@@ -1,3 +1,4 @@
+import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 const HomePage = () => (
@@ -30,7 +31,7 @@ const HomePage = () => (
 const Router = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<RetinalAnalysis />} />
     </Routes>
   </BrowserRouter>
 );

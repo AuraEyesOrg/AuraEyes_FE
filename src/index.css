@@ -1,9 +1,16 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @theme {
-  /* AURA Medical Color Palette */
-  --color-primary: #0099CF;
+  /* AURA Retinal Viewer Color Palette */
+  --color-primary: #13ecec;
+  --color-background-light: #f6f8f8;
+  --color-background-dark: #102222;
+  --color-surface-dark: #182626;
+  --color-surface-border: #283939;
+  --color-text-muted: #9db9b9;
+  
+  /* Legacy colors for compatibility */
   --color-secondary: #1040C5;
   --color-dark: #101732;
   --color-accent: #0D74B1;
@@ -12,15 +19,40 @@
   --color-danger: #F43F5E;
   
   /* Font Family */
-  --font-sans: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', sans-serif;
 }
 
 :root {
-	color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
-	margin: 0;
-	font-family: var(--font-sans);
-	background-color: var(--color-dark);
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #102222;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #102222;
+}
+::-webkit-scrollbar-thumb {
+  background: #283939;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4f4f;
+}
+
+/* Toggle checkbox styles */
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: #13ecec;
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #13ecec;
 }
