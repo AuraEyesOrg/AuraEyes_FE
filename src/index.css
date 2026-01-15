@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@theme {
+  /* AURA Medical Color Palette */
+  --color-primary: #0099CF;
+  --color-secondary: #1040C5;
+  --color-dark: #101732;
+  --color-accent: #0D74B1;
+  --color-neutral: #B8ACAA;
+  --color-white: #FFFFFF;
+  --color-danger: #F43F5E;
+  
+  /* Font Family */
+  --font-sans: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+	color-scheme: light;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-sans);
+	background-color: var(--color-dark);
+}
