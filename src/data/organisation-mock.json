@@ -1,0 +1,202 @@
+{
+  "clinic": {
+    "name": "AURA Vision Clinic",
+    "location": "Ho Chi Minh City, Vietnam",
+    "admin": "Dr. Nguyễn Văn An",
+    "avatar": "/clinic-logo.png"
+  },
+  "dashboardStats": {
+    "totalScreenings": {
+      "value": 1245,
+      "change": "+12.5%",
+      "trend": "up"
+    },
+    "pendingReviews": {
+      "value": 23,
+      "change": "-5",
+      "trend": "down"
+    },
+    "aiPredictions": {
+      "value": 1189,
+      "accuracy": 94.8,
+      "trend": "up"
+    },
+    "criticalCases": {
+      "value": 8,
+      "change": "+2",
+      "trend": "up"
+    }
+  },
+  "screeningActivity": [
+    { "month": "Jan", "screenings": 98, "predictions": 92, "reviewed": 95 },
+    { "month": "Feb", "screenings": 112, "predictions": 108, "reviewed": 110 },
+    { "month": "Mar", "screenings": 125, "predictions": 118, "reviewed": 122 },
+    { "month": "Apr", "screenings": 108, "predictions": 102, "reviewed": 105 },
+    { "month": "May", "screenings": 135, "predictions": 128, "reviewed": 132 },
+    { "month": "Jun", "screenings": 142, "predictions": 138, "reviewed": 140 },
+    { "month": "Jul", "screenings": 128, "predictions": 122, "reviewed": 125 },
+    { "month": "Aug", "screenings": 155, "predictions": 148, "reviewed": 152 },
+    { "month": "Sep", "screenings": 148, "predictions": 142, "reviewed": 145 },
+    { "month": "Oct", "screenings": 162, "predictions": 155, "reviewed": 160 }
+  ],
+  "predictionAccuracy": {
+    "overall": 94.8,
+    "byCondition": {
+      "diabeticRetinopathy": 96.2,
+      "glaucoma": 93.5,
+      "macularDegeneration": 94.1,
+      "hypertensiveRetinopathy": 95.8
+    }
+  },
+  "recentPatients": [
+    {
+      "id": "P001245",
+      "name": "Trần Thị Mai",
+      "age": 45,
+      "gender": "F",
+      "lastScreening": "2026-01-17",
+      "aiPrediction": "Diabetic Retinopathy",
+      "confidence": 92.5,
+      "status": "pending-review",
+      "priority": "high"
+    },
+    {
+      "id": "P001244",
+      "name": "Lê Văn Hùng",
+      "age": 58,
+      "gender": "M",
+      "lastScreening": "2026-01-17",
+      "aiPrediction": "Healthy",
+      "confidence": 98.2,
+      "status": "reviewed",
+      "priority": "low"
+    },
+    {
+      "id": "P001243",
+      "name": "Phạm Minh Tuấn",
+      "age": 62,
+      "gender": "M",
+      "lastScreening": "2026-01-16",
+      "aiPrediction": "Glaucoma Suspect",
+      "confidence": 87.3,
+      "status": "pending-review",
+      "priority": "medium"
+    },
+    {
+      "id": "P001242",
+      "name": "Nguyễn Hồng Nhung",
+      "age": 52,
+      "gender": "F",
+      "lastScreening": "2026-01-16",
+      "aiPrediction": "Hypertensive Retinopathy",
+      "confidence": 95.1,
+      "status": "reviewed",
+      "priority": "high"
+    },
+    {
+      "id": "P001241",
+      "name": "Võ Thanh Tùng",
+      "age": 38,
+      "gender": "M",
+      "lastScreening": "2026-01-15",
+      "aiPrediction": "Healthy",
+      "confidence": 99.1,
+      "status": "reviewed",
+      "priority": "low"
+    }
+  ],
+  "upcomingAppointments": [
+    {
+      "id": "A001",
+      "patientName": "Đặng Thị Lan",
+      "patientId": "P000892",
+      "date": "2026-01-19",
+      "time": "09:00",
+      "type": "Screening",
+      "doctor": "Dr. Nguyễn Văn An"
+    },
+    {
+      "id": "A002",
+      "patientName": "Hoàng Minh Khôi",
+      "patientId": "P001103",
+      "date": "2026-01-19",
+      "time": "10:30",
+      "type": "Follow-up",
+      "doctor": "Dr. Trần Thị Bích"
+    },
+    {
+      "id": "A003",
+      "patientName": "Bùi Văn Long",
+      "patientId": "P001205",
+      "date": "2026-01-19",
+      "time": "14:00",
+      "type": "Screening",
+      "doctor": "Dr. Nguyễn Văn An"
+    },
+    {
+      "id": "A004",
+      "patientName": "Lý Thanh Hà",
+      "patientId": "P000956",
+      "date": "2026-01-20",
+      "time": "09:30",
+      "type": "Consultation",
+      "doctor": "Dr. Lê Văn Minh"
+    }
+  ],
+  "alerts": [
+    {
+      "id": "AL001",
+      "type": "critical",
+      "message": "8 critical cases require immediate attention",
+      "timestamp": "2026-01-18T08:30:00Z"
+    },
+    {
+      "id": "AL002",
+      "type": "warning",
+      "message": "23 AI predictions pending doctor review",
+      "timestamp": "2026-01-18T07:15:00Z"
+    },
+    {
+      "id": "AL003",
+      "type": "info",
+      "message": "System maintenance scheduled for Jan 20, 2026",
+      "timestamp": "2026-01-17T16:00:00Z"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "D001",
+      "name": "Dr. Nguyễn Văn An",
+      "specialty": "Ophthalmologist",
+      "patientsReviewed": 342,
+      "avgReviewTime": "4.2 min"
+    },
+    {
+      "id": "D002",
+      "name": "Dr. Trần Thị Bích",
+      "specialty": "Retina Specialist",
+      "patientsReviewed": 298,
+      "avgReviewTime": "5.1 min"
+    },
+    {
+      "id": "D003",
+      "name": "Dr. Lê Văn Minh",
+      "specialty": "Glaucoma Specialist",
+      "patientsReviewed": 267,
+      "avgReviewTime": "4.8 min"
+    }
+  ],
+  "calendarAvailability": {
+    "workingHours": {
+      "monday": ["09:00-12:00", "14:00-17:00"],
+      "tuesday": ["09:00-12:00", "14:00-17:00"],
+      "wednesday": ["09:00-12:00", "14:00-17:00"],
+      "thursday": ["09:00-12:00", "14:00-17:00"],
+      "friday": ["09:00-12:00", "14:00-17:00"],
+      "saturday": ["09:00-12:00"],
+      "sunday": []
+    },
+    "blockedDates": ["2026-01-20", "2026-02-10", "2026-02-11"],
+    "appointmentDuration": 30
+  }
+}

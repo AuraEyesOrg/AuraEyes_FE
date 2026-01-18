@@ -1,0 +1,43 @@
+export interface ToggleState {
+  vesselSegmentation: boolean;
+  hemorrhages: boolean;
+  exudates: boolean;
+  opticDisc: boolean;
+}
+
+export interface Location {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Anomaly {
+  id: string;
+  name: string;
+  confidence: number;
+  description: string;
+  color: string; // hex or tailwind class prefix
+  type: 'warning' | 'priority_high' | 'info';
+  location?: Location;
+}
+
+export interface Patient {
+  name: string;
+  id: string;
+  dob: string;
+  scanDate: string;
+  eye: 'Left Eye (OS)' | 'Right Eye (OD)';
+  status: 'Attention Needed' | 'Normal';
+}
+
+export interface RetinalImage {
+  id: string;
+  url: string;
+  name: string;
+  eye: 'Left Eye (OS)' | 'Right Eye (OD)';
+  uploadedAt: string;
+  analyzed: boolean;
+  anomalies: Anomaly[];
+  thumbnail?: string;
+}
