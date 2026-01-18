@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
 
 @theme {
   /* AURA Retinal Viewer Color Palette */
@@ -9,15 +9,15 @@
   --color-surface-dark: #182626;
   --color-surface-border: #283939;
   --color-text-muted: #9db9b9;
-  
+
   /* Legacy colors for compatibility */
-  --color-secondary: #1040C5;
+  --color-secondary: #1040c5;
   --color-dark: #101732;
-  --color-accent: #0D74B1;
-  --color-neutral: #B8ACAA;
-  --color-white: #FFFFFF;
-  --color-danger: #F43F5E;
-  
+  --color-accent: #0d74b1;
+  --color-neutral: #b8acaa;
+  --color-white: #ffffff;
+  --color-danger: #f43f5e;
+
   /* Font Family */
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter', sans-serif;
@@ -25,27 +25,101 @@
 
 :root {
   color-scheme: dark;
+  /* Dark theme variables */
+  --bg-primary: #0a1929;
+  --bg-secondary: #1e3a5f;
+  --bg-tertiary: #0a1f44;
+  --border-color: #2d4a6f;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+}
+
+.light {
+  color-scheme: light;
+  /* Light theme variables */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background-color: #102222;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom scrollbar */
+/* Light mode overrides for specific colors */
+.light .bg-\[\#0a1f44\],
+.light [class*="bg-[#0a1f44]"] {
+  background-color: #ffffff !important;
+}
+
+.light .bg-\[\#1e3a5f\],
+.light [class*="bg-[#1e3a5f]"] {
+  background-color: #f3f4f6 !important;
+}
+
+.light .bg-\[\#0a1929\],
+.light [class*="bg-[#0a1929]"] {
+  background-color: #ffffff !important;
+}
+
+.light .bg-\[\#1e3a8a\],
+.light [class*="bg-[#1e3a8a]"] {
+  background-color: #dbeafe !important;
+}
+
+.light .border-\[\#1e3a5f\],
+.light [class*="border-[#1e3a5f]"] {
+  border-color: #e5e7eb !important;
+}
+
+.light .border-\[\#2d4a6f\],
+.light [class*="border-[#2d4a6f]"] {
+  border-color: #e5e7eb !important;
+}
+
+.light .text-white {
+  color: #111827 !important;
+}
+
+.light .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.light .text-gray-300 {
+  color: #4b5563 !important;
+}
+
+/* Custom scrollbar - Dark */
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
   background: #102222;
 }
+.light ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
 ::-webkit-scrollbar-thumb {
   background: #283939;
   border-radius: 3px;
 }
+.light ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #3a4f4f;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 /* Toggle checkbox styles */
