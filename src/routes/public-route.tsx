@@ -1,18 +1,16 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { type ReactElement } from 'react';
+import { Navigate } from 'react-router';
 import useAuthStore from '@/store/auth-store';
 
-/**
- * PublicRoute component for routes that redirect authenticated users
- * Uses Outlet pattern recommended by React Router v6
- */
-const PublicRoute = () => {
+interface Props {
+  children: ReactElement;
+}
+
+const PublicRoute: React.FC<Props> = ({ children }) => {
+  // Replace with your auth condition
   const { isAuthenticated } = useAuthStore((state) => state);
 
-  return isAuthenticated ? (
-    <Navigate to="/patient/dashboard" replace />
-  ) : (
-    <Outlet />
-  );
+  return isAuthenticated ? <Navigate to="/patient/screening" /> : children;
 };
 
 export default PublicRoute;
