@@ -1,3 +1,5 @@
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import AdminDashboard from '@/features/admin/pages/dashboard';
 import OrganisationDashboard from '@/features/organisation/pages/dashboard';
@@ -6,7 +8,19 @@ import CalendarPage from '@/features/organisation/pages/calendar';
 import SettingsPage from '@/features/organisation/pages/settings';
 import AnalyticsPage from '@/features/organisation/pages/analytics';
 import Header from '@/components/ui/header';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { LoginPage, RegisterPage, ConfirmEmailPage } from '@/pages';
+
+/**
+ * Loading component hiển thị khi lazy load
+ */
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <div className="text-center">
+      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+      <p className="mt-4 text-neutral">Loading...</p>
+    </div>
+  </div>
+);
 
 const HomePage = () => (
   <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6 text-center">
@@ -43,28 +57,39 @@ const PatientLayout = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+/**
+ * Main Router Component
+ */
 const Router = () => (
   <BrowserRouter>
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <PatientLayout>
-            <RetinalAnalysis />
-          </PatientLayout>
-        }
-      />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminDashboard />} />
+        {/* Patient/Main Route */}
+        <Route
+          path="/"
+          element={
+            <PatientLayout>
+              <RetinalAnalysis />
+            </PatientLayout>
+          }
+        />
 
-      {/* Organisation Routes */}
-      <Route path="/organisation" element={<OrganisationDashboard />} />
-      <Route path="/organisation/patients" element={<PatientsPage />} />
-      <Route path="/organisation/analytics" element={<AnalyticsPage />} />
-      <Route path="/organisation/calendar" element={<CalendarPage />} />
-      <Route path="/organisation/settings" element={<SettingsPage />} />
-    </Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminDashboard />} />
+
+        {/* Organisation Routes */}
+        <Route path="/organisation" element={<OrganisationDashboard />} />
+        <Route path="/organisation/patients" element={<PatientsPage />} />
+        <Route path="/organisation/analytics" element={<AnalyticsPage />} />
+        <Route path="/organisation/calendar" element={<CalendarPage />} />
+        <Route path="/organisation/settings" element={<SettingsPage />} />
+      </Routes>
+    </Suspense>
   </BrowserRouter>
 );
 
