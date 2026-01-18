@@ -27,10 +27,19 @@
   color-scheme: dark;
 }
 
+.light {
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
   background-color: #102222;
+  transition: background-color 0.3s ease;
+}
+
+.light body {
+  background-color: #f9fafb;
 }
 
 /* Custom scrollbar */
