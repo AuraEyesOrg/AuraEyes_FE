@@ -1,5 +1,9 @@
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import AdminDashboard from '@/features/admin/pages/dashboard';
+import OrganisationDashboard from '@/features/organisation/pages/dashboard';
+import PatientsPage from '@/features/organisation/pages/patients';
+import CalendarPage from '@/features/organisation/pages/calendar';
+import SettingsPage from '@/features/organisation/pages/settings';
 import Header from '@/components/ui/header';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
@@ -50,6 +54,12 @@ const Router = () => (
         }
       />
       <Route path="/admin" element={<AdminDashboard />} />
+
+      {/* Organisation Routes */}
+      <Route path="/organisation" element={<OrganisationDashboard />} />
+      <Route path="/organisation/patients" element={<PatientsPage />} />
+      <Route path="/organisation/calendar" element={<CalendarPage />} />
+      <Route path="/organisation/settings" element={<SettingsPage />} />
     </Routes>
   </BrowserRouter>
 );

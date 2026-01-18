@@ -1,22 +1,28 @@
-import { Home, FileText, Target, Bell, Settings, LogOut } from 'lucide-react';
+import {
+  Home,
+  Users,
+  Calendar,
+  Settings,
+  LogOut,
+  Activity,
+} from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 interface SidebarProps {
-  reminderCount?: number;
+  pendingCount?: number;
 }
 
-export default function Sidebar({ reminderCount = 6 }: SidebarProps) {
+export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/admin' },
-    { icon: FileText, label: 'Reports', path: '/admin/reports' },
-    { icon: Target, label: 'Goals', path: '/admin/goals' },
+    { icon: Home, label: 'Dashboard', path: '/organisation' },
     {
-      icon: Bell,
-      label: 'Reminders',
-      path: '/admin/reminders',
-      badge: reminderCount,
+      icon: Users,
+      label: 'Patients',
+      path: '/organisation/patients',
+      badge: pendingCount,
     },
-    { icon: Settings, label: 'Settings', path: '/admin/settings' },
+    { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
+    { icon: Settings, label: 'Settings', path: '/organisation/settings' },
   ];
 
   return (
@@ -24,7 +30,7 @@ export default function Sidebar({ reminderCount = 6 }: SidebarProps) {
       <div className="p-6 border-b border-[#1e3a5f] dark:border-[#1e3a5f] light:border-gray-200">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
+            <Activity className="w-5 h-5 text-white" />
           </div>
           <span className="text-white dark:text-white light:text-gray-900 font-semibold text-lg">
             AURA
@@ -48,7 +54,7 @@ export default function Sidebar({ reminderCount = 6 }: SidebarProps) {
             <item.icon size={20} />
             <span className="text-sm font-medium">{item.label}</span>
             {item.badge && (
-              <span className="absolute right-2 top-2 bg-orange-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {item.badge}
               </span>
             )}
@@ -57,7 +63,7 @@ export default function Sidebar({ reminderCount = 6 }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-[#1e3a5f] dark:border-[#1e3a5f] light:border-gray-200">
-        <button className="flex items-center gap-3 px-4 py-3 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 rounded-lg w-full transition-colors">
+        <button className="flex items-center gap-3 px-4 py-3 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 rounded-lg transition-colors w-full">
           <LogOut size={20} />
           <span className="text-sm font-medium">Log out</span>
         </button>
