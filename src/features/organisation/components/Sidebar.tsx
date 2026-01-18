@@ -5,6 +5,7 @@ import {
   Settings,
   LogOut,
   Activity,
+  BarChart3,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -21,6 +22,7 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
       path: '/organisation/patients',
       badge: pendingCount,
     },
+    { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
     { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
     { icon: Settings, label: 'Settings', path: '/organisation/settings' },
   ];
