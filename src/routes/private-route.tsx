@@ -1,16 +1,14 @@
-import { type ReactElement } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, Outlet } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 
-interface Props {
-  children: ReactElement;
-}
-
-const PrivateRoute: React.FC<Props> = ({ children }) => {
-  // Replace with your auth condition
+/**
+ * PrivateRoute component that protects routes requiring authentication
+ * Uses Outlet pattern recommended by React Router v6
+ */
+const PrivateRoute = () => {
   const { isAuthenticated } = useAuthStore((state) => state);
 
-  return isAuthenticated ? children : <Navigate to="/" />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;
