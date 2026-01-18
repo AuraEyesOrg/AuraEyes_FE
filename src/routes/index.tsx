@@ -8,7 +8,12 @@ import CalendarPage from '@/features/organisation/pages/calendar';
 import SettingsPage from '@/features/organisation/pages/settings';
 import AnalyticsPage from '@/features/organisation/pages/analytics';
 import Header from '@/components/ui/header';
-import { LoginPage, RegisterPage, ConfirmEmailPage } from '@/pages';
+import {
+  LoginPage,
+  RegisterPage,
+  ConfirmEmailPage,
+  RegisterDoctorPage,
+} from '@/pages';
 
 /**
  * Loading component hiển thị khi lazy load
@@ -67,6 +72,7 @@ const Router = () => (
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
 
         {/* Patient/Main Route */}
