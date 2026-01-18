@@ -52,37 +52,39 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Light mode overrides for specific colors */
 .light .bg-\[\#0a1f44\],
-.light [class*="bg-[#0a1f44]"] {
+.light [class*='bg-[#0a1f44]'] {
   background-color: #ffffff !important;
 }
 
 .light .bg-\[\#1e3a5f\],
-.light [class*="bg-[#1e3a5f]"] {
+.light [class*='bg-[#1e3a5f]'] {
   background-color: #f3f4f6 !important;
 }
 
 .light .bg-\[\#0a1929\],
-.light [class*="bg-[#0a1929]"] {
+.light [class*='bg-[#0a1929]'] {
   background-color: #ffffff !important;
 }
 
 .light .bg-\[\#1e3a8a\],
-.light [class*="bg-[#1e3a8a]"] {
+.light [class*='bg-[#1e3a8a]'] {
   background-color: #dbeafe !important;
 }
 
 .light .border-\[\#1e3a5f\],
-.light [class*="border-[#1e3a5f]"] {
+.light [class*='border-[#1e3a5f]'] {
   border-color: #e5e7eb !important;
 }
 
 .light .border-\[\#2d4a6f\],
-.light [class*="border-[#2d4a6f]"] {
+.light [class*='border-[#2d4a6f]'] {
   border-color: #e5e7eb !important;
 }
 
