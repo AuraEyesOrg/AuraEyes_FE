@@ -7,7 +7,13 @@ import PublicRoute from './public-route';
 import { DashboardLayout, MainLayout } from '@/components/layouts';
 
 // Shared Pages (không thuộc feature cụ thể)
-import { HomePage, LoginPage, NotFoundPage } from '@/pages';
+import {
+  ConfirmEmailPage,
+  HomePage,
+  LoginPage,
+  NotFoundPage,
+  RegisterPage,
+} from '@/pages';
 
 // Lazy load feature pages cho code splitting
 const PatientDashboard = lazy(
@@ -42,8 +48,16 @@ const Router = () => (
         <Route element={<PublicRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
           </Route>
+          {/* Auth Routes typically don't share MainLayout if MainLayout has a header/footer that contradicts AuthLayout.
+              However, currently LoginPage was inside MainLayout.
+              AuthLayout includes the full page structure.
+              So I should move them out of MainLayout if it conflicts, or just keep them here if MainLayout is just a wrapper.
+              Let's assume we want them independent or if MainLayout is a hindrance.
+              Creating a new Route group for Auth. */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         </Route>
 
         {/* Protected Routes - cần authentication */}
