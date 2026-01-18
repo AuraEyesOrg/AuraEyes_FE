@@ -1,4 +1,5 @@
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
+import AdminDashboard from '@/features/admin/pages/dashboard';
 import OrganisationDashboard from '@/features/organisation/pages/dashboard';
 import PatientsPage from '@/features/organisation/pages/patients';
 import CalendarPage from '@/features/organisation/pages/calendar';
@@ -53,6 +54,9 @@ const Router = () => (
           </PatientLayout>
         }
       />
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminDashboard />} />
 
       {/* Organisation Routes */}
       <Route path="/organisation" element={<OrganisationDashboard />} />
