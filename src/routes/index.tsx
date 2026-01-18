@@ -1,5 +1,6 @@
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import AdminDashboard from '@/features/admin/pages/dashboard';
+import Header from '@/components/ui/header';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 const HomePage = () => (
@@ -29,10 +30,25 @@ const HomePage = () => (
   </div>
 );
 
+// Layout for patient pages (with Header)
+const PatientLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen bg-gradient-to-b from-dark via-[#0d223f] to-dark text-white">
+    <Header />
+    <main className="mx-auto max-w-6xl px-6 pb-12 pt-8">{children}</main>
+  </div>
+);
+
 const Router = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<RetinalAnalysis />} />
+      <Route
+        path="/"
+        element={
+          <PatientLayout>
+            <RetinalAnalysis />
+          </PatientLayout>
+        }
+      />
       <Route path="/admin" element={<AdminDashboard />} />
     </Routes>
   </BrowserRouter>
