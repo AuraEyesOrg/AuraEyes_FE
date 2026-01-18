@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* AURA Retinal Viewer Color Palette */
@@ -9,15 +9,15 @@
   --color-surface-dark: #182626;
   --color-surface-border: #283939;
   --color-text-muted: #9db9b9;
-  
+
   /* Legacy colors for compatibility */
-  --color-secondary: #1040C5;
+  --color-secondary: #1040c5;
   --color-dark: #101732;
-  --color-accent: #0D74B1;
-  --color-neutral: #B8ACAA;
-  --color-white: #FFFFFF;
-  --color-danger: #F43F5E;
-  
+  --color-accent: #0d74b1;
+  --color-neutral: #b8acaa;
+  --color-white: #ffffff;
+  --color-danger: #f43f5e;
+
   /* Font Family */
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter', sans-serif;
