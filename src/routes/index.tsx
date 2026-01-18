@@ -1,4 +1,5 @@
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
+import AdminDashboard from '@/features/admin/pages/dashboard';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 const HomePage = () => (
@@ -32,6 +33,7 @@ const Router = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<RetinalAnalysis />} />
+      <Route path="/admin" element={<AdminDashboard />} />
     </Routes>
   </BrowserRouter>
 );
