@@ -22,32 +22,32 @@ const ToolsSidebar: React.FC<ToolsSidebarProps> = ({
   onReset,
 }) => {
   return (
-    <aside className="w-16 flex-none flex flex-col items-center py-6 gap-6 bg-[#182626] border-r border-[#283939] z-10">
+    <aside className="w-16 flex-none flex flex-col items-center py-6 gap-6 bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-white border-r border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 z-10">
       {/* Navigation Tools */}
       <div className="flex flex-col gap-2 w-full px-2">
         <button
           onClick={onZoomIn}
-          className="group relative flex items-center justify-center size-10 rounded-lg bg-[#283939] text-white hover:bg-[#13ecec] hover:text-[#102222] transition-all shadow-sm mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-gray-100 text-white dark:text-white light:text-gray-900 hover:bg-[#13ecec] hover:text-[#102222] transition-all shadow-sm mx-auto"
           title="Zoom In"
         >
           <ZoomIn className="w-5 h-5" />
         </button>
         <button
           onClick={onZoomOut}
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all mx-auto"
           title="Zoom Out"
         >
           <ZoomOut className="w-5 h-5" />
         </button>
         <button
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all mx-auto"
           title="Pan Tool"
         >
           <Hand className="w-5 h-5" />
         </button>
         <button
           onClick={onReset}
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all mx-auto"
           title="Reset View"
         >
           <RotateCcw className="w-5 h-5" />
@@ -58,13 +58,13 @@ const ToolsSidebar: React.FC<ToolsSidebarProps> = ({
       {/* Analysis Tools */}
       <div className="flex flex-col gap-2 w-full px-2">
         <button
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all mx-auto"
           title="Measurement"
         >
           <Ruler className="w-5 h-5" />
         </button>
         <button
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all mx-auto"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all mx-auto"
           title="Brightness/Contrast"
         >
           <Sun className="w-5 h-5" />
@@ -79,7 +79,7 @@ const ToolsSidebar: React.FC<ToolsSidebarProps> = ({
 
       <div className="mt-auto mb-4">
         <button
-          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#283939] text-[#9db9b9] hover:text-white transition-all"
+          className="group relative flex items-center justify-center size-10 rounded-lg hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-all"
           title="Keyboard Shortcuts"
         >
           <Keyboard className="w-5 h-5" />

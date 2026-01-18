@@ -23,13 +23,13 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   const imageName = currentImage?.name || 'Fundus photograph';
 
   return (
-    <section className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-move select-none">
+    <section className="flex-1 relative bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-100 flex items-center justify-center overflow-hidden cursor-move select-none">
       {/* Grid Background Pattern */}
       <div
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
           backgroundImage:
-            'linear-gradient(#283939 1px, transparent 1px), linear-gradient(90deg, #283939 1px, transparent 1px)',
+            'linear-gradient(rgba(45, 74, 111, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(45, 74, 111, 0.5) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       ></div>
@@ -39,7 +39,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         className="relative max-w-full max-h-full p-10 transition-transform duration-200 ease-out origin-center"
         style={{ transform: `scale(${zoomLevel})` }}
       >
-        <div className="relative rounded-full overflow-hidden shadow-2xl border border-[#283939] group">
+        <div className="relative rounded-full overflow-hidden shadow-2xl border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 group">
           <img
             src={imageUrl}
             alt={imageName}
@@ -135,11 +135,11 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       </div>
 
       {/* Floating Scale Bar */}
-      <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur text-xs text-[#9db9b9] px-3 py-1.5 rounded border border-white/10 flex items-center gap-2 pointer-events-none">
+      <div className="absolute bottom-6 left-6 bg-black/80 dark:bg-black/80 light:bg-white/90 backdrop-blur text-xs text-white dark:text-white light:text-gray-900 px-3 py-1.5 rounded border border-white/20 dark:border-white/20 light:border-gray-300 flex items-center gap-2 pointer-events-none shadow-lg">
         <span>Scale: {zoomLevel.toFixed(1)}x</span>
-        <div className="w-20 h-1 bg-white/30 relative">
-          <div className="absolute left-0 top-0 h-full w-px bg-white"></div>
-          <div className="absolute right-0 top-0 h-full w-px bg-white"></div>
+        <div className="w-20 h-1 bg-white/50 dark:bg-white/50 light:bg-gray-400 relative">
+          <div className="absolute left-0 top-0 h-full w-px bg-white dark:bg-white light:bg-gray-600"></div>
+          <div className="absolute right-0 top-0 h-full w-px bg-white dark:bg-white light:bg-gray-600"></div>
         </div>
         <span>200µm</span>
       </div>

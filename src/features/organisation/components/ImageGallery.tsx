@@ -53,15 +53,15 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
   return (
     <div
-      className={`w-full bg-[#182626] border-t border-[#283939] transition-all duration-300`}
+      className={`w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-white border-t border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 transition-all duration-300`}
     >
       {/* Compact Header Bar - Always visible */}
       <div
-        className="flex items-center justify-between px-4 py-1.5 cursor-pointer hover:bg-[#283939]/20 transition-colors"
+        className="flex items-center justify-between px-4 py-1.5 cursor-pointer hover:bg-[#1e3a5f]/20 dark:hover:bg-[#1e3a5f]/20 light:hover:bg-gray-100 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-1 text-[#9db9b9] hover:text-white transition-colors">
+          <button className="flex items-center gap-1 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors">
             <ChevronUp
               className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
             />
@@ -69,13 +69,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
           <div className="flex items-center gap-2">
             <Images className="w-4 h-4 text-[#13ecec]" />
-            <span className="text-xs font-medium text-white">
+            <span className="text-xs font-medium text-white dark:text-white light:text-gray-900">
               {images.length} {images.length === 1 ? 'Image' : 'Images'}
             </span>
           </div>
 
           {/* Mini status indicators */}
-          <div className="flex items-center gap-3 text-[10px] text-[#9db9b9]">
+          <div className="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-400 light:text-gray-600">
             {images.filter((img) => img.analyzed && img.anomalies.length === 0)
               .length > 0 && (
               <span className="flex items-center gap-0.5">
@@ -117,7 +117,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                   className={`w-6 h-6 rounded overflow-hidden border ${
                     selectedImageId === image.id
                       ? 'border-[#13ecec]'
-                      : 'border-[#283939]'
+                      : 'border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -132,7 +132,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                 </div>
               ))}
               {images.length > 5 && (
-                <span className="text-[10px] text-[#9db9b9]">
+                <span className="text-[10px] text-gray-400 dark:text-gray-400 light:text-gray-600">
                   +{images.length - 5}
                 </span>
               )}
@@ -165,13 +165,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
       {/* Expandable Thumbnails Strip */}
       {isExpanded && (
         <div
-          className="flex items-center gap-2 px-4 py-2 overflow-x-auto scrollbar-thin scrollbar-thumb-[#283939] scrollbar-track-transparent border-t border-[#283939]/50 animate-in slide-in-from-top-2 duration-200"
+          className="flex items-center gap-2 px-4 py-2 overflow-x-auto scrollbar-thin scrollbar-thumb-[#2d4a6f] dark:scrollbar-thumb-[#2d4a6f] light:scrollbar-thumb-gray-300 scrollbar-track-transparent border-t border-[#2d4a6f]/50 dark:border-[#2d4a6f]/50 light:border-gray-200 animate-in slide-in-from-top-2 duration-200"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           {images.length === 0 ? (
             <div
-              className="flex-1 min-h-[60px] border border-dashed border-[#283939] rounded flex items-center justify-center gap-2 text-[#9db9b9] hover:border-[#13ecec]/50 hover:text-[#13ecec] transition-colors cursor-pointer text-xs"
+              className="flex-1 min-h-[60px] border border-dashed border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded flex items-center justify-center gap-2 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:border-[#13ecec]/50 hover:text-[#13ecec] transition-colors cursor-pointer text-xs"
               onClick={() => fileInputRef.current?.click()}
             >
               <CloudUpload className="w-5 h-5" />
@@ -185,8 +185,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                   onClick={() => onSelectImage(image.id)}
                   className={`relative flex-none w-14 h-14 rounded overflow-hidden cursor-pointer group transition-all duration-200 ${
                     selectedImageId === image.id
-                      ? 'ring-2 ring-[#13ecec] ring-offset-1 ring-offset-[#182626]'
-                      : 'ring-1 ring-[#283939] hover:ring-[#13ecec]/50'
+                      ? 'ring-2 ring-[#13ecec] ring-offset-1 ring-offset-[#0a1f44] dark:ring-offset-[#0a1f44] light:ring-offset-white'
+                      : 'ring-1 ring-[#2d4a6f] dark:ring-[#2d4a6f] light:ring-gray-300 hover:ring-[#13ecec]/50'
                   }`}
                 >
                   <img
@@ -239,7 +239,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
               {/* Add More */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-none w-14 h-14 border border-dashed border-[#283939] rounded flex flex-col items-center justify-center text-[#9db9b9] hover:border-[#13ecec]/50 hover:text-[#13ecec] transition-colors cursor-pointer"
+                className="flex-none w-14 h-14 border border-dashed border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 light:text-gray-600 hover:border-[#13ecec]/50 hover:text-[#13ecec] transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </div>
@@ -247,8 +247,8 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           )}
 
           {isUploading && (
-            <div className="flex-none w-14 h-14 border border-[#283939] rounded flex items-center justify-center bg-[#182626]">
-              <div className="w-4 h-4 border-2 border-[#283939] border-t-[#13ecec] rounded-full animate-spin"></div>
+            <div className="flex-none w-14 h-14 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded flex items-center justify-center bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50">
+              <div className="w-4 h-4 border-2 border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 border-t-[#13ecec] rounded-full animate-spin"></div>
             </div>
           )}
         </div>
