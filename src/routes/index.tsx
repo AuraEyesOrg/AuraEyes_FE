@@ -1,4 +1,8 @@
-import HomePage from '@/features/guest/pages/home';
+import HomePage from '@/features/guest/pages/Home_tem';
+import AboutPage from '@/features/guest/pages/About_tem';
+import HowItWorksPage from '@/features/guest/pages/HowItWorks';
+import ContactPage from '@/features/guest/pages/Contact_tem';
+import EthicsPrivacyPage from '@/features/guest/pages/EthicsPrivacy';
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import AdminDashboard from '@/features/admin/pages/dashboard';
 import OrganisationDashboard from '@/features/organisation/pages/dashboard';
@@ -21,6 +25,10 @@ const Router = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/how-it-works" element={<HowItWorksPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/ethics" element={<EthicsPrivacyPage />} />
       <Route
         path="/retinal_analysis"
         element={
