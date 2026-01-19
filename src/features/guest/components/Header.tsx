@@ -59,7 +59,7 @@ export const Header = () => {
 
         {/* CTA Button */}
         <div className="flex items-center gap-4">
-          <button className="hidden sm:flex items-center justify-center rounded-lg bg-[#319795] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors">
+          <button className="hidden sm:flex items-center justify-center rounded-lg bg-[#13ecec] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors">
             Get Started
           </button>
 

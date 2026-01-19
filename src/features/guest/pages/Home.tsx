@@ -473,7 +473,7 @@ const HomePage = () => {
                   accessible, and clinically accurate.
                 </p>
                 <div className="hero-buttons flex flex-wrap gap-4">
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[#319795] px-6 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg hover:shadow-[#319795]/30">
+                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[#13ecec] px-6 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg hover:shadow-[#319795]/30">
                     See How It Works
                   </button>
                   <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[#E2E8F0] bg-transparent px-6 text-base font-bold text-[#1A202C] hover:bg-gray-50 transition-all hover:border-[#319795]">
@@ -549,9 +549,6 @@ const HomePage = () => {
                         backgroundPosition: 'center',
                       }}
                     />
-
-                    {/* Radial gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-radial from-transparent via-[#0a1628]/50 to-[#0a1628]" />
 
                     {/* Iris ring effect */}
                     <div className="absolute inset-[15%] rounded-full border-[3px] border-[#319795]/40" />
