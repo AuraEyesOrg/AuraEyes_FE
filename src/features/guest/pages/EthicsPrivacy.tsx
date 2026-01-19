@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,24 +15,37 @@ const EthicsPrivacyPage = () => {
       // Hero animations
       gsap.fromTo(
         '.hero-content > *',
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out' }
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: 'power2.out' }
+      );
+
+      // Hero image
+      gsap.fromTo(
+        '.hero-image',
+        { opacity: 0, scale: 0.95, x: 30 },
+        {
+          opacity: 1,
+          scale: 1,
+          x: 0,
+          duration: 0.8,
+          delay: 0.3,
+          ease: 'power2.out',
+        }
       );
 
       // Compliance badges
       gsap.fromTo(
-        '.compliance-badge',
-        { opacity: 0, scale: 0.8, y: 20 },
+        '.compliance-item',
+        { opacity: 0, y: 20 },
         {
           opacity: 1,
-          scale: 1,
           y: 0,
           duration: 0.5,
           stagger: 0.1,
-          ease: 'back.out(2)',
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: '.compliance-section',
-            start: 'top 80%',
+            start: 'top 85%',
             toggleActions: 'play none none reverse',
           },
         }
@@ -39,14 +54,13 @@ const EthicsPrivacyPage = () => {
       // Pillar cards
       gsap.fromTo(
         '.pillar-card',
-        { opacity: 0, y: 60, rotateX: 15 },
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
           y: 0,
-          rotateX: 0,
-          duration: 0.7,
-          stagger: 0.2,
-          ease: 'power3.out',
+          duration: 0.6,
+          stagger: 0.15,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: '.pillars-section',
             start: 'top 75%',
@@ -58,12 +72,12 @@ const EthicsPrivacyPage = () => {
       // Data journey steps
       gsap.fromTo(
         '.journey-step',
-        { opacity: 0, x: -30 },
+        { opacity: 0, x: -20 },
         {
           opacity: 1,
           x: 0,
           duration: 0.5,
-          stagger: 0.15,
+          stagger: 0.12,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: '.journey-section',
@@ -73,13 +87,13 @@ const EthicsPrivacyPage = () => {
         }
       );
 
-      // Timeline connector
+      // Timeline line
       gsap.fromTo(
-        '.journey-line',
+        '.timeline-line-fill',
         { scaleY: 0, transformOrigin: 'top' },
         {
           scaleY: 1,
-          duration: 1.2,
+          duration: 1,
           ease: 'power2.inOut',
           scrollTrigger: {
             trigger: '.journey-section',
@@ -92,12 +106,12 @@ const EthicsPrivacyPage = () => {
       // FAQ items
       gsap.fromTo(
         '.faq-item',
-        { opacity: 0, y: 20 },
+        { opacity: 0, y: 15 },
         {
           opacity: 1,
           y: 0,
           duration: 0.4,
-          stagger: 0.1,
+          stagger: 0.08,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: '.faq-section',
@@ -113,12 +127,12 @@ const EthicsPrivacyPage = () => {
 
   const pillars = [
     {
-      title: 'Privacy by Design',
+      title: 'Data Privacy First',
       description:
-        'Patient data is anonymized at the point of capture. We never store personally identifiable information alongside imaging data. All transmissions are encrypted end-to-end.',
+        'Your retinal data is end-to-end encrypted and anonymized. You retain full ownership and control at every step of the diagnostic process.',
       icon: (
         <svg
-          className="w-10 h-10"
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -131,15 +145,34 @@ const EthicsPrivacyPage = () => {
           />
         </svg>
       ),
-      color: 'from-[#319795] to-[#285E61]',
     },
     {
-      title: 'Transparent AI',
+      title: 'Ethical AI Design',
       description:
-        'Our diagnostic models are published with full documentation. We provide confidence scores and explanations with every result, so clinicians understand how conclusions are reached.',
+        'Our models are trained on diverse global datasets to mitigate bias and ensure equitable healthcare outcomes for all populations.',
       icon: (
         <svg
-          className="w-10 h-10"
+          className="w-7 h-7"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: 'Total Transparency',
+      description:
+        "We open the 'black box'. AURA provides explainable results, highlighting exactly what the AI sees, keeping humans in the loop.",
+      icon: (
+        <svg
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -158,40 +191,18 @@ const EthicsPrivacyPage = () => {
           />
         </svg>
       ),
-      color: 'from-[#2C5282] to-[#1A365D]',
-    },
-    {
-      title: 'Equity in Healthcare',
-      description:
-        'We actively test for and mitigate demographic biases in our models. Our mission is to provide accurate screening for all patients, regardless of race, age, or socioeconomic status.',
-      icon: (
-        <svg
-          className="w-10 h-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: 'from-purple-600 to-purple-800',
     },
   ];
 
   const dataJourney = [
     {
       step: 1,
-      title: 'Image Capture',
+      title: 'Upload & Encryption',
       description:
-        'Retinal image is captured by a standard fundus camera at the clinic. Patient ID is stripped before upload.',
+        'Retinal images are uploaded via a secure TLS 1.3 connection. Before leaving your device, data is encrypted using AES-256 standards.',
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -200,19 +211,19 @@ const EthicsPrivacyPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
           />
         </svg>
       ),
     },
     {
       step: 2,
-      title: 'Secure Transit',
+      title: 'Anonymization',
       description:
-        'Data is encrypted using AES-256 and transmitted over TLS 1.3 to our HIPAA-compliant cloud servers.',
+        'All Personal Health Information (PHI) is stripped from the metadata. The system assigns a unique, randomized token to the image data.',
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -221,19 +232,19 @@ const EthicsPrivacyPage = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+            d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
           />
         </svg>
       ),
     },
     {
       step: 3,
-      title: 'AI Processing',
+      title: 'AI Analysis',
       description:
-        'Our AI model analyzes the image. No human views the raw image during this automated process.',
+        'The anonymized image is processed by our Neural Network in a secure enclave. No data is stored permanently on the inference servers.',
       icon: (
         <svg
-          className="w-6 h-6"
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -249,33 +260,12 @@ const EthicsPrivacyPage = () => {
     },
     {
       step: 4,
-      title: 'Report Delivery',
+      title: 'Result Delivery & Deletion',
       description:
-        'A structured, anonymized report is generated and sent securely to the requesting clinician.',
+        "Results are sent back to the clinician's dashboard. The temporary image data on our servers is immediately wiped.",
       icon: (
         <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      step: 5,
-      title: 'Data Expiration',
-      description:
-        'Images are automatically purged from our servers within 72 hours unless opted-in for research.',
-      icon: (
-        <svg
-          className="w-6 h-6"
+          className="w-7 h-7"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -293,173 +283,72 @@ const EthicsPrivacyPage = () => {
 
   const faqs = [
     {
-      question: 'Is AURA HIPAA Compliant?',
+      question: 'What datasets is AURA trained on?',
       answer:
-        'Yes. Our entire infrastructure is built on HIPAA-compliant cloud services with Business Associate Agreements (BAAs) in place. We undergo annual third-party security audits.',
+        'Our model is trained on a proprietary dataset of over 2.5 million retinal scans sourced from 14 distinct geographical regions, ensuring representation across diverse ethnicities, ages, and genders. This diversity is critical to preventing algorithmic bias common in models trained on homogenous populations.',
     },
     {
-      question: 'Does AURA sell or share patient data?',
+      question: 'Is there a "Human in the Loop"?',
       answer:
-        'Absolutely not. We are a non-profit organization. Patient data is never sold or used for advertising. Anonymized data may only be used for research with explicit consent.',
+        'Absolutely. AURA is designed as a Decision Support System (DSS), not a replacement for clinicians. The AI provides a probability score and heatmaps indicating areas of concern, but the final diagnosis and treatment plan are always determined by a qualified ophthalmologist.',
     },
     {
-      question: 'How is AI bias addressed?',
+      question: 'How do you handle edge cases?',
       answer:
-        'Our models are trained on diverse, globally representative datasets. We publish detailed bias audits with each model release and actively work with underrepresented communities to improve accuracy.',
-    },
-    {
-      question: 'Can patients request their data be deleted?',
-      answer:
-        'Yes. Patients can request immediate and complete deletion of their data through their healthcare provider. We provide a verifiable deletion certificate upon completion.',
-    },
-    {
-      question: 'What happens if there is a data breach?',
-      answer:
-        'In the unlikely event of a breach, affected parties will be notified within 24 hours as per HIPAA requirements. Our anonymization practices mean that even in a worst-case scenario, images cannot be linked to individuals.',
+        'We employ uncertainty quantification. If the AI encounters a scan with low confidence (due to poor image quality or rare pathology), it flags the case for "Manual Review" rather than forcing a potentially incorrect prediction. This safety mechanism reduces false positives/negatives significantly.',
     },
   ];
 
-  const complianceBadges = [
-    { name: 'HIPAA', desc: 'Health Insurance Portability' },
-    { name: 'GDPR', desc: 'EU Data Protection' },
-    { name: 'SOC 2', desc: 'Type II Certified' },
-    { name: 'ISO 27001', desc: 'Information Security' },
+  const complianceItems = [
+    { name: 'HIPAA', icon: 'verified_user' },
+    { name: 'GDPR', icon: 'security' },
+    { name: 'SOC2', icon: 'policy' },
+    { name: 'ISO 27001', icon: 'health_and_safety' },
   ];
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6 lg:px-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#319795]/20 text-[#319795]">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle cx="12" cy="12" r="4" fill="currentColor" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-[#1A202C]">AURA</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/"
-            >
-              Home
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/about"
-            >
-              About Us
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/how-it-works"
-            >
-              How It Works
-            </a>
-            <a
-              className="text-sm font-medium text-[#2C5282] font-semibold"
-              href="/ethics"
-            >
-              Ethics & Privacy
-            </a>
-          </nav>
-          <button className="rounded-lg bg-[#319795] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors">
-            Get Started
-          </button>
-        </div>
-      </header>
+      <Header />
 
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-28 bg-gradient-to-br from-[#1A365D] via-[#2C5282] to-[#2D3748] overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                backgroundSize: '32px 32px',
-              }}
-            />
-          </div>
+        <section className="relative bg-white overflow-hidden">
+          {/* Subtle pattern background */}
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23319795' fill-opacity='0.08' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='2'/%3E%3Ccircle cx='13' cy='13' r='2'/%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
 
-          {/* Decorative elements */}
-          <div className="absolute top-20 left-10 w-64 h-64 bg-[#319795]/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 relative z-10">
+            <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
+              {/* Left Content */}
+              <div className="hero-content lg:col-span-6 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#319795]/10 px-3 py-1 text-sm font-medium text-[#2C7A7B] mb-6 ring-1 ring-inset ring-[#319795]/20">
+                  <span className="h-2 w-2 rounded-full bg-[#319795]"></span>
+                  Trust & Transparency
+                </div>
 
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10 relative z-10">
-            <div className="hero-content max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold text-white mb-6">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                Trust & Transparency
-              </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#1A202C] leading-tight mb-6">
+                  Your Health Data,
+                  <br />
+                  <span className="text-[#319795]">Secure & Ethical.</span>
+                </h1>
 
-              <h1 className="text-4xl lg:text-5xl font-black leading-tight text-white mb-6">
-                Ethics, Data Privacy &{' '}
-                <span className="text-[#319795]">AI Transparency</span>
-              </h1>
+                <p className="text-lg text-[#718096] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                  AURA is built on a foundation of rigorous ethics. We protect
+                  your retinal data while advancing global health equity through
+                  transparent, bias-aware technology.
+                </p>
 
-              <p className="text-lg text-gray-300 mb-10">
-                At AURA, we believe that access to healthcare technology must be
-                built on a foundation of trust. We are committed to the highest
-                standards of data privacy, ethical AI development, and
-                transparent practices.
-              </p>
-
-              <div className="flex flex-wrap justify-center gap-4">
-                <a
-                  href="#pillars"
-                  className="rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg"
-                >
-                  Our Principles
-                </a>
-                <a
-                  href="#faq"
-                  className="rounded-lg border-2 border-white/30 px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors"
-                >
-                  Privacy FAQ
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Compliance Banner */}
-        <section className="compliance-section py-12 bg-white border-b border-[#E2E8F0]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <p className="text-center text-sm font-semibold text-[#718096] uppercase tracking-wider mb-6">
-              Certified Compliant With
-            </p>
-            <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-              {complianceBadges.map((badge, index) => (
-                <div
-                  key={index}
-                  className="compliance-badge flex items-center gap-3 px-6 py-3 bg-[#F7FAFC] rounded-xl border border-[#E2E8F0]"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[#319795]/10 flex items-center justify-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[#319795] hover:bg-[#2C7A7B] transition-colors">
+                    Read Our Principles
+                  </button>
+                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[#1A202C] border border-[#E2E8F0] hover:border-[#319795] hover:bg-[#F7FAFC] transition-colors">
                     <svg
-                      className="w-5 h-5 text-[#319795]"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -468,14 +357,84 @@ const EthicsPrivacyPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                       />
                     </svg>
+                    Privacy Policy
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Image */}
+              <div className="hero-image mt-12 lg:mt-0 lg:col-span-6 flex justify-center lg:justify-end">
+                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[#E2E8F0]">
+                  <div className="aspect-[4/3] bg-[#F7FAFC]">
+                    <img
+                      src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=450&fit=crop"
+                      alt="Secure digital data network"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A202C]/70 to-transparent flex items-end p-6">
+                      <div className="text-white">
+                        <div className="flex items-center gap-2 mb-1">
+                          <svg
+                            className="w-5 h-5 text-[#319795]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
+                          </svg>
+                          <span className="text-sm font-bold uppercase tracking-wider text-[#319795]">
+                            Secure Enclave
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-300">
+                          Processing Node: US-East-1 (HIPAA Compliant)
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-[#1A202C]">{badge.name}</p>
-                    <p className="text-xs text-[#718096]">{badge.desc}</p>
-                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Compliance Banner */}
+        <section className="compliance-section bg-white border-y border-[#E2E8F0] py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p className="text-center text-sm font-semibold text-[#718096] uppercase tracking-widest mb-6">
+              Trusted by & Compliant With
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
+              {complianceItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="compliance-item flex justify-center items-center gap-2 text-[#718096] hover:text-[#319795] transition-colors"
+                >
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <span className="font-bold text-xl text-[#1A202C]">
+                    {item.name}
+                  </span>
                 </div>
               ))}
             </div>
@@ -483,17 +442,16 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Three Pillars Section */}
-        <section id="pillars" className="pillars-section py-20 bg-[#F7FAFC]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
-                Our Foundation
-              </span>
+        <section className="pillars-section py-20 bg-[#F7FAFC]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
-                The Three Pillars of AURA's Ethics
+                Building Trust Through Transparency
               </h2>
-              <p className="text-lg text-[#718096] max-w-2xl mx-auto">
-                Every decision we make is guided by these core principles.
+              <p className="text-lg text-[#718096]">
+                We believe that medical AI must be built on a foundation of
+                rigorous ethics and absolute data privacy. Here is how we ensure
+                it.
               </p>
             </div>
 
@@ -501,23 +459,17 @@ const EthicsPrivacyPage = () => {
               {pillars.map((pillar, index) => (
                 <div
                   key={index}
-                  className="pillar-card group bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden hover:shadow-xl transition-all duration-300"
-                  style={{ perspective: '1000px' }}
+                  className="pillar-card group bg-white rounded-2xl p-8 border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className={`h-2 bg-gradient-to-r ${pillar.color}`} />
-                  <div className="p-8">
-                    <div
-                      className={`w-16 h-16 rounded-xl bg-gradient-to-br ${pillar.color} text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
-                    >
-                      {pillar.icon}
-                    </div>
-                    <h3 className="text-xl font-bold text-[#1A202C] mb-3">
-                      {pillar.title}
-                    </h3>
-                    <p className="text-[#718096] leading-relaxed">
-                      {pillar.description}
-                    </p>
+                  <div className="w-14 h-14 bg-[#319795]/10 rounded-xl flex items-center justify-center mb-6 text-[#319795] group-hover:bg-[#319795]/20 transition-colors">
+                    {pillar.icon}
                   </div>
+                  <h3 className="text-xl font-bold text-[#1A202C] mb-3">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-[#718096] leading-relaxed">
+                    {pillar.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -525,90 +477,105 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Data Journey Section */}
-        <section className="journey-section py-20 bg-white border-y border-[#E2E8F0]">
-          <div className="mx-auto max-w-4xl px-6 lg:px-10">
-            <div className="text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
-                Data Lifecycle
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
-                Your Data's Journey Through AURA
-              </h2>
-              <p className="text-lg text-[#718096] max-w-2xl mx-auto">
-                Complete transparency on how your patient data is handled at
-                every step.
-              </p>
-            </div>
-
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-[#E2E8F0]">
-                <div className="journey-line absolute inset-0 bg-gradient-to-b from-[#319795] to-[#2C5282]" />
+        <section className="journey-section py-20 bg-white border-t border-[#E2E8F0]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row gap-12 items-start">
+              {/* Sticky Left Side */}
+              <div className="md:w-1/3 md:sticky md:top-24">
+                <h2 className="text-3xl font-bold text-[#1A202C] mb-4">
+                  The Data Journey
+                </h2>
+                <p className="text-[#718096] mb-8 leading-relaxed">
+                  We've simplified the complex process of data handling into
+                  four clear, secure steps. Transparency is key to your peace of
+                  mind.
+                </p>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-1 text-[#319795] font-bold hover:text-[#2C7A7B] transition-colors"
+                >
+                  View Security Architecture
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </a>
               </div>
 
-              <div className="space-y-8">
-                {dataJourney.map((step, index) => (
-                  <div
-                    key={index}
-                    className="journey-step relative flex gap-6 pl-2"
-                  >
-                    {/* Step Icon */}
-                    <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full bg-white border-4 border-[#319795] flex items-center justify-center shadow-md">
-                      <span className="text-sm font-black text-[#319795]">
-                        {step.step}
-                      </span>
-                    </div>
+              {/* Timeline Right Side */}
+              <div className="md:w-2/3 w-full">
+                <div className="relative pl-8 border-l-2 border-[#E2E8F0] space-y-10">
+                  {/* Animated line fill */}
+                  <div className="timeline-line-fill absolute left-0 top-0 bottom-0 w-0.5 bg-[#319795] -ml-[1px]" />
 
-                    {/* Content */}
-                    <div className="flex-1 bg-[#F7FAFC] rounded-xl p-6 border border-[#E2E8F0] hover:border-[#319795]/30 hover:shadow-md transition-all">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                  {dataJourney.map((step, index) => (
+                    <div key={index} className="journey-step relative">
+                      {/* Dot */}
+                      <span className="absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-white bg-[#319795]" />
+
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[#F7FAFC] p-6 rounded-xl">
+                        <div className="bg-white p-3 rounded-lg h-fit shadow-sm border border-[#E2E8F0] text-[#319795]">
                           {step.icon}
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-[#1A202C] mb-1">
-                            {step.title}
+                          <h3 className="text-lg font-bold text-[#1A202C]">
+                            {step.step}. {step.title}
                           </h3>
-                          <p className="text-sm text-[#718096]">
+                          <p className="mt-2 text-[#718096] text-sm leading-relaxed">
                             {step.description}
                           </p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="faq-section py-20 bg-[#F7FAFC]">
-          <div className="mx-auto max-w-3xl px-6 lg:px-10">
+        <section className="faq-section py-20 bg-[#F7FAFC]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
-                Common Questions
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
-                Privacy & Security FAQ
+              <h2 className="text-3xl font-bold text-[#1A202C] mb-4">
+                Deep Dive: How We Mitigate Bias
               </h2>
+              <p className="text-[#718096]">
+                Answers to common questions about fairness in our AI models.
+              </p>
             </div>
 
             <div className="space-y-4">
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="faq-item bg-white rounded-xl border border-[#E2E8F0] overflow-hidden"
+                  className={`faq-item bg-white rounded-lg border transition-all ${
+                    openFaq === index
+                      ? 'border-[#319795]/30 ring-2 ring-[#319795]/10'
+                      : 'border-[#E2E8F0]'
+                  }`}
                 >
                   <button
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between p-6 text-left"
                   >
-                    <span className="font-semibold text-[#1A202C] pr-4">
+                    <span className="font-bold text-lg text-[#1A202C]">
                       {faq.question}
                     </span>
                     <svg
-                      className={`w-5 h-5 text-[#718096] flex-shrink-0 transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 text-[#718096] transition-transform duration-200 ${
+                        openFaq === index ? 'rotate-180' : ''
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -622,9 +589,11 @@ const EthicsPrivacyPage = () => {
                     </svg>
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-300 ${openFaq === index ? 'max-h-96' : 'max-h-0'}`}
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openFaq === index ? 'max-h-96' : 'max-h-0'
+                    }`}
                   >
-                    <div className="px-6 pb-6 text-[#718096] leading-relaxed">
+                    <div className="px-6 pb-6 text-[#718096] leading-relaxed border-t border-[#E2E8F0] pt-4">
                       {faq.answer}
                     </div>
                   </div>
@@ -634,95 +603,67 @@ const EthicsPrivacyPage = () => {
           </div>
         </section>
 
-        {/* Commitment Section */}
-        <section className="py-20 bg-gradient-to-br from-[#319795]/5 to-[#2C5282]/5">
-          <div className="mx-auto max-w-4xl px-6 lg:px-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#319795]/10 text-[#319795] flex items-center justify-center mx-auto mb-6">
-              <svg
-                className="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
-              Our Commitment to You
-            </h2>
-            <p className="text-lg text-[#718096] mb-8 max-w-2xl mx-auto">
-              We are a non-profit initiative. We will never sell your data. We
-              are accountable to the communities we serve. If you have any
-              concerns, we want to hear from you.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg">
-                Contact Our Ethics Team
-              </button>
-              <button className="rounded-lg border-2 border-[#E2E8F0] px-6 py-3 text-base font-bold text-[#1A202C] hover:border-[#319795] transition-colors">
-                View Full Privacy Policy
-              </button>
-            </div>
-          </div>
-        </section>
-
         {/* CTA Section */}
         <section className="py-16 bg-white border-t border-[#E2E8F0]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="bg-gradient-to-br from-[#2C5282] to-[#1A365D] rounded-2xl p-10 md:p-16 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Have More Questions About Privacy?
-              </h2>
-              <p className="text-gray-300 max-w-xl mx-auto mb-8">
-                Our team is ready to discuss your specific compliance needs and
-                answer any questions about our data handling practices.
-              </p>
-              <button className="rounded-lg bg-white px-8 py-4 text-base font-bold text-[#2C5282] hover:bg-gray-100 transition-all hover:shadow-xl">
-                Schedule a Privacy Consultation
-              </button>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-[#1A202C] rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden">
+              {/* Subtle dot pattern */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage:
+                    'radial-gradient(#319795 1px, transparent 1px)',
+                  backgroundSize: '24px 24px',
+                }}
+              />
+
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="max-w-2xl text-center md:text-left">
+                  <h2 className="text-3xl font-bold text-white mb-4">
+                    Partner with AURA
+                  </h2>
+                  <p className="text-gray-300 text-lg mb-8">
+                    Join our network of ethical AI practitioners. We provide
+                    full documentation and API access for researchers committed
+                    to responsible healthcare innovation.
+                  </p>
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                    <button className="bg-[#319795] hover:bg-[#2C7A7B] text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                      Request Developer Access
+                    </button>
+                    <button className="bg-transparent border border-gray-600 text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
+                      Contact Ethics Board
+                    </button>
+                  </div>
+                </div>
+
+                {/* Icon decoration */}
+                <div className="hidden md:block">
+                  <div className="w-32 h-32 rounded-full border-4 border-[#319795]/30 flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-[#319795] flex items-center justify-center">
+                      <svg
+                        className="w-10 h-10 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#1A202C] text-white py-12">
-        <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold">AURA</span>
-              <span className="text-sm text-gray-400">
-                © 2026 AURA Non-Profit Initiative
-              </span>
-            </div>
-            <div className="flex gap-6">
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Terms of Use
-              </a>
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Ethics Charter
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

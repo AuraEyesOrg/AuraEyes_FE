@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -406,73 +408,8 @@ const HomePage = () => {
           />
         ))}
       </div>
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6 lg:px-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#319795]/20 text-[#319795]">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle cx="12" cy="12" r="4" fill="currentColor" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-[#1A202C]">
-              AURA
-            </h2>
-          </div>
-          <nav className="hidden md:flex flex-1 justify-end items-center gap-8 mr-8">
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="#technology"
-            >
-              Technology
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="#mission"
-            >
-              Mission
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="#research"
-            >
-              Research
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="#contact"
-            >
-              Contact
-            </a>
-          </nav>
-          <button className="flex items-center justify-center rounded-lg bg-[#319795] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors focus:ring-2 focus:ring-[#319795] focus:ring-offset-2">
-            Get Started
-          </button>
-          <button className="md:hidden ml-4 p-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-        </div>
-      </header>
 
+      <Header />
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section
@@ -1143,155 +1080,7 @@ const HomePage = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#F7FAFC] border-t border-[#E2E8F0]">
-        <div className="mx-auto max-w-[1280px] px-6 py-12 lg:px-10 lg:py-16">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-[#319795]/20 text-[#319795]">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle cx="12" cy="12" r="4" fill="currentColor" />
-                  </svg>
-                </div>
-                <h2 className="text-lg font-bold text-[#1A202C]">AURA</h2>
-              </div>
-              <p className="text-sm text-[#718096]">
-                Democratizing access to high-quality retinal screening through
-                ethical artificial intelligence.
-              </p>
-            </div>
-            <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
-                Platform
-              </h3>
-              <ul className="flex flex-col gap-3">
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Technology
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Accuracy Data
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    API Documentation
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Clinical Studies
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
-                Organization
-              </h3>
-              <ul className="flex flex-col gap-3">
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Our Mission
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Financial Reports
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className="text-sm text-[#718096] hover:text-[#2C5282]"
-                    href="#"
-                  >
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
-                Subscribe
-              </h3>
-              <p className="mb-4 text-sm text-[#718096]">
-                Get the latest updates on our research and global impact.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  className="w-full rounded-md border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#1A202C] focus:border-[#319795] focus:outline-none focus:ring-1 focus:ring-[#319795]"
-                  placeholder="Email address"
-                  type="email"
-                />
-                <button className="rounded-md bg-[#319795] px-4 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B]">
-                  Join
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="mt-12 border-t border-[#E2E8F0] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-[#718096]">
-              © 2026 AURA Non-Profit Organization. All rights reserved.
-            </p>
-            <div className="flex gap-6">
-              <a
-                className="text-xs text-[#718096] hover:text-[#2C5282]"
-                href="#"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="text-xs text-[#718096] hover:text-[#2C5282]"
-                href="#"
-              >
-                Terms of Service
-              </a>
-              <a
-                className="text-xs text-[#718096] hover:text-[#2C5282]"
-                href="#"
-              >
-                Accessibility
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

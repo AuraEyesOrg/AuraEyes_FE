@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -170,55 +172,7 @@ const ContactPage = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6 lg:px-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#319795]/20 text-[#319795]">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle cx="12" cy="12" r="4" fill="currentColor" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-[#1A202C]">AURA</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/"
-            >
-              Home
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/about"
-            >
-              About Us
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/how-it-works"
-            >
-              How It Works
-            </a>
-            <a
-              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
-              href="/ethics"
-            >
-              Ethics & Privacy
-            </a>
-          </nav>
-          <button className="rounded-lg bg-[#319795] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors">
-            Partner With Us
-          </button>
-        </div>
-      </header>
+      <Header />
 
       <main>
         {/* Hero Section */}
@@ -747,39 +701,7 @@ const ContactPage = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#1A202C] text-white py-12">
-        <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold">AURA</span>
-              <span className="text-sm text-gray-400">
-                © 2026 AURA Non-Profit Initiative
-              </span>
-            </div>
-            <div className="flex gap-6">
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Privacy
-              </a>
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Terms
-              </a>
-              <a
-                className="text-sm text-gray-400 hover:text-[#319795] transition-colors"
-                href="#"
-              >
-                Ethics
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
