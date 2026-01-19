@@ -284,7 +284,7 @@ const HowItWorksPage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="hero-content flex flex-col gap-6">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#319795]/10 px-4 py-1.5 text-sm font-semibold text-[#319795] w-fit">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-brand-primary)]/10 px-4 py-1.5 text-sm font-semibold text-[var(--color-brand-primary)] w-fit">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -341,7 +341,7 @@ const HowItWorksPage = () => {
                     {/* Animated Eye Scanner */}
                     <div className="relative w-48 h-48">
                       <div
-                        className="absolute inset-0 rounded-full border-4 border-[#319795]/30 animate-ping"
+                        className="absolute inset-0 rounded-full border-4 border-[var(--color-brand-primary)]/30 animate-ping"
                         style={{ animationDuration: '2s' }}
                       />
                       <div

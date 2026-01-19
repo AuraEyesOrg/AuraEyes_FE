@@ -390,7 +390,7 @@ const HomePage = () => {
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#F7FAFC]"
+      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-bg-medical)]"
     >
       {/* Floating Particles Background */}
       <div
@@ -402,7 +402,7 @@ const HomePage = () => {
             key={i}
             className="particle absolute w-2 h-2 rounded-full opacity-30"
             style={{
-              background: i % 2 === 0 ? '#319795' : '#2C5282',
+              background: i % 2 === 0 ? '#13ECEC' : '#1A202C',
               filter: 'blur(1px)',
             }}
           />
@@ -422,7 +422,7 @@ const HomePage = () => {
               className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full opacity-10"
               style={{
                 background:
-                  'radial-gradient(circle, #319795 0%, transparent 70%)',
+                  'radial-gradient(circle, #13ECEC 0%, transparent 70%)',
                 animation: 'pulse 8s ease-in-out infinite',
               }}
             />
@@ -430,7 +430,7 @@ const HomePage = () => {
               className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full opacity-10"
               style={{
                 background:
-                  'radial-gradient(circle, #2C5282 0%, transparent 70%)',
+                  'radial-gradient(circle, #13ECEC 0%, transparent 70%)',
                 animation: 'pulse 10s ease-in-out infinite reverse',
               }}
             />
@@ -442,7 +442,7 @@ const HomePage = () => {
                 ref={heroTextRef}
                 className="flex flex-1 flex-col gap-6 lg:gap-8"
               >
-                <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-[#319795]/30 bg-[#EBF8FF] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#319795] w-fit">
+                <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-[var(--color-brand-primary)]/30 bg-[var(--color-brand-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-brand-primary)] w-fit">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -463,24 +463,24 @@ const HomePage = () => {
                   style={{ perspective: '1000px' }}
                 >
                   Democratizing Retinal Health with{' '}
-                  <span className="hero-gradient-text text-transparent bg-clip-text bg-gradient-to-r from-[#2C5282] to-[#319795]">
+                  <span className="hero-gradient-text text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5]">
                     Ethical AI
                   </span>
                 </h1>
-                <p className="hero-description max-w-xl text-lg text-[#718096]">
+                <p className="hero-description max-w-xl text-lg text-[var(--color-text-muted)]">
                   AURA provides instant, non-invasive screening for vascular
                   abnormalities and systemic health risks. Open-source,
                   accessible, and clinically accurate.
                 </p>
                 <div className="hero-buttons flex flex-wrap gap-4">
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[#13ecec] px-6 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg hover:shadow-[#319795]/30">
+                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
                     See How It Works
                   </button>
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[#E2E8F0] bg-transparent px-6 text-base font-bold text-[#1A202C] hover:bg-gray-50 transition-all hover:border-[#319795]">
+                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-border)] bg-transparent px-6 text-base font-bold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-all hover:border-[var(--color-brand-primary)]">
                     Read the Research
                   </button>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-[#718096] pt-2">
+                <div className="flex items-center gap-4 text-sm text-[var(--color-text-muted)] pt-2">
                   <div className="hero-avatars flex -space-x-2">
                     <div
                       className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
@@ -518,21 +518,21 @@ const HomePage = () => {
                   style={{ transformStyle: 'preserve-3d' }}
                 >
                   {/* Outer glow ring */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#319795] to-[#2C5282] opacity-20 blur-xl animate-pulse" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5] opacity-20 blur-xl animate-pulse" />
 
                   {/* Outer scanning ring */}
                   <div
-                    className="absolute inset-0 rounded-full border-4 border-[#319795]/30"
+                    className="absolute inset-0 rounded-full border-4 border-[var(--color-brand-primary)]/30"
                     style={{
                       animation: 'rotateRing 8s linear infinite',
                     }}
                   >
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#319795] rounded-full shadow-lg shadow-[#319795]/50" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[var(--color-brand-primary)] rounded-full shadow-lg shadow-[var(--color-brand-primary)]/50" />
                   </div>
 
                   {/* Secondary rotating ring */}
                   <div
-                    className="absolute inset-4 rounded-full border-2 border-dashed border-[#2C5282]/40"
+                    className="absolute inset-4 rounded-full border-2 border-dashed border-[var(--color-brand-primary)]/40"
                     style={{
                       animation: 'rotateRing 12s linear infinite reverse',
                     }}
@@ -551,9 +551,9 @@ const HomePage = () => {
                     />
 
                     {/* Iris ring effect */}
-                    <div className="absolute inset-[15%] rounded-full border-[3px] border-[#319795]/40" />
-                    <div className="absolute inset-[20%] rounded-full border-2 border-[#319795]/30" />
-                    <div className="absolute inset-[25%] rounded-full border border-[#319795]/20" />
+                    <div className="absolute inset-[15%] rounded-full border-[3px] border-[var(--color-brand-primary)]/40" />
+                    <div className="absolute inset-[20%] rounded-full border-2 border-[var(--color-brand-primary)]/30" />
+                    <div className="absolute inset-[25%] rounded-full border border-[var(--color-brand-primary)]/20" />
 
                     {/* Pupil (center) */}
                     <div className="absolute inset-[35%] rounded-full bg-gradient-to-br from-[#0a0a0a] to-[#1a1a2e] shadow-inner">
@@ -564,39 +564,39 @@ const HomePage = () => {
 
                     {/* Scanning laser beam - horizontal */}
                     <div
-                      className="scan-beam absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#319795] to-transparent shadow-lg shadow-[#319795]"
+                      className="scan-beam absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--color-brand-primary)] to-transparent shadow-lg shadow-[var(--color-brand-primary)]"
                       style={{
                         animation: 'scanBeamVertical 2.5s ease-in-out infinite',
-                        boxShadow: '0 0 20px 2px rgba(49, 151, 149, 0.8)',
+                        boxShadow: '0 0 20px 2px rgba(19, 236, 236, 0.8)',
                       }}
                     />
 
                     {/* Scanning laser beam - vertical */}
                     <div
-                      className="absolute top-0 bottom-0 w-[2px] left-1/2 -translate-x-1/2 bg-gradient-to-b from-transparent via-[#319795] to-transparent"
+                      className="absolute top-0 bottom-0 w-[2px] left-1/2 -translate-x-1/2 bg-gradient-to-b from-transparent via-[var(--color-brand-primary)] to-transparent"
                       style={{
                         animation: 'scanBeamHorizontal 3s ease-in-out infinite',
                         animationDelay: '0.5s',
-                        boxShadow: '0 0 15px 2px rgba(49, 151, 149, 0.6)',
+                        boxShadow: '0 0 15px 2px rgba(19, 236, 236, 0.6)',
                       }}
                     />
 
                     {/* Circular scanning wave */}
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                       }}
                     />
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                         animationDelay: '0.6s',
                       }}
                     />
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                         animationDelay: '1.2s',
@@ -604,21 +604,21 @@ const HomePage = () => {
                     />
 
                     {/* Corner brackets */}
-                    <div className="absolute top-[10%] left-[10%] w-8 h-8 border-l-2 border-t-2 border-[#319795]/80" />
-                    <div className="absolute top-[10%] right-[10%] w-8 h-8 border-r-2 border-t-2 border-[#319795]/80" />
-                    <div className="absolute bottom-[10%] left-[10%] w-8 h-8 border-l-2 border-b-2 border-[#319795]/80" />
-                    <div className="absolute bottom-[10%] right-[10%] w-8 h-8 border-r-2 border-b-2 border-[#319795]/80" />
+                    <div className="absolute top-[10%] left-[10%] w-8 h-8 border-l-2 border-t-2 border-[var(--color-brand-primary)]/80" />
+                    <div className="absolute top-[10%] right-[10%] w-8 h-8 border-r-2 border-t-2 border-[var(--color-brand-primary)]/80" />
+                    <div className="absolute bottom-[10%] left-[10%] w-8 h-8 border-l-2 border-b-2 border-[var(--color-brand-primary)]/80" />
+                    <div className="absolute bottom-[10%] right-[10%] w-8 h-8 border-r-2 border-b-2 border-[var(--color-brand-primary)]/80" />
 
                     {/* Data points animation */}
                     <div className="absolute top-[15%] left-[50%] -translate-x-1/2">
                       <div className="flex items-center gap-1">
-                        <div className="w-1 h-1 bg-[#319795] rounded-full animate-pulse" />
+                        <div className="w-1 h-1 bg-[var(--color-brand-primary)] rounded-full animate-pulse" />
                         <div
-                          className="w-1 h-1 bg-[#319795] rounded-full animate-pulse"
+                          className="w-1 h-1 bg-[var(--color-brand-primary)] rounded-full animate-pulse"
                           style={{ animationDelay: '0.2s' }}
                         />
                         <div
-                          className="w-1 h-1 bg-[#319795] rounded-full animate-pulse"
+                          className="w-1 h-1 bg-[var(--color-brand-primary)] rounded-full animate-pulse"
                           style={{ animationDelay: '0.4s' }}
                         />
                       </div>
@@ -626,9 +626,9 @@ const HomePage = () => {
                   </div>
 
                   {/* Floating UI Card overlay - positioned below the eye */}
-                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[#E2E8F0]">
+                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[var(--color-border)]">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold uppercase text-[#718096]">
+                      <span className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">
                         Analysis Result
                       </span>
                       <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
@@ -646,7 +646,7 @@ const HomePage = () => {
                     </div>
                     <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
                       <div
-                        className="progress-bar-fill h-full bg-[#319795] rounded-full"
+                        className="progress-bar-fill h-full bg-[var(--color-brand-primary)] rounded-full"
                         style={{ width: '0%' }}
                       ></div>
                     </div>
@@ -707,14 +707,14 @@ const HomePage = () => {
         {/* Feature Grid */}
         <section
           ref={featuresRef}
-          className="bg-[#F7FAFC] py-16 lg:py-24 border-y border-[#E2E8F0]"
+          className="bg-[var(--color-bg-medical)] py-16 lg:py-24 border-y border-[var(--color-border)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="features-title mb-12 max-w-3xl">
-              <h2 className="text-3xl font-bold tracking-tight text-[#1A202C] sm:text-4xl mb-4">
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-brand-dark)] sm:text-4xl mb-4">
                 Advanced Screening Technology
               </h2>
-              <p className="text-lg text-[#718096]">
+              <p className="text-lg text-[var(--color-text-muted)]">
                 Our platform leverages cutting-edge deep learning to provide
                 rapid, reliable assessments of retinal health, designed for both
                 clinical and field settings.
@@ -726,10 +726,10 @@ const HomePage = () => {
             >
               {/* Feature 1 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#319795]/10 hover:border-[#319795]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#13ECEC]/10 hover:border-[#13ECEC]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
-                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795] group-hover:bg-[#319795] group-hover:text-white transition-all duration-300">
+                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#13ECEC]/10 text-[#13ECEC] group-hover:bg-[#13ECEC] group-hover:text-white transition-all duration-300">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -756,10 +756,10 @@ const HomePage = () => {
 
               {/* Feature 2 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#319795]/10 hover:border-[#319795]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
-                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795] group-hover:bg-[#319795] group-hover:text-white transition-all duration-300">
+                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -786,10 +786,10 @@ const HomePage = () => {
 
               {/* Feature 3 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#319795]/10 hover:border-[#319795]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
-                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795] group-hover:bg-[#319795] group-hover:text-white transition-all duration-300">
+                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -820,7 +820,7 @@ const HomePage = () => {
         <section ref={workflowRef} className="py-16 lg:py-24 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="flex flex-col items-center text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2">
+              <span className="text-sm font-bold uppercase tracking-wider text-[#13ECEC] mb-2">
                 Workflow
               </span>
               <h2 className="text-3xl font-bold text-[#1A202C] sm:text-4xl">
@@ -829,7 +829,7 @@ const HomePage = () => {
             </div>
             <div className="relative">
               {/* Connecting line for desktop - animated */}
-              <div className="timeline-line absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-[#319795]/40 hidden lg:block z-0"></div>
+              <div className="timeline-line absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-[#13ECEC]/40 hidden lg:block z-0"></div>
               <div
                 ref={stepsRef}
                 className="grid gap-12 lg:grid-cols-3 lg:gap-8 relative z-10"
@@ -839,7 +839,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-lg shadow-[#319795]/10 mb-6 hover:border-[#319795] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -868,7 +868,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-lg shadow-[#319795]/10 mb-6 hover:border-[#319795] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -897,7 +897,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-lg shadow-[#319795]/10 mb-6 hover:border-[#319795] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -932,7 +932,7 @@ const HomePage = () => {
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div
-              className="mission-card overflow-hidden rounded-2xl bg-gradient-to-br from-[#2C5282] to-[#1A365D] text-white relative"
+              className="mission-card overflow-hidden rounded-2xl bg-gradient-to-br from-[#1A202C] to-[#0F172A] text-white relative"
               style={{ transformStyle: 'preserve-3d' }}
             >
               <div className="absolute top-0 right-0 p-12 opacity-10">
@@ -956,7 +956,7 @@ const HomePage = () => {
                     human right, and AI should be a tool for equity.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg hover:shadow-[#319795]/30 w-fit">
+                    <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[#13ECEC] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[#13ECEC]/30 w-fit">
                       Learn About Our Mission
                     </button>
                     <button className="magnetic-btn flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-all w-fit">
@@ -971,7 +971,7 @@ const HomePage = () => {
                   >
                     <div className="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
                       <svg
-                        className="w-8 h-8 text-[#319795]"
+                        className="w-8 h-8 text-[#13ECEC]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -994,7 +994,7 @@ const HomePage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <svg
-                        className="w-8 h-8 text-[#319795]"
+                        className="w-8 h-8 text-[#13ECEC]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1026,7 +1026,7 @@ const HomePage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[#E2E8F0]">
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#319795] mb-2"
+                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
                   data-value="50000"
                   data-suffix="k+"
                 >
@@ -1038,7 +1038,7 @@ const HomePage = () => {
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#319795] mb-2"
+                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
                   data-value="98"
                   data-suffix="%"
                 >
@@ -1050,7 +1050,7 @@ const HomePage = () => {
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#319795] mb-2"
+                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
                   data-value="30"
                   data-suffix="+"
                 >
@@ -1062,7 +1062,7 @@ const HomePage = () => {
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#319795] mb-2"
+                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
                   data-value="100"
                   data-suffix="%"
                 >
