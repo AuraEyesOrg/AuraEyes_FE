@@ -2,12 +2,12 @@ import React from 'react';
 
 const HomePage = () => {
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#F7FAFC]">
       {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-6 lg:px-10">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#319795]/20 text-[#319795]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <circle
                   cx="12"
@@ -19,37 +19,37 @@ const HomePage = () => {
                 <circle cx="12" cy="12" r="4" fill="currentColor" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <h2 className="text-xl font-bold tracking-tight text-[#1A202C]">
               AURA
             </h2>
           </div>
           <nav className="hidden md:flex flex-1 justify-end items-center gap-8 mr-8">
             <a
-              className="text-sm font-medium text-gray-700 hover:text-cyan-600 dark:text-gray-300 dark:hover:text-cyan-400 transition-colors"
+              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
               href="#technology"
             >
               Technology
             </a>
             <a
-              className="text-sm font-medium text-gray-700 hover:text-cyan-600 dark:text-gray-300 dark:hover:text-cyan-400 transition-colors"
+              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
               href="#mission"
             >
               Mission
             </a>
             <a
-              className="text-sm font-medium text-gray-700 hover:text-cyan-600 dark:text-gray-300 dark:hover:text-cyan-400 transition-colors"
+              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
               href="#research"
             >
               Research
             </a>
             <a
-              className="text-sm font-medium text-gray-700 hover:text-cyan-600 dark:text-gray-300 dark:hover:text-cyan-400 transition-colors"
+              className="text-sm font-medium text-[#718096] hover:text-[#2C5282] transition-colors"
               href="#contact"
             >
               Contact
             </a>
           </nav>
-          <button className="flex items-center justify-center rounded-lg bg-cyan-500 px-5 py-2 text-sm font-bold text-gray-900 hover:bg-cyan-600 transition-colors focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+          <button className="flex items-center justify-center rounded-lg bg-[#319795] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors focus:ring-2 focus:ring-[#319795] focus:ring-offset-2">
             Get Started
           </button>
           <button className="md:hidden ml-4 p-2">
@@ -72,11 +72,11 @@ const HomePage = () => {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-16 lg:py-24 bg-white dark:bg-gray-900">
+        <section className="relative overflow-hidden py-16 lg:py-24 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="flex flex-col gap-12 lg:flex-row lg:items-center">
               <div className="flex flex-1 flex-col gap-6 lg:gap-8">
-                <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-600 dark:text-cyan-400 w-fit">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#319795]/30 bg-[#EBF8FF] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#319795] w-fit">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -92,43 +92,43 @@ const HomePage = () => {
                   </svg>
                   <span>Open Source Initiative</span>
                 </div>
-                <h1 className="text-4xl font-black leading-tight tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+                <h1 className="text-4xl font-black leading-tight tracking-tight text-[#1A202C] sm:text-5xl lg:text-6xl">
                   Democratizing Retinal Health with{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-cyan-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2C5282] to-[#319795]">
                     Ethical AI
                   </span>
                 </h1>
-                <p className="max-w-xl text-lg text-gray-600 dark:text-gray-400">
+                <p className="max-w-xl text-lg text-[#718096]">
                   AURA provides instant, non-invasive screening for vascular
                   abnormalities and systemic health risks. Open-source,
                   accessible, and clinically accurate.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <button className="inline-flex h-12 items-center justify-center rounded-lg bg-cyan-500 px-6 text-base font-bold text-gray-900 hover:bg-cyan-600 transition-opacity">
+                  <button className="inline-flex h-12 items-center justify-center rounded-lg bg-[#319795] px-6 text-base font-bold text-white hover:bg-[#2C7A7B] transition-opacity">
                     See How It Works
                   </button>
-                  <button className="inline-flex h-12 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-6 text-base font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <button className="inline-flex h-12 items-center justify-center rounded-lg border border-[#E2E8F0] bg-transparent px-6 text-base font-bold text-[#1A202C] hover:bg-gray-50 transition-colors">
                     Read the Research
                   </button>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-500 pt-2">
+                <div className="flex items-center gap-4 text-sm text-[#718096] pt-2">
                   <div className="flex -space-x-2">
                     <div
-                      className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-gray-900 bg-cover bg-center"
+                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
                       style={{
                         backgroundImage:
                           "url('https://i.pravatar.cc/150?img=1')",
                       }}
                     ></div>
                     <div
-                      className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-gray-900 bg-cover bg-center"
+                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
                       style={{
                         backgroundImage:
                           "url('https://i.pravatar.cc/150?img=2')",
                       }}
                     ></div>
                     <div
-                      className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-gray-900 bg-cover bg-center"
+                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
                       style={{
                         backgroundImage:
                           "url('https://i.pravatar.cc/150?img=3')",
@@ -139,7 +139,7 @@ const HomePage = () => {
                 </div>
               </div>
               <div className="relative flex-1 lg:pl-10">
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-900 via-teal-800 to-gray-900 shadow-2xl">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-[#2C5282] via-[#319795] to-[#1A365D] shadow-2xl">
                   <div
                     className="absolute inset-0 bg-cover bg-center opacity-80"
                     data-alt="Abstract blue and teal data visualization representing retinal scan analysis"
@@ -149,27 +149,27 @@ const HomePage = () => {
                     }}
                   ></div>
                   {/* Floating UI Card overlay */}
-                  <div className="absolute bottom-6 left-6 right-6 rounded-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-5 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <div className="absolute bottom-6 left-6 right-6 rounded-xl bg-white backdrop-blur-sm p-5 shadow-lg border border-[#E2E8F0]">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
+                      <span className="text-xs font-semibold uppercase text-[#718096]">
                         Analysis Result
                       </span>
-                      <span className="inline-flex items-center rounded bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs font-medium text-green-800 dark:text-green-400">
+                      <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
                         Low Risk
                       </span>
                     </div>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                      <span className="text-3xl font-bold text-[#1A202C]">
                         99.2%
                       </span>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      <span className="text-sm font-medium text-[#718096] mb-1">
                         Confidence Score
                       </span>
                     </div>
-                    <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
                       <div
-                        className="h-full bg-cyan-500 rounded-full"
+                        className="h-full bg-[#319795] rounded-full"
                         style={{ width: '99.2%' }}
                       ></div>
                     </div>
@@ -181,13 +181,13 @@ const HomePage = () => {
         </section>
 
         {/* Feature Grid */}
-        <section className="bg-gray-50 dark:bg-gray-950 py-16 lg:py-24 border-y border-gray-100 dark:border-gray-800">
+        <section className="bg-[#F7FAFC] py-16 lg:py-24 border-y border-[#E2E8F0]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="mb-12 max-w-3xl">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl mb-4">
+              <h2 className="text-3xl font-bold tracking-tight text-[#1A202C] sm:text-4xl mb-4">
                 Advanced Screening Technology
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
+              <p className="text-lg text-[#718096]">
                 Our platform leverages cutting-edge deep learning to provide
                 rapid, reliable assessments of retinal health, designed for both
                 clinical and field settings.
@@ -195,8 +195,8 @@ const HomePage = () => {
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* Feature 1 */}
-              <div className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 transition-all hover:shadow-md hover:border-cyan-500/50">
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <div className="group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-md hover:border-[#319795]/50">
+                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795]">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -211,10 +211,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
                   AI Precision
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-[#718096] leading-relaxed">
                   State-of-the-art deep learning models trained on diverse
                   global datasets for high accuracy across different
                   demographics.
@@ -222,8 +222,8 @@ const HomePage = () => {
               </div>
 
               {/* Feature 2 */}
-              <div className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 transition-all hover:shadow-md hover:border-cyan-500/50">
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <div className="group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-md hover:border-[#319795]/50">
+                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795]">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -238,10 +238,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
                   Global Access
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-[#718096] leading-relaxed">
                   Lightweight architecture optimized for low-bandwidth
                   environments, ensuring healthcare equity in underserved
                   regions.
@@ -249,8 +249,8 @@ const HomePage = () => {
               </div>
 
               {/* Feature 3 */}
-              <div className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 transition-all hover:shadow-md hover:border-cyan-500/50">
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <div className="group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-md hover:border-[#319795]/50">
+                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#319795]/10 text-[#319795]">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -265,10 +265,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
                   Privacy First
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-[#718096] leading-relaxed">
                   HIPAA compliant architecture processing data locally where
                   possible, with ethically sourced and anonymized training data.
                 </p>
@@ -278,23 +278,23 @@ const HomePage = () => {
         </section>
 
         {/* Timeline / How it works */}
-        <section className="py-16 lg:py-24 bg-white dark:bg-gray-900">
+        <section className="py-16 lg:py-24 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="flex flex-col items-center text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-2">
+              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2">
                 Workflow
               </span>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+              <h2 className="text-3xl font-bold text-[#1A202C] sm:text-4xl">
                 From Scan to Insight in Seconds
               </h2>
             </div>
             <div className="relative">
               {/* Connecting line for desktop */}
-              <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-gray-200 dark:border-gray-700 hidden lg:block z-0"></div>
+              <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-[#E2E8F0] hidden lg:block z-0"></div>
               <div className="grid gap-12 lg:grid-cols-3 lg:gap-8 relative z-10">
                 {/* Step 1 */}
-                <div className="flex flex-col items-center text-center bg-white dark:bg-gray-900 p-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-gray-800 border-4 border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm mb-6">
+                <div className="flex flex-col items-center text-center bg-white p-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-sm mb-6">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -309,18 +309,18 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
                     1. Upload Retinal Scan
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
+                  <p className="text-sm text-[#718096] max-w-xs">
                     Securely upload fundus photography from any standard retinal
                     camera or smartphone adapter.
                   </p>
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex flex-col items-center text-center bg-white dark:bg-gray-900 p-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-gray-800 border-4 border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm mb-6">
+                <div className="flex flex-col items-center text-center bg-white p-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-sm mb-6">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -335,18 +335,18 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
                     2. AI Analysis Processing
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
+                  <p className="text-sm text-[#718096] max-w-xs">
                     Our proprietary algorithms analyze vascular geometry,
                     branching angles, and tortuosity instantly.
                   </p>
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex flex-col items-center text-center bg-white dark:bg-gray-900 p-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-gray-800 border-4 border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm mb-6">
+                <div className="flex flex-col items-center text-center bg-white p-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#319795]/20 text-[#319795] shadow-sm mb-6">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -361,10 +361,10 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
                     3. Receive Risk Report
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
+                  <p className="text-sm text-[#718096] max-w-xs">
                     Get a comprehensive, downloadable report identifying
                     potential markers for diabetic retinopathy or CVD.
                   </p>
@@ -375,9 +375,9 @@ const HomePage = () => {
         </section>
 
         {/* Mission Section */}
-        <section className="py-20 bg-gray-50 dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
+        <section className="py-20 bg-[#F7FAFC] border-t border-[#E2E8F0]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 text-white relative">
+            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#2C5282] to-[#1A365D] text-white relative">
               <div className="absolute top-0 right-0 p-12 opacity-10">
                 <svg
                   className="w-72 h-72"
@@ -399,7 +399,7 @@ const HomePage = () => {
                     human right, and AI should be a tool for equity.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button className="flex items-center justify-center rounded-lg bg-cyan-500 px-6 py-3 text-base font-bold text-gray-900 hover:bg-cyan-600 transition-opacity w-fit">
+                    <button className="flex items-center justify-center rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-opacity w-fit">
                       Learn About Our Mission
                     </button>
                     <button className="flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors w-fit">
@@ -411,7 +411,7 @@ const HomePage = () => {
                   <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 max-w-sm w-full">
                     <div className="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
                       <svg
-                        className="w-8 h-8 text-cyan-400"
+                        className="w-8 h-8 text-[#319795]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -434,7 +434,7 @@ const HomePage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <svg
-                        className="w-8 h-8 text-cyan-400"
+                        className="w-8 h-8 text-[#319795]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -461,38 +461,38 @@ const HomePage = () => {
         </section>
 
         {/* Stats / Trust Section */}
-        <section className="py-16 bg-white dark:bg-gray-900">
+        <section className="py-16 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-200 dark:divide-gray-800">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[#E2E8F0]">
               <div className="p-4">
-                <div className="text-4xl font-black text-cyan-600 dark:text-cyan-400 mb-2">
+                <div className="text-4xl font-black text-[#319795] mb-2">
                   50k+
                 </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="text-sm font-medium text-[#718096]">
                   Scans Analyzed
                 </div>
               </div>
               <div className="p-4">
-                <div className="text-4xl font-black text-cyan-600 dark:text-cyan-400 mb-2">
+                <div className="text-4xl font-black text-[#319795] mb-2">
                   98%
                 </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="text-sm font-medium text-[#718096]">
                   Accuracy Rate
                 </div>
               </div>
               <div className="p-4">
-                <div className="text-4xl font-black text-cyan-600 dark:text-cyan-400 mb-2">
+                <div className="text-4xl font-black text-[#319795] mb-2">
                   30+
                 </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="text-sm font-medium text-[#718096]">
                   Countries Reached
                 </div>
               </div>
               <div className="p-4">
-                <div className="text-4xl font-black text-cyan-600 dark:text-cyan-400 mb-2">
+                <div className="text-4xl font-black text-[#319795] mb-2">
                   100%
                 </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <div className="text-sm font-medium text-[#718096]">
                   Non-Profit
                 </div>
               </div>
@@ -502,12 +502,12 @@ const HomePage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+      <footer className="bg-[#F7FAFC] border-t border-[#E2E8F0]">
         <div className="mx-auto max-w-[1280px] px-6 py-12 lg:px-10 lg:py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-cyan-500/20 text-cyan-600 dark:text-cyan-400">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-[#319795]/20 text-[#319795]">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <circle
                       cx="12"
@@ -519,23 +519,21 @@ const HomePage = () => {
                     <circle cx="12" cy="12" r="4" fill="currentColor" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  AURA
-                </h2>
+                <h2 className="text-lg font-bold text-[#1A202C]">AURA</h2>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[#718096]">
                 Democratizing access to high-quality retinal screening through
                 ethical artificial intelligence.
               </p>
             </div>
             <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
                 Platform
               </h3>
               <ul className="flex flex-col gap-3">
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Technology
@@ -543,7 +541,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Accuracy Data
@@ -551,7 +549,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     API Documentation
@@ -559,7 +557,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Clinical Studies
@@ -568,13 +566,13 @@ const HomePage = () => {
               </ul>
             </div>
             <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
                 Organization
               </h3>
               <ul className="flex flex-col gap-3">
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     About Us
@@ -582,7 +580,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Our Mission
@@ -590,7 +588,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Financial Reports
@@ -598,7 +596,7 @@ const HomePage = () => {
                 </li>
                 <li>
                   <a
-                    className="text-sm text-gray-600 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400"
+                    className="text-sm text-[#718096] hover:text-[#2C5282]"
                     href="#"
                   >
                     Contact
@@ -607,43 +605,43 @@ const HomePage = () => {
               </ul>
             </div>
             <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#1A202C]">
                 Subscribe
               </h3>
-              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mb-4 text-sm text-[#718096]">
                 Get the latest updates on our research and global impact.
               </p>
               <div className="flex gap-2">
                 <input
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-md border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#1A202C] focus:border-[#319795] focus:outline-none focus:ring-1 focus:ring-[#319795]"
                   placeholder="Email address"
                   type="email"
                 />
-                <button className="rounded-md bg-cyan-500 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-cyan-600">
+                <button className="rounded-md bg-[#319795] px-4 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B]">
                   Join
                 </button>
               </div>
             </div>
           </div>
-          <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-gray-600 dark:text-gray-500">
+          <div className="mt-12 border-t border-[#E2E8F0] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-[#718096]">
               © 2024 AURA Non-Profit Organization. All rights reserved.
             </p>
             <div className="flex gap-6">
               <a
-                className="text-xs text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+                className="text-xs text-[#718096] hover:text-[#2C5282]"
                 href="#"
               >
                 Privacy Policy
               </a>
               <a
-                className="text-xs text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+                className="text-xs text-[#718096] hover:text-[#2C5282]"
                 href="#"
               >
                 Terms of Service
               </a>
               <a
-                className="text-xs text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+                className="text-xs text-[#718096] hover:text-[#2C5282]"
                 href="#"
               >
                 Accessibility
