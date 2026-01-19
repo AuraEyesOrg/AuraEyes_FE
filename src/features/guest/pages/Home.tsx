@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Footer } from '../components/Footer';
@@ -402,7 +402,10 @@ const HomePage = () => {
             key={i}
             className="particle absolute w-2 h-2 rounded-full opacity-30"
             style={{
-              background: i % 2 === 0 ? '#13ECEC' : '#1A202C',
+              background:
+                i % 2 === 0
+                  ? 'var(--color-brand-primary)'
+                  : 'var(--color-brand-dark)',
               filter: 'blur(1px)',
             }}
           />
@@ -422,7 +425,7 @@ const HomePage = () => {
               className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full opacity-10"
               style={{
                 background:
-                  'radial-gradient(circle, #13ECEC 0%, transparent 70%)',
+                  'radial-gradient(circle, var(--color-brand-primary) 0%, transparent 70%)',
                 animation: 'pulse 8s ease-in-out infinite',
               }}
             />
@@ -430,7 +433,7 @@ const HomePage = () => {
               className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full opacity-10"
               style={{
                 background:
-                  'radial-gradient(circle, #13ECEC 0%, transparent 70%)',
+                  'radial-gradient(circle, var(--color-brand-primary) 0%, transparent 70%)',
                 animation: 'pulse 10s ease-in-out infinite reverse',
               }}
             />
@@ -459,7 +462,7 @@ const HomePage = () => {
                   <span>Open Source Initiative</span>
                 </div>
                 <h1
-                  className="hero-title text-4xl font-black leading-tight tracking-tight text-[#1A202C] sm:text-5xl lg:text-6xl"
+                  className="hero-title text-4xl font-black leading-tight tracking-tight text-[var(--color-brand-dark)] sm:text-5xl lg:text-6xl"
                   style={{ perspective: '1000px' }}
                 >
                   Democratizing Retinal Health with{' '}
@@ -583,20 +586,20 @@ const HomePage = () => {
 
                     {/* Circular scanning wave */}
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[var(--color-brand-primary)]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                       }}
                     />
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[var(--color-brand-primary)]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                         animationDelay: '0.6s',
                       }}
                     />
                     <div
-                      className="absolute inset-[30%] rounded-full border-2 border-[#13ECEC]/60"
+                      className="absolute inset-[30%] rounded-full border-2 border-[var(--color-brand-primary)]/60"
                       style={{
                         animation: 'scanWave 2s ease-out infinite',
                         animationDelay: '1.2s',
@@ -637,10 +640,10 @@ const HomePage = () => {
                       </span>
                     </div>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl font-bold text-[#1A202C]">
+                      <span className="text-3xl font-bold text-[var(--color-brand-dark)]">
                         99.2%
                       </span>
-                      <span className="text-sm font-medium text-[#718096] mb-1">
+                      <span className="text-sm font-medium text-[var(--color-text-muted)] mb-1">
                         Confidence Score
                       </span>
                     </div>
@@ -726,10 +729,10 @@ const HomePage = () => {
             >
               {/* Feature 1 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#13ECEC]/10 hover:border-[#13ECEC]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
-                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#13ECEC]/10 text-[#13ECEC] group-hover:bg-[#13ECEC] group-hover:text-white transition-all duration-300">
+                <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
                   <svg
                     className="w-6 h-6"
                     fill="none"
@@ -744,10 +747,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
+                <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
                   AI Precision
                 </h3>
-                <p className="text-[#718096] leading-relaxed">
+                <p className="text-[var(--color-text-muted)] leading-relaxed">
                   State-of-the-art deep learning models trained on diverse
                   global datasets for high accuracy across different
                   demographics.
@@ -774,10 +777,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
+                <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
                   Global Access
                 </h3>
-                <p className="text-[#718096] leading-relaxed">
+                <p className="text-[var(--color-text-muted)] leading-relaxed">
                   Lightweight architecture optimized for low-bandwidth
                   environments, ensuring healthcare equity in underserved
                   regions.
@@ -804,10 +807,10 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-[#1A202C]">
+                <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
                   Privacy First
                 </h3>
-                <p className="text-[#718096] leading-relaxed">
+                <p className="text-[var(--color-text-muted)] leading-relaxed">
                   HIPAA compliant architecture processing data locally where
                   possible, with ethically sourced and anonymized training data.
                 </p>
@@ -820,16 +823,16 @@ const HomePage = () => {
         <section ref={workflowRef} className="py-16 lg:py-24 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="flex flex-col items-center text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#13ECEC] mb-2">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2">
                 Workflow
               </span>
-              <h2 className="text-3xl font-bold text-[#1A202C] sm:text-4xl">
+              <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] sm:text-4xl">
                 From Scan to Insight in Seconds
               </h2>
             </div>
             <div className="relative">
               {/* Connecting line for desktop - animated */}
-              <div className="timeline-line absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-[#13ECEC]/40 hidden lg:block z-0"></div>
+              <div className="timeline-line absolute top-1/2 left-0 w-full -translate-y-1/2 border-t-2 border-dashed border-[var(--color-brand-primary)]/40 hidden lg:block z-0"></div>
               <div
                 ref={stepsRef}
                 className="grid gap-12 lg:grid-cols-3 lg:gap-8 relative z-10"
@@ -839,7 +842,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[var(--color-brand-primary)]/20 text-[var(--color-brand-primary)] shadow-lg shadow-[var(--color-brand-primary)]/10 mb-6 hover:border-[var(--color-brand-primary)] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -854,10 +857,10 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
+                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
                     1. Upload Retinal Scan
                   </h3>
-                  <p className="text-sm text-[#718096] max-w-xs">
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
                     Securely upload fundus photography from any standard retinal
                     camera or smartphone adapter.
                   </p>
@@ -868,7 +871,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[var(--color-brand-primary)]/20 text-[var(--color-brand-primary)] shadow-lg shadow-[var(--color-brand-primary)]/10 mb-6 hover:border-[var(--color-brand-primary)] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -883,10 +886,10 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
+                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
                     2. AI Analysis Processing
                   </h3>
-                  <p className="text-sm text-[#718096] max-w-xs">
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
                     Our proprietary algorithms analyze vascular geometry,
                     branching angles, and tortuosity instantly.
                   </p>
@@ -897,7 +900,7 @@ const HomePage = () => {
                   className="workflow-step flex flex-col items-center text-center bg-white p-4"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
-                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[#13ECEC]/20 text-[#13ECEC] shadow-lg shadow-[#13ECEC]/10 mb-6 hover:border-[#13ECEC] transition-all duration-300">
+                  <div className="step-icon flex h-16 w-16 items-center justify-center rounded-full bg-white border-4 border-[var(--color-brand-primary)]/20 text-[var(--color-brand-primary)] shadow-lg shadow-[var(--color-brand-primary)]/10 mb-6 hover:border-[var(--color-brand-primary)] transition-all duration-300">
                     <svg
                       className="w-8 h-8"
                       fill="none"
@@ -912,10 +915,10 @@ const HomePage = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
+                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
                     3. Receive Risk Report
                   </h3>
-                  <p className="text-sm text-[#718096] max-w-xs">
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
                     Get a comprehensive, downloadable report identifying
                     potential markers for diabetic retinopathy or CVD.
                   </p>
@@ -928,11 +931,11 @@ const HomePage = () => {
         {/* Mission Section */}
         <section
           ref={missionRef}
-          className="py-20 bg-[#F7FAFC] border-t border-[#E2E8F0]"
+          className="py-20 bg-[var(--color-bg-medical)] border-t border-[var(--color-border)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div
-              className="mission-card overflow-hidden rounded-2xl bg-gradient-to-br from-[#1A202C] to-[#0F172A] text-white relative"
+              className="mission-card overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-brand-dark)] to-[#0F172A] text-white relative"
               style={{ transformStyle: 'preserve-3d' }}
             >
               <div className="absolute top-0 right-0 p-12 opacity-10">
@@ -956,7 +959,7 @@ const HomePage = () => {
                     human right, and AI should be a tool for equity.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[#13ECEC] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[#13ECEC]/30 w-fit">
+                    <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30 w-fit">
                       Learn About Our Mission
                     </button>
                     <button className="magnetic-btn flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-all w-fit">
@@ -971,7 +974,7 @@ const HomePage = () => {
                   >
                     <div className="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
                       <svg
-                        className="w-8 h-8 text-[#13ECEC]"
+                        className="w-8 h-8 text-[var(--color-brand-primary)]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -994,7 +997,7 @@ const HomePage = () => {
                     </div>
                     <div className="flex items-center gap-4">
                       <svg
-                        className="w-8 h-8 text-[#13ECEC]"
+                        className="w-8 h-8 text-[var(--color-brand-primary)]"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1023,52 +1026,52 @@ const HomePage = () => {
         {/* Stats / Trust Section */}
         <section ref={statsRef} className="py-16 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[#E2E8F0]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[var(--color-border)]">
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
+                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
                   data-value="50000"
                   data-suffix="k+"
                 >
                   50k+
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Scans Analyzed
                 </div>
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
+                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
                   data-value="98"
                   data-suffix="%"
                 >
                   98%
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Accuracy Rate
                 </div>
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
+                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
                   data-value="30"
                   data-suffix="+"
                 >
                   30+
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Countries Reached
                 </div>
               </div>
               <div className="stat-item p-4">
                 <div
-                  className="stat-number text-4xl font-black text-[#13ECEC] mb-2"
+                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
                   data-value="100"
                   data-suffix="%"
                 >
                   100%
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Non-Profit
                 </div>
               </div>
