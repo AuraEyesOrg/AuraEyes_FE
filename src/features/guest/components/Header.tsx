@@ -63,6 +63,21 @@ export const Header = () => {
             Get Started
           </button>
 
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/login"
+              className="px-8 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            >
+              Login
+            </a>
+            <a
+              href="/register"
+              className="px-8 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition-all"
+            >
+              Register
+            </a>
+          </div>
+
           {/* Mobile Menu Button */}
           <button className="md:hidden p-2 text-[#718096] hover:text-[#1A202C]">
             <svg
