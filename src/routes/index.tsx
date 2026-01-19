@@ -1,4 +1,4 @@
-import HomePage from '@/features/guest/pages/Home';
+import HomePage from '@/features/guest/pages/home';
 import RetinalAnalysis from '@/features/patient/pages/retinal_analysis';
 import AdminDashboard from '@/features/admin/pages/dashboard';
 import OrganisationDashboard from '@/features/organisation/pages/dashboard';
