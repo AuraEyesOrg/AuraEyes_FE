@@ -1,3 +1,8 @@
+import HomePage from '@/features/guest/pages/Home';
+import AboutPage from '@/features/guest/pages/About';
+import HowItWorksPage from '@/features/guest/pages/HowItWorks';
+import ContactPage from '@/features/guest/pages/Contact';
+import EthicsPrivacyPage from '@/features/guest/pages/EthicsPrivacy';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
@@ -39,49 +44,6 @@ const PageLoader = () => (
   </div>
 );
 
-const HomePage = () => (
-  <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent/5 flex items-center justify-center p-4">
-    <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl border border-gray-100 p-12 text-center">
-      <div className="mb-8 inline-flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-4xl font-bold text-white shadow-xl">
-        A
-      </div>
-      <h1 className="mb-4 text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-        Welcome to AURA
-      </h1>
-      <p className="mb-2 text-2xl text-gray-700 font-semibold">
-        Retinal Vascular Health Screening System
-      </p>
-      <p className="mb-8 text-lg text-gray-600">
-        Hệ Thống Sàng Lọc Sức Khỏe Mạch Máu Võng Mạc
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-6 py-4 text-left">
-          <h3 className="mb-2 text-lg font-semibold text-primary">🚀 Status</h3>
-          <p className="text-gray-700">System is up and running!</p>
-        </div>
-        <div className="rounded-xl border border-accent/20 bg-accent/5 px-6 py-4 text-left">
-          <h3 className="mb-2 text-lg font-semibold text-accent">✨ Version</h3>
-          <p className="text-gray-700">v1.0.0 - Production Ready</p>
-        </div>
-      </div>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <a
-          href="/login"
-          className="px-8 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-        >
-          Login
-        </a>
-        <a
-          href="/register"
-          className="px-8 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition-all"
-        >
-          Register
-        </a>
-      </div>
-    </div>
-  </div>
-);
-
 /**
  * Main Router Component
  */
@@ -104,12 +66,17 @@ const Router = () => (
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/appointments" element={<AppointmentsPage />} />
 
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/ethics" element={<EthicsPrivacyPage />} />
         {/* ============ ADMIN ROUTES ============ */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
-          path="/organisation/dashboard"
+          path="/retinal_analysisorganisation/dashboard"
           element={<OrganisationDashboard />}
         />
         <Route path="/organisation/patients" element={<PatientsPage />} />
