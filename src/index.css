@@ -100,6 +100,11 @@ body {
     color 0.3s ease;
 }
 
+/* Custom gradient utilities */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
 /* Medical UI Component Classes */
 @layer components {
   /* Sidebar cố định */

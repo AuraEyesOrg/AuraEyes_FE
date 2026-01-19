@@ -572,38 +572,133 @@ const HomePage = () => {
               </div>
               <div
                 ref={heroImageRef}
-                className="relative flex-1 lg:pl-10"
+                className="relative flex-1 lg:pl-10 flex justify-center items-center"
                 style={{ perspective: '1200px' }}
               >
+                {/* Retinal Eye Scanner - Circular Design */}
                 <div
-                  className="hero-image-container relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-[#2C5282] via-[#319795] to-[#1A365D] shadow-2xl"
+                  className="hero-image-container relative w-[400px] h-[400px] lg:w-[480px] lg:h-[480px]"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
+                  {/* Outer glow ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#319795] to-[#2C5282] opacity-20 blur-xl animate-pulse" />
+
+                  {/* Outer scanning ring */}
                   <div
-                    className="absolute inset-0 bg-cover bg-center opacity-80"
-                    data-alt="Abstract blue and teal data visualization representing retinal scan analysis"
+                    className="absolute inset-0 rounded-full border-4 border-[#319795]/30"
                     style={{
-                      backgroundImage:
-                        "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQvJj5-5RCvY8IYCi8flBAIcoOn17PKUUWhYeyhvPswg9MC8Sh0-e_PNqkowy7wAfOknOPWU_jPTOUcwMjQ41qDwYmUQvzjUaSjSheu59lNCv0c_JShcj5yCYaiLd7Cg5nzydktmOMcrZln56KPJAduosyEDZRifEnJxSD035IQLns2wcVfVzb4py-HXozIEQEFxnuwCbB-DtDS2t_BieKdCp_EJVOTswflhTIjtN_0e9SOSs2L4losk5qWC99hbsIiKUR4hmTWuYr')",
+                      animation: 'rotateRing 8s linear infinite',
                     }}
-                  ></div>
-                  {/* Animated scan line effect */}
+                  >
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#319795] rounded-full shadow-lg shadow-[#319795]/50" />
+                  </div>
+
+                  {/* Secondary rotating ring */}
                   <div
-                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                    className="absolute inset-4 rounded-full border-2 border-dashed border-[#2C5282]/40"
                     style={{
-                      background:
-                        'linear-gradient(180deg, transparent 0%, rgba(49, 151, 149, 0.3) 50%, transparent 100%)',
-                      animation: 'scanLine 3s ease-in-out infinite',
+                      animation: 'rotateRing 12s linear infinite reverse',
                     }}
                   />
-                  {/* Floating UI Card overlay */}
-                  <div className="hero-analysis-card absolute bottom-6 left-6 right-6 rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[#E2E8F0]">
+
+                  {/* Main eye container */}
+                  <div className="absolute inset-8 rounded-full overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#1a365d] to-[#0d2137] shadow-2xl">
+                    {/* Retinal texture background */}
+                    <div
+                      className="absolute inset-0 opacity-60"
+                      style={{
+                        backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQvJj5-5RCvY8IYCi8flBAIcoOn17PKUUWhYeyhvPswg9MC8Sh0-e_PNqkowy7wAfOknOPWU_jPTOUcwMjQ41qDwYmUQvzjUaSjSheu59lNCv0c_JShcj5yCYaiLd7Cg5nzydktmOMcrZln56KPJAduosyEDZRifEnJxSD035IQLns2wcVfVzb4py-HXozIEQEFxnuwCbB-DtDS2t_BieKdCp_EJVOTswflhTIjtN_0e9SOSs2L4losk5qWC99hbsIiKUR4hmTWuYr')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+
+                    {/* Radial gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-radial from-transparent via-[#0a1628]/50 to-[#0a1628]" />
+
+                    {/* Iris ring effect */}
+                    <div className="absolute inset-[15%] rounded-full border-[3px] border-[#319795]/40" />
+                    <div className="absolute inset-[20%] rounded-full border-2 border-[#319795]/30" />
+                    <div className="absolute inset-[25%] rounded-full border border-[#319795]/20" />
+
+                    {/* Pupil (center) */}
+                    <div className="absolute inset-[35%] rounded-full bg-gradient-to-br from-[#0a0a0a] to-[#1a1a2e] shadow-inner">
+                      {/* Pupil reflection */}
+                      <div className="absolute top-[20%] left-[25%] w-[20%] h-[20%] bg-white/30 rounded-full blur-sm" />
+                      <div className="absolute top-[30%] left-[35%] w-[10%] h-[10%] bg-white/50 rounded-full" />
+                    </div>
+
+                    {/* Scanning laser beam - horizontal */}
+                    <div
+                      className="scan-beam absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#319795] to-transparent shadow-lg shadow-[#319795]"
+                      style={{
+                        animation: 'scanBeamVertical 2.5s ease-in-out infinite',
+                        boxShadow: '0 0 20px 2px rgba(49, 151, 149, 0.8)',
+                      }}
+                    />
+
+                    {/* Scanning laser beam - vertical */}
+                    <div
+                      className="absolute top-0 bottom-0 w-[2px] left-1/2 -translate-x-1/2 bg-gradient-to-b from-transparent via-[#319795] to-transparent"
+                      style={{
+                        animation: 'scanBeamHorizontal 3s ease-in-out infinite',
+                        animationDelay: '0.5s',
+                        boxShadow: '0 0 15px 2px rgba(49, 151, 149, 0.6)',
+                      }}
+                    />
+
+                    {/* Circular scanning wave */}
+                    <div
+                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      style={{
+                        animation: 'scanWave 2s ease-out infinite',
+                      }}
+                    />
+                    <div
+                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      style={{
+                        animation: 'scanWave 2s ease-out infinite',
+                        animationDelay: '0.6s',
+                      }}
+                    />
+                    <div
+                      className="absolute inset-[30%] rounded-full border-2 border-[#319795]/60"
+                      style={{
+                        animation: 'scanWave 2s ease-out infinite',
+                        animationDelay: '1.2s',
+                      }}
+                    />
+
+                    {/* Corner brackets */}
+                    <div className="absolute top-[10%] left-[10%] w-8 h-8 border-l-2 border-t-2 border-[#319795]/80" />
+                    <div className="absolute top-[10%] right-[10%] w-8 h-8 border-r-2 border-t-2 border-[#319795]/80" />
+                    <div className="absolute bottom-[10%] left-[10%] w-8 h-8 border-l-2 border-b-2 border-[#319795]/80" />
+                    <div className="absolute bottom-[10%] right-[10%] w-8 h-8 border-r-2 border-b-2 border-[#319795]/80" />
+
+                    {/* Data points animation */}
+                    <div className="absolute top-[15%] left-[50%] -translate-x-1/2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-1 h-1 bg-[#319795] rounded-full animate-pulse" />
+                        <div
+                          className="w-1 h-1 bg-[#319795] rounded-full animate-pulse"
+                          style={{ animationDelay: '0.2s' }}
+                        />
+                        <div
+                          className="w-1 h-1 bg-[#319795] rounded-full animate-pulse"
+                          style={{ animationDelay: '0.4s' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating UI Card overlay - positioned below the eye */}
+                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[#E2E8F0]">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-semibold uppercase text-[#718096]">
                         Analysis Result
                       </span>
                       <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
                         Low Risk
                       </span>
                     </div>
@@ -640,6 +735,37 @@ const HomePage = () => {
             @keyframes float {
               0%, 100% { transform: translateY(0px); }
               50% { transform: translateY(-20px); }
+            }
+            @keyframes rotateRing {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            @keyframes scanBeamVertical {
+              0%, 100% { top: 10%; opacity: 0; }
+              10% { opacity: 1; }
+              50% { top: 50%; opacity: 1; }
+              90% { opacity: 1; }
+              100% { top: 90%; opacity: 0; }
+            }
+            @keyframes scanBeamHorizontal {
+              0%, 100% { transform: translateX(-50%) scaleY(0.5); opacity: 0; }
+              50% { transform: translateX(-50%) scaleY(1); opacity: 0.8; }
+            }
+            @keyframes scanWave {
+              0% { 
+                transform: scale(1); 
+                opacity: 0.8; 
+              }
+              100% { 
+                transform: scale(2.5); 
+                opacity: 0; 
+              }
+            }
+            @keyframes dataFlow {
+              0% { transform: translateY(0); opacity: 0; }
+              20% { opacity: 1; }
+              80% { opacity: 1; }
+              100% { transform: translateY(-20px); opacity: 0; }
             }
           `}</style>
         </section>
