@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -242,12 +242,15 @@ const AboutPage = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[var(--color-bg-medical)]"
+    >
       <Header />
 
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-28 bg-gradient-to-br from-[#2C5282] to-[#1A365D] text-white overflow-hidden">
+        <section className="relative py-20 lg:py-28 bg-gradient-to-br from-[var(--color-brand-dark)] to-[#0F172A] text-white overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div
               className="absolute inset-0"
@@ -261,12 +264,14 @@ const AboutPage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 relative z-10">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium mb-6 border border-white/20">
-                <span className="h-2 w-2 rounded-full bg-[#319795] animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-[var(--color-brand-primary)] animate-pulse" />
                 Non-Profit Healthcare Initiative
               </div>
               <h1 className="about-hero-title text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6">
                 Democratizing Access to{' '}
-                <span className="text-[#319795]">Retinal Health</span>
+                <span className="text-[var(--color-brand-primary)]">
+                  Retinal Health
+                </span>
               </h1>
               <p className="about-hero-desc text-lg lg:text-xl text-gray-300 leading-relaxed">
                 We're a team of ophthalmologists, AI researchers, and healthcare
@@ -278,38 +283,38 @@ const AboutPage = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="stats-section py-16 bg-white border-b border-[#E2E8F0]">
+        <section className="stats-section py-16 bg-white border-b border-[var(--color-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[#319795] mb-2">
+                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
                   1M+
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Screenings Completed
                 </div>
               </div>
               <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[#319795] mb-2">
+                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
                   30+
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Countries Reached
                 </div>
               </div>
               <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[#319795] mb-2">
+                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
                   200+
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Partner Institutions
                 </div>
               </div>
               <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[#319795] mb-2">
+                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
                   98.5%
                 </div>
-                <div className="text-sm font-medium text-[#718096]">
+                <div className="text-sm font-medium text-[var(--color-text-muted)]">
                   Detection Accuracy
                 </div>
               </div>
@@ -318,16 +323,16 @@ const AboutPage = () => {
         </section>
 
         {/* Mission & Values */}
-        <section className="values-section py-20 bg-[#F7FAFC]">
+        <section className="values-section py-20 bg-[var(--color-bg-medical)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                 Our Values
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
                 Built on Principles That Matter
               </h2>
-              <p className="text-lg text-[#718096]">
+              <p className="text-lg text-[var(--color-text-muted)]">
                 Every decision we make is guided by our commitment to health
                 equity, privacy, and scientific integrity.
               </p>
@@ -337,15 +342,15 @@ const AboutPage = () => {
               {values.map((value, index) => (
                 <div
                   key={index}
-                  className="value-card bg-white rounded-xl p-6 border border-[#E2E8F0] hover:shadow-lg hover:border-[#319795]/30 transition-all duration-300 hover:-translate-y-1"
+                  className="value-card bg-white rounded-xl p-6 border border-[var(--color-border)] hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center mb-4">
                     {value.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-[#1A202C] mb-2">
+                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
                     {value.title}
                   </h3>
-                  <p className="text-sm text-[#718096] leading-relaxed">
+                  <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
                     {value.description}
                   </p>
                 </div>
@@ -358,13 +363,13 @@ const AboutPage = () => {
         <section className="team-section py-20 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                 Leadership
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
                 Meet Our Team
               </h2>
-              <p className="text-lg text-[#718096]">
+              <p className="text-lg text-[var(--color-text-muted)]">
                 World-class experts in ophthalmology, AI, and global health
                 working together.
               </p>
@@ -379,14 +384,14 @@ const AboutPage = () => {
                       alt={member.name}
                       className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A365D]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                       <p className="text-white text-sm">{member.bio}</p>
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-[#1A202C]">
+                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)]">
                     {member.name}
                   </h3>
-                  <p className="text-sm text-[#319795] font-medium">
+                  <p className="text-sm text-[var(--color-brand-primary)] font-medium">
                     {member.role}
                   </p>
                 </div>
@@ -396,35 +401,35 @@ const AboutPage = () => {
         </section>
 
         {/* Timeline Section */}
-        <section className="timeline-section py-20 bg-[#F7FAFC]">
+        <section className="timeline-section py-20 bg-[var(--color-bg-medical)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                 Our Journey
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C]">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)]">
                 Milestones & Achievements
               </h2>
             </div>
 
             <div className="relative">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[#E2E8F0]" />
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[var(--color-border)]" />
               <div className="space-y-8">
                 {timeline.map((item, index) => (
                   <div
                     key={index}
                     className="timeline-item relative flex gap-6 pl-8"
                   >
-                    <div className="absolute left-0 w-16 h-16 rounded-full bg-white border-4 border-[#319795]/20 flex items-center justify-center z-10">
-                      <span className="text-sm font-bold text-[#319795]">
+                    <div className="absolute left-0 w-16 h-16 rounded-full bg-white border-4 border-[var(--color-brand-primary)]/20 flex items-center justify-center z-10">
+                      <span className="text-sm font-bold text-[var(--color-brand-primary)]">
                         {item.year}
                       </span>
                     </div>
-                    <div className="flex-1 bg-white rounded-xl p-6 border border-[#E2E8F0] ml-12 hover:shadow-md transition-shadow">
-                      <h3 className="text-lg font-bold text-[#1A202C] mb-1">
+                    <div className="flex-1 bg-white rounded-xl p-6 border border-[var(--color-border)] ml-12 hover:shadow-md transition-shadow">
+                      <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-1">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-[#718096]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         {item.description}
                       </p>
                     </div>
@@ -436,7 +441,7 @@ const AboutPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-br from-[#2C5282] to-[#1A365D] text-white">
+        <section className="py-20 bg-gradient-to-br from-[var(--color-brand-dark)] to-[#0F172A] text-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Join Our Mission
@@ -446,7 +451,7 @@ const AboutPage = () => {
               there's a place for you in the AURA community.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-lg bg-[#319795] px-8 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg">
+              <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg">
                 Partner With Us
               </button>
               <button className="rounded-lg border-2 border-white/30 bg-transparent px-8 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors">

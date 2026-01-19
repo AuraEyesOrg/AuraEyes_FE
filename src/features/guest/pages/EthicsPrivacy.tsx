@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -307,7 +307,10 @@ const EthicsPrivacyPage = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[var(--color-bg-medical)]"
+    >
       <Header />
 
       <main>
@@ -325,28 +328,30 @@ const EthicsPrivacyPage = () => {
             <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
               {/* Left Content */}
               <div className="hero-content lg:col-span-6 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#319795]/10 px-3 py-1 text-sm font-medium text-[#2C7A7B] mb-6 ring-1 ring-inset ring-[#319795]/20">
-                  <span className="h-2 w-2 rounded-full bg-[#319795]"></span>
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-brand-primary)]/10 px-3 py-1 text-sm font-medium text-[var(--color-brand-primary)] mb-6 ring-1 ring-inset ring-[var(--color-brand-primary)]/20">
+                  <span className="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span>
                   Trust & Transparency
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#1A202C] leading-tight mb-6">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[var(--color-brand-dark)] leading-tight mb-6">
                   Your Health Data,
                   <br />
-                  <span className="text-[#319795]">Secure & Ethical.</span>
+                  <span className="text-[var(--color-brand-primary)]">
+                    Secure & Ethical.
+                  </span>
                 </h1>
 
-                <p className="text-lg text-[#718096] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                <p className="text-lg text-[var(--color-text-muted)] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
                   AURA is built on a foundation of rigorous ethics. We protect
                   your retinal data while advancing global health equity through
                   transparent, bias-aware technology.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[#319795] hover:bg-[#2C7A7B] transition-colors">
+                  <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors">
                     Read Our Principles
                   </button>
-                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[#1A202C] border border-[#E2E8F0] hover:border-[#319795] hover:bg-[#F7FAFC] transition-colors">
+                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-medical)] transition-colors">
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -367,19 +372,19 @@ const EthicsPrivacyPage = () => {
 
               {/* Right Image */}
               <div className="hero-image mt-12 lg:mt-0 lg:col-span-6 flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[#E2E8F0]">
-                  <div className="aspect-[4/3] bg-[#F7FAFC]">
+                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[var(--color-border)]">
+                  <div className="aspect-[4/3] bg-[var(--color-bg-medical)]">
                     <img
                       src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=450&fit=crop"
                       alt="Secure digital data network"
                       className="w-full h-full object-cover"
                     />
                     {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A202C]/70 to-transparent flex items-end p-6">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand-dark)]/70 to-transparent flex items-end p-6">
                       <div className="text-white">
                         <div className="flex items-center gap-2 mb-1">
                           <svg
-                            className="w-5 h-5 text-[#319795]"
+                            className="w-5 h-5 text-[var(--color-brand-primary)]"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -391,7 +396,7 @@ const EthicsPrivacyPage = () => {
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                             />
                           </svg>
-                          <span className="text-sm font-bold uppercase tracking-wider text-[#319795]">
+                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)]">
                             Secure Enclave
                           </span>
                         </div>
@@ -408,16 +413,16 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Compliance Banner */}
-        <section className="compliance-section bg-white border-y border-[#E2E8F0] py-8">
+        <section className="compliance-section bg-white border-y border-[var(--color-border)] py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm font-semibold text-[#718096] uppercase tracking-widest mb-6">
+            <p className="text-center text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-6">
               Trusted by & Compliant With
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
               {complianceItems.map((item, index) => (
                 <div
                   key={index}
-                  className="compliance-item flex justify-center items-center gap-2 text-[#718096] hover:text-[#319795] transition-colors"
+                  className="compliance-item flex justify-center items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors"
                 >
                   <svg
                     className="w-10 h-10"
@@ -432,7 +437,7 @@ const EthicsPrivacyPage = () => {
                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
-                  <span className="font-bold text-xl text-[#1A202C]">
+                  <span className="font-bold text-xl text-[var(--color-brand-dark)]">
                     {item.name}
                   </span>
                 </div>
@@ -442,13 +447,13 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Three Pillars Section */}
-        <section className="pillars-section py-20 bg-[#F7FAFC]">
+        <section className="pillars-section py-20 bg-[var(--color-bg-medical)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
                 Building Trust Through Transparency
               </h2>
-              <p className="text-lg text-[#718096]">
+              <p className="text-lg text-[var(--color-text-muted)]">
                 We believe that medical AI must be built on a foundation of
                 rigorous ethics and absolute data privacy. Here is how we ensure
                 it.
@@ -459,15 +464,15 @@ const EthicsPrivacyPage = () => {
               {pillars.map((pillar, index) => (
                 <div
                   key={index}
-                  className="pillar-card group bg-white rounded-2xl p-8 border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow"
+                  className="pillar-card group bg-white rounded-2xl p-8 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <div className="w-14 h-14 bg-[#319795]/10 rounded-xl flex items-center justify-center mb-6 text-[#319795] group-hover:bg-[#319795]/20 transition-colors">
+                  <div className="w-14 h-14 bg-[var(--color-brand-primary)]/10 rounded-xl flex items-center justify-center mb-6 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)]/20 transition-colors">
                     {pillar.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-[#1A202C] mb-3">
+                  <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-3">
                     {pillar.title}
                   </h3>
-                  <p className="text-[#718096] leading-relaxed">
+                  <p className="text-[var(--color-text-muted)] leading-relaxed">
                     {pillar.description}
                   </p>
                 </div>
@@ -477,22 +482,22 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Data Journey Section */}
-        <section className="journey-section py-20 bg-white border-t border-[#E2E8F0]">
+        <section className="journey-section py-20 bg-white border-t border-[var(--color-border)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row gap-12 items-start">
               {/* Sticky Left Side */}
               <div className="md:w-1/3 md:sticky md:top-24">
-                <h2 className="text-3xl font-bold text-[#1A202C] mb-4">
+                <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
                   The Data Journey
                 </h2>
-                <p className="text-[#718096] mb-8 leading-relaxed">
+                <p className="text-[var(--color-text-muted)] mb-8 leading-relaxed">
                   We've simplified the complex process of data handling into
                   four clear, secure steps. Transparency is key to your peace of
                   mind.
                 </p>
                 <a
                   href="#"
-                  className="inline-flex items-center gap-1 text-[#319795] font-bold hover:text-[#2C7A7B] transition-colors"
+                  className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] font-bold hover:text-[var(--color-brand-primary)] transition-colors"
                 >
                   View Security Architecture
                   <svg
@@ -513,24 +518,24 @@ const EthicsPrivacyPage = () => {
 
               {/* Timeline Right Side */}
               <div className="md:w-2/3 w-full">
-                <div className="relative pl-8 border-l-2 border-[#E2E8F0] space-y-10">
+                <div className="relative pl-8 border-l-2 border-[var(--color-border)] space-y-10">
                   {/* Animated line fill */}
-                  <div className="timeline-line-fill absolute left-0 top-0 bottom-0 w-0.5 bg-[#319795] -ml-[1px]" />
+                  <div className="timeline-line-fill absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--color-brand-primary)] -ml-[1px]" />
 
                   {dataJourney.map((step, index) => (
                     <div key={index} className="journey-step relative">
                       {/* Dot */}
-                      <span className="absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-white bg-[#319795]" />
+                      <span className="absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-white bg-[var(--color-brand-primary)]" />
 
-                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[#F7FAFC] p-6 rounded-xl">
-                        <div className="bg-white p-3 rounded-lg h-fit shadow-sm border border-[#E2E8F0] text-[#319795]">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[var(--color-bg-medical)] p-6 rounded-xl">
+                        <div className="bg-white p-3 rounded-lg h-fit shadow-sm border border-[var(--color-border)] text-[var(--color-brand-primary)]">
                           {step.icon}
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-[#1A202C]">
+                          <h3 className="text-lg font-bold text-[var(--color-brand-dark)]">
                             {step.step}. {step.title}
                           </h3>
-                          <p className="mt-2 text-[#718096] text-sm leading-relaxed">
+                          <p className="mt-2 text-[var(--color-text-muted)] text-sm leading-relaxed">
                             {step.description}
                           </p>
                         </div>
@@ -544,13 +549,13 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="faq-section py-20 bg-[#F7FAFC]">
+        <section className="faq-section py-20 bg-[var(--color-bg-medical)]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
                 Deep Dive: How We Mitigate Bias
               </h2>
-              <p className="text-[#718096]">
+              <p className="text-[var(--color-text-muted)]">
                 Answers to common questions about fairness in our AI models.
               </p>
             </div>
@@ -561,19 +566,19 @@ const EthicsPrivacyPage = () => {
                   key={index}
                   className={`faq-item bg-white rounded-lg border transition-all ${
                     openFaq === index
-                      ? 'border-[#319795]/30 ring-2 ring-[#319795]/10'
-                      : 'border-[#E2E8F0]'
+                      ? 'border-[var(--color-brand-primary)]/30 ring-2 ring-[var(--color-brand-primary)]/10'
+                      : 'border-[var(--color-border)]'
                   }`}
                 >
                   <button
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
                     className="w-full flex items-center justify-between p-6 text-left"
                   >
-                    <span className="font-bold text-lg text-[#1A202C]">
+                    <span className="font-bold text-lg text-[var(--color-brand-dark)]">
                       {faq.question}
                     </span>
                     <svg
-                      className={`w-5 h-5 text-[#718096] transition-transform duration-200 ${
+                      className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform duration-200 ${
                         openFaq === index ? 'rotate-180' : ''
                       }`}
                       fill="none"
@@ -593,7 +598,7 @@ const EthicsPrivacyPage = () => {
                       openFaq === index ? 'max-h-96' : 'max-h-0'
                     }`}
                   >
-                    <div className="px-6 pb-6 text-[#718096] leading-relaxed border-t border-[#E2E8F0] pt-4">
+                    <div className="px-6 pb-6 text-[var(--color-text-muted)] leading-relaxed border-t border-[var(--color-border)] pt-4">
                       {faq.answer}
                     </div>
                   </div>
@@ -604,15 +609,15 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-white border-t border-[#E2E8F0]">
+        <section className="py-16 bg-white border-t border-[var(--color-border)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-[#1A202C] rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden">
+            <div className="bg-[var(--color-brand-dark)] rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden">
               {/* Subtle dot pattern */}
               <div
                 className="absolute inset-0 opacity-20"
                 style={{
                   backgroundImage:
-                    'radial-gradient(#319795 1px, transparent 1px)',
+                    'radial-gradient(var(--color-brand-primary) 1px, transparent 1px)',
                   backgroundSize: '24px 24px',
                 }}
               />
@@ -628,7 +633,7 @@ const EthicsPrivacyPage = () => {
                     to responsible healthcare innovation.
                   </p>
                   <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                    <button className="bg-[#319795] hover:bg-[#2C7A7B] text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    <button className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] text-white font-bold py-3 px-6 rounded-lg transition-colors">
                       Request Developer Access
                     </button>
                     <button className="bg-transparent border border-gray-600 text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
@@ -639,8 +644,8 @@ const EthicsPrivacyPage = () => {
 
                 {/* Icon decoration */}
                 <div className="hidden md:block">
-                  <div className="w-32 h-32 rounded-full border-4 border-[#319795]/30 flex items-center justify-center">
-                    <div className="w-24 h-24 rounded-full bg-[#319795] flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full border-4 border-[var(--color-brand-primary)]/30 flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-[var(--color-brand-primary)] flex items-center justify-center">
                       <svg
                         className="w-10 h-10 text-white"
                         fill="none"

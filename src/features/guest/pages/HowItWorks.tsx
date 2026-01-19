@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -264,7 +264,10 @@ const HowItWorksPage = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[var(--color-bg-medical)]"
+    >
       <Header />
 
       <main>
@@ -275,7 +278,7 @@ const HowItWorksPage = () => {
               className="absolute inset-0"
               style={{
                 backgroundImage:
-                  'radial-gradient(circle at 1px 1px, #319795 1px, transparent 0)',
+                  'radial-gradient(circle at 1px 1px, var(--color-brand-primary) 1px, transparent 0)',
                 backgroundSize: '32px 32px',
               }}
             />
@@ -301,12 +304,15 @@ const HowItWorksPage = () => {
                   AI-Driven Diagnostics
                 </div>
 
-                <h1 className="text-4xl lg:text-5xl font-black leading-tight text-[#1A202C]">
-                  Demystifying the <span className="text-[#319795]">AURA</span>{' '}
+                <h1 className="text-4xl lg:text-5xl font-black leading-tight text-[var(--color-brand-dark)]">
+                  Demystifying the{' '}
+                  <span className="text-[var(--color-brand-primary)]">
+                    AURA
+                  </span>{' '}
                   Screening Process
                 </h1>
 
-                <p className="text-lg text-[#718096] leading-relaxed">
+                <p className="text-lg text-[var(--color-text-muted)] leading-relaxed">
                   Our platform leverages advanced computer vision to analyze
                   retinal images for early signs of vascular abnormalities. A
                   non-invasive, secure, and instant check-up for your systemic
@@ -314,7 +320,7 @@ const HowItWorksPage = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-2">
-                  <button className="inline-flex items-center gap-2 rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg">
+                  <button className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg">
                     <svg
                       className="w-5 h-5"
                       fill="currentColor"
@@ -328,15 +334,15 @@ const HowItWorksPage = () => {
                     </svg>
                     Watch Demo Video
                   </button>
-                  <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[#E2E8F0] px-6 py-3 text-base font-bold text-[#1A202C] hover:border-[#319795] transition-colors">
+                  <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-border)] px-6 py-3 text-base font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
                     View Technical Docs
                   </button>
                 </div>
               </div>
 
               {/* Hero Image */}
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[#E2E8F0]">
-                <div className="aspect-video bg-gradient-to-br from-[#2C5282] via-[#319795] to-[#1A365D] relative">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[var(--color-border)]">
+                <div className="aspect-video bg-gradient-to-br from-[var(--color-brand-dark)] via-[var(--color-brand-primary)] to-[#0F172A] relative">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {/* Animated Eye Scanner */}
                     <div className="relative w-48 h-48">
@@ -348,8 +354,8 @@ const HowItWorksPage = () => {
                         className="absolute inset-4 rounded-full border-2 border-dashed border-white/30 animate-spin"
                         style={{ animationDuration: '8s' }}
                       />
-                      <div className="absolute inset-8 rounded-full bg-gradient-to-br from-[#0a1628] to-[#1a365d] flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-[#319795] animate-pulse" />
+                      <div className="absolute inset-8 rounded-full bg-gradient-to-br from-[#0a1628] to-[#0F172A] flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-[var(--color-brand-primary)] animate-pulse" />
                       </div>
                     </div>
                   </div>
@@ -357,7 +363,7 @@ const HowItWorksPage = () => {
                   {/* Overlay Card */}
                   <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-[#718096] uppercase">
+                      <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase">
                         Processing Status
                       </span>
                       <span className="text-xs font-medium text-green-600 flex items-center gap-1">
@@ -367,7 +373,7 @@ const HowItWorksPage = () => {
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#319795] rounded-full animate-pulse"
+                        className="h-full bg-[var(--color-brand-primary)] rounded-full animate-pulse"
                         style={{ width: '75%' }}
                       />
                     </div>
@@ -379,48 +385,48 @@ const HowItWorksPage = () => {
         </section>
 
         {/* Process Steps */}
-        <section className="process-section py-20 bg-[#F7FAFC]">
+        <section className="process-section py-20 bg-[var(--color-bg-medical)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                 The Journey
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
                 From Scan to Insight in Seconds
               </h2>
-              <p className="text-lg text-[#718096] max-w-2xl mx-auto">
+              <p className="text-lg text-[var(--color-text-muted)] max-w-2xl mx-auto">
                 The entire process is designed to be seamless, secure, and fast.
               </p>
             </div>
 
             <div className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-1 bg-[#E2E8F0]">
-                <div className="timeline-progress absolute inset-0 bg-gradient-to-b from-[#319795] to-[#2C5282]" />
+              <div className="absolute left-8 top-0 bottom-0 w-1 bg-[var(--color-border)]">
+                <div className="timeline-progress absolute inset-0 bg-gradient-to-b from-[var(--color-brand-primary)] to-[var(--color-brand-dark)]" />
               </div>
 
               <div className="space-y-12">
                 {steps.map((step, index) => (
                   <div key={index} className="process-step relative flex gap-8">
                     {/* Step Number */}
-                    <div className="relative z-10 flex-shrink-0 w-16 h-16 rounded-full bg-white border-4 border-[#319795] flex items-center justify-center shadow-lg">
-                      <span className="text-lg font-black text-[#319795]">
+                    <div className="relative z-10 flex-shrink-0 w-16 h-16 rounded-full bg-white border-4 border-[var(--color-brand-primary)] flex items-center justify-center shadow-lg">
+                      <span className="text-lg font-black text-[var(--color-brand-primary)]">
                         {step.number}
                       </span>
                     </div>
 
                     {/* Content Card */}
-                    <div className="flex-1 bg-white rounded-xl border border-[#E2E8F0] overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="flex-1 bg-white rounded-xl border border-[var(--color-border)] overflow-hidden hover:shadow-lg transition-shadow">
                       <div className="p-6">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                             {step.icon}
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-[#1A202C] mb-2">
+                            <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-2">
                               {step.title}
                             </h3>
-                            <p className="text-[#718096] leading-relaxed">
+                            <p className="text-[var(--color-text-muted)] leading-relaxed">
                               {step.description}
                             </p>
                           </div>
@@ -435,29 +441,29 @@ const HowItWorksPage = () => {
         </section>
 
         {/* What AI Sees Section */}
-        <section className="features-section py-20 bg-white border-y border-[#E2E8F0]">
+        <section className="features-section py-20 bg-white border-y border-[var(--color-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid lg:grid-cols-2 gap-16 items-start">
               <div className="sticky top-24">
-                <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+                <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                   AI Analysis
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
                   Decoding the Retina:
                   <br />
                   What the AI Sees
                 </h2>
-                <p className="text-lg text-[#718096] mb-6 leading-relaxed">
+                <p className="text-lg text-[var(--color-text-muted)] mb-6 leading-relaxed">
                   The AURA Engine doesn't just look at the picture; it measures
                   microscopic changes in your vascular network. These subtle
                   indicators correlate strongly with systemic health conditions.
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  <span className="px-3 py-1.5 rounded-full bg-[#319795]/10 text-sm font-medium text-[#319795]">
+                  <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-primary)]/10 text-sm font-medium text-[var(--color-brand-primary)]">
                     Deep Learning
                   </span>
-                  <span className="px-3 py-1.5 rounded-full bg-[#2C5282]/10 text-sm font-medium text-[#2C5282]">
+                  <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-dark)]/10 text-sm font-medium text-[var(--color-brand-dark)]">
                     Computer Vision
                   </span>
                   <span className="px-3 py-1.5 rounded-full bg-green-100 text-sm font-medium text-green-700">
@@ -470,17 +476,17 @@ const HowItWorksPage = () => {
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="feature-card bg-[#F7FAFC] rounded-xl p-6 border border-[#E2E8F0] hover:border-[#319795]/30 hover:shadow-md transition-all"
+                    className="feature-card bg-[var(--color-bg-medical)] rounded-xl p-6 border border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/30 hover:shadow-md transition-all"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                         {feature.icon}
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-[#1A202C] mb-2">
+                        <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
                           {feature.title}
                         </h3>
-                        <p className="text-sm text-[#718096] leading-relaxed">
+                        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
                           {feature.description}
                         </p>
                       </div>
@@ -493,10 +499,10 @@ const HowItWorksPage = () => {
         </section>
 
         {/* Trust Section */}
-        <section className="trust-section py-16 bg-[#F7FAFC]">
+        <section className="trust-section py-16 bg-[var(--color-bg-medical)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
-            <div className="bg-gradient-to-br from-[#319795]/5 to-[#2C5282]/5 rounded-2xl p-8 md:p-12 border border-[#319795]/20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#319795]/10 text-[#319795] flex items-center justify-center mx-auto mb-6">
+            <div className="bg-gradient-to-br from-[var(--color-brand-primary)]/5 to-[var(--color-brand-dark)]/5 rounded-2xl p-8 md:p-12 border border-[var(--color-brand-primary)]/20 text-center">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center mx-auto mb-6">
                 <svg
                   className="w-8 h-8"
                   fill="none"
@@ -511,17 +517,17 @@ const HowItWorksPage = () => {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-[#1A202C] mb-4">
+              <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-4">
                 Built on Trust & Ethical AI
               </h2>
-              <p className="text-[#718096] max-w-2xl mx-auto mb-8">
+              <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
                 AURA is a non-profit initiative dedicated to accessibility. We
                 do not sell your data. Our models are trained on diverse
                 datasets to minimize bias and ensure accuracy across all
                 demographics.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[#E2E8F0]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
                   <svg
                     className="w-5 h-5 text-green-600"
                     fill="none"
@@ -535,11 +541,11 @@ const HowItWorksPage = () => {
                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
-                  <span className="text-sm font-medium text-[#1A202C]">
+                  <span className="text-sm font-medium text-[var(--color-brand-dark)]">
                     HIPAA Compliant
                   </span>
                 </div>
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[#E2E8F0]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
                   <svg
                     className="w-5 h-5 text-blue-600"
                     fill="none"
@@ -553,11 +559,11 @@ const HowItWorksPage = () => {
                       d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
                     />
                   </svg>
-                  <span className="text-sm font-medium text-[#1A202C]">
+                  <span className="text-sm font-medium text-[var(--color-brand-dark)]">
                     GDPR Ready
                   </span>
                 </div>
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[#E2E8F0]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
                   <svg
                     className="w-5 h-5 text-purple-600"
                     fill="none"
@@ -571,7 +577,7 @@ const HowItWorksPage = () => {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                     />
                   </svg>
-                  <span className="text-sm font-medium text-[#1A202C]">
+                  <span className="text-sm font-medium text-[var(--color-brand-dark)]">
                     Bias Checked
                   </span>
                 </div>
@@ -581,20 +587,20 @@ const HowItWorksPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-white border-t border-[#E2E8F0]">
+        <section className="py-20 bg-white border-t border-[var(--color-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
               Take Control of Your Vascular Health
             </h2>
-            <p className="text-lg text-[#718096] max-w-2xl mx-auto mb-10">
+            <p className="text-lg text-[var(--color-text-muted)] max-w-2xl mx-auto mb-10">
               Early detection can save lives. Find a screening partner near you
               or learn more about integrating AURA into your practice.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-lg bg-[#319795] px-8 py-4 text-lg font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-xl hover:-translate-y-1">
+              <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-4 text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1">
                 Start Screening Now
               </button>
-              <button className="rounded-lg border-2 border-[#E2E8F0] px-8 py-4 text-lg font-bold text-[#1A202C] hover:border-[#319795] transition-colors">
+              <button className="rounded-lg border-2 border-[var(--color-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
                 For Healthcare Providers
               </button>
             </div>

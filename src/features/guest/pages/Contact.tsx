@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -171,12 +171,15 @@ const ContactPage = () => {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#F7FAFC]">
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[var(--color-bg-medical)]"
+    >
       <Header />
 
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 bg-gradient-to-br from-[#2C5282] via-[#2D3748] to-[#1A365D] overflow-hidden">
+        <section className="relative py-20 bg-gradient-to-br from-[var(--color-brand-dark)] via-[#2D3748] to-[#0F172A] overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div
               className="absolute inset-0"
@@ -208,8 +211,9 @@ const ContactPage = () => {
               </div>
 
               <h1 className="text-4xl lg:text-5xl font-black leading-tight text-white mb-6">
-                Partner with <span className="text-[#319795]">AURA</span> to
-                Improve Vision Health Worldwide
+                Partner with{' '}
+                <span className="text-[var(--color-brand-primary)]">AURA</span>{' '}
+                to Improve Vision Health Worldwide
               </h1>
 
               <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
@@ -225,7 +229,7 @@ const ContactPage = () => {
                       .getElementById('contact-form')
                       ?.scrollIntoView({ behavior: 'smooth' })
                   }
-                  className="rounded-lg bg-[#319795] px-6 py-3 text-base font-bold text-white hover:bg-[#2C7A7B] transition-all hover:shadow-lg"
+                  className="rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                 >
                   Apply for Partnership
                 </button>
@@ -238,13 +242,13 @@ const ContactPage = () => {
         </section>
 
         {/* Partner Types Section */}
-        <section className="partners-section py-20 bg-white border-b border-[#E2E8F0]">
+        <section className="partners-section py-20 bg-white border-b border-[var(--color-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                 Partnership Options
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C]">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)]">
                 Choose Your Path to Partnership
               </h2>
             </div>
@@ -256,33 +260,35 @@ const ContactPage = () => {
                   onClick={() => setUserType(partner.type)}
                   className={`partner-card text-left p-8 rounded-2xl border-2 transition-all duration-300 ${
                     userType === partner.type
-                      ? 'border-[#319795] bg-[#319795]/5 shadow-lg'
-                      : 'border-[#E2E8F0] bg-white hover:border-[#319795]/50 hover:shadow-md'
+                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 shadow-lg'
+                      : 'border-[var(--color-border)] bg-white hover:border-[var(--color-brand-primary)]/50 hover:shadow-md'
                   }`}
                 >
                   <div
                     className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
                       userType === partner.type
-                        ? 'bg-[#319795] text-white'
-                        : 'bg-[#319795]/10 text-[#319795]'
+                        ? 'bg-[var(--color-brand-primary)] text-white'
+                        : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
                     }`}
                   >
                     {partner.icon}
                   </div>
 
-                  <h3 className="text-xl font-bold text-[#1A202C] mb-2">
+                  <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-2">
                     {partner.title}
                   </h3>
-                  <p className="text-[#718096] mb-4">{partner.description}</p>
+                  <p className="text-[var(--color-text-muted)] mb-4">
+                    {partner.description}
+                  </p>
 
                   <ul className="space-y-2">
                     {partner.benefits.map((benefit, i) => (
                       <li
                         key={i}
-                        className="flex items-center gap-2 text-sm text-[#1A202C]"
+                        className="flex items-center gap-2 text-sm text-[var(--color-brand-dark)]"
                       >
                         <svg
-                          className="w-4 h-4 text-[#319795]"
+                          className="w-4 h-4 text-[var(--color-brand-primary)]"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -302,8 +308,8 @@ const ContactPage = () => {
                   <div
                     className={`mt-4 flex items-center gap-2 text-sm font-semibold ${
                       userType === partner.type
-                        ? 'text-[#319795]'
-                        : 'text-[#718096]'
+                        ? 'text-[var(--color-brand-primary)]'
+                        : 'text-[var(--color-text-muted)]'
                     }`}
                   >
                     {userType === partner.type ? (
@@ -332,29 +338,32 @@ const ContactPage = () => {
         </section>
 
         {/* Contact Form Section */}
-        <section id="contact-form" className="form-section py-20 bg-[#F7FAFC]">
+        <section
+          id="contact-form"
+          className="form-section py-20 bg-[var(--color-bg-medical)]"
+        >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid lg:grid-cols-2 gap-16">
               {/* Info Side */}
               <div>
-                <span className="text-sm font-bold uppercase tracking-wider text-[#319795] mb-2 block">
+                <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                   Get Started
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-bold text-[#1A202C] mb-6">
+                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-6">
                   {userType === 'specialist'
                     ? 'Register as a Specialist'
                     : 'Request Enterprise Demo'}
                 </h2>
-                <p className="text-lg text-[#718096] mb-8 leading-relaxed">
+                <p className="text-lg text-[var(--color-text-muted)] mb-8 leading-relaxed">
                   {userType === 'specialist'
                     ? 'Fill out the form to get API access, training resources, and connect with our clinical support team.'
                     : 'Tell us about your organization and screening needs. Our partnership team will reach out within 24 hours.'}
                 </p>
 
                 {/* Contact Info */}
-                <div className="space-y-6 p-6 bg-white rounded-xl border border-[#E2E8F0]">
+                <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-border)]">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -370,17 +379,17 @@ const ContactPage = () => {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[#1A202C]">
+                      <p className="text-sm font-semibold text-[var(--color-brand-dark)]">
                         Email Support
                       </p>
-                      <p className="text-sm text-[#718096]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         partners@auraeyes.org
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -396,17 +405,17 @@ const ContactPage = () => {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[#1A202C]">
+                      <p className="text-sm font-semibold text-[var(--color-brand-dark)]">
                         Response Time
                       </p>
-                      <p className="text-sm text-[#718096]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Within 24-48 business hours
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#319795]/10 text-[#319795] flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -428,10 +437,10 @@ const ContactPage = () => {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[#1A202C]">
+                      <p className="text-sm font-semibold text-[var(--color-brand-dark)]">
                         Headquarters
                       </p>
-                      <p className="text-sm text-[#718096]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         San Francisco, CA, USA
                       </p>
                     </div>
@@ -442,12 +451,12 @@ const ContactPage = () => {
               {/* Form Side */}
               <form
                 onSubmit={handleSubmit}
-                className="contact-form bg-white p-8 rounded-2xl border border-[#E2E8F0] shadow-sm"
+                className="contact-form bg-white p-8 rounded-2xl border border-[var(--color-border)] shadow-sm"
               >
                 <div className="space-y-6">
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                       Work Email <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -456,7 +465,7 @@ const ContactPage = () => {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C]"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -464,7 +473,7 @@ const ContactPage = () => {
                   {/* Name Fields */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -473,11 +482,11 @@ const ContactPage = () => {
                         required
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -486,7 +495,7 @@ const ContactPage = () => {
                         required
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                   </div>
@@ -494,7 +503,7 @@ const ContactPage = () => {
                   {/* Organization Name (only for organisation type) */}
                   {userType === 'organisation' && (
                     <div>
-                      <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                         Organization Name{' '}
                         <span className="text-red-500">*</span>
                       </label>
@@ -504,14 +513,14 @@ const ContactPage = () => {
                         required
                         value={formData.organizationName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                   )}
 
                   {/* Role/Specialty */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                       {userType === 'specialist' ? 'Specialty' : 'Your Role'}{' '}
                       <span className="text-red-500">*</span>
                     </label>
@@ -520,7 +529,7 @@ const ContactPage = () => {
                       required
                       value={formData.role}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C] bg-white"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
                     >
                       <option value="">Select an option</option>
                       {userType === 'specialist' ? (
@@ -552,14 +561,14 @@ const ContactPage = () => {
                   {/* Estimated Volume (only for organisation) */}
                   {userType === 'organisation' && (
                     <div>
-                      <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                         Estimated Monthly Screenings
                       </label>
                       <select
                         name="estimatedVolume"
                         value={formData.estimatedVolume}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C] bg-white"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
                       >
                         <option value="">Select range</option>
                         <option value="100-500">100 - 500</option>
@@ -572,7 +581,7 @@ const ContactPage = () => {
 
                   {/* Message */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#1A202C] mb-2">
+                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                       Additional Information
                     </label>
                     <textarea
@@ -580,7 +589,7 @@ const ContactPage = () => {
                       rows={4}
                       value={formData.message}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[#E2E8F0] focus:border-[#319795] focus:ring-2 focus:ring-[#319795]/20 outline-none transition-all text-[#1A202C] resize-none"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
                       placeholder="Tell us about your needs or questions..."
                     />
                   </div>
@@ -593,16 +602,25 @@ const ContactPage = () => {
                       id="terms"
                       checked={formData.termsAgreed}
                       onChange={handleInputChange}
-                      className="mt-1 w-4 h-4 rounded border-[#E2E8F0] text-[#319795] focus:ring-[#319795]/20"
+                      className="mt-1 w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-brand-primary)] focus:ring-[var(--color-brand-primary)]/20"
                       required
                     />
-                    <label htmlFor="terms" className="text-sm text-[#718096]">
+                    <label
+                      htmlFor="terms"
+                      className="text-sm text-[var(--color-text-muted)]"
+                    >
                       I agree to AURA's{' '}
-                      <a href="#" className="text-[#319795] hover:underline">
+                      <a
+                        href="#"
+                        className="text-[var(--color-brand-primary)] hover:underline"
+                      >
                         Terms of Service
                       </a>{' '}
                       and{' '}
-                      <a href="#" className="text-[#319795] hover:underline">
+                      <a
+                        href="#"
+                        className="text-[var(--color-brand-primary)] hover:underline"
+                      >
                         Privacy Policy
                       </a>
                       .
@@ -612,7 +630,7 @@ const ContactPage = () => {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full py-4 rounded-lg bg-[#319795] text-white font-bold text-base hover:bg-[#2C7A7B] transition-all hover:shadow-lg"
+                    className="w-full py-4 rounded-lg bg-[var(--color-brand-primary)] text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                   >
                     {userType === 'specialist'
                       ? 'Request Access'
@@ -625,13 +643,13 @@ const ContactPage = () => {
         </section>
 
         {/* Impact Section */}
-        <section className="impact-section py-16 bg-white border-t border-[#E2E8F0]">
+        <section className="impact-section py-16 bg-white border-t border-[var(--color-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold text-[#1A202C] mb-2">
+              <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
                 Our Growing Impact
               </h2>
-              <p className="text-[#718096]">
+              <p className="text-[var(--color-text-muted)]">
                 Join a network that's making a difference worldwide
               </p>
             </div>
@@ -639,10 +657,12 @@ const ContactPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {impactStats.map((stat, index) => (
                 <div key={index} className="impact-stat text-center">
-                  <p className="text-4xl font-black text-[#319795] mb-2">
+                  <p className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
                     {stat.value}
                   </p>
-                  <p className="text-sm text-[#718096]">{stat.label}</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -650,10 +670,10 @@ const ContactPage = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 bg-[#F7FAFC]">
+        <section className="py-20 bg-[var(--color-bg-medical)]">
           <div className="mx-auto max-w-3xl px-6 lg:px-10">
             <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold text-[#1A202C] mb-2">
+              <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
                 Frequently Asked Questions
               </h2>
             </div>
@@ -675,12 +695,12 @@ const ContactPage = () => {
               ].map((faq, index) => (
                 <details
                   key={index}
-                  className="group bg-white rounded-xl border border-[#E2E8F0] overflow-hidden"
+                  className="group bg-white rounded-xl border border-[var(--color-border)] overflow-hidden"
                 >
-                  <summary className="flex items-center justify-between p-6 cursor-pointer text-[#1A202C] font-semibold hover:bg-gray-50 transition-colors">
+                  <summary className="flex items-center justify-between p-6 cursor-pointer text-[var(--color-brand-dark)] font-semibold hover:bg-gray-50 transition-colors">
                     {faq.q}
                     <svg
-                      className="w-5 h-5 text-[#718096] group-open:rotate-180 transition-transform"
+                      className="w-5 h-5 text-[var(--color-text-muted)] group-open:rotate-180 transition-transform"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -693,7 +713,9 @@ const ContactPage = () => {
                       />
                     </svg>
                   </summary>
-                  <div className="px-6 pb-6 text-[#718096]">{faq.a}</div>
+                  <div className="px-6 pb-6 text-[var(--color-text-muted)]">
+                    {faq.a}
+                  </div>
                 </details>
               ))}
             </div>
