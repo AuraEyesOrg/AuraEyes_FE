@@ -1,5 +1,5 @@
 import { GuestLayout } from '@/components/layouts';
-import { Eye, Upload, AlertCircle, Download } from 'lucide-react';
+import { Eye, Upload, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
 const ScreeningPage = () => {

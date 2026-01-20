@@ -1,36 +1,33 @@
-import HomePage from '@/features/guest/pages/Home';
-import AboutPage from '@/features/guest/pages/About';
-import HowItWorksPage from '@/features/guest/pages/HowItWorks';
-import ContactPage from '@/features/guest/pages/Contact';
-import EthicsPrivacyPage from '@/features/guest/pages/EthicsPrivacy';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-// Admin imports
-import AdminDashboard from '@/features/admin/pages/dashboard';
-
-// Organisation imports
-import OrganisationDashboard from '@/features/organisation/pages/dashboard';
-import PatientsPage from '@/features/organisation/pages/patients';
-import CalendarPage from '@/features/organisation/pages/calendar';
-import SettingsPage from '@/features/organisation/pages/settings';
-import AnalyticsPage from '@/features/organisation/pages/analytics';
+// Guest/Landing pages
+const HomePage = lazy(() => import('@/features/guest/pages/Home'));
+const AboutPage = lazy(() => import('@/features/guest/pages/About'));
+const HowItWorksPage = lazy(() => import('@/features/guest/pages/HowItWorks'));
+const ContactPage = lazy(() => import('@/features/guest/pages/Contact'));
+const EthicsPrivacyPage = lazy(() => import('@/features/guest/pages/EthicsPrivacy'));
 
 // Auth pages
-import {
-  LoginPage,
-  RegisterPage,
-  ConfirmEmailPage,
-  RegisterDoctorPage,
-} from '@/pages';
+const LoginPage = lazy(() => import('@/pages').then(module => ({ default: module.LoginPage })));
+const ConfirmEmailPage = lazy(() => import('@/pages').then(module => ({ default: module.ConfirmEmailPage })));
+const RegisterDoctorPage = lazy(() => import('@/pages').then(module => ({ default: module.RegisterDoctorPage })));
 
-// Guest/Customer pages
-import {
-  GuestDashboard,
-  ScreeningPage,
-  ReportsPage,
-  AppointmentsPage,
-} from '@/pages/guest';
+// Guest/Customer pages (After Login)
+const GuestDashboard = lazy(() => import('@/pages/guest').then(module => ({ default: module.GuestDashboard })));
+const ScreeningPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ScreeningPage })));
+const ReportsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ReportsPage })));
+const AppointmentsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.AppointmentsPage })));
+
+// Admin pages
+const AdminDashboard = lazy(() => import('@/features/admin/pages/dashboard'));
+
+// Organisation pages
+const OrganisationDashboard = lazy(() => import('@/features/organisation/pages/dashboard'));
+const PatientsPage = lazy(() => import('@/features/organisation/pages/patients'));
+const CalendarPage = lazy(() => import('@/features/organisation/pages/calendar'));
+const SettingsPage = lazy(() => import('@/features/organisation/pages/settings'));
+const AnalyticsPage = lazy(() => import('@/features/organisation/pages/analytics'));
 
 /**
  * Loading component hiển thị khi lazy load
@@ -56,7 +53,6 @@ const Router = () => (
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
 
