@@ -59,9 +59,9 @@ export const Header = () => {
 
         {/* CTA Button */}
         <div className="flex items-center gap-4">
-          <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
+          <Link to="/login" className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
             Get Started
-          </button>
+          </Link>
 
           {/* Mobile Menu Button */}
           <button className="md:hidden p-2 text-[#718096] hover:text-[#1A202C]">
