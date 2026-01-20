@@ -3,18 +3,18 @@
 
 @theme {
   /* Primary - Vibrant Cyan/Teal (Lấy từ homepage) */
-  --color-brand-primary: #13ECEC; /* Màu chính cho Buttons & Accents */
+  --color-brand-primary: #00E5FF; /* Màu chính cho Buttons & Accents */
   --color-brand-dark: #1A202C; /* Màu nền đậm cho Sidebar/Mission sections */
   --color-brand-soft: #F0FDFA; /* Teal cực nhạt cho hover states */
   
   /* Semantic - Trạng thái y tế */
-  --color-risk-low: #13ECEC; /* Dùng chung màu brand cho an toàn */
+  --color-risk-low: #00E5FF; /* Dùng chung màu brand cho an toàn */
   --color-risk-medium: #F6AD55; /* Cam dịu */
   --color-risk-high: #FC8181; /* Đỏ pastel y tế */
   
   /* Surface & Neutral */
   --color-medical-bg: #F7FAFC; /* Nền xám nhạt */
-  --color-medical-surface: #FFFFFF; /* Trắng tuyệt đối cho Card */
+  --color-medical-surface: #F5F7FA; /* Trắng tuyệt đối cho Card */
   --color-medical-border: #E2E8F0; /* Border mảnh */
   
   /* Text */
@@ -22,8 +22,8 @@
   --color-text-muted: #718096; /* Chữ phụ */
   
   /* Legacy colors for compatibility */
-  --color-primary: #13ECEC;
-  --color-secondary: #13ECEC;
+  --color-primary: #00E5FF;
+  --color-secondary: #00E5FF;
   --color-accent: #F0FDFA;
   --color-danger: #FC8181;
   --color-white: #ffffff;
@@ -47,7 +47,7 @@
   color-scheme: light;
   /* Medical-Grade Theme Variables */
   --bg-primary: #F7FAFC;
-  --bg-secondary: #FFFFFF;
+  --bg-secondary: #F5F7FA;
   --bg-tertiary: #F0FDFA;
   --border-color: #E2E8F0;
   --text-primary: #2D3748;
@@ -55,12 +55,12 @@
   --text-muted: #A0AEC0;
   
   /* Brand colors */
-  --brand-primary: #13ECEC;
-  --brand-secondary: #13ECEC;
+  --brand-primary: #00E5FF;
+  --brand-secondary: #00E5FF;
   --brand-accent: #F0FDFA;
   
   /* Risk status colors */
-  --risk-low: #13ECEC;
+  --risk-low: #00E5FF;
   --risk-medium: #F6AD55;
   --risk-high: #FC8181;
 }
@@ -69,7 +69,7 @@
   color-scheme: light;
   /* Light theme variables (default for medical UI) */
   --bg-primary: #F7FAFC;
-  --bg-secondary: #FFFFFF;
+  --bg-secondary: #F5F7FA;
   --bg-tertiary: #F0FDFA;
   --border-color: #E2E8F0;
   --text-primary: #2D3748;
@@ -235,8 +235,8 @@ body {
 /* Toggle checkbox styles */
 .toggle-checkbox:checked {
   right: 0;
-  border-color: #13ecec;
+  border-color: #00E5FF;
 }
 .toggle-checkbox:checked + .toggle-label {
-  background-color: #13ecec;
+  background-color: #00E5FF;
 }

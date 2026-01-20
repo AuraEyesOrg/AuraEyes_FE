@@ -59,24 +59,9 @@ export const Header = () => {
 
         {/* CTA Button */}
         <div className="flex items-center gap-4">
-          <button className="hidden sm:flex items-center justify-center rounded-lg bg-[#13ecec] px-5 py-2 text-sm font-bold text-white hover:bg-[#2C7A7B] transition-colors">
+          <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
             Get Started
           </button>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/login"
-              className="px-8 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              Login
-            </a>
-            <a
-              href="/register"
-              className="px-8 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition-all"
-            >
-              Register
-            </a>
-          </div>
 
           {/* Mobile Menu Button */}
           <button className="md:hidden p-2 text-[#718096] hover:text-[#1A202C]">
