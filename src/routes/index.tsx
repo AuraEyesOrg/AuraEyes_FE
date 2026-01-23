@@ -6,28 +6,70 @@ const HomePage = lazy(() => import('@/features/guest/pages/Home'));
 const AboutPage = lazy(() => import('@/features/guest/pages/About'));
 const HowItWorksPage = lazy(() => import('@/features/guest/pages/HowItWorks'));
 const ContactPage = lazy(() => import('@/features/guest/pages/Contact'));
-const EthicsPrivacyPage = lazy(() => import('@/features/guest/pages/EthicsPrivacy'));
+const EthicsPrivacyPage = lazy(
+  () => import('@/features/guest/pages/EthicsPrivacy')
+);
 
 // Auth pages
-const LoginPage = lazy(() => import('@/pages').then(module => ({ default: module.LoginPage })));
-const ConfirmEmailPage = lazy(() => import('@/pages').then(module => ({ default: module.ConfirmEmailPage })));
-const RegisterDoctorPage = lazy(() => import('@/pages').then(module => ({ default: module.RegisterDoctorPage })));
+const LoginPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.LoginPage }))
+);
+const ConfirmEmailPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
+);
+const RegisterDoctorPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
+);
 
 // Guest/Customer pages (After Login)
-const GuestDashboard = lazy(() => import('@/pages/guest').then(module => ({ default: module.GuestDashboard })));
-const ScreeningPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ScreeningPage })));
-const ReportsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ReportsPage })));
-const AppointmentsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.AppointmentsPage })));
-
-// Admin pages
-const AdminDashboard = lazy(() => import('@/features/admin/pages/dashboard'));
+const GuestDashboard = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.GuestDashboard }))
+);
+const ScreeningPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.ScreeningPage }))
+);
+const ReportsPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.ReportsPage }))
+);
+const AppointmentsPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({
+    default: module.AppointmentsPage,
+  }))
+);
 
 // Organisation pages
-const OrganisationDashboard = lazy(() => import('@/features/organisation/pages/dashboard'));
-const PatientsPage = lazy(() => import('@/features/organisation/pages/patients'));
-const CalendarPage = lazy(() => import('@/features/organisation/pages/calendar'));
-const SettingsPage = lazy(() => import('@/features/organisation/pages/settings'));
-const AnalyticsPage = lazy(() => import('@/features/organisation/pages/analytics'));
+const OrganisationDashboard = lazy(
+  () => import('@/features/organisation/pages/dashboard')
+);
+const PatientsPage = lazy(
+  () => import('@/features/organisation/pages/patients')
+);
+const CalendarPage = lazy(
+  () => import('@/features/organisation/pages/calendar')
+);
+const SettingsPage = lazy(
+  () => import('@/features/organisation/pages/settings')
+);
+const AnalyticsPage = lazy(
+  () => import('@/features/organisation/pages/analytics')
+);
+
+// System Admin pages
+const SystemAdminDashboard = lazy(
+  () => import('@/features/system-admin/pages/dashboard')
+);
+const SystemAdminOrganisations = lazy(
+  () => import('@/features/system-admin/pages/organisations')
+);
+const SystemAdminUsers = lazy(
+  () => import('@/features/system-admin/pages/users')
+);
+const SystemAdminAIModels = lazy(
+  () => import('@/features/system-admin/pages/ai-models')
+);
+const SystemAdminAuditLogs = lazy(
+  () => import('@/features/system-admin/pages/audit-logs')
+);
 
 /**
  * Loading component hiển thị khi lazy load
@@ -67,8 +109,6 @@ const Router = () => (
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
-        {/* ============ ADMIN ROUTES ============ */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
@@ -82,6 +122,25 @@ const Router = () => (
 
         {/* ============ OPHTHALMOLOGIST ROUTES (Coming Soon) ============ */}
         {/* Add ophthalmologist routes here */}
+
+        {/* ============ SYSTEM ADMIN ROUTES ============ */}
+        <Route
+          path="/system-admin/dashboard"
+          element={<SystemAdminDashboard />}
+        />
+        <Route
+          path="/system-admin/organisations"
+          element={<SystemAdminOrganisations />}
+        />
+        <Route path="/system-admin/users" element={<SystemAdminUsers />} />
+        <Route
+          path="/system-admin/ai-models"
+          element={<SystemAdminAIModels />}
+        />
+        <Route
+          path="/system-admin/audit-logs"
+          element={<SystemAdminAuditLogs />}
+        />
       </Routes>
     </Suspense>
   </BrowserRouter>
