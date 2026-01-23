@@ -7,11 +7,11 @@ const ConfirmEmailPage = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors: _errors },
   } = useForm();
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const onSubmit = (_data: unknown) => {
+    console.log(_data);
     // TODO: Implement verification logic
   };
 
