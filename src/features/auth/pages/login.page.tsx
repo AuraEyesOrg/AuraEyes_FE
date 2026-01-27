@@ -17,7 +17,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
 import { login, registerPatient, isTwoFactorRequired } from '../api';
-import type { LoginRequest, TwoFactorRequiredResponse } from '../types';
+import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
 
 type AuthMode = 'login' | 'register';

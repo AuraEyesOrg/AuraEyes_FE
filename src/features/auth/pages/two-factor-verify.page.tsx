@@ -11,7 +11,6 @@ import {
   Eye,
 } from 'lucide-react';
 import { verifyTwoFactorLogin } from '../api/auth.api';
-import type { AuthResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
 import '@/styles/auth-animations.css';
 

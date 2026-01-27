@@ -3,6 +3,7 @@ import ts from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import unusedImports from 'eslint-plugin-unused-imports';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
@@ -20,8 +21,18 @@ export default [
     },
     plugins: {
       '@typescript-eslint': ts,
+      'unused-imports': unusedImports,
     },
     rules: {
+      ...ts.configs.recommended.rules,
+      // Auto-remove unused imports
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off', // Dùng unused-imports thay thế
       // Chỉ giữ các rules quan trọng, còn lại để warn hoặc tắt
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',

@@ -18,7 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
-import '../styles/auth-animations.css';
+import '@/styles/auth-animations.css';
 
 interface DoctorFormData {
   fullName: string;
@@ -35,7 +35,7 @@ const RegisterDoctorPage = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const {
     register,
     handleSubmit,

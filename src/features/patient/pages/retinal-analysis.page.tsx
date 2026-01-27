@@ -231,15 +231,16 @@ export default function RetinalAnalysis() {
         }
       }
       setAnalyzed(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error('AI Analysis failed:', error);
+      const err = error as { status?: number; message?: string };
 
       // Check for quota/rate limit issues
       const isQuotaError =
-        error.status === 429 ||
-        error.message?.includes('429') ||
-        error.message?.includes('quota') ||
-        error.message?.includes('RESOURCE_EXHAUSTED');
+        err.status === 429 ||
+        err.message?.includes('429') ||
+        err.message?.includes('quota') ||
+        err.message?.includes('RESOURCE_EXHAUSTED');
 
       if (isQuotaError) {
         setErrorMessage(

@@ -7,7 +7,7 @@ import { OrganisationData, Appointment } from '../types/organisation.types';
 export default function CalendarPage() {
   const [data, setData] = useState<OrganisationData | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [_selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     import('@/data/organisation-mock.json').then((module) => {
