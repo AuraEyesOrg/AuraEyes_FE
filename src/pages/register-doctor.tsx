@@ -91,7 +91,8 @@ const RegisterDoctorPage = () => {
               <span className="text-[#00d1c0]">Medical Excellence.</span>
             </h1>
             <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-              Join our network of healthcare professionals using cutting-edge AI for retinal diagnostics.
+              Join our network of healthcare professionals using cutting-edge AI
+              for retinal diagnostics.
             </p>
           </div>
 
@@ -118,11 +119,13 @@ const RegisterDoctorPage = () => {
                 Thank you for registering with AURA Healthcare Network.
               </p>
               <p className="text-gray-600 mb-6">
-                Our team will review your application and credentials. You will receive your account details via email within 2-3 business days.
+                Our team will review your application and credentials. You will
+                receive your account details via email within 2-3 business days.
               </p>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
                 <p className="text-sm text-blue-800">
-                  📧 Please check your email <strong>{submittedEmail}</strong> for updates on your application status.
+                  📧 Please check your email <strong>{submittedEmail}</strong>{' '}
+                  for updates on your application status.
                 </p>
               </div>
               <Link
@@ -167,7 +170,8 @@ const RegisterDoctorPage = () => {
             <span className="text-[#00d1c0]">Medical Network.</span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            Become part of our elite team of healthcare professionals leveraging AI-powered diagnostics.
+            Become part of our elite team of healthcare professionals leveraging
+            AI-powered diagnostics.
           </p>
 
           {/* Features */}
@@ -177,8 +181,12 @@ const RegisterDoctorPage = () => {
                 <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
               </div>
               <div>
-                <h3 className="font-semibold text-white mb-1">AI-Powered Analysis</h3>
-                <p className="text-gray-400 text-sm">Access cutting-edge retinal screening technology</p>
+                <h3 className="font-semibold text-white mb-1">
+                  AI-Powered Analysis
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  Access cutting-edge retinal screening technology
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -186,8 +194,12 @@ const RegisterDoctorPage = () => {
                 <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
               </div>
               <div>
-                <h3 className="font-semibold text-white mb-1">Secure Platform</h3>
-                <p className="text-gray-400 text-sm">HIPAA-compliant data protection standards</p>
+                <h3 className="font-semibold text-white mb-1">
+                  Secure Platform
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  HIPAA-compliant data protection standards
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -195,8 +207,12 @@ const RegisterDoctorPage = () => {
                 <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
               </div>
               <div>
-                <h3 className="font-semibold text-white mb-1">Collaborative Care</h3>
-                <p className="text-gray-400 text-sm">Connect with specialists and share insights</p>
+                <h3 className="font-semibold text-white mb-1">
+                  Collaborative Care
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  Connect with specialists and share insights
+                </p>
               </div>
             </div>
           </div>
@@ -223,7 +239,9 @@ const RegisterDoctorPage = () => {
               <h2 className="text-3xl font-bold text-[#1A202C] mb-2 tracking-tight">
                 Doctor Registration
               </h2>
-              <p className="text-gray-600 text-sm">Join AURA Healthcare Network</p>
+              <p className="text-gray-600 text-sm">
+                Join AURA Healthcare Network
+              </p>
             </div>
 
             {/* Registration Form */}
@@ -251,7 +269,9 @@ const RegisterDoctorPage = () => {
                   />
                 </div>
                 {errors.fullName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.fullName.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.fullName.message}
+                  </p>
                 )}
               </div>
 
@@ -278,7 +298,9 @@ const RegisterDoctorPage = () => {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -305,7 +327,9 @@ const RegisterDoctorPage = () => {
                   />
                 </div>
                 {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
 
@@ -327,13 +351,17 @@ const RegisterDoctorPage = () => {
                     <option value="">Select your specialization</option>
                     <option value="ophthalmologist">Ophthalmologist</option>
                     <option value="retina-specialist">Retina Specialist</option>
-                    <option value="general-practitioner">General Practitioner</option>
+                    <option value="general-practitioner">
+                      General Practitioner
+                    </option>
                     <option value="optometrist">Optometrist</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
                 {errors.specialization && (
-                  <p className="text-xs text-red-500 mt-1">{errors.specialization.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.specialization.message}
+                  </p>
                 )}
               </div>
 
@@ -353,7 +381,9 @@ const RegisterDoctorPage = () => {
                     placeholder="MD-12345"
                   />
                   {errors.licenseNumber && (
-                    <p className="text-xs text-red-500 mt-1">{errors.licenseNumber.message}</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.licenseNumber.message}
+                    </p>
                   )}
                 </div>
 
@@ -377,7 +407,9 @@ const RegisterDoctorPage = () => {
                     />
                   </div>
                   {errors.yearsOfExperience && (
-                    <p className="text-xs text-red-500 mt-1">{errors.yearsOfExperience.message}</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.yearsOfExperience.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -401,7 +433,9 @@ const RegisterDoctorPage = () => {
                   />
                 </div>
                 {errors.hospital && (
-                  <p className="text-xs text-red-500 mt-1">{errors.hospital.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.hospital.message}
+                  </p>
                 )}
               </div>
 
@@ -424,7 +458,8 @@ const RegisterDoctorPage = () => {
                   Upload Credentials <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Please upload your medical license, certificates, or other relevant documents (PDF, JPG, PNG - Max 10MB each)
+                  Please upload your medical license, certificates, or other
+                  relevant documents (PDF, JPG, PNG - Max 10MB each)
                 </p>
 
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
@@ -436,7 +471,10 @@ const RegisterDoctorPage = () => {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  <label htmlFor="fileUpload" className="cursor-pointer flex flex-col items-center">
+                  <label
+                    htmlFor="fileUpload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
                     <div className="h-12 w-12 rounded-full bg-[#00d1c0]/10 flex items-center justify-center mb-3">
                       <Upload className="h-6 w-6 text-[#00d1c0]" />
                     </div>
@@ -490,7 +528,10 @@ const RegisterDoctorPage = () => {
                       Account Creation Process
                     </h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      After submitting your application, our verification team will review your credentials. Once approved, you'll receive your login credentials via email within 2-3 business days.
+                      After submitting your application, our verification team
+                      will review your credentials. Once approved, you'll
+                      receive your login credentials via email within 2-3
+                      business days.
                     </p>
                   </div>
                 </div>

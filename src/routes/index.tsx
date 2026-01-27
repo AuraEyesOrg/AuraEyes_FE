@@ -6,28 +6,67 @@ const HomePage = lazy(() => import('@/features/guest/pages/Home'));
 const AboutPage = lazy(() => import('@/features/guest/pages/About'));
 const HowItWorksPage = lazy(() => import('@/features/guest/pages/HowItWorks'));
 const ContactPage = lazy(() => import('@/features/guest/pages/Contact'));
-const EthicsPrivacyPage = lazy(() => import('@/features/guest/pages/EthicsPrivacy'));
+const EthicsPrivacyPage = lazy(
+  () => import('@/features/guest/pages/EthicsPrivacy')
+);
 
-// Auth pages
-const LoginPage = lazy(() => import('@/pages').then(module => ({ default: module.LoginPage })));
-const ConfirmEmailPage = lazy(() => import('@/pages').then(module => ({ default: module.ConfirmEmailPage })));
-const RegisterDoctorPage = lazy(() => import('@/pages').then(module => ({ default: module.RegisterDoctorPage })));
+// Auth pages (from auth feature)
+const LoginPage = lazy(() => import('@/features/auth/pages/login.page'));
+const TwoFactorSettingsPage = lazy(
+  () => import('@/features/auth/pages/two-factor-settings.page')
+);
+const TwoFactorVerifyPage = lazy(
+  () => import('@/features/auth/pages/two-factor-verify.page')
+);
+
+// Legacy auth pages (still in pages folder)
+const ConfirmEmailPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
+);
+const RegisterDoctorPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
+);
 
 // Guest/Customer pages (After Login)
-const GuestDashboard = lazy(() => import('@/pages/guest').then(module => ({ default: module.GuestDashboard })));
-const ScreeningPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ScreeningPage })));
-const ReportsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.ReportsPage })));
-const AppointmentsPage = lazy(() => import('@/pages/guest').then(module => ({ default: module.AppointmentsPage })));
+const GuestDashboard = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.GuestDashboard }))
+);
+const ScreeningPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.ScreeningPage }))
+);
+const ReportsPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({ default: module.ReportsPage }))
+);
+const AppointmentsPage = lazy(() =>
+  import('@/pages/guest').then((module) => ({
+    default: module.AppointmentsPage,
+  }))
+);
 
 // Admin pages
 const AdminDashboard = lazy(() => import('@/features/admin/pages/dashboard'));
 
 // Organisation pages
-const OrganisationDashboard = lazy(() => import('@/features/organisation/pages/dashboard'));
-const PatientsPage = lazy(() => import('@/features/organisation/pages/patients'));
-const CalendarPage = lazy(() => import('@/features/organisation/pages/calendar'));
-const SettingsPage = lazy(() => import('@/features/organisation/pages/settings'));
-const AnalyticsPage = lazy(() => import('@/features/organisation/pages/analytics'));
+const OrganisationDashboard = lazy(
+  () => import('@/features/organisation/pages/dashboard')
+);
+const PatientsPage = lazy(
+  () => import('@/features/organisation/pages/patients')
+);
+const CalendarPage = lazy(
+  () => import('@/features/organisation/pages/calendar')
+);
+const SettingsPage = lazy(
+  () => import('@/features/organisation/pages/settings')
+);
+const AnalyticsPage = lazy(
+  () => import('@/features/organisation/pages/analytics')
+);
+
+// Patient pages
+const PatientDashboard = lazy(
+  () => import('@/features/patient/pages/dashboard')
+);
 
 /**
  * Loading component hiển thị khi lazy load
@@ -55,6 +94,8 @@ const Router = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
+        <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
 
         {/* ============ GUEST/CUSTOMER ROUTES (After Login) ============ */}
         <Route path="/dashboard" element={<GuestDashboard />} />
@@ -67,6 +108,10 @@ const Router = () => (
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
+
+        {/* ============ PATIENT ROUTES ============ */}
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
+
         {/* ============ ADMIN ROUTES ============ */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
