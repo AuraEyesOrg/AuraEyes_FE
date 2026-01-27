@@ -18,7 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
-import '../styles/auth-animations.css';
+import '@/styles/auth-animations.css';
 
 interface DoctorFormData {
   fullName: string;

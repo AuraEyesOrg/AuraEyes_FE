@@ -130,7 +130,8 @@ export interface RegisterFormData {
   confirmPassword: string;
   agreeTerms: boolean;
 }
-
+export { default as ConfirmEmailPage } from '../pages/confirm-email.page';
+export { default as RegisterDoctorPage } from '../pages/register-doctor.page';
 export interface TwoFactorVerifyFormData {
   code: string;
 }

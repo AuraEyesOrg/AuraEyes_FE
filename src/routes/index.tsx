@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-// Guest/Landing pages
+// Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
 const AboutPage = lazy(() => import('@/features/guest/pages/About'));
 const HowItWorksPage = lazy(() => import('@/features/guest/pages/HowItWorks'));
@@ -18,49 +18,40 @@ const TwoFactorSettingsPage = lazy(
 const TwoFactorVerifyPage = lazy(
   () => import('@/features/auth/pages/two-factor-verify.page')
 );
-const ConfirmEmailPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
+const ConfirmEmailPage = lazy(
+  () => import('@/features/auth/pages/confirm-email.page')
 );
-const RegisterDoctorPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
+const RegisterDoctorPage = lazy(
+  () => import('@/features/auth/pages/register-doctor.page')
 );
 
-// Guest/Customer pages (After Login)
-const GuestDashboard = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.GuestDashboard }))
+// Patient pages
+const PatientDashboard = lazy(
+  () => import('@/features/patient/pages/dashboard.page')
 );
-const ScreeningPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.ScreeningPage }))
+const ScreeningPage = lazy(
+  () => import('@/features/patient/pages/screening.page')
 );
-const ReportsPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.ReportsPage }))
-);
-const AppointmentsPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({
-    default: module.AppointmentsPage,
-  }))
+const ReportsPage = lazy(() => import('@/features/patient/pages/reports.page'));
+const AppointmentsPage = lazy(
+  () => import('@/features/patient/pages/appointments.page')
 );
 
 // Organisation pages
 const OrganisationDashboard = lazy(
   () => import('@/features/organisation/pages/dashboard')
 );
-const PatientsPage = lazy(
+const OrganisationPatientsPage = lazy(
   () => import('@/features/organisation/pages/patients')
 );
-const CalendarPage = lazy(
+const OrganisationCalendarPage = lazy(
   () => import('@/features/organisation/pages/calendar')
 );
-const SettingsPage = lazy(
+const OrganisationSettingsPage = lazy(
   () => import('@/features/organisation/pages/settings')
 );
-const AnalyticsPage = lazy(
+const OrganisationAnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
-);
-
-// Patient pages
-const PatientDashboard = lazy(
-  () => import('@/features/patient/pages/dashboard')
 );
 
 // System Admin pages
@@ -99,8 +90,12 @@ const Router = () => (
   <BrowserRouter>
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Public Landing Page */}
+        {/* ============ GUEST ROUTES (Public - No Auth) ============ */}
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/ethics" element={<EthicsPrivacyPage />} />
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
@@ -109,29 +104,33 @@ const Router = () => (
         <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
         <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
 
-        {/* ============ GUEST/CUSTOMER ROUTES (After Login) ============ */}
-        <Route path="/dashboard" element={<GuestDashboard />} />
-        <Route path="/screening" element={<ScreeningPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/appointments" element={<AppointmentsPage />} />
-
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/ethics" element={<EthicsPrivacyPage />} />
-
         {/* ============ PATIENT ROUTES ============ */}
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
+        <Route path="/patient/screening" element={<ScreeningPage />} />
+        <Route path="/patient/reports" element={<ReportsPage />} />
+        <Route path="/patient/appointments" element={<AppointmentsPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
-          path="/retinal_analysisorganisation/dashboard"
+          path="/organisation/dashboard"
           element={<OrganisationDashboard />}
         />
-        <Route path="/organisation/patients" element={<PatientsPage />} />
-        <Route path="/organisation/analytics" element={<AnalyticsPage />} />
-        <Route path="/organisation/calendar" element={<CalendarPage />} />
-        <Route path="/organisation/settings" element={<SettingsPage />} />
+        <Route
+          path="/organisation/patients"
+          element={<OrganisationPatientsPage />}
+        />
+        <Route
+          path="/organisation/analytics"
+          element={<OrganisationAnalyticsPage />}
+        />
+        <Route
+          path="/organisation/calendar"
+          element={<OrganisationCalendarPage />}
+        />
+        <Route
+          path="/organisation/settings"
+          element={<OrganisationSettingsPage />}
+        />
 
         {/* ============ OPHTHALMOLOGIST ROUTES (Coming Soon) ============ */}
         {/* Add ophthalmologist routes here */}
