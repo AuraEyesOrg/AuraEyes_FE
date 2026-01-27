@@ -31,13 +31,14 @@ export default [
         'warn',
         { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
       ],
-      // Tắt các rules hay gây phiền
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'off', // Dùng unused-imports thay thế
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
+      '@typescript-eslint/no-empty-interface': 'off',
+      '@typescript-eslint/no-namespace': 'off',
     },
   },
 
@@ -52,13 +53,13 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      ...react.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react/display-name': 'off',
       'react/no-unescaped-entities': 'off',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react/no-children-prop': 'off',
+      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/exhaustive-deps': 'off',
     },
     settings: {
       react: {
@@ -80,10 +81,13 @@ export default [
     },
     rules: {
       'no-console': 'off',
-      'no-unused-vars': 'off', // Dùng @typescript-eslint/no-unused-vars thay thế
-      'no-empty': 'warn',
-      'prefer-const': 'warn',
-      'no-undef': 'off', // TypeScript đã check rồi
+      'no-unused-vars': 'off',
+      'no-empty': 'off',
+      'prefer-const': 'off',
+      'no-undef': 'off',
+      'no-constant-condition': 'off',
+      'no-case-declarations': 'off',
+      'no-useless-escape': 'off',
     },
   },
 

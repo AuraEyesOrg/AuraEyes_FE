@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module 'virtual:pwa-register/react' {
   // @ts-expect-error ignore when react is not installed
   // @ref: https://vite-plugin-pwa.netlify.app/frameworks/react.html
