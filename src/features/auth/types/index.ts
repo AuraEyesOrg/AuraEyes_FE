@@ -3,8 +3,6 @@
  * Type definitions for the AURA authentication system
  */
 
-// ==================== Request Types ====================
-
 export interface LoginRequest {
   email: string;
   password: string;
@@ -59,8 +57,6 @@ export interface ConfirmEmailRequest {
   token: string;
 }
 
-// ==================== Response Types ====================
-
 export interface UserInfoResponse {
   id: string;
   email: string;
@@ -85,8 +81,6 @@ export interface TwoFactorRequiredResponse {
   userId: string;
   message: string;
 }
-
-// ==================== Two-Factor Types ====================
 
 export interface TwoFactorStatusResponse {
   isEnabled: boolean;
@@ -121,8 +115,6 @@ export interface RecoveryCodesResponse {
   succeeded: boolean;
   recoveryCodes: string[];
 }
-
-// ==================== Form Types ====================
 
 export interface LoginFormData {
   email: string;

@@ -11,19 +11,14 @@ const EthicsPrivacyPage = lazy(
 );
 
 // Auth pages (from auth feature)
-const LoginPage = lazy(() =>
-  import('@/features/auth').then((module) => ({ default: module.LoginPage }))
+const LoginPage = lazy(() => import('@/features/auth/pages/login.page'));
+const TwoFactorSettingsPage = lazy(
+  () => import('@/features/auth/pages/two-factor-settings.page')
 );
-const TwoFactorSettingsPage = lazy(() =>
-  import('@/features/auth').then((module) => ({
-    default: module.TwoFactorSettingsPage,
-  }))
+const TwoFactorVerifyPage = lazy(
+  () => import('@/features/auth/pages/two-factor-verify.page')
 );
-const TwoFactorVerifyPage = lazy(() =>
-  import('@/features/auth').then((module) => ({
-    default: module.TwoFactorVerifyPage,
-  }))
-);
+
 // Legacy auth pages (still in pages folder)
 const ConfirmEmailPage = lazy(() =>
   import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
