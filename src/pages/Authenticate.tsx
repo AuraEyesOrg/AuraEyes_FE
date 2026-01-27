@@ -10,11 +10,20 @@ import {
   Zap,
   Activity,
   Stethoscope,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/auth-animations.css';
 import { LoginFormData, RegisterFormData } from '@/types/auth.types';
+import {
+  login,
+  registerPatient,
+  isTwoFactorRequired,
+  type TwoFactorRequiredResponse,
+} from '@/lib/auth-api';
+import useAuthStore from '@/store/auth-store';
 
 type AuthMode = 'login' | 'register';
 
@@ -22,7 +31,13 @@ const LoginPage = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [twoFactorData, setTwoFactorData] =
+    useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuthStore();
 
   const {
     register: registerLogin,
@@ -35,21 +50,133 @@ const LoginPage = () => {
     handleSubmit: handleSignupSubmit,
     formState: { errors: signupErrors },
     watch,
+    reset: resetRegisterForm,
   } = useForm<RegisterFormData>();
 
-  const onLoginSubmit = (data: LoginFormData) => {
-    console.log('Login data:', data);
-    // TODO: Implement actual login logic
+  const onLoginSubmit = async (data: LoginFormData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await login({
+        email: data.email,
+        password: data.password,
+      });
+
+      // Check if 2FA is required
+      if (isTwoFactorRequired(response)) {
+        setTwoFactorData(response);
+        // Navigate to 2FA verification page with userId
+        navigate('/two-factor-verify', {
+          state: {
+            userId: response.userId,
+            email: data.email,
+          },
+        });
+        return;
+      }
+
+      // Login successful
+      if (response.succeeded) {
+        setIsAuthenticated(true);
+
+        // Navigate based on user role
+        const roles = response.user?.roles || [];
+        if (roles.includes('SystemAdmin')) {
+          navigate('/admin/dashboard');
+        } else if (roles.includes('Patient')) {
+          navigate('/patient/dashboard');
+        } else if (roles.includes('Ophthalmologist')) {
+          navigate('/ophthalmologist/dashboard');
+        } else if (roles.includes('Organization')) {
+          navigate('/organisation/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setError(
+          response.errors?.join(', ') || 'Login failed. Please try again.'
+        );
+      }
+    } catch (err: unknown) {
+      console.error('Login error:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred during login';
+      // Check for axios error response
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string; errors?: string[] } };
+        };
+        setError(
+          axiosError.response?.data?.message ||
+            axiosError.response?.data?.errors?.join(', ') ||
+            errorMessage
+        );
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterFormData) => {
-    console.log('Register data:', data);
-    // TODO: Implement actual registration logic
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      await registerPatient({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        fullName: data.fullName,
+      });
+
+      // Registration successful
+      setSuccessMessage(
+        'Registration successful! Please check your email to confirm your account.'
+      );
+      resetRegisterForm();
+
+      // Switch to login mode after a delay
+      setTimeout(() => {
+        setAuthMode('login');
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err: unknown) {
+      console.error('Registration error:', err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'An error occurred during registration';
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string; errors?: string[] } };
+        };
+        setError(
+          axiosError.response?.data?.message ||
+            axiosError.response?.data?.errors?.join(', ') ||
+            errorMessage
+        );
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSSOLogin = () => {
     console.log('SSO Login initiated');
     // TODO: Implement SSO logic
+  };
+
+  // Clear messages when switching auth mode
+  const handleAuthModeChange = (mode: AuthMode) => {
+    setAuthMode(mode);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   return (
@@ -126,7 +253,7 @@ const LoginPage = () => {
                 }`}
               />
               <button
-                onClick={() => setAuthMode('login')}
+                onClick={() => handleAuthModeChange('login')}
                 className={`flex flex-col items-center justify-center pb-3 pt-2 px-2 transition-all duration-300 relative z-10 ${
                   authMode === 'login'
                     ? 'text-[#1A202C]'
@@ -138,7 +265,7 @@ const LoginPage = () => {
                 </span>
               </button>
               <button
-                onClick={() => setAuthMode('register')}
+                onClick={() => handleAuthModeChange('register')}
                 className={`flex flex-col items-center justify-center pb-3 pt-2 px-2 transition-all duration-300 relative z-10 ${
                   authMode === 'register'
                     ? 'text-[#1A202C]'
@@ -151,6 +278,30 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
+              <AlertCircle className="text-red-500 w-5 h-5 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-red-700">{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-xs text-red-600 hover:text-red-800 mt-1"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
+              <Shield className="text-green-500 w-5 h-5 mt-0.5 shrink-0" />
+              <p className="text-sm text-green-700">{successMessage}</p>
+            </div>
+          )}
 
           {/* Ldiv className="animate-slide-in-right"ogin Form */}
           {authMode === 'login' && (
@@ -260,10 +411,18 @@ const LoginPage = () => {
                 {/* Actions */}
                 <div className="pt-4 space-y-4">
                   <button
-                    className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift"
+                    className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
                     type="submit"
+                    disabled={isLoading}
                   >
-                    Secure Sign In
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      'Secure Sign In'
+                    )}
                   </button>
 
                   <div className="relative flex items-center justify-center py-2">
@@ -554,10 +713,18 @@ const LoginPage = () => {
                 {/* Submit Button */}
                 <div className="pt-4">
                   <button
-                    className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift"
+                    className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
                     type="submit"
+                    disabled={isLoading}
                   >
-                    Create Account
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
                   </button>
                 </div>
               </form>

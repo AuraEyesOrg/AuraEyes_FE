@@ -20,6 +20,12 @@ const ConfirmEmailPage = lazy(() =>
 const RegisterDoctorPage = lazy(() =>
   import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
 );
+const TwoFactorAuthenPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.TwoFactorAuthenPage }))
+);
+const TwoFactorVerifyPage = lazy(() =>
+  import('@/pages').then((module) => ({ default: module.TwoFactorVerifyPage }))
+);
 
 // Guest/Customer pages (After Login)
 const GuestDashboard = lazy(() =>
@@ -57,6 +63,11 @@ const AnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
 );
 
+// Patient pages
+const PatientDashboard = lazy(
+  () => import('@/features/patient/pages/dashboard')
+);
+
 /**
  * Loading component hiển thị khi lazy load
  */
@@ -83,6 +94,8 @@ const Router = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/two-factor-auth" element={<TwoFactorAuthenPage />} />
+        <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
 
         {/* ============ GUEST/CUSTOMER ROUTES (After Login) ============ */}
         <Route path="/dashboard" element={<GuestDashboard />} />
@@ -95,6 +108,10 @@ const Router = () => (
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
+
+        {/* ============ PATIENT ROUTES ============ */}
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
+
         {/* ============ ADMIN ROUTES ============ */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
