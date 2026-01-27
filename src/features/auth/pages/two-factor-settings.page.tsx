@@ -23,17 +23,17 @@ import {
   enableTwoFactor,
   disableTwoFactor,
   generateRecoveryCodes,
-} from '@/lib/two-factor-api';
+} from '../api/two-factor.api';
 import type {
   TwoFactorStep,
   TwoFactorStatusResponse,
   TwoFactorSetupResponse,
   TwoFactorVerifyFormData,
   TwoFactorDisableFormData,
-} from '@/types/two-factor.types';
-import '../styles/auth-animations.css';
+} from '../types';
+import '@/styles/auth-animations.css';
 
-const TwoFactorAuthen = () => {
+const TwoFactorSettingsPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<TwoFactorStep>('status');
   const [isLoading, setIsLoading] = useState(true);
@@ -615,4 +615,4 @@ After using a recovery code, we recommend generating new codes.`;
   );
 };
 
-export default TwoFactorAuthen;
+export default TwoFactorSettingsPage;

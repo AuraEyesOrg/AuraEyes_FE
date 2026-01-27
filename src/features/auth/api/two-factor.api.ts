@@ -3,7 +3,7 @@
  * API functions for 2FA management
  */
 
-import { api } from './api';
+import { api } from '@/lib/api';
 import type {
   TwoFactorStatusResponse,
   TwoFactorSetupResponse,
@@ -12,7 +12,7 @@ import type {
   DisableTwoFactorRequest,
   GenerateRecoveryCodesRequest,
   RecoveryCodesResponse,
-} from '@/types/two-factor.types';
+} from '../types';
 
 interface ApiResponse<T> {
   succeeded: boolean;

@@ -10,9 +10,10 @@ import {
   Smartphone,
   Eye,
 } from 'lucide-react';
-import { verifyTwoFactorLogin } from '@/lib/auth-api';
+import { verifyTwoFactorLogin } from '../api/auth.api';
+import type { AuthResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
-import '../styles/auth-animations.css';
+import '@/styles/auth-animations.css';
 
 interface TwoFactorVerifyForm {
   code: string;

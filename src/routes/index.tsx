@@ -10,21 +10,26 @@ const EthicsPrivacyPage = lazy(
   () => import('@/features/guest/pages/EthicsPrivacy')
 );
 
-// Auth pages
+// Auth pages (from auth feature)
 const LoginPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.LoginPage }))
+  import('@/features/auth').then((module) => ({ default: module.LoginPage }))
 );
+const TwoFactorSettingsPage = lazy(() =>
+  import('@/features/auth').then((module) => ({
+    default: module.TwoFactorSettingsPage,
+  }))
+);
+const TwoFactorVerifyPage = lazy(() =>
+  import('@/features/auth').then((module) => ({
+    default: module.TwoFactorVerifyPage,
+  }))
+);
+// Legacy auth pages (still in pages folder)
 const ConfirmEmailPage = lazy(() =>
   import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
 );
 const RegisterDoctorPage = lazy(() =>
   import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
-);
-const TwoFactorAuthenPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.TwoFactorAuthenPage }))
-);
-const TwoFactorVerifyPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.TwoFactorVerifyPage }))
 );
 
 // Guest/Customer pages (After Login)
@@ -94,7 +99,7 @@ const Router = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-        <Route path="/two-factor-auth" element={<TwoFactorAuthenPage />} />
+        <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
         <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
 
         {/* ============ GUEST/CUSTOMER ROUTES (After Login) ============ */}

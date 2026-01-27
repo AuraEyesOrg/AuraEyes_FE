@@ -15,17 +15,26 @@ import {
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import '../styles/auth-animations.css';
-import { LoginFormData, RegisterFormData } from '@/types/auth.types';
-import {
-  login,
-  registerPatient,
-  isTwoFactorRequired,
-  type TwoFactorRequiredResponse,
-} from '@/lib/auth-api';
+import '@/styles/auth-animations.css';
+import { login, registerPatient, isTwoFactorRequired } from '../api/auth.api';
+import type { LoginRequest, TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
 
 type AuthMode = 'login' | 'register';
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface RegisterFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  agreeTerms: boolean;
+}
 
 const LoginPage = () => {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -303,7 +312,7 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Ldiv className="animate-slide-in-right"ogin Form */}
+          {/* Login Form */}
           {authMode === 'login' && (
             <div>
               {/* Page Heading */}

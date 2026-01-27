@@ -3,89 +3,20 @@
  * API functions for user authentication, registration, and token management
  */
 
-import { api } from './api';
-import { setItem, getItem } from './local-storage';
-
-// ==================== Types ====================
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-  deviceInfo?: string;
-}
-
-export interface RegisterPatientRequest {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
-  address?: string;
-  dateOfBirth?: string;
-  gender?: number;
-}
-
-export interface RegisterOphthalmologistRequest {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
-  bio?: string;
-  yearsOfExperience: number;
-  organizationId?: string;
-}
-
-export interface UserInfoResponse {
-  id: string;
-  email: string;
-  fullName: string;
-  roles: string[];
-  emailConfirmed: boolean;
-  organizationId?: string;
-  twoFactorEnabled: boolean;
-}
-
-export interface AuthResponse {
-  succeeded: boolean;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  user?: UserInfoResponse;
-  errors?: string[];
-}
-
-export interface TwoFactorRequiredResponse {
-  requiresTwoFactor: boolean;
-  userId: string;
-  message: string;
-}
-
-export interface VerifyTwoFactorRequest {
-  userId: string;
-  code: string;
-  useRecoveryCode?: boolean;
-  deviceInfo?: string;
-}
-
-export interface RefreshTokenRequest {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface ForgotPasswordRequest {
-  email: string;
-}
-
-export interface ResetPasswordRequest {
-  userId: string;
-  token: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-export interface ConfirmEmailRequest {
-  userId: string;
-  token: string;
-}
+import { api } from '@/lib/api';
+import { setItem, getItem } from '@/lib/local-storage';
+import type {
+  LoginRequest,
+  RegisterPatientRequest,
+  RegisterOphthalmologistRequest,
+  VerifyTwoFactorRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  ConfirmEmailRequest,
+  AuthResponse,
+  TwoFactorRequiredResponse,
+  UserInfoResponse,
+} from '../types';
 
 interface ApiResponse<T> {
   succeeded: boolean;
@@ -94,7 +25,8 @@ interface ApiResponse<T> {
   errors?: string[];
 }
 
-// Type guard to check if response is TwoFactorRequired
+// ==================== Type Guards ====================
+
 export const isTwoFactorRequired = (
   response: AuthResponse | TwoFactorRequiredResponse
 ): response is TwoFactorRequiredResponse => {
