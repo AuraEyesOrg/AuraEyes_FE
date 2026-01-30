@@ -32,10 +32,21 @@ const PatientDashboard = lazy(
 const ScreeningPage = lazy(
   () => import('@/features/patient/pages/screening.page')
 );
+const ScreeningNewPage = lazy(
+  () => import('@/features/patient/pages/screening-new.page')
+);
 const ReportsPage = lazy(() => import('@/features/patient/pages/reports.page'));
 const AppointmentsPage = lazy(
   () => import('@/features/patient/pages/appointments.page')
 );
+const ProfilePage = lazy(() => import('@/features/patient/pages/profile.page'));
+const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics.page'));
+const VerificationPage = lazy(
+  () => import('@/features/patient/pages/verification.page')
+);
+const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap.page'));
+const ChatPage = lazy(() => import('@/features/patient/pages/chat.page'));
+const WalletPage = lazy(() => import('@/features/patient/pages/wallet.page'));
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -107,8 +118,15 @@ const Router = () => (
         {/* ============ PATIENT ROUTES ============ */}
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/screening" element={<ScreeningPage />} />
+        <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
+        <Route path="/patient/profile" element={<ProfilePage />} />
+        <Route path="/patient/clinics" element={<ClinicsPage />} />
+        <Route path="/patient/verification" element={<VerificationPage />} />
+        <Route path="/patient/roadmap" element={<RoadmapPage />} />
+        <Route path="/patient/chat" element={<ChatPage />} />
+        <Route path="/patient/wallet" element={<WalletPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
