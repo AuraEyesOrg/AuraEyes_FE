@@ -2,417 +2,395 @@ import {
   Calendar,
   FileText,
   Upload,
-  AlertCircle,
-  Clock,
-  TrendingUp,
   Eye,
   Wallet,
   MessageCircle,
   ArrowRight,
   ChevronRight,
+  Bell,
+  Home,
+  CheckCircle,
+  History,
+  ShieldCheck,
+  CreditCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 
 // Mock data for dashboard
-const dashboardStats = {
-  totalScreenings: 12,
-  pendingResults: 2,
-  upcomingAppointments: 3,
-  walletBalance: 2500000,
+const latestScan = {
+  id: '#8823-X',
+  date: 'Jan 30, 2026',
+  nextScreening: 'Jul 30, 2026',
+  result: 'Retinal Structure Stable',
+  riskLevel: 'low',
+  description:
+    'The AI analysis detected no significant anomalies in the vascular structure or optic nerve head. Your retinal health appears consistent with previous baselines.',
+  imageUrl:
+    'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=600&auto=format&fit=crop&q=60',
 };
 
-const recentScreenings = [
+const screeningHistory = [
   {
     id: '1',
-    date: 'Jan 28, 2026',
-    status: 'completed',
+    title: 'Regular Checkup',
+    date: 'Jan 30, 2026',
+    doctor: 'Dr. S. Chen',
     riskLevel: 'low',
-    eye: 'Left Eye (OS)',
   },
   {
     id: '2',
-    date: 'Jan 25, 2026',
-    status: 'pending',
-    riskLevel: 'pending',
-    eye: 'Right Eye (OD)',
+    title: 'Annual Screening',
+    date: 'Jan 15, 2026',
+    doctor: 'AURA AI Auto',
+    riskLevel: 'low',
   },
   {
     id: '3',
-    date: 'Jan 20, 2026',
-    status: 'verified',
+    title: 'Follow-up Scan',
+    date: 'Dec 20, 2025',
+    doctor: 'Dr. P. Patel',
     riskLevel: 'medium',
-    eye: 'Both Eyes',
   },
 ];
 
-const upcomingAppointments = [
+const statsCards = [
   {
-    id: '1',
-    date: 'Feb 1, 2026',
-    time: '10:00 AM',
-    type: 'Follow-up',
-    clinic: 'AURA Vision Clinic',
-    doctor: 'Dr. Sarah Smith',
-    isOnline: false,
+    icon: Eye,
+    label: 'Latest AI Risk Status',
+    value: 'Low Risk',
+    valueColor: 'text-brand',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-500',
   },
   {
-    id: '2',
-    date: 'Feb 5, 2026',
-    time: '2:30 PM',
-    type: 'Consultation',
-    clinic: 'Eye Care Center',
-    doctor: 'Dr. John Williams',
-    isOnline: true,
+    icon: Calendar,
+    label: 'Next Appointment',
+    value: 'Feb 15, 2026',
+    valueColor: 'text-[var(--text-primary)]',
+    bgColor: 'bg-pink-50',
+    iconColor: 'text-pink-500',
+  },
+  {
+    icon: Wallet,
+    label: 'Wallet Balance',
+    value: '3 Credits',
+    valueColor: 'text-[var(--text-primary)]',
+    bgColor: 'bg-orange-50',
+    iconColor: 'text-orange-500',
   },
 ];
-
-const healthRoadmap = {
-  title: 'Post-Screening Care Plan',
-  progress: 65,
-  nextMilestone: 'Schedule OCT Scan',
-  dueDate: 'Feb 10, 2026',
-};
 
 export default function PatientDashboard() {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'pending':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'verified':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
-
-  const getRiskColor = (risk: string) => {
+  const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
       case 'low':
-        return 'text-green-400';
+        return 'badge-risk-low';
       case 'medium':
-        return 'text-amber-400';
+        return 'badge-risk-medium';
       case 'high':
-        return 'text-orange-400';
-      case 'critical':
-        return 'text-red-400';
+        return 'badge-risk-high';
       default:
-        return 'text-gray-400';
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
+  const getTimelineDotColor = (risk: string) => {
+    switch (risk) {
+      case 'low':
+        return 'bg-green-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'high':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
   return (
-    <PatientLayout userName="John Doe">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Welcome back, John!
-        </h1>
-        <p className="text-gray-400">
-          Here's an overview of your retinal health status and upcoming
-          activities.
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#0d2137] rounded-2xl p-6 border border-[#2d4a6f]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-              <Eye className="w-6 h-6 text-primary" />
-            </div>
-            <span className="text-xs font-medium text-green-400 bg-green-400/20 px-2 py-1 rounded-full">
-              +2 this month
-            </span>
-          </div>
-          <p className="text-gray-400 text-sm mb-1">Total Screenings</p>
-          <p className="text-3xl font-bold text-white">
-            {dashboardStats.totalScreenings}
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#0d2137] rounded-2xl p-6 border border-[#2d4a6f]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-amber-400" />
-            </div>
-            <span className="text-xs font-medium text-amber-400 bg-amber-400/20 px-2 py-1 rounded-full">
-              Action needed
-            </span>
-          </div>
-          <p className="text-gray-400 text-sm mb-1">Pending Results</p>
-          <p className="text-3xl font-bold text-white">
-            {dashboardStats.pendingResults}
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#0d2137] rounded-2xl p-6 border border-[#2d4a6f]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-blue-400" />
-            </div>
-          </div>
-          <p className="text-gray-400 text-sm mb-1">Upcoming Appointments</p>
-          <p className="text-3xl font-bold text-white">
-            {dashboardStats.upcomingAppointments}
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#1e3a5f] to-[#0d2137] rounded-2xl p-6 border border-[#2d4a6f]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-green-400" />
-            </div>
-            <Link
-              to="/patient/wallet"
-              className="text-xs font-medium text-primary hover:text-primary/80"
-            >
-              Top up →
-            </Link>
-          </div>
-          <p className="text-gray-400 text-sm mb-1">Wallet Balance</p>
-          <p className="text-2xl font-bold text-white">
-            {formatCurrency(dashboardStats.walletBalance)}
-          </p>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Recent Screenings & Actions */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Quick Actions
+    <PatientLayout userName="Alex Morgan">
+      <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            {/* Breadcrumb */}
+            <nav className="flex text-xs text-[var(--text-secondary)] mb-1">
+              <ol className="flex items-center space-x-2">
+                <li>
+                  <Link
+                    to="/"
+                    className="hover:text-brand transition-colors flex items-center gap-1"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <span className="text-[var(--border-color)]">/</span>
+                </li>
+                <li className="font-semibold text-[var(--text-primary)]">
+                  Dashboard
+                </li>
+              </ol>
+            </nav>
+            <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              Good Morning, Alex
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link
-                to="/patient/screening"
-                className="flex flex-col items-center p-4 bg-[#1e3a5f]/50 rounded-xl hover:bg-[#1e3a5f] transition-colors group"
-              >
-                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-3 group-hover:bg-primary/30">
-                  <Upload className="w-6 h-6 text-primary" />
-                </div>
-                <span className="text-sm text-gray-300 text-center">
-                  New Screening
+            <p className="text-[var(--text-secondary)] mt-1 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {currentDate} • Your Retinal Health Overview
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
+            <button className="relative p-2 rounded-full hover:bg-[var(--bg-tertiary)] transition-colors text-[var(--text-secondary)]">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--bg-primary)]"></span>
+            </button>
+            <Link
+              to="/patient/screening/new"
+              className="btn-primary flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Upload New Scan
+            </Link>
+            <div className="hidden md:flex items-center gap-2 text-brand bg-brand-soft px-3 py-1.5 rounded-full border border-brand/20">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">
+                HIPAA Compliant
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* Latest Analysis Result Section */}
+        <section className="medical-card p-1 overflow-hidden">
+          <div className="flex flex-col lg:flex-row">
+            {/* Scan Image */}
+            <div className="lg:w-1/3 relative h-64 lg:h-auto min-h-[250px] bg-black rounded-lg overflow-hidden m-1 group">
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  backgroundImage: `url("${latestScan.imageUrl}")`,
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <span className="bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded border border-white/20">
+                  Scan ID: {latestScan.id}
                 </span>
-              </Link>
+              </div>
+            </div>
+
+            {/* Scan Details */}
+            <div className="lg:w-2/3 p-6 lg:p-8 flex flex-col justify-center">
+              <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
+                    Latest Analysis Result
+                  </p>
+                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">
+                    {latestScan.result}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-600 border border-green-100">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="font-bold capitalize">
+                    {latestScan.riskLevel} Risk
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+                {latestScan.description}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-[var(--border-color)]">
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-1">
+                    Date Scanned
+                  </p>
+                  <p className="font-medium text-[var(--text-primary)]">
+                    {latestScan.date}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-1">
+                    Next Screening
+                  </p>
+                  <p className="font-medium text-brand">
+                    {latestScan.nextScreening}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <Link
+                    to="/patient/reports"
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    View Full Report
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {statsCards.map((stat, index) => (
+            <div key={index} className="medical-card flex items-center gap-4">
+              <div className={`p-3 ${stat.bgColor} rounded-lg flex-shrink-0`}>
+                <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium uppercase tracking-wide">
+                  {stat.label}
+                </p>
+                <p className={`text-lg font-bold mt-1 ${stat.valueColor}`}>
+                  {stat.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Screening History */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <div className="medical-card flex flex-col h-full p-0">
+              <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <History className="w-5 h-5 text-[var(--text-muted)]" />
+                  Screening History
+                </h3>
+                <Link
+                  to="/patient/reports"
+                  className="text-sm font-medium text-brand hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+
+              <div className="p-6 flex-1">
+                <div className="relative pl-4 border-l-2 border-[var(--border-color)] space-y-8">
+                  {screeningHistory.map((item) => (
+                    <div key={item.id} className="relative pl-6 group">
+                      <div
+                        className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white ${getTimelineDotColor(item.riskLevel)} ring-1 ring-[var(--border-color)]`}
+                      />
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <p className="font-bold text-[var(--text-primary)]">
+                            {item.title}
+                          </p>
+                          <p className="text-sm text-[var(--text-secondary)]">
+                            {item.date} • {item.doctor}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`${getRiskBadgeStyle(item.riskLevel)}`}
+                          >
+                            {item.riskLevel} Risk
+                          </span>
+                          <button className="text-[var(--text-muted)] hover:text-brand transition-colors">
+                            <FileText className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Wallet & Quick Actions */}
+          <div className="flex flex-col gap-6">
+            {/* Wallet Card */}
+            <div className="gradient-brand rounded-xl shadow-brand-lg p-6 text-white relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded text-white">
+                    Pre-paid
+                  </span>
+                </div>
+
+                <p className="text-white/80 text-sm font-medium mb-1">
+                  Available Balance
+                </p>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <h3 className="text-4xl font-bold">3</h3>
+                  <span className="text-sm text-white/80">Credits</span>
+                </div>
+
+                <div className="pt-4 border-t border-white/20 flex justify-between items-center">
+                  <span className="text-xs text-white/80">
+                    1 Credit = 1 AI Analysis
+                  </span>
+                  <Link
+                    to="/patient/wallet"
+                    className="text-xs font-bold text-brand bg-white px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
+                  >
+                    Top Up
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="medical-card flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
+                Quick Actions
+              </h3>
 
               <Link
-                to="/patient/appointments"
-                className="flex flex-col items-center p-4 bg-[#1e3a5f]/50 rounded-xl hover:bg-[#1e3a5f] transition-colors group"
+                to="/patient/screening/new"
+                className="flex items-center justify-between w-full p-4 rounded-lg gradient-brand text-white shadow-brand hover:shadow-brand-lg transition-all group"
               >
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-500/30">
-                  <Calendar className="w-6 h-6 text-blue-400" />
+                <div className="flex items-center gap-3">
+                  <Upload className="w-5 h-5" />
+                  <span className="font-bold">Upload New Scan</span>
                 </div>
-                <span className="text-sm text-gray-300 text-center">
-                  Book Appointment
-                </span>
-              </Link>
-
-              <Link
-                to="/patient/reports"
-                className="flex flex-col items-center p-4 bg-[#1e3a5f]/50 rounded-xl hover:bg-[#1e3a5f] transition-colors group"
-              >
-                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-500/30">
-                  <FileText className="w-6 h-6 text-green-400" />
-                </div>
-                <span className="text-sm text-gray-300 text-center">
-                  View Reports
-                </span>
+                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 to="/patient/chat"
-                className="flex flex-col items-center p-4 bg-[#1e3a5f]/50 rounded-xl hover:bg-[#1e3a5f] transition-colors group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-white border border-[var(--border-color)] text-[var(--text-primary)] hover:border-brand/50 hover:bg-brand-soft transition-all group"
               >
-                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-500/30">
-                  <MessageCircle className="w-6 h-6 text-purple-400" />
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="w-5 h-5 text-brand" />
+                  <span className="font-bold">Message Specialist</span>
                 </div>
-                <span className="text-sm text-gray-300 text-center">
-                  Chat with Doctor
-                </span>
+                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
-            </div>
-          </div>
 
-          {/* Recent Screenings */}
-          <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
-                Recent Screenings
-              </h2>
               <Link
-                to="/patient/reports"
-                className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
+                to="/patient/clinics"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-white border border-[var(--border-color)] text-[var(--text-primary)] hover:border-brand/50 hover:bg-brand-soft transition-all group"
               >
-                View all <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {recentScreenings.map((screening) => (
-                <div
-                  key={screening.id}
-                  className="flex items-center justify-between p-4 bg-[#1e3a5f]/30 rounded-xl hover:bg-[#1e3a5f]/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                      <Eye className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{screening.eye}</p>
-                      <p className="text-sm text-gray-400">{screening.date}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`text-sm font-medium capitalize ${getRiskColor(screening.riskLevel)}`}
-                    >
-                      {screening.riskLevel === 'pending'
-                        ? 'Analyzing...'
-                        : `${screening.riskLevel} risk`}
-                    </span>
-                    <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusColor(screening.status)}`}
-                    >
-                      {screening.status}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-purple-600" />
+                  <span className="font-bold">Book Appointment</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Appointments & Roadmap */}
-        <div className="space-y-6">
-          {/* Health Roadmap Progress */}
-          <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl border border-primary/30 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary/30 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Health Roadmap
-                </h2>
-                <p className="text-sm text-gray-400">{healthRoadmap.title}</p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Progress</span>
-                <span className="text-sm font-medium text-white">
-                  {healthRoadmap.progress}%
-                </span>
-              </div>
-              <div className="w-full h-2 bg-[#1e3a5f] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all"
-                  style={{ width: `${healthRoadmap.progress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="p-3 bg-[#0d2137]/50 rounded-xl">
-              <p className="text-xs text-gray-400 mb-1">Next Milestone</p>
-              <p className="text-white font-medium">
-                {healthRoadmap.nextMilestone}
-              </p>
-              <p className="text-xs text-primary mt-1">
-                Due: {healthRoadmap.dueDate}
-              </p>
-            </div>
-
-            <Link
-              to="/patient/roadmap"
-              className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-primary/20 hover:bg-primary/30 text-primary rounded-xl transition-colors"
-            >
-              View Full Roadmap <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Upcoming Appointments */}
-          <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
-                Upcoming Appointments
-              </h2>
-              <Link
-                to="/patient/appointments"
-                className="text-sm text-primary hover:text-primary/80"
-              >
-                View all
+                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
-            </div>
-
-            <div className="space-y-4">
-              {upcomingAppointments.map((apt) => (
-                <div
-                  key={apt.id}
-                  className="p-4 bg-[#1e3a5f]/30 rounded-xl border border-[#2d4a6f]"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-white font-medium">{apt.type}</p>
-                      <p className="text-sm text-gray-400">{apt.doctor}</p>
-                    </div>
-                    {apt.isOnline ? (
-                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
-                        Online
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
-                        In-person
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" /> {apt.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> {apt.time}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">{apt.clinic}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Need Attention Card */}
-          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-2xl border border-amber-500/30 p-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-amber-500/30 rounded-xl flex items-center justify-center shrink-0">
-                <AlertCircle className="w-5 h-5 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-medium mb-1">Action Required</h3>
-                <p className="text-sm text-gray-400 mb-3">
-                  You have 2 screening results pending review. Request
-                  ophthalmologist verification for detailed diagnosis.
-                </p>
-                <Link
-                  to="/patient/verification"
-                  className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1"
-                >
-                  Request Verification <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
           </div>
         </div>
