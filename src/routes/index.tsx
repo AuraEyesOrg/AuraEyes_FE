@@ -27,26 +27,24 @@ const RegisterDoctorPage = lazy(
 
 // Patient pages
 const PatientDashboard = lazy(
-  () => import('@/features/patient/pages/dashboard.page')
+  () => import('@/features/patient/pages/dashboard')
 );
-const ScreeningPage = lazy(
-  () => import('@/features/patient/pages/screening.page')
-);
+const ScreeningPage = lazy(() => import('@/features/patient/pages/screening'));
 const ScreeningNewPage = lazy(
-  () => import('@/features/patient/pages/screening-new.page')
+  () => import('@/features/patient/pages/screening-new')
 );
-const ReportsPage = lazy(() => import('@/features/patient/pages/reports.page'));
+const ReportsPage = lazy(() => import('@/features/patient/pages/reports'));
 const AppointmentsPage = lazy(
-  () => import('@/features/patient/pages/appointments.page')
+  () => import('@/features/patient/pages/appointments')
 );
-const ProfilePage = lazy(() => import('@/features/patient/pages/profile.page'));
-const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics.page'));
+const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
+const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const VerificationPage = lazy(
-  () => import('@/features/patient/pages/verification.page')
+  () => import('@/features/patient/pages/verification')
 );
-const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap.page'));
-const ChatPage = lazy(() => import('@/features/patient/pages/chat.page'));
-const WalletPage = lazy(() => import('@/features/patient/pages/wallet.page'));
+const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
+const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
+const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
 
 // Organisation pages
 const OrganisationDashboard = lazy(
