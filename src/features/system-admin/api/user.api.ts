@@ -1,5 +1,5 @@
 /**
- * System Admin User & Role Service
+ * System Admin User & Role API
  * Handles API calls for user management
  */
 
@@ -12,7 +12,7 @@ import type {
   PaginatedResponse,
 } from '../types/system-admin.types';
 
-export const userService = {
+export const userApi = {
   /**
    * Fetch all users with pagination
    */

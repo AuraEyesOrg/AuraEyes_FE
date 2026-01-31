@@ -1,5 +1,5 @@
 /**
- * System Admin AI Model Monitoring Service
+ * System Admin AI Model Monitoring API
  * Handles API calls for AI model monitoring and metrics
  */
 
@@ -15,7 +15,7 @@ import type {
   DemographicParity,
 } from '../types/system-admin.types';
 
-export const aiModelService = {
+export const aiModelApi = {
   /**
    * Fetch current active AI model
    */

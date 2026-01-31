@@ -27,7 +27,7 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { auditService } from '../services/audit.service';
+import { auditApi } from '../api';
 import type { AuditLogEntry } from '../types/system-admin.types';
 
 // Mock data for demonstration
@@ -170,7 +170,7 @@ export default function AuditLogsPage() {
   // Load data
   const loadData = useCallback(async () => {
     try {
-      const logsData = await auditService.getAuditLogs().catch(() => null);
+      const logsData = await auditApi.getAuditLogs().catch(() => null);
       setAuditLogs(logsData?.data || getMockAuditLogs());
       setStats(getMockComplianceStats());
     } finally {
@@ -200,7 +200,7 @@ export default function AuditLogsPage() {
   // Export logs handler
   const handleExport = async () => {
     try {
-      await auditService.exportAuditLogs('csv');
+      await auditApi.exportAuditLogs('csv');
       // In real implementation, this would trigger a file download
       console.log('Exporting audit logs...');
     } catch (error) {
