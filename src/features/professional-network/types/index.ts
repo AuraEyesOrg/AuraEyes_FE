@@ -89,6 +89,7 @@ export interface ProfessionalPost {
   userReaction?: ReactionType;
   isEdited: boolean;
   isPinned: boolean;
+  isBookmarked?: boolean;
   createdAt: string;
   updatedAt?: string;
 }

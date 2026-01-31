@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Users, UserPlus, Clock } from 'lucide-react';
 import { ProfessionalCard } from '../components/professional/ProfessionalCard';
 import { ConnectionRequestCard } from '../components/connection/ConnectionRequestCard';
-import type { Ophthalmologist, ProfessionalConnection } from '../types';
+import { mockOphthalmologists, mockConnections, currentUser } from '../data';
 
 type TabType = 'all' | 'pending' | 'requests';
 
@@ -17,11 +17,16 @@ const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
   { id: 'requests', label: 'Requests', icon: UserPlus },
 ];
 
-// TODO: Replace with actual API calls and auth context
-const currentUserId = 'current-user';
-const mockConnections: Ophthalmologist[] = [];
-const mockPendingRequests: ProfessionalConnection[] = [];
-const mockReceivedRequests: ProfessionalConnection[] = [];
+// Filter connections by status
+const allConnections = mockOphthalmologists.filter(
+  (p) => p.id !== currentUser.id
+);
+const mockPendingRequests = mockConnections.filter(
+  (c) => c.status === 'pending'
+);
+const mockReceivedRequests = mockConnections.filter(
+  (c) => c.status === 'pending'
+);
 
 function ConnectionsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('all');
@@ -29,12 +34,12 @@ function ConnectionsPage() {
   return (
     <>
       {/* Sticky Header */}
-      <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md">
+      <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <h2 className="text-xl font-bold text-text-main">Connections</h2>
             <p className="text-[13px] text-text-muted">
-              {mockConnections.length} connections
+              {allConnections.length} connections
             </p>
           </div>
         </div>
@@ -73,7 +78,7 @@ function ConnectionsPage() {
           <>
             <div className="flex items-center justify-between px-4 py-3">
               <p className="text-[13px] text-text-muted">
-                {mockConnections.length} connections
+                {allConnections.length} connections
               </p>
               <select className="bg-main-search-background border-0 rounded-full px-3 py-1.5 text-[13px] text-text-main focus:outline-none focus:ring-2 focus:ring-brand-primary">
                 <option>Sort by: Recent</option>
@@ -81,8 +86,8 @@ function ConnectionsPage() {
                 <option>Sort by: Specialty</option>
               </select>
             </div>
-            {mockConnections.length > 0 ? (
-              mockConnections.map((professional) => (
+            {allConnections.length > 0 ? (
+              allConnections.map((professional) => (
                 <div
                   key={professional.id}
                   className="hover-card hover-animation"

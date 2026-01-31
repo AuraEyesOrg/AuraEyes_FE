@@ -8,11 +8,7 @@ import { Search, Users, Building2, UsersRound } from 'lucide-react';
 import { ProfessionalCard } from '../components/professional/ProfessionalCard';
 import { OrganisationCard } from '../components/organisation/OrganisationCard';
 import { GroupCard } from '../components/group/GroupCard';
-import type {
-  Ophthalmologist,
-  Organisation,
-  ProfessionalGroup,
-} from '../types';
+import { mockOphthalmologists, mockOrganisations, mockGroups } from '../data';
 
 type TabType = 'professionals' | 'organisations' | 'groups';
 
@@ -31,11 +27,6 @@ const specialties = [
   'AI in Ophthalmology',
 ];
 
-// TODO: Replace with actual API calls
-const mockOphthalmologists: Ophthalmologist[] = [];
-const mockOrganisations: Organisation[] = [];
-const mockGroups: ProfessionalGroup[] = [];
-
 function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<TabType>('professionals');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
@@ -44,7 +35,7 @@ function DiscoverPage() {
   return (
     <>
       {/* Sticky Header */}
-      <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md">
+      <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md">
         <div className="px-4 py-3">
           <h2 className="text-xl font-bold text-text-main">Discover</h2>
           <p className="text-[13px] text-text-muted mt-0.5">

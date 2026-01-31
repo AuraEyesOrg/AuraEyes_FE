@@ -6,12 +6,9 @@
 import { useState } from 'react';
 import { Plus, Search, Globe, Lock, UsersRound } from 'lucide-react';
 import { GroupCard } from '../components/group/GroupCard';
-import type { ProfessionalGroup } from '../types';
+import { mockGroups } from '../data';
 
 type FilterType = 'all' | 'joined' | 'discover';
-
-// TODO: Replace with actual API call
-const mockGroups: ProfessionalGroup[] = [];
 
 function GroupsPage() {
   const [filter, setFilter] = useState<FilterType>('all');
@@ -33,7 +30,7 @@ function GroupsPage() {
   return (
     <>
       {/* Sticky Header */}
-      <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md">
+      <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md">
         <div className="flex items-center justify-between px-4 h-[53px]">
           <h2 className="text-xl font-bold text-text-main">Groups</h2>
           <button className="btn-primary text-[13px] py-1.5 px-4 flex items-center gap-1.5">

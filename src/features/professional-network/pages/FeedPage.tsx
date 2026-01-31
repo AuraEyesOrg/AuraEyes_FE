@@ -1,20 +1,22 @@
 /**
  * Feed Page
  * Main feed page showing posts and post composer
+ *
+ * Features:
+ * - Sticky header with blur backdrop (Twitter style)
+ * - Post composer at top
+ * - Feed of posts from network
  */
 
 import { PostComposer } from '../components/post/PostComposer';
 import { PostCard } from '../components/post/PostCard';
-import type { ProfessionalPost } from '../types';
-
-// TODO: Replace with actual API call
-const mockPosts: ProfessionalPost[] = [];
+import { mockPosts } from '../data';
 
 function FeedPage() {
   return (
     <>
-      {/* Sticky Header */}
-      <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
+      {/* Sticky Header - Twitter style with blur */}
+      <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md border-b border-light-border">
         <div className="flex h-[53px] items-center gap-6 px-4">
           <h2 className="text-xl font-bold text-text-main">Feed</h2>
         </div>

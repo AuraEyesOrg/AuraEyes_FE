@@ -14,11 +14,10 @@ import {
   Bookmark,
 } from 'lucide-react';
 import { PostCard } from '../components/post/PostCard';
-import type { ProfessionalPost, SavedCollection } from '../types';
+import { mockCollections, mockPosts } from '../data';
 
-// TODO: Replace with actual API calls
-const mockCollections: SavedCollection[] = [];
-const mockSavedPosts: ProfessionalPost[] = [];
+// Use mock posts as saved posts for demonstration
+const mockSavedPosts = mockPosts.filter((p) => p.isBookmarked);
 
 function SavedPage() {
   const [selectedCollection, setSelectedCollection] = useState<string | null>(
@@ -28,7 +27,7 @@ function SavedPage() {
   return (
     <>
       {/* Sticky Header */}
-      <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
+      <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md border-b border-light-border">
         <div className="flex items-center justify-between px-4 h-[53px]">
           <h2 className="text-xl font-bold text-text-main">Bookmarks</h2>
           <button className="btn-primary text-[13px] py-1.5 px-4 flex items-center gap-1.5">

@@ -82,6 +82,11 @@ const SystemAdminAuditLogs = lazy(
 );
 
 // Professional Network pages
+const NetworkLayout = lazy(() =>
+  import('@/features/professional-network/components/layouts/NetworkLayout').then(
+    (module) => ({ default: module.NetworkLayout })
+  )
+);
 const NetworkFeedPage = lazy(
   () => import('@/features/professional-network/pages/FeedPage')
 );
@@ -200,21 +205,20 @@ const Router = () => (
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
-        <Route path="/network" element={<NetworkFeedPage />} />
-        <Route path="/network/feed" element={<NetworkFeedPage />} />
-        <Route path="/network/discover" element={<NetworkDiscoverPage />} />
-        <Route
-          path="/network/connections"
-          element={<NetworkConnectionsPage />}
-        />
-        <Route path="/network/groups" element={<NetworkGroupsPage />} />
-        <Route path="/network/saved" element={<NetworkSavedPage />} />
-        <Route path="/network/post/:id" element={<NetworkPostDetailPage />} />
-        <Route path="/network/profile/:id" element={<NetworkProfilePage />} />
-        <Route
-          path="/network/organisation/:id"
-          element={<NetworkOrganisationPage />}
-        />
+        <Route path="/network" element={<NetworkLayout />}>
+          <Route index element={<NetworkFeedPage />} />
+          <Route path="feed" element={<NetworkFeedPage />} />
+          <Route path="discover" element={<NetworkDiscoverPage />} />
+          <Route path="connections" element={<NetworkConnectionsPage />} />
+          <Route path="groups" element={<NetworkGroupsPage />} />
+          <Route path="saved" element={<NetworkSavedPage />} />
+          <Route path="post/:id" element={<NetworkPostDetailPage />} />
+          <Route path="profile/:id" element={<NetworkProfilePage />} />
+          <Route
+            path="organisation/:id"
+            element={<NetworkOrganisationPage />}
+          />
+        </Route>
       </Routes>
     </Suspense>
   </BrowserRouter>
