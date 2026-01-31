@@ -131,7 +131,7 @@ const mockMessages: Message[] = [
 ];
 
 export default function ChatPage() {
-  const [conversations, setConversations] = useState(mockConversations);
+  const [conversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >('1');
@@ -183,26 +183,26 @@ export default function ChatPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Messages</h1>
-        <p className="text-gray-400">
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Messages</h1>
+        <p className="text-[var(--text-secondary)]">
           Chat with your assigned ophthalmologists
         </p>
       </div>
 
-      <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] overflow-hidden h-[calc(100vh-220px)]">
+      <div className="medical-card overflow-hidden h-[calc(100vh-220px)]">
         <div className="flex h-full">
           {/* Conversations List */}
-          <div className="w-80 border-r border-[#1e3a5f] flex flex-col">
+          <div className="w-80 border-r border-[var(--border-color)] flex flex-col">
             {/* Search */}
-            <div className="p-4 border-b border-[#1e3a5f]">
+            <div className="p-4 border-b border-[var(--border-color)]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
                   type="text"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#1e3a5f]/50 border border-[#2d4a6f] rounded-lg text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
               </div>
             </div>
@@ -213,45 +213,45 @@ export default function ChatPage() {
                 <div
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`p-4 cursor-pointer transition-colors border-b border-[#1e3a5f] ${
+                  className={`p-4 cursor-pointer transition-colors border-b border-[var(--border-color)] ${
                     selectedConversation === conversation.id
-                      ? 'bg-primary/20'
-                      : 'hover:bg-[#1e3a5f]/30'
+                      ? 'bg-brand-soft'
+                      : 'hover:bg-[var(--bg-tertiary)]'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-brand to-accent rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold">
                           {conversation.ophthalmologist.name.charAt(0)}
                         </span>
                       </div>
                       {conversation.ophthalmologist.isOnline && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0d2137]" />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                       )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-white font-medium truncate">
+                        <p className="text-[var(--text-primary)] font-medium truncate">
                           {conversation.ophthalmologist.name}
                         </p>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-[var(--text-muted)]">
                           {conversation.lastMessage.timestamp}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mb-1">
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">
                         {conversation.ophthalmologist.title}
                       </p>
-                      <p className="text-sm text-gray-400 truncate">
+                      <p className="text-sm text-[var(--text-secondary)] truncate">
                         {conversation.lastMessage.content}
                       </p>
                     </div>
 
                     {conversation.unreadCount > 0 && (
-                      <span className="w-5 h-5 bg-primary rounded-full text-xs font-bold text-white flex items-center justify-center">
+                      <span className="w-5 h-5 bg-brand rounded-full text-xs font-bold text-white flex items-center justify-center">
                         {conversation.unreadCount}
                       </span>
                     )}
@@ -265,43 +265,43 @@ export default function ChatPage() {
           {selectedConversation ? (
             <div className="flex-1 flex flex-col">
               {/* Chat Header */}
-              <div className="p-4 border-b border-[#1e3a5f] flex items-center justify-between">
+              <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-brand to-accent rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">
                         {selectedDoctor?.name.charAt(0)}
                       </span>
                     </div>
                     {selectedDoctor?.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#0d2137]" />
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                     )}
                   </div>
                   <div>
-                    <p className="text-white font-medium">
+                    <p className="text-[var(--text-primary)] font-medium">
                       {selectedDoctor?.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--text-secondary)]">
                       {selectedDoctor?.isOnline ? 'Online' : 'Offline'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1e3a5f] rounded-lg transition-colors">
+                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
                     <Phone className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1e3a5f] rounded-lg transition-colors">
+                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
                     <Video className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1e3a5f] rounded-lg transition-colors">
+                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--bg-secondary)]">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -314,8 +314,8 @@ export default function ChatPage() {
                     <div
                       className={`max-w-[70%] p-3 rounded-2xl ${
                         message.senderType === 'patient'
-                          ? 'bg-primary text-white rounded-br-sm'
-                          : 'bg-[#1e3a5f] text-white rounded-bl-sm'
+                          ? 'bg-brand text-white rounded-br-sm'
+                          : 'bg-white text-[var(--text-primary)] rounded-bl-sm border border-[var(--border-color)] shadow-sm'
                       }`}
                     >
                       <p className="text-sm">{message.content}</p>
@@ -326,7 +326,7 @@ export default function ChatPage() {
                             : 'justify-start'
                         }`}
                       >
-                        <span className="text-xs opacity-70">
+                        <span className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-[var(--text-muted)]'}`}>
                           {message.timestamp}
                         </span>
                         {message.senderType === 'patient' && (
@@ -344,12 +344,12 @@ export default function ChatPage() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-[#1e3a5f]">
+              <div className="p-4 border-t border-[var(--border-color)]">
                 <div className="flex items-end gap-3">
-                  <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1e3a5f] rounded-lg transition-colors">
+                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
                     <Paperclip className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-white hover:bg-[#1e3a5f] rounded-lg transition-colors">
+                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
                     <Image className="w-5 h-5" />
                   </button>
                   <div className="flex-1">
@@ -358,14 +358,14 @@ export default function ChatPage() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type a message..."
-                      className="w-full px-4 py-3 bg-[#1e3a5f]/50 border border-[#2d4a6f] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
                       rows={1}
                     />
                   </div>
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="p-3 bg-primary hover:bg-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                    className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -375,13 +375,13 @@ export default function ChatPage() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-20 h-20 bg-[#1e3a5f] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-10 h-10 text-[var(--text-muted)]" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
                   Select a conversation
                 </h3>
-                <p className="text-gray-400">
+                <p className="text-[var(--text-secondary)]">
                   Choose a doctor to start chatting
                 </p>
               </div>

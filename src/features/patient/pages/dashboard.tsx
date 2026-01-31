@@ -27,7 +27,7 @@ const latestScan = {
   description:
     'The AI analysis detected no significant anomalies in the vascular structure or optic nerve head. Your retinal health appears consistent with previous baselines.',
   imageUrl:
-    'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=600&auto=format&fit=crop&q=60',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuDNfYMvswuRztDZIKYnxKSo6OSE2Dh6LBHr7RbcmTYEnOq-0FU_4Xg2yaq8QiAAQmHidzOwDCUjFo-3x1zRAGcMw-3xxlv5Nxz-L_EQVRhzzZw-MFIByJZhln3BgzBwpwHRx8Rh88NP50WeTb0W1OVC5QIt8b2HQS6jGMH1t-IsAeZrzpj8cFbWxlAaPbxuM3FSAVIf7wX1bw1s-B98lo9NYjrM61WMhp_z8G1mB3WrD-OhfOX7Z30Ryig8BBpUABw81vsuGIqjcx8x',
 };
 
 const screeningHistory = [

@@ -127,6 +127,7 @@ const Router = () => (
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/security" element={<TwoFactorSettingsPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route

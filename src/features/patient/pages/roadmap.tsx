@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Route,
+  Milestone,
   CheckCircle,
   Clock,
   Calendar,
@@ -211,40 +211,40 @@ export default function RoadmapPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
           Health Improvement Roadmap
         </h1>
-        <p className="text-gray-400">
+        <p className="text-[var(--text-secondary)]">
           Your personalized care plan based on diagnosis and recommendations
         </p>
       </div>
 
       {/* Roadmap Overview */}
-      <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl border border-primary/30 p-6 mb-6">
+      <div className="medical-card bg-brand-soft border-brand/20 mb-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary/30 rounded-2xl flex items-center justify-center">
-              <Route className="w-7 h-7 text-primary" />
+            <div className="w-14 h-14 bg-brand/20 rounded-2xl flex items-center justify-center">
+              <Milestone className="w-7 h-7 text-brand" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">
                 {mockRoadmap.title}
               </h2>
-              <p className="text-gray-400">{mockRoadmap.description}</p>
-              <p className="text-sm text-primary mt-1">
+              <p className="text-[var(--text-secondary)]">{mockRoadmap.description}</p>
+              <p className="text-sm text-brand mt-1">
                 Started: {mockRoadmap.startDate}
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors">
+          <button className="btn-primary flex items-center gap-2">
             <Download className="w-4 h-4" />
             Download PDF
           </button>
         </div>
 
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm text-gray-400">Overall Progress</span>
-          <span className="text-sm font-medium text-white">
+          <span className="text-sm text-[var(--text-secondary)]">Overall Progress</span>
+          <span className="text-sm font-medium text-[var(--text-primary)]">
             {mockRoadmap.progress}%
           </span>
         </div>
