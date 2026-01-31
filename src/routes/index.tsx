@@ -81,6 +81,32 @@ const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
 
+// Professional Network pages
+const NetworkFeedPage = lazy(
+  () => import('@/features/professional-network/pages/FeedPage')
+);
+const NetworkDiscoverPage = lazy(
+  () => import('@/features/professional-network/pages/DiscoverPage')
+);
+const NetworkConnectionsPage = lazy(
+  () => import('@/features/professional-network/pages/ConnectionsPage')
+);
+const NetworkGroupsPage = lazy(
+  () => import('@/features/professional-network/pages/GroupsPage')
+);
+const NetworkSavedPage = lazy(
+  () => import('@/features/professional-network/pages/SavedPage')
+);
+const NetworkPostDetailPage = lazy(
+  () => import('@/features/professional-network/pages/PostDetailPage')
+);
+const NetworkProfilePage = lazy(
+  () => import('@/features/professional-network/pages/ProfilePage')
+);
+const NetworkOrganisationPage = lazy(
+  () => import('@/features/professional-network/pages/OrganisationPage')
+);
+
 /**
  * Loading component hiển thị khi lazy load
  */
@@ -171,6 +197,23 @@ const Router = () => (
         <Route
           path="/system-admin/audit-logs"
           element={<SystemAdminAuditLogs />}
+        />
+
+        {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
+        <Route path="/network" element={<NetworkFeedPage />} />
+        <Route path="/network/feed" element={<NetworkFeedPage />} />
+        <Route path="/network/discover" element={<NetworkDiscoverPage />} />
+        <Route
+          path="/network/connections"
+          element={<NetworkConnectionsPage />}
+        />
+        <Route path="/network/groups" element={<NetworkGroupsPage />} />
+        <Route path="/network/saved" element={<NetworkSavedPage />} />
+        <Route path="/network/post/:id" element={<NetworkPostDetailPage />} />
+        <Route path="/network/profile/:id" element={<NetworkProfilePage />} />
+        <Route
+          path="/network/organisation/:id"
+          element={<NetworkOrganisationPage />}
         />
       </Routes>
     </Suspense>
