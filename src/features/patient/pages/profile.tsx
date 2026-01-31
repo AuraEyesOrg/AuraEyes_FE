@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   User,
@@ -13,6 +13,10 @@ import {
   Save,
   Edit3,
   CheckCircle,
+  Upload,
+  Image as ImageIcon,
+  X,
+  Clipboard,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 
@@ -32,6 +36,144 @@ export default function ProfilePage() {
 
   const [formData, setFormData] = useState(profile);
 
+  // Avatar upload state
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // Validate and process image file
+  const processImageFile = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        reject(new Error('Please select an image file'));
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        reject(new Error('Image must be less than 5MB'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  // Handle file selection from input
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const dataUrl = await processImageFile(file);
+        setPreviewUrl(dataUrl);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to load image');
+      }
+    },
+    [processImageFile]
+  );
+
+  // Handle drag events
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
+      try {
+        const dataUrl = await processImageFile(file);
+        setPreviewUrl(dataUrl);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to load image');
+      }
+    },
+    [processImageFile]
+  );
+
+  // Handle paste from clipboard
+  const handlePaste = useCallback(
+    async (e: ClipboardEvent) => {
+      if (!showAvatarUpload) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (!file) continue;
+          try {
+            const dataUrl = await processImageFile(file);
+            setPreviewUrl(dataUrl);
+          } catch (error) {
+            alert(
+              error instanceof Error ? error.message : 'Failed to load image'
+            );
+          }
+          break;
+        }
+      }
+    },
+    [showAvatarUpload, processImageFile]
+  );
+
+  // Add paste event listener
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [handlePaste]);
+
+  // Handle avatar save
+  const handleAvatarSave = async () => {
+    if (!previewUrl) return;
+    setIsUploading(true);
+    try {
+      // TODO: Upload to server and get URL back
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate upload
+      setProfile((prev) => ({ ...prev, avatarUrl: previewUrl }));
+      setFormData((prev) => ({ ...prev, avatarUrl: previewUrl }));
+      setShowAvatarUpload(false);
+      setPreviewUrl(null);
+    } catch (error) {
+      alert('Failed to upload avatar');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Cancel avatar upload
+  const handleAvatarCancel = () => {
+    setShowAvatarUpload(false);
+    setPreviewUrl(null);
+    setIsDragging(false);
+  };
+
   const handleSave = () => {
     setProfile(formData);
     setIsEditing(false);
@@ -46,7 +188,9 @@ export default function ProfilePage() {
   return (
     <PatientLayout userName={profile.fullName}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">My Profile</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          My Profile
+        </h1>
         <p className="text-[var(--text-secondary)]">
           Manage your personal information and account settings
         </p>
@@ -71,10 +215,137 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <button className="absolute bottom-0 right-0 w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white hover:brightness-110 transition-all shadow-lg">
+              <button
+                onClick={() => setShowAvatarUpload(true)}
+                className="absolute bottom-0 right-0 w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white hover:brightness-110 transition-all shadow-lg"
+              >
                 <Camera className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Avatar Upload Modal */}
+            {showAvatarUpload && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                      Update Profile Photo
+                    </h3>
+                    <button
+                      onClick={handleAvatarCancel}
+                      className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-[var(--text-secondary)]" />
+                    </button>
+                  </div>
+
+                  {/* Drop Zone */}
+                  <div
+                    ref={dropZoneRef}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+                      isDragging
+                        ? 'border-brand bg-brand-soft/20 scale-[1.02]'
+                        : 'border-[var(--border-color)] hover:border-brand/50 hover:bg-[var(--bg-secondary)]'
+                    }`}
+                  >
+                    {previewUrl ? (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-brand shadow-lg">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          Click or drop another image to change
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
+                            isDragging
+                              ? 'bg-brand text-white'
+                              : 'bg-brand-soft text-brand'
+                          }`}
+                        >
+                          {isDragging ? (
+                            <Upload className="w-8 h-8 animate-bounce" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[var(--text-primary)] font-medium mb-1">
+                            {isDragging
+                              ? 'Drop your image here'
+                              : 'Drag & drop your photo'}
+                          </p>
+                          <p className="text-sm text-[var(--text-secondary)]">
+                            or click to browse files
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Paste hint */}
+                  <div className="flex items-center justify-center gap-2 mt-4 p-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
+                    <Clipboard className="w-4 h-4 text-brand" />
+                    <span className="text-sm text-[var(--text-secondary)]">
+                      You can also{' '}
+                      <span className="text-brand font-medium">Ctrl+V</span> to
+                      paste an image
+                    </span>
+                  </div>
+
+                  {/* File requirements */}
+                  <p className="text-xs text-[var(--text-muted)] text-center mt-3">
+                    Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={handleAvatarCancel}
+                      className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAvatarSave}
+                      disabled={!previewUrl || isUploading}
+                      className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isUploading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          Save Photo
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
               {profile.fullName}
@@ -92,7 +363,9 @@ export default function ProfilePage() {
           {/* Quick Stats */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">Total Screenings</span>
+              <span className="text-[var(--text-secondary)]">
+                Total Screenings
+              </span>
               <span className="text-[var(--text-primary)] font-medium">12</span>
             </div>
             <div className="flex items-center justify-between">
@@ -101,7 +374,9 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[var(--text-secondary)]">Member Since</span>
-              <span className="text-[var(--text-primary)] font-medium">Jan 2026</span>
+              <span className="text-[var(--text-primary)] font-medium">
+                Jan 2026
+              </span>
             </div>
           </div>
         </div>
@@ -158,7 +433,9 @@ export default function ProfilePage() {
                     className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium">{profile.fullName}</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.fullName}
+                  </p>
                 )}
               </div>
 
@@ -168,7 +445,9 @@ export default function ProfilePage() {
                   <Mail className="w-4 h-4" />
                   Email
                 </label>
-                <p className="text-[var(--text-primary)] font-medium">{profile.email}</p>
+                <p className="text-[var(--text-primary)] font-medium">
+                  {profile.email}
+                </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   Email cannot be changed
                 </p>
@@ -190,7 +469,9 @@ export default function ProfilePage() {
                     className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium">{profile.phone}</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.phone}
+                  </p>
                 )}
               </div>
 
@@ -260,13 +541,17 @@ export default function ProfilePage() {
                     className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium">{profile.address}</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.address}
+                  </p>
                 )}
               </div>
 
               {/* City */}
               <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">City</label>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  City
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -277,7 +562,9 @@ export default function ProfilePage() {
                     className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium">{profile.city}</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.city}
+                  </p>
                 )}
               </div>
 
@@ -296,7 +583,9 @@ export default function ProfilePage() {
                     className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 ) : (
-                  <p className="text-[var(--text-primary)] font-medium">{profile.country}</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.country}
+                  </p>
                 )}
               </div>
             </div>
@@ -316,7 +605,9 @@ export default function ProfilePage() {
                     <Key className="w-5 h-5 text-brand" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">Password</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      Password
+                    </p>
                     <p className="text-sm text-[var(--text-secondary)]">
                       Last changed 30 days ago
                     </p>
@@ -340,7 +631,7 @@ export default function ProfilePage() {
                     <p className="text-sm text-green-600">Enabled</p>
                   </div>
                 </div>
-                <Link 
+                <Link
                   to="/patient/security"
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
