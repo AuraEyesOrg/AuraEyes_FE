@@ -11,18 +11,18 @@ const EthicsPrivacyPage = lazy(
 );
 
 // Auth pages
-const LoginPage = lazy(() => import('@/features/auth/pages/login.page'));
+const LoginPage = lazy(() => import('@/features/auth/pages/login'));
 const TwoFactorSettingsPage = lazy(
-  () => import('@/features/auth/pages/two-factor-settings.page')
+  () => import('@/features/auth/pages/two-factor-settings')
 );
 const TwoFactorVerifyPage = lazy(
-  () => import('@/features/auth/pages/two-factor-verify.page')
+  () => import('@/features/auth/pages/two-factor-verify')
 );
 const ConfirmEmailPage = lazy(
-  () => import('@/features/auth/pages/confirm-email.page')
+  () => import('@/features/auth/pages/confirm-email')
 );
 const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor.page')
+  () => import('@/features/auth/pages/register-doctor')
 );
 
 // Patient pages
