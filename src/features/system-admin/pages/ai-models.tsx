@@ -21,7 +21,7 @@ import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import StatusBadge from '../components/StatusBadge';
-import { aiModelService } from '../services/ai-model.service';
+import { aiModelApi } from '../api';
 import type {
   AIModel,
   AIModelMetrics,
@@ -132,9 +132,9 @@ export default function AIModelsPage() {
   const loadData = useCallback(async () => {
     try {
       const [modelData, kpisData, parityData] = await Promise.all([
-        aiModelService.getCurrentModel().catch(() => null),
-        aiModelService.getModelKPIs().catch(() => null),
-        aiModelService.getDemographicParity().catch(() => null),
+        aiModelApi.getCurrentModel().catch(() => null),
+        aiModelApi.getModelKPIs().catch(() => null),
+        aiModelApi.getDemographicParity().catch(() => null),
       ]);
 
       setCurrentModel(modelData || getMockCurrentModel());

@@ -18,10 +18,7 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import {
-  organisationService,
-  deviceService,
-} from '../services/organisation.service';
+import { organisationApi, deviceApi } from '../api';
 import type { Organisation, Device } from '../types/system-admin.types';
 
 type TabType = 'clinics' | 'devices';
@@ -128,8 +125,8 @@ export default function OrganisationsPage() {
   const loadData = useCallback(async () => {
     try {
       const [orgsData, devicesData] = await Promise.all([
-        organisationService.getOrganisations().catch(() => null),
-        deviceService.getDevices().catch(() => null),
+        organisationApi.getOrganisations().catch(() => null),
+        deviceApi.getDevices().catch(() => null),
       ]);
 
       // Use mock data if API not available
