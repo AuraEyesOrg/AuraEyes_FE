@@ -7,6 +7,7 @@ export interface LoginRequest {
   email: string;
   password: string;
   deviceInfo?: string;
+  recaptchaToken?: string;
 }
 
 export interface RegisterPatientRequest {

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import {
   Eye,
   EyeOff,
@@ -42,6 +43,8 @@ const LoginPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
@@ -63,6 +66,12 @@ const LoginPage = () => {
   } = useForm<RegisterFormData>();
 
   const onLoginSubmit = async (data: LoginFormData) => {
+    // Validate reCAPTCHA
+    if (!recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification.');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -70,6 +79,7 @@ const LoginPage = () => {
       const response = await login({
         email: data.email,
         password: data.password,
+        recaptchaToken: recaptchaToken,
       });
 
       // Check if 2FA is required
@@ -126,6 +136,9 @@ const LoginPage = () => {
       }
     } finally {
       setIsLoading(false);
+      // Reset reCAPTCHA on error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -415,6 +428,17 @@ const LoginPage = () => {
                       {loginErrors.password.message}
                     </p>
                   )}
+                </div>
+
+                {/* reCAPTCHA */}
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                    onChange={(token) => setRecaptchaToken(token)}
+                    onExpired={() => setRecaptchaToken(null)}
+                    onErrored={() => setRecaptchaToken(null)}
+                  />
                 </div>
 
                 {/* Actions */}
