@@ -90,19 +90,19 @@ const ReportsPage = () => {
     switch (risk) {
       case 'low':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
+          <span className="badge-risk-low flex items-center gap-1">
             <CheckCircle className="w-3 h-3" /> Low Risk
           </span>
         );
       case 'medium':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-xs font-medium">
+          <span className="badge-risk-medium flex items-center gap-1">
             <Clock className="w-3 h-3" /> Medium Risk
           </span>
         );
       case 'high':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium">
+          <span className="badge-risk-high flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> High Risk
           </span>
         );
@@ -127,16 +127,16 @@ const ReportsPage = () => {
   const getTypeIcon = (type: string, risk: string) => {
     const bgClass =
       risk === 'low'
-        ? 'bg-green-500/20'
+        ? 'bg-green-50'
         : risk === 'medium'
-          ? 'bg-amber-500/20'
-          : 'bg-red-500/20';
+          ? 'bg-amber-50'
+          : 'bg-red-50';
     const iconClass =
       risk === 'low'
-        ? 'text-green-400'
+        ? 'text-green-600'
         : risk === 'medium'
-          ? 'text-amber-400'
-          : 'text-red-400';
+          ? 'text-amber-600'
+          : 'text-red-600';
 
     return (
       <div
@@ -150,54 +150,54 @@ const ReportsPage = () => {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Medical Reports</h1>
-        <p className="text-gray-400">
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Medical Reports</h1>
+        <p className="text-[var(--text-secondary)]">
           View, download, and track your screening results and heatmaps
         </p>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.length}
               </p>
-              <p className="text-xs text-gray-400">Total Reports</p>
+              <p className="text-xs text-[var(--text-secondary)]">Total Reports</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-400" />
+            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.filter((r) => r.isVerified).length}
               </p>
-              <p className="text-xs text-gray-400">Verified</p>
+              <p className="text-xs text-[var(--text-secondary)]">Verified</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.filter((r) => r.hasHeatmap).length}
               </p>
-              <p className="text-xs text-gray-400">With Heatmaps</p>
+              <p className="text-xs text-[var(--text-secondary)]">With Heatmaps</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
               <Eye className="w-5 h-5 text-purple-400" />

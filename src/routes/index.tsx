@@ -9,44 +9,43 @@ const ContactPage = lazy(() => import('@/features/guest/pages/Contact'));
 const EthicsPrivacyPage = lazy(
   () => import('@/features/guest/pages/EthicsPrivacy')
 );
+const StatusPage = lazy(() => import('@/features/guest/pages/Status'));
 
 // Auth pages
-const LoginPage = lazy(() => import('@/features/auth/pages/login.page'));
+const LoginPage = lazy(() => import('@/features/auth/pages/login'));
 const TwoFactorSettingsPage = lazy(
-  () => import('@/features/auth/pages/two-factor-settings.page')
+  () => import('@/features/auth/pages/two-factor-settings')
 );
 const TwoFactorVerifyPage = lazy(
-  () => import('@/features/auth/pages/two-factor-verify.page')
+  () => import('@/features/auth/pages/two-factor-verify')
 );
 const ConfirmEmailPage = lazy(
-  () => import('@/features/auth/pages/confirm-email.page')
+  () => import('@/features/auth/pages/confirm-email')
 );
 const RegisterDoctorPage = lazy(
-  () => import('@/features/auth/pages/register-doctor.page')
+  () => import('@/features/auth/pages/register-doctor')
 );
 
 // Patient pages
 const PatientDashboard = lazy(
-  () => import('@/features/patient/pages/dashboard.page')
+  () => import('@/features/patient/pages/dashboard')
 );
-const ScreeningPage = lazy(
-  () => import('@/features/patient/pages/screening.page')
-);
+const ScreeningPage = lazy(() => import('@/features/patient/pages/screening'));
 const ScreeningNewPage = lazy(
-  () => import('@/features/patient/pages/screening-new.page')
+  () => import('@/features/patient/pages/screening-new')
 );
-const ReportsPage = lazy(() => import('@/features/patient/pages/reports.page'));
+const ReportsPage = lazy(() => import('@/features/patient/pages/reports'));
 const AppointmentsPage = lazy(
-  () => import('@/features/patient/pages/appointments.page')
+  () => import('@/features/patient/pages/appointments')
 );
-const ProfilePage = lazy(() => import('@/features/patient/pages/profile.page'));
-const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics.page'));
+const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
+const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const VerificationPage = lazy(
-  () => import('@/features/patient/pages/verification.page')
+  () => import('@/features/patient/pages/verification')
 );
-const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap.page'));
-const ChatPage = lazy(() => import('@/features/patient/pages/chat.page'));
-const WalletPage = lazy(() => import('@/features/patient/pages/wallet.page'));
+const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
+const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
+const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -107,6 +106,7 @@ const Router = () => (
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
+        <Route path="/status" element={<StatusPage />} />
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
@@ -127,6 +127,7 @@ const Router = () => (
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/security" element={<TwoFactorSettingsPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route

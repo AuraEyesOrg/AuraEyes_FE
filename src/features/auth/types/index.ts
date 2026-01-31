@@ -7,6 +7,7 @@ export interface LoginRequest {
   email: string;
   password: string;
   deviceInfo?: string;
+  recaptchaToken?: string;
 }
 
 export interface RegisterPatientRequest {
@@ -130,8 +131,8 @@ export interface RegisterFormData {
   confirmPassword: string;
   agreeTerms: boolean;
 }
-export { default as ConfirmEmailPage } from '../pages/confirm-email.page';
-export { default as RegisterDoctorPage } from '../pages/register-doctor.page';
+export { default as ConfirmEmailPage } from '../pages/confirm-email';
+export { default as RegisterDoctorPage } from '../pages/register-doctor';
 export interface TwoFactorVerifyFormData {
   code: string;
 }

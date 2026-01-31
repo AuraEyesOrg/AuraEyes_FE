@@ -374,7 +374,7 @@ After using a recovery code, we recommend generating new codes.`;
                   Or enter this key manually:
                 </p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 p-3 bg-white rounded border border-gray-200 font-mono text-sm break-all">
+                  <code className="flex-1 p-3 text-[var(--color-text-main)] bg-white rounded border border-gray-200 font-mono text-sm break-all">
                     {setupData.formattedKey}
                   </code>
                   <button
@@ -470,7 +470,7 @@ After using a recovery code, we recommend generating new codes.`;
                 {recoveryCodes.map((code, index) => (
                   <div
                     key={index}
-                    className="p-3 bg-gray-50 rounded-lg font-mono text-sm text-center border border-gray-200"
+                    className="p-3 bg-gray-50 rounded-lg font-mono text-sm text-center text-[var(--color-text-muted)] border border-gray-200"
                   >
                     {code}
                   </div>
@@ -483,7 +483,7 @@ After using a recovery code, we recommend generating new codes.`;
                   onClick={() =>
                     copyToClipboard(recoveryCodes.join('\n'), 'codes')
                   }
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm text-[var(--color-text-main)] font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   {copiedCodes ? (
                     <>
@@ -499,7 +499,7 @@ After using a recovery code, we recommend generating new codes.`;
                 </button>
                 <button
                   onClick={downloadRecoveryCodes}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm text-[var(--color-text-main)] font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   Download

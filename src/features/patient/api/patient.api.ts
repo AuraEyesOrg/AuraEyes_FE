@@ -1,6 +1,3 @@
-// Patient API Endpoints and Functions
-// Based on Functional Requirements FR-01 to FR-13
-
 import { api } from '@/lib/api';
 import type { AxiosProgressEvent } from 'axios';
 import type {

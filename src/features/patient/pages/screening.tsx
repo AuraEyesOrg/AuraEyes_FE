@@ -1,6 +1,7 @@
-import { GuestLayout } from '@/components/layouts';
-import { Eye, Upload, AlertCircle } from 'lucide-react';
+import PatientLayout from '../components/PatientLayout';
+import { Eye, Upload, AlertCircle, Home } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const ScreeningPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -20,31 +21,45 @@ const ScreeningPage = () => {
   };
 
   return (
-    <GuestLayout>
+    <PatientLayout>
       <div className="max-w-4xl mx-auto">
+        {/* Breadcrumb */}
+        <nav className="flex text-xs text-[var(--text-secondary)] mb-4">
+          <ol className="flex items-center space-x-2">
+            <li>
+              <Link to="/" className="hover:text-brand transition-colors flex items-center gap-1">
+                <Home className="w-3.5 h-3.5" />
+                Home
+              </Link>
+            </li>
+            <li><span className="text-[var(--border-color)]">/</span></li>
+            <li className="font-semibold text-[var(--text-primary)]">My Scans</li>
+          </ol>
+        </nav>
+
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
             Retinal Screening
           </h1>
-          <p className="text-gray-600">
+          <p className="text-[var(--text-secondary)]">
             Upload your retinal images for AI-powered analysis
           </p>
         </div>
 
         {/* Upload Section */}
-        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm mb-6">
+        <div className="medical-card mb-6">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">
               Upload Retinal Image
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--text-secondary)]">
               Supported formats: JPG, PNG, DICOM (Max 10MB)
             </p>
           </div>
 
           {!previewUrl ? (
-            <label className="block border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all">
+            <label className="block border-2 border-dashed border-[var(--border-color)] rounded-xl p-12 text-center cursor-pointer hover:border-brand hover:bg-brand-soft transition-all">
               <input
                 type="file"
                 accept="image/*"
@@ -52,24 +67,24 @@ const ScreeningPage = () => {
                 className="hidden"
               />
               <div className="flex flex-col items-center">
-                <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Upload className="h-8 w-8 text-primary" />
+                <div className="h-16 w-16 bg-brand-soft rounded-full flex items-center justify-center mb-4">
+                  <Upload className="h-8 w-8 text-brand" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
                   Click to upload or drag and drop
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--text-muted)]">
                   PNG, JPG or DICOM (max. 10MB)
                 </p>
               </div>
             </label>
           ) : (
             <div className="space-y-4">
-              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+              <div className="relative rounded-xl overflow-hidden border border-[var(--border-color)]">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="w-full h-96 object-contain bg-gray-50"
+                  className="w-full h-96 object-contain bg-[var(--bg-secondary)]"
                 />
                 <button
                   onClick={() => {
@@ -82,14 +97,14 @@ const ScreeningPage = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Eye className="h-5 w-5 text-primary" />
+                  <Eye className="h-5 w-5 text-brand" />
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-[var(--text-primary)]">
                       {selectedFile?.name}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[var(--text-muted)]">
                       {((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -98,7 +113,7 @@ const ScreeningPage = () => {
 
               <button
                 onClick={handleSubmit}
-                className="w-full py-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="btn-primary w-full py-4"
               >
                 Analyze Image
               </button>
@@ -107,14 +122,14 @@ const ScreeningPage = () => {
         </div>
 
         {/* Info Section */}
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="medical-card bg-brand-soft border-brand/20">
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-              <AlertCircle className="h-5 w-5 text-blue-600" />
+            <div className="h-10 w-10 bg-brand/20 rounded-lg flex items-center justify-center shrink-0">
+              <AlertCircle className="h-5 w-5 text-brand" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-2">How it works</h3>
-              <ul className="space-y-2 text-sm text-blue-700">
+              <h3 className="font-semibold text-[var(--text-primary)] mb-2">How it works</h3>
+              <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
                 <li className="flex items-start gap-2">
                   <span className="font-semibold">1.</span>
                   <span>Upload a clear retinal image</span>
@@ -135,7 +150,7 @@ const ScreeningPage = () => {
           </div>
         </div>
       </div>
-    </GuestLayout>
+    </PatientLayout>
   );
 };
 

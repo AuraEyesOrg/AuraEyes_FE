@@ -1,34 +1,30 @@
 import { ReactNode } from 'react';
 import PatientSidebar from './PatientSidebar';
-import PatientHeader from './PatientHeader';
 
 interface PatientLayoutProps {
   children: ReactNode;
   userName?: string;
   avatarUrl?: string;
-  notificationCount?: number;
-  unreadMessages?: number;
+  userId?: string;
 }
 
 export default function PatientLayout({
   children,
-  userName = 'Patient',
+  userName = 'Alex Morgan',
   avatarUrl,
-  notificationCount = 0,
-  unreadMessages = 0,
+  userId = '#8823-X',
 }: PatientLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#0a1929]">
+    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       <PatientSidebar
-        notificationCount={notificationCount}
-        unreadMessages={unreadMessages}
+        userName={userName}
+        userAvatar={avatarUrl}
+        userId={userId}
       />
 
-      <div className="ml-56">
-        <PatientHeader userName={userName} avatarUrl={avatarUrl} />
-
-        <main className="p-6">{children}</main>
-      </div>
+      <main className="flex-1 h-full overflow-y-auto relative">
+        <div className="p-6 lg:p-10">{children}</div>
+      </main>
     </div>
   );
 }

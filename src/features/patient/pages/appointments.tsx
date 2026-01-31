@@ -90,7 +90,6 @@ const AppointmentsPage = () => {
   const [filter, setFilter] = useState<
     'all' | 'upcoming' | 'completed' | 'cancelled'
   >('all');
-  const [showBookingModal, setShowBookingModal] = useState(false);
 
   const filteredAppointments = mockAppointments.filter((apt) => {
     if (filter === 'all') return true;
@@ -108,19 +107,19 @@ const AppointmentsPage = () => {
     switch (status) {
       case 'upcoming':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
             <Clock className="w-3 h-3" /> Upcoming
           </span>
         );
       case 'completed':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
             <CheckCircle className="w-3 h-3" /> Completed
           </span>
         );
       case 'cancelled':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
             <XCircle className="w-3 h-3" /> Cancelled
           </span>
         );
@@ -148,15 +147,15 @@ const AppointmentsPage = () => {
     <PatientLayout userName="John Doe">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Appointments</h1>
-          <p className="text-gray-400">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Appointments</h1>
+          <p className="text-[var(--text-secondary)]">
             Manage your appointments and retinal images
           </p>
         </div>
 
         <Link
           to="/patient/clinics"
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-semibold hover:shadow-lg transition-all w-fit"
+          className="btn-primary flex items-center gap-2 px-6 py-3 rounded-xl font-semibold w-fit"
         >
           <Plus className="h-5 w-5" />
           Book Appointment
@@ -165,47 +164,47 @@ const AppointmentsPage = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{upcomingCount}</p>
-              <p className="text-xs text-gray-400">Upcoming</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">{upcomingCount}</p>
+              <p className="text-xs text-[var(--text-muted)]">Upcoming</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-400" />
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{completedCount}</p>
-              <p className="text-xs text-gray-400">Completed</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">{completedCount}</p>
+              <p className="text-xs text-[var(--text-muted)]">Completed</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Image className="w-5 h-5 text-purple-400" />
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Image className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">5</p>
-              <p className="text-xs text-gray-400">Images</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">5</p>
+              <p className="text-xs text-[var(--text-muted)]">Images</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0d2137] rounded-xl border border-[#1e3a5f] p-4">
+        <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">3</p>
-              <p className="text-xs text-gray-400">Reports</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">3</p>
+              <p className="text-xs text-[var(--text-muted)]">Reports</p>
             </div>
           </div>
         </div>
@@ -213,7 +212,7 @@ const AppointmentsPage = () => {
 
       {/* Filters */}
       <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#1e3a5f] text-gray-300 rounded-lg text-sm">
+        <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] rounded-lg text-sm">
           <Filter className="w-4 h-4" />
           Filter
         </button>
@@ -224,8 +223,8 @@ const AppointmentsPage = () => {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 filter === status
-                  ? 'bg-primary text-white'
-                  : 'bg-[#1e3a5f]/50 text-gray-400 hover:bg-[#1e3a5f]'
+                  ? 'bg-brand text-white'
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-color)]'
               }`}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -239,7 +238,7 @@ const AppointmentsPage = () => {
         {filteredAppointments.map((apt) => (
           <div
             key={apt.id}
-            className={`bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6 hover:border-primary/30 transition-colors ${
+            className={`medical-card p-6 hover:border-brand/30 transition-colors ${
               apt.status === 'cancelled' ? 'opacity-60' : ''
             }`}
           >
@@ -248,18 +247,18 @@ const AppointmentsPage = () => {
                 <div
                   className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
                     apt.status === 'upcoming'
-                      ? 'bg-primary/20'
+                      ? 'bg-brand-soft'
                       : apt.status === 'completed'
-                        ? 'bg-green-500/20'
-                        : 'bg-gray-500/20'
+                        ? 'bg-green-100'
+                        : 'bg-gray-100'
                   }`}
                 >
                   <Calendar
                     className={`w-7 h-7 ${
                       apt.status === 'upcoming'
-                        ? 'text-primary'
+                        ? 'text-brand'
                         : apt.status === 'completed'
-                          ? 'text-green-400'
+                          ? 'text-green-600'
                           : 'text-gray-400'
                     }`}
                   />
@@ -267,22 +266,22 @@ const AppointmentsPage = () => {
 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">
                       {getTypeLabel(apt.type)}
                     </h3>
                     {getStatusBadge(apt.status)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <Calendar className="w-4 h-4" />
                       <span>{apt.date}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <Clock className="w-4 h-4" />
                       <span>{apt.time}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <User className="w-4 h-4" />
                       <span>
                         {apt.doctor} - {apt.specialty}
@@ -291,15 +290,15 @@ const AppointmentsPage = () => {
                     <div className="flex items-center gap-2">
                       {apt.isOnline ? (
                         <>
-                          <Video className="w-4 h-4 text-blue-400" />
-                          <span className="text-blue-400">
+                          <Video className="w-4 h-4 text-blue-600" />
+                          <span className="text-blue-600">
                             Online Consultation
                           </span>
                         </>
                       ) : (
                         <>
-                          <MapPin className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-400">
+                          <MapPin className="w-4 h-4 text-[var(--text-secondary)]" />
+                          <span className="text-[var(--text-secondary)]">
                             {apt.clinicName}
                           </span>
                         </>
@@ -309,8 +308,8 @@ const AppointmentsPage = () => {
 
                   {/* Attached Images */}
                   {apt.images && apt.images.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-[#1e3a5f]">
-                      <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                    <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                      <p className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-1">
                         <Image className="w-3 h-3" />
                         Attached Images ({apt.images.length})
                       </p>
@@ -318,13 +317,13 @@ const AppointmentsPage = () => {
                         {apt.images.map((img, idx) => (
                           <div
                             key={idx}
-                            className="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center"
+                            className="w-12 h-12 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-center"
                           >
-                            <Eye className="w-4 h-4 text-gray-400" />
+                            <Eye className="w-4 h-4 text-[var(--text-muted)]" />
                           </div>
                         ))}
-                        <button className="w-12 h-12 bg-[#1e3a5f]/50 border border-dashed border-[#2d4a6f] rounded-lg flex items-center justify-center hover:bg-[#1e3a5f] transition-colors">
-                          <Plus className="w-4 h-4 text-gray-400" />
+                        <button className="w-12 h-12 bg-[var(--bg-secondary)] border border-dashed border-[var(--border-color)] rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] transition-colors">
+                          <Plus className="w-4 h-4 text-[var(--text-muted)]" />
                         </button>
                       </div>
                     </div>
@@ -341,7 +340,7 @@ const AppointmentsPage = () => {
               <div className="flex flex-row lg:flex-col gap-2 shrink-0">
                 {apt.status === 'upcoming' && (
                   <>
-                    <button className="flex-1 lg:flex-none px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <button className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                       <Eye className="w-4 h-4" />
                       View Details
                     </button>
@@ -351,13 +350,13 @@ const AppointmentsPage = () => {
                         Join Call
                       </button>
                     )}
-                    <button className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
+                    <button className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
                       Cancel
                     </button>
                   </>
                 )}
                 {apt.status === 'completed' && (
-                  <button className="px-4 py-2 bg-[#1e3a5f] hover:bg-[#2d4a6f] text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     View Report
                     <ChevronRight className="w-4 h-4" />
@@ -371,18 +370,18 @@ const AppointmentsPage = () => {
 
       {filteredAppointments.length === 0 && (
         <div className="text-center py-16">
-          <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <Calendar className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
             No Appointments Found
           </h3>
-          <p className="text-gray-400 mb-6">
+          <p className="text-[var(--text-secondary)] mb-6">
             {filter === 'all'
               ? "You haven't booked any appointments yet."
               : `No ${filter} appointments.`}
           </p>
           <Link
             to="/patient/clinics"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/90 text-white rounded-xl font-semibold transition-colors"
           >
             <Plus className="w-5 h-5" />
             Book Your First Appointment

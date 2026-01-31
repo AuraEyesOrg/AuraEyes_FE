@@ -383,7 +383,7 @@ const ContactPage = () => {
                         Email Support
                       </p>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        partners@auraeyes.org
+                        auraeyes4se@gmail.com
                       </p>
                     </div>
                   </div>
@@ -441,7 +441,7 @@ const ContactPage = () => {
                         Headquarters
                       </p>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        San Francisco, CA, USA
+                        FPT University, HCM, VN
                       </p>
                     </div>
                   </div>
@@ -687,10 +687,6 @@ const ContactPage = () => {
                 {
                   q: 'How long does the onboarding process take?',
                   a: 'Most specialists can be set up and running within 48 hours. Enterprise integrations typically take 2-4 weeks depending on complexity.',
-                },
-                {
-                  q: 'What equipment do I need?',
-                  a: 'Any standard fundus camera or smartphone-compatible retinal adapter will work with AURA. We provide a list of recommended devices.',
                 },
               ].map((faq, index) => (
                 <details

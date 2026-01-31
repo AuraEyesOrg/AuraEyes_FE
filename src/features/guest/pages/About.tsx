@@ -100,27 +100,27 @@ const AboutPage = () => {
 
   const teamMembers = [
     {
-      name: 'Dr. Sarah Chen',
+      name: 'Dr. Sarah An',
       role: 'Chief Medical Officer',
-      image: 'https://i.pravatar.cc/300?img=1',
+      image: 'https://avatars.githubusercontent.com/u/165766167?v=4',
       bio: 'Board-certified ophthalmologist with 15+ years in retinal diagnostics.',
     },
     {
-      name: 'Dr. Michael Torres',
+      name: 'Dr. Michael Phuoc',
       role: 'Head of AI Research',
-      image: 'https://i.pravatar.cc/300?img=3',
+      image: 'https://avatars.githubusercontent.com/u/153256952?v=4',
       bio: 'PhD in Computer Vision from MIT, specializing in medical imaging AI.',
     },
     {
-      name: 'Dr. Emily Nakamura',
+      name: 'Dr. Viet Nakamura',
       role: 'Director of Clinical Validation',
-      image: 'https://i.pravatar.cc/300?img=5',
+      image: 'https://avatars.githubusercontent.com/u/157226403?v=4',
       bio: 'Expert in clinical trials and FDA regulatory pathways for medical devices.',
     },
     {
-      name: 'James Wilson',
+      name: 'Dr. James Thinh',
       role: 'Chief Technology Officer',
-      image: 'https://i.pravatar.cc/300?img=8',
+      image: 'https://avatars.githubusercontent.com/u/156297768?v=4',
       bio: 'Former Google Health engineer with expertise in scalable medical platforms.',
     },
   ];
