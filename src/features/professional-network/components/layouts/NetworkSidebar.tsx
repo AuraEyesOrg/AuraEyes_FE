@@ -2,14 +2,14 @@
  * Network Sidebar Component
  * Left navigation sidebar for professional network
  *
- * Responsive widths (matching Twitter):
- * - Mobile: w-0 (hidden) → fixed bottom bar
- * - xs (500px+): w-20 → icons only
- * - md (768px+): w-24
- * - xl (1280px+): w-full max-w-xs (288px) → icons + labels
+ * EXACT Responsive widths (matching Twitter):
+ * - Mobile (<500px): w-0 (hidden) → fixed bottom bar
+ * - 500px+: w-[68px] → icons only, centered
+ * - 768px+: w-[88px]
+ * - 1280px+: w-[275px] → icons + labels, right-aligned content
  */
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   Home,
   Compass,
@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   PenSquare,
   Eye,
+  ArrowLeft,
 } from 'lucide-react';
 import { currentUser } from '../../data';
 
@@ -33,19 +34,11 @@ const navItems = [
 
 export function NetworkSidebar() {
   return (
-    <header
-      id="sidebar"
-      className="flex w-0 shrink-0 transition-opacity duration-200 xs:w-20 md:w-24
-                 lg:max-w-none xl:-mr-4 xl:w-full xl:max-w-xs xl:justify-end"
-    >
-      <div
-        className="fixed bottom-0 z-10 flex w-full flex-col justify-between border-t border-light-border 
-                   bg-main-background py-0 xs:top-0 xs:h-full xs:w-auto xs:border-0 
-                   xs:bg-transparent xs:px-2 xs:py-3 xs:pt-2 md:px-4 xl:w-72"
-      >
-        {/* Logo - Aura Eye icon */}
-        <section className="flex flex-col justify-center gap-2 xs:items-center xl:items-stretch">
-          <h1 className="hidden xs:flex">
+    <header id="network-sidebar" className="network-sidebar-header">
+      <div className="network-sidebar-inner">
+        {/* Logo - Aura Eye icon with back to dashboard */}
+        <section className="network-sidebar-section">
+          <h1 className="network-sidebar-logo">
             <NavLink
               to="/network"
               className="custom-button main-tab text-brand-primary transition hover:bg-brand-primary/10 
@@ -57,18 +50,30 @@ export function NetworkSidebar() {
             </NavLink>
           </h1>
 
+          {/* Back to Dashboard Link */}
+          <Link
+            to="/system-admin/dashboard"
+            className="network-nav-link hover-animation text-text-muted hover:text-brand-primary"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft
+              className="w-[22px] h-[22px] flex-shrink-0"
+              strokeWidth={1.75}
+            />
+            <span className="network-nav-label text-base">Dashboard</span>
+          </Link>
+
           {/* Navigation */}
-          <nav className="flex items-center justify-around xs:flex-col xs:justify-center xl:block">
+          <nav className="network-sidebar-nav">
             {navItems.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `group flex items-center gap-4 px-3 py-3 rounded-full hover-animation
-                   hover:bg-gray-100 xl:pr-6 ${
-                     isActive ? 'font-bold text-text-main' : 'text-text-main'
-                   }`
+                  `network-nav-link hover-animation ${
+                    isActive ? 'font-bold' : ''
+                  }`
                 }
               >
                 {({ isActive }) => (
@@ -77,7 +82,7 @@ export function NetworkSidebar() {
                       className="w-[26px] h-[26px] shrink-0"
                       strokeWidth={isActive ? 2.5 : 1.75}
                     />
-                    <span className="hidden xl:block text-xl">{label}</span>
+                    <span className="network-nav-label">{label}</span>
                   </>
                 )}
               </NavLink>
@@ -87,10 +92,9 @@ export function NetworkSidebar() {
             <NavLink
               to={`/network/profile/${currentUser.id}`}
               className={({ isActive }) =>
-                `group flex items-center gap-4 px-3 py-3 rounded-full hover-animation
-                 hover:bg-gray-100 xl:pr-6 ${
-                   isActive ? 'font-bold text-text-main' : 'text-text-main'
-                 }`
+                `network-nav-link hover-animation ${
+                  isActive ? 'font-bold' : ''
+                }`
               }
             >
               {({ isActive }) => (
@@ -99,43 +103,36 @@ export function NetworkSidebar() {
                     className="w-[26px] h-[26px] shrink-0"
                     strokeWidth={isActive ? 2.5 : 1.75}
                   />
-                  <span className="hidden xl:block text-xl">Profile</span>
+                  <span className="network-nav-label">Profile</span>
                 </>
               )}
             </NavLink>
 
             {/* More */}
-            <button
-              className="group flex items-center gap-4 px-3 py-3 rounded-full hover-animation
-                         hover:bg-gray-100 xl:pr-6 text-text-main"
-            >
+            <button className="network-nav-link hover-animation">
               <MoreHorizontal
                 className="w-[26px] h-[26px] shrink-0"
                 strokeWidth={1.75}
               />
-              <span className="hidden xl:block text-xl">More</span>
+              <span className="network-nav-label">More</span>
             </button>
           </nav>
 
           {/* New Post Button */}
-          <button
-            className="accent-tab absolute right-4 -translate-y-[72px] bg-brand-primary text-lg font-bold text-white
-                       outline-none transition hover:brightness-90 active:brightness-75 xs:static xs:translate-y-0
-                       xs:hover:bg-brand-primary/90 xs:active:bg-brand-primary/75 xl:w-11/12 mt-4 py-3 rounded-full"
-          >
-            <PenSquare className="block h-6 w-6 xl:hidden mx-auto" />
-            <span className="hidden xl:block text-[17px]">Post</span>
+          <button className="network-post-button">
+            <PenSquare className="network-post-icon" />
+            <span className="network-post-text">Post</span>
           </button>
         </section>
 
         {/* User Profile at bottom - using currentUser from mock data */}
-        <button className="hidden xs:flex items-center gap-3 p-3 rounded-full hover:bg-gray-100 hover-animation w-full">
+        <button className="network-profile-button">
           <img
             src={currentUser.avatarUrl}
             alt={currentUser.fullName}
             className="w-10 h-10 rounded-full object-cover shrink-0"
           />
-          <div className="hidden xl:block flex-1 min-w-0 text-left">
+          <div className="network-profile-info">
             <p className="font-bold text-[15px] text-text-main truncate leading-tight">
               {currentUser.fullName}
             </p>
@@ -143,7 +140,7 @@ export function NetworkSidebar() {
               {currentUser.specialty[0]}
             </p>
           </div>
-          <MoreHorizontal className="hidden xl:block w-5 h-5 text-text-main shrink-0" />
+          <MoreHorizontal className="network-profile-more" />
         </button>
       </div>
     </header>

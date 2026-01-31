@@ -27,6 +27,7 @@ import {
   Copy,
   Flag,
   UserMinus,
+  BadgeCheck,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
 
@@ -161,10 +162,10 @@ export function PostCard({ post }: Props) {
         </div>
       )}
 
-      {/* Grid layout: avatar | content */}
-      <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
-        {/* Avatar column */}
-        <div className="flex flex-col items-center gap-2">
+      {/* Main content wrapper - flex row with avatar on left */}
+      <div className="flex gap-x-3">
+        {/* Avatar - fixed, never shrinks, aligned to top */}
+        <div className="flex-shrink-0">
           <img
             src={post.author.avatarUrl}
             alt={post.author.fullName}
@@ -172,9 +173,9 @@ export function PostCard({ post }: Props) {
           />
         </div>
 
-        {/* Content column */}
-        <div className="flex flex-col min-w-0">
-          {/* Header row */}
+        {/* Content column - takes remaining space, min-w-0 for truncation */}
+        <div className="flex-1 min-w-0">
+          {/* Header row - author info + more menu */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 min-w-0 text-[15px]">
               <Link
@@ -184,12 +185,12 @@ export function PostCard({ post }: Props) {
                 {post.author.fullName}
               </Link>
               {post.author.isVerified && (
-                <span className="text-brand-primary shrink-0">✓</span>
+                <BadgeCheck className="w-[18px] h-[18px] text-brand-primary flex-shrink-0 fill-brand-primary/20" />
               )}
               <span className="text-text-muted truncate">
                 · {post.author.specialty?.[0]}
               </span>
-              <span className="text-text-muted shrink-0">
+              <span className="text-text-muted flex-shrink-0 whitespace-nowrap">
                 ·{' '}
                 {new Date(post.createdAt).toLocaleDateString('vi-VN', {
                   day: 'numeric',
@@ -200,7 +201,7 @@ export function PostCard({ post }: Props) {
 
             {/* More Menu */}
             <div
-              className="relative -mr-2"
+              className="relative -mr-2 flex-shrink-0"
               onMouseEnter={handleMoreMouseEnter}
               onMouseLeave={handleMoreMouseLeave}
             >

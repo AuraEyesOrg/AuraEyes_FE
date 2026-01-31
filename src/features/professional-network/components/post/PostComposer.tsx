@@ -16,14 +16,7 @@ import {
   Building2,
 } from 'lucide-react';
 import type { PostType, PostVisibility } from '../../types';
-
-// TODO: Replace with actual user from auth context
-const currentUser = {
-  id: 'current-user',
-  fullName: 'Dr. Current User',
-  avatarUrl:
-    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150',
-};
+import { currentUser } from '../../data';
 
 const postTypes: { type: PostType; icon: React.ElementType; label: string }[] =
   [

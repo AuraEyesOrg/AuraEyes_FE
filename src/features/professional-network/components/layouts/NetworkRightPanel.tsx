@@ -2,7 +2,7 @@
  * Network Right Panel Component
  * Right aside panel with search, trends, and suggestions
  *
- * Width: w-96 (384px)
+ * EXACT Width (matching Twitter): w-[350px] on lg+
  * Hidden on screens < lg (1024px)
  */
 
@@ -18,7 +18,7 @@ export function NetworkRightPanel() {
   const myGroups = mockGroups.filter((g) => g.isMember);
 
   return (
-    <aside className="hidden lg:flex w-96 flex-col gap-4 px-4 py-3 pt-1">
+    <aside className="network-right-panel">
       {/* Search - Twitter style: sticky, rounded-full */}
       <div className="sticky top-0 z-10 bg-main-background py-3">
         <div className="relative">
