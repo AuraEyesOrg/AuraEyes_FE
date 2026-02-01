@@ -247,7 +247,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
-          <p>© 2024 Aura Medical Systems.</p>
+          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
           <a className="hover:text-[#00d1c0] transition-colors" href="#">
             System Status: <span className="text-green-400">● Online</span>
           </a>

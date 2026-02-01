@@ -151,7 +151,7 @@ const TwoFactorVerifyPage = () => {
 
         {/* Footer */}
         <div className="relative z-10 text-sm text-gray-500">
-          <p>© 2024 Aura Medical Systems.</p>
+          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
         </div>
       </div>
 
