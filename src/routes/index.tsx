@@ -40,6 +40,7 @@ const AppointmentsPage = lazy(
   () => import('@/features/patient/pages/appointments')
 );
 const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
+const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const VerificationPage = lazy(
   () => import('@/features/patient/pages/verification')
@@ -124,6 +125,7 @@ const Router = () => (
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
         <Route path="/patient/profile" element={<ProfilePage />} />
+        <Route path="/patient/settings" element={<SettingsPage />} />
         <Route path="/patient/clinics" element={<ClinicsPage />} />
         <Route path="/patient/verification" element={<VerificationPage />} />
         <Route path="/patient/roadmap" element={<RoadmapPage />} />

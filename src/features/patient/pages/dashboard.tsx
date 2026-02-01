@@ -11,8 +11,6 @@ import {
   Home,
   CheckCircle,
   History,
-  ShieldCheck,
-  CreditCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
@@ -74,7 +72,7 @@ const statsCards = [
   {
     icon: Wallet,
     label: 'Wallet Balance',
-    value: '3 Credits',
+    value: '100.000 VNĐ',
     valueColor: 'text-[var(--text-primary)]',
     bgColor: 'bg-orange-50',
     iconColor: 'text-orange-500',
@@ -161,12 +159,6 @@ export default function PatientDashboard() {
               <Upload className="w-4 h-4" />
               Upload New Scan
             </Link>
-            <div className="hidden md:flex items-center gap-2 text-brand bg-brand-soft px-3 py-1.5 rounded-full border border-brand/20">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                HIPAA Compliant
-              </span>
-            </div>
           </div>
         </header>
 
@@ -316,59 +308,11 @@ export default function PatientDashboard() {
 
           {/* Right Column - Wallet & Quick Actions */}
           <div className="flex flex-col gap-6">
-            {/* Wallet Card */}
-            <div className="gradient-brand rounded-xl shadow-brand-lg p-6 text-white relative overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded text-white">
-                    Pre-paid
-                  </span>
-                </div>
-
-                <p className="text-white/80 text-sm font-medium mb-1">
-                  Available Balance
-                </p>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <h3 className="text-4xl font-bold">3</h3>
-                  <span className="text-sm text-white/80">Credits</span>
-                </div>
-
-                <div className="pt-4 border-t border-white/20 flex justify-between items-center">
-                  <span className="text-xs text-white/80">
-                    1 Credit = 1 AI Analysis
-                  </span>
-                  <Link
-                    to="/patient/wallet"
-                    className="text-xs font-bold text-brand bg-white px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
-                  >
-                    Top Up
-                  </Link>
-                </div>
-              </div>
-            </div>
-
             {/* Quick Actions */}
             <div className="medical-card flex flex-col gap-3">
               <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
                 Quick Actions
               </h3>
-
-              <Link
-                to="/patient/screening/new"
-                className="flex items-center justify-between w-full p-4 rounded-lg gradient-brand text-white shadow-brand hover:shadow-brand-lg transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <Upload className="w-5 h-5" />
-                  <span className="font-bold">Upload New Scan</span>
-                </div>
-                <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
-              </Link>
 
               <Link
                 to="/patient/chat"

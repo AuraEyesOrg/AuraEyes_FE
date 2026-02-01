@@ -31,7 +31,8 @@ export default function ProfilePage() {
     address: '123 Nguyen Hue Street',
     city: 'Ho Chi Minh City',
     country: 'Vietnam',
-    avatarUrl: '',
+    avatarUrl:
+      'https://tse4.mm.bing.net/th/id/OIP.2CZ8dHVST2-MS2FKuIh_TwHaFj?rs=1&pid=ImgDetMain&o=7&rm=3',
   });
 
   const [formData, setFormData] = useState(profile);
