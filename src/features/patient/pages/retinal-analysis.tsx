@@ -1,24 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI } from '@google/genai';
-import Header from '../components/Header';
-import PatientBar from '../components/PatientBar';
+import FocusModeLayout from '../components/FocusModeLayout';
 import ToolsSidebar from '../components/ToolsSidebar';
 import ImageViewer from '../components/ImageViewer';
 import AnalysisSidebar from '../components/AnalysisSidebar';
-import ImageGallery from '../components/ImageGallery';
+import ReadOnlyImageGallery from '../components/ReadOnlyImageGallery';
 import { ToggleState, Anomaly, RetinalImage } from '../types/type';
-
-// Default sample image for demo
-const DEFAULT_IMAGE: RetinalImage = {
-  id: 'default-1',
-  url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4',
-  name: 'Fundus_OS_001.jpg',
-  eye: 'Left Eye (OS)',
-  uploadedAt: new Date().toISOString(),
-  analyzed: false,
-  anomalies: [],
-};
 
 // Fallback data in case of API/CORS errors to ensure UI demo works
 const MOCK_ANOMALIES: Anomaly[] = [
@@ -74,32 +62,27 @@ export default function RetinalAnalysis() {
   const [isFallback, setIsFallback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Bulk Image Management State
-  const [images, setImages] = useState<RetinalImage[]>([DEFAULT_IMAGE]);
-  const [selectedImageId, setSelectedImageId] = useState<string>(
-    DEFAULT_IMAGE.id
-  );
-  const [isUploading, setIsUploading] = useState(false);
+  // Bulk Image Management State - Initialize empty, will be populated from route state
+  const [images, setImages] = useState<RetinalImage[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if we have images from the previous step
     if (routeState?.images && routeState.images.length > 0) {
-      const incomingImages: RetinalImage[] = routeState.images.map(
-        (img, index) => ({
-          id: img.id,
-          url: img.preview,
-          name: img.name,
-          eye:
-            img.name.toLowerCase().includes('od') ||
-            img.name.toLowerCase().includes('right')
-              ? 'Right Eye (OD)'
-              : 'Left Eye (OS)',
-          uploadedAt: new Date().toISOString(),
-          analyzed: false,
-          anomalies: [],
-        })
-      );
+      const incomingImages: RetinalImage[] = routeState.images.map((img) => ({
+        id: img.id,
+        url: img.preview,
+        name: img.name,
+        eye:
+          img.name.toLowerCase().includes('od') ||
+          img.name.toLowerCase().includes('right')
+            ? 'Right Eye (OD)'
+            : 'Left Eye (OS)',
+        uploadedAt: new Date().toISOString(),
+        analyzed: false,
+        anomalies: [],
+      }));
 
-      // Replace default images with incoming ones
       setImages(incomingImages);
       setSelectedImageId(incomingImages[0].id);
       setAnalyzed(false);
@@ -107,6 +90,9 @@ export default function RetinalAnalysis() {
 
       // Clear the state to prevent re-processing on refresh
       window.history.replaceState({}, document.title);
+    } else {
+      // No images from previous step - redirect back to upload
+      navigate('/patient/screening/new', { replace: true });
     }
   }, []);
 
@@ -125,49 +111,6 @@ export default function RetinalAnalysis() {
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.5));
   const handleReset = () => setZoomLevel(1.2);
 
-  // Handle bulk image upload
-  const handleUploadImages = async (files: FileList) => {
-    setIsUploading(true);
-
-    const newImages: RetinalImage[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
-
-      // Create object URL for the image
-      const url = URL.createObjectURL(file);
-
-      // Determine eye based on filename (simple heuristic)
-      const isRightEye =
-        file.name.toLowerCase().includes('od') ||
-        file.name.toLowerCase().includes('right');
-
-      const newImage: RetinalImage = {
-        id: `img-${Date.now()}-${i}`,
-        url,
-        name: file.name,
-        eye: isRightEye ? 'Right Eye (OD)' : 'Left Eye (OS)',
-        uploadedAt: new Date().toISOString(),
-        analyzed: false,
-        anomalies: [],
-      };
-
-      newImages.push(newImage);
-    }
-
-    if (newImages.length > 0) {
-      setImages((prev) => [...prev, ...newImages]);
-      // Auto-select the first new image
-      setSelectedImageId(newImages[0].id);
-      // Reset analysis state for new image
-      setAnalyzed(false);
-      setAnomalies([]);
-    }
-
-    setIsUploading(false);
-  };
-
   // Handle image selection
   const handleSelectImage = (imageId: string) => {
     setSelectedImageId(imageId);
@@ -181,20 +124,6 @@ export default function RetinalAnalysis() {
     }
   };
 
-  // Handle image removal
-  const handleRemoveImage = (imageId: string) => {
-    setImages((prev) => {
-      const filtered = prev.filter((img) => img.id !== imageId);
-      // If removing selected image, select another one
-      if (imageId === selectedImageId && filtered.length > 0) {
-        setSelectedImageId(filtered[0].id);
-        setAnomalies(filtered[0].anomalies);
-        setAnalyzed(filtered[0].analyzed);
-      }
-      return filtered;
-    });
-  };
-
   const handleAnalyze = async () => {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
@@ -204,8 +133,14 @@ export default function RetinalAnalysis() {
     setErrorMessage(null);
 
     try {
-      // Use current image URL or default
-      const imageUrl = currentImage?.url || DEFAULT_IMAGE.url;
+      // Use current image URL
+      const imageUrl = currentImage?.url;
+
+      if (!imageUrl) {
+        setErrorMessage('No image available for analysis');
+        setIsAnalyzing(false);
+        return;
+      }
 
       let base64Image = '';
       try {
@@ -315,11 +250,23 @@ export default function RetinalAnalysis() {
     }
   };
 
+  // If no images, show nothing (will redirect)
+  if (images.length === 0) {
+    return null;
+  }
+
   return (
-    <>
-      <Header />
-      <PatientBar />
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+    <FocusModeLayout
+      currentStep="analysis"
+      title="AI Retinal Analysis"
+      exitPath="/patient/screening/new"
+      breadcrumbItems={[
+        { label: 'Home', path: '/patient/dashboard' },
+        { label: 'Screening', path: '/patient/screening' },
+        { label: 'AI Analysis' },
+      ]}
+    >
+      <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
           <ToolsSidebar
             onZoomIn={handleZoomIn}
@@ -344,16 +291,13 @@ export default function RetinalAnalysis() {
             errorMessage={errorMessage}
           />
         </div>
-        {/* Image Gallery for Bulk Images */}
-        <ImageGallery
+        {/* Read-only Image Gallery - No upload functionality */}
+        <ReadOnlyImageGallery
           images={images}
           selectedImageId={selectedImageId}
           onSelectImage={handleSelectImage}
-          onUploadImages={handleUploadImages}
-          onRemoveImage={handleRemoveImage}
-          isUploading={isUploading}
         />
-      </main>
-    </>
+      </div>
+    </FocusModeLayout>
   );
 }
