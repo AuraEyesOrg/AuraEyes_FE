@@ -10,6 +10,7 @@ const EthicsPrivacyPage = lazy(
   () => import('@/features/guest/pages/EthicsPrivacy')
 );
 const StatusPage = lazy(() => import('@/features/guest/pages/Status'));
+const CompliancePage = lazy(() => import('@/features/guest/pages/Compliance'));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -107,6 +108,7 @@ const Router = () => (
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
         <Route path="/status" element={<StatusPage />} />
+        <Route path="/compliance" element={<CompliancePage />} />
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />

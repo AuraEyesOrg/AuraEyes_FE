@@ -88,6 +88,14 @@ export const Footer = () => {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link
+                  className="hover:text-[#319795] transition-colors"
+                  to="/compliance"
+                >
+                  Compliance
+                </Link>
+              </li>
             </ul>
           </div>
 
