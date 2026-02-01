@@ -102,7 +102,7 @@ const LoginPage = () => {
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/admin/dashboard');
+          navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
