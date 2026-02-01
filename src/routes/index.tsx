@@ -10,6 +10,7 @@ const EthicsPrivacyPage = lazy(
   () => import('@/features/guest/pages/EthicsPrivacy')
 );
 const StatusPage = lazy(() => import('@/features/guest/pages/Status'));
+const CompliancePage = lazy(() => import('@/features/guest/pages/Compliance'));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -39,6 +40,7 @@ const AppointmentsPage = lazy(
   () => import('@/features/patient/pages/appointments')
 );
 const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
+const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const VerificationPage = lazy(
   () => import('@/features/patient/pages/verification')
@@ -46,6 +48,9 @@ const VerificationPage = lazy(
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
 const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
+const RetinalAnalysisPage = lazy(
+  () => import('@/features/patient/pages/retinal-analysis')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -138,6 +143,7 @@ const Router = () => (
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
         <Route path="/status" element={<StatusPage />} />
+        <Route path="/compliance" element={<CompliancePage />} />
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
@@ -150,9 +156,11 @@ const Router = () => (
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/screening" element={<ScreeningPage />} />
         <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
+        <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
         <Route path="/patient/profile" element={<ProfilePage />} />
+        <Route path="/patient/settings" element={<SettingsPage />} />
         <Route path="/patient/clinics" element={<ClinicsPage />} />
         <Route path="/patient/verification" element={<VerificationPage />} />
         <Route path="/patient/roadmap" element={<RoadmapPage />} />

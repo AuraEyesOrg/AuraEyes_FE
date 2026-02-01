@@ -30,7 +30,7 @@ const navItems = [
   { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
   { icon: MessageCircle, label: 'Chat', path: '/patient/chat', badge: true },
   { icon: Wallet, label: 'Wallet', path: '/patient/wallet' },
-  { icon: Settings, label: 'Settings', path: '/patient/profile' },
+  { icon: Settings, label: 'Settings', path: '/patient/settings' },
 ];
 
 export default function PatientSidebar({
@@ -103,32 +103,37 @@ export default function PatientSidebar({
         {/* User Profile Footer */}
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
-            <div className="relative">
-              <div
-                className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center"
-                style={{
-                  backgroundImage: userAvatar
-                    ? `url("${userAvatar}")`
-                    : undefined,
-                }}
-              >
-                {!userAvatar && (
-                  <span className="text-white font-bold text-sm">
-                    {userName.charAt(0)}
-                  </span>
-                )}
+            <NavLink
+              to="/patient/profile"
+              className="flex items-center gap-3 flex-1 group cursor-pointer"
+            >
+              <div className="relative">
+                <div
+                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
+                  style={{
+                    backgroundImage: userAvatar
+                      ? `url("${userAvatar}")`
+                      : undefined,
+                  }}
+                >
+                  {!userAvatar && (
+                    <span className="text-white font-bold text-sm">
+                      {userName.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A202C]"></div>
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A202C]"></div>
-            </div>
-            <div className="flex flex-col overflow-hidden">
-              <p className="text-sm font-bold text-[var(--text-primary)] truncate">
-                {userName}
-              </p>
-              <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
-            </div>
+              <div className="flex flex-col overflow-hidden">
+                <p className="text-sm font-bold text-[var(--text-primary)] truncate group-hover:text-brand transition-colors">
+                  {userName}
+                </p>
+                <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
+              </div>
+            </NavLink>
             <button
               onClick={handleLogout}
-              className="ml-auto text-gray-500 hover:text-white transition-colors"
+              className="ml-auto text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
               title="Logout"
             >
               <LogOut className="w-5 h-5" />
