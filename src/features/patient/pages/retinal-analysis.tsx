@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI } from '@google/genai';
 import Header from '../components/Header';
 import PatientBar from '../components/PatientBar';
@@ -41,7 +42,24 @@ const MOCK_ANOMALIES: Anomaly[] = [
   },
 ];
 
+// Interface for route state from screening-new
+interface RouteStateImage {
+  id: string;
+  name: string;
+  preview: string;
+  quality?: 'high' | 'medium' | 'low';
+}
+
+interface LocationState {
+  images?: RouteStateImage[];
+  source?: string;
+}
+
 export default function RetinalAnalysis() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routeState = location.state as LocationState | null;
+
   const [toggles, setToggles] = useState<ToggleState>({
     vesselSegmentation: false,
     hemorrhages: true,
@@ -62,6 +80,35 @@ export default function RetinalAnalysis() {
     DEFAULT_IMAGE.id
   );
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (routeState?.images && routeState.images.length > 0) {
+      const incomingImages: RetinalImage[] = routeState.images.map(
+        (img, index) => ({
+          id: img.id,
+          url: img.preview,
+          name: img.name,
+          eye:
+            img.name.toLowerCase().includes('od') ||
+            img.name.toLowerCase().includes('right')
+              ? 'Right Eye (OD)'
+              : 'Left Eye (OS)',
+          uploadedAt: new Date().toISOString(),
+          analyzed: false,
+          anomalies: [],
+        })
+      );
+
+      // Replace default images with incoming ones
+      setImages(incomingImages);
+      setSelectedImageId(incomingImages[0].id);
+      setAnalyzed(false);
+      setAnomalies([]);
+
+      // Clear the state to prevent re-processing on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   // Get current selected image
   const currentImage =
