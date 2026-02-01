@@ -1,13 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Upload,
   AlertCircle,
   CheckCircle,
   Loader2,
   X,
-  Home,
-  ChevronRight,
   Sun,
   Focus,
   Target,
@@ -18,7 +16,7 @@ import {
   Clipboard,
   Lock,
 } from 'lucide-react';
-import PatientLayout from '../components/PatientLayout';
+import FocusModeLayout from '../components/FocusModeLayout';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -244,80 +242,13 @@ export default function ScreeningNewPage() {
   };
 
   return (
-    <PatientLayout>
-      <div className="flex flex-col h-full">
-        {/* Breadcrumb */}
-        <nav className="flex text-sm mb-4">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link
-                to="/patient/dashboard"
-                className="text-[var(--text-secondary)] hover:text-brand transition-colors flex items-center gap-1"
-              >
-                <Home className="w-4 h-4" />
-                Home
-              </Link>
-            </li>
-            <li>
-              <ChevronRight className="w-4 h-4 text-[var(--border-color)]" />
-            </li>
-            <li className="font-bold text-brand">New Screening</li>
-          </ol>
-        </nav>
-
-        {/* Step Progress */}
-        <div className="w-full py-4 mb-6">
-          <div className="relative flex items-center justify-between w-full max-w-xl mx-auto">
-            {/* Progress Line */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-[var(--border-color)] -z-10 rounded-full" />
-
-            {STEPS.map((step, index) => {
-              const isCompleted =
-                STEPS.findIndex((s) => s.key === currentStep) > index;
-              const isCurrent = step.key === currentStep;
-              const isPending =
-                STEPS.findIndex((s) => s.key === currentStep) < index;
-
-              return (
-                <div
-                  key={step.key}
-                  className="flex flex-col items-center gap-2"
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ring-4 ring-[var(--bg-primary)] transition-all ${
-                      isCompleted
-                        ? 'bg-brand text-white'
-                        : isCurrent
-                          ? 'bg-brand text-white relative'
-                          : 'bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] text-[var(--text-muted)]'
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : (
-                      <span className="text-sm font-bold">{step.number}</span>
-                    )}
-                    {isCurrent && (
-                      <span className="absolute -inset-1 rounded-full border border-brand animate-ping opacity-30" />
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs font-bold uppercase tracking-wide ${
-                      isCurrent
-                        ? 'text-[var(--text-primary)]'
-                        : isPending
-                          ? 'text-[var(--text-muted)]'
-                          : 'text-brand'
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+    <FocusModeLayout
+      currentStep="upload"
+      title="New Screening"
+      exitPath="/patient/screening"
+      showBreadcrumb={false}
+    >
+      <div className="flex-1 flex flex-col p-6 lg:p-10">
         {/* Main Content */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Sidebar - Quality Standards (Smaller) */}
@@ -621,6 +552,6 @@ export default function ScreeningNewPage() {
           </p>
         </footer>
       </div>
-    </PatientLayout>
+    </FocusModeLayout>
   );
 }
