@@ -3,32 +3,24 @@ import { RetinalImage } from '../types/type';
 import {
   ChevronUp,
   Images,
-  Upload,
   CloudUpload,
-  Plus,
   AlertTriangle,
   Check,
   Clock,
-  X,
-  Clipboard,
 } from 'lucide-react';
 
 interface ImageGalleryProps {
   images: RetinalImage[];
   selectedImageId: string | null;
   onSelectImage: (imageId: string) => void;
-  onUploadImages: (files: FileList) => void;
   onRemoveImage: (imageId: string) => void;
-  isUploading: boolean;
 }
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   selectedImageId,
   onSelectImage,
-  onUploadImages,
   onRemoveImage,
-  isUploading,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -60,10 +52,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
       if (imageFiles.length > 0) {
         e.preventDefault();
-        onUploadImages(createFileList(imageFiles));
       }
     },
-    [isExpanded, onUploadImages, createFileList]
+    [isExpanded, createFileList]
   );
 
   // Add paste event listener
@@ -100,9 +91,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onUploadImages(e.dataTransfer.files);
-    }
   };
 
   // Handle global drag events for better UX
@@ -117,12 +105,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
     return () =>
       document.removeEventListener('dragenter', handleGlobalDragEnter);
   }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      onUploadImages(e.target.files);
-    }
-  };
 
   return (
     <div
@@ -211,18 +193,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
               )}
             </div>
           )}
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-            disabled={isUploading}
-            className="flex items-center gap-1 px-2 py-1 bg-[#13ecec]/20 hover:bg-[#13ecec]/30 text-[#13ecec] text-[10px] font-medium rounded border border-[#13ecec]/30 transition-colors disabled:opacity-50"
-          >
-            <Upload className="w-3 h-3" />
-            Upload
-          </button>
         </div>
 
         <input
@@ -230,7 +200,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           type="file"
           accept="image/*"
           multiple
-          onChange={handleFileSelect}
           className="hidden"
         />
       </div>
@@ -314,40 +283,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                       <Clock className="w-2 h-2 text-white" />
                     )}
                   </div>
-
-                  {/* Remove button on hover */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveImage(image.id);
-                    }}
-                    className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-red-500/80 rounded-full items-center justify-center hidden group-hover:flex hover:bg-red-500"
-                  >
-                    <X className="w-2 h-2 text-white" />
-                  </button>
                 </div>
               ))}
-
-              {/* Add More */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-none w-14 h-14 border border-dashed border-[#283939] rounded flex flex-col items-center justify-center text-[#9db9b9] hover:border-[#13ecec]/50 hover:text-[#13ecec] transition-colors cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-              </div>
-
-              {/* Paste hint */}
-              <div className="flex-none flex items-center gap-1.5 px-3 py-2 bg-[#283939]/30 rounded text-[10px] text-[#9db9b9] border border-[#283939]">
-                <Clipboard className="w-3 h-3" />
-                <span>Ctrl+V to paste</span>
-              </div>
             </>
-          )}
-
-          {isUploading && (
-            <div className="flex-none w-14 h-14 border border-[#283939] rounded flex items-center justify-center bg-[#182626]">
-              <div className="w-4 h-4 border-2 border-[#283939] border-t-[#13ecec] rounded-full animate-spin"></div>
-            </div>
           )}
         </div>
       )}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleGenAI } from '@google/genai';
-import Header from '../components/Header';
 import PatientBar from '../components/PatientBar';
 import ToolsSidebar from '../components/ToolsSidebar';
 import ImageViewer from '../components/ImageViewer';
@@ -79,7 +78,6 @@ export default function RetinalAnalysis() {
   const [selectedImageId, setSelectedImageId] = useState<string>(
     DEFAULT_IMAGE.id
   );
-  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (routeState?.images && routeState.images.length > 0) {
@@ -124,49 +122,6 @@ export default function RetinalAnalysis() {
   const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 0.2, 5.0));
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.2, 0.5));
   const handleReset = () => setZoomLevel(1.2);
-
-  // Handle bulk image upload
-  const handleUploadImages = async (files: FileList) => {
-    setIsUploading(true);
-
-    const newImages: RetinalImage[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
-
-      // Create object URL for the image
-      const url = URL.createObjectURL(file);
-
-      // Determine eye based on filename (simple heuristic)
-      const isRightEye =
-        file.name.toLowerCase().includes('od') ||
-        file.name.toLowerCase().includes('right');
-
-      const newImage: RetinalImage = {
-        id: `img-${Date.now()}-${i}`,
-        url,
-        name: file.name,
-        eye: isRightEye ? 'Right Eye (OD)' : 'Left Eye (OS)',
-        uploadedAt: new Date().toISOString(),
-        analyzed: false,
-        anomalies: [],
-      };
-
-      newImages.push(newImage);
-    }
-
-    if (newImages.length > 0) {
-      setImages((prev) => [...prev, ...newImages]);
-      // Auto-select the first new image
-      setSelectedImageId(newImages[0].id);
-      // Reset analysis state for new image
-      setAnalyzed(false);
-      setAnomalies([]);
-    }
-
-    setIsUploading(false);
-  };
 
   // Handle image selection
   const handleSelectImage = (imageId: string) => {
@@ -317,7 +272,6 @@ export default function RetinalAnalysis() {
 
   return (
     <>
-      <Header />
       <PatientBar />
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <div className="flex-1 flex overflow-hidden">
@@ -349,9 +303,7 @@ export default function RetinalAnalysis() {
           images={images}
           selectedImageId={selectedImageId}
           onSelectImage={handleSelectImage}
-          onUploadImages={handleUploadImages}
           onRemoveImage={handleRemoveImage}
-          isUploading={isUploading}
         />
       </main>
     </>

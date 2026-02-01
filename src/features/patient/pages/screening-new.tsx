@@ -32,11 +32,11 @@ interface UploadedImage {
   message?: string;
 }
 
-type Step = 'guidelines' | 'upload' | 'review';
+type Step = 'upload' | 'analysis' | 'review';
 
 const STEPS: { key: Step; label: string; number: number }[] = [
-  { key: 'guidelines', label: 'Guidelines', number: 1 },
-  { key: 'upload', label: 'Upload & Validate', number: 2 },
+  { key: 'upload', label: 'Upload & Validate', number: 1 },
+  { key: 'analysis', label: 'Analysis', number: 2 },
   { key: 'review', label: 'Review', number: 3 },
 ];
 
