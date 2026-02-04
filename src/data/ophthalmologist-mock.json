@@ -1,0 +1,143 @@
+{
+  "doctor": {
+    "id": "D001",
+    "name": "Dr. Alistair",
+    "specialty": "Retina Specialist",
+    "hospital": "General Hospital",
+    "department": "Retina Dept",
+    "avatar": null
+  },
+  "dashboardStats": {
+    "pendingReviews": 12,
+    "urgentCases": 3,
+    "completedToday": 45
+  },
+  "urgentAlerts": [
+    {
+      "id": "UA001",
+      "patientId": "#99201",
+      "patientName": "Jane Doe",
+      "age": 64,
+      "condition": "Glaucoma Risk",
+      "conditionType": "glaucoma",
+      "aiConfidence": 98,
+      "eyeImage": "/eye-scan-1.jpg",
+      "priority": "critical"
+    },
+    {
+      "id": "UA002",
+      "patientId": "#89321",
+      "patientName": "John Smith",
+      "age": 72,
+      "condition": "Vein Occlusion",
+      "conditionType": "vein-occlusion",
+      "aiConfidence": 92,
+      "eyeImage": "/eye-scan-2.jpg",
+      "priority": "high"
+    },
+    {
+      "id": "UA003",
+      "patientId": "#44921",
+      "patientName": "Robert Brown",
+      "age": 58,
+      "condition": "Diabetic Retinopathy",
+      "conditionType": "diabetic-retinopathy",
+      "aiConfidence": 99,
+      "eyeImage": "/eye-scan-3.jpg",
+      "priority": "critical"
+    }
+  ],
+  "screeningQueue": {
+    "total": 12,
+    "showing": 4,
+    "currentPage": 1,
+    "totalPages": 3,
+    "patients": [
+      {
+        "id": "#48291",
+        "name": "Elena Miller",
+        "initials": "EM",
+        "avatarColor": "#14b8a6",
+        "scanDate": "Oct 24, 09:30 AM",
+        "aiPrediction": "Macular Degeneration",
+        "predictionType": "macular-degeneration",
+        "confidence": 78,
+        "status": "ai-analyzed",
+        "action": "start-review"
+      },
+      {
+        "id": "#48290",
+        "name": "David Kim",
+        "initials": "DK",
+        "avatarColor": "#f59e0b",
+        "scanDate": "Oct 24, 10:15 AM",
+        "aiPrediction": "Healthy",
+        "predictionType": "healthy",
+        "confidence": 95,
+        "status": "ai-analyzed",
+        "action": "quick-approve"
+      },
+      {
+        "id": "#48301",
+        "name": "Sarah Jenkins",
+        "initials": "SJ",
+        "avatarColor": "#8b5cf6",
+        "scanDate": "Oct 23, 04:45 PM",
+        "aiPrediction": "Microaneurysms",
+        "predictionType": "microaneurysms",
+        "confidence": 65,
+        "status": "flagged-for-review",
+        "action": "start-review"
+      },
+      {
+        "id": "#48312",
+        "name": "Marcus Wright",
+        "initials": "MW",
+        "avatarColor": "#ec4899",
+        "scanDate": "Oct 23, 03:20 PM",
+        "aiPrediction": "Hypertensive",
+        "predictionType": "hypertensive",
+        "confidence": 88,
+        "status": "ai-analyzed",
+        "action": "start-review"
+      }
+    ]
+  },
+  "navItems": [
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "icon": "LayoutDashboard",
+      "path": "/ophthalmologist/dashboard",
+      "active": true
+    },
+    {
+      "id": "patients",
+      "label": "Patients",
+      "icon": "Users",
+      "path": "/ophthalmologist/patients",
+      "active": false
+    },
+    {
+      "id": "screenings",
+      "label": "Screenings",
+      "icon": "Eye",
+      "path": "/ophthalmologist/screenings",
+      "active": false
+    },
+    {
+      "id": "analytics",
+      "label": "Analytics",
+      "icon": "BarChart3",
+      "path": "/ophthalmologist/analytics",
+      "active": false
+    },
+    {
+      "id": "settings",
+      "label": "Settings",
+      "icon": "Settings",
+      "path": "/ophthalmologist/settings",
+      "active": false
+    }
+  ]
+}

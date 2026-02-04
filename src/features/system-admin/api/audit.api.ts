@@ -1,5 +1,5 @@
 /**
- * System Admin Audit Logs & Compliance Service
+ * System Admin Audit Logs & Compliance API
  * Handles API calls for audit logs and compliance reporting
  */
 
@@ -13,7 +13,7 @@ import type {
   PaginatedResponse,
 } from '../types/system-admin.types';
 
-export const auditService = {
+export const auditApi = {
   /**
    * Fetch audit logs with pagination and filtering
    */
@@ -88,7 +88,7 @@ export const auditService = {
   },
 };
 
-export const complianceService = {
+export const complianceApi = {
   /**
    * Fetch compliance overview
    */

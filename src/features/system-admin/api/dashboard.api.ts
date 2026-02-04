@@ -1,5 +1,5 @@
 /**
- * System Admin Dashboard Service
+ * System Admin Dashboard API
  * Handles API calls for dashboard data
  */
 
@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type { ApiResponse, DashboardData } from '../types/system-admin.types';
 
-export const dashboardService = {
+export const dashboardApi = {
   /**
    * Fetch dashboard statistics
    */

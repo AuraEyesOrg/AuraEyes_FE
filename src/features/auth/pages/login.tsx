@@ -46,7 +46,7 @@ const LoginPage = () => {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [twoFactorData, setTwoFactorData] =
+  const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
@@ -102,7 +102,7 @@ const LoginPage = () => {
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/admin/dashboard');
+          navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {

@@ -32,7 +32,7 @@ interface SettingSection {
 }
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);

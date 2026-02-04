@@ -26,14 +26,16 @@ export {
 } from './components';
 export type { TableColumn } from './components';
 
-// Services
+// API
 export {
-  dashboardService,
-  organisationService,
-  userService,
-  aiModelService,
-  auditService,
-} from './services';
+  dashboardApi,
+  organisationApi,
+  deviceApi,
+  userApi,
+  aiModelApi,
+  auditApi,
+  complianceApi,
+} from './api';
 
 // Types - re-export all types
 export type * from './types';

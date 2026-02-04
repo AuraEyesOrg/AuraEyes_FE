@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Milestone,
   CheckCircle,
   Clock,
   Calendar,
@@ -137,7 +136,7 @@ const mockRecommendations: Recommendation[] = [
 ];
 
 export default function RoadmapPage() {
-  const [selectedMilestone, setSelectedMilestone] = useState<string | null>(
+  const [_selectedMilestone, _setSelectedMilestone] = useState<string | null>(
     null
   );
   const [recommendations, setRecommendations] = useState(mockRecommendations);
@@ -230,7 +229,9 @@ export default function RoadmapPage() {
               <h2 className="text-xl font-bold text-[var(--text-primary)]">
                 {mockRoadmap.title}
               </h2>
-              <p className="text-[var(--text-secondary)]">{mockRoadmap.description}</p>
+              <p className="text-[var(--text-secondary)]">
+                {mockRoadmap.description}
+              </p>
               <p className="text-sm text-brand mt-1">
                 Started: {mockRoadmap.startDate}
               </p>
@@ -243,7 +244,9 @@ export default function RoadmapPage() {
         </div>
 
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm text-[var(--text-secondary)]">Overall Progress</span>
+          <span className="text-sm text-[var(--text-secondary)]">
+            Overall Progress
+          </span>
           <span className="text-sm font-medium text-[var(--text-primary)]">
             {mockRoadmap.progress}%
           </span>
@@ -269,7 +272,7 @@ export default function RoadmapPage() {
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-[#1e3a5f]" />
 
               <div className="space-y-6">
-                {mockMilestones.map((milestone, index) => (
+                {mockMilestones.map((milestone, _index) => (
                   <div key={milestone.id} className="relative flex gap-4">
                     {/* Timeline Dot */}
                     <div

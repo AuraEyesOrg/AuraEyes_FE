@@ -10,7 +10,7 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import StatusBadge, { RiskBadge } from '../components/StatusBadge';
 import DataTable, { type TableColumn } from '../components/DataTable';
-import { dashboardService } from '../services/dashboard.service';
+import { dashboardApi } from '../api';
 import type {
   DashboardStats,
   ScreeningVolumeTrend,
@@ -127,21 +127,39 @@ export default function SystemAdminDashboard() {
 
   // Load dashboard data
   const loadData = useCallback(async () => {
+    // Use mock data directly since API endpoints may not exist yet
+    const mockData = getMockData();
+
     try {
       const [statsData, screeningsData, trendsData, riskData] =
         await Promise.all([
-          dashboardService.getStats().catch(() => null),
-          dashboardService.getRecentScreenings(5).catch(() => null),
-          dashboardService.getScreeningVolume().catch(() => null),
-          dashboardService.getRiskDistribution().catch(() => null),
+          dashboardApi.getStats().catch(() => null),
+          dashboardApi.getRecentScreenings(5).catch(() => null),
+          dashboardApi.getScreeningVolume().catch(() => null),
+          dashboardApi.getRiskDistribution().catch(() => null),
         ]);
 
-      // Use mock data if API not available
-      const mockData = getMockData();
-      setStats(statsData || mockData.stats);
-      setRecentScreenings(screeningsData || mockData.recentScreenings);
-      setVolumeTrends(trendsData || mockData.volumeTrends);
-      setRiskDistribution(riskData || mockData.riskDistribution);
+      // Use API data if available and valid, otherwise use mock data
+      setStats(
+        statsData && typeof statsData === 'object' ? statsData : mockData.stats
+      );
+      setRecentScreenings(
+        Array.isArray(screeningsData)
+          ? screeningsData
+          : mockData.recentScreenings
+      );
+      setVolumeTrends(
+        Array.isArray(trendsData) ? trendsData : mockData.volumeTrends
+      );
+      setRiskDistribution(
+        Array.isArray(riskData) ? riskData : mockData.riskDistribution
+      );
+    } catch {
+      // If all fails, use mock data
+      setStats(mockData.stats);
+      setRecentScreenings(mockData.recentScreenings);
+      setVolumeTrends(mockData.volumeTrends);
+      setRiskDistribution(mockData.riskDistribution);
     } finally {
       setLoading({
         stats: false,

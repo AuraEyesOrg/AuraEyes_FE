@@ -3,41 +3,41 @@
 
 @theme {
   /* Primary - Vibrant Cyan/Teal (Lấy từ homepage) */
-  --color-brand-primary: #00E5FF; /* Màu chính cho Buttons & Accents */
-  --color-brand-dark: #1A202C; /* Màu nền đậm cho Sidebar/Mission sections */
-  --color-brand-soft: #F0FDFA; /* Teal cực nhạt cho hover states */
-  
+  --color-brand-primary: #00e5ff; /* Màu chính cho Buttons & Accents */
+  --color-brand-dark: #1a202c; /* Màu nền đậm cho Sidebar/Mission sections */
+  --color-brand-soft: #f0fdfa; /* Teal cực nhạt cho hover states */
+
   /* Semantic - Trạng thái y tế */
-  --color-risk-low: #00E5FF; /* Dùng chung màu brand cho an toàn */
-  --color-risk-medium: #F6AD55; /* Cam dịu */
-  --color-risk-high: #FC8181; /* Đỏ pastel y tế */
-  
+  --color-risk-low: #00e5ff; /* Dùng chung màu brand cho an toàn */
+  --color-risk-medium: #f6ad55; /* Cam dịu */
+  --color-risk-high: #fc8181; /* Đỏ pastel y tế */
+
   /* Surface & Neutral */
-  --color-medical-bg: #F7FAFC; /* Nền xám nhạt */
-  --color-medical-surface: #F5F7FA; /* Trắng tuyệt đối cho Card */
-  --color-medical-border: #E2E8F0; /* Border mảnh */
-  
+  --color-medical-bg: #f7fafc; /* Nền xám nhạt */
+  --color-medical-surface: #f5f7fa; /* Trắng tuyệt đối cho Card */
+  --color-medical-border: #e2e8f0; /* Border mảnh */
+
   /* Text */
-  --color-text-main: #2D3748; /* Xám đậm (không dùng đen tuyền) */
+  --color-text-main: #2d3748; /* Xám đậm (không dùng đen tuyền) */
   --color-text-muted: #718096; /* Chữ phụ */
-  
+
   /* Legacy colors for compatibility */
-  --color-primary: #00E5FF;
-  --color-secondary: #00E5FF;
-  --color-accent: #F0FDFA;
-  --color-danger: #FC8181;
+  --color-primary: #00e5ff;
+  --color-secondary: #00e5ff;
+  --color-accent: #f0fdfa;
+  --color-danger: #fc8181;
   --color-white: #ffffff;
 
   /* Typography */
-  --font-family-medical: "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-medical: 'Inter', system-ui, -apple-system, sans-serif;
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter', sans-serif;
-  
+
   /* Font Sizes */
   --text-base: 16px;
   --text-heading: 1.25rem; /* 20px - Cho các title Card */
   --text-page-title: 1.875rem; /* 30px - Cho Breadcrumbs/Page Name */
-  
+
   /* Spacing & Radius */
   --radius-card: 0.75rem; /* 12px */
   --radius-button: 0.5rem; /* 8px */
@@ -46,47 +46,47 @@
 :root {
   color-scheme: light;
   /* Medical-Grade Theme Variables */
-  --bg-primary: #F7FAFC;
-  --bg-secondary: #F5F7FA;
-  --bg-tertiary: #F0FDFA;
-  --border-color: #E2E8F0;
-  --text-primary: #2D3748;
+  --bg-primary: #f7fafc;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #f0fdfa;
+  --border-color: #e2e8f0;
+  --text-primary: #2d3748;
   --text-secondary: #718096;
-  --text-muted: #A0AEC0;
-  
+  --text-muted: #a0aec0;
+
   /* Brand colors */
-  --brand-primary: #00E5FF;
-  --brand-secondary: #00E5FF;
-  --brand-accent: #F0FDFA;
-  
+  --brand-primary: #00e5ff;
+  --brand-secondary: #00e5ff;
+  --brand-accent: #f0fdfa;
+
   /* Risk status colors */
-  --risk-low: #00E5FF;
-  --risk-medium: #F6AD55;
-  --risk-high: #FC8181;
+  --risk-low: #00e5ff;
+  --risk-medium: #f6ad55;
+  --risk-high: #fc8181;
 }
 
 .light {
   color-scheme: light;
   /* Light theme variables (default for medical UI) */
-  --bg-primary: #F7FAFC;
-  --bg-secondary: #F5F7FA;
-  --bg-tertiary: #F0FDFA;
-  --border-color: #E2E8F0;
-  --text-primary: #2D3748;
+  --bg-primary: #f7fafc;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #f0fdfa;
+  --border-color: #e2e8f0;
+  --text-primary: #2d3748;
   --text-secondary: #718096;
-  --text-muted: #A0AEC0;
+  --text-muted: #a0aec0;
 }
 
 .dark {
   color-scheme: dark;
   /* Optional dark mode for medical UI (less common) */
-  --bg-primary: #1A202C;
-  --bg-secondary: #2D3748;
-  --bg-tertiary: #134E4A;
-  --border-color: #4A5568;
-  --text-primary: #F7FAFC;
-  --text-secondary: #CBD5E0;
-  --text-muted: #A0AEC0;
+  --bg-primary: #1a202c;
+  --bg-secondary: #2d3748;
+  --bg-tertiary: #134e4a;
+  --border-color: #4a5568;
+  --text-primary: #f7fafc;
+  --text-secondary: #cbd5e0;
+  --text-muted: #a0aec0;
 }
 
 body {
@@ -106,76 +106,84 @@ body {
   .btn-primary {
     @apply bg-[var(--color-brand-primary)] text-white font-semibold py-2 px-6 rounded-lg hover:brightness-110 transition-all shadow-md active:scale-95;
   }
-  
+
   .btn-secondary {
     @apply border-2 border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] font-semibold py-2 px-6 rounded-lg hover:bg-[var(--color-brand-soft)] transition-all;
   }
-  
+
   /* Brand Color Utilities */
   .bg-brand {
     background-color: var(--color-brand-primary);
   }
-  
+
   .text-brand {
     color: var(--color-brand-primary);
   }
-  
+
   .border-brand {
     border-color: var(--color-brand-primary);
   }
-  
+
   .bg-brand-soft {
     background-color: var(--color-brand-soft);
   }
-  
+
   .shadow-brand {
     box-shadow: 0 4px 14px rgba(19, 236, 236, 0.15);
   }
-  
+
   .shadow-brand-lg {
     box-shadow: 0 10px 30px rgba(19, 236, 236, 0.2);
   }
-  
+
   /* Gradient Utilities */
   .gradient-brand {
-    background: linear-gradient(135deg, var(--color-brand-primary) 0%, #0EA5A5 100%);
+    background: linear-gradient(
+      135deg,
+      var(--color-brand-primary) 0%,
+      #0ea5a5 100%
+    );
   }
-  
+
   .gradient-dark {
-    background: linear-gradient(135deg, var(--color-brand-dark) 0%, #0F172A 100%);
+    background: linear-gradient(
+      135deg,
+      var(--color-brand-dark) 0%,
+      #0f172a 100%
+    );
   }
-  
+
   /* Sidebar cố định */
   .sidebar-container {
     @apply fixed left-0 top-0 h-screen w-64 bg-[#1A202C] text-white z-50;
   }
-  
+
   /* Header chứa Breadcrumbs */
   .header-main {
     @apply fixed top-0 right-0 left-64 h-16 bg-white border-b border-[var(--border-color)] flex items-center px-8 z-40;
   }
-  
+
   /* Content Wrapper */
   .main-content {
     @apply ml-64 mt-16 p-8 bg-[var(--bg-primary)] min-h-[calc(100vh-64px)];
   }
-  
+
   /* Medical Card - Dashboard Card Layout */
   .medical-card {
     @apply bg-white border border-[var(--border-color)] rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow;
   }
-  
+
   /* Status Badge */
   .badge-risk-low {
     @apply px-3 py-1 rounded-full text-xs font-semibold uppercase;
     background-color: var(--color-brand-soft);
     color: var(--color-brand-primary);
   }
-  
+
   .badge-risk-medium {
     @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-orange-100 text-orange-800;
   }
-  
+
   .badge-risk-high {
     @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-red-100 text-red-800;
   }
@@ -200,20 +208,20 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #F7FAFC;
+  background: #f7fafc;
 }
 .dark ::-webkit-scrollbar-track {
-  background: #2D3748;
+  background: #2d3748;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E0;
+  background: #cbd5e0;
   border-radius: 4px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #4A5568;
+  background: #4a5568;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A0AEC0;
+  background: #a0aec0;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #718096;
@@ -225,20 +233,24 @@ body {
 }
 
 .shadow-medical {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .shadow-medical-lg {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Toggle checkbox styles */
 .toggle-checkbox:checked {
   right: 0;
-  border-color: #00E5FF;
+  border-color: #00e5ff;
 }
 .toggle-checkbox:checked + .toggle-label {
-  background-color: #00E5FF;
+  background-color: #00e5ff;
 }
 
 /* Animation utilities */

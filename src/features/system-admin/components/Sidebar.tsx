@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  Network,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -50,6 +51,11 @@ const navItems: NavItem[] = [
     label: 'Audit Logs',
     icon: <FileText className="w-5 h-5" />,
     href: '/system-admin/audit-logs',
+  },
+  {
+    label: 'Pro Network',
+    icon: <Network className="w-5 h-5" />,
+    href: '/network',
   },
   {
     label: 'Settings',

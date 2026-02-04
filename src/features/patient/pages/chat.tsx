@@ -183,7 +183,9 @@ export default function ChatPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Messages</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          Messages
+        </h1>
         <p className="text-[var(--text-secondary)]">
           Chat with your assigned ophthalmologists
         </p>
@@ -326,7 +328,9 @@ export default function ChatPage() {
                             : 'justify-start'
                         }`}
                       >
-                        <span className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-[var(--text-muted)]'}`}>
+                        <span
+                          className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-[var(--text-muted)]'}`}
+                        >
                           {message.timestamp}
                         </span>
                         {message.senderType === 'patient' && (

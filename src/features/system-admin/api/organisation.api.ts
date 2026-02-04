@@ -1,5 +1,5 @@
 /**
- * System Admin Organisation & Device Service
+ * System Admin Organisation & Device API
  * Handles API calls for organisation and device management
  */
 
@@ -14,7 +14,7 @@ import type {
   CalibrationLog,
 } from '../types/system-admin.types';
 
-export const organisationService = {
+export const organisationApi = {
   /**
    * Fetch all organisations with pagination
    */
@@ -111,7 +111,7 @@ export const organisationService = {
   },
 };
 
-export const deviceService = {
+export const deviceApi = {
   /**
    * Fetch all devices with pagination
    */

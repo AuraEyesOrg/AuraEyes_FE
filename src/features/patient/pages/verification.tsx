@@ -217,7 +217,9 @@ export default function VerificationPage() {
                             : 'bg-[var(--bg-primary)] border-[var(--border-color)] hover:border-brand/30'
                         }`}
                       >
-                        <p className="text-[var(--text-primary)] font-medium mb-1">Normal</p>
+                        <p className="text-[var(--text-primary)] font-medium mb-1">
+                          Normal
+                        </p>
                         <p className="text-sm text-[var(--text-secondary)]">
                           2-3 business days
                         </p>
@@ -233,8 +235,12 @@ export default function VerificationPage() {
                             : 'bg-[var(--bg-primary)] border-[var(--border-color)] hover:border-amber-500/30'
                         }`}
                       >
-                        <p className="text-[var(--text-primary)] font-medium mb-1">Urgent</p>
-                        <p className="text-sm text-[var(--text-secondary)]">Within 24 hours</p>
+                        <p className="text-[var(--text-primary)] font-medium mb-1">
+                          Urgent
+                        </p>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          Within 24 hours
+                        </p>
                         <p className="text-lg font-bold text-amber-600 mt-2">
                           {formatCurrency(1000000)}
                         </p>
@@ -253,7 +259,9 @@ export default function VerificationPage() {
                 <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <p className="text-[var(--text-primary)] font-medium mb-2">All caught up!</p>
+                <p className="text-[var(--text-primary)] font-medium mb-2">
+                  All caught up!
+                </p>
                 <p className="text-[var(--text-secondary)] text-sm">
                   All your screening results have been verified.
                 </p>
@@ -351,7 +359,9 @@ export default function VerificationPage() {
               <div className="w-10 h-10 bg-brand/20 rounded-xl flex items-center justify-center">
                 <Shield className="w-5 h-5 text-brand" />
               </div>
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">How It Works</h2>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                How It Works
+              </h2>
             </div>
 
             <ol className="space-y-4">
@@ -360,7 +370,9 @@ export default function VerificationPage() {
                   1
                 </span>
                 <div>
-                  <p className="text-[var(--text-primary)] font-medium">Select Screening</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Select Screening
+                  </p>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Choose which AI result you want verified
                   </p>
@@ -371,7 +383,9 @@ export default function VerificationPage() {
                   2
                 </span>
                 <div>
-                  <p className="text-[var(--text-primary)] font-medium">Pay for Service</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Pay for Service
+                  </p>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Choose priority and complete payment
                   </p>
@@ -382,7 +396,9 @@ export default function VerificationPage() {
                   3
                 </span>
                 <div>
-                  <p className="text-[var(--text-primary)] font-medium">Expert Review</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Expert Review
+                  </p>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Ophthalmologist reviews your results
                   </p>
@@ -393,7 +409,9 @@ export default function VerificationPage() {
                   4
                 </span>
                 <div>
-                  <p className="text-[var(--text-primary)] font-medium">Get Diagnosis</p>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Get Diagnosis
+                  </p>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Receive verified diagnosis and recommendations
                   </p>

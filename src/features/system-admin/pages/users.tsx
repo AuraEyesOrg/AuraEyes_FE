@@ -21,7 +21,7 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { userService } from '../services/user.service';
+import { userApi } from '../api';
 import type { User, UserRole } from '../types/system-admin.types';
 
 // Mock data for demonstration
@@ -113,7 +113,7 @@ export default function UsersPage() {
   // Load data
   const loadData = useCallback(async () => {
     try {
-      const usersData = await userService.getUsers().catch(() => null);
+      const usersData = await userApi.getUsers().catch(() => null);
       setUsers(usersData?.data || getMockUsers());
     } finally {
       setLoading(false);
@@ -145,9 +145,9 @@ export default function UsersPage() {
   const handleToggleLock = async (userId: string, currentStatus: string) => {
     try {
       if (currentStatus === 'locked') {
-        await userService.unlockUser(userId);
+        await userApi.unlockUser(userId);
       } else {
-        await userService.lockUser(userId);
+        await userApi.lockUser(userId);
       }
       loadData(); // Refresh data
     } catch (error) {

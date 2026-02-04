@@ -86,6 +86,37 @@ const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
 
+// Professional Network pages
+const NetworkLayout = lazy(() =>
+  import('@/features/professional-network/components/layouts/NetworkLayout').then(
+    (module) => ({ default: module.NetworkLayout })
+  )
+);
+const NetworkFeedPage = lazy(
+  () => import('@/features/professional-network/pages/FeedPage')
+);
+const NetworkDiscoverPage = lazy(
+  () => import('@/features/professional-network/pages/DiscoverPage')
+);
+const NetworkConnectionsPage = lazy(
+  () => import('@/features/professional-network/pages/ConnectionsPage')
+);
+const NetworkGroupsPage = lazy(
+  () => import('@/features/professional-network/pages/GroupsPage')
+);
+const NetworkSavedPage = lazy(
+  () => import('@/features/professional-network/pages/SavedPage')
+);
+const NetworkPostDetailPage = lazy(
+  () => import('@/features/professional-network/pages/PostDetailPage')
+);
+const NetworkProfilePage = lazy(
+  () => import('@/features/professional-network/pages/ProfilePage')
+);
+const NetworkOrganisationPage = lazy(
+  () => import('@/features/professional-network/pages/OrganisationPage')
+);
+
 /**
  * Loading component hiển thị khi lazy load
  */
@@ -159,8 +190,23 @@ const Router = () => (
           element={<OrganisationSettingsPage />}
         />
 
-        {/* ============ OPHTHALMOLOGIST ROUTES (Coming Soon) ============ */}
-        {/* Add ophthalmologist routes here */}
+        {/* ============ OPHTHALMOLOGIST ROUTES ============ */}
+        <Route
+          path="/ophthalmologist/dashboard"
+          element={<OphthalmologistDashboard />}
+        />
+        <Route
+          path="/ophthalmologist/patients"
+          element={<OphthalmologistPatients />}
+        />
+        <Route
+          path="/ophthalmologist/screenings"
+          element={<OphthalmologistScreenings />}
+        />
+        <Route
+          path="/ophthalmologist/analytics"
+          element={<OphthalmologistAnalytics />}
+        />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
         <Route
@@ -180,6 +226,22 @@ const Router = () => (
           path="/system-admin/audit-logs"
           element={<SystemAdminAuditLogs />}
         />
+
+        {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
+        <Route path="/network" element={<NetworkLayout />}>
+          <Route index element={<NetworkFeedPage />} />
+          <Route path="feed" element={<NetworkFeedPage />} />
+          <Route path="discover" element={<NetworkDiscoverPage />} />
+          <Route path="connections" element={<NetworkConnectionsPage />} />
+          <Route path="groups" element={<NetworkGroupsPage />} />
+          <Route path="saved" element={<NetworkSavedPage />} />
+          <Route path="post/:id" element={<NetworkPostDetailPage />} />
+          <Route path="profile/:id" element={<NetworkProfilePage />} />
+          <Route
+            path="organisation/:id"
+            element={<NetworkOrganisationPage />}
+          />
+        </Route>
       </Routes>
     </Suspense>
   </BrowserRouter>
