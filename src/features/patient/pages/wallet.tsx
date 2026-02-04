@@ -12,6 +12,10 @@ import {
   XCircle,
   ChevronRight,
   RefreshCw,
+  TrendingUp,
+  DollarSign,
+  X,
+  Calendar,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 
@@ -150,7 +154,9 @@ export default function WalletPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Digital Wallet</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          Digital Wallet
+        </h1>
         <p className="text-[var(--text-secondary)]">
           Manage your balance and view transaction history
         </p>
@@ -160,40 +166,97 @@ export default function WalletPage() {
         {/* Left Column - Balance & Quick Actions */}
         <div className="space-y-6">
           {/* Balance Card */}
-          <div className="bg-gradient-to-br from-primary via-primary/80 to-accent rounded-2xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+          <div className="medical-card bg-gradient-to-br from-brand via-[#00d4e6] to-[#00b8cc] text-white">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm text-white/80">Available Balance</p>
-                <p className="text-3xl font-bold">{formatCurrency(balance)}</p>
+                <p className="text-sm text-white/90 font-medium">
+                  Available Balance
+                </p>
+                <p className="text-3xl font-bold mt-1">
+                  {formatCurrency(balance)}
+                </p>
               </div>
             </div>
 
             <button
               onClick={() => setShowDepositModal(true)}
-              className="w-full py-3 bg-white/20 hover:bg-white/30 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-white hover:bg-white/95 rounded-xl font-semibold transition-all text-brand flex items-center justify-center gap-2 shadow-md active:scale-95"
             >
               <Plus className="w-5 h-5" />
               Top Up Wallet
             </button>
           </div>
 
+          {/* Quick Stats */}
+          <div className="medical-card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-brand" />
+              This Month
+            </h2>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                    <ArrowDownLeft className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="text-[var(--text-secondary)] text-sm">
+                    Total Deposits
+                  </span>
+                </div>
+                <span className="text-green-600 font-semibold">
+                  +{formatCurrency(3000000)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                    <ArrowUpRight className="w-4 h-4 text-red-500" />
+                  </div>
+                  <span className="text-[var(--text-secondary)] text-sm">
+                    Total Spent
+                  </span>
+                </div>
+                <span className="text-red-500 font-semibold">
+                  -{formatCurrency(1500000)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <History className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-[var(--text-secondary)] text-sm">
+                    Transactions
+                  </span>
+                </div>
+                <span className="text-[var(--text-primary)] font-semibold">
+                  6
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Payment Methods */}
-          <div className="medical-card p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+          <div className="medical-card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-brand" />
               Payment Methods
             </h2>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
+              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">VNPay</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      VNPay
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Cards, Bank Transfer, QR
                     </p>
@@ -202,50 +265,21 @@ export default function WalletPage() {
                 <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
+              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">PayOS</p>
-                    <p className="text-xs text-[var(--text-secondary)]">Bank Transfer, QR</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      PayOS
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Bank Transfer, QR
+                    </p>
                   </div>
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="medical-card p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-              This Month
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ArrowDownLeft className="w-4 h-4 text-green-600" />
-                  <span className="text-[var(--text-secondary)]">Total Deposits</span>
-                </div>
-                <span className="text-green-600 font-medium">
-                  +{formatCurrency(3000000)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ArrowUpRight className="w-4 h-4 text-red-500" />
-                  <span className="text-[var(--text-secondary)]">Total Spent</span>
-                </div>
-                <span className="text-red-500 font-medium">
-                  -{formatCurrency(1500000)}
-                </span>
-              </div>
-              <hr className="border-[var(--border-color)]" />
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">Transactions</span>
-                <span className="text-[var(--text-primary)] font-medium">6</span>
               </div>
             </div>
           </div>
@@ -253,30 +287,31 @@ export default function WalletPage() {
 
         {/* Right Column - Transaction History */}
         <div className="lg:col-span-2">
-          <div className="medical-card p-6">
+          <div className="medical-card">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                <History className="w-5 h-5 text-brand" />
                 Transaction History
               </h2>
-              <button className="text-sm text-brand hover:text-brand/80 flex items-center gap-1">
+              <button className="text-sm text-brand hover:text-brand/80 flex items-center gap-1 font-medium transition-colors">
                 View All <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {mockTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-colors"
+                  className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-all hover:shadow-md"
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         transaction.type === 'deposit'
-                          ? 'bg-green-100'
+                          ? 'bg-green-50'
                           : transaction.type === 'refund'
-                            ? 'bg-blue-100'
-                            : 'bg-red-100'
+                            ? 'bg-blue-50'
+                            : 'bg-red-50'
                       }`}
                     >
                       {getTransactionIcon(transaction.type)}
@@ -285,7 +320,8 @@ export default function WalletPage() {
                       <p className="text-[var(--text-primary)] font-medium">
                         {transaction.description}
                       </p>
-                      <p className="text-sm text-[var(--text-secondary)]">
+                      <p className="text-sm text-[var(--text-secondary)] mt-0.5 flex items-center gap-2">
+                        <Calendar className="w-3 h-3" />
                         {transaction.date}
                       </p>
                     </div>
@@ -293,7 +329,7 @@ export default function WalletPage() {
 
                   <div className="text-right">
                     <p
-                      className={`font-semibold ${
+                      className={`font-bold text-lg mb-1 ${
                         transaction.amount > 0
                           ? 'text-green-600'
                           : 'text-red-500'
@@ -313,15 +349,31 @@ export default function WalletPage() {
 
       {/* Deposit Modal */}
       {showDepositModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl border border-[var(--border-color)] p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">
-              Top Up Your Wallet
-            </h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="medical-card w-full max-w-lg shadow-2xl animate-slideUp">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <DollarSign className="w-6 h-6 text-brand" />
+                  Top Up Your Wallet
+                </h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">
+                  Choose an amount and payment method
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDepositModal(false)}
+                className="w-8 h-8 rounded-lg hover:bg-[var(--bg-secondary)] flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-[var(--text-secondary)]" />
+              </button>
+            </div>
 
             {/* Amount Selection */}
             <div className="mb-6">
-              <p className="text-sm text-[var(--text-secondary)] mb-3">Select Amount</p>
+              <label className="text-sm font-semibold text-[var(--text-primary)] mb-3 block">
+                Select Amount
+              </label>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {depositAmounts.map((amount) => (
                   <button
@@ -330,10 +382,10 @@ export default function WalletPage() {
                       setSelectedAmount(amount);
                       setCustomAmount('');
                     }}
-                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
+                    className={`py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
                       selectedAmount === amount
-                        ? 'bg-brand text-white'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-color)]'
+                        ? 'bg-brand text-white shadow-brand'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-color)] hover:border-brand/30'
                     }`}
                   >
                     {formatCurrency(amount)}
@@ -350,9 +402,9 @@ export default function WalletPage() {
                     setCustomAmount(e.target.value);
                     setSelectedAmount(null);
                   }}
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-brand transition-colors"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-medium">
                   VND
                 </span>
               </div>
@@ -360,60 +412,72 @@ export default function WalletPage() {
 
             {/* Payment Method */}
             <div className="mb-6">
-              <p className="text-sm text-[var(--text-secondary)] mb-3">Payment Method</p>
+              <label className="text-sm font-semibold text-[var(--text-primary)] mb-3 block">
+                Payment Method
+              </label>
               <div className="space-y-3">
                 <button
                   onClick={() => setSelectedMethod('vnpay')}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     selectedMethod === 'vnpay'
-                      ? 'bg-brand-soft border-brand/50'
+                      ? 'bg-brand-soft border-brand shadow-brand'
                       : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-brand/30'
                   }`}
                 >
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-blue-600" />
                   </div>
-                  <div className="text-left">
-                    <p className="text-[var(--text-primary)] font-medium">VNPay</p>
+                  <div className="text-left flex-1">
+                    <p className="text-[var(--text-primary)] font-semibold">
+                      VNPay
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Credit/Debit Card, Bank Transfer
                     </p>
                   </div>
+                  {selectedMethod === 'vnpay' && (
+                    <CheckCircle className="w-5 h-5 text-brand" />
+                  )}
                 </button>
 
                 <button
                   onClick={() => setSelectedMethod('payos')}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     selectedMethod === 'payos'
-                      ? 'bg-brand-soft border-brand/50'
+                      ? 'bg-brand-soft border-brand shadow-brand'
                       : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-brand/30'
                   }`}
                 >
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-purple-600" />
                   </div>
-                  <div className="text-left">
-                    <p className="text-[var(--text-primary)] font-medium">PayOS</p>
+                  <div className="text-left flex-1">
+                    <p className="text-[var(--text-primary)] font-semibold">
+                      PayOS
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Bank Transfer, QR Code
                     </p>
                   </div>
+                  {selectedMethod === 'payos' && (
+                    <CheckCircle className="w-5 h-5 text-brand" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-4 border-t border-[var(--border-color)]">
               <button
                 onClick={() => setShowDepositModal(false)}
-                className="flex-1 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl font-medium transition-colors"
+                className="flex-1 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl font-semibold transition-all active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeposit}
                 disabled={!selectedMethod || (!selectedAmount && !customAmount)}
-                className="flex-1 py-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+                className="flex-1 py-3 bg-brand hover:brightness-110 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 disabled:shadow-none"
               >
                 Proceed to Pay
               </button>
