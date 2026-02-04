@@ -48,10 +48,10 @@ function ProfilePage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionPending, setConnectionPending] = useState(false);
-  const [professional, setProfessional] = useState<Ophthalmologist | null>(
+  const [professional, _setProfessional] = useState<Ophthalmologist | null>(
     null
   );
-  const [userPosts, setUserPosts] = useState<ProfessionalPost[]>([]);
+  const [userPosts, _setUserPosts] = useState<ProfessionalPost[]>([]);
 
   // TODO: Fetch from API using useEffect
 

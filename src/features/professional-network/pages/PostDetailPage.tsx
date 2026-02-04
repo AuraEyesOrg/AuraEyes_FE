@@ -19,10 +19,10 @@ const currentUser = {
 };
 
 function PostDetailPage() {
-  const { id } = useParams();
+  const { id: _id } = useParams();
   const [commentText, setCommentText] = useState('');
-  const [post, setPost] = useState<ProfessionalPost | null>(null);
-  const [comments, setComments] = useState<PostComment[]>([]);
+  const [post, _setPost] = useState<ProfessionalPost | null>(null);
+  const [comments, _setComments] = useState<PostComment[]>([]);
 
   // TODO: Fetch post and comments from API
 

@@ -29,12 +29,12 @@ const orgTypeLabels: Record<Organisation['type'], string> = {
 // TODO: Replace with actual API calls
 
 function OrganisationPage() {
-  const { id } = useParams();
+  const { id: _id } = useParams();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [isFollowing, setIsFollowing] = useState(false);
-  const [organisation, setOrganisation] = useState<Organisation | null>(null);
-  const [orgPosts, setOrgPosts] = useState<ProfessionalPost[]>([]);
-  const [members, setMembers] = useState<Ophthalmologist[]>([]);
+  const [organisation, _setOrganisation] = useState<Organisation | null>(null);
+  const [orgPosts, _setOrgPosts] = useState<ProfessionalPost[]>([]);
+  const [members, _setMembers] = useState<Ophthalmologist[]>([]);
 
   // TODO: Fetch from API using useEffect
 

@@ -46,7 +46,7 @@ const LoginPage = () => {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [twoFactorData, setTwoFactorData] =
+  const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();

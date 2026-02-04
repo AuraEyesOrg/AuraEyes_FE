@@ -147,7 +147,9 @@ const AppointmentsPage = () => {
     <PatientLayout userName="John Doe">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Appointments</h1>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+            Appointments
+          </h1>
           <p className="text-[var(--text-secondary)]">
             Manage your appointments and retinal images
           </p>
@@ -170,7 +172,9 @@ const AppointmentsPage = () => {
               <Calendar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{upcomingCount}</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
+                {upcomingCount}
+              </p>
               <p className="text-xs text-[var(--text-muted)]">Upcoming</p>
             </div>
           </div>
@@ -181,7 +185,9 @@ const AppointmentsPage = () => {
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{completedCount}</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
+                {completedCount}
+              </p>
               <p className="text-xs text-[var(--text-muted)]">Completed</p>
             </div>
           </div>

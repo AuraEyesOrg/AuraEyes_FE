@@ -24,12 +24,16 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               // Split React into its own chunk for long-term caching
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              if (
+                id.includes('react') ||
+                id.includes('react-dom') ||
+                id.includes('react-router')
+              ) {
                 return 'vendor-react';
               }
               // Combine other huge libraries (add your own here, e.g., 'lodash', 'axios')
               // if (id.includes('lodash')) return 'vendor-utils';
-              
+
               // Default vendor chunk
               return 'vendor';
             }
@@ -61,17 +65,18 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tsconfigPaths(),
-      tailwindcss(), 
+      tailwindcss(),
       VitePWA(PWAConfig),
 
       // 5. Compression (Gzip) - Production only
       // Reduces deployment size significantly
-      isProduction && viteCompression({
-        algorithm: 'gzip',
-        ext: '.gz',
-        threshold: 10240, // Only compress assets > 10kb
-        deleteOriginFile: false,
-      }),
+      isProduction &&
+        viteCompression({
+          algorithm: 'gzip',
+          ext: '.gz',
+          threshold: 10240, // Only compress assets > 10kb
+          deleteOriginFile: false,
+        }),
 
       // 6. Visualizer - Build Analysis
       // Generates stats.html to see exactly what is in your bundle

@@ -3,9 +3,11 @@
 ## 🎨 Color Palette
 
 ### Primary Brand Color
+
 - **Cyan/Teal**: `#13ECEC` - Main brand color for buttons, accents, and key UI elements
 
 ### Supporting Colors
+
 - **Dark**: `#1A202C` - Headers, dark backgrounds
 - **Soft Cyan**: `#F0FDFA` - Light backgrounds, hover states
 - **Text Main**: `#2D3748` - Primary text
@@ -16,6 +18,7 @@
 ## ✅ Correct Usage - CSS Variables
 
 ### In Tailwind Classes (Recommended)
+
 ```tsx
 // ✅ GOOD - Using CSS variables
 <div className="bg-[var(--color-brand-primary)]">
@@ -29,15 +32,16 @@
 ```
 
 ### In Inline Styles
+
 ```tsx
 // ✅ GOOD - Using CSS variables
-<div style={{ 
+<div style={{
   background: 'var(--color-brand-primary)',
   color: 'var(--color-brand-primary)'
 }}>
 
 // For gradients
-<div style={{ 
+<div style={{
   background: 'linear-gradient(135deg, var(--color-brand-primary) 0%, #0EA5A5 100%)'
 }}>
 ```
@@ -57,6 +61,7 @@
 ## 🛠️ Utility Classes Available
 
 ### Backgrounds
+
 ```tsx
 .bg-brand          // Background: Cyan (#13ECEC)
 .bg-brand-soft     // Background: Light Cyan (#F0FDFA)
@@ -65,28 +70,33 @@
 ```
 
 ### Text Colors
+
 ```tsx
 .text-brand        // Text: Cyan (#13ECEC)
 ```
 
 ### Borders
+
 ```tsx
 .border-brand      // Border: Cyan (#13ECEC)
 ```
 
 ### Shadows
+
 ```tsx
 .shadow-brand      // Cyan shadow (subtle)
 .shadow-brand-lg   // Cyan shadow (prominent)
 ```
 
 ### Buttons
+
 ```tsx
 .btn-primary       // Primary button (Cyan background)
 .btn-secondary     // Secondary button (Cyan border)
 ```
 
 ### Badges
+
 ```tsx
 .badge-risk-low    // Low risk (Cyan)
 .badge-risk-medium // Medium risk (Orange)
@@ -96,6 +106,7 @@
 ## 📋 Common Patterns
 
 ### Buttons
+
 ```tsx
 // Primary Action
 <button className="btn-primary">
@@ -114,6 +125,7 @@
 ```
 
 ### Cards with Brand Accent
+
 ```tsx
 <div className="medical-card hover:border-brand">
   <div className="text-brand font-bold">Card Title</div>
@@ -122,6 +134,7 @@
 ```
 
 ### Status Indicators
+
 ```tsx
 <span className="badge-risk-low">Low Risk</span>
 <span className="badge-risk-medium">Medium</span>
@@ -129,10 +142,9 @@
 ```
 
 ### Icons with Brand Color
+
 ```tsx
-<svg className="text-brand w-6 h-6">
-  {/* SVG paths */}
-</svg>
+<svg className="text-brand w-6 h-6">{/* SVG paths */}</svg>
 ```
 
 ## 🔄 Migration Guide
@@ -141,19 +153,19 @@ If you have hardcoded colors, replace them:
 
 ```tsx
 // Before (❌)
-className="bg-[#13ECEC]"
-className="text-[#13ECEC]"
-className="border-[#13ECEC]/30"
+className = 'bg-[#13ECEC]';
+className = 'text-[#13ECEC]';
+className = 'border-[#13ECEC]/30';
 
 // After (✅)
-className="bg-[var(--color-brand-primary)]"
-className="text-[var(--color-brand-primary)]"
-className="border-[var(--color-brand-primary)]/30"
+className = 'bg-[var(--color-brand-primary)]';
+className = 'text-[var(--color-brand-primary)]';
+className = 'border-[var(--color-brand-primary)]/30';
 
 // Or use utility classes (✅)
-className="bg-brand"
-className="text-brand"
-className="border-brand opacity-30"
+className = 'bg-brand';
+className = 'text-brand';
+className = 'border-brand opacity-30';
 ```
 
 ## 💡 Why Use CSS Variables?
@@ -171,16 +183,16 @@ className="border-brand opacity-30"
 
 ## 🎯 Quick Reference
 
-| Need | Use This |
-|------|----------|
-| Primary button | `btn-primary` |
-| Secondary button | `btn-secondary` |
-| Brand color bg | `bg-[var(--color-brand-primary)]` or `bg-brand` |
-| Brand color text | `text-[var(--color-brand-primary)]` or `text-brand` |
+| Need               | Use This                                                |
+| ------------------ | ------------------------------------------------------- |
+| Primary button     | `btn-primary`                                           |
+| Secondary button   | `btn-secondary`                                         |
+| Brand color bg     | `bg-[var(--color-brand-primary)]` or `bg-brand`         |
+| Brand color text   | `text-[var(--color-brand-primary)]` or `text-brand`     |
 | Brand color border | `border-[var(--color-brand-primary)]` or `border-brand` |
-| Light cyan bg | `bg-[var(--color-brand-soft)]` or `bg-brand-soft` |
-| Card component | `medical-card` |
-| Status badge | `badge-risk-low/medium/high` |
+| Light cyan bg      | `bg-[var(--color-brand-soft)]` or `bg-brand-soft`       |
+| Card component     | `medical-card`                                          |
+| Status badge       | `badge-risk-low/medium/high`                            |
 
 ---
 

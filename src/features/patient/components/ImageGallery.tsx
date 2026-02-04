@@ -20,7 +20,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   selectedImageId,
   onSelectImage,
-  onRemoveImage,
+  onRemoveImage: _onRemoveImage,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);

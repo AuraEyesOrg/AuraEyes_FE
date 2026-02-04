@@ -18,7 +18,7 @@ interface Props {
   isReply?: boolean;
 }
 
-const reactionConfig: Record<
+const _reactionConfig: Record<
   ReactionType,
   { icon: React.ElementType; color: string }
 > = {

@@ -190,8 +190,23 @@ const Router = () => (
           element={<OrganisationSettingsPage />}
         />
 
-        {/* ============ OPHTHALMOLOGIST ROUTES (Coming Soon) ============ */}
-        {/* Add ophthalmologist routes here */}
+        {/* ============ OPHTHALMOLOGIST ROUTES ============ */}
+        <Route
+          path="/ophthalmologist/dashboard"
+          element={<OphthalmologistDashboard />}
+        />
+        <Route
+          path="/ophthalmologist/patients"
+          element={<OphthalmologistPatients />}
+        />
+        <Route
+          path="/ophthalmologist/screenings"
+          element={<OphthalmologistScreenings />}
+        />
+        <Route
+          path="/ophthalmologist/analytics"
+          element={<OphthalmologistAnalytics />}
+        />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
         <Route

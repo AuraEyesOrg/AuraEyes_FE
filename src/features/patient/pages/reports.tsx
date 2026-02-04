@@ -150,7 +150,9 @@ const ReportsPage = () => {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Medical Reports</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          Medical Reports
+        </h1>
         <p className="text-[var(--text-secondary)]">
           View, download, and track your screening results and heatmaps
         </p>
@@ -167,7 +169,9 @@ const ReportsPage = () => {
               <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.length}
               </p>
-              <p className="text-xs text-[var(--text-secondary)]">Total Reports</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Total Reports
+              </p>
             </div>
           </div>
         </div>
@@ -193,7 +197,9 @@ const ReportsPage = () => {
               <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.filter((r) => r.hasHeatmap).length}
               </p>
-              <p className="text-xs text-[var(--text-secondary)]">With Heatmaps</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                With Heatmaps
+              </p>
             </div>
           </div>
         </div>

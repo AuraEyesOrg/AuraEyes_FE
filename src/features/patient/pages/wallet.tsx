@@ -150,7 +150,9 @@ export default function WalletPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Digital Wallet</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          Digital Wallet
+        </h1>
         <p className="text-[var(--text-secondary)]">
           Manage your balance and view transaction history
         </p>
@@ -193,7 +195,9 @@ export default function WalletPage() {
                     <CreditCard className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">VNPay</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      VNPay
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Cards, Bank Transfer, QR
                     </p>
@@ -208,8 +212,12 @@ export default function WalletPage() {
                     <Building2 className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">PayOS</p>
-                    <p className="text-xs text-[var(--text-secondary)]">Bank Transfer, QR</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      PayOS
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Bank Transfer, QR
+                    </p>
                   </div>
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -227,7 +235,9 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowDownLeft className="w-4 h-4 text-green-600" />
-                  <span className="text-[var(--text-secondary)]">Total Deposits</span>
+                  <span className="text-[var(--text-secondary)]">
+                    Total Deposits
+                  </span>
                 </div>
                 <span className="text-green-600 font-medium">
                   +{formatCurrency(3000000)}
@@ -236,7 +246,9 @@ export default function WalletPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowUpRight className="w-4 h-4 text-red-500" />
-                  <span className="text-[var(--text-secondary)]">Total Spent</span>
+                  <span className="text-[var(--text-secondary)]">
+                    Total Spent
+                  </span>
                 </div>
                 <span className="text-red-500 font-medium">
                   -{formatCurrency(1500000)}
@@ -244,8 +256,12 @@ export default function WalletPage() {
               </div>
               <hr className="border-[var(--border-color)]" />
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">Transactions</span>
-                <span className="text-[var(--text-primary)] font-medium">6</span>
+                <span className="text-[var(--text-secondary)]">
+                  Transactions
+                </span>
+                <span className="text-[var(--text-primary)] font-medium">
+                  6
+                </span>
               </div>
             </div>
           </div>
@@ -321,7 +337,9 @@ export default function WalletPage() {
 
             {/* Amount Selection */}
             <div className="mb-6">
-              <p className="text-sm text-[var(--text-secondary)] mb-3">Select Amount</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-3">
+                Select Amount
+              </p>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {depositAmounts.map((amount) => (
                   <button
@@ -360,7 +378,9 @@ export default function WalletPage() {
 
             {/* Payment Method */}
             <div className="mb-6">
-              <p className="text-sm text-[var(--text-secondary)] mb-3">Payment Method</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-3">
+                Payment Method
+              </p>
               <div className="space-y-3">
                 <button
                   onClick={() => setSelectedMethod('vnpay')}
@@ -374,7 +394,9 @@ export default function WalletPage() {
                     <CreditCard className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[var(--text-primary)] font-medium">VNPay</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      VNPay
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Credit/Debit Card, Bank Transfer
                     </p>
@@ -393,7 +415,9 @@ export default function WalletPage() {
                     <Building2 className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[var(--text-primary)] font-medium">PayOS</p>
+                    <p className="text-[var(--text-primary)] font-medium">
+                      PayOS
+                    </p>
                     <p className="text-xs text-[var(--text-secondary)]">
                       Bank Transfer, QR Code
                     </p>

@@ -32,7 +32,7 @@ interface UploadedImage {
 
 type Step = 'upload' | 'analysis' | 'review';
 
-const STEPS: { key: Step; label: string; number: number }[] = [
+const _STEPS: { key: Step; label: string; number: number }[] = [
   { key: 'upload', label: 'Upload & Validate', number: 1 },
   { key: 'analysis', label: 'Analysis', number: 2 },
   { key: 'review', label: 'Review', number: 3 },
@@ -40,7 +40,7 @@ const STEPS: { key: Step; label: string; number: number }[] = [
 
 export default function ScreeningNewPage() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<Step>('upload');
+  const [_currentStep, _setCurrentStep] = useState<Step>('upload');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

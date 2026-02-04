@@ -161,7 +161,7 @@ export default function ProfilePage() {
       setFormData((prev) => ({ ...prev, avatarUrl: previewUrl }));
       setShowAvatarUpload(false);
       setPreviewUrl(null);
-    } catch (error) {
+    } catch {
       alert('Failed to upload avatar');
     } finally {
       setIsUploading(false);
