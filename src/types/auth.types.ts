@@ -39,7 +39,7 @@ export interface User {
   updatedAt: string;
 }
 
-export type UserRole = 
+export type UserRole =
   | 'patient'
   | 'doctor'
   | 'ophthalmologist'

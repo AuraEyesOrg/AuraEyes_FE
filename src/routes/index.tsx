@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-// Guest/Landing pages
+// Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
 const AboutPage = lazy(() => import('@/features/guest/pages/About'));
 const HowItWorksPage = lazy(() => import('@/features/guest/pages/HowItWorks'));
@@ -9,66 +9,112 @@ const ContactPage = lazy(() => import('@/features/guest/pages/Contact'));
 const EthicsPrivacyPage = lazy(
   () => import('@/features/guest/pages/EthicsPrivacy')
 );
+const StatusPage = lazy(() => import('@/features/guest/pages/Status'));
+const CompliancePage = lazy(() => import('@/features/guest/pages/Compliance'));
 
 // Auth pages
-const LoginPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.LoginPage }))
+const LoginPage = lazy(() => import('@/features/auth/pages/login'));
+const TwoFactorSettingsPage = lazy(
+  () => import('@/features/auth/pages/two-factor-settings')
 );
-const ConfirmEmailPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.ConfirmEmailPage }))
+const TwoFactorVerifyPage = lazy(
+  () => import('@/features/auth/pages/two-factor-verify')
 );
-const RegisterDoctorPage = lazy(() =>
-  import('@/pages').then((module) => ({ default: module.RegisterDoctorPage }))
+const ConfirmEmailPage = lazy(
+  () => import('@/features/auth/pages/confirm-email')
 );
-
-// Guest/Customer pages (After Login)
-const GuestDashboard = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.GuestDashboard }))
-);
-const ScreeningPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.ScreeningPage }))
-);
-const ReportsPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({ default: module.ReportsPage }))
-);
-const AppointmentsPage = lazy(() =>
-  import('@/pages/guest').then((module) => ({
-    default: module.AppointmentsPage,
-  }))
+const RegisterDoctorPage = lazy(
+  () => import('@/features/auth/pages/register-doctor')
 );
 
-// Admin pages
-const AdminDashboard = lazy(() => import('@/features/admin/pages/dashboard'));
+// Patient pages
+const PatientDashboard = lazy(
+  () => import('@/features/patient/pages/dashboard')
+);
+const ScreeningPage = lazy(() => import('@/features/patient/pages/screening'));
+const ScreeningNewPage = lazy(
+  () => import('@/features/patient/pages/screening-new')
+);
+const ReportsPage = lazy(() => import('@/features/patient/pages/reports'));
+const AppointmentsPage = lazy(
+  () => import('@/features/patient/pages/appointments')
+);
+const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
+const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
+const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
+const VerificationPage = lazy(
+  () => import('@/features/patient/pages/verification')
+);
+const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
+const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
+const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
+const RetinalAnalysisPage = lazy(
+  () => import('@/features/patient/pages/retinal-analysis')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
   () => import('@/features/organisation/pages/dashboard')
 );
-const PatientsPage = lazy(
+const OrganisationPatientsPage = lazy(
   () => import('@/features/organisation/pages/patients')
 );
-const CalendarPage = lazy(
+const OrganisationCalendarPage = lazy(
   () => import('@/features/organisation/pages/calendar')
 );
-const SettingsPage = lazy(
+const OrganisationSettingsPage = lazy(
   () => import('@/features/organisation/pages/settings')
 );
-const AnalyticsPage = lazy(
+const OrganisationAnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
 );
 
-// Ophthalmologist pages
-const OphthalmologistDashboard = lazy(
-  () => import('@/features/ophthalmologist/pages/dashboard')
+// System Admin pages
+const SystemAdminDashboard = lazy(
+  () => import('@/features/system-admin/pages/dashboard')
 );
-const OphthalmologistPatients = lazy(
-  () => import('@/features/ophthalmologist/pages/patients')
+const SystemAdminOrganisations = lazy(
+  () => import('@/features/system-admin/pages/organisations')
 );
-const OphthalmologistScreenings = lazy(
-  () => import('@/features/ophthalmologist/pages/screenings')
+const SystemAdminUsers = lazy(
+  () => import('@/features/system-admin/pages/users')
 );
-const OphthalmologistAnalytics = lazy(
-  () => import('@/features/ophthalmologist/pages/analytics')
+const SystemAdminAIModels = lazy(
+  () => import('@/features/system-admin/pages/ai-models')
+);
+const SystemAdminAuditLogs = lazy(
+  () => import('@/features/system-admin/pages/audit-logs')
+);
+
+// Professional Network pages
+const NetworkLayout = lazy(() =>
+  import('@/features/professional-network/components/layouts/NetworkLayout').then(
+    (module) => ({ default: module.NetworkLayout })
+  )
+);
+const NetworkFeedPage = lazy(
+  () => import('@/features/professional-network/pages/FeedPage')
+);
+const NetworkDiscoverPage = lazy(
+  () => import('@/features/professional-network/pages/DiscoverPage')
+);
+const NetworkConnectionsPage = lazy(
+  () => import('@/features/professional-network/pages/ConnectionsPage')
+);
+const NetworkGroupsPage = lazy(
+  () => import('@/features/professional-network/pages/GroupsPage')
+);
+const NetworkSavedPage = lazy(
+  () => import('@/features/professional-network/pages/SavedPage')
+);
+const NetworkPostDetailPage = lazy(
+  () => import('@/features/professional-network/pages/PostDetailPage')
+);
+const NetworkProfilePage = lazy(
+  () => import('@/features/professional-network/pages/ProfilePage')
+);
+const NetworkOrganisationPage = lazy(
+  () => import('@/features/professional-network/pages/OrganisationPage')
 );
 
 /**
@@ -90,37 +136,59 @@ const Router = () => (
   <BrowserRouter>
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Public Landing Page */}
-        <Route path="/" element={<HomePage />} />
-
-        {/* ============ AUTH ROUTES ============ */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register-doctor" element={<RegisterDoctorPage />} />
-        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-
-        {/* ============ GUEST/CUSTOMER ROUTES (After Login) ============ */}
-        <Route path="/dashboard" element={<GuestDashboard />} />
-        <Route path="/screening" element={<ScreeningPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/appointments" element={<AppointmentsPage />} />
-
+        {/* ============ GUEST ROUTES (Public - No Auth) ============ */}
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/ethics" element={<EthicsPrivacyPage />} />
-        {/* ============ ADMIN ROUTES ============ */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/status" element={<StatusPage />} />
+        <Route path="/compliance" element={<CompliancePage />} />
+
+        {/* ============ AUTH ROUTES ============ */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register-doctor" element={<RegisterDoctorPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
+        <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
+
+        {/* ============ PATIENT ROUTES ============ */}
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
+        <Route path="/patient/screening" element={<ScreeningPage />} />
+        <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
+        <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
+        <Route path="/patient/reports" element={<ReportsPage />} />
+        <Route path="/patient/appointments" element={<AppointmentsPage />} />
+        <Route path="/patient/profile" element={<ProfilePage />} />
+        <Route path="/patient/settings" element={<SettingsPage />} />
+        <Route path="/patient/clinics" element={<ClinicsPage />} />
+        <Route path="/patient/verification" element={<VerificationPage />} />
+        <Route path="/patient/roadmap" element={<RoadmapPage />} />
+        <Route path="/patient/chat" element={<ChatPage />} />
+        <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/security" element={<TwoFactorSettingsPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
-          path="/retinal_analysisorganisation/dashboard"
+          path="/organisation/dashboard"
           element={<OrganisationDashboard />}
         />
-        <Route path="/organisation/patients" element={<PatientsPage />} />
-        <Route path="/organisation/analytics" element={<AnalyticsPage />} />
-        <Route path="/organisation/calendar" element={<CalendarPage />} />
-        <Route path="/organisation/settings" element={<SettingsPage />} />
+        <Route
+          path="/organisation/patients"
+          element={<OrganisationPatientsPage />}
+        />
+        <Route
+          path="/organisation/analytics"
+          element={<OrganisationAnalyticsPage />}
+        />
+        <Route
+          path="/organisation/calendar"
+          element={<OrganisationCalendarPage />}
+        />
+        <Route
+          path="/organisation/settings"
+          element={<OrganisationSettingsPage />}
+        />
 
         {/* ============ OPHTHALMOLOGIST ROUTES ============ */}
         <Route
@@ -139,6 +207,41 @@ const Router = () => (
           path="/ophthalmologist/analytics"
           element={<OphthalmologistAnalytics />}
         />
+
+        {/* ============ SYSTEM ADMIN ROUTES ============ */}
+        <Route
+          path="/system-admin/dashboard"
+          element={<SystemAdminDashboard />}
+        />
+        <Route
+          path="/system-admin/organisations"
+          element={<SystemAdminOrganisations />}
+        />
+        <Route path="/system-admin/users" element={<SystemAdminUsers />} />
+        <Route
+          path="/system-admin/ai-models"
+          element={<SystemAdminAIModels />}
+        />
+        <Route
+          path="/system-admin/audit-logs"
+          element={<SystemAdminAuditLogs />}
+        />
+
+        {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
+        <Route path="/network" element={<NetworkLayout />}>
+          <Route index element={<NetworkFeedPage />} />
+          <Route path="feed" element={<NetworkFeedPage />} />
+          <Route path="discover" element={<NetworkDiscoverPage />} />
+          <Route path="connections" element={<NetworkConnectionsPage />} />
+          <Route path="groups" element={<NetworkGroupsPage />} />
+          <Route path="saved" element={<NetworkSavedPage />} />
+          <Route path="post/:id" element={<NetworkPostDetailPage />} />
+          <Route path="profile/:id" element={<NetworkProfilePage />} />
+          <Route
+            path="organisation/:id"
+            element={<NetworkOrganisationPage />}
+          />
+        </Route>
       </Routes>
     </Suspense>
   </BrowserRouter>

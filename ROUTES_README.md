@@ -3,6 +3,7 @@
 ## 📁 Cấu Trúc Mới
 
 ### 1. **Guest/Customer Pages** (Sau khi login)
+
 📍 Location: `src/pages/guest/`
 
 - ✅ **Dashboard** (`/dashboard`) - Trang chủ với thống kê tổng quan
@@ -13,9 +14,11 @@
 ### 2. **Components Mới**
 
 #### Navbar cho Guest/Customer
+
 📍 `src/components/ui/navbar/guest-navbar.tsx`
 
 **Features:**
+
 - 🎨 Modern design với gradient colors
 - 📱 Responsive (mobile menu)
 - 🔔 Notification bell
@@ -23,6 +26,7 @@
 - 🎯 Active state cho navigation items
 
 #### Layout cho Guest
+
 📍 `src/components/layouts/guest-layout.tsx`
 
 - Wrapper với navbar
@@ -64,12 +68,14 @@
 ## 🎨 Design Highlights
 
 ### Guest Navbar
+
 - **Logo**: AURA với gradient icon
 - **Navigation**: Home, Screening, Reports, Appointments
 - **User Menu**: Profile, Settings, Logout
 - **Mobile-friendly**: Hamburger menu cho mobile
 
 ### Guest Pages
+
 1. **Dashboard**
    - Welcome message
    - Quick stats (4 cards)
@@ -100,6 +106,7 @@
 ## 🚀 Usage
 
 ### Sau khi login thành công:
+
 ```typescript
 // Redirect user based on role:
 - Guest/Customer → /dashboard
@@ -109,6 +116,7 @@
 ```
 
 ### Navigation cho Guest:
+
 ```typescript
 import { GuestLayout } from '@/components/layouts';
 

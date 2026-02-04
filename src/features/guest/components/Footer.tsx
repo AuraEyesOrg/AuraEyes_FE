@@ -49,6 +49,14 @@ export const Footer = () => {
                   API Documentation
                 </a>
               </li>
+              <li>
+                <Link
+                  className="hover:text-[#319795] transition-colors"
+                  to="/status"
+                >
+                  System Status
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -78,6 +86,14 @@ export const Footer = () => {
                   to="/contact"
                 >
                   Contact
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="hover:text-[#319795] transition-colors"
+                  to="/compliance"
+                >
+                  Compliance
                 </Link>
               </li>
             </ul>

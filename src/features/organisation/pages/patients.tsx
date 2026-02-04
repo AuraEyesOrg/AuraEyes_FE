@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Download, Eye } from 'lucide-react';
+import { Search, Download, Eye } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
-import { Patient, OrganisationData } from '../types/organisation.types';
+import type { OrganisationData } from '../types/organisation.types';
 
 export default function PatientsPage() {
   const [data, setData] = useState<OrganisationData | null>(null);

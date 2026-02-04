@@ -104,10 +104,40 @@
     ]
   },
   "navItems": [
-    { "id": "dashboard", "label": "Dashboard", "icon": "LayoutDashboard", "path": "/ophthalmologist/dashboard", "active": true },
-    { "id": "patients", "label": "Patients", "icon": "Users", "path": "/ophthalmologist/patients", "active": false },
-    { "id": "screenings", "label": "Screenings", "icon": "Eye", "path": "/ophthalmologist/screenings", "active": false },
-    { "id": "analytics", "label": "Analytics", "icon": "BarChart3", "path": "/ophthalmologist/analytics", "active": false },
-    { "id": "settings", "label": "Settings", "icon": "Settings", "path": "/ophthalmologist/settings", "active": false }
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "icon": "LayoutDashboard",
+      "path": "/ophthalmologist/dashboard",
+      "active": true
+    },
+    {
+      "id": "patients",
+      "label": "Patients",
+      "icon": "Users",
+      "path": "/ophthalmologist/patients",
+      "active": false
+    },
+    {
+      "id": "screenings",
+      "label": "Screenings",
+      "icon": "Eye",
+      "path": "/ophthalmologist/screenings",
+      "active": false
+    },
+    {
+      "id": "analytics",
+      "label": "Analytics",
+      "icon": "BarChart3",
+      "path": "/ophthalmologist/analytics",
+      "active": false
+    },
+    {
+      "id": "settings",
+      "label": "Settings",
+      "icon": "Settings",
+      "path": "/ophthalmologist/settings",
+      "active": false
+    }
   ]
 }
