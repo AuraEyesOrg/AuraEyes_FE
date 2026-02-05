@@ -10,9 +10,12 @@ import {
   Shield,
   MessageCircle,
   Milestone,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface PatientSidebarProps {
   userName?: string;
@@ -40,6 +43,7 @@ export default function PatientSidebar({
 }: PatientSidebarProps) {
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -47,7 +51,7 @@ export default function PatientSidebar({
   };
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] flex flex-col justify-between flex-shrink-0 transition-colors duration-300 z-20 h-screen">
+    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10 px-2">
@@ -55,7 +59,7 @@ export default function PatientSidebar({
             <Eye className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-[var(--text-primary)] text-lg font-bold leading-none tracking-tight">
+            <h1 className="text-(--text-primary) text-lg font-bold leading-none tracking-tight">
               AURA
             </h1>
             <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">
@@ -125,15 +129,26 @@ export default function PatientSidebar({
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A202C]"></div>
               </div>
               <div className="flex flex-col overflow-hidden">
-                <p className="text-sm font-bold text-[var(--text-primary)] truncate group-hover:text-brand transition-colors">
+                <p className="text-sm font-bold text-(--text-primary) truncate group-hover:text-brand transition-colors">
                   {userName}
                 </p>
                 <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
               </div>
             </NavLink>
             <button
+              onClick={toggleTheme}
+              className="text-gray-500 hover:text-brand transition-colors p-2 rounded-lg hover:bg-brand/10"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </button>
+            <button
               onClick={handleLogout}
-              className="ml-auto text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
+              className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
               title="Logout"
             >
               <LogOut className="w-5 h-5" />

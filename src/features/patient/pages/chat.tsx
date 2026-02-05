@@ -183,10 +183,10 @@ export default function ChatPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Messages
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           Chat with your assigned ophthalmologists
         </p>
       </div>
@@ -194,17 +194,17 @@ export default function ChatPage() {
       <div className="medical-card overflow-hidden h-[calc(100vh-220px)]">
         <div className="flex h-full">
           {/* Conversations List */}
-          <div className="w-80 border-r border-[var(--border-color)] flex flex-col">
+          <div className="w-80 border-r border-(--border-color) flex flex-col">
             {/* Search */}
-            <div className="p-4 border-b border-[var(--border-color)]">
+            <div className="p-4 border-b border-(--border-color)">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
                 <input
                   type="text"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                  className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
               </div>
             </div>
@@ -215,16 +215,16 @@ export default function ChatPage() {
                 <div
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`p-4 cursor-pointer transition-colors border-b border-[var(--border-color)] ${
+                  className={`p-4 cursor-pointer transition-colors border-b border-(--border-color) ${
                     selectedConversation === conversation.id
                       ? 'bg-brand-soft'
-                      : 'hover:bg-[var(--bg-tertiary)]'
+                      : 'hover:bg-(--bg-tertiary)'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-brand to-accent rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-linear-to-br from-brand to-accent rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold">
                           {conversation.ophthalmologist.name.charAt(0)}
                         </span>
@@ -237,17 +237,17 @@ export default function ChatPage() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-[var(--text-primary)] font-medium truncate">
+                        <p className="text-(--text-primary) font-medium truncate">
                           {conversation.ophthalmologist.name}
                         </p>
-                        <span className="text-xs text-[var(--text-muted)]">
+                        <span className="text-xs text-(--text-muted)">
                           {conversation.lastMessage.timestamp}
                         </span>
                       </div>
-                      <p className="text-xs text-[var(--text-secondary)] mb-1">
+                      <p className="text-xs text-(--text-secondary) mb-1">
                         {conversation.ophthalmologist.title}
                       </p>
-                      <p className="text-sm text-[var(--text-secondary)] truncate">
+                      <p className="text-sm text-(--text-secondary) truncate">
                         {conversation.lastMessage.content}
                       </p>
                     </div>
@@ -267,10 +267,10 @@ export default function ChatPage() {
           {selectedConversation ? (
             <div className="flex-1 flex flex-col">
               {/* Chat Header */}
-              <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
+              <div className="p-4 border-b border-(--border-color) flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-brand to-accent rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-linear-to-br from-brand to-accent rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">
                         {selectedDoctor?.name.charAt(0)}
                       </span>
@@ -280,30 +280,30 @@ export default function ChatPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">
+                    <p className="text-(--text-primary) font-medium">
                       {selectedDoctor?.name}
                     </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-xs text-(--text-secondary)">
                       {selectedDoctor?.isOnline ? 'Online' : 'Offline'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <Phone className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <Video className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--bg-secondary)]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-(--bg-secondary)">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -317,7 +317,7 @@ export default function ChatPage() {
                       className={`max-w-[70%] p-3 rounded-2xl ${
                         message.senderType === 'patient'
                           ? 'bg-brand text-white rounded-br-sm'
-                          : 'bg-white text-[var(--text-primary)] rounded-bl-sm border border-[var(--border-color)] shadow-sm'
+                          : 'bg-white dark:bg-[#1e3a5f] text-(--text-primary) rounded-bl-sm border border-(--border-color) shadow-sm'
                       }`}
                     >
                       <p className="text-sm">{message.content}</p>
@@ -329,7 +329,7 @@ export default function ChatPage() {
                         }`}
                       >
                         <span
-                          className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-[var(--text-muted)]'}`}
+                          className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-(--text-muted)'}`}
                         >
                           {message.timestamp}
                         </span>
@@ -348,12 +348,12 @@ export default function ChatPage() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-[var(--border-color)]">
+              <div className="p-4 border-t border-(--border-color)">
                 <div className="flex items-end gap-3">
-                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <Paperclip className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-[var(--text-secondary)] hover:text-brand hover:bg-[var(--bg-secondary)] rounded-lg transition-colors">
+                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <Image className="w-5 h-5" />
                   </button>
                   <div className="flex-1">
@@ -362,7 +362,7 @@ export default function ChatPage() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type a message..."
-                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
+                      className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
                       rows={1}
                     />
                   </div>
@@ -379,13 +379,13 @@ export default function ChatPage() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-10 h-10 text-[var(--text-muted)]" />
+                <div className="w-20 h-20 bg-(--bg-secondary) rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-10 h-10 text-(--text-muted)" />
                 </div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
                   Select a conversation
                 </h3>
-                <p className="text-[var(--text-secondary)]">
+                <p className="text-(--text-secondary)">
                   Choose a doctor to start chatting
                 </p>
               </div>

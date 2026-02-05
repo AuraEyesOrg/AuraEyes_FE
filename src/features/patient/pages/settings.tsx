@@ -15,6 +15,7 @@ import {
   Mail,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SettingItem {
   icon: React.ElementType;
@@ -33,7 +34,7 @@ interface SettingSection {
 
 export default function SettingsPage() {
   const _navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
 
@@ -207,35 +208,35 @@ export default function SettingsPage() {
             </h2>
             <div className="space-y-4">
               {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                    {isDarkMode ? (
+                    {theme === 'dark' ? (
                       <Moon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     ) : (
                       <Sun className="w-5 h-5 text-yellow-600" />
                     )}
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">
+                    <p className="text-(--text-primary) font-medium">
                       Dark Mode
                     </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {isDarkMode
+                    <p className="text-sm text-(--text-secondary)">
+                      {theme === 'dark'
                         ? 'Currently using dark theme'
                         : 'Currently using light theme'}
                     </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  onClick={toggleTheme}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    isDarkMode ? 'bg-brand' : 'bg-gray-300'
+                    theme === 'dark' ? 'bg-brand' : 'bg-gray-300'
                   }`}
                 >
                   <div
                     className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      isDarkMode ? 'left-7' : 'left-1'
+                      theme === 'dark' ? 'left-7' : 'left-1'
                     }`}
                   />
                 </button>

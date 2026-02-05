@@ -107,19 +107,19 @@ const AppointmentsPage = () => {
     switch (status) {
       case 'upcoming':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
             <Clock className="w-3 h-3" /> Upcoming
           </span>
         );
       case 'completed':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
             <CheckCircle className="w-3 h-3" /> Completed
           </span>
         );
       case 'cancelled':
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
             <XCircle className="w-3 h-3" /> Cancelled
           </span>
         );
@@ -147,10 +147,10 @@ const AppointmentsPage = () => {
     <PatientLayout userName="John Doe">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
             Appointments
           </h1>
-          <p className="text-[var(--text-secondary)]">
+          <p className="text-(--text-secondary)">
             Manage your appointments and retinal images
           </p>
         </div>
@@ -255,8 +255,8 @@ const AppointmentsPage = () => {
                     apt.status === 'upcoming'
                       ? 'bg-brand-soft'
                       : apt.status === 'completed'
-                        ? 'bg-green-100'
-                        : 'bg-gray-100'
+                        ? 'bg-green-100 dark:bg-green-900/30'
+                        : 'bg-gray-100 dark:bg-gray-800'
                   }`}
                 >
                   <Calendar
@@ -272,7 +272,7 @@ const AppointmentsPage = () => {
 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h3 className="text-lg font-bold text-[var(--text-primary)]">
+                    <h3 className="text-lg font-bold text-(--text-primary)">
                       {getTypeLabel(apt.type)}
                     </h3>
                     {getStatusBadge(apt.status)}

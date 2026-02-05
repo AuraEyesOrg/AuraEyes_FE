@@ -171,7 +171,7 @@ body {
 
   /* Medical Card - Dashboard Card Layout */
   .medical-card {
-    @apply bg-white border border-[var(--border-color)] rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow;
+    @apply bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow;
   }
 
   /* Status Badge */
