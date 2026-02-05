@@ -69,6 +69,20 @@ const OrganisationAnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
 );
 
+// Ophthalmologist pages
+const OphthalmologistDashboard = lazy(
+  () => import('@/features/ophthalmologist/pages/dashboard')
+);
+const OphthalmologistPatientsPage = lazy(
+  () => import('@/features/ophthalmologist/pages/patients')
+);
+const OphthalmologistScreeningsPage = lazy(
+  () => import('@/features/ophthalmologist/pages/screenings')
+);
+const OphthalmologistAnalyticsPage = lazy(
+  () => import('@/features/ophthalmologist/pages/analytics')
+);
+
 // System Admin pages
 const SystemAdminDashboard = lazy(
   () => import('@/features/system-admin/pages/dashboard')
@@ -197,15 +211,15 @@ const Router = () => (
         />
         <Route
           path="/ophthalmologist/patients"
-          element={<OphthalmologistPatients />}
+          element={<OphthalmologistPatientsPage />}
         />
         <Route
           path="/ophthalmologist/screenings"
-          element={<OphthalmologistScreenings />}
+          element={<OphthalmologistScreeningsPage />}
         />
         <Route
           path="/ophthalmologist/analytics"
-          element={<OphthalmologistAnalytics />}
+          element={<OphthalmologistAnalyticsPage />}
         />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
