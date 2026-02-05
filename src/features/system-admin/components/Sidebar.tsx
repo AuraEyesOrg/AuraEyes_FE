@@ -3,21 +3,23 @@
  * Main navigation for system admin dashboard
  */
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   Settings,
   Users,
   Shield,
-  Database,
+  Building2,
   FileText,
   Eye,
   LogOut,
   Menu,
   X,
   Network,
+  Stethoscope,
 } from 'lucide-react';
 import { useState } from 'react';
+import useAuthStore from '@/store/auth-store';
 
 interface NavItem {
   label: string;
@@ -33,14 +35,19 @@ const navItems: NavItem[] = [
     href: '/system-admin/dashboard',
   },
   {
-    label: 'Organizations',
-    icon: <Database className="w-5 h-5" />,
+    label: 'Organisations',
+    icon: <Building2 className="w-5 h-5" />,
     href: '/system-admin/organisations',
   },
   {
-    label: 'User Management',
+    label: 'Ophthalmologists',
+    icon: <Stethoscope className="w-5 h-5" />,
+    href: '/system-admin/ophthalmologists',
+  },
+  {
+    label: 'Patients',
     icon: <Users className="w-5 h-5" />,
-    href: '/system-admin/users',
+    href: '/system-admin/patients',
   },
   {
     label: 'AI Performance',
@@ -53,7 +60,7 @@ const navItems: NavItem[] = [
     href: '/system-admin/audit-logs',
   },
   {
-    label: 'Pro Network',
+    label: 'Aura Network',
     icon: <Network className="w-5 h-5" />,
     href: '/network',
   },
@@ -70,6 +77,13 @@ interface SidebarProps {
 
 export default function Sidebar({ currentPath = '' }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuthStore();
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    navigate('/login');
+  };
 
   return (
     <>
@@ -152,7 +166,10 @@ export default function Sidebar({ currentPath = '' }: SidebarProps) {
             </div>
           </div>
 
-          <button className="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg w-full transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-lg w-full transition-colors"
+          >
             <LogOut className="w-4 h-4" />
             <span className="text-sm font-medium">Log out</span>
           </button>

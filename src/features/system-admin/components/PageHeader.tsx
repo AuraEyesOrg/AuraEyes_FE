@@ -3,7 +3,8 @@
  * Common header for all system admin pages
  */
 
-import { Download, Bell } from 'lucide-react';
+import { Download, Bell, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface PageHeaderProps {
   title: string;
@@ -20,6 +21,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
   showNotifications = true,
 }) => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 md:px-10 py-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
       <div className="flex-1">
@@ -37,6 +40,19 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5" />
+          ) : (
+            <Moon className="w-5 h-5" />
+          )}
+        </button>
+
         {showNotifications && (
           <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
             <Bell className="w-5 h-5" />
