@@ -81,7 +81,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <Sidebar pendingCount={data.dashboardStats.pendingReviews.value} />
 
       <div className="ml-48">
@@ -89,10 +89,10 @@ export default function CalendarPage() {
 
         <main className="p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Appointment Calendar
             </h1>
-            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Manage clinic availability and appointments
             </p>
           </div>
@@ -100,23 +100,23 @@ export default function CalendarPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar */}
             <div className="lg:col-span-2">
-              <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-white dark:text-white light:text-gray-900">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     {monthNames[currentDate.getMonth()]}{' '}
                     {currentDate.getFullYear()}
                   </h2>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={previousMonth}
-                      className="p-2 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 text-gray-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                      className="p-2 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <ChevronLeft size={20} />
                     </button>
                     <button
                       onClick={nextMonth}
-                      className="p-2 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 text-gray-400 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                      className="p-2 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -129,7 +129,7 @@ export default function CalendarPage() {
                     (day) => (
                       <div
                         key={day}
-                        className="text-center text-xs font-semibold text-gray-400 dark:text-gray-400 light:text-gray-600 py-2"
+                        className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2"
                       >
                         {day}
                       </div>
@@ -166,7 +166,7 @@ export default function CalendarPage() {
                               ? 'bg-primary border-primary text-white'
                               : blocked
                                 ? 'bg-red-500/10 border-red-500/30 text-red-400 cursor-not-allowed'
-                                : 'bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:border-primary'
+                                : 'bg-gray-50 dark:bg-[#0a1f44] border-gray-200 dark:border-[#2d4a6f] text-gray-700 dark:text-gray-300 hover:border-primary'
                           }
                         `}
                         disabled={blocked}
@@ -192,9 +192,9 @@ export default function CalendarPage() {
             {/* Sidebar - Working Hours & Appointments */}
             <div className="space-y-6">
               {/* Working Hours */}
-              <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Working Hours
                   </h3>
                   <button className="text-primary hover:text-primary/80 transition-colors text-sm">
@@ -209,10 +209,10 @@ export default function CalendarPage() {
                         key={day}
                         className="flex items-center justify-between text-sm"
                       >
-                        <span className="text-gray-400 dark:text-gray-400 light:text-gray-600 capitalize">
+                        <span className="text-gray-600 dark:text-gray-400 capitalize">
                           {day}
                         </span>
-                        <span className="text-gray-300 dark:text-gray-300 light:text-gray-700">
+                        <span className="text-gray-700 dark:text-gray-300">
                           {hours.length > 0 ? hours.join(', ') : 'Closed'}
                         </span>
                       </div>
@@ -220,8 +220,8 @@ export default function CalendarPage() {
                   )}
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
-                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-400 light:text-gray-600">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#2d4a6f]">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Clock size={16} />
                     <span>
                       {data.calendarAvailability.appointmentDuration} min per
@@ -232,9 +232,9 @@ export default function CalendarPage() {
               </div>
 
               {/* Today's Appointments */}
-              <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Today's Schedule
                   </h3>
                   <button className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors text-sm">
@@ -247,20 +247,20 @@ export default function CalendarPage() {
                   {data.upcomingAppointments.slice(0, 4).map((appointment) => (
                     <div
                       key={appointment.id}
-                      className="p-3 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200"
+                      className="p-3 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className="text-sm font-semibold text-white dark:text-white light:text-gray-900">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
                           {appointment.time}
                         </span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-500">
                           {appointment.type}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-300 dark:text-gray-300 light:text-gray-700 mb-1">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
                         {appointment.patientName}
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         {appointment.doctor}
                       </p>
                     </div>

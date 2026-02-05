@@ -15,7 +15,7 @@ interface SidebarProps {
 
 export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/organisation' },
+    { icon: Home, label: 'Dashboard', path: '/organisation/dashboard' },
     {
       icon: Users,
       label: 'Patients',
@@ -28,13 +28,13 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-48 bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-white border-r border-[#1e3a5f] dark:border-[#1e3a5f] light:border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-[#1e3a5f] dark:border-[#1e3a5f] light:border-gray-200">
+    <aside className="fixed left-0 top-0 h-screen w-48 bg-white dark:bg-[#0a1f44] border-r border-gray-200 dark:border-[#1e3a5f] flex flex-col">
+      <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Activity className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white dark:text-white light:text-gray-900 font-semibold text-lg">
+          <span className="text-gray-900 dark:text-white font-semibold text-lg">
             AURA
           </span>
         </div>
@@ -48,8 +48,8 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 mb-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#1e3a8a] dark:bg-[#1e3a8a] light:bg-blue-50 text-white dark:text-white light:text-blue-600'
-                  : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100'
+                  ? 'bg-blue-50 dark:bg-[#1e3a8a] text-blue-600 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
               }`
             }
           >
@@ -64,8 +64,8 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-[#1e3a5f] dark:border-[#1e3a5f] light:border-gray-200">
-        <button className="flex items-center gap-3 px-4 py-3 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-100 rounded-lg transition-colors w-full">
+      <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
+        <button className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors w-full">
           <LogOut size={20} />
           <span className="text-sm font-medium">Log out</span>
         </button>

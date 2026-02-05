@@ -210,10 +210,10 @@ export default function RoadmapPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Health Improvement Roadmap
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           Your personalized care plan based on diagnosis and recommendations
         </p>
       </div>
@@ -226,10 +226,10 @@ export default function RoadmapPage() {
               <Milestone className="w-7 h-7 text-brand" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">
+              <h2 className="text-xl font-bold text-(--text-primary)">
                 {mockRoadmap.title}
               </h2>
-              <p className="text-[var(--text-secondary)]">
+              <p className="text-(--text-secondary)">
                 {mockRoadmap.description}
               </p>
               <p className="text-sm text-brand mt-1">
@@ -244,10 +244,10 @@ export default function RoadmapPage() {
         </div>
 
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm text-[var(--text-secondary)]">
+          <span className="text-sm text-(--text-secondary)">
             Overall Progress
           </span>
-          <span className="text-sm font-medium text-[var(--text-primary)]">
+          <span className="text-sm font-medium text-(--text-primary)">
             {mockRoadmap.progress}%
           </span>
         </div>
@@ -262,8 +262,8 @@ export default function RoadmapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Milestones Timeline */}
         <div className="lg:col-span-2">
-          <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6">
-            <h2 className="text-lg font-semibold text-white mb-6">
+          <div className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-(--text-primary) mb-6">
               Care Milestones
             </h2>
 
@@ -291,15 +291,15 @@ export default function RoadmapPage() {
                     <div
                       className={`flex-1 p-4 rounded-xl border transition-all ${
                         milestone.status === 'completed'
-                          ? 'bg-green-500/10 border-green-500/30'
+                          ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
                           : milestone.status === 'in-progress'
-                            ? 'bg-blue-500/10 border-blue-500/30'
-                            : 'bg-[#1e3a5f]/30 border-[#2d4a6f]'
+                            ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30'
+                            : 'bg-gray-50 dark:bg-[#1e3a5f]/30 border-gray-200 dark:border-[#2d4a6f]'
                       }`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-white font-medium">
+                          <h3 className="text-(--text-primary) font-medium">
                             {milestone.title}
                           </h3>
                           <p className="text-sm text-gray-400">
@@ -335,9 +335,9 @@ export default function RoadmapPage() {
 
         {/* Recommendations */}
         <div className="space-y-6">
-          <div className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6">
+          <div className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-(--text-primary)">
                 Daily Recommendations
               </h2>
               <span className="text-sm text-gray-400">
@@ -353,8 +353,8 @@ export default function RoadmapPage() {
                   onClick={() => toggleRecommendation(rec.id)}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
                     rec.isCompleted
-                      ? 'bg-green-500/10 border-green-500/30 opacity-70'
-                      : 'bg-[#1e3a5f]/30 border-[#2d4a6f] hover:border-primary/30'
+                      ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30 opacity-70'
+                      : 'bg-white dark:bg-[#1e3a5f]/30 border-gray-200 dark:border-[#2d4a6f] hover:border-primary/30'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -375,8 +375,8 @@ export default function RoadmapPage() {
                         <p
                           className={`font-medium ${
                             rec.isCompleted
-                              ? 'text-gray-400 line-through'
-                              : 'text-white'
+                              ? 'text-(--text-muted) line-through'
+                              : 'text-(--text-primary)'
                           }`}
                         >
                           {rec.title}

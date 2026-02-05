@@ -118,19 +118,19 @@ export default function WalletPage() {
     switch (status) {
       case 'completed':
         return (
-          <span className="flex items-center gap-1 text-xs text-green-600">
+          <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
             <CheckCircle className="w-3 h-3" /> Completed
           </span>
         );
       case 'pending':
         return (
-          <span className="flex items-center gap-1 text-xs text-amber-600">
+          <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
             <Clock className="w-3 h-3" /> Pending
           </span>
         );
       case 'failed':
         return (
-          <span className="flex items-center gap-1 text-xs text-red-500">
+          <span className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400">
             <XCircle className="w-3 h-3" /> Failed
           </span>
         );
@@ -154,10 +154,10 @@ export default function WalletPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Digital Wallet
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           Manage your balance and view transaction history
         </p>
       </div>
@@ -166,7 +166,7 @@ export default function WalletPage() {
         {/* Left Column - Balance & Quick Actions */}
         <div className="space-y-6">
           {/* Balance Card */}
-          <div className="medical-card bg-gradient-to-br from-brand via-[#00d4e6] to-[#00b8cc] text-white">
+          <div className="medical-card bg-linear-to-br from-brand via-[#00d4e6] to-[#00b8cc] text-white">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <Wallet className="w-6 h-6" />
@@ -192,94 +192,88 @@ export default function WalletPage() {
 
           {/* Quick Stats */}
           <div className="medical-card">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-brand" />
               This Month
             </h2>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                    <ArrowDownLeft className="w-4 h-4 text-green-600" />
+                  <div className="w-8 h-8 bg-green-50 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <span className="text-[var(--text-secondary)] text-sm">
+                  <span className="text-(--text-secondary) text-sm">
                     Total Deposits
                   </span>
                 </div>
-                <span className="text-green-600 font-semibold">
+                <span className="text-green-600 dark:text-green-400 font-semibold">
                   +{formatCurrency(3000000)}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                    <ArrowUpRight className="w-4 h-4 text-red-500" />
+                  <div className="w-8 h-8 bg-red-50 dark:bg-red-500/20 rounded-lg flex items-center justify-center">
+                    <ArrowUpRight className="w-4 h-4 text-red-500 dark:text-red-400" />
                   </div>
-                  <span className="text-[var(--text-secondary)] text-sm">
+                  <span className="text-(--text-secondary) text-sm">
                     Total Spent
                   </span>
                 </div>
-                <span className="text-red-500 font-semibold">
+                <span className="text-red-500 dark:text-red-400 font-semibold">
                   -{formatCurrency(1500000)}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <History className="w-4 h-4 text-blue-600" />
+                  <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <History className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-[var(--text-secondary)] text-sm">
+                  <span className="text-(--text-secondary) text-sm">
                     Transactions
                   </span>
                 </div>
-                <span className="text-[var(--text-primary)] font-semibold">
-                  6
-                </span>
+                <span className="text-(--text-primary) font-semibold">6</span>
               </div>
             </div>
           </div>
 
           {/* Payment Methods */}
           <div className="medical-card">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-brand" />
               Payment Methods
             </h2>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      VNPay
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-(--text-primary) font-medium">VNPay</p>
+                    <p className="text-xs text-(--text-secondary)">
                       Cards, Bank Transfer, QR
                     </p>
                   </div>
                 </div>
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      PayOS
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-(--text-primary) font-medium">PayOS</p>
+                    <p className="text-xs text-(--text-secondary)">
                       Bank Transfer, QR
                     </p>
                   </div>
                 </div>
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
@@ -289,7 +283,7 @@ export default function WalletPage() {
         <div className="lg:col-span-2">
           <div className="medical-card">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
                 <History className="w-5 h-5 text-brand" />
                 Transaction History
               </h2>
@@ -302,25 +296,25 @@ export default function WalletPage() {
               {mockTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] hover:border-brand/30 transition-all hover:shadow-md"
+                  className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-all hover:shadow-md"
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         transaction.type === 'deposit'
-                          ? 'bg-green-50'
+                          ? 'bg-green-50 dark:bg-green-500/20'
                           : transaction.type === 'refund'
-                            ? 'bg-blue-50'
-                            : 'bg-red-50'
+                            ? 'bg-blue-50 dark:bg-blue-500/20'
+                            : 'bg-red-50 dark:bg-red-500/20'
                       }`}
                     >
                       {getTransactionIcon(transaction.type)}
                     </div>
                     <div>
-                      <p className="text-[var(--text-primary)] font-medium">
+                      <p className="text-(--text-primary) font-medium">
                         {transaction.description}
                       </p>
-                      <p className="text-sm text-[var(--text-secondary)] mt-0.5 flex items-center gap-2">
+                      <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
                         <Calendar className="w-3 h-3" />
                         {transaction.date}
                       </p>
@@ -331,8 +325,8 @@ export default function WalletPage() {
                     <p
                       className={`font-bold text-lg mb-1 ${
                         transaction.amount > 0
-                          ? 'text-green-600'
-                          : 'text-red-500'
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-500 dark:text-red-400'
                       }`}
                     >
                       {transaction.amount > 0 ? '+' : ''}
@@ -353,25 +347,25 @@ export default function WalletPage() {
           <div className="medical-card w-full max-w-lg shadow-2xl animate-slideUp">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-(--text-primary) flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-brand" />
                   Top Up Your Wallet
                 </h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-1">
+                <p className="text-sm text-(--text-secondary) mt-1">
                   Choose an amount and payment method
                 </p>
               </div>
               <button
                 onClick={() => setShowDepositModal(false)}
-                className="w-8 h-8 rounded-lg hover:bg-[var(--bg-secondary)] flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg hover:bg-(--bg-secondary) flex items-center justify-center transition-colors"
               >
-                <X className="w-5 h-5 text-[var(--text-secondary)]" />
+                <X className="w-5 h-5 text-(--text-secondary)" />
               </button>
             </div>
 
             {/* Amount Selection */}
             <div className="mb-6">
-              <label className="text-sm font-semibold text-[var(--text-primary)] mb-3 block">
+              <label className="text-sm font-semibold text-(--text-primary) mb-3 block">
                 Select Amount
               </label>
               <div className="grid grid-cols-3 gap-3 mb-4">
@@ -385,7 +379,7 @@ export default function WalletPage() {
                     className={`py-3 px-2 rounded-xl text-sm font-semibold transition-all ${
                       selectedAmount === amount
                         ? 'bg-brand text-white shadow-brand'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] border border-[var(--border-color)] hover:border-brand/30'
+                        : 'bg-(--bg-secondary) text-(--text-secondary) hover:bg-(--bg-tertiary) border border-(--border-color) hover:border-brand/30'
                     }`}
                   >
                     {formatCurrency(amount)}
@@ -402,9 +396,9 @@ export default function WalletPage() {
                     setCustomAmount(e.target.value);
                     setSelectedAmount(null);
                   }}
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-brand transition-colors"
+                  className="w-full px-4 py-3 bg-(--bg-secondary) border-2 border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:border-brand transition-colors"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-medium">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-(--text-muted) font-medium">
                   VND
                 </span>
               </div>
@@ -412,7 +406,7 @@ export default function WalletPage() {
 
             {/* Payment Method */}
             <div className="mb-6">
-              <label className="text-sm font-semibold text-[var(--text-primary)] mb-3 block">
+              <label className="text-sm font-semibold text-(--text-primary) mb-3 block">
                 Payment Method
               </label>
               <div className="space-y-3">
@@ -421,17 +415,15 @@ export default function WalletPage() {
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     selectedMethod === 'vnpay'
                       ? 'bg-brand-soft border-brand shadow-brand'
-                      : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-brand/30'
+                      : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-[var(--text-primary)] font-semibold">
-                      VNPay
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-(--text-primary) font-semibold">VNPay</p>
+                    <p className="text-xs text-(--text-secondary)">
                       Credit/Debit Card, Bank Transfer
                     </p>
                   </div>
@@ -445,17 +437,15 @@ export default function WalletPage() {
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                     selectedMethod === 'payos'
                       ? 'bg-brand-soft border-brand shadow-brand'
-                      : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-brand/30'
+                      : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-[var(--text-primary)] font-semibold">
-                      PayOS
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
+                    <p className="text-(--text-primary) font-semibold">PayOS</p>
+                    <p className="text-xs text-(--text-secondary)">
                       Bank Transfer, QR Code
                     </p>
                   </div>
@@ -467,10 +457,10 @@ export default function WalletPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-[var(--border-color)]">
+            <div className="flex gap-3 pt-4 border-t border-(--border-color)">
               <button
                 onClick={() => setShowDepositModal(false)}
-                className="flex-1 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-xl font-semibold transition-all active:scale-95"
+                className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95"
               >
                 Cancel
               </button>

@@ -122,10 +122,10 @@ export default function ClinicsPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Find Partner Clinics & Hospitals
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           Search and book appointments at our verified partner locations
         </p>
       </div>
@@ -135,13 +135,13 @@ export default function ClinicsPage() {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search Input */}
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
             <input
               type="text"
               placeholder="Search by clinic name or location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+              className="w-full pl-12 pr-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
 
@@ -150,7 +150,7 @@ export default function ClinicsPage() {
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="appearance-none w-full lg:w-48 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50 cursor-pointer"
+              className="appearance-none w-full lg:w-48 px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-brand/50 cursor-pointer"
             >
               {cities.map((city) => (
                 <option key={city} value={city}>
@@ -158,7 +158,7 @@ export default function ClinicsPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)] pointer-events-none" />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) pointer-events-none" />
           </div>
 
           {/* Type Filter */}
@@ -170,7 +170,7 @@ export default function ClinicsPage() {
                 className={`px-4 py-3 text-sm font-medium transition-colors capitalize ${
                   selectedType === type
                     ? 'bg-brand text-white'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    : 'bg-(--bg-secondary) text-(--text-secondary) hover:text-(--text-primary)'
                 }`}
               >
                 {type === 'all' ? 'All' : type}
@@ -232,7 +232,7 @@ export default function ClinicsPage() {
                     <Star className="w-4 h-4 fill-current" />
                     <span className="font-medium">{clinic.rating}</span>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="text-xs text-(--text-muted)">
                     {clinic.reviewCount} reviews
                   </p>
                 </div>
@@ -243,7 +243,7 @@ export default function ClinicsPage() {
                 {clinic.services.slice(0, 3).map((service) => (
                   <span
                     key={service}
-                    className="px-2 py-1 bg-[var(--bg-secondary)] text-[var(--text-secondary)] text-xs rounded-lg"
+                    className="px-2 py-1 bg-(--bg-secondary) text-(--text-secondary) text-xs rounded-lg"
                   >
                     {service}
                   </span>

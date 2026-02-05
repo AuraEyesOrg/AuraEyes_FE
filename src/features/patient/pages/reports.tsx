@@ -150,10 +150,10 @@ const ReportsPage = () => {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Medical Reports
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           View, download, and track your screening results and heatmaps
         </p>
       </div>
@@ -166,12 +166,10 @@ const ReportsPage = () => {
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">
+              <p className="text-2xl font-bold text-(--text-primary)">
                 {mockReports.length}
               </p>
-              <p className="text-xs text-[var(--text-secondary)]">
-                Total Reports
-              </p>
+              <p className="text-xs text-(--text-secondary)">Total Reports</p>
             </div>
           </div>
         </div>
@@ -227,7 +225,7 @@ const ReportsPage = () => {
             placeholder="Search reports..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#1e3a5f]/50 border border-[#2d4a6f] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-(--text-primary) placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
         <div className="flex gap-2">
@@ -258,7 +256,7 @@ const ReportsPage = () => {
         {filteredReports.map((report) => (
           <div
             key={report.id}
-            className="bg-[#0d2137] rounded-2xl border border-[#1e3a5f] p-6 hover:border-primary/30 transition-colors"
+            className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-6 hover:border-primary/30 transition-colors"
           >
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex items-start gap-4 flex-1">

@@ -102,26 +102,26 @@ export default function VerificationPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-amber-100 text-amber-700 border-amber-300';
+        return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700/50';
       case 'in-review':
-        return 'bg-blue-100 text-blue-700 border-blue-300';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700/50';
       case 'completed':
-        return 'bg-green-100 text-green-700 border-green-300';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700/50';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-300';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700';
     }
   };
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case 'low':
-        return 'text-green-600';
+        return 'text-green-600 dark:text-green-400';
       case 'medium':
-        return 'text-amber-600';
+        return 'text-amber-600 dark:text-amber-400';
       case 'high':
-        return 'text-red-600';
+        return 'text-red-600 dark:text-red-400';
       default:
-        return 'text-gray-600';
+        return 'text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -135,10 +135,10 @@ export default function VerificationPage() {
   return (
     <PatientLayout userName="John Doe">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Ophthalmologist Verification
         </h1>
-        <p className="text-[var(--text-secondary)]">
+        <p className="text-(--text-secondary)">
           Request professional verification for your AI screening results
         </p>
       </div>
@@ -148,7 +148,7 @@ export default function VerificationPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Pending Screenings for Verification */}
           <div className="medical-card p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+            <h2 className="text-lg font-semibold text-(--text-primary) mb-4">
               Request New Verification
             </h2>
 
@@ -166,7 +166,7 @@ export default function VerificationPage() {
                     className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
                       selectedScreening === screening.id
                         ? 'bg-brand-soft border-brand/50'
-                        : 'bg-[var(--bg-secondary)] border-[var(--border-color)] hover:border-brand/30'
+                        : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -204,8 +204,8 @@ export default function VerificationPage() {
                 ))}
 
                 {selectedScreening && (
-                  <div className="mt-6 p-4 bg-[var(--bg-secondary)] rounded-xl">
-                    <h3 className="text-[var(--text-primary)] font-medium mb-4">
+                  <div className="mt-6 p-4 bg-(--bg-secondary) rounded-xl">
+                    <h3 className="text-(--text-primary) font-medium mb-4">
                       Select Priority
                     </h3>
                     <div className="grid grid-cols-2 gap-4 mb-6">

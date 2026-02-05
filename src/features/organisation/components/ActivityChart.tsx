@@ -10,27 +10,27 @@ export default function ActivityChart({ data }: ActivityChartProps) {
   );
 
   return (
-    <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+    <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Screening Activity
         </h3>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               Screenings
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               AI Predictions
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-            <span className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               Reviewed
             </span>
           </div>
@@ -66,7 +66,7 @@ export default function ActivityChart({ data }: ActivityChartProps) {
                 }}
               />
             </div>
-            <span className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
               {item.month}
             </span>
           </div>

@@ -133,15 +133,15 @@ export default function PatientDashboard() {
                 <li>
                   <span className="text-[var(--border-color)]">/</span>
                 </li>
-                <li className="font-semibold text-[var(--text-primary)]">
+                <li className="font-semibold text-(--text-primary)">
                   Dashboard
                 </li>
               </ol>
             </nav>
-            <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+            <h2 className="text-3xl font-extrabold text-(--text-primary) tracking-tight">
               Good Morning, Alex
             </h2>
-            <p className="text-[var(--text-secondary)] mt-1 flex items-center gap-2">
+            <p className="text-(--text-secondary) mt-1 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               {currentDate} • Your Retinal Health Overview
             </p>
@@ -188,11 +188,11 @@ export default function PatientDashboard() {
                   <p className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
                     Latest Analysis Result
                   </p>
-                  <h3 className="text-2xl font-bold text-[var(--text-primary)]">
+                  <h3 className="text-2xl font-bold text-(--text-primary)">
                     {latestScan.result}
                   </h3>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-600 border border-green-100">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800">
                   <CheckCircle className="w-4 h-4" />
                   <span className="font-bold capitalize">
                     {latestScan.riskLevel} Risk
@@ -200,16 +200,16 @@ export default function PatientDashboard() {
                 </div>
               </div>
 
-              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+              <p className="text-(--text-secondary) leading-relaxed mb-6">
                 {latestScan.description}
               </p>
 
-              <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-[var(--border-color)]">
+              <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-(--border-color)">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">
+                  <p className="text-xs text-(--text-muted) mb-1">
                     Date Scanned
                   </p>
-                  <p className="font-medium text-[var(--text-primary)]">
+                  <p className="font-medium text-(--text-primary)">
                     {latestScan.date}
                   </p>
                 </div>
@@ -239,11 +239,13 @@ export default function PatientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statsCards.map((stat, index) => (
             <div key={index} className="medical-card flex items-center gap-4">
-              <div className={`p-3 ${stat.bgColor} rounded-lg flex-shrink-0`}>
+              <div
+                className={`p-3 ${stat.bgColor} dark:bg-opacity-10 rounded-lg shrink-0`}
+              >
                 <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium uppercase tracking-wide">
+                <p className="text-xs text-(--text-secondary) font-medium uppercase tracking-wide">
                   {stat.label}
                 </p>
                 <p className={`text-lg font-bold mt-1 ${stat.valueColor}`}>
@@ -259,9 +261,9 @@ export default function PatientDashboard() {
           {/* Left Column - Screening History */}
           <div className="lg:col-span-2 flex flex-col gap-6">
             <div className="medical-card flex flex-col h-full p-0">
-              <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center">
-                <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
-                  <History className="w-5 h-5 text-[var(--text-muted)]" />
+              <div className="p-6 border-b border-(--border-color) flex justify-between items-center">
+                <h3 className="text-lg font-bold text-(--text-primary) flex items-center gap-2">
+                  <History className="w-5 h-5 text-(--text-muted)" />
                   Screening History
                 </h3>
                 <Link
@@ -281,10 +283,10 @@ export default function PatientDashboard() {
                       />
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
-                          <p className="font-bold text-[var(--text-primary)]">
+                          <p className="font-bold text-(--text-primary)">
                             {item.title}
                           </p>
-                          <p className="text-sm text-[var(--text-secondary)]">
+                          <p className="text-sm text-(--text-secondary)">
                             {item.date} • {item.doctor}
                           </p>
                         </div>
@@ -310,13 +312,13 @@ export default function PatientDashboard() {
           <div className="flex flex-col gap-6">
             {/* Quick Actions */}
             <div className="medical-card flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
+              <h3 className="text-sm font-bold text-(--text-primary) uppercase tracking-wide mb-2">
                 Quick Actions
               </h3>
 
               <Link
                 to="/patient/chat"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white border border-[var(--border-color)] text-[var(--text-primary)] hover:border-brand/50 hover:bg-brand-soft transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <MessageCircle className="w-5 h-5 text-brand" />
@@ -327,7 +329,7 @@ export default function PatientDashboard() {
 
               <Link
                 to="/patient/clinics"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white border border-[var(--border-color)] text-[var(--text-primary)] hover:border-brand/50 hover:bg-brand-soft transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-purple-600" />

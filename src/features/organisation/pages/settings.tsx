@@ -31,7 +31,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <Sidebar pendingCount={data.dashboardStats.pendingReviews.value} />
 
       <div className="ml-48">
@@ -39,17 +39,17 @@ export default function SettingsPage() {
 
         <main className="p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Settings
             </h1>
-            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Manage your clinic configuration and preferences
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Tabs Sidebar */}
-            <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-4 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 h-fit">
+            <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-4 border border-gray-200 dark:border-[#2d4a6f] h-fit">
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       activeTab === tab.id
                         ? 'bg-primary text-white'
-                        : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-[#0a1f44] dark:hover:bg-[#0a1f44] light:hover:bg-gray-50'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0a1f44]'
                     }`}
                   >
                     <tab.icon size={20} />
@@ -70,67 +70,67 @@ export default function SettingsPage() {
 
             {/* Content Area */}
             <div className="lg:col-span-3">
-              <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
                 {activeTab === 'clinic' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Clinic Information
                       </h3>
 
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Clinic Name
                           </label>
                           <input
                             type="text"
                             defaultValue={data.clinic.name}
-                            className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary"
+                            className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Location
                           </label>
                           <input
                             type="text"
                             defaultValue={data.clinic.location}
-                            className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary"
+                            className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Administrator
                           </label>
                           <input
                             type="text"
                             defaultValue={data.clinic.admin}
-                            className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary"
+                            className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Contact Email
                           </label>
                           <input
                             type="email"
                             placeholder="clinic@auravision.vn"
-                            className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary"
+                            className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Phone Number
                           </label>
                           <input
                             type="tel"
                             placeholder="+84 28 xxxx xxxx"
-                            className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary"
+                            className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary"
                           />
                         </div>
                       </div>
@@ -141,7 +141,7 @@ export default function SettingsPage() {
                 {activeTab === 'users' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Team Members
                       </h3>
 
@@ -149,22 +149,22 @@ export default function SettingsPage() {
                         {data.doctors.map((doctor) => (
                           <div
                             key={doctor.id}
-                            className="flex items-center justify-between p-4 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200"
+                            className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+                              <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
                                 {doctor.name.split(' ').pop()?.charAt(0)}
                               </div>
                               <div>
-                                <div className="text-sm font-semibold text-white dark:text-white light:text-gray-900">
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">
                                   {doctor.name}
                                 </div>
-                                <div className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
                                   {doctor.specialty}
                                 </div>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                               {doctor.patientsReviewed} patients reviewed
                             </div>
                           </div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                 {activeTab === 'notifications' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Notification Preferences
                       </h3>
 
@@ -209,13 +209,13 @@ export default function SettingsPage() {
                         ].map((item, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-4 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200"
+                            className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]"
                           >
                             <div>
-                              <div className="text-sm font-semibold text-white dark:text-white light:text-gray-900 mb-1">
+                              <div className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                                 {item.label}
                               </div>
-                              <div className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {item.description}
                               </div>
                             </div>
@@ -225,7 +225,7 @@ export default function SettingsPage() {
                                 className="sr-only peer"
                                 defaultChecked
                               />
-                              <div className="w-11 h-6 bg-gray-700 dark:bg-gray-700 light:bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                              <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                           </div>
                         ))}
@@ -237,17 +237,17 @@ export default function SettingsPage() {
                 {activeTab === 'security' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Security Settings
                       </h3>
 
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Two-Factor Authentication
                           </label>
-                          <div className="flex items-center justify-between p-4 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
-                            <span className="text-sm text-gray-300 dark:text-gray-300 light:text-gray-700">
+                          <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
                               Enable 2FA for enhanced security
                             </span>
                             <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors text-sm">
@@ -257,10 +257,10 @@ export default function SettingsPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-400 dark:text-gray-400 light:text-gray-600 mb-2">
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             Session Timeout
                           </label>
-                          <select className="w-full bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded-lg px-4 py-2 text-white dark:text-white light:text-gray-900 focus:outline-none focus:border-primary">
+                          <select className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-primary">
                             <option>15 minutes</option>
                             <option>30 minutes</option>
                             <option>1 hour</option>
@@ -275,35 +275,35 @@ export default function SettingsPage() {
                 {activeTab === 'data' && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Data Management
                       </h3>
 
                       <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-semibold text-white dark:text-white light:text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
                               Export Patient Data
                             </span>
                             <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors text-sm">
                               Export
                             </button>
                           </div>
-                          <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
                             Download all patient records and screening results
                           </p>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-semibold text-white dark:text-white light:text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
                               Data Retention Policy
                             </span>
-                            <button className="px-4 py-2 bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-gray-100 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg hover:border-primary transition-colors text-sm">
+                            <button className="px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-900 dark:text-white rounded-lg hover:border-primary transition-colors text-sm">
                               Configure
                             </button>
                           </div>
-                          <p className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
                             Set how long patient data is stored
                           </p>
                         </div>
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Save Button */}
-                <div className="mt-6 pt-6 border-t border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200">
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d4a6f]">
                   <button className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors">
                     <Save size={18} />
                     Save Changes

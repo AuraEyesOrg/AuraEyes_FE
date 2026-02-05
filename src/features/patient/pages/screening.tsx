@@ -146,26 +146,26 @@ export default function ScreeningPage() {
             <li>
               <Link
                 to="/patient/dashboard"
-                className="text-[var(--text-secondary)] hover:text-brand transition-colors flex items-center gap-1"
+                className="text-(--text-secondary) hover:text-brand transition-colors flex items-center gap-1"
               >
                 <Home className="w-4 h-4" />
                 Home
               </Link>
             </li>
             <li>
-              <ChevronRight className="w-4 h-4 text-[var(--border-color)]" />
+              <ChevronRight className="w-4 h-4 text-(--border-color)" />
             </li>
-            <li className="font-bold text-[var(--text-primary)]">My Scans</li>
+            <li className="font-bold text-(--text-primary)">My Scans</li>
           </ol>
         </nav>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">
+            <h1 className="text-2xl font-bold text-(--text-primary) mb-1">
               My Scans
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm">
+            <p className="text-(--text-secondary) text-sm">
               View and manage your retinal screening history
             </p>
           </div>
@@ -225,10 +225,10 @@ export default function ScreeningPage() {
                 <FileText className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[var(--text-primary)]">
+                <p className="text-2xl font-bold text-(--text-primary)">
                   {scans.reduce((acc, s) => acc + (s.findings || 0), 0)}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Findings</p>
+                <p className="text-xs text-(--text-muted)">Findings</p>
               </div>
             </div>
           </div>
@@ -237,13 +237,13 @@ export default function ScreeningPage() {
         {/* Search & Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
             <input
               type="text"
               placeholder="Search scans..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+              className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
           <button className="flex items-center gap-2 px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
@@ -254,8 +254,8 @@ export default function ScreeningPage() {
 
         {/* Scans List */}
         <div className="medical-card flex-1 overflow-hidden">
-          <div className="p-4 border-b border-[var(--border-color)]">
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">
+          <div className="p-4 border-b border-(--border-color)">
+            <h2 className="text-sm font-bold text-(--text-primary)">
               Recent Scans ({filteredScans.length})
             </h2>
           </div>
