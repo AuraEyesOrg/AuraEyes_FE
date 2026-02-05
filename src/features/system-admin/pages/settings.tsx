@@ -1,0 +1,527 @@
+/**
+ * System Admin Settings Page
+ * Manage system-wide settings and configurations
+ */
+
+import { useState } from 'react';
+import {
+  Settings as SettingsIcon,
+  Bell,
+  Shield,
+  Database,
+  Globe,
+  Mail,
+  Lock,
+  Save,
+  RefreshCw,
+} from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
+
+interface SettingSection {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const settingSections: SettingSection[] = [
+  {
+    id: 'general',
+    title: 'General Settings',
+    description: 'Configure basic system settings',
+    icon: <SettingsIcon className="w-5 h-5" />,
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    description: 'Manage notification preferences',
+    icon: <Bell className="w-5 h-5" />,
+  },
+  {
+    id: 'security',
+    title: 'Security',
+    description: 'Security and authentication settings',
+    icon: <Shield className="w-5 h-5" />,
+  },
+  {
+    id: 'data',
+    title: 'Data Management',
+    description: 'Backup, export, and data retention',
+    icon: <Database className="w-5 h-5" />,
+  },
+];
+
+export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState('general');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // General settings state
+  const [generalSettings, setGeneralSettings] = useState({
+    platformName: 'AURA Medical',
+    supportEmail: 'support@aura.med',
+    timezone: 'UTC',
+    language: 'en',
+    maintenanceMode: false,
+  });
+
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    screeningAlerts: true,
+    systemAlerts: true,
+    weeklyReports: true,
+    marketingEmails: false,
+  });
+
+  // Security settings state
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorRequired: false,
+    sessionTimeout: 30,
+    passwordMinLength: 8,
+    maxLoginAttempts: 5,
+    ipWhitelist: '',
+  });
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // TODO: Implement API call to save settings
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Settings saved');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const renderGeneralSettings = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Platform Name
+          </label>
+          <input
+            type="text"
+            value={generalSettings.platformName}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                platformName: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Support Email
+          </label>
+          <input
+            type="email"
+            value={generalSettings.supportEmail}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                supportEmail: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Timezone
+          </label>
+          <select
+            value={generalSettings.timezone}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                timezone: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          >
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">Eastern Time (ET)</option>
+            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+            <option value="Europe/London">London (GMT)</option>
+            <option value="Asia/Ho_Chi_Minh">Vietnam (ICT)</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Default Language
+          </label>
+          <select
+            value={generalSettings.language}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                language: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          >
+            <option value="en">English</option>
+            <option value="vi">Vietnamese</option>
+            <option value="fr">French</option>
+            <option value="es">Spanish</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+        <div>
+          <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-400">
+            Maintenance Mode
+          </h4>
+          <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+            Enable to temporarily disable user access for system maintenance
+          </p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={generalSettings.maintenanceMode}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                maintenanceMode: e.target.checked,
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-amber-500"></div>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderNotificationSettings = () => (
+    <div className="space-y-4">
+      {[
+        {
+          key: 'emailNotifications',
+          label: 'Email Notifications',
+          description: 'Receive email notifications for important events',
+        },
+        {
+          key: 'screeningAlerts',
+          label: 'Screening Alerts',
+          description: 'Get notified when new screenings need review',
+        },
+        {
+          key: 'systemAlerts',
+          label: 'System Alerts',
+          description: 'Receive alerts about system health and issues',
+        },
+        {
+          key: 'weeklyReports',
+          label: 'Weekly Reports',
+          description: 'Receive weekly summary reports via email',
+        },
+        {
+          key: 'marketingEmails',
+          label: 'Marketing Emails',
+          description: 'Receive product updates and announcements',
+        },
+      ].map((item) => (
+        <div
+          key={item.key}
+          className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+        >
+          <div>
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+              {item.label}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">{item.description}</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={
+                notificationSettings[
+                  item.key as keyof typeof notificationSettings
+                ]
+              }
+              onChange={(e) =>
+                setNotificationSettings({
+                  ...notificationSettings,
+                  [item.key]: e.target.checked,
+                })
+              }
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderSecuritySettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Require Two-Factor Authentication
+          </h4>
+          <p className="text-xs text-slate-500 mt-1">
+            Require all users to enable 2FA for their accounts
+          </p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={securitySettings.twoFactorRequired}
+            onChange={(e) =>
+              setSecuritySettings({
+                ...securitySettings,
+                twoFactorRequired: e.target.checked,
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+        </label>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Session Timeout (minutes)
+          </label>
+          <input
+            type="number"
+            value={securitySettings.sessionTimeout}
+            onChange={(e) =>
+              setSecuritySettings({
+                ...securitySettings,
+                sessionTimeout: parseInt(e.target.value) || 30,
+              })
+            }
+            min={5}
+            max={120}
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Minimum Password Length
+          </label>
+          <input
+            type="number"
+            value={securitySettings.passwordMinLength}
+            onChange={(e) =>
+              setSecuritySettings({
+                ...securitySettings,
+                passwordMinLength: parseInt(e.target.value) || 8,
+              })
+            }
+            min={6}
+            max={32}
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Max Login Attempts
+          </label>
+          <input
+            type="number"
+            value={securitySettings.maxLoginAttempts}
+            onChange={(e) =>
+              setSecuritySettings({
+                ...securitySettings,
+                maxLoginAttempts: parseInt(e.target.value) || 5,
+              })
+            }
+            min={3}
+            max={10}
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            IP Whitelist (comma separated)
+          </label>
+          <input
+            type="text"
+            value={securitySettings.ipWhitelist}
+            onChange={(e) =>
+              setSecuritySettings({
+                ...securitySettings,
+                ipWhitelist: e.target.value,
+              })
+            }
+            placeholder="192.168.1.1, 10.0.0.1"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDataSettings = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+              <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                Database Backup
+              </h4>
+              <p className="text-xs text-slate-500">Last backup: 2 hours ago</p>
+            </div>
+          </div>
+          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-all">
+            <RefreshCw className="w-4 h-4" />
+            Create Backup Now
+          </button>
+        </div>
+
+        <div className="p-6 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+              <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                Export Data
+              </h4>
+              <p className="text-xs text-slate-500">Download all system data</p>
+            </div>
+          </div>
+          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-all">
+            <Mail className="w-4 h-4" />
+            Export to Email
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+            <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-red-800 dark:text-red-400">
+              Danger Zone
+            </h4>
+            <p className="text-xs text-red-600 dark:text-red-500">
+              Irreversible actions - proceed with caution
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button className="px-4 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 font-medium text-sm transition-all">
+            Clear Cache
+          </button>
+          <button className="px-4 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 font-medium text-sm transition-all">
+            Reset Statistics
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'general':
+        return renderGeneralSettings();
+      case 'notifications':
+        return renderNotificationSettings();
+      case 'security':
+        return renderSecuritySettings();
+      case 'data':
+        return renderDataSettings();
+      default:
+        return renderGeneralSettings();
+    }
+  };
+
+  return (
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
+      <Sidebar currentPath="/system-admin/settings" />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <PageHeader
+          title="System Settings"
+          description="Configure system-wide settings and preferences"
+          actions={
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+            >
+              {isSaving ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          }
+        />
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="px-6 md:px-10 py-6 max-w-[1200px] mx-auto w-full">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Settings Navigation */}
+              <div className="lg:w-64 flex-shrink-0">
+                <nav className="space-y-1">
+                  {settingSections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
+                        activeSection === section.id
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <span
+                        className={
+                          activeSection === section.id ? 'text-primary' : ''
+                        }
+                      >
+                        {section.icon}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">{section.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {section.description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Settings Content */}
+              <div className="flex-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    {settingSections.find((s) => s.id === activeSection)?.title}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {
+                      settingSections.find((s) => s.id === activeSection)
+                        ?.description
+                    }
+                  </p>
+                </div>
+                {renderContent()}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
