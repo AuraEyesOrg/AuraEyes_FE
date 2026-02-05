@@ -90,6 +90,12 @@ const SystemAdminDashboard = lazy(
 const SystemAdminOrganisations = lazy(
   () => import('@/features/system-admin/pages/organisations')
 );
+const SystemAdminPatients = lazy(
+  () => import('@/features/system-admin/pages/patients')
+);
+const SystemAdminOphthalmologists = lazy(
+  () => import('@/features/system-admin/pages/ophthalmologists')
+);
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
@@ -98,6 +104,9 @@ const SystemAdminAIModels = lazy(
 );
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
+);
+const SystemAdminSettings = lazy(
+  () => import('@/features/system-admin/pages/settings')
 );
 
 // Professional Network pages
@@ -231,6 +240,14 @@ const Router = () => (
           path="/system-admin/organisations"
           element={<SystemAdminOrganisations />}
         />
+        <Route
+          path="/system-admin/patients"
+          element={<SystemAdminPatients />}
+        />
+        <Route
+          path="/system-admin/ophthalmologists"
+          element={<SystemAdminOphthalmologists />}
+        />
         <Route path="/system-admin/users" element={<SystemAdminUsers />} />
         <Route
           path="/system-admin/ai-models"
@@ -239,6 +256,10 @@ const Router = () => (
         <Route
           path="/system-admin/audit-logs"
           element={<SystemAdminAuditLogs />}
+        />
+        <Route
+          path="/system-admin/settings"
+          element={<SystemAdminSettings />}
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
