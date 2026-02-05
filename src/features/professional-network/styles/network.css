@@ -23,6 +23,7 @@
 
 /* ============================================
  * CSS VARIABLES - Twitter-style theme
+ * Synced with Tailwind dark mode (class-based)
  * ============================================ */
 :root {
   /* Background colors */
@@ -52,6 +53,30 @@
   --network-reaction-helpful: #f6ad55;
   --network-reaction-question: #ecc94b;
   --network-reaction-celebrate: #fc8181;
+}
+
+/* Dark mode variables - Syncs with system-admin theme toggle */
+.dark {
+  /* Background colors - Dark */
+  --network-bg-main: 15 23 42; /* slate-900 */
+  --network-bg-search: 30 41 59; /* slate-800 */
+  --network-bg-sidebar: 15 23 42; /* slate-900 */
+  --network-accent: 0 229 255;
+
+  /* Brand colors - Dark */
+  --network-brand-primary: #00e5ff;
+  --network-brand-dark: #0f172a;
+  --network-brand-soft: #1e293b;
+
+  /* Border colors - Dark */
+  --network-border-light: #334155; /* slate-700 */
+  --network-border-dark: #475569; /* slate-600 */
+  --network-line-reply: #475569;
+
+  /* Text colors - Dark */
+  --network-text-main: #f1f5f9; /* slate-100 */
+  --network-text-muted: #94a3b8; /* slate-400 */
+  --network-text-light: #64748b; /* slate-500 */
 }
 
 /* ============================================
@@ -740,6 +765,7 @@
   word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
