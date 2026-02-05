@@ -261,16 +261,14 @@ export default function AnalyticsPage() {
 
   if (!orgData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-50">
-        <div className="text-white dark:text-white light:text-gray-900">
-          Loading...
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+        <div className="text-gray-900 dark:text-white">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <Sidebar pendingCount={orgData.dashboardStats.pendingReviews.value} />
 
       <div className="ml-48">
@@ -279,17 +277,17 @@ export default function AnalyticsPage() {
         <main className="p-6">
           {/* Page Title */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Retinal Image Analytics
             </h1>
-            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               AI-powered retinal screening and anomaly detection
             </p>
           </div>
 
           {/* Analytics Interface Container */}
           <div
-            className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 overflow-hidden"
+            className="bg-white dark:bg-[#1e3a5f] rounded-xl border border-gray-200 dark:border-[#2d4a6f] overflow-hidden"
             style={{ height: 'calc(100vh - 220px)' }}
           >
             <div className="flex h-full">

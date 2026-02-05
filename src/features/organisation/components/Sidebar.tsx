@@ -15,7 +15,7 @@ interface SidebarProps {
 
 export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/organisation' },
+    { icon: Home, label: 'Dashboard', path: '/organisation/dashboard' },
     {
       icon: Users,
       label: 'Patients',
