@@ -25,7 +25,7 @@ export default function StatsCard({
         : 'text-gray-400';
 
   return (
-    <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 hover:border-primary transition-colors">
+    <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f] hover:border-primary transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div
           className="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -39,14 +39,12 @@ export default function StatsCard({
       </div>
 
       <div className="mb-1">
-        <span className="text-3xl font-bold text-white dark:text-white light:text-gray-900">
+        <span className="text-3xl font-bold text-gray-900 dark:text-white">
           {value}
         </span>
       </div>
 
-      <p className="text-gray-400 dark:text-gray-400 light:text-gray-600 text-sm">
-        {title}
-      </p>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">{title}</p>
     </div>
   );
 }

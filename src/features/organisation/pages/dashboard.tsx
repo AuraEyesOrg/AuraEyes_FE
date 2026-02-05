@@ -28,7 +28,7 @@ export default function OrganisationDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <Sidebar pendingCount={data.dashboardStats.pendingReviews.value} />
 
       <div className="ml-48">
@@ -37,10 +37,10 @@ export default function OrganisationDashboard() {
         <main className="p-6">
           {/* Welcome Section */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Welcome back, {data.clinic.admin}
             </h1>
-            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               {data.clinic.name} • {data.clinic.location}
             </p>
           </div>
