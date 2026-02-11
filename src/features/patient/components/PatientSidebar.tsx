@@ -78,7 +78,7 @@ export default function PatientSidebar({
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${
                   isActive
                     ? 'bg-brand/20 text-brand font-bold'
-                    : 'text-gray-400 hover:bg-brand/10 hover:text-black'
+                    : 'text-black-400 hover:text-black hover:bg-brand/10'
                 }`
               }
             >

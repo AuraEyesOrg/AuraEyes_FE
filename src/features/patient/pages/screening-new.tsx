@@ -10,11 +10,11 @@ import {
   Focus,
   Target,
   Info,
-  ArrowLeft,
   ArrowRight,
   RefreshCw,
   Clipboard,
   Lock,
+  Trash2,
 } from 'lucide-react';
 import FocusModeLayout from '../components/FocusModeLayout';
 
@@ -357,7 +357,7 @@ export default function ScreeningNewPage() {
                     <p className="text-lg font-bold text-[var(--text-primary)]">
                       {dragActive
                         ? 'Drop images here'
-                        : 'Drag & Drop images here'}
+                        : 'Drag & Drop fundus images here'}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
                       or{' '}
@@ -394,14 +394,27 @@ export default function ScreeningNewPage() {
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
                     Validation Queue ({images.length})
                   </h3>
-                  {images.some(
-                    (img) =>
-                      img.status === 'uploading' || img.status === 'validating'
-                  ) && (
-                    <span className="text-xs font-medium text-[var(--text-muted)]">
-                      Processing locally...
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {images.some(
+                      (img) =>
+                        img.status === 'uploading' ||
+                        img.status === 'validating'
+                    ) ? (
+                      <span className="text-xs font-medium text-[var(--text-muted)]">
+                        Processing locally...
+                      </span>
+                    ) : (
+                      images.length > 0 && (
+                        <button
+                          onClick={() => setImages([])}
+                          className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Clear All
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 {images.length === 0 ? (
@@ -502,14 +515,7 @@ export default function ScreeningNewPage() {
               </div>
 
               {/* Footer Actions */}
-              <div className="bg-[var(--bg-secondary)]/50 px-6 py-4 flex items-center justify-between border-t border-[var(--border-color)] mt-auto">
-                <button
-                  onClick={() => navigate('/patient/screening')}
-                  className="px-5 py-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-sm font-bold hover:bg-[var(--bg-secondary)] transition-colors flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
-                </button>
+              <div className="bg-[var(--bg-secondary)]/50 px-6 py-4 flex items-end justify-end border-t border-[var(--border-color)] mt-auto">
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-[var(--text-muted)] hidden sm:block font-medium">
                     {readyImages.length} file

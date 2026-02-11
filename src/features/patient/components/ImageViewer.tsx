@@ -1,6 +1,6 @@
 import React from 'react';
 import { ToggleState, Anomaly, RetinalImage } from '../types/type';
-import { AlertTriangle, AlertCircle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface ImageViewerProps {
   toggles: ToggleState;
@@ -8,55 +8,66 @@ interface ImageViewerProps {
   anomalies: Anomaly[];
   isAnalyzing: boolean;
   currentImage?: RetinalImage | null;
+  showHighlights?: boolean;
 }
 
 const ImageViewer: React.FC<ImageViewerProps> = ({
   toggles,
-  zoomLevel,
   anomalies,
   isAnalyzing,
   currentImage,
+  showHighlights = false,
 }) => {
   const defaultImageUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4';
   const imageUrl = currentImage?.url || defaultImageUrl;
-  const imageName = currentImage?.name || 'Fundus photograph';
+  const imageName = currentImage?.name || 'Your retinal scan';
+
+  const getAnnotationStyle = (type: string) => {
+    if (type === 'warning')
+      return {
+        border: 'rgba(239, 68, 68, 0.7)',
+        bg: 'rgba(239, 68, 68, 0.12)',
+        labelBg: 'rgba(30, 30, 30, 0.85)',
+        icon: <AlertTriangle className="w-3 h-3 text-red-400" />,
+      };
+    if (type === 'priority_high')
+      return {
+        border: 'rgba(251, 191, 36, 0.7)',
+        bg: 'rgba(251, 191, 36, 0.1)',
+        labelBg: 'rgba(30, 30, 30, 0.85)',
+        icon: <Info className="w-3 h-3 text-amber-400" />,
+      };
+    return {
+      border: 'rgba(96, 165, 250, 0.6)',
+      bg: 'rgba(96, 165, 250, 0.08)',
+      labelBg: 'rgba(30, 30, 30, 0.85)',
+      icon: <Info className="w-3 h-3 text-blue-400" />,
+    };
+  };
 
   return (
-    <section className="flex-1 relative bg-[var(--bg-primary)] flex items-center justify-center overflow-hidden cursor-move select-none">
-      {/* Grid Background Pattern */}
-      <div
-        className="absolute inset-0 opacity-10 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(var(--border-color) 1px, transparent 1px), linear-gradient(90deg, var(--border-color) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      ></div>
+    <div className="relative flex items-center justify-center w-full h-full overflow-hidden">
+      {/* Image container — fills entire available space */}
+      <div className="relative w-full h-full flex items-center justify-center">
+        <img
+          src={imageUrl}
+          alt={imageName}
+          className="block w-full h-full object-contain"
+          draggable={false}
+        />
 
-      {/* Image Container with Transforms */}
-      <div
-        className="relative max-w-full max-h-full p-10 transition-transform duration-200 ease-out origin-center"
-        style={{ transform: `scale(${zoomLevel})` }}
-      >
-        <div className="relative rounded-full overflow-hidden shadow-2xl border border-[var(--border-color)] group">
-          <img
-            src={imageUrl}
-            alt={imageName}
-            className="block max-h-[80vh] w-auto object-contain opacity-90"
-          />
+        {/* Scanning animation during analysis */}
+        {isAnalyzing && (
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 animate-[scan_2.5s_ease-in-out_infinite]" />
+            <div className="absolute inset-0 bg-teal-400/5 animate-pulse" />
+          </div>
+        )}
 
-          {/* Real-time Scanning Effect */}
-          {isAnalyzing && (
-            <div className="absolute inset-0 z-30 pointer-events-none">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#13ecec]/80 shadow-[0_0_15px_rgba(19,236,236,0.8)] animate-[scan_2s_ease-in-out_infinite]"></div>
-              <div className="absolute inset-0 bg-[#13ecec]/5 animate-pulse"></div>
-            </div>
-          )}
-
-          {/* Dynamic AI Annotation Overlays */}
-          {anomalies.map((anomaly, index) => {
-            // Check if this anomaly type is toggled on
+        {/* AI highlight annotations with text labels */}
+        {showHighlights &&
+          anomalies.map((anomaly) => {
             const isVisible =
               (anomaly.name.toLowerCase().includes('hemorrhage') &&
                 toggles.hemorrhages) ||
@@ -70,89 +81,51 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 
             if (!isVisible || !anomaly.location) return null;
 
+            const style = getAnnotationStyle(anomaly.type);
+
             return (
-              <React.Fragment key={anomaly.id}>
+              <div
+                key={anomaly.id}
+                className="absolute pointer-events-none"
+                style={{
+                  top: `${anomaly.location.y}%`,
+                  left: `${anomaly.location.x}%`,
+                  width: `${anomaly.location.width}%`,
+                  height: `${anomaly.location.height}%`,
+                }}
+              >
+                {/* Rectangle border */}
                 <div
-                  className={`absolute border-2 rounded-lg pointer-events-none animate-in fade-in zoom-in duration-500`}
+                  className="absolute inset-0 rounded-md border-2 transition-opacity duration-500"
                   style={{
-                    top: `${anomaly.location.y}%`,
-                    left: `${anomaly.location.x}%`,
-                    width: `${anomaly.location.width}%`,
-                    height: `${anomaly.location.height}%`,
-                    borderColor:
-                      anomaly.type === 'warning'
-                        ? '#ef4444'
-                        : anomaly.type === 'priority_high'
-                          ? '#facc15'
-                          : '#3b82f6',
-                    backgroundColor:
-                      anomaly.type === 'warning'
-                        ? 'rgba(239, 68, 68, 0.2)'
-                        : anomaly.type === 'priority_high'
-                          ? 'rgba(250, 204, 21, 0.1)'
-                          : 'rgba(59, 130, 246, 0.1)',
-                    animationDelay: `${index * 200}ms`,
-                    animationFillMode: 'both',
+                    borderColor: style.border,
+                    backgroundColor: style.bg,
                   }}
-                ></div>
+                />
+                {/* Text label */}
                 <div
-                  className="absolute flex items-center gap-1 bg-black/80 backdrop-blur-sm border px-2 py-1 rounded text-xs z-10 whitespace-nowrap shadow-lg transition-opacity duration-300 hover:opacity-100 animate-in fade-in slide-in-from-bottom-2 duration-500"
-                  style={{
-                    top: `${anomaly.location.y - 5}%`,
-                    left: `${anomaly.location.x}%`,
-                    borderColor:
-                      anomaly.type === 'warning'
-                        ? '#ef4444'
-                        : anomaly.type === 'priority_high'
-                          ? '#facc15'
-                          : '#3b82f6',
-                    color:
-                      anomaly.type === 'warning'
-                        ? '#fecaca'
-                        : anomaly.type === 'priority_high'
-                          ? '#fef08a'
-                          : '#bfdbfe',
-                    animationDelay: `${index * 200 + 100}ms`,
-                    animationFillMode: 'both',
-                  }}
+                  className="absolute left-0 bottom-full mb-1.5 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium whitespace-nowrap shadow-md"
+                  style={{ backgroundColor: style.labelBg }}
                 >
-                  {anomaly.type === 'warning' ? (
-                    <AlertTriangle className="w-3 h-3" />
-                  ) : (
-                    <AlertCircle className="w-3 h-3" />
-                  )}
-                  {anomaly.name} ({anomaly.confidence}%)
+                  {style.icon}
+                  <span>
+                    {anomaly.name} ({anomaly.confidence}%)
+                  </span>
                 </div>
-              </React.Fragment>
+              </div>
             );
           })}
-
-          {/* Static Vessel Segmentation Layer */}
-          {toggles.vesselSegmentation && (
-            <div className="absolute inset-0 bg-brand/10 mix-blend-overlay pointer-events-none animate-pulse"></div>
-          )}
-        </div>
-      </div>
-
-      {/* Floating Scale Bar */}
-      <div className="absolute bottom-6 left-6 bg-[var(--bg-primary)]/80 backdrop-blur text-xs text-[var(--text-secondary)] px-3 py-1.5 rounded border border-[var(--border-color)] flex items-center gap-2 pointer-events-none">
-        <span>Scale: {zoomLevel.toFixed(1)}x</span>
-        <div className="w-20 h-1 bg-[var(--text-secondary)]/30 relative">
-          <div className="absolute left-0 top-0 h-full w-px bg-[var(--text-primary)]"></div>
-          <div className="absolute right-0 top-0 h-full w-px bg-[var(--text-primary)]"></div>
-        </div>
-        <span>200µm</span>
       </div>
 
       <style>{`
         @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
         }
       `}</style>
-    </section>
+    </div>
   );
 };
 
