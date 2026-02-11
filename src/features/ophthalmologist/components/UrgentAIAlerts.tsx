@@ -41,7 +41,7 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
             aria-label="Clear all urgent alerts"
           >
             <Trash2 className="w-4 h-4" />
