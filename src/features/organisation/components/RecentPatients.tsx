@@ -43,11 +43,17 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
           Recent Patients
         </h3>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors">
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
+            aria-label="Clear all recent patients"
+          >
             <Trash2 className="w-4 h-4" />
             Clear all
           </button>
-          <button className="text-primary hover:text-primary/80 transition-colors text-sm">
+          <button
+            className="text-primary hover:text-primary/80 transition-colors text-sm"
+            aria-label="View all recent patients"
+          >
             View all
           </button>
         </div>
