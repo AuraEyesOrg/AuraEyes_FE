@@ -1,56 +1,62 @@
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Moon, Sun, User } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { Doctor } from '../types/ophthalmologist.types';
 
 interface DoctorHeaderProps {
   doctor: Doctor;
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
-}
-
-function formatDate(): string {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
 export default function DoctorHeader({ doctor }: DoctorHeaderProps) {
-  return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      {/* Left - Greeting */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-800">
-          {getGreeting()}, {doctor.name}
-        </h1>
-        <p className="text-sm text-gray-500">
-          {doctor.hospital} - {doctor.department} | {formatDate()}
-        </p>
-      </div>
+  const { theme, toggleTheme } = useTheme();
 
-      {/* Right - Search & Notifications */}
-      <div className="flex items-center gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search patients, ID..."
-            className="w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
-          />
+  return (
+    <header className="bg-transparent py-4 px-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <span>Pages</span>
+          <span>/</span>
+          <span className="text-gray-900 dark:text-white">Dashboard</span>
         </div>
 
-        {/* Notifications */}
-        <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Search patients, ID..."
+              className="bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-cyan-500 w-64"
+            />
+          </div>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          {/* Notifications */}
+          <button className="relative p-2 rounded-lg bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <Bell size={20} />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+
+          {/* User Profile */}
+          <button className="flex items-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] hover:border-cyan-500 transition-colors">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-teal-500 flex items-center justify-center">
+              <User size={18} className="text-white" />
+            </div>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {doctor.name.split(' ').pop()?.charAt(0) || 'D'}
+            </span>
+          </button>
+        </div>
       </div>
     </header>
   );
