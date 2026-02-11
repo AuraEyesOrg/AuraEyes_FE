@@ -260,11 +260,7 @@ export default function RetinalAnalysis() {
       currentStep="analysis"
       title="AI Retinal Analysis"
       exitPath="/patient/screening/new"
-      breadcrumbItems={[
-        { label: 'Home', path: '/patient/dashboard' },
-        { label: 'Screening', path: '/patient/screening' },
-        { label: 'AI Analysis' },
-      ]}
+      showBreadcrumb={false}
     >
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">

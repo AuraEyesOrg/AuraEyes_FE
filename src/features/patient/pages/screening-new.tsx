@@ -10,7 +10,6 @@ import {
   Focus,
   Target,
   Info,
-  ArrowLeft,
   ArrowRight,
   RefreshCw,
   Clipboard,
@@ -357,7 +356,7 @@ export default function ScreeningNewPage() {
                     <p className="text-lg font-bold text-[var(--text-primary)]">
                       {dragActive
                         ? 'Drop images here'
-                        : 'Drag & Drop images here'}
+                        : 'Drag & Drop fundus images here'}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
                       or{' '}
@@ -502,14 +501,7 @@ export default function ScreeningNewPage() {
               </div>
 
               {/* Footer Actions */}
-              <div className="bg-[var(--bg-secondary)]/50 px-6 py-4 flex items-center justify-between border-t border-[var(--border-color)] mt-auto">
-                <button
-                  onClick={() => navigate('/patient/screening')}
-                  className="px-5 py-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] text-sm font-bold hover:bg-[var(--bg-secondary)] transition-colors flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
-                </button>
+              <div className="bg-[var(--bg-secondary)]/50 px-6 py-4 flex items-end justify-end border-t border-[var(--border-color)] mt-auto">
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-[var(--text-muted)] hidden sm:block font-medium">
                     {readyImages.length} file
