@@ -1,5 +1,5 @@
 import { Patient } from '../types/organisation.types';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock, AlertCircle, Trash2 } from 'lucide-react';
 
 interface RecentPatientsProps {
   patients: Patient[];
@@ -42,9 +42,15 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Recent Patients
         </h3>
-        <button className="text-primary hover:text-primary/80 transition-colors text-sm">
-          View all
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors">
+            <Trash2 className="w-4 h-4" />
+            Clear all
+          </button>
+          <button className="text-primary hover:text-primary/80 transition-colors text-sm">
+            View all
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">

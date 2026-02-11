@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import type {
   UrgentAlert,
   ConditionType,
@@ -39,9 +39,15 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
             Urgent AI Alerts
           </h2>
         </div>
-        <button className="text-sm text-cyan-600 hover:text-cyan-700 font-medium transition-colors">
-          View all alerts
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors">
+            <Trash2 className="w-4 h-4" />
+            Clear all
+          </button>
+          <button className="text-sm text-cyan-600 hover:text-cyan-700 font-medium transition-colors">
+            View all alerts
+          </button>
+        </div>
       </div>
 
       {/* Alert Cards */}
