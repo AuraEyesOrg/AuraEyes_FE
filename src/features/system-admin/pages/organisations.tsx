@@ -1,137 +1,160 @@
 /**
- * Organization & Device Management Page
- * System Admin view for managing clinics/organizations and their devices
+ * Organisation Management Page
+ * System Admin view for managing organizations - contracts, billing, AI usage
+ * Based on FR-26 to FR-36 requirements
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import {
   Building2,
-  Wifi,
-  Wrench,
+  FileText,
+  CreditCard,
   Search,
   Download,
   Plus,
   MoreVertical,
+  Eye,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Activity,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { organisationApi, deviceApi } from '../api';
-import type { Organisation, Device } from '../types/system-admin.types';
 
-type TabType = 'clinics' | 'devices';
+type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
+type TabType = 'organisations' | 'billing' | 'contracts';
+
+interface Organisation {
+  id: string;
+  name: string;
+  type: 'clinic' | 'hospital' | 'imaging_center';
+  location: string;
+  country: string;
+  status: 'active' | 'inactive' | 'suspended';
+  contractStatus: ContractStatus;
+  usersCount: number;
+  // Billing info
+  monthlyAIUsage: number;
+  monthlyBilling: number;
+  pendingPayment: number;
+  totalScreenings: number;
+  // Contract info
+  contractStartDate: string;
+  contractEndDate: string;
+  createdAt: string;
+  contactEmail: string;
+}
 
 // Mock data for demonstration
 const getMockOrganisations = (): Organisation[] => [
   {
-    id: '#CL042',
+    id: '#ORG001',
     name: 'Metro Vascular Center',
     type: 'clinic',
     location: 'New York, NY',
     country: 'USA',
     status: 'active',
-    devicesCount: 3,
+    contractStatus: 'active',
     usersCount: 12,
+    monthlyAIUsage: 245,
+    monthlyBilling: 4900,
+    pendingPayment: 0,
+    totalScreenings: 1245,
+    contractStartDate: '2023-10-01',
+    contractEndDate: '2024-10-01',
     createdAt: 'Oct 12, 2023',
     contactEmail: 'contact@metrovc.com',
   },
   {
-    id: '#CL043',
+    id: '#ORG002',
     name: 'Bayside Eye Institute',
     type: 'hospital',
     location: 'San Francisco, CA',
     country: 'USA',
     status: 'active',
-    devicesCount: 5,
+    contractStatus: 'active',
     usersCount: 24,
+    monthlyAIUsage: 520,
+    monthlyBilling: 10400,
+    pendingPayment: 2100,
+    totalScreenings: 3420,
+    contractStartDate: '2023-06-15',
+    contractEndDate: '2024-06-15',
     createdAt: 'Nov 02, 2023',
     contactEmail: 'info@baysideeye.com',
   },
   {
-    id: '#CL044',
+    id: '#ORG003',
     name: 'Oakwood Medical',
     type: 'clinic',
     location: 'Austin, TX',
     country: 'USA',
     status: 'active',
-    devicesCount: 2,
+    contractStatus: 'pending',
     usersCount: 8,
+    monthlyAIUsage: 98,
+    monthlyBilling: 1960,
+    pendingPayment: 1960,
+    totalScreenings: 567,
+    contractStartDate: '2023-12-01',
+    contractEndDate: '2024-12-01',
     createdAt: 'Dec 10, 2023',
     contactEmail: 'hello@oakwoodmed.com',
   },
   {
-    id: '#CL045',
+    id: '#ORG004',
     name: 'Downtown Health Center',
     type: 'imaging_center',
     location: 'Chicago, IL',
     country: 'USA',
     status: 'inactive',
-    devicesCount: 4,
+    contractStatus: 'expired',
     usersCount: 15,
+    monthlyAIUsage: 0,
+    monthlyBilling: 0,
+    pendingPayment: 3500,
+    totalScreenings: 890,
+    contractStartDate: '2023-01-01',
+    contractEndDate: '2024-01-01',
     createdAt: 'Jan 05, 2024',
     contactEmail: 'support@dthc.com',
   },
-];
-
-const getMockDevices = (): Device[] => [
   {
-    id: '#DEV001',
-    name: 'Retinal Camera A1',
-    model: 'AURA-RC-5000',
-    serialNumber: 'RC5K-2024-0001',
-    organisationId: '#CL042',
-    organisationName: 'Metro Vascular Center',
+    id: '#ORG005',
+    name: 'Pacific Vision Clinic',
+    type: 'clinic',
+    location: 'Seattle, WA',
+    country: 'USA',
     status: 'active',
-    screeningsPerformed: 1245,
-    lastCalibrated: '2024-01-15',
-    firmwareVersion: 'v2.4.1',
-  },
-  {
-    id: '#DEV002',
-    name: 'Retinal Camera B2',
-    model: 'AURA-RC-5000',
-    serialNumber: 'RC5K-2024-0002',
-    organisationId: '#CL043',
-    organisationName: 'Bayside Eye Institute',
-    status: 'maintenance',
-    screeningsPerformed: 892,
-    lastCalibrated: '2023-12-20',
-    firmwareVersion: 'v2.3.8',
-  },
-  {
-    id: '#DEV003',
-    name: 'Retinal Camera C3',
-    model: 'AURA-RC-3000',
-    serialNumber: 'RC3K-2023-0015',
-    organisationId: '#CL044',
-    organisationName: 'Oakwood Medical',
-    status: 'active',
-    screeningsPerformed: 567,
-    lastCalibrated: '2024-01-10',
-    firmwareVersion: 'v2.4.0',
+    contractStatus: 'active',
+    usersCount: 6,
+    monthlyAIUsage: 156,
+    monthlyBilling: 3120,
+    pendingPayment: 0,
+    totalScreenings: 780,
+    contractStartDate: '2023-08-01',
+    contractEndDate: '2024-08-01',
+    createdAt: 'Aug 15, 2023',
+    contactEmail: 'admin@pacificvision.com',
   },
 ];
 
 export default function OrganisationsPage() {
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
-  const [activeTab, setActiveTab] = useState<TabType>('clinics');
+  const [activeTab, setActiveTab] = useState<TabType>('organisations');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   // Load data
   const loadData = useCallback(async () => {
     try {
-      const [orgsData, devicesData] = await Promise.all([
-        organisationApi.getOrganisations().catch(() => null),
-        deviceApi.getDevices().catch(() => null),
-      ]);
-
-      // Use mock data if API not available
-      setOrganisations(orgsData?.data || getMockOrganisations());
-      setDevices(devicesData?.data || getMockDevices());
+      // Use mock data directly - API returns different type
+      setOrganisations(getMockOrganisations());
     } finally {
       setLoading(false);
     }
@@ -143,49 +166,106 @@ export default function OrganisationsPage() {
 
   // Calculate stats
   const activeOrgs = organisations.filter((o) => o.status === 'active').length;
-  const onlineDevices = devices.filter((d) => d.status === 'active').length;
-  const calibrationNeeded = devices.filter(
-    (d) => d.status === 'maintenance'
-  ).length;
+  const totalMonthlyRevenue = organisations.reduce(
+    (sum, o) => sum + o.monthlyBilling,
+    0
+  );
+  const totalPendingPayments = organisations.reduce(
+    (sum, o) => sum + o.pendingPayment,
+    0
+  );
+  const totalScreenings = organisations.reduce(
+    (sum, o) => sum + o.totalScreenings,
+    0
+  );
+  const totalUsers = organisations.reduce((sum, o) => sum + o.usersCount, 0);
 
-  // Filter data based on search
-  const filteredOrganisations = organisations.filter(
-    (org) =>
+  // Filter data based on search and status
+  const filteredOrganisations = organisations.filter((org) => {
+    const matchesSearch =
       org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       org.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      org.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      org.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const filteredDevices = devices.filter(
-    (device) =>
-      device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.organisationName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    const matchesStatus = statusFilter === 'all' || org.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const organisationColumns: TableColumn<Organisation>[] = [
     { header: 'ID', accessor: 'id', width: '100px' },
     {
-      header: 'Clinic Details',
+      header: 'Organisation',
       accessor: 'name',
       render: (_, row) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-slate-900 dark:text-white">
-            {row.name}
-          </span>
-          <span className="text-xs text-slate-500">Added {row.createdAt}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+            {row.name.substring(0, 2).toUpperCase()}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-slate-900 dark:text-white">
+              {row.name}
+            </span>
+            <span className="text-xs text-slate-500">
+              {row.type.replace('_', ' ')}
+            </span>
+          </div>
         </div>
       ),
     },
     { header: 'Location', accessor: 'location' },
     {
-      header: 'Devices',
-      accessor: 'devicesCount',
+      header: 'Users',
+      accessor: 'usersCount',
       render: (value) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
           {value as number}
         </span>
       ),
+    },
+    {
+      header: 'AI Screenings',
+      accessor: 'totalScreenings',
+      render: (value) => (
+        <span className="text-sm font-medium text-slate-900 dark:text-white">
+          {(value as number).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      header: 'Contract',
+      accessor: 'contractStatus',
+      render: (value) => {
+        const statusMap: Record<
+          ContractStatus,
+          'success' | 'warning' | 'error' | 'info'
+        > = {
+          active: 'success',
+          pending: 'warning',
+          expired: 'error',
+          suspended: 'error',
+        };
+        const labelMap: Record<ContractStatus, string> = {
+          active: 'Active',
+          pending: 'Pending',
+          expired: 'Expired',
+          suspended: 'Suspended',
+        };
+        return (
+          <StatusBadge
+            status={statusMap[value as ContractStatus]}
+            label={labelMap[value as ContractStatus]}
+          />
+        );
+      },
     },
     {
       header: 'Status',
@@ -211,57 +291,73 @@ export default function OrganisationsPage() {
       header: 'Actions',
       accessor: () => null,
       render: () => (
-        <button className="text-slate-500 hover:text-primary transition-colors p-1">
-          <MoreVertical className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="text-slate-500 hover:text-primary transition-colors p-1"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button className="text-slate-500 hover:text-primary transition-colors p-1">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       ),
     },
   ];
 
-  const deviceColumns: TableColumn<Device>[] = [
+  const billingColumns: TableColumn<Organisation>[] = [
     { header: 'ID', accessor: 'id', width: '100px' },
     {
-      header: 'Device Info',
+      header: 'Organisation',
       accessor: 'name',
       render: (_, row) => (
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-900 dark:text-white">
             {row.name}
           </span>
-          <span className="text-xs text-slate-500">{row.model}</span>
+          <span className="text-xs text-slate-500">{row.contactEmail}</span>
         </div>
       ),
     },
-    { header: 'Organization', accessor: 'organisationName' },
     {
-      header: 'Screenings',
-      accessor: 'screeningsPerformed',
-      render: (value) => (value as number).toLocaleString(),
+      header: 'Monthly AI Usage',
+      accessor: 'monthlyAIUsage',
+      render: (value) => (
+        <span className="text-sm font-medium text-slate-900 dark:text-white">
+          {value as number} screenings
+        </span>
+      ),
     },
-    { header: 'Last Calibrated', accessor: 'lastCalibrated' },
+    {
+      header: 'Monthly Billing',
+      accessor: 'monthlyBilling',
+      render: (value) => (
+        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+          {formatCurrency(value as number)}
+        </span>
+      ),
+    },
+    {
+      header: 'Pending Payment',
+      accessor: 'pendingPayment',
+      render: (value) => (
+        <span
+          className={`text-sm font-semibold ${(value as number) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'}`}
+        >
+          {formatCurrency(value as number)}
+        </span>
+      ),
+    },
     {
       header: 'Status',
-      accessor: 'status',
+      accessor: 'pendingPayment',
       render: (value) => {
-        const statusMap: Record<
-          string,
-          'success' | 'warning' | 'error' | 'processing'
-        > = {
-          active: 'success',
-          inactive: 'error',
-          maintenance: 'warning',
-          error: 'error',
-        };
-        const labelMap: Record<string, string> = {
-          active: 'Online',
-          inactive: 'Offline',
-          maintenance: 'Calibration Needed',
-          error: 'Error',
-        };
+        const isPaid = (value as number) === 0;
         return (
           <StatusBadge
-            status={statusMap[value as string] || 'info'}
-            label={labelMap[value as string] || (value as string)}
+            status={isPaid ? 'success' : 'warning'}
+            label={isPaid ? 'Paid' : 'Pending'}
           />
         );
       },
@@ -270,12 +366,127 @@ export default function OrganisationsPage() {
       header: 'Actions',
       accessor: () => null,
       render: () => (
-        <button className="text-slate-500 hover:text-primary transition-colors p-1">
-          <MoreVertical className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="text-slate-500 hover:text-primary transition-colors p-1"
+            title="View Invoice"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
+          <button className="text-slate-500 hover:text-primary transition-colors p-1">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       ),
     },
   ];
+
+  const contractColumns: TableColumn<Organisation>[] = [
+    { header: 'ID', accessor: 'id', width: '100px' },
+    {
+      header: 'Organisation',
+      accessor: 'name',
+      render: (_, row) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-slate-900 dark:text-white">
+            {row.name}
+          </span>
+          <span className="text-xs text-slate-500">
+            {row.type.replace('_', ' ')}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Contract Start',
+      accessor: 'contractStartDate',
+      render: (value) => (
+        <span className="text-sm text-slate-700 dark:text-slate-300">
+          {new Date(value as string).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: 'Contract End',
+      accessor: 'contractEndDate',
+      render: (value) => (
+        <span className="text-sm text-slate-700 dark:text-slate-300">
+          {new Date(value as string).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: 'Contract Status',
+      accessor: 'contractStatus',
+      render: (value) => {
+        const statusMap: Record<
+          ContractStatus,
+          'success' | 'warning' | 'error' | 'info'
+        > = {
+          active: 'success',
+          pending: 'warning',
+          expired: 'error',
+          suspended: 'error',
+        };
+        const labelMap: Record<ContractStatus, string> = {
+          active: 'Active',
+          pending: 'Pending Signature',
+          expired: 'Expired',
+          suspended: 'Suspended',
+        };
+        return (
+          <StatusBadge
+            status={statusMap[value as ContractStatus]}
+            label={labelMap[value as ContractStatus]}
+          />
+        );
+      },
+    },
+    {
+      header: 'Actions',
+      accessor: () => null,
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <button
+            className="text-slate-500 hover:text-primary transition-colors p-1"
+            title="View Contract"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
+          {row.contractStatus === 'expired' && (
+            <button className="text-xs px-2 py-1 bg-primary text-slate-900 rounded font-medium hover:opacity-90">
+              Renew
+            </button>
+          )}
+          <button className="text-slate-500 hover:text-primary transition-colors p-1">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const tabs = [
+    {
+      id: 'organisations' as const,
+      label: 'All Organisations',
+      icon: Building2,
+      count: organisations.length,
+    },
+    { id: 'billing' as const, label: 'Billing & Payments', icon: CreditCard },
+    { id: 'contracts' as const, label: 'Contracts', icon: FileText },
+  ];
+
+  const getActiveColumns = () => {
+    switch (activeTab) {
+      case 'billing':
+        return billingColumns;
+      case 'contracts':
+        return contractColumns;
+      default:
+        return organisationColumns;
+    }
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -283,17 +494,17 @@ export default function OrganisationsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Clinic & Device Inventory"
-          description="Manage registered clinics, monitor retinal camera status, and calibration logs"
+          title="Organisation Management"
+          description="Manage organizations, contracts, billing, and AI usage reports"
           actions={
             <div className="flex items-center gap-3">
               <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
                 <Download className="w-4 h-4" />
-                Export
+                Export Report
               </button>
               <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4" />
-                Register Clinic
+                Add Organisation
               </button>
             </div>
           }
@@ -302,61 +513,150 @@ export default function OrganisationsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
             {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <StatsCard
-                title="Active Clinics"
+                title="Active Organisations"
                 value={activeOrgs}
                 icon={Building2}
                 change={2}
                 trend="up"
-                description="+2 this month"
+                description={`${organisations.length} total`}
                 variant="success"
               />
               <StatsCard
-                title="Devices Online"
-                value={`${onlineDevices} / ${devices.length}`}
-                icon={Wifi}
-                description="Total devices registered"
+                title="Monthly Revenue"
+                value={formatCurrency(totalMonthlyRevenue)}
+                icon={DollarSign}
+                change={15}
+                trend="up"
+                description="From AI services"
                 variant="primary"
               />
               <StatsCard
-                title="Calibration Required"
-                value={calibrationNeeded}
-                icon={Wrench}
-                description="Action needed"
+                title="Pending Payments"
+                value={formatCurrency(totalPendingPayments)}
+                icon={CreditCard}
+                description="Awaiting collection"
                 variant="warning"
+              />
+              <StatsCard
+                title="Total Screenings"
+                value={totalScreenings.toLocaleString()}
+                icon={Activity}
+                change={8}
+                trend="up"
+                description="All time AI usage"
+                variant="primary"
+              />
+              <StatsCard
+                title="Organisation Users"
+                value={totalUsers}
+                icon={Users}
+                description="Across all orgs"
+                variant="primary"
               />
             </div>
 
-            {/* Tabs */}
-            <div className="border-b border-slate-200 dark:border-slate-800">
-              <div className="flex gap-8">
-                <button
-                  onClick={() => setActiveTab('clinics')}
-                  className={`relative flex items-center gap-2 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'clinics'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4" />
-                  Registered Clinics
-                </button>
-                <button
-                  onClick={() => setActiveTab('devices')}
-                  className={`relative flex items-center gap-2 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'devices'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Wifi className="w-4 h-4" />
-                  Device Inventory
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    {devices.length}
+            {/* Revenue Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    AI Screening Revenue
+                  </h3>
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                    {formatCurrency(totalMonthlyRevenue)}
                   </span>
-                </button>
+                  <span className="text-sm text-emerald-500">+12%</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Based on{' '}
+                  {organisations.reduce((sum, o) => sum + o.monthlyAIUsage, 0)}{' '}
+                  screenings this month
+                </p>
               </div>
+
+              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    Active Contracts
+                  </h3>
+                  <FileText className="w-5 h-5 text-blue-500" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                    {
+                      organisations.filter((o) => o.contractStatus === 'active')
+                        .length
+                    }
+                  </span>
+                  <span className="text-sm text-slate-500">
+                    / {organisations.length}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  {
+                    organisations.filter((o) => o.contractStatus === 'pending')
+                      .length
+                  }{' '}
+                  pending signature,{' '}
+                  {
+                    organisations.filter((o) => o.contractStatus === 'expired')
+                      .length
+                  }{' '}
+                  expired
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    Collection Rate
+                  </h3>
+                  <CreditCard className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                    {totalMonthlyRevenue > 0
+                      ? Math.round(
+                          ((totalMonthlyRevenue - totalPendingPayments) /
+                            totalMonthlyRevenue) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  {formatCurrency(totalPendingPayments)} pending collection
+                </p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count !== undefined && (
+                    <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
 
             {/* Search & Filters */}
@@ -367,41 +667,58 @@ export default function OrganisationsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search ${activeTab === 'clinics' ? 'clinics' : 'devices'}...`}
+                  placeholder="Search organisations..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg
+                      className="w-4 h-4 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Data Table */}
             <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              {activeTab === 'clinics' ? (
-                <DataTable<Organisation>
-                  columns={organisationColumns}
-                  data={filteredOrganisations}
-                  keyExtractor={(row) => row.id}
-                  isLoading={loading}
-                  emptyMessage="No clinics found"
-                />
-              ) : (
-                <DataTable<Device>
-                  columns={deviceColumns}
-                  data={filteredDevices}
-                  keyExtractor={(row) => row.id}
-                  isLoading={loading}
-                  emptyMessage="No devices found"
-                />
-              )}
+              <DataTable<Organisation>
+                columns={getActiveColumns()}
+                data={filteredOrganisations}
+                keyExtractor={(row) => row.id}
+                isLoading={loading}
+                emptyMessage="No organisations found"
+              />
             </div>
 
-            {/* Pagination placeholder */}
+            {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing{' '}
-                {activeTab === 'clinics'
-                  ? filteredOrganisations.length
-                  : filteredDevices.length}{' '}
-                results
+                Showing {filteredOrganisations.length} of {organisations.length}{' '}
+                organisations
               </span>
               <div className="flex items-center gap-2">
                 <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">

@@ -21,8 +21,11 @@ import {
   PenSquare,
   Eye,
   ArrowLeft,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { currentUser } from '../../data';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const navItems = [
   { to: '/network', icon: Home, label: 'Feed', end: true },
@@ -33,20 +36,25 @@ const navItems = [
 ];
 
 export function NetworkSidebar() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header id="network-sidebar" className="network-sidebar-header">
       <div className="network-sidebar-inner">
-        {/* Logo - Aura Eye icon with back to dashboard */}
+        {/* Logo - Aura Eye icon with Aura Network text */}
         <section className="network-sidebar-section">
           <h1 className="network-sidebar-logo">
             <NavLink
               to="/network"
               className="custom-button main-tab text-brand-primary transition hover:bg-brand-primary/10 
-                         focus-visible:bg-brand-primary/10 focus-visible:!ring-brand-primary/80 p-3"
+                         focus-visible:bg-brand-primary/10 focus-visible:!ring-brand-primary/80 p-3 flex items-center gap-3"
             >
-              <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center flex-shrink-0">
                 <Eye className="w-4 h-4 text-white" />
               </div>
+              <span className="network-nav-label font-bold text-lg text-brand-primary">
+                Aura Network
+              </span>
             </NavLink>
           </h1>
 
@@ -115,6 +123,28 @@ export function NetworkSidebar() {
                 strokeWidth={1.75}
               />
               <span className="network-nav-label">More</span>
+            </button>
+
+            {/* Theme Toggle - Synced with system admin */}
+            <button
+              onClick={toggleTheme}
+              className="network-nav-link hover-animation"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <Sun
+                  className="w-[26px] h-[26px] shrink-0"
+                  strokeWidth={1.75}
+                />
+              ) : (
+                <Moon
+                  className="w-[26px] h-[26px] shrink-0"
+                  strokeWidth={1.75}
+                />
+              )}
+              <span className="network-nav-label">
+                {theme === 'dark' ? 'Light' : 'Dark'}
+              </span>
             </button>
           </nav>
 
