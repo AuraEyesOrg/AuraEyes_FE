@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Clipboard,
   Lock,
+  Trash2,
 } from 'lucide-react';
 import FocusModeLayout from '../components/FocusModeLayout';
 
@@ -393,14 +394,27 @@ export default function ScreeningNewPage() {
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
                     Validation Queue ({images.length})
                   </h3>
-                  {images.some(
-                    (img) =>
-                      img.status === 'uploading' || img.status === 'validating'
-                  ) && (
-                    <span className="text-xs font-medium text-[var(--text-muted)]">
-                      Processing locally...
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {images.some(
+                      (img) =>
+                        img.status === 'uploading' ||
+                        img.status === 'validating'
+                    ) ? (
+                      <span className="text-xs font-medium text-[var(--text-muted)]">
+                        Processing locally...
+                      </span>
+                    ) : (
+                      images.length > 0 && (
+                        <button
+                          onClick={() => setImages([])}
+                          className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Clear All
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 {images.length === 0 ? (
