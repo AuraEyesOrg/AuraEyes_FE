@@ -6,6 +6,18 @@ interface RecentPatientsProps {
 }
 
 export default function RecentPatients({ patients }: RecentPatientsProps) {
+  const handleClearAll = () => {
+    // TODO: Implement clear all functionality
+    // This should clear all recent patients with user confirmation
+    console.log('Clear all recent patients clicked');
+  };
+
+  const handleViewAll = () => {
+    // TODO: Implement view all functionality
+    // This should navigate to the full patients page
+    console.log('View all recent patients clicked');
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -46,6 +58,7 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
           <button
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
             aria-label="Clear all recent patients"
+            onClick={handleClearAll}
           >
             <Trash2 className="w-4 h-4" />
             Clear all
@@ -53,6 +66,7 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
           <button
             className="text-primary hover:text-primary/80 transition-colors text-sm"
             aria-label="View all recent patients"
+            onClick={handleViewAll}
           >
             View all
           </button>

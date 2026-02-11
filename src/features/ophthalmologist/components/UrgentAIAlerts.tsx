@@ -29,6 +29,18 @@ function getButtonStyle(priority: string): string {
 }
 
 export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
+  const handleClearAll = () => {
+    // TODO: Implement clear all functionality
+    // This should clear all urgent alerts with user confirmation
+    console.log('Clear all alerts clicked');
+  };
+
+  const handleViewAll = () => {
+    // TODO: Implement view all functionality
+    // This should navigate to the full alerts page
+    console.log('View all alerts clicked');
+  };
+
   return (
     <section className="mb-8">
       {/* Header */}
@@ -43,6 +55,7 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
           <button
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
             aria-label="Clear all urgent alerts"
+            onClick={handleClearAll}
           >
             <Trash2 className="w-4 h-4" />
             Clear all
@@ -50,6 +63,7 @@ export default function UrgentAIAlerts({ alerts }: UrgentAIAlertsProps) {
           <button
             className="text-sm text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
             aria-label="View all urgent alerts"
+            onClick={handleViewAll}
           >
             View all alerts
           </button>
