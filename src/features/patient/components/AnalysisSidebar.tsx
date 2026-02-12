@@ -1,6 +1,6 @@
 import React from 'react';
 import { ToggleState, Anomaly } from '../types/type';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 
 interface PatientFindingsProps {
   anomalies: Anomaly[];
@@ -49,6 +49,16 @@ const PatientFindings: React.FC<PatientFindingsProps> = ({
           />
         ))}
       </div>
+
+      {/* Recommended next step */}
+      <div className="mt-5 flex items-start gap-3 rounded-xl bg-slate-50 border border-slate-100 p-4">
+        <ArrowRight className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-slate-500 leading-relaxed">
+          <span className="font-medium text-slate-600">Next step:</span>{' '}
+          Continue to the Review stage where a specialist can confirm these
+          findings and discuss your options.
+        </p>
+      </div>
     </section>
   );
 };
@@ -67,22 +77,25 @@ const FindingCard: React.FC<FindingCardProps> = ({
 }) => {
   const typeConfig = {
     warning: {
-      borderLeft: 'border-l-rose-500',
+      borderLeft: 'border-l-orange-400',
       label: 'Needs attention',
-      labelColor: 'text-rose-700',
-      badgeBg: 'bg-rose-50',
+      labelColor: 'text-orange-700',
+      badgeBg: 'bg-orange-50',
+      suggestion: 'Consider consulting an ophthalmologist.',
     },
     priority_high: {
-      borderLeft: 'border-l-amber-500',
+      borderLeft: 'border-l-amber-400',
       label: 'Worth monitoring',
       labelColor: 'text-amber-700',
       badgeBg: 'bg-amber-50',
+      suggestion: 'A specialist can advise on monitoring.',
     },
     info: {
-      borderLeft: 'border-l-blue-500',
+      borderLeft: 'border-l-blue-400',
       label: 'For your info',
       labelColor: 'text-blue-700',
       badgeBg: 'bg-blue-50',
+      suggestion: 'No immediate action needed.',
     },
   };
 
@@ -106,6 +119,10 @@ const FindingCard: React.FC<FindingCardProps> = ({
       {/* Description */}
       <p className="text-sm text-slate-500 leading-relaxed">
         {friendlyDescription(anomaly)}
+      </p>
+      {/* Suggested next step */}
+      <p className="text-xs text-slate-400 mt-1.5 italic">
+        {config.suggestion}
       </p>
     </div>
   );

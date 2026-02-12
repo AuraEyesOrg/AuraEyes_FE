@@ -107,9 +107,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                 style={{ backgroundColor: style.labelBg }}
               >
                 {style.icon}
-                <span>
-                  {anomaly.name} ({anomaly.confidence}%)
-                </span>
+                <span>{anomaly.friendlyName || anomaly.name}</span>
               </div>
             </div>
           );
