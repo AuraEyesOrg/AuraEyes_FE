@@ -11,6 +11,7 @@ export { default as ImageGallery } from './ImageGallery';
 export { default as ReadOnlyImageGallery } from './ReadOnlyImageGallery';
 export { default as ImageViewer } from './ImageViewer';
 export { default as ToolsSidebar } from './ToolsSidebar';
+export { default as SecondaryActionCard } from './SecondaryActionCard';
 
 // UI Components
 export { default as HighlightCard } from './highlight-card';

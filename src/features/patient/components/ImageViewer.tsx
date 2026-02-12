@@ -47,75 +47,71 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   };
 
   return (
-    <div className="relative flex items-center justify-center w-full h-full overflow-hidden">
-      {/* Image container — fills entire available space */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        <img
-          src={imageUrl}
-          alt={imageName}
-          className="block w-full h-full object-contain"
-          draggable={false}
-        />
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Image — fills the container, annotations align to same space */}
+      <img
+        src={imageUrl}
+        alt={imageName}
+        className="w-full h-full object-contain"
+        draggable={false}
+      />
 
-        {/* Scanning animation during analysis */}
-        {isAnalyzing && (
-          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 animate-[scan_2.5s_ease-in-out_infinite]" />
-            <div className="absolute inset-0 bg-teal-400/5 animate-pulse" />
-          </div>
-        )}
+      {/* Scanning animation during analysis */}
+      {isAnalyzing && (
+        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-80 animate-[scan_2.5s_ease-in-out_infinite]" />
+          <div className="absolute inset-0 bg-teal-400/5 animate-pulse" />
+        </div>
+      )}
 
-        {/* AI highlight annotations with text labels */}
-        {showHighlights &&
-          anomalies.map((anomaly) => {
-            const isVisible =
-              (anomaly.name.toLowerCase().includes('hemorrhage') &&
-                toggles.hemorrhages) ||
-              (anomaly.name.toLowerCase().includes('aneurysm') &&
-                toggles.hemorrhages) ||
-              (anomaly.name.toLowerCase().includes('exudate') &&
-                toggles.exudates) ||
-              (!anomaly.name.toLowerCase().includes('hemorrhage') &&
-                !anomaly.name.toLowerCase().includes('aneurysm') &&
-                !anomaly.name.toLowerCase().includes('exudate'));
+      {/* AI highlight annotations with text labels */}
+      {showHighlights &&
+        anomalies.map((anomaly) => {
+          const isVisible =
+            (anomaly.name.toLowerCase().includes('hemorrhage') &&
+              toggles.hemorrhages) ||
+            (anomaly.name.toLowerCase().includes('aneurysm') &&
+              toggles.hemorrhages) ||
+            (anomaly.name.toLowerCase().includes('exudate') &&
+              toggles.exudates) ||
+            (!anomaly.name.toLowerCase().includes('hemorrhage') &&
+              !anomaly.name.toLowerCase().includes('aneurysm') &&
+              !anomaly.name.toLowerCase().includes('exudate'));
 
-            if (!isVisible || !anomaly.location) return null;
+          if (!isVisible || !anomaly.location) return null;
 
-            const style = getAnnotationStyle(anomaly.type);
+          const style = getAnnotationStyle(anomaly.type);
 
-            return (
+          return (
+            <div
+              key={anomaly.id}
+              className="absolute pointer-events-none"
+              style={{
+                top: `${anomaly.location.y}%`,
+                left: `${anomaly.location.x}%`,
+                width: `${anomaly.location.width}%`,
+                height: `${anomaly.location.height}%`,
+              }}
+            >
+              {/* Rectangle border */}
               <div
-                key={anomaly.id}
-                className="absolute pointer-events-none"
+                className="absolute inset-0 rounded-md border-2 transition-opacity duration-500"
                 style={{
-                  top: `${anomaly.location.y}%`,
-                  left: `${anomaly.location.x}%`,
-                  width: `${anomaly.location.width}%`,
-                  height: `${anomaly.location.height}%`,
+                  borderColor: style.border,
+                  backgroundColor: style.bg,
                 }}
+              />
+              {/* Text label */}
+              <div
+                className="absolute left-0 bottom-full mb-1.5 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium whitespace-nowrap shadow-md"
+                style={{ backgroundColor: style.labelBg }}
               >
-                {/* Rectangle border */}
-                <div
-                  className="absolute inset-0 rounded-md border-2 transition-opacity duration-500"
-                  style={{
-                    borderColor: style.border,
-                    backgroundColor: style.bg,
-                  }}
-                />
-                {/* Text label */}
-                <div
-                  className="absolute left-0 bottom-full mb-1.5 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium whitespace-nowrap shadow-md"
-                  style={{ backgroundColor: style.labelBg }}
-                >
-                  {style.icon}
-                  <span>
-                    {anomaly.name} ({anomaly.confidence}%)
-                  </span>
-                </div>
+                {style.icon}
+                <span>{anomaly.friendlyName || anomaly.name}</span>
               </div>
-            );
-          })}
-      </div>
+            </div>
+          );
+        })}
 
       <style>{`
         @keyframes scan {

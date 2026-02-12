@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ToggleState, Anomaly } from '../types/type';
-import { HelpCircle, CheckCircle } from 'lucide-react';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 
 interface PatientFindingsProps {
   anomalies: Anomaly[];
@@ -36,8 +36,10 @@ const PatientFindings: React.FC<PatientFindingsProps> = ({
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-800 mb-4">What We Found</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+        What We Found
+      </h2>
+      <div className="space-y-3">
         {anomalies.map((anomaly) => (
           <FindingCard
             key={anomaly.id}
@@ -46,6 +48,16 @@ const PatientFindings: React.FC<PatientFindingsProps> = ({
             friendlyDescription={friendlyDescription}
           />
         ))}
+      </div>
+
+      {/* Recommended next step */}
+      <div className="mt-5 flex items-start gap-3 rounded-xl bg-slate-50 border border-slate-100 p-4">
+        <ArrowRight className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-slate-500 leading-relaxed">
+          <span className="font-medium text-slate-600">Next step:</span>{' '}
+          Continue to the Review stage where a specialist can confirm these
+          findings and discuss your options.
+        </p>
       </div>
     </section>
   );
@@ -63,79 +75,54 @@ const FindingCard: React.FC<FindingCardProps> = ({
   friendlyName,
   friendlyDescription,
 }) => {
-  const [showTooltip, setShowTooltip] = useState(false);
-
   const typeConfig = {
     warning: {
-      dot: 'bg-rose-500',
+      borderLeft: 'border-l-orange-400',
       label: 'Needs attention',
-      labelColor: 'text-rose-600',
+      labelColor: 'text-orange-700',
+      badgeBg: 'bg-orange-50',
+      suggestion: 'Consider consulting an ophthalmologist.',
     },
     priority_high: {
-      dot: 'bg-amber-500',
+      borderLeft: 'border-l-amber-400',
       label: 'Worth monitoring',
-      labelColor: 'text-amber-600',
+      labelColor: 'text-amber-700',
+      badgeBg: 'bg-amber-50',
+      suggestion: 'A specialist can advise on monitoring.',
     },
     info: {
-      dot: 'bg-blue-500',
+      borderLeft: 'border-l-blue-400',
       label: 'For your info',
-      labelColor: 'text-blue-600',
+      labelColor: 'text-blue-700',
+      badgeBg: 'bg-blue-50',
+      suggestion: 'No immediate action needed.',
     },
   };
 
   const config = typeConfig[anomaly.type] || typeConfig.info;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 transition-colors hover:bg-slate-50">
-      {/* Dot + Name + Severity */}
-      <div className="flex items-start gap-2 mb-2">
-        <div
-          className={`w-2.5 h-2.5 rounded-full ${config.dot} mt-1.5 flex-shrink-0`}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-sm font-bold text-slate-700 leading-snug">
-              {friendlyName(anomaly)}
-            </span>
-            <span className={`text-sm font-bold leading-snug`}> — </span>
-            <span
-              className={`text-sm font-semibold ${config.labelColor} leading-snug`}
-            >
-              {config.label}.
-            </span>
-            {/* Tooltip */}
-            <div className="relative inline-block">
-              <button
-                onClick={() => setShowTooltip(!showTooltip)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label="Medical term"
-              >
-                <HelpCircle className="w-3.5 h-3.5" />
-              </button>
-              {showTooltip && (
-                <div className="absolute left-0 top-full mt-1 z-50 w-52 p-3 bg-white rounded-lg shadow-lg border border-slate-200 text-xs text-slate-600 leading-relaxed">
-                  <p className="font-medium text-slate-700 mb-1">
-                    Medical term: {anomaly.name}
-                  </p>
-                  <p>
-                    Your eye doctor can explain this in more detail during your
-                    visit.
-                  </p>
-                  <button
-                    onClick={() => setShowTooltip(false)}
-                    className="mt-2 text-teal-600 hover:text-teal-700 font-medium"
-                  >
-                    Got it
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+    <div
+      className={`rounded-xl border border-slate-200 bg-white p-5 border-l-4 ${config.borderLeft} transition-colors hover:bg-slate-50`}
+    >
+      {/* Title + Severity Badge */}
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <span className="text-[15px] font-bold text-slate-800 leading-snug">
+          {friendlyName(anomaly)}
+        </span>
+        <span
+          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${config.badgeBg} ${config.labelColor}`}
+        >
+          {config.label}
+        </span>
       </div>
       {/* Description */}
-      <p className="text-sm text-slate-500 leading-relaxed pl-[18px]">
+      <p className="text-sm text-slate-500 leading-relaxed">
         {friendlyDescription(anomaly)}
+      </p>
+      {/* Suggested next step */}
+      <p className="text-xs text-slate-400 mt-1.5 italic">
+        {config.suggestion}
       </p>
     </div>
   );
