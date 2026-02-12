@@ -135,7 +135,7 @@ export default function ReviewPage() {
       showBreadcrumb={false}
     >
       <div className="flex-1 overflow-y-auto bg-[#f0f2f5]">
-        <div className="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex flex-col gap-1.5">
               <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-slate-800">
@@ -196,11 +196,11 @@ export default function ReviewPage() {
               <div>
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div>
-                    <p className="text-sm text-slate-400 font-medium mb-0.5">
+                    <p className="text-sm text-black-400 font-medium mb-0.5">
                       Scan ID: #AUR-
                       {Math.random().toString(36).substring(2, 6).toUpperCase()}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-black-400">
                       Captured:{' '}
                       {new Date().toLocaleDateString('en-US', {
                         month: 'short',
@@ -270,7 +270,7 @@ export default function ReviewPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
               {/* PRIMARY — Book Consultation */}
               <div className="col-span-1 md:col-span-3 lg:col-span-2 bg-gradient-to-br from-cyan-50 to-white rounded-2xl p-6 md:p-8 shadow-sm border border-cyan-200/50 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-[0.04] pointer-events-none">
+                <div className="absolute top-0 right-0 p-6 opacity-[0.2] pointer-events-none">
                   <Stethoscope className="w-44 h-44 text-cyan-600" />
                 </div>
                 <div className="relative z-10 flex flex-col h-full justify-between gap-6">
