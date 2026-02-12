@@ -316,22 +316,10 @@ The friendlyName and friendlyDescription should be written as if explaining to a
         {/* --- Main row --- */}
         <div className="flex-1 flex overflow-hidden">
           {/* LEFT — Image Viewer                                          */}
-          <div className="flex-1 flex flex-col min-w-0 relative">
-            {/* Image — contained within left panel */}
-            <div className="flex-1 min-h-0 flex items-center justify-center">
-              <PatientImageViewer
-                toggles={toggles}
-                zoomLevel={1}
-                anomalies={anomalies}
-                isAnalyzing={isAnalyzing}
-                currentImage={currentImage}
-                showHighlights={showHighlights}
-              />
-            </div>
-
-            {/* Toggle overlay — floats on top-right of image */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Toggle — above image, aligned right */}
             {analyzed && (
-              <div className="absolute top-3 right-3 z-10">
+              <div className="flex-shrink-0 flex justify-end px-4 py-2">
                 <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
                   <span className="text-sm font-medium text-slate-600">
                     Show AI Highlights
@@ -341,7 +329,7 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                     aria-checked={showHighlights}
                     onClick={() => setShowHighlights(!showHighlights)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      showHighlights ? 'bg-teal-500' : 'bg-slate-300'
+                      showHighlights ? 'bg-cyan-300' : 'bg-slate-300'
                     }`}
                   >
                     <span
@@ -353,6 +341,18 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                 </label>
               </div>
             )}
+
+            {/* Image — pushed below toggle */}
+            <div className="flex-1 min-h-0 flex items-center justify-center">
+              <PatientImageViewer
+                toggles={toggles}
+                zoomLevel={1}
+                anomalies={anomalies}
+                isAnalyzing={isAnalyzing}
+                currentImage={currentImage}
+                showHighlights={showHighlights}
+              />
+            </div>
 
             {/* Image strip below image */}
             {images.length > 1 && (
@@ -395,7 +395,7 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                       </p>
                       <button
                         onClick={handleAnalyze}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-teal-500/20"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
                       >
                         <Sparkles className="w-5 h-5" />
                         Start Screening
@@ -405,7 +405,7 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                     <div className="flex items-center gap-4 py-2">
                       <div className="relative w-10 h-10 flex-shrink-0">
                         <div className="absolute inset-0 rounded-full border-[3px] border-slate-100" />
-                        <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-teal-500 animate-spin" />
+                        <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-cyan-500 animate-spin" />
                       </div>
                       <p className="text-[15px] text-slate-500">
                         Analyzing your retinal scan…
@@ -459,7 +459,7 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                     <div className="grid grid-cols-2 gap-3">
                       <ActionCard
                         icon={
-                          <CalendarCheck className="w-6 h-6 text-teal-600" />
+                          <CalendarCheck className="w-6 h-6 text-cyan-600" />
                         }
                         title="Book Consultation"
                         description="Talk to a specialist today."
