@@ -316,9 +316,9 @@ The friendlyName and friendlyDescription should be written as if explaining to a
         {/* --- Main row --- */}
         <div className="flex-1 flex overflow-hidden">
           {/* LEFT — Image Viewer                                          */}
-          <div className="flex-1 flex flex-col min-w-0 relative bg-slate-900">
-            {/* Image — fills entire left panel */}
-            <div className="flex-1 min-h-0">
+          <div className="flex-1 flex flex-col min-w-0 relative">
+            {/* Image — contained within left panel */}
+            <div className="flex-1 min-h-0 flex items-center justify-center">
               <PatientImageViewer
                 toggles={toggles}
                 zoomLevel={1}

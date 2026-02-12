@@ -47,12 +47,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-slate-900">
-      {/* Image — covers the entire container */}
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Image — fills the container, annotations align to same space */}
       <img
         src={imageUrl}
         alt={imageName}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="w-full h-full object-contain"
         draggable={false}
       />
 
