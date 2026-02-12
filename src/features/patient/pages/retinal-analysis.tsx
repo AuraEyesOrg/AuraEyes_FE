@@ -10,9 +10,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   Sparkles,
-  Download,
-  CalendarCheck,
-  Phone,
+  ArrowRight,
   RefreshCw,
   Info,
 } from 'lucide-react';
@@ -147,34 +145,31 @@ export default function RetinalAnalysis() {
 
   const riskConfig = {
     low: {
-      label: 'Low Risk',
-      color: 'text-emerald-600',
+      label: 'Looks Healthy',
+      color: 'text-emerald-700',
       bg: 'bg-emerald-50',
       border: 'border-emerald-200',
-      icon: <ShieldCheck className="w-6 h-6 text-emerald-500" />,
-      barColor: 'bg-emerald-400',
+      icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
       summary:
-        'Great news! Your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+        'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
     },
     moderate: {
-      label: 'Moderate',
-      color: 'text-amber-600',
+      label: 'Worth Reviewing',
+      color: 'text-amber-700',
       bg: 'bg-amber-50',
       border: 'border-amber-200',
-      icon: <AlertTriangle className="w-6 h-6 text-amber-500" />,
-      barColor: 'bg-amber-400',
+      icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
       summary:
-        "Our AI found some areas that may need attention. This doesn't mean there's a problem — a specialist can review these results and provide you with clear guidance.",
+        "Our AI noticed some areas that may benefit from a specialist\'s review. This doesn\'t mean there\'s a problem — it simply means a closer look could be helpful.",
     },
     high: {
-      label: 'High Risk',
-      color: 'text-rose-600',
-      bg: 'bg-rose-50',
-      border: 'border-rose-200',
-      icon: <AlertTriangle className="w-6 h-6 text-rose-500" />,
-      barColor: 'bg-rose-400',
+      label: 'Needs Attention',
+      color: 'text-orange-700',
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
       summary:
-        "We've detected some findings that are worth discussing with an eye specialist. Please don't worry — early detection is the best path to protecting your vision.",
+        "We\'ve found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision — your next step is to have these results reviewed by a doctor.",
     },
   };
 
@@ -377,10 +372,10 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                     </h1>
                     {analyzed && (
                       <span
-                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${risk.color} ${risk.bg} border ${risk.border}`}
+                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${risk.color} ${risk.bg} border ${risk.border}`}
                       >
                         {risk.icon}
-                        {risk.label} {riskScore}/10
+                        {risk.label}
                       </span>
                     )}
                   </div>
@@ -414,19 +409,8 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                   ) : (
                     <div className="space-y-3">
                       <p className="text-[15px] text-slate-600 leading-relaxed">
-                        Here's what our AI screening found. Your doctor will
-                        confirm the results.
-                      </p>
-                      <p className="text-[15px] text-slate-600 leading-relaxed">
                         {risk.summary}
                       </p>
-                      <button
-                        onClick={handleAnalyze}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        Re-analyze scan
-                      </button>
                       {isFallback && errorMessage && (
                         <span className="text-xs text-amber-600 flex items-center gap-1">
                           <Info className="w-3 h-3" />
@@ -452,36 +436,25 @@ The friendlyName and friendlyDescription should be written as if explaining to a
 
                 {/* ---- Actions ---- */}
                 {analyzed && (
-                  <section>
-                    <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                      What You Can Do Next
-                    </h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      <ActionCard
-                        icon={
-                          <CalendarCheck className="w-6 h-6 text-cyan-600" />
-                        }
-                        title="Book Consultation"
-                        description="Talk to a specialist today."
-                      />
-                      <ActionCard
-                        icon={
-                          <CalendarCheck className="w-6 h-6 text-amber-600" />
-                        }
-                        title="Rescreen Later"
-                        description="Set a 6-month reminder."
-                      />
-                      <ActionCard
-                        icon={<Download className="w-6 h-6 text-slate-600" />}
-                        title="Download Report"
-                        description="Full clinical PDF for your records."
-                      />
-                      <ActionCard
-                        icon={<Phone className="w-6 h-6 text-indigo-600" />}
-                        title="Talk to Expert"
-                        description="Chat with our support team."
-                      />
-                    </div>
+                  <section className="space-y-3">
+                    <button
+                      onClick={() =>
+                        navigate('/patient/screening/review', {
+                          state: { images, anomalies, riskLevel, riskScore },
+                        })
+                      }
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/15"
+                    >
+                      Continue to Review
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleAnalyze}
+                      className="w-full inline-flex items-center justify-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors py-1"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Re-analyze scan
+                    </button>
                   </section>
                 )}
 
@@ -500,26 +473,5 @@ The friendlyName and friendlyDescription should be written as if explaining to a
         </div>
       </div>
     </FocusModeLayout>
-  );
-}
-
-// --- Action Card Component ---
-interface ActionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-function ActionCard({ icon, title, description }: ActionCardProps) {
-  return (
-    <div className="flex flex-col items-start p-5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer">
-      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
-        {icon}
-      </div>
-      <h3 className="text-sm font-bold text-slate-700">{title}</h3>
-      <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
-        {description}
-      </p>
-    </div>
   );
 }
