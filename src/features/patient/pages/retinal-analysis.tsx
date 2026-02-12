@@ -420,21 +420,19 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                       <p className="text-[15px] text-slate-600 leading-relaxed">
                         {risk.summary}
                       </p>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <button
-                          onClick={handleAnalyze}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          Re-analyze
-                        </button>
-                        {isFallback && errorMessage && (
-                          <span className="text-xs text-amber-600 flex items-center gap-1">
-                            <Info className="w-3 h-3" />
-                            {errorMessage}
-                          </span>
-                        )}
-                      </div>
+                      <button
+                        onClick={handleAnalyze}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Re-analyze scan
+                      </button>
+                      {isFallback && errorMessage && (
+                        <span className="text-xs text-amber-600 flex items-center gap-1">
+                          <Info className="w-3 h-3" />
+                          {errorMessage}
+                        </span>
+                      )}
                     </div>
                   )}
                 </section>
@@ -455,33 +453,33 @@ The friendlyName and friendlyDescription should be written as if explaining to a
                 {/* ---- Actions ---- */}
                 {analyzed && (
                   <section>
-                    <h2 className="text-lg font-bold text-slate-800 mb-4">
+                    <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
                       What You Can Do Next
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
                       <ActionCard
                         icon={
-                          <CalendarCheck className="w-5 h-5 text-teal-600" />
+                          <CalendarCheck className="w-6 h-6 text-teal-600" />
                         }
                         title="Book Consultation"
-                        description="Book a consultation or referral."
+                        description="Talk to a specialist today."
                       />
                       <ActionCard
                         icon={
-                          <CalendarCheck className="w-5 h-5 text-amber-600" />
+                          <CalendarCheck className="w-6 h-6 text-amber-600" />
                         }
                         title="Rescreen Later"
-                        description="Rescreen in scheduled months."
+                        description="Set a 6-month reminder."
                       />
                       <ActionCard
-                        icon={<Download className="w-5 h-5 text-slate-600" />}
+                        icon={<Download className="w-6 h-6 text-slate-600" />}
                         title="Download Report"
-                        description="Download report to share."
+                        description="Full clinical PDF for your records."
                       />
                       <ActionCard
-                        icon={<Phone className="w-5 h-5 text-indigo-600" />}
+                        icon={<Phone className="w-6 h-6 text-indigo-600" />}
                         title="Talk to Expert"
-                        description="Talk to expert for guidance."
+                        description="Chat with our support team."
                       />
                     </div>
                   </section>
@@ -514,16 +512,14 @@ interface ActionCardProps {
 
 function ActionCard({ icon, title, description }: ActionCardProps) {
   return (
-    <div className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors cursor-pointer">
-      <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center flex-shrink-0">
+    <div className="flex flex-col items-start p-5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer">
+      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
         {icon}
       </div>
-      <div className="min-w-0">
-        <h3 className="text-sm font-bold text-slate-700">{title}</h3>
-        <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
-          {description}
-        </p>
-      </div>
+      <h3 className="text-sm font-bold text-slate-700">{title}</h3>
+      <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
+        {description}
+      </p>
     </div>
   );
 }
