@@ -17,7 +17,6 @@ import {
   Info,
 } from 'lucide-react';
 
-// Fallback data in case of API/CORS errors to ensure UI demo works
 const MOCK_ANOMALIES: Anomaly[] = [
   {
     id: '1',
@@ -220,7 +219,7 @@ export default function RetinalAnalysis() {
         return;
       }
 
-      if (!process.env.API_KEY) {
+      if (!import.meta.env.VITE_API_KEY) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         setAnomalies(MOCK_ANOMALIES);
         setAnalyzed(true);
@@ -230,7 +229,7 @@ export default function RetinalAnalysis() {
         return;
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: {
@@ -312,21 +311,28 @@ The friendlyName and friendlyDescription should be written as if explaining to a
       exitPath="/patient/screening/new"
       showBreadcrumb={false}
     >
-      {/* ================================================================ */}
-      {/* HORIZONTAL FULL-SCREEN LAYOUT  (matches reference design)        */}
       {/* Left: Image + toggle  |  Right: Summary / Findings / Actions     */}
-      {/* ================================================================ */}
       <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f2f5]">
         {/* --- Main row --- */}
         <div className="flex-1 flex overflow-hidden">
-          {/* ============================================================ */}
           {/* LEFT — Image Viewer                                          */}
-          {/* ============================================================ */}
-          <div className="flex-1 flex flex-col min-w-0 p-6 pr-3">
-            {/* Toggle bar */}
+          <div className="flex-1 flex flex-col min-w-0 relative bg-slate-900">
+            {/* Image — fills entire left panel */}
+            <div className="flex-1 min-h-0">
+              <PatientImageViewer
+                toggles={toggles}
+                zoomLevel={1}
+                anomalies={anomalies}
+                isAnalyzing={isAnalyzing}
+                currentImage={currentImage}
+                showHighlights={showHighlights}
+              />
+            </div>
+
+            {/* Toggle overlay — floats on top-right of image */}
             {analyzed && (
-              <div className="flex items-center justify-end mb-3 flex-shrink-0">
-                <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
+              <div className="absolute top-3 right-3 z-10">
+                <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
                   <span className="text-sm font-medium text-slate-600">
                     Show AI Highlights
                   </span>
@@ -348,21 +354,9 @@ The friendlyName and friendlyDescription should be written as if explaining to a
               </div>
             )}
 
-            {/* Image — large, fills remaining space */}
-            <div className="flex-1 min-h-0 flex items-center justify-center">
-              <PatientImageViewer
-                toggles={toggles}
-                zoomLevel={1}
-                anomalies={anomalies}
-                isAnalyzing={isAnalyzing}
-                currentImage={currentImage}
-                showHighlights={showHighlights}
-              />
-            </div>
-
             {/* Image strip below image */}
             {images.length > 1 && (
-              <div className="mt-3 flex-shrink-0">
+              <div className="flex-shrink-0 px-4 py-2">
                 <PatientImageStrip
                   images={images}
                   selectedImageId={selectedImageId}
@@ -372,13 +366,10 @@ The friendlyName and friendlyDescription should be written as if explaining to a
             )}
           </div>
 
-          {/* ============================================================ */}
           {/* RIGHT — Results Panel                                        */}
-          {/* ============================================================ */}
           <div className="w-[520px] flex-shrink-0 p-6 pl-3 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm">
               <div className="px-8 py-8 space-y-7">
-                {/* ---- Title + Risk Badge inline ---- */}
                 <section>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
