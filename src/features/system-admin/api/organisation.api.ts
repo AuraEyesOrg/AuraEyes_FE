@@ -18,12 +18,22 @@ export const organisationApi = {
   /**
    * Fetch all organisations with pagination
    */
-  async getOrganisations(page = 1, pageSize = 10) {
+  async getOrganisations(
+    pageNumber = 1,
+    pageSize = 10,
+    searchTerm?: string,
+    orgType?: string
+  ) {
     try {
       const response = await api.get<
         ApiResponse<PaginatedResponse<Organisation>>
       >(API_ENDPOINTS.SYSTEM_ADMIN.ORGANISATIONS.LIST, {
-        params: { page, pageSize },
+        params: {
+          pageNumber,
+          pageSize,
+          searchTerm: searchTerm || undefined,
+          orgType: orgType || undefined,
+        },
       });
       return response.data.data;
     } catch (error) {

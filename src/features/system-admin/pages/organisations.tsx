@@ -24,6 +24,8 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { organisationApi } from '../api/organisation.api';
+import type { Organisation as ApiOrganisation } from '../types/system-admin.types';
 
 type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
 type TabType = 'organisations' | 'billing' | 'contracts';
@@ -31,7 +33,7 @@ type TabType = 'organisations' | 'billing' | 'contracts';
 interface Organisation {
   id: string;
   name: string;
-  type: 'clinic' | 'hospital' | 'imaging_center';
+  type: string;
   location: string;
   country: string;
   status: 'active' | 'inactive' | 'suspended';
@@ -49,116 +51,65 @@ interface Organisation {
   contactEmail: string;
 }
 
-// Mock data for demonstration
-const getMockOrganisations = (): Organisation[] => [
-  {
-    id: '#ORG001',
-    name: 'Metro Vascular Center',
-    type: 'clinic',
-    location: 'New York, NY',
-    country: 'USA',
-    status: 'active',
-    contractStatus: 'active',
-    usersCount: 12,
-    monthlyAIUsage: 245,
-    monthlyBilling: 4900,
-    pendingPayment: 0,
-    totalScreenings: 1245,
-    contractStartDate: '2023-10-01',
-    contractEndDate: '2024-10-01',
-    createdAt: 'Oct 12, 2023',
-    contactEmail: 'contact@metrovc.com',
-  },
-  {
-    id: '#ORG002',
-    name: 'Bayside Eye Institute',
-    type: 'hospital',
-    location: 'San Francisco, CA',
-    country: 'USA',
-    status: 'active',
-    contractStatus: 'active',
-    usersCount: 24,
-    monthlyAIUsage: 520,
-    monthlyBilling: 10400,
-    pendingPayment: 2100,
-    totalScreenings: 3420,
-    contractStartDate: '2023-06-15',
-    contractEndDate: '2024-06-15',
-    createdAt: 'Nov 02, 2023',
-    contactEmail: 'info@baysideeye.com',
-  },
-  {
-    id: '#ORG003',
-    name: 'Oakwood Medical',
-    type: 'clinic',
-    location: 'Austin, TX',
-    country: 'USA',
-    status: 'active',
-    contractStatus: 'pending',
-    usersCount: 8,
-    monthlyAIUsage: 98,
-    monthlyBilling: 1960,
-    pendingPayment: 1960,
-    totalScreenings: 567,
-    contractStartDate: '2023-12-01',
-    contractEndDate: '2024-12-01',
-    createdAt: 'Dec 10, 2023',
-    contactEmail: 'hello@oakwoodmed.com',
-  },
-  {
-    id: '#ORG004',
-    name: 'Downtown Health Center',
-    type: 'imaging_center',
-    location: 'Chicago, IL',
-    country: 'USA',
-    status: 'inactive',
-    contractStatus: 'expired',
-    usersCount: 15,
-    monthlyAIUsage: 0,
-    monthlyBilling: 0,
-    pendingPayment: 3500,
-    totalScreenings: 890,
-    contractStartDate: '2023-01-01',
-    contractEndDate: '2024-01-01',
-    createdAt: 'Jan 05, 2024',
-    contactEmail: 'support@dthc.com',
-  },
-  {
-    id: '#ORG005',
-    name: 'Pacific Vision Clinic',
-    type: 'clinic',
-    location: 'Seattle, WA',
-    country: 'USA',
-    status: 'active',
-    contractStatus: 'active',
-    usersCount: 6,
-    monthlyAIUsage: 156,
-    monthlyBilling: 3120,
-    pendingPayment: 0,
-    totalScreenings: 780,
-    contractStartDate: '2023-08-01',
-    contractEndDate: '2024-08-01',
-    createdAt: 'Aug 15, 2023',
-    contactEmail: 'admin@pacificvision.com',
-  },
-];
+/** Map API response to UI Organisation */
+const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
+  id: item.id,
+  name: item.name,
+  type: (item.orgType || 'clinic').toLowerCase(),
+  location: item.address || 'Unknown',
+  country: '',
+  status: item.isActive ? 'active' : 'inactive',
+  contractStatus: item.isActive ? 'active' : 'expired',
+  usersCount: item.usersCount ?? 0,
+  monthlyAIUsage: 0,
+  monthlyBilling: 0,
+  pendingPayment: 0,
+  totalScreenings: 0,
+  contractStartDate: item.createdAt,
+  contractEndDate: '',
+  createdAt: new Date(item.createdAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  }),
+  contactEmail: item.contactEmail || '',
+});
 
 export default function OrganisationsPage() {
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('organisations');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
-  // Load data
+  // Load data from real API
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      // Use mock data directly - API returns different type
-      setOrganisations(getMockOrganisations());
+      const orgTypeFilter = statusFilter === 'all' ? undefined : statusFilter;
+      const result = await organisationApi.getOrganisations(
+        pageNumber,
+        10,
+        searchQuery || undefined,
+        orgTypeFilter
+      );
+      if (result) {
+        setOrganisations((result.items || []).map(mapToUiOrg));
+        setTotalCount(result.totalCount ?? 0);
+        setHasNext(result.hasNext ?? false);
+        setHasPrevious(result.hasPrevious ?? false);
+      }
+    } catch (error) {
+      console.error('Failed to load organisations:', error);
+      setOrganisations([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pageNumber, searchQuery, statusFilter]);
 
   useEffect(() => {
     loadData();
@@ -180,17 +131,8 @@ export default function OrganisationsPage() {
   );
   const totalUsers = organisations.reduce((sum, o) => sum + o.usersCount, 0);
 
-  // Filter data based on search and status
-  const filteredOrganisations = organisations.filter((org) => {
-    const matchesSearch =
-      org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      org.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      org.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = statusFilter === 'all' || org.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Server-side filtering is already applied, use all results
+  const filteredOrganisations = organisations;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -717,14 +659,23 @@ export default function OrganisationsPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredOrganisations.length} of {organisations.length}{' '}
+                Showing {filteredOrganisations.length} of {totalCount}{' '}
                 organisations
               </span>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <button
+                  disabled={!hasPrevious}
+                  onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <button
+                  disabled={!hasNext}
+                  onClick={() => setPageNumber((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>
