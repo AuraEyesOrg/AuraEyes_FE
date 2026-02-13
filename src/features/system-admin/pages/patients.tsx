@@ -22,99 +22,67 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { patientApi, type PatientListItem } from '../api/patient.api';
 
-interface Patient {
-  id: string;
+interface Patient extends PatientListItem {
   name: string;
-  email: string;
-  phone?: string;
   status: 'active' | 'inactive' | 'locked';
   screeningsCount: number;
   lastScreening?: string;
-  createdAt: string;
-  medicalHistorySummary?: string;
   emailVerified: boolean;
 }
 
-// Mock data for demonstration
-const getMockPatients = (): Patient[] => [
-  {
-    id: '#PAT001',
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567',
-    status: 'active',
-    screeningsCount: 5,
-    lastScreening: '2024-01-20',
-    createdAt: 'Oct 15, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#PAT002',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@email.com',
-    phone: '+1 (555) 234-5678',
-    status: 'active',
-    screeningsCount: 3,
-    lastScreening: '2024-01-18',
-    createdAt: 'Nov 02, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#PAT003',
-    name: 'Michael Brown',
-    email: 'michael.b@email.com',
-    phone: '+1 (555) 345-6789',
-    status: 'inactive',
-    screeningsCount: 1,
-    lastScreening: '2023-12-10',
-    createdAt: 'Dec 05, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#PAT004',
-    name: 'Emily Davis',
-    email: 'emily.d@email.com',
-    status: 'locked',
-    screeningsCount: 0,
-    createdAt: 'Jan 10, 2024',
-    emailVerified: false,
-  },
-  {
-    id: '#PAT005',
-    name: 'Robert Wilson',
-    email: 'robert.w@email.com',
-    phone: '+1 (555) 567-8901',
-    status: 'active',
-    screeningsCount: 8,
-    lastScreening: '2024-01-22',
-    createdAt: 'Sep 20, 2023',
-    emailVerified: true,
-  },
-];
+/** Map API item to UI Patient model */
+const mapToUiPatient = (item: PatientListItem): Patient => ({
+  ...item,
+  name: item.fullName,
+  status: item.isActive ? 'active' : 'locked',
+  screeningsCount: 0,
+  lastScreening: item.lastLoginAt
+    ? new Date(item.lastLoginAt).toLocaleDateString()
+    : undefined,
+  emailVerified: item.emailConfirmed,
+});
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
-  // Load data
+  // Load data from real API
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      setPatients(getMockPatients());
+      const apiStatus = statusFilter === 'all' ? undefined : statusFilter;
+      const result = await patientApi.getPatients(
+        pageNumber,
+        10,
+        searchQuery || undefined,
+        apiStatus
+      );
+      setPatients(result.items.map(mapToUiPatient));
+      setTotalCount(result.totalCount);
+      setHasNext(result.hasNext);
+      setHasPrevious(result.hasPrevious);
+    } catch (error) {
+      console.error('Failed to load patients:', error);
+      setPatients([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pageNumber, searchQuery, statusFilter]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   // Calculate stats
-  const totalPatients = patients.length;
+  const totalPatients = totalCount;
   const activePatients = patients.filter((p) => p.status === 'active').length;
   const lockedPatients = patients.filter((p) => p.status === 'locked').length;
   const totalScreenings = patients.reduce(
@@ -122,26 +90,19 @@ export default function PatientsPage() {
     0
   );
 
-  // Filter data
-  const filteredPatients = patients.filter((patient) => {
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'all' || patient.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Use server-side filtering; client-side list is already filtered
+  const filteredPatients = patients;
 
   // Handle lock/unlock patient
-  const handleToggleLock = async (patientId: string, currentStatus: string) => {
+  const handleToggleLock = async (userId: string, currentStatus: string) => {
     try {
-      // TODO: Implement API call
-      console.log(
-        `Toggle lock for patient ${patientId}, current status: ${currentStatus}`
-      );
+      const action = currentStatus === 'locked' ? 'activate' : 'lock';
+      let reason: string | undefined;
+      if (action === 'lock') {
+        reason =
+          window.prompt('Enter reason for locking this patient:') || undefined;
+      }
+      await patientApi.updatePatientStatus(userId, action, reason);
       loadData();
     } catch (error) {
       console.error('Failed to toggle patient lock status:', error);
@@ -230,7 +191,7 @@ export default function PatientsPage() {
             <FileText className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleToggleLock(row.id, row.status)}
+            onClick={() => handleToggleLock(row.userId, row.status)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
             title={row.status === 'locked' ? 'Unlock Patient' : 'Lock Patient'}
           >
@@ -362,13 +323,22 @@ export default function PatientsPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredPatients.length} of {patients.length} patients
+                Showing {filteredPatients.length} of {totalCount} patients
               </span>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <button
+                  disabled={!hasPrevious}
+                  onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <button
+                  disabled={!hasNext}
+                  onClick={() => setPageNumber((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>

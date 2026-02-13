@@ -54,6 +54,19 @@ export const API_ENDPOINTS = {
       STATS: '/system-admin/users/stats',
     },
 
+    // Ophthalmologist Management
+    OPHTHALMOLOGISTS: {
+      LIST: '/system-admin/ophthalmologists',
+      VERIFY: (id: string) => `/system-admin/ophthalmologists/${id}/verify`,
+    },
+
+    // Patient Management
+    PATIENTS: {
+      LIST: '/system-admin/patients',
+      UPDATE_STATUS: (userId: string) =>
+        `/system-admin/patients/${userId}/status`,
+    },
+
     // AI Model Monitoring
     AI_MODELS: {
       CURRENT: '/system-admin/ai-models/current',

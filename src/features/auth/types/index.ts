@@ -25,9 +25,12 @@ export interface RegisterOphthalmologistRequest {
   password: string;
   confirmPassword: string;
   fullName: string;
+  phone?: string;
   bio?: string;
   yearsOfExperience: number;
   organizationId?: string;
+  licenseImage?: File;
+  degreeImage?: File;
 }
 
 export interface VerifyTwoFactorRequest {

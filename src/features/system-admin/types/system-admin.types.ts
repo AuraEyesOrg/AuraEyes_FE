@@ -60,13 +60,19 @@ export interface DashboardData {
 export interface Organisation {
   id: string;
   name: string;
-  type: 'clinic' | 'hospital' | 'imaging_center' | 'research';
-  location: string;
-  country: string;
-  status: 'active' | 'inactive' | 'suspended';
-  devicesCount: number;
-  usersCount: number;
+  address?: string;
+  licenseNumber?: string;
+  orgType: string;
+  deviceCount: number;
+  isActive: boolean;
   createdAt: string;
+  // UI-only fields (not from API)
+  type?: 'clinic' | 'hospital' | 'imaging_center' | 'research';
+  location?: string;
+  country?: string;
+  status?: 'active' | 'inactive' | 'suspended';
+  devicesCount?: number;
+  usersCount?: number;
   contactEmail?: string;
   contactPhone?: string;
 }
@@ -292,8 +298,16 @@ export interface FilterOptions {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  // Legacy fields for backward compatibility
+  data?: T[];
+  pagination?: {
     currentPage: number;
     pageSize: number;
     totalPages: number;
