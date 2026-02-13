@@ -27,171 +27,52 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import {
+  ophthalmologistApi,
+  type OphthalmologistListItem,
+} from '../api/ophthalmologist.api';
 
-type RequestStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'in_progress'
-  | 'completed';
-type VerificationStatus = 'verified' | 'pending' | 'unverified';
-type DoctorStatus = 'available' | 'busy' | 'unavailable' | 'fully_booked';
+type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
 
-interface OphthalmologistRequest {
-  id: string;
-  patientName: string;
-  patientId: string;
-  status: RequestStatus;
-  requestedAt: string;
-  message?: string;
-}
-
-interface Ophthalmologist {
-  id: string;
+interface Ophthalmologist extends OphthalmologistListItem {
+  // UI mapped fields
   name: string;
-  email: string;
-  phone?: string;
-  verificationStatus: VerificationStatus;
-  status: DoctorStatus;
-  yearsOfExperience: number;
-  bio?: string;
-  // Request stats
+  status: 'available' | 'busy' | 'unavailable' | 'fully_booked';
   totalRequests: number;
   pendingRequests: number;
   completedRequests: number;
-  // Financial stats
   monthlyEarnings: number;
   totalEarnings: number;
   pendingPayouts: number;
-  // Feedback stats
   averageRating: number;
   totalReviews: number;
-  // Activity
   lastActive?: string;
   joinedAt: string;
-  requests?: OphthalmologistRequest[];
 }
 
-// Mock data for demonstration
-const getMockOphthalmologists = (): Ophthalmologist[] => [
-  {
-    id: '#OPH001',
-    name: 'Dr. Alex Chen',
-    email: 'alex.chen@aura.med',
-    phone: '+1 (555) 111-2222',
-    verificationStatus: 'verified',
-    status: 'available',
-    yearsOfExperience: 15,
-    bio: 'Specialist in diabetic retinopathy and macular degeneration',
-    totalRequests: 145,
-    pendingRequests: 8,
-    completedRequests: 130,
-    monthlyEarnings: 12500,
-    totalEarnings: 87500,
-    pendingPayouts: 3200,
-    averageRating: 4.9,
-    totalReviews: 120,
-    lastActive: '2024-01-23 10:30 AM',
-    joinedAt: 'Mar 15, 2023',
-    requests: [
-      {
-        id: 'REQ001',
-        patientName: 'John Smith',
-        patientId: '#PAT001',
-        status: 'pending',
-        requestedAt: '2024-01-23 09:00 AM',
-        message: 'Follow-up consultation needed',
-      },
-      {
-        id: 'REQ002',
-        patientName: 'Sarah Johnson',
-        patientId: '#PAT002',
-        status: 'in_progress',
-        requestedAt: '2024-01-22 02:30 PM',
-      },
-    ],
-  },
-  {
-    id: '#OPH002',
-    name: 'Dr. Sarah Williams',
-    email: 'sarah.williams@clinic.com',
-    phone: '+1 (555) 333-4444',
-    verificationStatus: 'verified',
-    status: 'busy',
-    yearsOfExperience: 12,
-    bio: 'Expert in retinal imaging and glaucoma diagnosis',
-    totalRequests: 98,
-    pendingRequests: 5,
-    completedRequests: 88,
-    monthlyEarnings: 9800,
-    totalEarnings: 62400,
-    pendingPayouts: 2100,
-    averageRating: 4.8,
-    totalReviews: 82,
-    lastActive: '2024-01-22 04:15 PM',
-    joinedAt: 'Jun 20, 2023',
-  },
-  {
-    id: '#OPH003',
-    name: 'Dr. Michael Lee',
-    email: 'michael.lee@eyecare.com',
-    phone: '+1 (555) 555-6666',
-    verificationStatus: 'pending',
-    status: 'available',
-    yearsOfExperience: 8,
-    bio: 'Pediatric ophthalmology specialist',
-    totalRequests: 45,
-    pendingRequests: 3,
-    completedRequests: 40,
-    monthlyEarnings: 5200,
-    totalEarnings: 28600,
-    pendingPayouts: 1500,
-    averageRating: 4.7,
-    totalReviews: 38,
-    lastActive: '2024-01-21 11:00 AM',
-    joinedAt: 'Sep 10, 2023',
-  },
-  {
-    id: '#OPH004',
-    name: 'Dr. Emily Zhang',
-    email: 'emily.zhang@vision.care',
-    verificationStatus: 'unverified',
-    status: 'unavailable',
-    yearsOfExperience: 5,
-    totalRequests: 12,
-    pendingRequests: 0,
-    completedRequests: 10,
-    monthlyEarnings: 1200,
-    totalEarnings: 6800,
-    pendingPayouts: 500,
-    averageRating: 4.5,
-    totalReviews: 10,
-    lastActive: '2024-01-15 02:00 PM',
-    joinedAt: 'Dec 01, 2023',
-  },
-  {
-    id: '#OPH005',
-    name: 'Dr. James Park',
-    email: 'james.park@eyeclinic.com',
-    phone: '+1 (555) 777-8888',
-    verificationStatus: 'verified',
-    status: 'fully_booked',
-    yearsOfExperience: 20,
-    bio: 'Senior retinal specialist with 20 years experience',
-    totalRequests: 220,
-    pendingRequests: 0,
-    completedRequests: 215,
-    monthlyEarnings: 18500,
-    totalEarnings: 125000,
-    pendingPayouts: 4500,
-    averageRating: 5.0,
-    totalReviews: 200,
-    lastActive: '2024-01-23 08:00 AM',
-    joinedAt: 'Jan 01, 2023',
-  },
-];
+/** Map API item to UI Ophthalmologist model */
+const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
+  ...item,
+  name: item.fullName,
+  status: item.isVerified ? 'available' : 'unavailable',
+  totalRequests: 0,
+  pendingRequests: 0,
+  completedRequests: 0,
+  monthlyEarnings: 0,
+  totalEarnings: 0,
+  pendingPayouts: 0,
+  averageRating: 0,
+  totalReviews: 0,
+  joinedAt: new Date(item.createdAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  }),
+});
 
 type TabType = 'overview' | 'requests' | 'feedback';
+
+type DoctorStatus = 'available' | 'busy' | 'unavailable' | 'fully_booked';
 
 const statusConfig: Record<
   DoctorStatus,
@@ -223,6 +104,10 @@ export default function OphthalmologistsPage() {
   const [ophthalmologists, setOphthalmologists] = useState<Ophthalmologist[]>(
     []
   );
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [verificationFilter, setVerificationFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -232,27 +117,41 @@ export default function OphthalmologistsPage() {
     null
   );
 
-  // Load data
+  // Load data from real API
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      setOphthalmologists(getMockOphthalmologists());
+      const apiVerificationStatus =
+        verificationFilter === 'all' ? undefined : verificationFilter;
+      const result = await ophthalmologistApi.getOphthalmologists(
+        pageNumber,
+        10,
+        searchQuery || undefined,
+        apiVerificationStatus
+      );
+      setOphthalmologists(result.items.map(mapToUiModel));
+      setTotalCount(result.totalCount);
+      setHasNext(result.hasNext);
+      setHasPrevious(result.hasPrevious);
+    } catch (error) {
+      console.error('Failed to load ophthalmologists:', error);
+      setOphthalmologists([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pageNumber, searchQuery, verificationFilter]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   // Calculate stats
-  const totalDoctors = ophthalmologists.length;
+  const totalDoctors = totalCount;
   const verifiedDoctors = ophthalmologists.filter(
-    (o) => o.verificationStatus === 'verified'
+    (o) => o.verificationStatus === 'Approved'
   ).length;
   const pendingVerification = ophthalmologists.filter(
-    (o) => o.verificationStatus === 'pending'
+    (o) => o.verificationStatus === 'PendingVerification'
   ).length;
   const availableDoctors = ophthalmologists.filter(
     (o) => o.status === 'available'
@@ -273,27 +172,17 @@ export default function OphthalmologistsPage() {
         ).toFixed(1)
       : '0';
 
-  // Filter data
+  // Client-side status filter (verification + search is server-side)
   const filteredOphthalmologists = ophthalmologists.filter((doctor) => {
-    const matchesSearch =
-      doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesVerification =
-      verificationFilter === 'all' ||
-      doctor.verificationStatus === verificationFilter;
     const matchesStatus =
       statusFilter === 'all' || doctor.status === statusFilter;
-
-    return matchesSearch && matchesVerification && matchesStatus;
+    return matchesStatus;
   });
 
   // Handle verification actions
   const handleVerify = async (doctorId: string) => {
     try {
-      // TODO: Implement API call
-      console.log(`Verify doctor ${doctorId}`);
+      await ophthalmologistApi.verifyOphthalmologist(doctorId, true);
       loadData();
     } catch (error) {
       console.error('Failed to verify doctor:', error);
@@ -301,9 +190,14 @@ export default function OphthalmologistsPage() {
   };
 
   const handleReject = async (doctorId: string) => {
+    const reason = window.prompt('Enter rejection reason:');
+    if (reason === null) return; // user cancelled
     try {
-      // TODO: Implement API call
-      console.log(`Reject doctor ${doctorId}`);
+      await ophthalmologistApi.verifyOphthalmologist(
+        doctorId,
+        false,
+        reason || 'Not specified'
+      );
       loadData();
     } catch (error) {
       console.error('Failed to reject doctor:', error);
@@ -368,16 +262,21 @@ export default function OphthalmologistsPage() {
       header: 'Verification',
       accessor: 'verificationStatus',
       render: (value) => {
-        const statusConfig: Record<
+        const statusMap: Record<
           VerificationStatus,
           { status: 'success' | 'warning' | 'error'; label: string }
         > = {
-          verified: { status: 'success', label: 'Verified' },
-          pending: { status: 'warning', label: 'Pending' },
-          unverified: { status: 'error', label: 'Unverified' },
+          Approved: { status: 'success', label: 'Verified' },
+          PendingVerification: { status: 'warning', label: 'Pending' },
+          Rejected: { status: 'error', label: 'Rejected' },
         };
-        const config = statusConfig[value as VerificationStatus];
-        return <StatusBadge status={config.status} label={config.label} />;
+        const config = statusMap[value as VerificationStatus];
+        return (
+          <StatusBadge
+            status={config?.status ?? 'warning'}
+            label={config?.label ?? String(value)}
+          />
+        );
       },
     },
     {
@@ -428,7 +327,7 @@ export default function OphthalmologistsPage() {
           >
             <Eye className="w-4 h-4" />
           </button>
-          {row.verificationStatus === 'pending' && (
+          {row.verificationStatus === 'PendingVerification' && (
             <>
               <button
                 onClick={() => handleVerify(row.id)}
@@ -641,9 +540,9 @@ export default function OphthalmologistsPage() {
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
                     <option value="all">All Verification</option>
-                    <option value="verified">Verified</option>
-                    <option value="pending">Pending</option>
-                    <option value="unverified">Unverified</option>
+                    <option value="PendingVerification">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -708,14 +607,23 @@ export default function OphthalmologistsPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredOphthalmologists.length} of{' '}
-                {ophthalmologists.length} doctors
+                Showing {filteredOphthalmologists.length} of {totalCount}{' '}
+                doctors
               </span>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <button
+                  disabled={!hasPrevious}
+                  onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <button
+                  disabled={!hasNext}
+                  onClick={() => setPageNumber((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>
@@ -821,40 +729,47 @@ export default function OphthalmologistsPage() {
                 </div>
               )}
 
-              {/* Recent Requests */}
-              {selectedDoctor.requests &&
-                selectedDoctor.requests.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
-                      Recent Requests
+              {/* Documents */}
+              {(selectedDoctor.licenseUrl || selectedDoctor.degreeUrl) && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
+                    Uploaded Documents
+                  </h3>
+                  <div className="flex gap-4">
+                    {selectedDoctor.licenseUrl && (
+                      <a
+                        href={selectedDoctor.licenseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        View License
+                      </a>
+                    )}
+                    {selectedDoctor.degreeUrl && (
+                      <a
+                        href={selectedDoctor.degreeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        View Degree
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Rejection Reason */}
+              {selectedDoctor.verificationStatus === 'Rejected' &&
+                selectedDoctor.rejectionReason && (
+                  <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-1">
+                      Rejection Reason
                     </h3>
-                    <div className="space-y-2">
-                      {selectedDoctor.requests.map((request) => (
-                        <div
-                          key={request.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-slate-900 dark:text-white">
-                              {request.patientName}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {request.requestedAt}
-                            </p>
-                          </div>
-                          <StatusBadge
-                            status={
-                              request.status === 'completed'
-                                ? 'success'
-                                : request.status === 'pending'
-                                  ? 'warning'
-                                  : 'info'
-                            }
-                            label={request.status.replace('_', ' ')}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      {selectedDoctor.rejectionReason}
+                    </p>
                   </div>
                 )}
 
