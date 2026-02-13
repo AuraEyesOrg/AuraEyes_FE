@@ -149,13 +149,28 @@ export const registerPatient = async (
 
 /**
  * Register a new ophthalmologist account
+ * Uses FormData to support file uploads (licenseImage, degreeImage)
  */
 export const registerOphthalmologist = async (
   data: RegisterOphthalmologistRequest
 ): Promise<{ userId: string }> => {
+  const formData = new FormData();
+  formData.append('email', data.email);
+  formData.append('password', data.password);
+  formData.append('confirmPassword', data.confirmPassword);
+  formData.append('fullName', data.fullName);
+  if (data.phone) formData.append('phone', data.phone);
+  if (data.bio) formData.append('bio', data.bio);
+  formData.append('yearsOfExperience', String(data.yearsOfExperience));
+  if (data.organizationId)
+    formData.append('organizationId', data.organizationId);
+  if (data.licenseImage) formData.append('licenseImage', data.licenseImage);
+  if (data.degreeImage) formData.append('degreeImage', data.degreeImage);
+
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,
-    data
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
   );
   return response.data.data;
 };

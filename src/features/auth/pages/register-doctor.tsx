@@ -9,31 +9,33 @@ import {
   FileText,
   X,
   CheckCircle,
-  Building2,
   Calendar,
-  Award,
   Eye,
   Shield,
   Activity,
   Zap,
+  Lock,
 } from 'lucide-react';
 import { useState } from 'react';
+import { registerOphthalmologist } from '../api/auth.api';
 import '@/styles/auth-animations.css';
 
 interface DoctorFormData {
   fullName: string;
   email: string;
+  password: string;
+  confirmPassword: string;
   phone: string;
-  specialization: string;
-  licenseNumber: string;
   yearsOfExperience: string;
-  hospital: string;
-  description: string;
+  bio: string;
 }
 
 const RegisterDoctorPage = () => {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const [degreeFile, setDegreeFile] = useState<File | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
   const _navigate = useNavigate();
   const {
@@ -42,24 +44,42 @@ const RegisterDoctorPage = () => {
     formState: { errors },
   } = useForm<DoctorFormData>();
 
-  const onSubmit = (data: DoctorFormData) => {
-    console.log('Form Data:', data);
-    console.log('Uploaded Files:', uploadedFiles);
-    setSubmittedEmail(data.email);
-    setIsSubmitted(true);
-    // TODO: Implement doctor registration API call
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
+  const onSubmit = async (data: DoctorFormData) => {
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await registerOphthalmologist({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        fullName: data.fullName,
+        phone: data.phone || undefined,
+        bio: data.bio || undefined,
+        yearsOfExperience: parseInt(data.yearsOfExperience, 10) || 0,
+        licenseImage: licenseFile ?? undefined,
+        degreeImage: degreeFile ?? undefined,
+      });
+      setSubmittedEmail(data.email);
+      setIsSubmitted(true);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setSubmitError(
+        error?.response?.data?.message ||
+          'Registration failed. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  const handleLicenseUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) setLicenseFile(e.target.files[0]);
   };
+  const handleDegreeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) setDegreeFile(e.target.files[0]);
+  };
+  const removeLicense = () => setLicenseFile(null);
+  const removeDegree = () => setDegreeFile(null);
 
   // Success State View
   if (isSubmitted) {
@@ -307,7 +327,7 @@ const RegisterDoctorPage = () => {
               {/* Phone */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Phone Number <span className="text-red-500">*</span>
+                  Phone Number
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -316,7 +336,6 @@ const RegisterDoctorPage = () => {
                   <input
                     type="tel"
                     {...register('phone', {
-                      required: 'Phone number is required',
                       pattern: {
                         value: /^[0-9+\-\s()]+$/,
                         message: 'Invalid phone number',
@@ -333,188 +352,197 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Specialization */}
+              {/* Password */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Specialization <span className="text-red-500">*</span>
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <select
-                    {...register('specialization', {
-                      required: 'Specialization is required',
-                    })}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all appearance-none"
-                  >
-                    <option value="">Select your specialization</option>
-                    <option value="ophthalmologist">Ophthalmologist</option>
-                    <option value="retina-specialist">Retina Specialist</option>
-                    <option value="general-practitioner">
-                      General Practitioner
-                    </option>
-                    <option value="optometrist">Optometrist</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                {errors.specialization && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.specialization.message}
-                  </p>
-                )}
-              </div>
-
-              {/* License Number & Experience */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* License Number */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    License Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    {...register('licenseNumber', {
-                      required: 'License number is required',
-                    })}
-                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="MD-12345"
-                  />
-                  {errors.licenseNumber && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.licenseNumber.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Years of Experience */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Experience (years) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="number"
-                      {...register('yearsOfExperience', {
-                        required: 'Experience is required',
-                        min: { value: 0, message: 'Invalid experience' },
-                      })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      placeholder="5"
-                    />
-                  </div>
-                  {errors.yearsOfExperience && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.yearsOfExperience.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Hospital/Clinic */}
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Hospital/Clinic <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Building2 className="w-5 h-5" />
+                    <Lock className="w-5 h-5" />
                   </div>
                   <input
-                    type="text"
-                    {...register('hospital', {
-                      required: 'Hospital/Clinic name is required',
+                    type="password"
+                    {...register('password', {
+                      required: 'Password is required',
+                      minLength: {
+                        value: 8,
+                        message: 'Password must be at least 8 characters',
+                      },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="City General Hospital"
+                    placeholder="Minimum 8 characters"
                   />
                 </div>
-                {errors.hospital && (
+                {errors.password && (
                   <p className="text-xs text-red-500 mt-1">
-                    {errors.hospital.message}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
 
-              {/* Description */}
+              {/* Confirm Password */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Brief Description (Optional)
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="password"
+                    {...register('confirmPassword', {
+                      required: 'Please confirm your password',
+                    })}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    placeholder="Re-enter your password"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Years of Experience */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Experience (years) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="number"
+                    {...register('yearsOfExperience', {
+                      required: 'Experience is required',
+                      min: { value: 0, message: 'Invalid experience' },
+                    })}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    placeholder="5"
+                  />
+                </div>
+                {errors.yearsOfExperience && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.yearsOfExperience.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Bio / Description */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Brief Bio (Optional)
                 </label>
                 <textarea
-                  {...register('description')}
+                  {...register('bio')}
                   rows={3}
                   className="block w-full px-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all resize-none"
                   placeholder="Brief introduction about your practice and expertise..."
                 />
               </div>
 
-              {/* File Upload Section */}
+              {/* License Upload */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Upload Credentials <span className="text-red-500">*</span>
+                  Medical License
                 </label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Please upload your medical license, certificates, or other
-                  relevant documents (PDF, JPG, PNG - Max 10MB each)
+                <p className="text-xs text-gray-500 mb-2">
+                  Upload medical license (PDF, JPG, PNG - Max 10MB)
                 </p>
-
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
-                  <input
-                    type="file"
-                    id="fileUpload"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="fileUpload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <div className="h-12 w-12 rounded-full bg-[#00d1c0]/10 flex items-center justify-center mb-3">
-                      <Upload className="h-6 w-6 text-[#00d1c0]" />
-                    </div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PDF, JPG, PNG up to 10MB each
-                    </p>
-                  </label>
-                </div>
-
-                {/* Uploaded Files List */}
-                {uploadedFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {uploadedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 animate-slide-up"
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-700 truncate">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
-                        >
-                          <X className="h-4 w-4 text-red-500" />
-                        </button>
+                {!licenseFile ? (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
+                    <input
+                      type="file"
+                      id="licenseUpload"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleLicenseUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="licenseUpload"
+                      className="cursor-pointer flex flex-col items-center"
+                    >
+                      <Upload className="h-6 w-6 text-[#00d1c0] mb-1" />
+                      <p className="text-sm font-medium text-gray-700">
+                        Click to upload license
+                      </p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          {licenseFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(licenseFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
                       </div>
-                    ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeLicense}
+                      className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                    >
+                      <X className="h-4 w-4 text-red-500" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Degree Upload */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Medical Degree
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Upload medical degree certificate (PDF, JPG, PNG - Max 10MB)
+                </p>
+                {!degreeFile ? (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
+                    <input
+                      type="file"
+                      id="degreeUpload"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleDegreeUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="degreeUpload"
+                      className="cursor-pointer flex flex-col items-center"
+                    >
+                      <Upload className="h-6 w-6 text-[#00d1c0] mb-1" />
+                      <p className="text-sm font-medium text-gray-700">
+                        Click to upload degree
+                      </p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          {degreeFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(degreeFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeDegree}
+                      className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                    >
+                      <X className="h-4 w-4 text-red-500" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -539,12 +567,17 @@ const RegisterDoctorPage = () => {
 
               {/* Submit Button */}
               <div className="pt-4">
+                {submitError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">{submitError}</p>
+                  </div>
+                )}
                 <button
                   type="submit"
-                  disabled={uploadedFiles.length === 0}
+                  disabled={isSubmitting}
                   className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                 >
-                  Submit Application
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
                 </button>
               </div>
             </form>
