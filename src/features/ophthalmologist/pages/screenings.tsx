@@ -165,18 +165,20 @@ export default function ScreeningsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <DoctorSidebar doctor={mockDoctor} />
 
-      <div className="ml-56">
+      <div className="ml-48">
         <DoctorHeader doctor={mockDoctor} />
 
         <main className="p-6">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Screenings</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Screenings
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 View and manage patient screenings
               </p>
             </div>
@@ -184,36 +186,46 @@ export default function ScreeningsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-5 gap-4 mb-6">
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Total Screenings</p>
-              <p className="text-2xl font-bold text-gray-800">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Total Screenings
+              </p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-white">
                 {mockScreenings.length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Pending Review</p>
-              <p className="text-2xl font-bold text-gray-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Pending Review
+              </p>
+              <p className="text-2xl font-bold text-gray-600 dark:text-gray-300">
                 {
                   mockScreenings.filter((s) => s.status === 'pending-review')
                     .length
                 }
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Reviewed</p>
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Reviewed
+              </p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {mockScreenings.filter((s) => s.status === 'reviewed').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Approved</p>
-              <p className="text-2xl font-bold text-emerald-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Approved
+              </p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {mockScreenings.filter((s) => s.status === 'approved').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Flagged</p>
-              <p className="text-2xl font-bold text-amber-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Flagged
+              </p>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {mockScreenings.filter((s) => s.status === 'flagged').length}
               </p>
             </div>
@@ -228,14 +240,14 @@ export default function ScreeningsPage() {
                 placeholder="Search by patient name or screening ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
               />
             </div>
 
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+              className="px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
             >
               <option value="all">All Status</option>
               <option value="pending-review">Pending Review</option>
@@ -244,15 +256,15 @@ export default function ScreeningsPage() {
               <option value="flagged">Flagged</option>
             </select>
 
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-sm text-gray-700 transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
               <Filter size={16} />
               More Filters
             </button>
           </div>
 
           {/* Screenings List */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="divide-y divide-gray-100">
+          <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
+            <div className="divide-y divide-gray-100 dark:divide-[#1e3a5f]">
               {filteredScreenings.map((screening) => {
                 const statusLabel = getStatusLabel(screening.status);
                 const confidenceColor = getConfidenceColor(
@@ -262,7 +274,7 @@ export default function ScreeningsPage() {
                 return (
                   <div
                     key={screening.id}
-                    className="p-5 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="p-5 hover:bg-gray-50/50 dark:hover:bg-[#1e3a5f]/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
                       {/* Patient Avatar */}
@@ -277,10 +289,10 @@ export default function ScreeningsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-semibold text-gray-800">
+                            <h3 className="font-semibold text-gray-800 dark:text-white">
                               {screening.patientName}
                             </h3>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                               {screening.patientId} • {screening.type}
                             </p>
                           </div>
@@ -294,28 +306,28 @@ export default function ScreeningsPage() {
                         {/* AI Prediction */}
                         <div className="flex items-center gap-4 mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
                               AI Prediction:
                             </span>
-                            <span className="text-sm font-medium text-gray-800">
+                            <span className="text-sm font-medium text-gray-800 dark:text-white">
                               {screening.aiPrediction}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                               <div
                                 className={`h-full ${confidenceColor} rounded-full`}
                                 style={{ width: `${screening.confidence}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {screening.confidence}%
                             </span>
                           </div>
                         </div>
 
                         {/* Meta Info */}
-                        <div className="flex items-center gap-6 text-xs text-gray-500">
+                        <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
                           <div className="flex items-center gap-1.5">
                             <Calendar size={12} />
                             {screening.date}
@@ -330,7 +342,7 @@ export default function ScreeningsPage() {
                           </div>
                           <div className="flex items-center gap-1.5">
                             {getStatusIcon(screening.status)}
-                            <span className="text-gray-600">
+                            <span className="text-gray-600 dark:text-gray-400">
                               {screening.id}
                             </span>
                           </div>
@@ -338,14 +350,14 @@ export default function ScreeningsPage() {
 
                         {/* Notes */}
                         {screening.notes && (
-                          <p className="mt-2 text-sm text-gray-500 italic">
+                          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
                             {screening.notes}
                           </p>
                         )}
                       </div>
 
                       {/* Action */}
-                      <button className="px-4 py-2 text-sm font-medium text-cyan-600 hover:bg-cyan-50 rounded-xl transition-colors shrink-0">
+                      <button className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors shrink-0">
                         {screening.status === 'pending-review'
                           ? 'Review'
                           : 'View Details'}

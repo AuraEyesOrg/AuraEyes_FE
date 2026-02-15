@@ -140,18 +140,20 @@ export default function PatientsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <DoctorSidebar doctor={mockDoctor} />
 
-      <div className="ml-56">
+      <div className="ml-48">
         <DoctorHeader doctor={mockDoctor} />
 
         <main className="p-6">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Patients</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Patients
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Manage and view patient records
               </p>
             </div>
@@ -170,7 +172,7 @@ export default function PatientsPage() {
                 placeholder="Search patients by name or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
               />
             </div>
 
@@ -178,7 +180,7 @@ export default function PatientsPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                className="px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -186,7 +188,7 @@ export default function PatientsPage() {
                 <option value="critical">Critical</option>
               </select>
 
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-sm text-gray-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
                 <Filter size={16} />
                 More Filters
               </button>
@@ -195,27 +197,35 @@ export default function PatientsPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Total Patients</p>
-              <p className="text-2xl font-bold text-gray-800">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Total Patients
+              </p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-white">
                 {mockPatients.length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Active</p>
-              <p className="text-2xl font-bold text-emerald-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Active
+              </p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {mockPatients.filter((p) => p.status === 'active').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Urgent</p>
-              <p className="text-2xl font-bold text-amber-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Urgent
+              </p>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {mockPatients.filter((p) => p.status === 'urgent').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-sm text-gray-500 mb-1">Critical</p>
-              <p className="text-2xl font-bold text-red-600">
+            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Critical
+              </p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {mockPatients.filter((p) => p.status === 'critical').length}
               </p>
             </div>
@@ -229,7 +239,7 @@ export default function PatientsPage() {
               return (
                 <div
                   key={patient.id}
-                  className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300 group"
+                  className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-5 hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50 transition-all duration-300 group"
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -241,15 +251,15 @@ export default function PatientsPage() {
                         {patient.initials}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-800">
+                        <h3 className="font-semibold text-gray-800 dark:text-white">
                           {patient.name}
                         </h3>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {patient.id} • {patient.age}y • {patient.gender}
                         </p>
                       </div>
                     </div>
-                    <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                    <button className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                       <MoreVertical size={16} />
                     </button>
                   </div>
@@ -265,30 +275,36 @@ export default function PatientsPage() {
 
                   {/* Contact Info */}
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Phone
+                        size={14}
+                        className="text-gray-400 dark:text-gray-500"
+                      />
                       {patient.phone}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Mail size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Mail
+                        size={14}
+                        className="text-gray-400 dark:text-gray-500"
+                      />
                       {patient.email}
                     </div>
                   </div>
 
                   {/* Visit Info */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#1e3a5f]">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <Calendar size={12} />
                       Next: {patient.nextAppointment}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <Eye size={12} />
                       {patient.totalVisits} visits
                     </div>
                   </div>
 
                   {/* Action Button */}
-                  <button className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 hover:bg-cyan-50 rounded-xl transition-colors">
+                  <button className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors">
                     View Details
                   </button>
                 </div>
