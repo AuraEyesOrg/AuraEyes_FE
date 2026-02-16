@@ -4,9 +4,13 @@ import type { Doctor } from '../types/ophthalmologist.types';
 
 interface DoctorHeaderProps {
   doctor: Doctor;
+  pageName?: string;
 }
 
-export default function DoctorHeader({ doctor }: DoctorHeaderProps) {
+export default function DoctorHeader({
+  doctor,
+  pageName = 'Dashboard',
+}: DoctorHeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -15,7 +19,7 @@ export default function DoctorHeader({ doctor }: DoctorHeaderProps) {
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <span>Pages</span>
           <span>/</span>
-          <span className="text-gray-900 dark:text-white">Dashboard</span>
+          <span className="text-gray-900 dark:text-white">{pageName}</span>
         </div>
 
         <div className="flex items-center gap-4">

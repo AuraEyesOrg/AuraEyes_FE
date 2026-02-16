@@ -47,7 +47,7 @@ export default function OphthalmologistDashboard() {
       />
 
       {/* Main Content */}
-      <div className="ml-48">
+      <div className="ml-52">
         {/* Header */}
         <DoctorHeader doctor={data.doctor} />
 

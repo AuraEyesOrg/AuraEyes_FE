@@ -133,10 +133,10 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-      <DoctorSidebar doctor={mockDoctor} />
+      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
 
-      <div className="ml-48">
-        <DoctorHeader doctor={mockDoctor} />
+      <div className="ml-52">
+        <DoctorHeader doctor={mockDoctor} pageName="Analytics" />
 
         <main className="p-6">
           {/* Page Header */}
