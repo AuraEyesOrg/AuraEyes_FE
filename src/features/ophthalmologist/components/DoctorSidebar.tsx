@@ -62,27 +62,30 @@ export default function DoctorSidebar({
 
       {/* Navigation */}
       <nav className="flex-1 p-4">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 mb-2 rounded-lg transition-colors relative ${
-                isActive
-                  ? 'bg-cyan-50 dark:bg-[#1e3a8a] text-cyan-600 dark:text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
-              }`
-            }
-          >
-            <item.icon size={20} />
-            <span className="text-sm font-medium">{item.label}</span>
-            {item.hasBadge && pendingCount > 0 && (
-              <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {pendingCount}
-              </span>
-            )}
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 mb-2 rounded-lg transition-colors relative ${
+                  isActive
+                    ? 'bg-cyan-50 dark:bg-[#1e3a8a] text-cyan-600 dark:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
+                }`
+              }
+            >
+              <Icon size={20} />
+              <span className="text-sm font-medium">{item.label}</span>
+              {item.hasBadge && pendingCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {pendingCount}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Doctor Profile & Logout */}
