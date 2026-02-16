@@ -1,14 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   MessageCircle,
   Send,
   Paperclip,
-  Image,
+  Image as ImageIcon,
   MoreVertical,
   Phone,
   Video,
   Search,
   CheckCheck,
+  X,
+  Eye,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 
@@ -28,14 +31,25 @@ interface Conversation {
   unreadCount: number;
 }
 
+interface SharedScanData {
+  imageUrl?: string;
+  eyeLabel?: string;
+  riskLevel?: string;
+  riskLabel?: string;
+  anomalies?: string[];
+  summary?: string;
+  scanId?: string;
+}
+
 interface Message {
   id: string;
   senderId: string;
   senderType: 'patient' | 'ophthalmologist';
   content: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'scan-share';
   timestamp: string;
   isRead: boolean;
+  attachedScan?: SharedScanData;
 }
 
 const mockConversations: Conversation[] = [
@@ -131,13 +145,25 @@ const mockMessages: Message[] = [
 ];
 
 export default function ChatPage() {
+  const location = useLocation();
+  const sharedScan =
+    (location.state as { sharedScan?: SharedScanData } | null)?.sharedScan ??
+    null;
+
   const [conversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >('1');
   const [messages, setMessages] = useState(mockMessages);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState(
+    sharedScan
+      ? `Hi Doctor, I'd like to share my recent screening results for your review.`
+      : ''
+  );
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingScan, setPendingScan] = useState<SharedScanData | null>(
+    sharedScan
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -148,25 +174,34 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  // Scroll to show the pending scan preview when it arrives
+  useEffect(() => {
+    if (pendingScan) {
+      scrollToBottom();
+    }
+  }, [pendingScan]);
+
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !pendingScan) return;
 
     const message: Message = {
       id: `msg-${Date.now()}`,
       senderId: 'patient',
       senderType: 'patient',
       content: newMessage,
-      type: 'text',
+      type: pendingScan ? 'scan-share' : 'text',
       timestamp: new Date().toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
       }),
       isRead: false,
+      attachedScan: pendingScan ?? undefined,
     };
 
     setMessages((prev) => [...prev, message]);
     setNewMessage('');
+    setPendingScan(null);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -182,8 +217,8 @@ export default function ChatPage() {
 
   return (
     <PatientLayout userName="John Doe">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-1">
           Messages
         </h1>
         <p className="text-(--text-secondary)">
@@ -191,10 +226,10 @@ export default function ChatPage() {
         </p>
       </div>
 
-      <div className="medical-card overflow-hidden h-[calc(100vh-220px)]">
+      <div className="medical-card overflow-hidden h-[calc(100vh-180px)]">
         <div className="flex h-full">
           {/* Conversations List */}
-          <div className="w-80 border-r border-(--border-color) flex flex-col">
+          <div className="w-96 border-r border-(--border-color) flex flex-col">
             {/* Search */}
             <div className="p-4 border-b border-(--border-color)">
               <div className="relative">
@@ -303,7 +338,7 @@ export default function ChatPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-(--bg-secondary)">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-(--bg-secondary)">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -314,32 +349,90 @@ export default function ChatPage() {
                     }`}
                   >
                     <div
-                      className={`max-w-[70%] p-3 rounded-2xl ${
+                      className={`max-w-[65%] rounded-2xl ${
                         message.senderType === 'patient'
                           ? 'bg-brand text-white rounded-br-sm'
                           : 'bg-white dark:bg-[#1e3a5f] text-(--text-primary) rounded-bl-sm border border-(--border-color) shadow-sm'
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
-                      <div
-                        className={`flex items-center gap-1 mt-1 ${
-                          message.senderType === 'patient'
-                            ? 'justify-end'
-                            : 'justify-start'
-                        }`}
-                      >
-                        <span
-                          className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-(--text-muted)'}`}
-                        >
-                          {message.timestamp}
-                        </span>
-                        {message.senderType === 'patient' && (
-                          <CheckCheck
-                            className={`w-3 h-3 ${
-                              message.isRead ? 'text-blue-300' : 'opacity-70'
+                      {/* Attached scan card */}
+                      {message.type === 'scan-share' &&
+                        message.attachedScan && (
+                          <div
+                            className={`m-2 rounded-xl overflow-hidden border ${
+                              message.senderType === 'patient'
+                                ? 'border-white/20 bg-white/10'
+                                : 'border-(--border-color) bg-(--bg-secondary)'
                             }`}
-                          />
+                          >
+                            {message.attachedScan.imageUrl && (
+                              <div className="h-40 bg-slate-900">
+                                <img
+                                  src={message.attachedScan.imageUrl}
+                                  alt="Retinal scan"
+                                  className="w-full h-full object-cover opacity-90"
+                                />
+                              </div>
+                            )}
+                            <div className="p-3 space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <Eye className="w-4 h-4 flex-shrink-0" />
+                                <span className="text-xs font-semibold">
+                                  {message.attachedScan.eyeLabel ??
+                                    'Retinal Scan'}
+                                </span>
+                                {message.attachedScan.riskLabel && (
+                                  <span
+                                    className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      message.senderType === 'patient'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-cyan-50 text-cyan-700'
+                                    }`}
+                                  >
+                                    {message.attachedScan.riskLabel}
+                                  </span>
+                                )}
+                              </div>
+                              {message.attachedScan.scanId && (
+                                <p className="text-[11px] opacity-70">
+                                  Scan {message.attachedScan.scanId}
+                                </p>
+                              )}
+                              {message.attachedScan.anomalies &&
+                                message.attachedScan.anomalies.length > 0 && (
+                                  <p className="text-[11px] opacity-80">
+                                    Findings:{' '}
+                                    {message.attachedScan.anomalies.join(', ')}
+                                  </p>
+                                )}
+                            </div>
+                          </div>
                         )}
+
+                      <div className="p-3">
+                        <p className="text-sm leading-relaxed">
+                          {message.content}
+                        </p>
+                        <div
+                          className={`flex items-center gap-1 mt-1 ${
+                            message.senderType === 'patient'
+                              ? 'justify-end'
+                              : 'justify-start'
+                          }`}
+                        >
+                          <span
+                            className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-(--text-muted)'}`}
+                          >
+                            {message.timestamp}
+                          </span>
+                          {message.senderType === 'patient' && (
+                            <CheckCheck
+                              className={`w-3 h-3 ${
+                                message.isRead ? 'text-blue-300' : 'opacity-70'
+                              }`}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -348,13 +441,44 @@ export default function ChatPage() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-(--border-color)">
+              <div className="p-4 border-t border-(--border-color) space-y-3">
+                {/* Pending scan attachment preview */}
+                {pendingScan && (
+                  <div className="flex items-center gap-3 p-3 bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800 rounded-xl">
+                    {pendingScan.imageUrl && (
+                      <img
+                        src={pendingScan.imageUrl}
+                        alt="Scan preview"
+                        className="w-14 h-14 rounded-lg object-cover bg-slate-900"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-cyan-800 dark:text-cyan-200 truncate">
+                        Screening Results — {pendingScan.eyeLabel}
+                      </p>
+                      <p className="text-xs text-cyan-600 dark:text-cyan-400">
+                        {pendingScan.riskLabel}
+                        {pendingScan.anomalies &&
+                        pendingScan.anomalies.length > 0
+                          ? ` · ${pendingScan.anomalies.length} finding(s)`
+                          : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setPendingScan(null)}
+                      className="p-1.5 hover:bg-cyan-100 dark:hover:bg-cyan-900 rounded-lg transition-colors text-cyan-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-end gap-3">
                   <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
                     <Paperclip className="w-5 h-5" />
                   </button>
                   <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <Image className="w-5 h-5" />
+                    <ImageIcon className="w-5 h-5" />
                   </button>
                   <div className="flex-1">
                     <textarea
@@ -363,12 +487,12 @@ export default function ChatPage() {
                       onKeyPress={handleKeyPress}
                       placeholder="Type a message..."
                       className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
-                      rows={1}
+                      rows={2}
                     />
                   </div>
                   <button
                     onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() && !pendingScan}
                     className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                   >
                     <Send className="w-5 h-5" />
