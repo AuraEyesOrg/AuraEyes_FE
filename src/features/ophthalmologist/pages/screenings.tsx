@@ -168,7 +168,7 @@ export default function ScreeningsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
       <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
 
-      <div className="ml-48">
+      <div className="ml-52">
         <DoctorHeader doctor={mockDoctor} pageName="Screenings" />
 
         <main className="p-6">
