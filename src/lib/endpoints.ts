@@ -104,6 +104,16 @@ export const API_ENDPOINTS = {
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',
+    SCHEDULES: {
+      LIST: (ophthalmologistId: string) =>
+        `/ophthalmologists/${ophthalmologistId}/schedules`,
+      DETAIL: (ophthalmologistId: string, scheduleId: string) =>
+        `/ophthalmologists/${ophthalmologistId}/schedules/${scheduleId}`,
+      CREATE: (ophthalmologistId: string) =>
+        `/ophthalmologists/${ophthalmologistId}/schedules`,
+      UPDATE_STATUS: (ophthalmologistId: string, scheduleId: string) =>
+        `/ophthalmologists/${ophthalmologistId}/schedules/${scheduleId}/status`,
+    },
   },
 
   // Organisation features (from existing setup)

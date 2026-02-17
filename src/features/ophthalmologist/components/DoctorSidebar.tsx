@@ -4,6 +4,7 @@ import {
   Users,
   Eye,
   BarChart3,
+  Calendar,
   LogOut,
   Activity,
 } from 'lucide-react';
@@ -33,6 +34,12 @@ const navItems = [
     icon: Eye,
     path: '/ophthalmologist/screenings',
     hasBadge: true,
+  },
+  {
+    id: 'appointments',
+    label: 'Appointments',
+    icon: Calendar,
+    path: '/ophthalmologist/appointments',
   },
   {
     id: 'analytics',
