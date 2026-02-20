@@ -485,6 +485,96 @@ export default function SettingsPage() {
                   })}
                 </div>
               </div>
+
+              {/* E-Wallet Section */}
+              <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
+                <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    E-Wallet
+                  </h2>
+                </div>
+
+                <div className="p-4">
+                  {/* Balance Card */}
+                  <div className="bg-linear-to-br from-cyan-500 to-teal-500 rounded-xl p-5 mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                          <Wallet className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-white/80 text-sm font-medium">
+                          Available Balance
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-white mb-4">
+                      {formatCurrency(wallet.balance)}
+                    </p>
+                    <button
+                      onClick={() => setShowWithdrawModal(true)}
+                      className="w-full py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                      Withdraw Funds
+                    </button>
+                  </div>
+
+                  {/* Recent Transactions */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
+                      Recent Transactions
+                    </p>
+                    {wallet.transactions.slice(0, 4).map((txn) => {
+                      const txnStyle = getTransactionIcon(txn.transactionType);
+                      const TxnIcon = txnStyle.icon;
+                      return (
+                        <div
+                          key={txn.id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg"
+                        >
+                          <div
+                            className={`w-9 h-9 ${txnStyle.bg} rounded-lg flex items-center justify-center shrink-0`}
+                          >
+                            <TxnIcon className={`w-4 h-4 ${txnStyle.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              {txn.description || txn.transactionType}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(txn.createdAt).toLocaleDateString(
+                                'en-US',
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                }
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p
+                              className={`text-sm font-semibold ${isIncomeTransaction(txn.transactionType) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                            >
+                              {isIncomeTransaction(txn.transactionType)
+                                ? '+'
+                                : '-'}
+                              {formatCurrency(txn.amount)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* View All Link */}
+                  <button className="w-full mt-3 p-3 text-cyan-600 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1">
+                    View All Transactions
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Right Column - Quick Settings */}
@@ -674,96 +764,6 @@ export default function SettingsPage() {
                       />
                     </button>
                   </div>
-                </div>
-              </div>
-
-              {/* E-Wallet Section */}
-              <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
-                <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    E-Wallet
-                  </h2>
-                </div>
-
-                <div className="p-4">
-                  {/* Balance Card */}
-                  <div className="bg-linear-to-br from-cyan-500 to-teal-500 rounded-xl p-5 mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-white/80 text-sm font-medium">
-                          Available Balance
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-4">
-                      {formatCurrency(wallet.balance)}
-                    </p>
-                    <button
-                      onClick={() => setShowWithdrawModal(true)}
-                      className="w-full py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ArrowUpRight className="w-4 h-4" />
-                      Withdraw Funds
-                    </button>
-                  </div>
-
-                  {/* Recent Transactions */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-                      Recent Transactions
-                    </p>
-                    {wallet.transactions.slice(0, 4).map((txn) => {
-                      const txnStyle = getTransactionIcon(txn.transactionType);
-                      const TxnIcon = txnStyle.icon;
-                      return (
-                        <div
-                          key={txn.id}
-                          className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg"
-                        >
-                          <div
-                            className={`w-9 h-9 ${txnStyle.bg} rounded-lg flex items-center justify-center shrink-0`}
-                          >
-                            <TxnIcon className={`w-4 h-4 ${txnStyle.color}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                              {txn.description || txn.transactionType}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(txn.createdAt).toLocaleDateString(
-                                'en-US',
-                                {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                }
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p
-                              className={`text-sm font-semibold ${isIncomeTransaction(txn.transactionType) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                            >
-                              {isIncomeTransaction(txn.transactionType)
-                                ? '+'
-                                : '-'}
-                              {formatCurrency(txn.amount)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* View All Link */}
-                  <button className="w-full mt-3 p-3 text-cyan-600 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1">
-                    View All Transactions
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
 
