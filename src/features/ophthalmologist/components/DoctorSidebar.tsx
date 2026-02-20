@@ -7,6 +7,7 @@ import {
   Calendar,
   LogOut,
   Activity,
+  Settings,
 } from 'lucide-react';
 import type { Doctor } from '../types/ophthalmologist.types';
 
@@ -46,6 +47,12 @@ const navItems = [
     label: 'Analytics',
     icon: BarChart3,
     path: '/ophthalmologist/analytics',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    path: '/ophthalmologist/settings',
   },
 ];
 
