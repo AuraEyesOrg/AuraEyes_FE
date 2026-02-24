@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Filter,
@@ -152,6 +153,7 @@ function getConfidenceColor(confidence: number): string {
 }
 
 export default function ScreeningsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
@@ -357,7 +359,14 @@ export default function ScreeningsPage() {
                       </div>
 
                       {/* Action */}
-                      <button className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors shrink-0">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/ophthalmologist/screenings/${screening.id}/review`
+                          )
+                        }
+                        className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors shrink-0"
+                      >
                         {screening.status === 'pending-review'
                           ? 'Review'
                           : 'View Details'}
