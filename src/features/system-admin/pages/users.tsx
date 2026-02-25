@@ -247,7 +247,7 @@ export default function UsersPage() {
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
-      <Sidebar currentPath="/system-admin/users" />
+      <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader

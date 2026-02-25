@@ -366,7 +366,7 @@ export default function OphthalmologistsPage() {
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
-      <Sidebar currentPath="/system-admin/ophthalmologists" />
+      <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
