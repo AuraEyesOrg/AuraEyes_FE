@@ -8,6 +8,7 @@ import {
   LogOut,
   Activity,
   Settings,
+  MessagesSquare,
 } from 'lucide-react';
 import type { Doctor } from '../types/ophthalmologist.types';
 
@@ -43,6 +44,13 @@ const navItems = [
     path: '/ophthalmologist/appointments',
   },
   {
+    id: 'consultations',
+    label: 'Consultations',
+    icon: MessagesSquare,
+    path: '/ophthalmologist/consultations',
+    hasBadge: true,
+  },
+  {
     id: 'analytics',
     label: 'Analytics',
     icon: BarChart3,
@@ -66,7 +74,7 @@ export default function DoctorSidebar({
       <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-linear-to-br from-cyan-400 to-teal-500 rounded-lg flex items-center justify-center">
-            <Activity size={20} strokeWidth={2} className="text-white" />
+            <Activity className="w-5 h-5 text-white" />
           </div>
           <span className="text-gray-900 dark:text-white font-semibold text-lg">
             AURA
@@ -93,13 +101,11 @@ export default function DoctorSidebar({
               {({ isActive }) => (
                 <>
                   <Icon
-                    size={20}
-                    strokeWidth={2}
-                    className={
+                    className={`w-5 h-5 shrink-0 ${
                       isActive
                         ? 'text-cyan-600 dark:text-white'
                         : 'text-gray-600 dark:text-gray-400'
-                    }
+                    }`}
                   />
                   <span className="text-sm font-medium">{item.label}</span>
                   {item.hasBadge && pendingCount > 0 && (
@@ -130,7 +136,7 @@ export default function DoctorSidebar({
           </div>
         </div>
         <button className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors w-full">
-          <LogOut size={20} strokeWidth={2} />
+          <LogOut className="w-5 h-5" />
           <span className="text-sm font-medium">Log out</span>
         </button>
       </div>
