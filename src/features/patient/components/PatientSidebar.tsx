@@ -10,12 +10,9 @@ import {
   Shield,
   MessageCircle,
   Milestone,
-  Moon,
-  Sun,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
-import { useTheme } from '@/contexts/ThemeContext';
 
 interface PatientSidebarProps {
   userName?: string;
@@ -43,7 +40,6 @@ export default function PatientSidebar({
 }: PatientSidebarProps) {
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -69,36 +65,26 @@ export default function PatientSidebar({
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2 flex-1">
+        <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${
+                `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
-                    ? 'bg-brand/20 text-brand font-bold'
-                    : 'text-black-400 hover:text-black hover:bg-brand/10'
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`
               }
             >
               {({ isActive }) => (
-                <>
-                  <item.icon
-                    className={`w-5 h-5 ${
-                      isActive
-                        ? 'text-brand'
-                        : 'group-hover:text-brand transition-colors'
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      isActive ? 'font-bold text-brand' : 'font-medium'
-                    }`}
-                  >
-                    {item.label}
+                <div className="flex items-center gap-3">
+                  <span className={isActive ? 'text-primary' : ''}>
+                    <item.icon className="w-5 h-5" />
                   </span>
-                </>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
               )}
             </NavLink>
           ))}
@@ -135,17 +121,6 @@ export default function PatientSidebar({
                 <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
               </div>
             </NavLink>
-            <button
-              onClick={toggleTheme}
-              className="text-gray-500 hover:text-brand transition-colors p-2 rounded-lg hover:bg-brand/10"
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </button>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"

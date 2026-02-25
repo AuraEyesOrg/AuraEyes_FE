@@ -98,7 +98,7 @@ export default function ReviewPage() {
 
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
-  const remainingCredits = 2;
+  const remainingMoney = 200000;
   const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   const handleShareToChat = () => {
@@ -168,10 +168,10 @@ export default function ReviewPage() {
             <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-200">
               <div className="flex flex-col items-end">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Credits
+                  Available Balance
                 </span>
                 <span className="text-sm font-bold text-slate-700">
-                  {remainingCredits} Scans Left
+                  {remainingMoney.toLocaleString()}đ Left
                 </span>
               </div>
               <button

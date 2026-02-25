@@ -16,7 +16,7 @@ export default function SettingsPage() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1929]">
+      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -31,10 +31,10 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       <Sidebar pendingCount={data.dashboardStats.pendingReviews.value} />
 
-      <div className="ml-48">
+      <div className="flex-1 h-full overflow-y-auto">
         <OrganisationHeader />
 
         <main className="p-6">
