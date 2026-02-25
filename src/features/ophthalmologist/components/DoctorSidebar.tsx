@@ -1,5 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Eye, BarChart3, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Eye,
+  BarChart3,
+  Calendar,
+  LogOut,
+  Settings,
+  MessagesSquare,
+} from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import type { Doctor } from '../types/ophthalmologist.types';
 
@@ -21,7 +30,19 @@ const navItems = [
     path: '/ophthalmologist/screenings',
     hasBadge: true,
   },
+  {
+    label: 'Appointments',
+    icon: Calendar,
+    path: '/ophthalmologist/appointments',
+  },
+  {
+    label: 'Consultations',
+    icon: MessagesSquare,
+    path: '/ophthalmologist/consultations',
+    hasBadge: true,
+  },
   { label: 'Analytics', icon: BarChart3, path: '/ophthalmologist/analytics' },
+  { label: 'Settings', icon: Settings, path: '/ophthalmologist/settings' },
 ];
 
 export default function DoctorSidebar({
