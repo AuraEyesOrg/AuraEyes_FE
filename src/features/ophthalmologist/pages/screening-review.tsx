@@ -285,12 +285,12 @@ export default function ScreeningReviewPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       {/* Sidebar */}
       <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
 
       {/* Main Content */}
-      <div className="ml-52">
+      <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
         <DoctorHeader doctor={mockDoctor} />
 
