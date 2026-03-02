@@ -1,123 +1,100 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Calendar,
   Clock,
-  MapPin,
   User,
   Video,
   Plus,
-  Image,
   CheckCircle,
   XCircle,
   Eye,
   FileText,
   ChevronRight,
   Filter,
+  Loader2,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
+import {
+  useConsultationSessions,
+  useCancelSession,
+} from '@/features/consultation/hooks';
+import {
+  SessionStatus,
+  ConsultationSessionType,
+  SESSION_TYPE_LABELS,
+  SESSION_STATUS_LABELS,
+} from '@/types/consultation';
+import type { ConsultationSessionListDto } from '@/types/consultation';
 
-interface Appointment {
-  id: string;
-  date: string;
-  time: string;
-  doctor: string;
-  specialty: string;
-  type: 'screening' | 'follow-up' | 'consultation' | 'verification';
-  location: string;
-  clinicName: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
-  isOnline: boolean;
-  images?: string[];
-  notes?: string;
-}
+// TODO: Replace with actual user ID from auth store
+const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
 
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    date: 'Jan 25, 2026',
-    time: '10:00 AM',
-    doctor: 'Dr. Sarah Smith',
-    specialty: 'Ophthalmologist',
-    type: 'follow-up',
-    location: 'AURA Vision Clinic',
-    clinicName: 'AURA Vision Clinic',
-    status: 'upcoming',
-    isOnline: false,
-    images: ['retinal_001.jpg'],
-    notes: 'Bring previous screening results',
-  },
-  {
-    id: '2',
-    date: 'Feb 5, 2026',
-    time: '2:30 PM',
-    doctor: 'Dr. John Williams',
-    specialty: 'Retina Specialist',
-    type: 'consultation',
-    location: 'Online',
-    clinicName: 'Eye Care Center',
-    status: 'upcoming',
-    isOnline: true,
-  },
-  {
-    id: '3',
-    date: 'Jan 15, 2026',
-    time: '9:00 AM',
-    doctor: 'Dr. Sarah Smith',
-    specialty: 'Ophthalmologist',
-    type: 'screening',
-    location: 'AURA Vision Clinic',
-    clinicName: 'AURA Vision Clinic',
-    status: 'completed',
-    isOnline: false,
-    images: ['retinal_002.jpg', 'retinal_003.jpg'],
-  },
-  {
-    id: '4',
-    date: 'Jan 10, 2026',
-    time: '11:00 AM',
-    doctor: 'Dr. Emily Chen',
-    specialty: 'Ophthalmologist',
-    type: 'consultation',
-    location: 'Online',
-    clinicName: 'Vision Plus',
-    status: 'cancelled',
-    isOnline: true,
-  },
-];
+type FilterTab = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
 const AppointmentsPage = () => {
-  const [filter, setFilter] = useState<
-    'all' | 'upcoming' | 'completed' | 'cancelled'
-  >('all');
+  const [filter, setFilter] = useState<FilterTab>('all');
 
-  const filteredAppointments = mockAppointments.filter((apt) => {
-    if (filter === 'all') return true;
-    return apt.status === filter;
+  const { data: sessionsData, isLoading } = useConsultationSessions({
+    patientId: CURRENT_PATIENT_ID,
+    pageSize: 50,
   });
 
-  const upcomingCount = mockAppointments.filter(
-    (a) => a.status === 'upcoming'
+  const cancelMutation = useCancelSession();
+
+  const sessions = sessionsData?.items ?? [];
+
+  const filteredSessions = useMemo(() => {
+    return sessions.filter((s) => {
+      if (filter === 'all') return true;
+      if (filter === 'upcoming')
+        return (
+          s.status === SessionStatus.Pending ||
+          s.status === SessionStatus.Confirmed
+        );
+      if (filter === 'completed') return s.status === SessionStatus.Completed;
+      if (filter === 'cancelled') return s.status === SessionStatus.Cancelled;
+      return true;
+    });
+  }, [sessions, filter]);
+
+  const upcomingCount = sessions.filter(
+    (s) =>
+      s.status === SessionStatus.Pending || s.status === SessionStatus.Confirmed
   ).length;
-  const completedCount = mockAppointments.filter(
-    (a) => a.status === 'completed'
+  const completedCount = sessions.filter(
+    (s) => s.status === SessionStatus.Completed
   ).length;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'upcoming':
+  const handleCancel = (sessionId: string) => {
+    cancelMutation.mutate({
+      sessionId,
+      cancelledByUserId: CURRENT_PATIENT_ID,
+      reason: 'Cancelled by patient',
+    });
+  };
+
+  const getStatusBadge = (session: ConsultationSessionListDto) => {
+    switch (session.status) {
+      case SessionStatus.Pending:
         return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
-            <Clock className="w-3 h-3" /> Upcoming
+          <span className="flex items-center gap-1 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
+            <Clock className="w-3 h-3" /> Pending
           </span>
         );
-      case 'completed':
+      case SessionStatus.Confirmed:
+        return (
+          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
+            <Clock className="w-3 h-3" /> Confirmed
+          </span>
+        );
+      case SessionStatus.Completed:
         return (
           <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
             <CheckCircle className="w-3 h-3" /> Completed
           </span>
         );
-      case 'cancelled':
+      case SessionStatus.Cancelled:
         return (
           <span className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
             <XCircle className="w-3 h-3" /> Cancelled
@@ -128,20 +105,42 @@ const AppointmentsPage = () => {
     }
   };
 
-  const getTypeLabel = (type: string) => {
+  const getSessionIcon = (type: ConsultationSessionType) => {
     switch (type) {
-      case 'screening':
-        return 'Retinal Screening';
-      case 'follow-up':
-        return 'Follow-up Visit';
-      case 'consultation':
-        return 'Consultation';
-      case 'verification':
-        return 'Result Verification';
+      case ConsultationSessionType.Verification:
+        return <Eye className="w-7 h-7 text-blue-600" />;
+      case ConsultationSessionType.VideoCall:
+        return <Video className="w-7 h-7 text-purple-600" />;
       default:
-        return type;
+        return <Calendar className="w-7 h-7 text-brand" />;
     }
   };
+
+  const getSessionIconBg = (session: ConsultationSessionListDto) => {
+    if (
+      session.status === SessionStatus.Pending ||
+      session.status === SessionStatus.Confirmed
+    ) {
+      return 'bg-brand-soft';
+    }
+    if (session.status === SessionStatus.Completed) {
+      return 'bg-green-100 dark:bg-green-900/30';
+    }
+    return 'bg-gray-100 dark:bg-gray-800';
+  };
+
+  if (isLoading) {
+    return (
+      <PatientLayout userName="John Doe">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
+            <p className="text-(--text-secondary)">Loading appointments...</p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
 
   return (
     <PatientLayout userName="John Doe">
@@ -151,7 +150,7 @@ const AppointmentsPage = () => {
             Appointments
           </h1>
           <p className="text-(--text-secondary)">
-            Manage your appointments and retinal images
+            Manage your consultation sessions
           </p>
         </div>
 
@@ -195,11 +194,13 @@ const AppointmentsPage = () => {
         <div className="medical-card p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Image className="w-5 h-5 text-purple-600" />
+              <User className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">5</p>
-              <p className="text-xs text-[var(--text-muted)]">Images</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
+                {sessions.length}
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">Total</p>
             </div>
           </div>
         </div>
@@ -209,8 +210,13 @@ const AppointmentsPage = () => {
               <FileText className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">3</p>
-              <p className="text-xs text-[var(--text-muted)]">Reports</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)]">
+                {
+                  sessions.filter((s) => s.status === SessionStatus.Cancelled)
+                    .length
+                }
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">Cancelled</p>
             </div>
           </div>
         </div>
@@ -222,7 +228,7 @@ const AppointmentsPage = () => {
           <Filter className="w-4 h-4" />
           Filter
         </button>
-        {(['all', 'upcoming', 'completed', 'cancelled'] as const).map(
+        {(['all', 'upcoming', 'completed', 'cancelled'] as FilterTab[]).map(
           (status) => (
             <button
               key={status}
@@ -239,134 +245,120 @@ const AppointmentsPage = () => {
         )}
       </div>
 
-      {/* Appointments List */}
+      {/* Sessions List */}
       <div className="space-y-4">
-        {filteredAppointments.map((apt) => (
+        {filteredSessions.map((session) => (
           <div
-            key={apt.id}
+            key={session.id}
             className={`medical-card p-6 hover:border-brand/30 transition-colors ${
-              apt.status === 'cancelled' ? 'opacity-60' : ''
+              session.status === SessionStatus.Cancelled ? 'opacity-60' : ''
             }`}
           >
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex items-start gap-4 flex-1">
                 <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
-                    apt.status === 'upcoming'
-                      ? 'bg-brand-soft'
-                      : apt.status === 'completed'
-                        ? 'bg-green-100 dark:bg-green-900/30'
-                        : 'bg-gray-100 dark:bg-gray-800'
-                  }`}
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${getSessionIconBg(session)}`}
                 >
-                  <Calendar
-                    className={`w-7 h-7 ${
-                      apt.status === 'upcoming'
-                        ? 'text-brand'
-                        : apt.status === 'completed'
-                          ? 'text-green-600'
-                          : 'text-gray-400'
-                    }`}
-                  />
+                  {getSessionIcon(session.type)}
                 </div>
 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <h3 className="text-lg font-bold text-(--text-primary)">
-                      {getTypeLabel(apt.type)}
+                      {SESSION_TYPE_LABELS[session.type]}
                     </h3>
-                    {getStatusBadge(apt.status)}
+                    {getStatusBadge(session)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <Calendar className="w-4 h-4" />
-                      <span>{apt.date}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <Clock className="w-4 h-4" />
-                      <span>{apt.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <User className="w-4 h-4" />
                       <span>
-                        {apt.doctor} - {apt.specialty}
+                        {new Date(session.createdAt).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          }
+                        )}
                       </span>
                     </div>
+                    {session.appointmentTime && (
+                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                        <Clock className="w-4 h-4" />
+                        <span>
+                          {new Date(session.appointmentTime).toLocaleTimeString(
+                            'en-US',
+                            {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                            }
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                      <User className="w-4 h-4" />
+                      <span>{SESSION_STATUS_LABELS[session.status]}</span>
+                    </div>
                     <div className="flex items-center gap-2">
-                      {apt.isOnline ? (
+                      {session.type === ConsultationSessionType.VideoCall ? (
                         <>
                           <Video className="w-4 h-4 text-blue-600" />
                           <span className="text-blue-600">
-                            Online Consultation
+                            Video Consultation
                           </span>
                         </>
                       ) : (
                         <>
-                          <MapPin className="w-4 h-4 text-[var(--text-secondary)]" />
+                          <Eye className="w-4 h-4 text-[var(--text-secondary)]" />
                           <span className="text-[var(--text-secondary)]">
-                            {apt.clinicName}
+                            {SESSION_TYPE_LABELS[session.type]}
                           </span>
                         </>
                       )}
                     </div>
                   </div>
-
-                  {/* Attached Images */}
-                  {apt.images && apt.images.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                      <p className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-1">
-                        <Image className="w-3 h-3" />
-                        Attached Images ({apt.images.length})
-                      </p>
-                      <div className="flex gap-2">
-                        {apt.images.map((img, idx) => (
-                          <div
-                            key={idx}
-                            className="w-12 h-12 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-center"
-                          >
-                            <Eye className="w-4 h-4 text-[var(--text-muted)]" />
-                          </div>
-                        ))}
-                        <button className="w-12 h-12 bg-[var(--bg-secondary)] border border-dashed border-[var(--border-color)] rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] transition-colors">
-                          <Plus className="w-4 h-4 text-[var(--text-muted)]" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {apt.notes && (
-                    <p className="mt-3 text-sm text-amber-400/80 bg-amber-500/10 px-3 py-2 rounded-lg">
-                      📝 {apt.notes}
-                    </p>
-                  )}
                 </div>
               </div>
 
               <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                {apt.status === 'upcoming' && (
+                {(session.status === SessionStatus.Pending ||
+                  session.status === SessionStatus.Confirmed) && (
                   <>
-                    <button className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <Link
+                      to="/patient/chat"
+                      className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    >
                       <Eye className="w-4 h-4" />
-                      View Details
-                    </button>
-                    {apt.isOnline && (
+                      View Chat
+                    </Link>
+                    {session.type === ConsultationSessionType.VideoCall && (
                       <button className="flex-1 lg:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                         <Video className="w-4 h-4" />
                         Join Call
                       </button>
                     )}
-                    <button className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors">
+                    <button
+                      onClick={() => handleCancel(session.id)}
+                      disabled={cancelMutation.isPending}
+                      className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    >
                       Cancel
                     </button>
                   </>
                 )}
-                {apt.status === 'completed' && (
-                  <button className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                {session.status === SessionStatus.Completed && (
+                  <Link
+                    to="/patient/chat"
+                    className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  >
                     <FileText className="w-4 h-4" />
-                    View Report
+                    View Details
                     <ChevronRight className="w-4 h-4" />
-                  </button>
+                  </Link>
                 )}
               </div>
             </div>
@@ -374,16 +366,16 @@ const AppointmentsPage = () => {
         ))}
       </div>
 
-      {filteredAppointments.length === 0 && (
+      {filteredSessions.length === 0 && (
         <div className="text-center py-16">
           <Calendar className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-            No Appointments Found
+            No Sessions Found
           </h3>
           <p className="text-[var(--text-secondary)] mb-6">
             {filter === 'all'
-              ? "You haven't booked any appointments yet."
-              : `No ${filter} appointments.`}
+              ? "You haven't created any consultation sessions yet."
+              : `No ${filter} sessions.`}
           </p>
           <Link
             to="/patient/clinics"

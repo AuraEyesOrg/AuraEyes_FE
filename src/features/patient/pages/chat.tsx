@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   MessageCircle,
@@ -12,24 +12,25 @@ import {
   CheckCheck,
   X,
   Eye,
+  Loader2,
+  AlertCircle,
+  Lock,
+  Archive,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
-
-interface Conversation {
-  id: string;
-  ophthalmologist: {
-    name: string;
-    title: string;
-    avatarUrl?: string;
-    isOnline: boolean;
-  };
-  lastMessage: {
-    content: string;
-    timestamp: string;
-    isRead: boolean;
-  };
-  unreadCount: number;
-}
+import {
+  useConsultationSessions,
+  useConsultationSession,
+  useSendMessage,
+} from '@/features/consultation/hooks';
+import {
+  SessionStatus,
+  ChatStatus,
+  ConsultationSessionType,
+  SESSION_TYPE_LABELS,
+  SESSION_STATUS_LABELS,
+  CHAT_STATUS_LABELS,
+} from '@/types/consultation';
 
 interface SharedScanData {
   imageUrl?: string;
@@ -41,108 +42,39 @@ interface SharedScanData {
   scanId?: string;
 }
 
-interface Message {
-  id: string;
-  senderId: string;
-  senderType: 'patient' | 'ophthalmologist';
-  content: string;
-  type: 'text' | 'image' | 'scan-share';
-  timestamp: string;
-  isRead: boolean;
-  attachedScan?: SharedScanData;
-}
+// TODO: Replace with actual user ID from auth store once auth is fully integrated
+const CURRENT_USER_ID = '4c9ed208-3697-4c9f-b2a0-a12f045bebbf';
+const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
 
-const mockConversations: Conversation[] = [
-  {
-    id: '1',
-    ophthalmologist: {
-      name: 'Dr. Sarah Smith',
-      title: 'Retina Specialist',
-      isOnline: true,
-    },
-    lastMessage: {
-      content:
-        'Your follow-up scan looks good. Keep monitoring your blood pressure.',
-      timestamp: '10:30 AM',
-      isRead: true,
-    },
-    unreadCount: 0,
+const chatStatusConfig: Record<
+  ChatStatus,
+  { label: string; icon: typeof Lock; color: string; description: string }
+> = {
+  [ChatStatus.Locked]: {
+    label: 'Locked',
+    icon: Lock,
+    color: 'text-red-500',
+    description: 'Chat is locked. Waiting for doctor verification.',
   },
-  {
-    id: '2',
-    ophthalmologist: {
-      name: 'Dr. John Williams',
-      title: 'Ophthalmologist',
-      isOnline: false,
-    },
-    lastMessage: {
-      content: 'Please schedule your OCT scan at your earliest convenience.',
-      timestamp: 'Yesterday',
-      isRead: false,
-    },
-    unreadCount: 2,
+  [ChatStatus.MemoOnly]: {
+    label: 'Memo Only',
+    icon: MessageCircle,
+    color: 'text-amber-500',
+    description: 'Doctor can add notes. Chat opens after consultation.',
   },
-];
-
-const mockMessages: Message[] = [
-  {
-    id: '1',
-    senderId: 'doctor',
-    senderType: 'ophthalmologist',
-    content: 'Hello! I reviewed your recent screening results.',
-    type: 'text',
-    timestamp: '9:00 AM',
-    isRead: true,
+  [ChatStatus.Open]: {
+    label: 'Open',
+    icon: MessageCircle,
+    color: 'text-green-500',
+    description: 'Chat is open. You can send messages.',
   },
-  {
-    id: '2',
-    senderId: 'doctor',
-    senderType: 'ophthalmologist',
-    content:
-      'The AI detected some minor changes in your retinal vessels. Nothing to be alarmed about, but we should monitor it.',
-    type: 'text',
-    timestamp: '9:01 AM',
-    isRead: true,
+  [ChatStatus.Archived]: {
+    label: 'Archived',
+    icon: Archive,
+    color: 'text-gray-500',
+    description: 'Session ended. Chat is archived.',
   },
-  {
-    id: '3',
-    senderId: 'patient',
-    senderType: 'patient',
-    content: 'Thank you for reviewing, Doctor. Should I be concerned?',
-    type: 'text',
-    timestamp: '9:15 AM',
-    isRead: true,
-  },
-  {
-    id: '4',
-    senderId: 'doctor',
-    senderType: 'ophthalmologist',
-    content:
-      'Not at all! These changes are very common and can be managed with lifestyle modifications. I recommend regular blood pressure monitoring and reducing screen time.',
-    type: 'text',
-    timestamp: '9:20 AM',
-    isRead: true,
-  },
-  {
-    id: '5',
-    senderId: 'patient',
-    senderType: 'patient',
-    content: 'I understand. When should I schedule my next screening?',
-    type: 'text',
-    timestamp: '10:00 AM',
-    isRead: true,
-  },
-  {
-    id: '6',
-    senderId: 'doctor',
-    senderType: 'ophthalmologist',
-    content:
-      'Your follow-up scan looks good. Keep monitoring your blood pressure.',
-    type: 'text',
-    timestamp: '10:30 AM',
-    isRead: true,
-  },
-];
+};
 
 export default function ChatPage() {
   const location = useLocation();
@@ -150,11 +82,9 @@ export default function ChatPage() {
     (location.state as { sharedScan?: SharedScanData } | null)?.sharedScan ??
     null;
 
-  const [conversations] = useState(mockConversations);
-  const [selectedConversation, setSelectedConversation] = useState<
-    string | null
-  >('1');
-  const [messages, setMessages] = useState(mockMessages);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
   const [newMessage, setNewMessage] = useState(
     sharedScan
       ? `Hi Doctor, I'd like to share my recent screening results for your review.`
@@ -166,42 +96,77 @@ export default function ChatPage() {
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  // Fetch all sessions for this patient
+  const { data: sessionsData, isLoading: sessionsLoading } =
+    useConsultationSessions({
+      patientId: CURRENT_PATIENT_ID,
+      pageSize: 50,
+    });
+
+  // Fetch selected session detail
+  const { data: selectedSession, isLoading: sessionLoading } =
+    useConsultationSession(selectedSessionId ?? '', {
+      enabled: !!selectedSessionId,
+    });
+
+  // Send message mutation
+  const sendMessageMutation = useSendMessage();
+
+  const sessions = sessionsData?.items ?? [];
+
+  // Filter sessions that have chat capability
+  const chatSessions = sessions.filter(
+    (s) => s.status !== SessionStatus.Cancelled
+  );
+
+  const filteredSessions = chatSessions.filter((session) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      session.typeName.toLowerCase().includes(query) ||
+      session.statusName.toLowerCase().includes(query)
+    );
+  });
+
+  // Auto-select first session
+  useEffect(() => {
+    if (!selectedSessionId && filteredSessions.length > 0) {
+      setSelectedSessionId(filteredSessions[0].id);
+    }
+  }, [filteredSessions, selectedSessionId]);
+
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [selectedSession, scrollToBottom]);
 
-  // Scroll to show the pending scan preview when it arrives
   useEffect(() => {
-    if (pendingScan) {
-      scrollToBottom();
-    }
-  }, [pendingScan]);
+    if (pendingScan) scrollToBottom();
+  }, [pendingScan, scrollToBottom]);
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() && !pendingScan) return;
+    if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
 
-    const message: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: 'patient',
-      senderType: 'patient',
-      content: newMessage,
-      type: pendingScan ? 'scan-share' : 'text',
-      timestamp: new Date().toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }),
-      isRead: false,
-      attachedScan: pendingScan ?? undefined,
-    };
+    const messageContent = pendingScan
+      ? `${newMessage}\n\n[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
+      : newMessage;
 
-    setMessages((prev) => [...prev, message]);
-    setNewMessage('');
-    setPendingScan(null);
+    sendMessageMutation.mutate(
+      {
+        sessionId: selectedSessionId,
+        senderUserId: CURRENT_USER_ID,
+        message: messageContent,
+      },
+      {
+        onSuccess: () => {
+          setNewMessage('');
+          setPendingScan(null);
+        },
+      }
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -211,9 +176,54 @@ export default function ChatPage() {
     }
   };
 
-  const selectedDoctor = conversations.find(
-    (c) => c.id === selectedConversation
-  )?.ophthalmologist;
+  const currentSession = filteredSessions.find(
+    (s) => s.id === selectedSessionId
+  );
+  const canSendMessage =
+    currentSession?.chatStatus === ChatStatus.Open ||
+    currentSession?.chatStatus === ChatStatus.MemoOnly;
+
+  const getSessionTypeColor = (type: ConsultationSessionType) => {
+    switch (type) {
+      case ConsultationSessionType.Verification:
+        return 'from-blue-500 to-cyan-500';
+      case ConsultationSessionType.VideoCall:
+        return 'from-purple-500 to-pink-500';
+      case ConsultationSessionType.ClinicBooking:
+        return 'from-green-500 to-teal-500';
+      default:
+        return 'from-brand to-accent';
+    }
+  };
+
+  const getStatusBadgeClass = (status: SessionStatus) => {
+    switch (status) {
+      case SessionStatus.Pending:
+        return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
+      case SessionStatus.Confirmed:
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+      case SessionStatus.Completed:
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';
+      case SessionStatus.Cancelled:
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  // Loading state
+  if (sessionsLoading) {
+    return (
+      <PatientLayout userName="John Doe">
+        <div className="flex items-center justify-center h-[calc(100vh-180px)]">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
+            <p className="text-(--text-secondary)">Loading conversations...</p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
 
   return (
     <PatientLayout userName="John Doe">
@@ -228,7 +238,7 @@ export default function ChatPage() {
 
       <div className="medical-card overflow-hidden h-[calc(100vh-180px)]">
         <div className="flex h-full">
-          {/* Conversations List */}
+          {/* Sessions Sidebar */}
           <div className="w-96 border-r border-(--border-color) flex flex-col">
             {/* Search */}
             <div className="p-4 border-b border-(--border-color)">
@@ -236,7 +246,7 @@ export default function ChatPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
                 <input
                   type="text"
-                  placeholder="Search conversations..."
+                  placeholder="Search sessions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
@@ -244,82 +254,100 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Conversation List */}
+            {/* Session List */}
             <div className="flex-1 overflow-y-auto">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  onClick={() => setSelectedConversation(conversation.id)}
-                  className={`p-4 cursor-pointer transition-colors border-b border-(--border-color) ${
-                    selectedConversation === conversation.id
-                      ? 'bg-brand-soft'
-                      : 'hover:bg-(--bg-tertiary)'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-linear-to-br from-brand to-accent rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold">
-                          {conversation.ophthalmologist.name.charAt(0)}
-                        </span>
-                      </div>
-                      {conversation.ophthalmologist.isOnline && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-(--text-primary) font-medium truncate">
-                          {conversation.ophthalmologist.name}
-                        </p>
-                        <span className="text-xs text-(--text-muted)">
-                          {conversation.lastMessage.timestamp}
-                        </span>
-                      </div>
-                      <p className="text-xs text-(--text-secondary) mb-1">
-                        {conversation.ophthalmologist.title}
-                      </p>
-                      <p className="text-sm text-(--text-secondary) truncate">
-                        {conversation.lastMessage.content}
-                      </p>
-                    </div>
-
-                    {conversation.unreadCount > 0 && (
-                      <span className="w-5 h-5 bg-brand rounded-full text-xs font-bold text-white flex items-center justify-center">
-                        {conversation.unreadCount}
-                      </span>
-                    )}
-                  </div>
+              {filteredSessions.length === 0 ? (
+                <div className="p-8 text-center">
+                  <MessageCircle className="w-10 h-10 text-(--text-muted) mx-auto mb-3" />
+                  <p className="text-sm text-(--text-secondary)">
+                    No consultation sessions yet
+                  </p>
                 </div>
-              ))}
+              ) : (
+                filteredSessions.map((session) => {
+                  const statusConfig = chatStatusConfig[session.chatStatus];
+                  const StatusIcon = statusConfig.icon;
+                  return (
+                    <div
+                      key={session.id}
+                      onClick={() => setSelectedSessionId(session.id)}
+                      className={`p-4 cursor-pointer transition-colors border-b border-(--border-color) ${
+                        selectedSessionId === session.id
+                          ? 'bg-brand-soft'
+                          : 'hover:bg-(--bg-tertiary)'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Type avatar */}
+                        <div
+                          className={`w-12 h-12 bg-gradient-to-br ${getSessionTypeColor(session.type)} rounded-full flex items-center justify-center flex-shrink-0`}
+                        >
+                          {session.type ===
+                          ConsultationSessionType.Verification ? (
+                            <Eye className="w-5 h-5 text-white" />
+                          ) : session.type ===
+                            ConsultationSessionType.VideoCall ? (
+                            <Video className="w-5 h-5 text-white" />
+                          ) : (
+                            <MessageCircle className="w-5 h-5 text-white" />
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-(--text-primary) font-medium truncate text-sm">
+                              {SESSION_TYPE_LABELS[session.type]}
+                            </p>
+                            <span className="text-xs text-(--text-muted)">
+                              {new Date(session.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getStatusBadgeClass(session.status)}`}
+                            >
+                              {SESSION_STATUS_LABELS[session.status]}
+                            </span>
+                            <StatusIcon
+                              className={`w-3 h-3 ${statusConfig.color}`}
+                            />
+                          </div>
+                          <p className="text-xs text-(--text-secondary) truncate">
+                            {'No notes'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
           {/* Chat Area */}
-          {selectedConversation ? (
+          {selectedSessionId && currentSession ? (
             <div className="flex-1 flex flex-col">
               {/* Chat Header */}
               <div className="p-4 border-b border-(--border-color) flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-linear-to-br from-brand to-accent rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold">
-                        {selectedDoctor?.name.charAt(0)}
-                      </span>
-                    </div>
-                    {selectedDoctor?.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                  <div
+                    className={`w-10 h-10 bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} rounded-full flex items-center justify-center`}
+                  >
+                    {currentSession.type ===
+                    ConsultationSessionType.Verification ? (
+                      <Eye className="w-5 h-5 text-white" />
+                    ) : (
+                      <Video className="w-5 h-5 text-white" />
                     )}
                   </div>
                   <div>
                     <p className="text-(--text-primary) font-medium">
-                      {selectedDoctor?.name}
+                      {SESSION_TYPE_LABELS[currentSession.type]}
                     </p>
                     <p className="text-xs text-(--text-secondary)">
-                      {selectedDoctor?.isOnline ? 'Online' : 'Offline'}
+                      {SESSION_STATUS_LABELS[currentSession.status]} &middot;{' '}
+                      {CHAT_STATUS_LABELS[currentSession.chatStatus]}
                     </p>
                   </div>
                 </div>
@@ -337,106 +365,94 @@ export default function ChatPage() {
                 </div>
               </div>
 
+              {/* Chat Status Banner */}
+              {currentSession.chatStatus !== ChatStatus.Open && (
+                <div
+                  className={`px-4 py-2 flex items-center gap-2 text-sm border-b border-(--border-color) ${
+                    currentSession.chatStatus === ChatStatus.Locked
+                      ? 'bg-red-50 dark:bg-red-950/20'
+                      : currentSession.chatStatus === ChatStatus.MemoOnly
+                        ? 'bg-amber-50 dark:bg-amber-950/20'
+                        : 'bg-gray-50 dark:bg-gray-900/20'
+                  }`}
+                >
+                  {(() => {
+                    const cfg = chatStatusConfig[currentSession.chatStatus];
+                    const Icon = cfg.icon;
+                    return (
+                      <>
+                        <Icon className={`w-4 h-4 ${cfg.color}`} />
+                        <span className="text-(--text-secondary)">
+                          {cfg.description}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-(--bg-secondary)">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.senderType === 'patient'
-                        ? 'justify-end'
-                        : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[65%] rounded-2xl ${
-                        message.senderType === 'patient'
-                          ? 'bg-brand text-white rounded-br-sm'
-                          : 'bg-white dark:bg-[#1e3a5f] text-(--text-primary) rounded-bl-sm border border-(--border-color) shadow-sm'
-                      }`}
-                    >
-                      {/* Attached scan card */}
-                      {message.type === 'scan-share' &&
-                        message.attachedScan && (
-                          <div
-                            className={`m-2 rounded-xl overflow-hidden border ${
-                              message.senderType === 'patient'
-                                ? 'border-white/20 bg-white/10'
-                                : 'border-(--border-color) bg-(--bg-secondary)'
-                            }`}
-                          >
-                            {message.attachedScan.imageUrl && (
-                              <div className="h-40 bg-slate-900">
-                                <img
-                                  src={message.attachedScan.imageUrl}
-                                  alt="Retinal scan"
-                                  className="w-full h-full object-cover opacity-90"
-                                />
-                              </div>
-                            )}
-                            <div className="p-3 space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                <Eye className="w-4 h-4 flex-shrink-0" />
-                                <span className="text-xs font-semibold">
-                                  {message.attachedScan.eyeLabel ??
-                                    'Retinal Scan'}
-                                </span>
-                                {message.attachedScan.riskLabel && (
-                                  <span
-                                    className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                      message.senderType === 'patient'
-                                        ? 'bg-white/20 text-white'
-                                        : 'bg-cyan-50 text-cyan-700'
-                                    }`}
-                                  >
-                                    {message.attachedScan.riskLabel}
-                                  </span>
-                                )}
-                              </div>
-                              {message.attachedScan.scanId && (
-                                <p className="text-[11px] opacity-70">
-                                  Scan {message.attachedScan.scanId}
-                                </p>
-                              )}
-                              {message.attachedScan.anomalies &&
-                                message.attachedScan.anomalies.length > 0 && (
-                                  <p className="text-[11px] opacity-80">
-                                    Findings:{' '}
-                                    {message.attachedScan.anomalies.join(', ')}
-                                  </p>
-                                )}
-                            </div>
-                          </div>
-                        )}
-
-                      <div className="p-3">
-                        <p className="text-sm leading-relaxed">
-                          {message.content}
-                        </p>
+                {sessionLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 text-brand animate-spin" />
+                  </div>
+                ) : selectedSession?.messages &&
+                  selectedSession.messages.length > 0 ? (
+                  selectedSession.messages.map((message) => {
+                    const isPatient = message.senderUserId === CURRENT_USER_ID;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${isPatient ? 'justify-end' : 'justify-start'}`}
+                      >
                         <div
-                          className={`flex items-center gap-1 mt-1 ${
-                            message.senderType === 'patient'
-                              ? 'justify-end'
-                              : 'justify-start'
+                          className={`max-w-[65%] rounded-2xl ${
+                            isPatient
+                              ? 'bg-brand text-white rounded-br-sm'
+                              : 'bg-white dark:bg-[#1e3a5f] text-(--text-primary) rounded-bl-sm border border-(--border-color) shadow-sm'
                           }`}
                         >
-                          <span
-                            className={`text-xs ${message.senderType === 'patient' ? 'opacity-70' : 'text-(--text-muted)'}`}
-                          >
-                            {message.timestamp}
-                          </span>
-                          {message.senderType === 'patient' && (
-                            <CheckCheck
-                              className={`w-3 h-3 ${
-                                message.isRead ? 'text-blue-300' : 'opacity-70'
+                          <div className="p-3">
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {message.message}
+                            </p>
+                            <div
+                              className={`flex items-center gap-1 mt-1 ${
+                                isPatient ? 'justify-end' : 'justify-start'
                               }`}
-                            />
-                          )}
+                            >
+                              <span
+                                className={`text-xs ${isPatient ? 'opacity-70' : 'text-(--text-muted)'}`}
+                              >
+                                {new Date(message.sentAt).toLocaleTimeString(
+                                  'en-US',
+                                  {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  }
+                                )}
+                              </span>
+                              {isPatient && (
+                                <CheckCheck className="w-3 h-3 text-blue-300" />
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <MessageCircle className="w-10 h-10 text-(--text-muted) mx-auto mb-3" />
+                      <p className="text-sm text-(--text-secondary)">
+                        No messages yet. Start the conversation!
+                      </p>
                     </div>
                   </div>
-                ))}
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -473,31 +489,56 @@ export default function ChatPage() {
                   </div>
                 )}
 
-                <div className="flex items-end gap-3">
-                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <ImageIcon className="w-5 h-5" />
-                  </button>
-                  <div className="flex-1">
-                    <textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Type a message..."
-                      className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
-                      rows={2}
-                    />
+                {canSendMessage ? (
+                  <div className="flex items-end gap-3">
+                    <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
+                      <Paperclip className="w-5 h-5" />
+                    </button>
+                    <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
+                      <ImageIcon className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1">
+                      <textarea
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder="Type a message..."
+                        className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
+                        rows={2}
+                      />
+                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={
+                        (!newMessage.trim() && !pendingScan) ||
+                        sendMessageMutation.isPending
+                      }
+                      className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                    >
+                      {sendMessageMutation.isPending ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim() && !pendingScan}
-                    className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-(--text-muted)">
+                    <Lock className="w-4 h-4" />
+                    <span>
+                      {currentSession.chatStatus === ChatStatus.Locked
+                        ? 'Chat is locked until the doctor reviews your session.'
+                        : 'This session is archived. You cannot send new messages.'}
+                    </span>
+                  </div>
+                )}
+
+                {sendMessageMutation.isError && (
+                  <div className="flex items-center gap-2 text-sm text-red-500">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Failed to send message. Please try again.</span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -507,10 +548,10 @@ export default function ChatPage() {
                   <MessageCircle className="w-10 h-10 text-(--text-muted)" />
                 </div>
                 <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
-                  Select a conversation
+                  Select a session
                 </h3>
                 <p className="text-(--text-secondary)">
-                  Choose a doctor to start chatting
+                  Choose a consultation session to view messages
                 </p>
               </div>
             </div>

@@ -5,6 +5,7 @@ import {
   Eye,
   BarChart3,
   Calendar,
+  CalendarClock,
   LogOut,
   Settings,
   MessagesSquare,
@@ -34,6 +35,11 @@ const navItems = [
     label: 'Appointments',
     icon: Calendar,
     path: '/ophthalmologist/appointments',
+  },
+  {
+    label: 'Schedules',
+    icon: CalendarClock,
+    path: '/ophthalmologist/schedules',
   },
   {
     label: 'Consultations',

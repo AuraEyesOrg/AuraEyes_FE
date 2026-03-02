@@ -116,6 +116,20 @@ export const API_ENDPOINTS = {
     },
   },
 
+  // Consultation Sessions
+  CONSULTATION_SESSIONS: {
+    LIST: '/consultation-sessions',
+    DETAIL: (sessionId: string) => `/consultation-sessions/${sessionId}`,
+    CREATE_VERIFICATION: '/consultation-sessions/verification',
+    CREATE_VIDEO_CALL: '/consultation-sessions/video-call',
+    SUBMIT_REPORT: (sessionId: string) =>
+      `/consultation-sessions/${sessionId}/verification-report`,
+    SEND_MESSAGE: (sessionId: string) =>
+      `/consultation-sessions/${sessionId}/messages`,
+    CANCEL: (sessionId: string) => `/consultation-sessions/${sessionId}/cancel`,
+    END: (sessionId: string) => `/consultation-sessions/${sessionId}/end`,
+  },
+
   // Organisation features (from existing setup)
   ORGANISATION: {
     DASHBOARD: '/organisation/dashboard',

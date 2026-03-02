@@ -95,6 +95,9 @@ const OphthalmologistConsultationsPage = lazy(
 const OphthalmologistScreeningReviewPage = lazy(
   () => import('@/features/ophthalmologist/pages/screening-review')
 );
+const OphthalmologistSchedulesPage = lazy(
+  () => import('@/features/ophthalmologist/pages/schedules')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -259,6 +262,10 @@ const Router = () => (
         <Route
           path="/ophthalmologist/screenings/:screeningId/review"
           element={<OphthalmologistScreeningReviewPage />}
+        />
+        <Route
+          path="/ophthalmologist/schedules"
+          element={<OphthalmologistSchedulesPage />}
         />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
