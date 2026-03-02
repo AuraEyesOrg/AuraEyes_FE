@@ -5,10 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { walletApi } from '../api/patient.api';
-import type {
-  CreateDepositRequest,
-  VerifyPaymentRequest,
-} from '../types';
+import type { CreateDepositRequest, VerifyPaymentRequest } from '../types';
 
 // ============ QUERY KEYS ============
 
@@ -62,7 +59,11 @@ export const usePaymentStatus = (orderCode: string, enabled = true) => {
     refetchInterval: (query) => {
       // Stop polling once payment is resolved
       const status = query.state.data?.status;
-      if (status === 'Completed' || status === 'Failed' || status === 'Cancelled') {
+      if (
+        status === 'Completed' ||
+        status === 'Failed' ||
+        status === 'Cancelled'
+      ) {
         return false;
       }
       return 3000; // Poll every 3s while pending

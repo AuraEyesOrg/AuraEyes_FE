@@ -475,9 +475,10 @@ export const walletApi = {
   async createDeposit(
     data: CreateDepositRequest
   ): Promise<CreateDepositResponse> {
-    const response = await api.post<
-      BackendApiResponse<CreateDepositResponse>
-    >(PATIENT_ENDPOINTS.WALLET.CREATE_DEPOSIT, data);
+    const response = await api.post<BackendApiResponse<CreateDepositResponse>>(
+      PATIENT_ENDPOINTS.WALLET.CREATE_DEPOSIT,
+      data
+    );
     return response.data.data;
   },
 
@@ -485,17 +486,18 @@ export const walletApi = {
   async verifyPayment(
     data: VerifyPaymentRequest
   ): Promise<VerifyPaymentResponse> {
-    const response = await api.post<
-      BackendApiResponse<VerifyPaymentResponse>
-    >(PATIENT_ENDPOINTS.WALLET.VERIFY_PAYMENT, data);
+    const response = await api.post<BackendApiResponse<VerifyPaymentResponse>>(
+      PATIENT_ENDPOINTS.WALLET.VERIFY_PAYMENT,
+      data
+    );
     return response.data.data;
   },
 
   /** GET /wallets/payment-status/:orderCode - Check payment status (public) */
   async getPaymentStatus(orderCode: string): Promise<VerifyPaymentResponse> {
-    const response = await api.get<
-      BackendApiResponse<VerifyPaymentResponse>
-    >(PATIENT_ENDPOINTS.WALLET.PAYMENT_STATUS(orderCode));
+    const response = await api.get<BackendApiResponse<VerifyPaymentResponse>>(
+      PATIENT_ENDPOINTS.WALLET.PAYMENT_STATUS(orderCode)
+    );
     return response.data.data;
   },
 };

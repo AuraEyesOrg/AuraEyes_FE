@@ -8,8 +8,6 @@ import {
   CreditCard,
   Building2,
   CheckCircle,
-  Clock,
-  XCircle,
   ChevronRight,
   ChevronLeft,
   RefreshCw,
@@ -44,12 +42,18 @@ export default function WalletPage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<'payos' | 'vnpay' | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<
+    'payos' | 'vnpay' | null
+  >(null);
   const [txPage, setTxPage] = useState(1);
   const TX_PAGE_SIZE = 10;
 
   // ── Real API data ──
-  const { data: wallet, isLoading: walletLoading, error: walletError } = useWallet();
+  const {
+    data: wallet,
+    isLoading: walletLoading,
+    error: walletError,
+  } = useWallet();
   const {
     data: transactionsData,
     isLoading: txLoading,
@@ -71,7 +75,10 @@ export default function WalletPage() {
 
     for (const tx of transactions) {
       const txDate = new Date(tx.createdAt);
-      if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+      if (
+        txDate.getMonth() === currentMonth &&
+        txDate.getFullYear() === currentYear
+      ) {
         txCount++;
         const type = TRANSACTION_TYPE_MAP[tx.transactionType];
         if (type === 'deposit' || type === 'refund' || type === 'bonus') {
@@ -415,7 +422,9 @@ export default function WalletPage() {
                               TRANSACTION_TYPE_MAP[transaction.transactionType]
                                 ?.charAt(0)
                                 .toUpperCase() +
-                                TRANSACTION_TYPE_MAP[transaction.transactionType]?.slice(1)}
+                                TRANSACTION_TYPE_MAP[
+                                  transaction.transactionType
+                                ]?.slice(1)}
                           </p>
                           <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
                             <Calendar className="w-3 h-3" />
@@ -432,7 +441,9 @@ export default function WalletPage() {
                               : 'text-red-500 dark:text-red-400'
                           }`}
                         >
-                          {isPositiveAmount(transaction.transactionType) ? '+' : '-'}
+                          {isPositiveAmount(transaction.transactionType)
+                            ? '+'
+                            : '-'}
                           {formatCurrency(transaction.amount)}
                         </p>
                         <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
@@ -575,9 +586,7 @@ export default function WalletPage() {
                     <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-(--text-primary) font-semibold">
-                      PayOS
-                    </p>
+                    <p className="text-(--text-primary) font-semibold">PayOS</p>
                     <p className="text-xs text-(--text-secondary)">
                       Bank Transfer, QR Code
                     </p>
@@ -599,9 +608,7 @@ export default function WalletPage() {
                     <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-(--text-primary) font-semibold">
-                      VNPay
-                    </p>
+                    <p className="text-(--text-primary) font-semibold">VNPay</p>
                     <p className="text-xs text-(--text-secondary)">
                       Credit/Debit Card, Bank Transfer
                     </p>
@@ -636,7 +643,9 @@ export default function WalletPage() {
                   createDepositMutation.isPending ||
                   !selectedMethod ||
                   (!selectedAmount && !customAmount) ||
-                  (!!customAmount && (parseInt(customAmount) < 10000 || parseInt(customAmount) > 50000000))
+                  (!!customAmount &&
+                    (parseInt(customAmount) < 10000 ||
+                      parseInt(customAmount) > 50000000))
                 }
                 className="flex-1 py-3 bg-brand hover:brightness-110 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 disabled:shadow-none flex items-center justify-center gap-2"
               >
