@@ -259,10 +259,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
 
-      <div className="ml-52">
+      <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader doctor={mockDoctor} pageName="Settings" />
 
         <main className="p-6">
