@@ -216,9 +216,9 @@ export default function SchedulesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+      <div className="flex h-screen w-full bg-[var(--bg-primary)]">
         <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
-        <div className="ml-52">
+        <div className="flex-1 h-full overflow-y-auto">
           <DoctorHeader doctor={mockDoctor} />
           <main className="p-6 flex items-center justify-center h-[calc(100vh-220px)]">
             <div className="text-center">
@@ -234,10 +234,10 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
+    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
 
-      <div className="ml-52">
+      <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader doctor={mockDoctor} />
 
         <main className="p-6">
@@ -473,7 +473,7 @@ export default function SchedulesPage() {
         </main>
       </div>
 
-      {/* Create Schedule Modal */}
+      {/* Create Schedule Modal (portal-style, outside scroll container) */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] w-full max-w-md p-6 shadow-2xl">
