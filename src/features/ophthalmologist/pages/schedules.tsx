@@ -176,12 +176,37 @@ export default function SchedulesPage() {
   const handleCreateSchedule = useCallback(() => {
     if (!formDate || !formStartTime || !formEndTime) return;
 
+    // Build full datetime strings for validation
+    const startDateTimeStr = `${formDate}T${formStartTime}:00`;
+    const endDateTimeStr = `${formDate}T${formEndTime}:00`;
+
+    const startDateTime = new Date(startDateTimeStr);
+    const endDateTime = new Date(endDateTimeStr);
+
+    // Ensure both dates are valid and end is strictly after start
+    if (
+      Number.isNaN(startDateTime.getTime()) ||
+      Number.isNaN(endDateTime.getTime()) ||
+      endDateTime <= startDateTime
+    ) {
+      return;
+    }
+
+    let parsedCost: number | undefined;
+    if (formCost !== '') {
+      const numericCost = Number(formCost);
+      if (!Number.isFinite(numericCost) || numericCost < 0) {
+        return;
+      }
+      parsedCost = numericCost;
+    }
+
     const request: CreateScheduleRequest = {
       date: formDate,
-      startTime: formStartTime + ':00',
-      endTime: formEndTime + ':00',
+      startTime: `${formStartTime}:00`,
+      endTime: `${formEndTime}:00`,
       slotType: formSlotType,
-      cost: formCost ? parseFloat(formCost) : undefined,
+      cost: parsedCost,
     };
 
     createMutation.mutate(
