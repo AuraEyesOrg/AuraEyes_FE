@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
@@ -23,36 +23,45 @@ export default function PaymentCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const orderCode = searchParams.get('orderCode') ?? searchParams.get('order_code') ?? '';
-  const cancelled = searchParams.get('cancel') === 'true' || searchParams.get('status') === 'CANCELLED';
+  const orderCode =
+    searchParams.get('orderCode') ?? searchParams.get('order_code') ?? '';
+  const cancelled =
+    searchParams.get('cancel') === 'true' ||
+    searchParams.get('status') === 'CANCELLED';
 
   const verifyPayment = useVerifyPayment();
-  const { data: wallet, refetch: refetchWallet } = useWallet();
+  const { refetch: refetchWallet } = useWallet();
+
+  // Guard against React 18 StrictMode double-invoke and any re-renders:
+  // useRef persists across re-renders and is not reset by cleanup, so
+  // mutate() is fired exactly once per page load regardless of how many
+  // times the effect runs.
+  const hasVerified = useRef(false);
 
   // Automatically verify on mount (only if not cancelled)
   useEffect(() => {
-    if (!orderCode || cancelled) return;
+    if (!orderCode || cancelled || hasVerified.current) return;
 
-    // Only verify once
-    if (verifyPayment.isIdle) {
-      verifyPayment.mutate(
-        { orderCode },
-        {
-          onSuccess: () => {
-            // Refetch wallet to get updated balance
-            refetchWallet();
-          },
-        }
-      );
-    }
+    hasVerified.current = true;
+    verifyPayment.mutate(
+      { orderCode },
+      {
+        onSuccess: () => {
+          // Refetch wallet to get updated balance
+          refetchWallet();
+        },
+      }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderCode, cancelled]);
 
   const status = useMemo<'loading' | 'success' | 'failed' | 'cancelled'>(() => {
     if (cancelled) return 'cancelled';
     if (verifyPayment.isPending) return 'loading';
-    if (verifyPayment.isSuccess && verifyPayment.data?.isSuccess) return 'success';
-    if (verifyPayment.isSuccess && !verifyPayment.data?.isSuccess) return 'failed';
+    if (verifyPayment.isSuccess && verifyPayment.data?.isSuccess)
+      return 'success';
+    if (verifyPayment.isSuccess && !verifyPayment.data?.isSuccess)
+      return 'failed';
     if (verifyPayment.isError) return 'failed';
     return 'loading';
   }, [cancelled, verifyPayment]);
