@@ -293,40 +293,126 @@ export interface SendMessageData {
 
 // ============ WALLET TYPES ============
 
-export interface Wallet {
-  id: string;
-  patientId: string;
-  balance: number;
-  currency: 'VND';
-  createdAt: string;
-  updatedAt: string;
+/**
+ * Backend enum: TransactionType
+ * Deposit=1, Withdrawal=2, Payment=3, Refund=4, Transfer=5, Bonus=6
+ */
+export enum TransactionType {
+  Deposit = 1,
+  Withdrawal = 2,
+  Payment = 3,
+  Refund = 4,
+  Transfer = 5,
+  Bonus = 6,
 }
 
+/**
+ * Backend enum: PaymentMethod
+ * CreditCard=1, DebitCard=2, BankTransfer=3, Wallet=4, Cash=5, Momo=6, VNPay=7, ZaloPay=8, PayOS=9
+ */
+export enum PaymentMethod {
+  CreditCard = 1,
+  DebitCard = 2,
+  BankTransfer = 3,
+  Wallet = 4,
+  Cash = 5,
+  Momo = 6,
+  VNPay = 7,
+  ZaloPay = 8,
+  PayOS = 9,
+}
+
+/**
+ * Backend enum: PaymentStatus
+ * Pending=1, Processing=2, Completed=3, Failed=4, Refunded=5, Cancelled=6
+ */
+export enum PaymentStatus {
+  Pending = 1,
+  Processing = 2,
+  Completed = 3,
+  Failed = 4,
+  Refunded = 5,
+  Cancelled = 6,
+}
+
+/** Maps to backend WalletDto */
+export interface Wallet {
+  id: string;
+  userId: string;
+  balance: number;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+/** Maps to backend WalletTransactionDto */
 export interface WalletTransaction {
   id: string;
   walletId: string;
-  type: 'deposit' | 'payment' | 'refund' | 'withdrawal';
   amount: number;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
-  description: string;
-  referenceId?: string;
-  paymentMethod?: 'payos' | 'vnpay' | 'bank_transfer';
+  transactionType: TransactionType;
+  description: string | null;
   createdAt: string;
-  completedAt?: string;
 }
 
-export interface DepositRequest {
+/** Maps to backend DepositRequestDto */
+export interface DepositRequestDto {
+  id: string;
+  userId: string;
+  walletId: string;
   amount: number;
-  paymentMethod: 'payos' | 'vnpay';
+  paymentMethod: PaymentMethod;
+  status: PaymentStatus;
+  paymentOrderCode: string | null;
+  paymentUrl: string | null;
+  description: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  failureReason: string | null;
+}
+
+/** Request body for POST /wallets/deposit */
+export interface CreateDepositRequest {
+  amountVnd: number;
+  paymentMethod?: PaymentMethod;
+  description?: string;
   returnUrl?: string;
   cancelUrl?: string;
 }
 
-export interface DepositResponse {
-  transactionId: string;
+/** Response from POST /wallets/deposit */
+export interface CreateDepositResponse {
+  depositRequestId: string;
   paymentUrl: string;
+  orderCode: string;
   amount: number;
-  expiresAt: string;
+  status: string;
+}
+
+/** Request body for POST /wallets/verify-payment */
+export interface VerifyPaymentRequest {
+  orderCode: string;
+}
+
+/** Response from POST /wallets/verify-payment */
+export interface VerifyPaymentResponse {
+  depositRequestId: string;
+  orderCode: string;
+  status: string;
+  amount: number;
+  isSuccess: boolean;
+  message: string | null;
+  newBalance: number | null;
+}
+
+/** Backend PagedResult<T> */
+export interface PagedResult<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
 }
 
 // ============ NOTIFICATION TYPES ============
