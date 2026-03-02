@@ -48,6 +48,9 @@ const VerificationPage = lazy(
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
 const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
+const PaymentCallbackPage = lazy(
+  () => import('@/features/patient/pages/payment-callback')
+);
 const RetinalAnalysisPage = lazy(
   () => import('@/features/patient/pages/retinal-analysis')
 );
@@ -206,6 +209,10 @@ const Router = () => (
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route
+          path="/patient/wallet/payment-callback"
+          element={<PaymentCallbackPage />}
+        />
         <Route path="/patient/security" element={<TwoFactorSettingsPage />} />
 
         {/* ============ ORGANISATION ROUTES ============ */}
