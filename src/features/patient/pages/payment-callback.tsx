@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { useVerifyPayment, useWallet } from '../hooks/use-wallet';
+import type { VerifyPaymentResponse } from '../types';
+
+type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
 
 /**
  * Payment Callback Page
@@ -32,10 +35,15 @@ export default function PaymentCallbackPage() {
   const verifyPayment = useVerifyPayment();
   const { refetch: refetchWallet } = useWallet();
 
-  // Guard against React 18 StrictMode double-invoke and any re-renders:
-  // useRef persists across re-renders and is not reset by cleanup, so
-  // mutate() is fired exactly once per page load regardless of how many
-  // times the effect runs.
+  // Use explicit state so React guarantees a re-render on status change
+  const [status, setStatus] = useState<PaymentStatus>(
+    cancelled ? 'cancelled' : 'loading'
+  );
+  const [paymentData, setPaymentData] = useState<VerifyPaymentResponse | null>(
+    null
+  );
+
+  // Guard against React 18 StrictMode double-invoke
   const hasVerified = useRef(false);
 
   // Automatically verify on mount (only if not cancelled)
@@ -46,25 +54,17 @@ export default function PaymentCallbackPage() {
     verifyPayment.mutate(
       { orderCode },
       {
-        onSuccess: () => {
-          // Refetch wallet to get updated balance
+        onSuccess: (data) => {
+          setPaymentData(data);
+          setStatus(data.isSuccess ? 'success' : 'failed');
           refetchWallet();
+        },
+        onError: () => {
+          setStatus('failed');
         },
       }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderCode, cancelled]);
-
-  const status = useMemo<'loading' | 'success' | 'failed' | 'cancelled'>(() => {
-    if (cancelled) return 'cancelled';
-    if (verifyPayment.isPending) return 'loading';
-    if (verifyPayment.isSuccess && verifyPayment.data?.isSuccess)
-      return 'success';
-    if (verifyPayment.isSuccess && !verifyPayment.data?.isSuccess)
-      return 'failed';
-    if (verifyPayment.isError) return 'failed';
-    return 'loading';
-  }, [cancelled, verifyPayment]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('vi-VN', {
@@ -106,14 +106,14 @@ export default function PaymentCallbackPage() {
 
               {/* Payment details */}
               <div className="bg-(--bg-secondary) rounded-xl p-4 mb-6 space-y-3">
-                {verifyPayment.data && (
+                {paymentData && (
                   <>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-(--text-secondary)">
                         Amount
                       </span>
                       <span className="font-semibold text-green-600 dark:text-green-400">
-                        +{formatCurrency(verifyPayment.data.amount)}
+                        +{formatCurrency(paymentData.amount)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -121,16 +121,16 @@ export default function PaymentCallbackPage() {
                         Order Code
                       </span>
                       <span className="font-mono text-sm text-(--text-primary)">
-                        {verifyPayment.data.orderCode}
+                        {paymentData.orderCode}
                       </span>
                     </div>
-                    {verifyPayment.data.newBalance !== null && (
+                    {paymentData.newBalance !== null && (
                       <div className="flex items-center justify-between pt-3 border-t border-(--border-color)">
                         <span className="text-sm text-(--text-secondary) flex items-center gap-1">
                           <Wallet className="w-4 h-4" /> New Balance
                         </span>
                         <span className="font-bold text-brand text-lg">
-                          {formatCurrency(verifyPayment.data.newBalance)}
+                          {formatCurrency(paymentData.newBalance)}
                         </span>
                       </div>
                     )}
@@ -150,7 +150,7 @@ export default function PaymentCallbackPage() {
                 Payment Failed
               </h1>
               <p className="text-(--text-secondary) mb-6">
-                {verifyPayment.data?.message ||
+                {paymentData?.message ||
                   'The payment could not be verified. No charges have been made.'}
               </p>
 
