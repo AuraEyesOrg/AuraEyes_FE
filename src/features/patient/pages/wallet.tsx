@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Wallet,
   Plus,
@@ -11,101 +11,107 @@ import {
   Clock,
   XCircle,
   ChevronRight,
+  ChevronLeft,
   RefreshCw,
   TrendingUp,
   DollarSign,
   X,
   Calendar,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
+import {
+  useWallet,
+  useWalletTransactions,
+  useCreateDeposit,
+} from '../hooks/use-wallet';
+import { TransactionType, PaymentMethod } from '../types';
 
-interface Transaction {
-  id: string;
-  type: 'deposit' | 'payment' | 'refund';
-  amount: number;
-  status: 'completed' | 'pending' | 'failed';
-  description: string;
-  date: string;
-  paymentMethod?: 'payos' | 'vnpay' | 'bank_transfer';
-}
+const DEPOSIT_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
 
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    type: 'deposit',
-    amount: 1000000,
-    status: 'completed',
-    description: 'Wallet Top-up via VNPay',
-    date: 'Jan 30, 2026 10:30 AM',
-    paymentMethod: 'vnpay',
-  },
-  {
-    id: '2',
-    type: 'payment',
-    amount: -500000,
-    status: 'completed',
-    description: 'Verification Service - Dr. Sarah Smith',
-    date: 'Jan 29, 2026 2:15 PM',
-  },
-  {
-    id: '3',
-    type: 'deposit',
-    amount: 2000000,
-    status: 'completed',
-    description: 'Wallet Top-up via PayOS',
-    date: 'Jan 25, 2026 9:00 AM',
-    paymentMethod: 'payos',
-  },
-  {
-    id: '4',
-    type: 'payment',
-    amount: -1000000,
-    status: 'completed',
-    description: 'Urgent Verification - Dr. John Williams',
-    date: 'Jan 22, 2026 4:45 PM',
-  },
-  {
-    id: '5',
-    type: 'refund',
-    amount: 500000,
-    status: 'completed',
-    description: 'Refund - Cancelled Appointment',
-    date: 'Jan 20, 2026 11:20 AM',
-  },
-  {
-    id: '6',
-    type: 'deposit',
-    amount: 500000,
-    status: 'pending',
-    description: 'Wallet Top-up via VNPay',
-    date: 'Jan 31, 2026 8:00 AM',
-    paymentMethod: 'vnpay',
-  },
-];
-
-const depositAmounts = [100000, 200000, 500000, 1000000, 2000000, 5000000];
+/** Map backend TransactionType enum to display string */
+const TRANSACTION_TYPE_MAP: Record<TransactionType, string> = {
+  [TransactionType.Deposit]: 'deposit',
+  [TransactionType.Withdrawal]: 'withdrawal',
+  [TransactionType.Payment]: 'payment',
+  [TransactionType.Refund]: 'refund',
+  [TransactionType.Transfer]: 'transfer',
+  [TransactionType.Bonus]: 'bonus',
+};
 
 export default function WalletPage() {
-  const [balance] = useState(2500000);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<
-    'payos' | 'vnpay' | null
-  >(null);
+  const [selectedMethod, setSelectedMethod] = useState<'payos' | 'vnpay' | null>(null);
+  const [txPage, setTxPage] = useState(1);
+  const TX_PAGE_SIZE = 10;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
+  // ── Real API data ──
+  const { data: wallet, isLoading: walletLoading, error: walletError } = useWallet();
+  const {
+    data: transactionsData,
+    isLoading: txLoading,
+    error: txError,
+  } = useWalletTransactions(txPage, TX_PAGE_SIZE);
+  const createDepositMutation = useCreateDeposit();
+
+  const transactions = transactionsData?.items ?? [];
+
+  // ── Computed stats ──
+  const monthlyStats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalDeposits = 0;
+    let totalSpent = 0;
+    let txCount = 0;
+
+    for (const tx of transactions) {
+      const txDate = new Date(tx.createdAt);
+      if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+        txCount++;
+        const type = TRANSACTION_TYPE_MAP[tx.transactionType];
+        if (type === 'deposit' || type === 'refund' || type === 'bonus') {
+          totalDeposits += tx.amount;
+        } else if (type === 'payment' || type === 'withdrawal') {
+          totalSpent += tx.amount;
+        }
+      }
+    }
+
+    return { totalDeposits, totalSpent, txCount };
+  }, [transactions]);
+
+  // ── Helpers ──
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
     }).format(Math.abs(amount));
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (txType: TransactionType) => {
+    const type = TRANSACTION_TYPE_MAP[txType];
     switch (type) {
       case 'deposit':
+      case 'bonus':
         return <ArrowDownLeft className="w-5 h-5 text-green-600" />;
       case 'payment':
+      case 'withdrawal':
         return <ArrowUpRight className="w-5 h-5 text-red-500" />;
       case 'refund':
         return <RefreshCw className="w-5 h-5 text-blue-600" />;
@@ -114,45 +120,107 @@ export default function WalletPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-            <CheckCircle className="w-3 h-3" /> Completed
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-            <Clock className="w-3 h-3" /> Pending
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400">
-            <XCircle className="w-3 h-3" /> Failed
-          </span>
-        );
+  const getTransactionBgClass = (txType: TransactionType) => {
+    const type = TRANSACTION_TYPE_MAP[txType];
+    switch (type) {
+      case 'deposit':
+      case 'bonus':
+        return 'bg-green-50 dark:bg-green-500/20';
+      case 'refund':
+        return 'bg-blue-50 dark:bg-blue-500/20';
       default:
-        return null;
+        return 'bg-red-50 dark:bg-red-500/20';
     }
   };
 
+  const isPositiveAmount = (txType: TransactionType) => {
+    const type = TRANSACTION_TYPE_MAP[txType];
+    return type === 'deposit' || type === 'refund' || type === 'bonus';
+  };
+
+  // ── Deposit handler ──
   const handleDeposit = () => {
     const amount = selectedAmount || parseInt(customAmount);
-    if (!amount || !selectedMethod) return;
+    if (!amount || amount < 10000 || !selectedMethod) return;
 
-    // TODO: Call API to create deposit request
-    console.log('Deposit:', { amount, method: selectedMethod });
+    const paymentMethod =
+      selectedMethod === 'payos' ? PaymentMethod.PayOS : PaymentMethod.VNPay;
+
+    const returnUrl = `${window.location.origin}/patient/wallet/payment-callback`;
+    const cancelUrl = `${window.location.origin}/patient/wallet`;
+
+    createDepositMutation.mutate(
+      {
+        amountVnd: amount,
+        paymentMethod,
+        description: `Wallet Top-up via ${selectedMethod === 'payos' ? 'PayOS' : 'VNPay'}`,
+        returnUrl,
+        cancelUrl,
+      },
+      {
+        onSuccess: (response) => {
+          // Redirect user to PayOS payment page
+          if (response.paymentUrl) {
+            window.location.href = response.paymentUrl;
+          }
+        },
+        onError: (error) => {
+          console.error('Deposit creation failed:', error);
+        },
+      }
+    );
+  };
+
+  const resetDepositModal = () => {
     setShowDepositModal(false);
     setSelectedAmount(null);
     setCustomAmount('');
     setSelectedMethod(null);
   };
 
+  // ── Loading state ──
+  if (walletLoading) {
+    return (
+      <PatientLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto mb-3" />
+            <p className="text-(--text-secondary)">Loading wallet...</p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
+
+  // ── Error state ──
+  if (walletError) {
+    return (
+      <PatientLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h2 className="text-xl font-bold text-(--text-primary) mb-2">
+              Unable to load wallet
+            </h2>
+            <p className="text-(--text-secondary) mb-4">
+              {walletError instanceof Error
+                ? walletError.message
+                : 'An unexpected error occurred. Please try again.'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-brand text-white rounded-xl font-semibold hover:brightness-110 transition-all"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
+
   return (
-    <PatientLayout userName="John Doe">
+    <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Digital Wallet
@@ -176,7 +244,7 @@ export default function WalletPage() {
                   Available Balance
                 </p>
                 <p className="text-3xl font-bold mt-1">
-                  {formatCurrency(balance)}
+                  {formatCurrency(wallet?.balance ?? 0)}
                 </p>
               </div>
             </div>
@@ -208,7 +276,7 @@ export default function WalletPage() {
                   </span>
                 </div>
                 <span className="text-green-600 dark:text-green-400 font-semibold">
-                  +{formatCurrency(3000000)}
+                  +{formatCurrency(monthlyStats.totalDeposits)}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
@@ -221,7 +289,7 @@ export default function WalletPage() {
                   </span>
                 </div>
                 <span className="text-red-500 dark:text-red-400 font-semibold">
-                  -{formatCurrency(1500000)}
+                  -{formatCurrency(monthlyStats.totalSpent)}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
@@ -233,7 +301,9 @@ export default function WalletPage() {
                     Transactions
                   </span>
                 </div>
-                <span className="text-(--text-primary) font-semibold">6</span>
+                <span className="text-(--text-primary) font-semibold">
+                  {transactionsData?.totalCount ?? 0}
+                </span>
               </div>
             </div>
           </div>
@@ -287,56 +357,125 @@ export default function WalletPage() {
                 <History className="w-5 h-5 text-brand" />
                 Transaction History
               </h2>
-              <button className="text-sm text-brand hover:text-brand/80 flex items-center gap-1 font-medium transition-colors">
-                View All <ChevronRight className="w-4 h-4" />
-              </button>
+              {transactionsData && transactionsData.totalCount > 0 && (
+                <span className="text-sm text-(--text-secondary)">
+                  {transactionsData.totalCount} total
+                </span>
+              )}
             </div>
 
-            <div className="space-y-3">
-              {mockTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-all hover:shadow-md"
-                >
-                  <div className="flex items-center gap-4">
+            {/* Loading */}
+            {txLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-brand" />
+              </div>
+            )}
+
+            {/* Error */}
+            {txError && !txLoading && (
+              <div className="text-center py-12">
+                <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                <p className="text-(--text-secondary)">
+                  Failed to load transactions
+                </p>
+              </div>
+            )}
+
+            {/* Empty */}
+            {!txLoading && !txError && transactions.length === 0 && (
+              <div className="text-center py-12">
+                <History className="w-12 h-12 text-(--text-muted) mx-auto mb-3" />
+                <p className="text-(--text-secondary) font-medium">
+                  No transactions yet
+                </p>
+                <p className="text-sm text-(--text-muted) mt-1">
+                  Top up your wallet to get started
+                </p>
+              </div>
+            )}
+
+            {/* Transaction List */}
+            {!txLoading && !txError && transactions.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  {transactions.map((transaction) => (
                     <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        transaction.type === 'deposit'
-                          ? 'bg-green-50 dark:bg-green-500/20'
-                          : transaction.type === 'refund'
-                            ? 'bg-blue-50 dark:bg-blue-500/20'
-                            : 'bg-red-50 dark:bg-red-500/20'
-                      }`}
+                      key={transaction.id}
+                      className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-all hover:shadow-md"
                     >
-                      {getTransactionIcon(transaction.type)}
-                    </div>
-                    <div>
-                      <p className="text-(--text-primary) font-medium">
-                        {transaction.description}
-                      </p>
-                      <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
-                        <Calendar className="w-3 h-3" />
-                        {transaction.date}
-                      </p>
-                    </div>
-                  </div>
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTransactionBgClass(transaction.transactionType)}`}
+                        >
+                          {getTransactionIcon(transaction.transactionType)}
+                        </div>
+                        <div>
+                          <p className="text-(--text-primary) font-medium">
+                            {transaction.description ||
+                              TRANSACTION_TYPE_MAP[transaction.transactionType]
+                                ?.charAt(0)
+                                .toUpperCase() +
+                                TRANSACTION_TYPE_MAP[transaction.transactionType]?.slice(1)}
+                          </p>
+                          <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(transaction.createdAt)}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="text-right">
-                    <p
-                      className={`font-bold text-lg mb-1 ${
-                        transaction.amount > 0
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-500 dark:text-red-400'
-                      }`}
-                    >
-                      {transaction.amount > 0 ? '+' : ''}
-                      {formatCurrency(transaction.amount)}
-                    </p>
-                    {getStatusBadge(transaction.status)}
-                  </div>
+                      <div className="text-right">
+                        <p
+                          className={`font-bold text-lg mb-1 ${
+                            isPositiveAmount(transaction.transactionType)
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-500 dark:text-red-400'
+                          }`}
+                        >
+                          {isPositiveAmount(transaction.transactionType) ? '+' : '-'}
+                          {formatCurrency(transaction.amount)}
+                        </p>
+                        <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
+                          <CheckCircle className="w-3 h-3" /> Completed
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                {/* Pagination */}
+                {transactionsData && transactionsData.totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-(--border-color)">
+                    <button
+                      onClick={() => setTxPage((p) => Math.max(1, p - 1))}
+                      disabled={!transactionsData.hasPrevious}
+                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </button>
+
+                    <span className="text-sm text-(--text-secondary)">
+                      Page {transactionsData.pageNumber} of{' '}
+                      {transactionsData.totalPages}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        setTxPage((p) =>
+                          Math.min(transactionsData.totalPages, p + 1)
+                        )
+                      }
+                      disabled={!transactionsData.hasNext}
+                      className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -356,7 +495,7 @@ export default function WalletPage() {
                 </p>
               </div>
               <button
-                onClick={() => setShowDepositModal(false)}
+                onClick={resetDepositModal}
                 className="w-8 h-8 rounded-lg hover:bg-(--bg-secondary) flex items-center justify-center transition-colors"
               >
                 <X className="w-5 h-5 text-(--text-secondary)" />
@@ -369,7 +508,7 @@ export default function WalletPage() {
                 Select Amount
               </label>
               <div className="grid grid-cols-3 gap-3 mb-4">
-                {depositAmounts.map((amount) => (
+                {DEPOSIT_AMOUNTS.map((amount) => (
                   <button
                     key={amount}
                     onClick={() => {
@@ -390,18 +529,32 @@ export default function WalletPage() {
               <div className="relative">
                 <input
                   type="number"
-                  placeholder="Or enter custom amount"
+                  placeholder="Or enter custom amount (min 10,000)"
                   value={customAmount}
                   onChange={(e) => {
                     setCustomAmount(e.target.value);
                     setSelectedAmount(null);
                   }}
+                  min={10000}
+                  max={50000000}
                   className="w-full px-4 py-3 bg-(--bg-secondary) border-2 border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:border-brand transition-colors"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-(--text-muted) font-medium">
                   VND
                 </span>
               </div>
+
+              {/* Validation hint */}
+              {customAmount && parseInt(customAmount) < 10000 && (
+                <p className="text-xs text-red-500 mt-1">
+                  Minimum deposit amount is 10,000 VND
+                </p>
+              )}
+              {customAmount && parseInt(customAmount) > 50000000 && (
+                <p className="text-xs text-red-500 mt-1">
+                  Maximum deposit amount is 50,000,000 VND
+                </p>
+              )}
             </div>
 
             {/* Payment Method */}
@@ -410,28 +563,6 @@ export default function WalletPage() {
                 Payment Method
               </label>
               <div className="space-y-3">
-                <button
-                  onClick={() => setSelectedMethod('vnpay')}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                    selectedMethod === 'vnpay'
-                      ? 'bg-brand-soft border-brand shadow-brand'
-                      : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
-                  }`}
-                >
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-(--text-primary) font-semibold">VNPay</p>
-                    <p className="text-xs text-(--text-secondary)">
-                      Credit/Debit Card, Bank Transfer
-                    </p>
-                  </div>
-                  {selectedMethod === 'vnpay' && (
-                    <CheckCircle className="w-5 h-5 text-brand" />
-                  )}
-                </button>
-
                 <button
                   onClick={() => setSelectedMethod('payos')}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
@@ -444,7 +575,9 @@ export default function WalletPage() {
                     <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-(--text-primary) font-semibold">PayOS</p>
+                    <p className="text-(--text-primary) font-semibold">
+                      PayOS
+                    </p>
                     <p className="text-xs text-(--text-secondary)">
                       Bank Transfer, QR Code
                     </p>
@@ -453,23 +586,68 @@ export default function WalletPage() {
                     <CheckCircle className="w-5 h-5 text-brand" />
                   )}
                 </button>
+
+                <button
+                  onClick={() => setSelectedMethod('vnpay')}
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                    selectedMethod === 'vnpay'
+                      ? 'bg-brand-soft border-brand shadow-brand'
+                      : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
+                  }`}
+                >
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-(--text-primary) font-semibold">
+                      VNPay
+                    </p>
+                    <p className="text-xs text-(--text-secondary)">
+                      Credit/Debit Card, Bank Transfer
+                    </p>
+                  </div>
+                  {selectedMethod === 'vnpay' && (
+                    <CheckCircle className="w-5 h-5 text-brand" />
+                  )}
+                </button>
               </div>
             </div>
+
+            {/* Deposit Error */}
+            {createDepositMutation.isError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                Failed to create deposit. Please try again.
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-(--border-color)">
               <button
-                onClick={() => setShowDepositModal(false)}
-                className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95"
+                onClick={resetDepositModal}
+                disabled={createDepositMutation.isPending}
+                className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeposit}
-                disabled={!selectedMethod || (!selectedAmount && !customAmount)}
-                className="flex-1 py-3 bg-brand hover:brightness-110 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 disabled:shadow-none"
+                disabled={
+                  createDepositMutation.isPending ||
+                  !selectedMethod ||
+                  (!selectedAmount && !customAmount) ||
+                  (!!customAmount && (parseInt(customAmount) < 10000 || parseInt(customAmount) > 50000000))
+                }
+                className="flex-1 py-3 bg-brand hover:brightness-110 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 disabled:shadow-none flex items-center justify-center gap-2"
               >
-                Proceed to Pay
+                {createDepositMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Proceed to Pay'
+                )}
               </button>
             </div>
           </div>
