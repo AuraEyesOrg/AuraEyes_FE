@@ -18,8 +18,11 @@ import type {
   SendMessageData,
   Wallet,
   WalletTransaction,
-  DepositRequest,
-  DepositResponse,
+  CreateDepositRequest,
+  CreateDepositResponse,
+  VerifyPaymentRequest,
+  VerifyPaymentResponse,
+  PagedResult,
   PaginatedResponse,
   ApiResponse,
 } from '../types';
@@ -103,12 +106,16 @@ export const PATIENT_ENDPOINTS = {
       `/patient/chat/conversations/${conversationId}/read`,
   },
 
-  // Wallet
+  // Wallet (maps to WalletsController)
   WALLET: {
-    GET: '/patient/wallet',
-    TRANSACTIONS: '/patient/wallet/transactions',
-    DEPOSIT: '/patient/wallet/deposit',
-    DEPOSIT_CALLBACK: '/patient/wallet/deposit/callback',
+    GET: '/wallets',
+    TRANSACTIONS: '/wallets/transactions',
+    DEPOSITS: '/wallets/deposits',
+    DEPOSIT_BY_ID: (id: string) => `/wallets/deposits/${id}`,
+    CREATE_DEPOSIT: '/wallets/deposit',
+    VERIFY_PAYMENT: '/wallets/verify-payment',
+    PAYMENT_STATUS: (orderCode: string) =>
+      `/wallets/payment-status/${orderCode}`,
   },
 
   // Notifications
@@ -421,29 +428,74 @@ export const markConversationAsRead = async (
 
 // ============ WALLET API ============
 
-export const getWallet = async (): Promise<Wallet> => {
-  const response = await api.get<ApiResponse<Wallet>>(
-    PATIENT_ENDPOINTS.WALLET.GET
-  );
-  return response.data.data!;
-};
+/** Backend response wrapper: { success, message, data, timestamp } */
+interface BackendApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
 
-export const getTransactions = async (
-  page = 1,
-  limit = 20
-): Promise<PaginatedResponse<WalletTransaction>> => {
-  const response = await api.get<
-    ApiResponse<PaginatedResponse<WalletTransaction>>
-  >(PATIENT_ENDPOINTS.WALLET.TRANSACTIONS, { params: { page, limit } });
-  return response.data.data!;
-};
+export const walletApi = {
+  /** GET /wallets - Get current user's wallet */
+  async getWallet(): Promise<Wallet> {
+    const response = await api.get<BackendApiResponse<Wallet>>(
+      PATIENT_ENDPOINTS.WALLET.GET
+    );
+    return response.data.data;
+  },
 
-export const createDeposit = async (
-  data: DepositRequest
-): Promise<DepositResponse> => {
-  const response = await api.post<ApiResponse<DepositResponse>>(
-    PATIENT_ENDPOINTS.WALLET.DEPOSIT,
-    data
-  );
-  return response.data.data!;
+  /** GET /wallets/transactions - Get paginated transaction history */
+  async getTransactions(
+    pageNumber = 1,
+    pageSize = 20
+  ): Promise<PagedResult<WalletTransaction>> {
+    const response = await api.get<
+      BackendApiResponse<PagedResult<WalletTransaction>>
+    >(PATIENT_ENDPOINTS.WALLET.TRANSACTIONS, {
+      params: { pageNumber, pageSize },
+    });
+    return response.data.data;
+  },
+
+  /** GET /wallets/deposits - Get paginated deposit history */
+  async getDeposits(
+    pageNumber = 1,
+    pageSize = 20
+  ): Promise<PagedResult<import('../types').DepositRequestDto>> {
+    const response = await api.get<
+      BackendApiResponse<PagedResult<import('../types').DepositRequestDto>>
+    >(PATIENT_ENDPOINTS.WALLET.DEPOSITS, {
+      params: { pageNumber, pageSize },
+    });
+    return response.data.data;
+  },
+
+  /** POST /wallets/deposit - Create deposit & get PayOS payment link */
+  async createDeposit(
+    data: CreateDepositRequest
+  ): Promise<CreateDepositResponse> {
+    const response = await api.post<
+      BackendApiResponse<CreateDepositResponse>
+    >(PATIENT_ENDPOINTS.WALLET.CREATE_DEPOSIT, data);
+    return response.data.data;
+  },
+
+  /** POST /wallets/verify-payment - Verify payment and credit wallet */
+  async verifyPayment(
+    data: VerifyPaymentRequest
+  ): Promise<VerifyPaymentResponse> {
+    const response = await api.post<
+      BackendApiResponse<VerifyPaymentResponse>
+    >(PATIENT_ENDPOINTS.WALLET.VERIFY_PAYMENT, data);
+    return response.data.data;
+  },
+
+  /** GET /wallets/payment-status/:orderCode - Check payment status (public) */
+  async getPaymentStatus(orderCode: string): Promise<VerifyPaymentResponse> {
+    const response = await api.get<
+      BackendApiResponse<VerifyPaymentResponse>
+    >(PATIENT_ENDPOINTS.WALLET.PAYMENT_STATUS(orderCode));
+    return response.data.data;
+  },
 };
