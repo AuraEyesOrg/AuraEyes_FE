@@ -9,7 +9,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
-import { useVerifyPayment, useWallet } from '../hooks/use-wallet';
+import { useWallet } from '../hooks/use-wallet';
+import { walletApi } from '../api/patient.api';
 import type { VerifyPaymentResponse } from '../types';
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
@@ -19,8 +20,12 @@ type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
  *
  * After a user completes (or cancels) payment on PayOS, they are redirected
  * back to this page with query params such as `orderCode`, `status`, etc.
- * This page automatically calls verify-payment to confirm the transaction
- * and credit the wallet.
+ *
+ * NOTE: We call walletApi.verifyPayment() directly instead of via useMutation.
+ * React 18 StrictMode re-mounts the component (mount → unmount → remount),
+ * which destroys the first MutationObserver. Inline callbacks registered on
+ * that observer's `.mutate()` call never fire on the replacement observer,
+ * leaving the page stuck on "loading". A plain promise is immune to this.
  */
 export default function PaymentCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -32,10 +37,8 @@ export default function PaymentCallbackPage() {
     searchParams.get('cancel') === 'true' ||
     searchParams.get('status') === 'CANCELLED';
 
-  const verifyPayment = useVerifyPayment();
   const { refetch: refetchWallet } = useWallet();
 
-  // Use explicit state so React guarantees a re-render on status change
   const [status, setStatus] = useState<PaymentStatus>(
     cancelled ? 'cancelled' : 'loading'
   );
@@ -46,22 +49,20 @@ export default function PaymentCallbackPage() {
   // Guard against React 18 StrictMode double-invoke
   const hasVerified = useRef(false);
 
-  // Automatically verify on mount (only if not cancelled)
+  // Verify payment on mount by calling the API directly
   useEffect(() => {
     if (!orderCode || cancelled || hasVerified.current) return;
 
     hasVerified.current = true;
-    verifyPayment.mutate(
-      { orderCode },
-      {
-        onSuccess: (data) => {
-          setPaymentData(data);
-          setStatus(data.isSuccess ? 'success' : 'failed');
-          refetchWallet();
-        },
-        onError: () => {
-          setStatus('failed');
-        },
+
+    walletApi.verifyPayment({ orderCode }).then(
+      (data) => {
+        setPaymentData(data);
+        setStatus(data.isSuccess ? 'success' : 'failed');
+        refetchWallet();
+      },
+      () => {
+        setStatus('failed');
       }
     );
   }, [orderCode, cancelled]);
