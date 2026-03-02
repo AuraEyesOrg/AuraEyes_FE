@@ -11,11 +11,11 @@ import {
   ExternalLink,
   Sparkles,
   ArrowLeft,
-  ArrowRight,
   ZoomIn,
   ChevronRight,
   Stethoscope,
   Bot,
+  MessageCircle,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
 
@@ -98,7 +98,24 @@ export default function ReviewPage() {
 
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
-  const remainingCredits = 2;
+  const remainingMoney = 200000;
+  const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+  const handleShareToChat = () => {
+    navigate('/patient/chat', {
+      state: {
+        sharedScan: {
+          imageUrl: thumbnail,
+          eyeLabel,
+          riskLevel,
+          riskLabel: risk.label,
+          anomalies: anomalies.map((a) => a.friendlyName || a.name),
+          summary: risk.summary,
+          scanId,
+        },
+      },
+    });
+  };
 
   /* guard: no route state */
   if (!state) {
@@ -151,10 +168,10 @@ export default function ReviewPage() {
             <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-slate-200">
               <div className="flex flex-col items-end">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Credits
+                  Available Balance
                 </span>
                 <span className="text-sm font-bold text-slate-700">
-                  {remainingCredits} Scans Left
+                  {remainingMoney.toLocaleString()}đ Left
                 </span>
               </div>
               <button
@@ -197,8 +214,7 @@ export default function ReviewPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div>
                     <p className="text-sm text-black-400 font-medium mb-0.5">
-                      Scan ID: #AUR-
-                      {Math.random().toString(36).substring(2, 6).toUpperCase()}
+                      Scan ID: {scanId}
                     </p>
                     <p className="text-xs text-black-400">
                       Captured:{' '}
@@ -302,6 +318,13 @@ export default function ReviewPage() {
                       <Bot className="w-5 h-5" />
                       Ask AURA AI Assistant
                     </button>
+                    <button
+                      onClick={handleShareToChat}
+                      className="flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-md shadow-violet-500/20 hover:shadow-violet-500/30 transform hover:-translate-y-0.5"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Send Results to Doctor
+                    </button>
                   </div>
                 </div>
               </div>
@@ -318,9 +341,10 @@ export default function ReviewPage() {
                 <SecondaryActionCard
                   icon={<Send className="w-5 h-5" />}
                   iconBg="bg-violet-50 text-violet-600"
-                  title="Share Results"
-                  subtitle="Secure link for your doctor"
-                  actionIcon={<ArrowRight className="w-4 h-4" />}
+                  title="Share with Doctor"
+                  subtitle="Send scan to chat"
+                  actionIcon={<MessageCircle className="w-4 h-4" />}
+                  onClick={handleShareToChat}
                 />
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
