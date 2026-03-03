@@ -1,7 +1,4 @@
 // Patient Feature Types
-// Based on Functional Requirements FR-01 to FR-13
-
-// Re-export existing types
 export * from './type';
 
 // ============ USER & PROFILE TYPES ============
@@ -14,8 +11,6 @@ export interface PatientProfile {
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
-  city?: string;
-  country?: string;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -29,8 +24,6 @@ export interface ProfileUpdateData {
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
-  city?: string;
-  country?: string;
 }
 
 // ============ RETINAL IMAGE & ANALYSIS TYPES ============

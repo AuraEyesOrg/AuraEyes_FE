@@ -1,5 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import {
   User,
   Mail,
@@ -17,35 +19,118 @@ import {
   Image as ImageIcon,
   X,
   Clipboard,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
+import {
+  useProfile,
+  useUpdateProfile,
+  useUploadAvatar,
+  useChangePassword,
+} from '../hooks/useProfile';
+import {
+  profileSchema,
+  changePasswordSchema,
+  type ProfileFormData,
+  type ChangePasswordFormData,
+} from '../schemas/profile.schema';
 
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+84 123 456 789',
-    dateOfBirth: '1990-05-15',
-    gender: 'male',
-    address: '123 Nguyen Hue Street',
-    city: 'Ho Chi Minh City',
-    country: 'Vietnam',
-    avatarUrl:
-      'https://tse4.mm.bing.net/th/id/OIP.2CZ8dHVST2-MS2FKuIh_TwHaFj?rs=1&pid=ImgDetMain&o=7&rm=3',
-  });
+  const { data: profile, isLoading, error } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+  const uploadAvatarMutation = useUploadAvatar();
+  const changePasswordMutation = useChangePassword();
 
-  const [formData, setFormData] = useState(profile);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Avatar upload state
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // Validate and process image file
+  // Change password modal state
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  // Profile form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors: formErrors },
+  } = useForm<ProfileFormData>({
+    resolver: yupResolver(profileSchema),
+    defaultValues: {
+      fullName: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: '',
+      address: '',
+    },
+  });
+
+  // Change password form
+  const {
+    register: registerPw,
+    handleSubmit: handleSubmitPw,
+    reset: resetPw,
+    formState: { errors: pwErrors },
+  } = useForm<ChangePasswordFormData>({
+    resolver: yupResolver(changePasswordSchema),
+  });
+
+  // Reset form when profile data loads or editing starts
+  useEffect(() => {
+    if (profile) {
+      reset({
+        fullName: profile.fullName ?? '',
+        phone: profile.phone ?? '',
+        dateOfBirth: profile.dateOfBirth
+          ? profile.dateOfBirth.split('T')[0]
+          : '',
+        gender: profile.gender ?? '',
+        address: profile.address ?? '',
+      });
+    }
+  }, [profile, reset]);
+
+  // ============ PROFILE FORM HANDLERS ============
+
+  const onProfileSubmit = (data: ProfileFormData) => {
+    updateProfileMutation.mutate(
+      {
+        fullName: data.fullName,
+        phone: data.phone || undefined,
+        dateOfBirth: data.dateOfBirth || undefined,
+        gender: (data.gender as 'male' | 'female' | 'other') || undefined,
+        address: data.address || undefined,
+      },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      }
+    );
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      reset({
+        fullName: profile.fullName ?? '',
+        phone: profile.phone ?? '',
+        dateOfBirth: profile.dateOfBirth
+          ? profile.dateOfBirth.split('T')[0]
+          : '',
+        gender: profile.gender ?? '',
+        address: profile.address ?? '',
+      });
+    }
+    setIsEditing(false);
+  };
+
   const processImageFile = useCallback((file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       if (!file.type.startsWith('image/')) {
@@ -63,7 +148,6 @@ export default function ProfilePage() {
     });
   }, []);
 
-  // Handle file selection from input
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -71,14 +155,14 @@ export default function ProfilePage() {
       try {
         const dataUrl = await processImageFile(file);
         setPreviewUrl(dataUrl);
-      } catch (error) {
-        alert(error instanceof Error ? error.message : 'Failed to load image');
+        setAvatarFile(file);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Failed to load image');
       }
     },
     [processImageFile]
   );
 
-  // Handle drag events
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -103,27 +187,24 @@ export default function ProfilePage() {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-
       const file = e.dataTransfer.files?.[0];
       if (!file) return;
       try {
         const dataUrl = await processImageFile(file);
         setPreviewUrl(dataUrl);
-      } catch (error) {
-        alert(error instanceof Error ? error.message : 'Failed to load image');
+        setAvatarFile(file);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Failed to load image');
       }
     },
     [processImageFile]
   );
 
-  // Handle paste from clipboard
   const handlePaste = useCallback(
     async (e: ClipboardEvent) => {
       if (!showAvatarUpload) return;
-
       const items = e.clipboardData?.items;
       if (!items) return;
-
       for (const item of Array.from(items)) {
         if (item.type.startsWith('image/')) {
           e.preventDefault();
@@ -132,10 +213,9 @@ export default function ProfilePage() {
           try {
             const dataUrl = await processImageFile(file);
             setPreviewUrl(dataUrl);
-          } catch (error) {
-            alert(
-              error instanceof Error ? error.message : 'Failed to load image'
-            );
+            setAvatarFile(file);
+          } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to load image');
           }
           break;
         }
@@ -144,47 +224,74 @@ export default function ProfilePage() {
     [showAvatarUpload, processImageFile]
   );
 
-  // Add paste event listener
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // Handle avatar save
-  const handleAvatarSave = async () => {
-    if (!previewUrl) return;
-    setIsUploading(true);
-    try {
-      // TODO: Upload to server and get URL back
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate upload
-      setProfile((prev) => ({ ...prev, avatarUrl: previewUrl }));
-      setFormData((prev) => ({ ...prev, avatarUrl: previewUrl }));
-      setShowAvatarUpload(false);
-      setPreviewUrl(null);
-    } catch {
-      alert('Failed to upload avatar');
-    } finally {
-      setIsUploading(false);
-    }
+  const handleAvatarSave = () => {
+    if (!avatarFile) return;
+    uploadAvatarMutation.mutate(avatarFile, {
+      onSuccess: () => {
+        setShowAvatarUpload(false);
+        setPreviewUrl(null);
+        setAvatarFile(null);
+      },
+    });
   };
 
-  // Cancel avatar upload
   const handleAvatarCancel = () => {
     setShowAvatarUpload(false);
     setPreviewUrl(null);
+    setAvatarFile(null);
     setIsDragging(false);
   };
 
-  const handleSave = () => {
-    setProfile(formData);
-    setIsEditing(false);
-    // TODO: Call API to update profile
+  // ============ CHANGE PASSWORD HANDLERS ============
+
+  const onPasswordSubmit = (data: ChangePasswordFormData) => {
+    changePasswordMutation.mutate(data, {
+      onSuccess: () => {
+        setShowChangePassword(false);
+        resetPw();
+      },
+    });
   };
 
-  const handleCancel = () => {
-    setFormData(profile);
-    setIsEditing(false);
-  };
+  // ============ LOADING / ERROR STATES ============
+
+  if (isLoading) {
+    return (
+      <PatientLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 text-brand animate-spin" />
+            <p className="text-[var(--text-secondary)]">Loading profile...</p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <PatientLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+            <p className="text-[var(--text-primary)] font-medium">
+              Failed to load profile
+            </p>
+            <p className="text-[var(--text-secondary)] text-sm">
+              {error?.message || 'An unexpected error occurred'}
+            </p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
+
+  // ============ RENDER ============
 
   return (
     <PatientLayout userName={profile.fullName}>
@@ -315,8 +422,16 @@ export default function ProfilePage() {
 
                   {/* File requirements */}
                   <p className="text-xs text-[var(--text-muted)] text-center mt-3">
-                    Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB
+                    Supported formats: JPG, PNG, GIF, WebP &bull; Max size: 5MB
                   </p>
+
+                  {/* Upload error */}
+                  {uploadAvatarMutation.isError && (
+                    <p className="text-sm text-red-500 text-center mt-2">
+                      {uploadAvatarMutation.error?.message ||
+                        'Failed to upload avatar'}
+                    </p>
+                  )}
 
                   {/* Actions */}
                   <div className="flex gap-3 mt-6">
@@ -328,12 +443,12 @@ export default function ProfilePage() {
                     </button>
                     <button
                       onClick={handleAvatarSave}
-                      disabled={!previewUrl || isUploading}
+                      disabled={!avatarFile || uploadAvatarMutation.isPending}
                       className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isUploading ? (
+                      {uploadAvatarMutation.isPending ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           Uploading...
                         </>
                       ) : (
@@ -353,9 +468,19 @@ export default function ProfilePage() {
             </h2>
             <p className="text-[var(--text-secondary)] mb-4">{profile.email}</p>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-sm border border-green-100">
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border ${
+                profile.isEmailVerified
+                  ? 'bg-green-50 text-green-600 border-green-100'
+                  : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+              }`}
+            >
               <CheckCircle className="w-4 h-4" />
-              <span>Email Verified</span>
+              <span>
+                {profile.isEmailVerified
+                  ? 'Email Verified'
+                  : 'Email Not Verified'}
+              </span>
             </div>
           </div>
 
@@ -364,19 +489,24 @@ export default function ProfilePage() {
           {/* Quick Stats */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">
-                Total Screenings
-              </span>
-              <span className="text-[var(--text-primary)] font-medium">12</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">Appointments</span>
-              <span className="text-[var(--text-primary)] font-medium">8</span>
-            </div>
-            <div className="flex items-center justify-between">
               <span className="text-[var(--text-secondary)]">Member Since</span>
               <span className="text-[var(--text-primary)] font-medium">
-                Jan 2026
+                {new Date(profile.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                })}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-secondary)]">2FA Status</span>
+              <span
+                className={`font-medium ${
+                  profile.isTwoFactorEnabled
+                    ? 'text-green-600'
+                    : 'text-yellow-600'
+                }`}
+              >
+                {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
           </div>
@@ -385,13 +515,17 @@ export default function ProfilePage() {
         {/* Profile Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Information */}
-          <div className="medical-card">
+          <form
+            onSubmit={handleSubmit(onProfileSubmit)}
+            className="medical-card"
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 Personal Information
               </h2>
               {!isEditing ? (
                 <button
+                  type="button"
                   onClick={() => setIsEditing(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
@@ -401,21 +535,42 @@ export default function ProfilePage() {
               ) : (
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleCancel}
                     className="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleSave}
-                    className="btn-primary flex items-center gap-2"
+                    type="submit"
+                    disabled={updateProfileMutation.isPending}
+                    className="btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
-                    <Save className="w-4 h-4" />
+                    {updateProfileMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
                     Save
                   </button>
                 </div>
               )}
             </div>
+
+            {/* Update error */}
+            {updateProfileMutation.isError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {updateProfileMutation.error?.message ||
+                  'Failed to update profile'}
+              </div>
+            )}
+
+            {/* Update success */}
+            {updateProfileMutation.isSuccess && !isEditing && (
+              <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
+                Profile updated successfully!
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Full Name */}
@@ -425,14 +580,18 @@ export default function ProfilePage() {
                   Full Name
                 </label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.fullName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullName: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
+                  <div>
+                    <input
+                      {...register('fullName')}
+                      type="text"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    />
+                    {formErrors.fullName && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.fullName.message}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
                     {profile.fullName}
@@ -461,17 +620,21 @@ export default function ProfilePage() {
                   Phone Number
                 </label>
                 {isEditing ? (
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
+                  <div>
+                    <input
+                      {...register('phone')}
+                      type="tel"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    />
+                    {formErrors.phone && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.phone.message}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
-                    {profile.phone}
+                    {profile.phone || '\u2014'}
                   </p>
                 )}
               </div>
@@ -483,21 +646,30 @@ export default function ProfilePage() {
                   Date of Birth
                 </label>
                 {isEditing ? (
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dateOfBirth: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
+                  <div>
+                    <input
+                      {...register('dateOfBirth')}
+                      type="date"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    />
+                    {formErrors.dateOfBirth && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.dateOfBirth.message}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
-                    {new Date(profile.dateOfBirth).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                    {profile.dateOfBirth
+                      ? new Date(profile.dateOfBirth).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          }
+                        )
+                      : '\u2014'}
                   </p>
                 )}
               </div>
@@ -508,20 +680,25 @@ export default function ProfilePage() {
                   Gender
                 </label>
                 {isEditing ? (
-                  <select
-                    value={formData.gender}
-                    onChange={(e) =>
-                      setFormData({ ...formData, gender: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <div>
+                    <select
+                      {...register('gender')}
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    >
+                      <option value="">Prefer not to say</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {formErrors.gender && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.gender.message}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium capitalize">
-                    {profile.gender}
+                    {profile.gender || '\u2014'}
                   </p>
                 )}
               </div>
@@ -533,64 +710,26 @@ export default function ProfilePage() {
                   Address
                 </label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
+                  <div>
+                    <input
+                      {...register('address')}
+                      type="text"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    />
+                    {formErrors.address && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {formErrors.address.message}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
-                    {profile.address}
-                  </p>
-                )}
-              </div>
-
-              {/* City */}
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  City
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
-                ) : (
-                  <p className="text-[var(--text-primary)] font-medium">
-                    {profile.city}
-                  </p>
-                )}
-              </div>
-
-              {/* Country */}
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Country
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={(e) =>
-                      setFormData({ ...formData, country: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                  />
-                ) : (
-                  <p className="text-[var(--text-primary)] font-medium">
-                    {profile.country}
+                    {profile.address || '\u2014'}
                   </p>
                 )}
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Security Settings */}
           <div className="medical-card">
@@ -610,11 +749,14 @@ export default function ProfilePage() {
                       Password
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      Last changed 30 days ago
+                      Change your account password
                     </p>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]">
+                <button
+                  onClick={() => setShowChangePassword(true)}
+                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
+                >
                   Change
                 </button>
               </div>
@@ -622,18 +764,38 @@ export default function ProfilePage() {
               {/* Two-Factor Auth */}
               <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-green-600" />
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      profile.isTwoFactorEnabled
+                        ? 'bg-green-50'
+                        : 'bg-yellow-50'
+                    }`}
+                  >
+                    <Shield
+                      className={`w-5 h-5 ${
+                        profile.isTwoFactorEnabled
+                          ? 'text-green-600'
+                          : 'text-yellow-600'
+                      }`}
+                    />
                   </div>
                   <div>
                     <p className="text-[var(--text-primary)] font-medium">
                       Two-Factor Authentication
                     </p>
-                    <p className="text-sm text-green-600">Enabled</p>
+                    <p
+                      className={`text-sm ${
+                        profile.isTwoFactorEnabled
+                          ? 'text-green-600'
+                          : 'text-yellow-600'
+                      }`}
+                    >
+                      {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
+                    </p>
                   </div>
                 </div>
                 <Link
-                  to="/patient/security"
+                  to="/two-factor-auth"
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
                   Manage
@@ -663,6 +825,126 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                Change Password
+              </h3>
+              <button
+                onClick={() => {
+                  setShowChangePassword(false);
+                  resetPw();
+                  changePasswordMutation.reset();
+                }}
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-[var(--text-secondary)]" />
+              </button>
+            </div>
+
+            {changePasswordMutation.isError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {changePasswordMutation.error?.message ||
+                  'Failed to change password'}
+              </div>
+            )}
+
+            {changePasswordMutation.isSuccess && (
+              <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
+                Password changed successfully!
+              </div>
+            )}
+
+            <form
+              onSubmit={handleSubmitPw(onPasswordSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  Current Password
+                </label>
+                <input
+                  {...registerPw('currentPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {pwErrors.currentPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {pwErrors.currentPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  New Password
+                </label>
+                <input
+                  {...registerPw('newPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {pwErrors.newPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {pwErrors.newPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  Confirm New Password
+                </label>
+                <input
+                  {...registerPw('confirmNewPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {pwErrors.confirmNewPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {pwErrors.confirmNewPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowChangePassword(false);
+                    resetPw();
+                    changePasswordMutation.reset();
+                  }}
+                  className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changePasswordMutation.isPending}
+                  className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Changing...
+                    </>
+                  ) : (
+                    <>
+                      <Key className="w-4 h-4" />
+                      Change Password
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </PatientLayout>
   );
 }
