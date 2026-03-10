@@ -9,10 +9,9 @@ import type { Ophthalmologist } from '../../types';
 
 interface Props {
   professional: Ophthalmologist;
-  showActions?: boolean;
 }
 
-export function ProfessionalCard({ professional, showActions = true }: Props) {
+export function ProfessionalCard({ professional }: Props) {
   return (
     <div className="px-4 py-3">
       <div className="flex gap-3">
@@ -46,13 +45,6 @@ export function ProfessionalCard({ professional, showActions = true }: Props) {
                   ` · ${professional.organisationName}`}
               </p>
             </div>
-
-            {/* Actions */}
-            {showActions && (
-              <button className="btn-primary text-[13px] py-1.5 px-4 shrink-0">
-                Connect
-              </button>
-            )}
           </div>
 
           {/* Specialties */}

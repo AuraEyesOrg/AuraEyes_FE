@@ -4,18 +4,16 @@
  */
 
 import { useState } from 'react';
-import { Search, Users, Building2, UsersRound } from 'lucide-react';
+import { Search, Users, Building2 } from 'lucide-react';
 import { ProfessionalCard } from '../components/professional/ProfessionalCard';
 import { OrganisationCard } from '../components/organisation/OrganisationCard';
-import { GroupCard } from '../components/group/GroupCard';
-import { mockOphthalmologists, mockOrganisations, mockGroups } from '../data';
+import { mockOphthalmologists, mockOrganisations } from '../data';
 
-type TabType = 'professionals' | 'organisations' | 'groups';
+type TabType = 'professionals' | 'organisations';
 
 const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
   { id: 'professionals', label: 'Professionals', icon: Users },
   { id: 'organisations', label: 'Organisations', icon: Building2 },
-  { id: 'groups', label: 'Groups', icon: UsersRound },
 ];
 
 const specialties = [
@@ -39,7 +37,7 @@ function DiscoverPage() {
         <div className="px-4 py-3">
           <h2 className="text-xl font-bold text-text-main">Discover</h2>
           <p className="text-[13px] text-text-muted mt-0.5">
-            Find professionals, organisations, and groups in ophthalmology
+            Find professionals and organisations in ophthalmology
           </p>
         </div>
 
@@ -145,28 +143,6 @@ function DiscoverPage() {
               <div className="text-center py-12 px-4">
                 <Building2 className="w-12 h-12 text-text-muted mx-auto mb-3" />
                 <p className="text-text-muted">No organisations found</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === 'groups' && (
-          <>
-            <div className="px-4 py-3">
-              <p className="text-[13px] text-text-muted">
-                {mockGroups.length} groups found
-              </p>
-            </div>
-            {mockGroups.length > 0 ? (
-              mockGroups.map((group) => (
-                <div key={group.id} className="hover-card hover-animation">
-                  <GroupCard group={group} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 px-4">
-                <UsersRound className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No groups found</p>
               </div>
             )}
           </>

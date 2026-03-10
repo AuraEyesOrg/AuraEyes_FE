@@ -48,10 +48,6 @@ export function OrganisationCard({ organisation }: Props) {
                 {orgTypeLabels[organisation.type]}
               </p>
             </div>
-
-            <button className="btn-secondary text-[13px] py-1.5 px-4 shrink-0">
-              Follow
-            </button>
           </div>
 
           <p className="flex items-center gap-1 text-[13px] text-text-muted mt-1">

@@ -8,9 +8,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MoreHorizontal,
-  Bookmark,
-  BookmarkCheck,
-  Share2,
   MessageCircle,
   Lightbulb,
   ThumbsUp,
@@ -94,8 +91,6 @@ export function PostCard({ post }: Props) {
     post.userReaction
   );
   const [reactionCount, setReactionCount] = useState(post.totalReactions);
-  const [isSaved, setIsSaved] = useState(false);
-
   // Refs for timeout handling
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -145,10 +140,6 @@ export function PostCard({ post }: Props) {
       setShowMoreMenu(false);
     }, 150);
   }, []);
-
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-  };
 
   const CurrentReaction = userReaction ? reactionConfig[userReaction] : null;
 
@@ -224,17 +215,6 @@ export function PostCard({ post }: Props) {
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all">
                       <Copy className="w-4 h-4" />
                       Copy link
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all"
-                    >
-                      {isSaved ? (
-                        <BookmarkCheck className="w-4 h-4 text-brand-primary" />
-                      ) : (
-                        <Bookmark className="w-4 h-4" />
-                      )}
-                      {isSaved ? 'Saved' : 'Save post'}
                     </button>
                     <div className="my-1 border-t border-light-border" />
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-muted hover:bg-main-search-background transition-all">
@@ -409,31 +389,6 @@ export function PostCard({ post }: Props) {
                 {post.totalComments > 0 ? post.totalComments : ''}
               </span>
             </Link>
-
-            {/* Share */}
-            <button className="group flex items-center gap-1 p-2 text-text-muted hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all">
-              <Share2 className="w-[18px] h-[18px]" />
-              <span className="text-[13px]">
-                {post.totalShares > 0 ? post.totalShares : ''}
-              </span>
-            </button>
-
-            {/* Save */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleSave}
-              className={`group flex items-center p-2 rounded-full transition-all ${
-                isSaved
-                  ? 'text-brand-primary'
-                  : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
-              }`}
-            >
-              {isSaved ? (
-                <BookmarkCheck className="w-[18px] h-[18px]" />
-              ) : (
-                <Bookmark className="w-[18px] h-[18px]" />
-              )}
-            </motion.button>
           </div>
         </div>
       </div>
