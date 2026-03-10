@@ -11,6 +11,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
+  Clock,
   Edit2,
   Key,
   Layers,
@@ -797,6 +799,7 @@ export default function PermissionsPage() {
     { permissionId: string; isGranted: boolean } | undefined
   >(undefined);
   const [revokingUserPerm, setRevokingUserPerm] = useState<string | null>(null);
+  const [showOverrideHistory, setShowOverrideHistory] = useState(false);
   const userSearchRef = useRef<HTMLDivElement>(null);
 
   // ── Load helpers ──────────────────────────────────────────────────────────
@@ -1564,9 +1567,9 @@ export default function PermissionsPage() {
 
                         {/* User overrides — active only */}
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              User Overrides (
+                              Active Overrides (
                               {
                                 userEffective.userOverrides.filter(
                                   (ov) => ov.isActive
@@ -1639,6 +1642,77 @@ export default function PermissionsPage() {
                             </div>
                           )}
                         </div>
+
+                        {/* Override history — inactive/revoked — full width, collapsible */}
+                        {(() => {
+                          const history = userEffective.userOverrides.filter(
+                            (ov) => !ov.isActive
+                          );
+                          if (history.length === 0) return null;
+                          return (
+                            <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShowOverrideHistory((v) => !v)
+                                }
+                                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-200 dark:border-slate-700"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-slate-400" />
+                                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Override History ({history.length} revoked /
+                                    expired)
+                                  </h4>
+                                </div>
+                                {showOverrideHistory ? (
+                                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                                )}
+                              </button>
+                              {showOverrideHistory && (
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+                                  {history.map((ov) => (
+                                    <div
+                                      key={ov.userPermissionId}
+                                      className="flex items-center gap-3 px-5 py-3 opacity-60"
+                                    >
+                                      <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
+                                          {ov.permissionDisplayName}
+                                        </p>
+                                        <code className="text-xs text-slate-400">
+                                          {ov.permissionName}
+                                        </code>
+                                      </div>
+                                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                                        <span
+                                          className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                                            ov.isGranted
+                                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                          }`}
+                                        >
+                                          {ov.isGranted ? 'Granted' : 'Denied'}
+                                        </span>
+                                        <span className="text-xs text-slate-400">
+                                          {ov.isExpired ? 'Expired' : 'Revoked'}
+                                          {ov.expiresAt && ov.isExpired
+                                            ? ` · ${new Date(ov.expiresAt).toLocaleDateString()}`
+                                            : ''}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div className="rounded-xl border border-slate-200 dark:border-slate-700 py-12 text-center text-sm text-slate-500">
