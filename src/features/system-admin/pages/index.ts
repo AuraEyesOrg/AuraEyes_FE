@@ -14,5 +14,7 @@ export { default as SettingsPage } from './settings';
 // Legacy export - keeping users.tsx for backward compatibility
 export { default as UsersPage } from './users';
 
+export { default as PermissionsPage } from './permissions';
+
 // Legacy default export for backward compatibility
 export { default } from './dashboard';

@@ -8,3 +8,4 @@ export { organisationApi, deviceApi } from './organisation.api';
 export { userApi } from './user.api';
 export { aiModelApi } from './ai-model.api';
 export { auditApi, complianceApi } from './audit.api';
+export { permissionsApi } from './permissions.api';
