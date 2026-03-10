@@ -15,6 +15,8 @@ export { default as SettingsPage } from './settings';
 export { default as UsersPage } from './users';
 
 export { default as PermissionsPage } from './permissions';
+export { default as ContractTemplatesPage } from './contract-templates';
+export { default as ContractTemplateEditorPage } from './contract-template-editor';
 
 // Legacy default export for backward compatibility
 export { default } from './dashboard';
