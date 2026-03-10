@@ -867,7 +867,11 @@ export default function PermissionsPage() {
 
   const searchUsers = useCallback(async (query: string) => {
     const result = await userApi.getUsers(1, 50).catch(() => null);
-    const all = result?.items ?? [];
+    // API returns `fullName`; normalize to the `name` field expected by AdminUser type
+    const all = (result?.items ?? []).map((u) => ({
+      ...u,
+      name: ((u as unknown as { fullName?: string }).fullName ?? u.name) || '',
+    })) as AdminUser[];
     const q = query.toLowerCase();
     setUserResults(
       q
