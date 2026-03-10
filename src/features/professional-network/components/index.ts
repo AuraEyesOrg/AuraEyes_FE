@@ -5,7 +5,6 @@
 // Layouts
 export { NetworkLayout } from './layouts/NetworkLayout';
 export { NetworkSidebar } from './layouts/NetworkSidebar';
-export { NetworkRightPanel } from './layouts/NetworkRightPanel';
 
 // Professional
 export { ProfessionalAvatar } from './professional/ProfessionalAvatar';
