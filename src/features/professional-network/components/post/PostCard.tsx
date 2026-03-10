@@ -22,6 +22,8 @@ import {
   Microscope,
   Copy,
   Flag,
+  Bookmark,
+  BookmarkCheck,
   BadgeCheck,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
@@ -89,6 +91,7 @@ export function PostCard({ post }: Props) {
     post.userReaction
   );
   const [reactionCount, setReactionCount] = useState(post.totalReactions);
+  const [isSaved, setIsSaved] = useState(false);
   // Refs for timeout handling
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -140,6 +143,8 @@ export function PostCard({ post }: Props) {
   }, []);
 
   const CurrentReaction = userReaction ? reactionConfig[userReaction] : null;
+
+  const handleSave = () => setIsSaved((prev) => !prev);
 
   return (
     <article className="accent-tab hover-card relative flex flex-col gap-y-4 px-4 py-3 outline-none hover-animation border-b border-light-border">
@@ -205,6 +210,17 @@ export function PostCard({ post }: Props) {
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all">
                       <Copy className="w-4 h-4" />
                       Copy link
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all"
+                    >
+                      {isSaved ? (
+                        <BookmarkCheck className="w-4 h-4 text-brand-primary" />
+                      ) : (
+                        <Bookmark className="w-4 h-4" />
+                      )}
+                      {isSaved ? 'Saved' : 'Save post'}
                     </button>
                     <div className="my-1 border-t border-light-border" />
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
@@ -375,6 +391,23 @@ export function PostCard({ post }: Props) {
                 {post.totalComments > 0 ? post.totalComments : ''}
               </span>
             </Link>
+
+            {/* Save */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={handleSave}
+              className={`group flex items-center p-2 rounded-full transition-all ${
+                isSaved
+                  ? 'text-brand-primary'
+                  : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
+              }`}
+            >
+              {isSaved ? (
+                <BookmarkCheck className="w-[18px] h-[18px]" />
+              ) : (
+                <Bookmark className="w-[18px] h-[18px]" />
+              )}
+            </motion.button>
           </div>
         </div>
       </div>
