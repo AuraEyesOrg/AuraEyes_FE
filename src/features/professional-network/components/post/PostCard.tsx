@@ -14,7 +14,6 @@ import {
   HelpCircle,
   Heart,
   PartyPopper,
-  Pin,
   FileText,
   FlaskConical,
   HelpingHand,
@@ -23,7 +22,6 @@ import {
   Microscope,
   Copy,
   Flag,
-  UserMinus,
   BadgeCheck,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
@@ -145,14 +143,6 @@ export function PostCard({ post }: Props) {
 
   return (
     <article className="accent-tab hover-card relative flex flex-col gap-y-4 px-4 py-3 outline-none hover-animation border-b border-light-border">
-      {/* Pinned indicator */}
-      {post.isPinned && (
-        <div className="flex items-center gap-2 text-[13px] text-text-muted -mb-2 ml-[52px]">
-          <Pin className="w-3 h-3" />
-          <span className="font-bold">Pinned</span>
-        </div>
-      )}
-
       {/* Main content wrapper - flex row with avatar on left */}
       <div className="flex gap-x-3">
         {/* Avatar - fixed, never shrinks, aligned to top */}
@@ -217,10 +207,6 @@ export function PostCard({ post }: Props) {
                       Copy link
                     </button>
                     <div className="my-1 border-t border-light-border" />
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-muted hover:bg-main-search-background transition-all">
-                      <UserMinus className="w-4 h-4" />
-                      Unfollow author
-                    </button>
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                       <Flag className="w-4 h-4" />
                       Report post

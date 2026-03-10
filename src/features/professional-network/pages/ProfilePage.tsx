@@ -17,8 +17,6 @@ import {
   Award,
   Mail,
   MoreHorizontal,
-  UserPlus,
-  UserCheck,
   MessageCircle,
   Edit3,
   Eye,
@@ -26,7 +24,6 @@ import {
   Settings,
   BarChart3,
   TrendingUp,
-  UserMinus,
   Flag,
   Share2,
   Copy,
@@ -46,8 +43,6 @@ function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionPending, setConnectionPending] = useState(false);
   const [professional, _setProfessional] = useState<Ophthalmologist | null>(
     null
   );
@@ -65,18 +60,6 @@ function ProfilePage() {
     postImpressionsTrend: 8,
     searchAppearances: 340,
     searchAppearancesTrend: -3,
-  };
-
-  const handleConnect = () => {
-    if (isConnected) {
-      setIsConnected(false);
-    } else {
-      setConnectionPending(true);
-      setTimeout(() => {
-        setConnectionPending(false);
-        setIsConnected(true);
-      }, 1000);
-    }
   };
 
   const availableTabs: TabType[] = isOwnProfile
@@ -224,35 +207,6 @@ function ProfilePage() {
               </>
             ) : (
               <>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleConnect}
-                  disabled={connectionPending}
-                  className={`text-sm py-2 px-4 flex items-center gap-1.5 ${
-                    isConnected
-                      ? 'btn-secondary'
-                      : connectionPending
-                        ? 'btn-secondary opacity-75 cursor-wait'
-                        : 'btn-primary'
-                  }`}
-                >
-                  {isConnected ? (
-                    <>
-                      <UserCheck className="w-4 h-4" />
-                      Connected
-                    </>
-                  ) : connectionPending ? (
-                    <>
-                      <span className="animate-spin">⏳</span>
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      Connect
-                    </>
-                  )}
-                </motion.button>
                 <button className="btn-secondary text-sm py-2 px-4 flex items-center gap-1.5">
                   <MessageCircle className="w-4 h-4" />
                   Message
@@ -284,10 +238,6 @@ function ProfilePage() {
                           Copy link
                         </button>
                         <div className="my-1 border-t border-light-border" />
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-muted hover:bg-main-search-background transition-all">
-                          <UserMinus className="w-4 h-4" />
-                          Unfollow
-                        </button>
                         <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                           <Flag className="w-4 h-4" />
                           Report
