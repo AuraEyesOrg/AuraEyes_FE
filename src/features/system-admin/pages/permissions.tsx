@@ -570,19 +570,21 @@ function GrantUserPermissionModal({
   userId,
   userEmail,
   permissions,
+  initialValues,
   onClose,
   onSaved,
 }: {
   userId: string;
   userEmail: string;
   permissions: PermissionDto[];
+  initialValues?: { permissionId: string; isGranted: boolean };
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [form, setForm] = useState<GrantPermissionToUserPayload>({
     userId,
-    permissionId: '',
-    isGranted: true,
+    permissionId: initialValues?.permissionId ?? '',
+    isGranted: initialValues?.isGranted ?? true,
     expiresAt: '',
   });
   const [search, setSearch] = useState('');
@@ -791,6 +793,9 @@ export default function PermissionsPage() {
     useState<UserEffectivePermissionsDto | null>(null);
   const [userPermsLoading, setUserPermsLoading] = useState(false);
   const [showGrantModal, setShowGrantModal] = useState(false);
+  const [grantInitial, setGrantInitial] = useState<
+    { permissionId: string; isGranted: boolean } | undefined
+  >(undefined);
   const [revokingUserPerm, setRevokingUserPerm] = useState<string | null>(null);
   const userSearchRef = useRef<HTMLDivElement>(null);
 
@@ -1441,7 +1446,10 @@ export default function PermissionsPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => setShowGrantModal(true)}
+                        onClick={() => {
+                          setGrantInitial(undefined);
+                          setShowGrantModal(true);
+                        }}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all"
                       >
                         <Plus className="w-4 h-4" />
@@ -1489,57 +1497,129 @@ export default function PermissionsPage() {
                           </div>
                         </div>
 
-                        {/* User overrides — full width */}
-                        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        {/* Role-inherited permissions */}
+                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                              Inherited from Roles (
+                              {userEffective.rolePermissions.length})
+                            </h4>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              Add a deny override to block a role permission
+                            </p>
+                          </div>
+                          {userEffective.rolePermissions.length === 0 ? (
+                            <div className="py-8 text-center text-sm text-slate-500">
+                              No role permissions
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+                              {userEffective.rolePermissions.map((rp) => {
+                                const denied = userEffective.userOverrides.some(
+                                  (ov) =>
+                                    ov.permissionId === rp.id &&
+                                    !ov.isGranted &&
+                                    ov.isActive
+                                );
+                                return (
+                                  <div
+                                    key={rp.id}
+                                    className="flex items-center gap-3 px-5 py-3"
+                                  >
+                                    <Key className="w-4 h-4 text-slate-400 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                        {rp.displayName}
+                                      </p>
+                                      <code className="text-xs text-slate-500">
+                                        {rp.name}
+                                      </code>
+                                    </div>
+                                    {denied ? (
+                                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 shrink-0">
+                                        Denied
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          setGrantInitial({
+                                            permissionId: rp.id,
+                                            isGranted: false,
+                                          });
+                                          setShowGrantModal(true);
+                                        }}
+                                        className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0"
+                                        title="Add deny override"
+                                      >
+                                        <ShieldOff className="w-3 h-3" />
+                                        Deny
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* User overrides — active only */}
+                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                               User Overrides (
-                              {userEffective.userOverrides.length})
+                              {
+                                userEffective.userOverrides.filter(
+                                  (ov) => ov.isActive
+                                ).length
+                              }
+                              )
                             </h4>
                           </div>
-                          {userEffective.userOverrides.length === 0 ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              No individual overrides — user inherits role
-                              permissions only
+                          {userEffective.userOverrides.filter(
+                            (ov) => ov.isActive
+                          ).length === 0 ? (
+                            <div className="py-8 text-center text-sm text-slate-500">
+                              No active overrides
                             </div>
                           ) : (
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                              {userEffective.userOverrides.map((ov) => (
-                                <div
-                                  key={ov.userPermissionId}
-                                  className="flex items-center gap-3 px-5 py-3"
-                                >
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+                              {userEffective.userOverrides
+                                .filter((ov) => ov.isActive)
+                                .map((ov) => (
                                   <div
-                                    className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                                      ov.isGranted
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                                        : 'bg-red-100 dark:bg-red-900/30'
-                                    }`}
+                                    key={ov.userPermissionId}
+                                    className="flex items-center gap-3 px-5 py-3"
                                   >
-                                    {ov.isGranted ? (
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                    ) : (
-                                      <XCircle className="w-3.5 h-3.5 text-red-500" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                      {ov.permissionDisplayName}
-                                    </p>
-                                    <code className="text-xs text-slate-500">
-                                      {ov.permissionName}
-                                    </code>
-                                  </div>
-                                  <span
-                                    className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ${
-                                      ov.isGranted
-                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                        : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                                    }`}
-                                  >
-                                    {ov.isGranted ? 'Granted' : 'Revoked'}
-                                  </span>
-                                  {ov.isActive && (
+                                    <div
+                                      className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                                        ov.isGranted
+                                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                                          : 'bg-red-100 dark:bg-red-900/30'
+                                      }`}
+                                    >
+                                      {ov.isGranted ? (
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      ) : (
+                                        <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                        {ov.permissionDisplayName}
+                                      </p>
+                                      <code className="text-xs text-slate-500">
+                                        {ov.permissionName}
+                                      </code>
+                                    </div>
+                                    <span
+                                      className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ${
+                                        ov.isGranted
+                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                          : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                      }`}
+                                    >
+                                      {ov.isGranted ? 'Granted' : 'Denied'}
+                                    </span>
                                     <button
                                       onClick={() =>
                                         handleRevokeUserPerm(
@@ -1554,9 +1634,8 @@ export default function PermissionsPage() {
                                     >
                                       <X className="w-4 h-4" />
                                     </button>
-                                  )}
-                                </div>
-                              ))}
+                                  </div>
+                                ))}
                             </div>
                           )}
                         </div>
@@ -1624,9 +1703,14 @@ export default function PermissionsPage() {
           userId={selectedUser.id}
           userEmail={selectedUser.email}
           permissions={allPermissions}
-          onClose={() => setShowGrantModal(false)}
+          initialValues={grantInitial}
+          onClose={() => {
+            setShowGrantModal(false);
+            setGrantInitial(undefined);
+          }}
           onSaved={() => {
             setShowGrantModal(false);
+            setGrantInitial(undefined);
             loadUserEffective(selectedUser.id);
           }}
         />

@@ -372,7 +372,7 @@ export interface UserEffectivePermissionsDto {
   userId: string;
   userEmail: string;
   roles: string[];
-  rolePermissions: RolePermissionAssignment[];
+  rolePermissions: PermissionDto[];
   userOverrides: UserPermissionOverride[];
   effectivePermissionNames: string[];
 }
