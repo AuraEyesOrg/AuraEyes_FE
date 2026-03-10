@@ -13,6 +13,7 @@ export {
   UsersPage,
   AIModelsPage,
   AuditLogsPage,
+  PermissionsPage,
 } from './pages';
 
 // Components
@@ -35,6 +36,7 @@ export {
   aiModelApi,
   auditApi,
   complianceApi,
+  permissionsApi,
 } from './api';
 
 // Types - re-export all types

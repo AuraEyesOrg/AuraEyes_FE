@@ -127,6 +127,9 @@ const SystemAdminAuditLogs = lazy(
 const SystemAdminSettings = lazy(
   () => import('@/features/system-admin/pages/settings')
 );
+const SystemAdminPermissions = lazy(
+  () => import('@/features/system-admin/pages/permissions')
+);
 
 // Professional Network pages
 const NetworkLayout = lazy(() =>
@@ -304,6 +307,10 @@ const Router = () => (
         <Route
           path="/system-admin/settings"
           element={<SystemAdminSettings />}
+        />
+        <Route
+          path="/system-admin/permissions"
+          element={<SystemAdminPermissions />}
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
