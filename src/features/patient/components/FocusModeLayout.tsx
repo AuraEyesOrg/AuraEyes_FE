@@ -53,7 +53,6 @@ export default function FocusModeLayout({
               <button
                 onClick={handleExit}
                 className="p-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                title="Exit Focus Mode"
               >
                 <X className="w-5 h-5" />
               </button>
