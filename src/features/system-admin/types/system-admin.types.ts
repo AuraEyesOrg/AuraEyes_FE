@@ -328,3 +328,81 @@ export interface ApiResponse<T> {
   error?: ApiError;
   timestamp: string;
 }
+
+// ============ PERMISSIONS ============
+
+export interface PermissionDto {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  category?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RolePermissionAssignment {
+  rolePermissionId: string;
+  roleId: string;
+  roleName: string;
+  permissionId: string;
+  permissionName: string;
+  permissionDisplayName: string;
+  category?: string;
+  assignedAt: string;
+}
+
+export interface UserPermissionOverride {
+  userPermissionId: string;
+  userId: string;
+  permissionId: string;
+  permissionName: string;
+  permissionDisplayName: string;
+  category?: string;
+  isGranted: boolean;
+  isActive: boolean;
+  isExpired: boolean;
+  grantedAt: string;
+  expiresAt?: string;
+  grantedBy?: string;
+}
+
+export interface UserEffectivePermissionsDto {
+  userId: string;
+  userEmail: string;
+  roles: string[];
+  rolePermissions: RolePermissionAssignment[];
+  userOverrides: UserPermissionOverride[];
+  effectivePermissionNames: string[];
+}
+
+export interface ApplicationRoleDto {
+  id: string;
+  name: string;
+}
+
+export interface CreatePermissionPayload {
+  name: string;
+  displayName: string;
+  description?: string;
+  category?: string;
+}
+
+export interface UpdatePermissionPayload {
+  displayName: string;
+  description?: string;
+  category?: string;
+}
+
+export interface AssignPermissionToRolePayload {
+  roleId: string;
+  permissionId: string;
+}
+
+export interface GrantPermissionToUserPayload {
+  userId: string;
+  permissionId: string;
+  isGranted: boolean;
+  expiresAt?: string;
+}

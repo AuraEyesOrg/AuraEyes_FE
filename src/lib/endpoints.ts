@@ -90,6 +90,30 @@ export const API_ENDPOINTS = {
       REPORTS: '/system-admin/compliance/reports',
       GENERATE_REPORT: '/system-admin/compliance/reports/generate',
     },
+
+    // Permission Management
+    PERMISSIONS: {
+      LIST: '/system-admin/permissions',
+      DETAIL: (id: string) => `/system-admin/permissions/${id}`,
+      CREATE: '/system-admin/permissions',
+      UPDATE: (id: string) => `/system-admin/permissions/${id}`,
+      DELETE: (id: string) => `/system-admin/permissions/${id}`,
+      ROLES: {
+        ALL: '/system-admin/permissions/roles',
+        BY_ROLE: (roleId: string) =>
+          `/system-admin/permissions/roles/${roleId}`,
+        ASSIGN: '/system-admin/permissions/roles',
+        REMOVE: (rolePermId: string) =>
+          `/system-admin/permissions/roles/${rolePermId}`,
+      },
+      USERS: {
+        BY_USER: (userId: string) =>
+          `/system-admin/permissions/users/${userId}`,
+        GRANT: '/system-admin/permissions/users',
+        REVOKE: (userPermId: string) =>
+          `/system-admin/permissions/users/${userPermId}/revoke`,
+      },
+    },
   },
 
   // Patient features
