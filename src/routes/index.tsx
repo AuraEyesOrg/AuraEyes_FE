@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import PrivateRoute from './private-route';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -25,6 +26,11 @@ const ConfirmEmailPage = lazy(
 );
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
+);
+
+// Pending Approval page
+const PendingApprovalPage = lazy(
+  () => import('@/features/auth/pages/pending-approval')
 );
 
 // Patient pages
@@ -115,6 +121,9 @@ const SystemAdminPatients = lazy(
 const SystemAdminOphthalmologists = lazy(
   () => import('@/features/system-admin/pages/ophthalmologists')
 );
+const SystemAdminVerificationRequests = lazy(
+  () => import('@/features/system-admin/pages/verification-requests')
+);
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
@@ -196,6 +205,7 @@ const Router = () => (
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
         <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
 
         {/* ============ PATIENT ROUTES ============ */}
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
@@ -243,39 +253,75 @@ const Router = () => (
         {/* ============ OPHTHALMOLOGIST ROUTES ============ */}
         <Route
           path="/ophthalmologist/dashboard"
-          element={<OphthalmologistDashboard />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistDashboard />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/patients"
-          element={<OphthalmologistPatientsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistPatientsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/screenings"
-          element={<OphthalmologistScreeningsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistScreeningsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/analytics"
-          element={<OphthalmologistAnalyticsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistAnalyticsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/appointments"
-          element={<OphthalmologistAppointmentsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistAppointmentsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/settings"
-          element={<OphthalmologistSettingsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistSettingsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/consultations"
-          element={<OphthalmologistConsultationsPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistConsultationsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/screenings/:screeningId/review"
-          element={<OphthalmologistScreeningReviewPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistScreeningReviewPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/ophthalmologist/schedules"
-          element={<OphthalmologistSchedulesPage />}
+          element={
+            <PrivateRoute>
+              <OphthalmologistSchedulesPage />
+            </PrivateRoute>
+          }
         />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
@@ -294,6 +340,10 @@ const Router = () => (
         <Route
           path="/system-admin/ophthalmologists"
           element={<SystemAdminOphthalmologists />}
+        />
+        <Route
+          path="/system-admin/verifications"
+          element={<SystemAdminVerificationRequests />}
         />
         <Route path="/system-admin/users" element={<SystemAdminUsers />} />
         <Route

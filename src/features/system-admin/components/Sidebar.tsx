@@ -17,6 +17,7 @@ import {
   Stethoscope,
   KeyRound,
   ScrollText,
+  ClipboardCheck,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 
@@ -31,6 +32,11 @@ const navItems = [
     label: 'Ophthalmologists',
     icon: Stethoscope,
     path: '/system-admin/ophthalmologists',
+  },
+  {
+    label: 'Verifications',
+    icon: ClipboardCheck,
+    path: '/system-admin/verifications',
   },
   { label: 'Patients', icon: Users, path: '/system-admin/patients' },
   { label: 'AI Performance', icon: Shield, path: '/system-admin/ai-models' },

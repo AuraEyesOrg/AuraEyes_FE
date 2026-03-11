@@ -114,8 +114,12 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          navigate('/ophthalmologist/dashboard');
-        } else if (roles.includes('OrgAdmin')) {
+          if (response.user?.isVerified === false) {
+            navigate('/pending-approval');
+          } else {
+            navigate('/ophthalmologist/dashboard');
+          }
+        } else if (roles.includes('Organization')) {
           navigate('/organisation/dashboard');
         } else {
           navigate('/dashboard');
@@ -237,7 +241,11 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          navigate('/ophthalmologist/dashboard');
+          if (response.user?.isVerified === false) {
+            navigate('/pending-approval');
+          } else {
+            navigate('/ophthalmologist/dashboard');
+          }
         } else if (roles.includes('Organization')) {
           navigate('/organisation/dashboard');
         } else {
