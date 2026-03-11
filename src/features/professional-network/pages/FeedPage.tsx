@@ -10,14 +10,32 @@ import { PostCard } from '../components/post/PostCard';
 import { FeedSkeleton } from '../components/post/PostSkeleton';
 import { useFeedPosts } from '../hooks/useNetworkPosts';
 import { useTrendingTopics } from '../hooks/useTrendingTopics';
+import { useToggleReaction } from '../hooks/useToggleReaction';
+import { useToggleSavePost } from '../hooks/useToggleSavePost';
+import type { ReactionType } from '../types';
 
 function FeedPage() {
   const [page, setPage] = useState(1);
   const { data: feedData, isLoading, isError, error } = useFeedPosts(page);
   const { data: trendingData } = useTrendingTopics();
+  const toggleReaction = useToggleReaction();
+  const toggleSave = useToggleSavePost();
 
   const posts = feedData?.items ?? [];
   const trendingTopics = trendingData ?? [];
+
+  const handleReaction = (postId: string, type: ReactionType) => {
+    const post = posts.find((p) => p.id === postId);
+    toggleReaction.mutate({
+      postId,
+      type,
+      currentReaction: post?.currentUserReaction,
+    });
+  };
+
+  const handleSave = (postId: string) => {
+    toggleSave.mutate(postId);
+  };
 
   return (
     <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
@@ -64,7 +82,11 @@ function FeedPage() {
                 key={post.id}
                 className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 overflow-hidden"
               >
-                <PostCard post={post} />
+                <PostCard
+                  post={post}
+                  onReaction={handleReaction}
+                  onSave={handleSave}
+                />
               </div>
             ))}
 

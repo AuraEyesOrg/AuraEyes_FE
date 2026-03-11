@@ -80,14 +80,14 @@ const reactionConfig: Record<
 export function PostCard({ post, onReaction, onSave }: Props) {
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [userReaction, setUserReaction] = useState<ReactionType | undefined>(
-    post.currentUserReaction
-  );
-  const [reactionCount, setReactionCount] = useState(post.reactionCount);
-  const [isSaved, setIsSaved] = useState(post.isBookmarked);
   // Refs for timeout handling
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Read directly from post prop (optimistic updates modify query cache)
+  const userReaction = post.currentUserReaction;
+  const reactionCount = post.reactionCount;
+  const isSaved = post.isBookmarked;
 
   const TypeConfig = postTypeConfig[post.category];
   const TypeIcon = TypeConfig.icon;
@@ -108,15 +108,6 @@ export function PostCard({ post, onReaction, onSave }: Props) {
   }, []);
 
   const handleReaction = (type: ReactionType) => {
-    if (userReaction === type) {
-      setUserReaction(undefined);
-      setReactionCount((prev) => prev - 1);
-    } else {
-      if (!userReaction) {
-        setReactionCount((prev) => prev + 1);
-      }
-      setUserReaction(type);
-    }
     setShowReactions(false);
     onReaction?.(post.id, type);
   };
@@ -139,7 +130,6 @@ export function PostCard({ post, onReaction, onSave }: Props) {
   const CurrentReaction = userReaction ? reactionConfig[userReaction] : null;
 
   const handleSave = () => {
-    setIsSaved((prev) => !prev);
     onSave?.(post.id);
   };
 
