@@ -8,6 +8,7 @@
 import { useState, useDeferredValue } from 'react';
 import { Search, Users, Building2, BookOpen } from 'lucide-react';
 import { CompactPostCard } from '../components/post/CompactPostCard';
+import { DiscoverSkeleton } from '../components/post/PostSkeleton';
 import { useDiscoverPosts } from '../hooks/useNetworkPosts';
 
 type TabType = 'professionals' | 'organisations';
@@ -129,28 +130,16 @@ function DiscoverPage() {
       {/* Results */}
       <div className="divide-y divide-light-border">
         {/* Count row */}
-        <div className="px-4 py-2.5">
-          <p className="text-[13px] text-text-muted">
-            {isLoading || isFetching
-              ? 'Loading...'
-              : `${posts.length} post${posts.length !== 1 ? 's' : ''} found`}
-          </p>
-        </div>
+        {!isLoading && !isFetching && (
+          <div className="px-4 py-2.5">
+            <p className="text-[13px] text-text-muted">
+              {posts.length} post{posts.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
+        )}
 
         {isLoading || isFetching ? (
-          /* Skeleton */
-          <>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 animate-pulse flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-main-search-background shrink-0" />
-                <div className="flex-1 space-y-2 pt-1">
-                  <div className="h-3.5 w-28 rounded bg-main-search-background" />
-                  <div className="h-3 w-full rounded bg-main-search-background" />
-                  <div className="h-3 w-3/4 rounded bg-main-search-background" />
-                </div>
-              </div>
-            ))}
-          </>
+          <DiscoverSkeleton count={6} />
         ) : posts.length > 0 ? (
           posts.map((post) => <CompactPostCard key={post.id} post={post} />)
         ) : (
