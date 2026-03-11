@@ -182,11 +182,112 @@ body {
   }
 
   .badge-risk-medium {
-    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-orange-100 text-orange-800;
+    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400;
   }
 
   .badge-risk-high {
-    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-red-100 text-red-800;
+    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  /* =============================================
+     Shared Role-Agnostic Dark/Light Utilities
+     ============================================= */
+
+  /* Header - transparent background consistent across all roles */
+  .role-header {
+    @apply bg-transparent py-4 px-6;
+  }
+
+  /* Header action button - theme toggle, notifications, etc. */
+  .header-action-btn {
+    @apply p-2 rounded-lg bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors;
+  }
+
+  /* Header search input */
+  .header-search-input {
+    @apply bg-gray-100 dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-primary;
+  }
+
+  /* Breadcrumb text */
+  .breadcrumb-text {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .breadcrumb-active {
+    @apply text-gray-900 dark:text-white;
+  }
+
+  /* Dropdown menu (profile, settings, etc.) */
+  .dropdown-menu {
+    @apply bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] rounded-xl shadow-xl py-2 z-50;
+  }
+
+  .dropdown-item {
+    @apply block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2d4a6f] hover:text-primary transition-colors;
+  }
+
+  .dropdown-danger {
+    @apply block w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
+  }
+
+  /* Action card - Quick Action / Secondary Action */
+  .action-card {
+    @apply bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] rounded-xl shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  /* Surface for cards, modals, panels */
+  .surface-primary {
+    @apply bg-white dark:bg-[#1e3a5f];
+  }
+
+  .surface-secondary {
+    @apply bg-gray-50 dark:bg-[#0f2847];
+  }
+
+  .surface-border {
+    @apply border border-(--border-color) dark:border-[#2d4a6f];
+  }
+
+  /* Text utilities for consistent dark/light */
+  .text-heading {
+    @apply text-gray-900 dark:text-white;
+  }
+
+  .text-body {
+    @apply text-gray-700 dark:text-gray-300;
+  }
+
+  .text-caption {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .text-subtle {
+    @apply text-gray-400 dark:text-gray-500;
+  }
+
+  /* Icon background utilities with dark mode */
+  .icon-bg-blue {
+    @apply bg-blue-50 dark:bg-blue-900/20;
+  }
+
+  .icon-bg-pink {
+    @apply bg-pink-50 dark:bg-pink-900/20;
+  }
+
+  .icon-bg-orange {
+    @apply bg-orange-50 dark:bg-orange-900/20;
+  }
+
+  .icon-bg-green {
+    @apply bg-green-50 dark:bg-green-900/20;
+  }
+
+  .icon-bg-red {
+    @apply bg-red-50 dark:bg-red-900/20;
+  }
+
+  .icon-bg-purple {
+    @apply bg-purple-50 dark:bg-purple-900/20;
   }
 }
 

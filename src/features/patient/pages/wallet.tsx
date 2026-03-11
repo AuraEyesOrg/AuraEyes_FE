@@ -123,7 +123,7 @@ export default function WalletPage() {
       case 'refund':
         return <RefreshCw className="w-5 h-5 text-blue-600" />;
       default:
-        return <History className="w-5 h-5 text-gray-500" />;
+        return <History className="w-5 h-5 text-gray-500 dark:text-gray-400" />;
     }
   };
 

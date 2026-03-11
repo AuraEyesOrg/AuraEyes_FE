@@ -116,8 +116,8 @@ export default function Sidebar() {
         {/* User Profile Footer */}
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0">
                 {initials || 'SA'}
               </div>
               <div className="flex flex-col overflow-hidden">
