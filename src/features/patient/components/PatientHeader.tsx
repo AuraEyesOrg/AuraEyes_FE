@@ -1,14 +1,10 @@
-import { Search, Bell, Moon, Sun, User } from 'lucide-react';
+import { Search, Bell, Moon, Sun } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import useAuthStore from '@/store/auth-store';
 
 export default function PatientHeader() {
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuthStore();
   const location = useLocation();
-
-  const displayInitial = user?.fullName?.split(' ').pop()?.charAt(0) || 'P';
 
   const pageName = (() => {
     const segments = location.pathname.split('/').filter(Boolean);
@@ -54,16 +50,6 @@ export default function PatientHeader() {
           <button className="header-action-btn relative">
             <Bell size={20} />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-
-          {/* User Profile */}
-          <button className="flex items-center gap-2 header-action-btn">
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-teal-500 flex items-center justify-center">
-              <User size={18} className="text-white" />
-            </div>
-            <span className="text-sm font-medium text-heading hidden md:block">
-              {displayInitial}
-            </span>
           </button>
         </div>
       </div>
