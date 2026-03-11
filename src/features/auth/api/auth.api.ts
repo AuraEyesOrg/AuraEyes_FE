@@ -269,12 +269,21 @@ export const resetPassword = async (
 };
 
 /**
- * Confirm email address
+ * Confirm email address via token link
  */
 export const confirmEmail = async (
   data: ConfirmEmailRequest
 ): Promise<void> => {
-  await api.post(`${AUTH_BASE_URL}/confirm-email`, data);
+  await api.get(`${AUTH_BASE_URL}/confirm-email`, { params: data });
+};
+
+/**
+ * Resend email confirmation link
+ */
+export const resendConfirmation = async (
+  data: ForgotPasswordRequest
+): Promise<void> => {
+  await api.post(`${AUTH_BASE_URL}/resend-confirmation`, data);
 };
 
 /**

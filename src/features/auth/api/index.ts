@@ -14,6 +14,7 @@ export {
   forgotPassword,
   resetPassword,
   confirmEmail,
+  resendConfirmation,
   getCurrentUser,
   isTwoFactorRequired,
   saveAuthTokens,
