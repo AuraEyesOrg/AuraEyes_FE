@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   FileText,
@@ -20,89 +21,27 @@ import {
   Stethoscope,
   Building2,
   Clock,
+  Loader2,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
-
-/* ─── Types ──────────────────────────────────────────────── */
-interface ContractTemplate {
-  id: string;
-  name: string;
-  type: 'ophthalmologist' | 'organization';
-  description: string;
-  variableCount: number;
-  status: 'active' | 'draft' | 'archived';
-  createdAt: string;
-  lastModified: string;
-  usageCount: number;
-}
-
-/* ─── Mock data ─────────────────────────────────────────── */
-const MOCK_TEMPLATES: ContractTemplate[] = [
-  {
-    id: 'tpl-001',
-    name: 'Hợp đồng hợp tác chuyên môn y khoa',
-    type: 'ophthalmologist',
-    description:
-      'Hợp đồng dành cho bác sĩ nhãn khoa ký kết với Aura Eyes Vietnam, bao gồm điều khoản tài chính, bảo mật và hiệu lực.',
-    variableCount: 12,
-    status: 'active',
-    createdAt: '2025-11-01',
-    lastModified: '2026-02-15',
-    usageCount: 47,
-  },
-  {
-    id: 'tpl-002',
-    name: 'Hợp đồng liên kết cung cấp dịch vụ y tế',
-    type: 'organization',
-    description:
-      'Hợp đồng dành cho tổ chức y tế (phòng khám, bệnh viện) liên kết cung cấp thiết bị và dịch vụ tầm soát đáy mắt.',
-    variableCount: 15,
-    status: 'active',
-    createdAt: '2025-11-01',
-    lastModified: '2026-02-20',
-    usageCount: 23,
-  },
-  {
-    id: 'tpl-003',
-    name: 'Hợp đồng thử nghiệm – Bác sĩ (v2)',
-    type: 'ophthalmologist',
-    description:
-      'Phiên bản thử nghiệm với điều khoản chia sẻ doanh thu linh hoạt theo hiệu suất.',
-    variableCount: 14,
-    status: 'draft',
-    createdAt: '2026-01-10',
-    lastModified: '2026-03-08',
-    usageCount: 0,
-  },
-];
+import { contractTemplatesApi } from '../api/contract-templates.api';
+import type { ContractTemplateDto } from '../types/system-admin.types';
 
 /* ─── Status badge ─────────────────────────────────────── */
-function StatusBadge({ status }: { status: ContractTemplate['status'] }) {
-  const map = {
-    active: {
-      label: 'Active',
-      icon: CheckCircle2,
-      cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    },
-    draft: {
-      label: 'Draft',
-      icon: Clock,
-      cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    },
-    archived: {
-      label: 'Archived',
-      icon: AlertCircle,
-      cls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-    },
-  };
-  const { label, icon: Icon, cls } = map[status];
+function StatusBadge({ isActive }: { isActive: boolean }) {
+  if (isActive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+        <CheckCircle2 className="w-3 h-3" />
+        Active
+      </span>
+    );
+  }
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cls}`}
-    >
-      <Icon className="w-3 h-3" />
-      {label}
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+      <Clock className="w-3 h-3" />
+      Inactive
     </span>
   );
 }
@@ -113,27 +52,27 @@ function TemplateCard({
   onEdit,
   onDuplicate,
   onDelete,
+  isDuplicating,
 }: {
-  template: ContractTemplate;
+  template: ContractTemplateDto;
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (tpl: ContractTemplateDto) => void;
+  isDuplicating: boolean;
 }) {
-  const TypeIcon =
-    template.type === 'ophthalmologist' ? Stethoscope : Building2;
-  const typeLabel =
-    template.type === 'ophthalmologist' ? 'Ophthalmologist' : 'Organization';
-  const typeClr =
-    template.type === 'ophthalmologist'
-      ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-      : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400';
+  const isOphthalmologist = template.type === 'OphthalmologistContract';
+  const TypeIcon = isOphthalmologist ? Stethoscope : Building2;
+  const typeLabel = isOphthalmologist ? 'Ophthalmologist' : 'Organization';
+  const typeClr = isOphthalmologist
+    ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
+    : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400';
 
   return (
     <div className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden">
       {/* Colorful header strip */}
       <div
         className={`h-1.5 w-full ${
-          template.type === 'ophthalmologist'
+          isOphthalmologist
             ? 'bg-gradient-to-r from-violet-500 to-purple-400'
             : 'bg-gradient-to-r from-cyan-500 to-blue-400'
         }`}
@@ -144,14 +83,14 @@ function TemplateCard({
         <div className="flex items-start gap-3">
           <div
             className={`p-2.5 rounded-xl ${
-              template.type === 'ophthalmologist'
+              isOphthalmologist
                 ? 'bg-violet-100 dark:bg-violet-900/30'
                 : 'bg-cyan-100 dark:bg-cyan-900/30'
             }`}
           >
             <TypeIcon
               className={`w-5 h-5 ${
-                template.type === 'ophthalmologist'
+                isOphthalmologist
                   ? 'text-violet-600 dark:text-violet-400'
                   : 'text-cyan-600 dark:text-cyan-400'
               }`}
@@ -160,7 +99,7 @@ function TemplateCard({
 
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug line-clamp-2">
-              {template.name}
+              {template.title}
             </h3>
             <span
               className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${typeClr}`}
@@ -170,12 +109,22 @@ function TemplateCard({
             </span>
           </div>
 
-          <StatusBadge status={template.status} />
+          <StatusBadge isActive={template.isActive} />
         </div>
 
-        {/* Description */}
-        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-          {template.description}
+        {/* Version */}
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          Version:{' '}
+          <span className="font-medium text-slate-700 dark:text-slate-300">
+            {template.contractVersion}
+          </span>
+          {template.effectiveDate && (
+            <>
+              {' '}
+              &nbsp;·&nbsp; Effective:{' '}
+              {new Date(template.effectiveDate).toLocaleDateString('vi-VN')}
+            </>
+          )}
         </p>
 
         {/* Stats row */}
@@ -190,7 +139,9 @@ function TemplateCard({
           </span>
           <span className="flex items-center gap-1 ml-auto">
             <Calendar className="w-3.5 h-3.5" />
-            {new Date(template.lastModified).toLocaleDateString('vi-VN')}
+            {new Date(
+              template.updatedAt ?? template.createdAt
+            ).toLocaleDateString('vi-VN')}
           </span>
         </div>
 
@@ -213,12 +164,17 @@ function TemplateCard({
           <button
             onClick={() => onDuplicate(template.id)}
             title="Duplicate"
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"
+            disabled={isDuplicating}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors disabled:opacity-50"
           >
-            <Copy className="w-4 h-4" />
+            {isDuplicating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
           <button
-            onClick={() => onDelete(template.id)}
+            onClick={() => onDelete(template)}
             title="Delete"
             className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"
           >
@@ -233,10 +189,12 @@ function TemplateCard({
 /* ─── Delete confirmation dialog ───────────────────────── */
 function DeleteDialog({
   name,
+  isDeleting,
   onConfirm,
   onCancel,
 }: {
   name: string;
+  isDeleting: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -261,14 +219,17 @@ function DeleteDialog({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+            disabled={isDeleting}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-70"
           >
+            {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
             Delete
           </button>
         </div>
@@ -280,55 +241,77 @@ function DeleteDialog({
 /* ─── Main page ─────────────────────────────────────────── */
 export default function ContractTemplatesPage() {
   const navigate = useNavigate();
-  const [templates, setTemplates] =
-    useState<ContractTemplate[]>(MOCK_TEMPLATES);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<ContractTemplate | null>(
+  const [deleteTarget, setDeleteTarget] = useState<ContractTemplateDto | null>(
     null
   );
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
-  const filtered = templates.filter(
-    (t) =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.type.toLowerCase().includes(search.toLowerCase())
-  );
+  /* ── Fetch templates ── */
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['contract-templates', search],
+    queryFn: () =>
+      contractTemplatesApi.getContractTemplates({
+        searchTerm: search || undefined,
+        pageSize: 100,
+      }),
+    staleTime: 1000 * 30,
+  });
+
+  const templates = data?.items ?? [];
+
+  /* ── Delete mutation ── */
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => contractTemplatesApi.deleteContractTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
+      setDeleteTarget(null);
+    },
+  });
+
+  /* ── Duplicate: load detail then create ── */
+  const handleDuplicate = async (id: string) => {
+    setDuplicatingId(id);
+    try {
+      const detail = await contractTemplatesApi.getContractTemplateById(id);
+      if (!detail) return;
+      await contractTemplatesApi.createContractTemplate({
+        title: `${detail.title} (copy)`,
+        type: detail.type === 'OphthalmologistContract' ? 1 : 2,
+        contractVersion: detail.contractVersion,
+        contentTemplate: detail.contentTemplate,
+        effectiveDate: detail.effectiveDate,
+        variables: detail.variables.map((v) => ({
+          key: v.key,
+          label: v.label,
+          variableType: 1, // Text default
+          description: v.description,
+          defaultValue: v.defaultValue,
+          selectOptions: v.selectOptions,
+          unit: v.unit,
+          isRequired: v.isRequired,
+          sortOrder: v.sortOrder,
+        })),
+      });
+      queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
 
   const handleEdit = (id: string) =>
     navigate(`/system-admin/contract-templates/${id}/edit`);
 
-  const handleDuplicate = (id: string) => {
-    const source = templates.find((t) => t.id === id);
-    if (!source) return;
-    const copy: ContractTemplate = {
-      ...source,
-      id: `tpl-${Date.now()}`,
-      name: `${source.name} (copy)`,
-      status: 'draft',
-      usageCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastModified: new Date().toISOString().split('T')[0],
-    };
-    setTemplates((prev) => [...prev, copy]);
-  };
-
-  const handleDelete = (id: string) => {
-    const tpl = templates.find((t) => t.id === id);
-    if (tpl) setDeleteTarget(tpl);
-  };
+  const handleDelete = (tpl: ContractTemplateDto) => setDeleteTarget(tpl);
 
   const confirmDelete = () => {
-    if (deleteTarget) {
-      setTemplates((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-      setDeleteTarget(null);
-    }
+    if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
   };
 
-  const stats = {
-    total: templates.length,
-    active: templates.filter((t) => t.status === 'active').length,
-    draft: templates.filter((t) => t.status === 'draft').length,
-    totalContracts: templates.reduce((s, t) => s + t.usageCount, 0),
-  };
+  const activeCount = templates.filter((t) => t.isActive).length;
+  const inactiveCount = templates.filter((t) => !t.isActive).length;
+  const totalContracts = templates.reduce((s, t) => s + t.usageCount, 0);
 
   return (
     <div className="flex h-screen bg-(--bg-primary) overflow-hidden">
@@ -355,18 +338,22 @@ export default function ContractTemplatesPage() {
             {[
               {
                 label: 'Total Templates',
-                value: stats.total,
+                value: templates.length,
                 color: 'text-slate-700 dark:text-slate-200',
               },
               {
                 label: 'Active',
-                value: stats.active,
+                value: activeCount,
                 color: 'text-emerald-600',
               },
-              { label: 'Drafts', value: stats.draft, color: 'text-amber-600' },
+              {
+                label: 'Inactive',
+                value: inactiveCount,
+                color: 'text-amber-600',
+              },
               {
                 label: 'Contracts Issued',
-                value: stats.totalContracts,
+                value: totalContracts,
                 color: 'text-violet-600',
               },
             ].map((s) => (
@@ -377,7 +364,13 @@ export default function ContractTemplatesPage() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
                   {s.label}
                 </p>
-                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className={`text-2xl font-bold ${s.color}`}>
+                  {isLoading ? (
+                    <span className="inline-block w-8 h-6 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                  ) : (
+                    s.value
+                  )}
+                </p>
               </div>
             ))}
           </div>
@@ -394,48 +387,72 @@ export default function ContractTemplatesPage() {
               />
             </div>
             <span className="text-sm text-slate-400">
-              {filtered.length} template{filtered.length !== 1 ? 's' : ''}
+              {templates.length} template{templates.length !== 1 ? 's' : ''}
             </span>
           </div>
 
-          {/* Template grid */}
-          {filtered.length === 0 ? (
-            <div className="text-center py-20 text-slate-400">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No templates found</p>
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {/* Create new card */}
-              <button
-                onClick={() => navigate('/system-admin/contract-templates/new')}
-                className="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 p-10 text-slate-400 hover:text-primary min-h-[240px]"
-              >
-                <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-700 group-hover:bg-primary/10 transition-colors">
-                  <Plus className="w-6 h-6" />
-                </div>
-                <span className="text-sm font-semibold">
-                  Create New Template
-                </span>
-              </button>
+          )}
 
-              {filtered.map((tpl) => (
-                <TemplateCard
-                  key={tpl.id}
-                  template={tpl}
-                  onEdit={handleEdit}
-                  onDuplicate={handleDuplicate}
-                  onDelete={handleDelete}
-                />
-              ))}
+          {/* Error state */}
+          {isError && (
+            <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              Failed to load templates:{' '}
+              {(error as Error)?.message ?? 'Unknown error'}
             </div>
+          )}
+
+          {/* Template grid */}
+          {!isLoading && !isError && (
+            <>
+              {templates.length === 0 ? (
+                <div className="text-center py-20 text-slate-400">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">No templates found</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {/* Create new card */}
+                  <button
+                    onClick={() =>
+                      navigate('/system-admin/contract-templates/new')
+                    }
+                    className="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 p-10 text-slate-400 hover:text-primary min-h-[240px]"
+                  >
+                    <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-700 group-hover:bg-primary/10 transition-colors">
+                      <Plus className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-semibold">
+                      Create New Template
+                    </span>
+                  </button>
+
+                  {templates.map((tpl) => (
+                    <TemplateCard
+                      key={tpl.id}
+                      template={tpl}
+                      onEdit={handleEdit}
+                      onDuplicate={handleDuplicate}
+                      onDelete={handleDelete}
+                      isDuplicating={duplicatingId === tpl.id}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {deleteTarget && (
         <DeleteDialog
-          name={deleteTarget.name}
+          name={deleteTarget.title}
+          isDeleting={deleteMutation.isPending}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />
