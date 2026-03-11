@@ -15,3 +15,7 @@ export { default as SecondaryActionCard } from './SecondaryActionCard';
 
 // UI Components
 export { default as HighlightCard } from './highlight-card';
+
+// Quota Components
+export { QuotaBadge } from './QuotaBadge';
+export { TopUpQuotaModal } from './TopUpQuotaModal';
