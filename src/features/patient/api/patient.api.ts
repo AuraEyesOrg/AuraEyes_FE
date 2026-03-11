@@ -35,6 +35,7 @@ export const PATIENT_ENDPOINTS = {
     GET: '/patient/profile',
     UPDATE: '/patient/profile',
     UPLOAD_AVATAR: '/patient/profile/avatar',
+    CHANGE_PASSWORD: '/patient/profile/change-password',
   },
 
   // Retinal Images & Screening
@@ -156,6 +157,14 @@ export const uploadAvatar = async (file: File): Promise<string> => {
     }
   );
   return response.data.data!.avatarUrl;
+};
+
+export const changePassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}): Promise<void> => {
+  await api.post(PATIENT_ENDPOINTS.PROFILE.CHANGE_PASSWORD, data);
 };
 
 // ============ IMAGES API ============

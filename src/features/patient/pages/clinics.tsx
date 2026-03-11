@@ -120,7 +120,7 @@ export default function ClinicsPage() {
   });
 
   return (
-    <PatientLayout userName="John Doe">
+    <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
           Find Partner Clinics & Hospitals

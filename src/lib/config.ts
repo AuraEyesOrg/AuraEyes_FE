@@ -8,9 +8,9 @@ export const PWAConfig: Partial<VitePWAOptions> = {
     'apple-touch-icon.png',
   ],
   manifest: {
-    name: 'React Query Zustand Boilerplate',
-    short_name: 'boilerplate',
-    description: 'Boilerplate with React, Zustand, and Vite',
+    name: 'System for Retinal Vascular Health Screening',
+    short_name: 'AURA EYES',
+    description: 'AURA EYES - System for Retinal Vascular Health Screening',
     theme_color: '#ffffff',
     start_url: '/',
     scope: '/',

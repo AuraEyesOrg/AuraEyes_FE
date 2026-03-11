@@ -22,4 +22,11 @@ export type MutationHandler<TData, TVariables> = (
   >
 ) => UseMutationResult<TData, Error, TVariables>;
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 2,
+    },
+  },
+});

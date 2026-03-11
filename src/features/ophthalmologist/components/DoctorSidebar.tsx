@@ -11,10 +11,8 @@ import {
   MessagesSquare,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
-import type { Doctor } from '../types/ophthalmologist.types';
 
 interface DoctorSidebarProps {
-  doctor: Doctor;
   pendingCount?: number;
 }
 
@@ -52,14 +50,15 @@ const navItems = [
 ];
 
 export default function DoctorSidebar({
-  doctor,
   pendingCount = 0,
 }: DoctorSidebarProps) {
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthStore();
+  const { user, logout } = useAuthStore();
+
+  const displayName = user?.fullName ?? 'Doctor';
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 
@@ -119,14 +118,14 @@ export default function DoctorSidebar({
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1">
               <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm">
-                {doctor.name.split(' ').pop()?.charAt(0) || 'D'}
+                {displayName.split(' ').pop()?.charAt(0) || 'D'}
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
-                  {doctor.name.split(' ').pop()}
+                  {displayName.split(' ').pop()}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {doctor.specialty}
+                  Ophthalmologist
                 </p>
               </div>
             </div>
