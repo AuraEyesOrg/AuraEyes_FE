@@ -10,7 +10,6 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 
 // Mock patient data
 const mockPatients = [
@@ -106,15 +105,6 @@ const mockPatients = [
   },
 ];
 
-const mockDoctor: Doctor = {
-  id: 'D001',
-  name: 'Dr. Alistair',
-  specialty: 'Retina Specialist',
-  hospital: 'General Hospital',
-  department: 'Retina Dept',
-  avatar: null,
-};
-
 function getStatusStyle(status: string): { bg: string; text: string } {
   switch (status) {
     case 'critical':
@@ -140,11 +130,11 @@ export default function PatientsPage() {
   });
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+    <div className="flex h-screen w-full bg-(--bg-primary)">
+      <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader doctor={mockDoctor} pageName="Patients" />
+        <DoctorHeader pageName="Patients" />
 
         <main className="p-6">
           {/* Page Header */}

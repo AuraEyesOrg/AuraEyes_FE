@@ -28,7 +28,6 @@ import {
   X,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface Certificate {
@@ -167,15 +166,6 @@ const mockWallet: WalletInfo = {
   ],
 };
 
-const mockDoctor: Doctor = {
-  id: 'D001',
-  name: 'Dr. Alistair',
-  specialty: 'Retina Specialist',
-  hospital: 'AURA Vision Center',
-  department: 'Retina Dept',
-  avatar: null,
-};
-
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const [profile] = useState<OphthalmologistProfile>(mockProfile);
@@ -259,11 +249,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+    <div className="flex h-screen w-full bg-(--bg-primary)">
+      <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader doctor={mockDoctor} pageName="Settings" />
+        <DoctorHeader pageName="Settings" />
 
         <main className="p-6">
           {/* Page Header */}

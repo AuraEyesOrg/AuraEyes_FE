@@ -24,7 +24,6 @@ import {
   Calendar,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 
 // Types matching backend entities
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -83,15 +82,6 @@ interface AnnotationLayer {
 }
 
 // Mock data
-const mockDoctor: Doctor = {
-  id: 'D001',
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
-
 const mockPatient: Patient = {
   id: '#99281-A',
   name: 'Sarah Johnson',
@@ -285,14 +275,14 @@ export default function ScreeningReviewPage() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+      <DoctorSidebar pendingCount={12} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader doctor={mockDoctor} />
+        <DoctorHeader />
 
         {/* Review Content */}
         <main className="p-4">

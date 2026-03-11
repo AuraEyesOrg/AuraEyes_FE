@@ -22,7 +22,6 @@ import {
   Archive,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import {
   useConsultationSessions,
   useConsultationSession,
@@ -41,16 +40,6 @@ import type { ConsultationSessionListDto } from '@/types/consultation';
 
 // TODO: Replace with actual doctor ID / user ID from auth store once auth is fully integrated
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-// TODO: Replace with actual doctor profile from auth store
-const mockDoctor: Doctor = {
-  id: CURRENT_DOCTOR_ID,
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -289,9 +278,9 @@ export default function ConsultationsPage() {
   if (sessionsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-        <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
+        <DoctorSidebar pendingCount={0} />
         <div className="ml-52">
-          <DoctorHeader doctor={mockDoctor} />
+          <DoctorHeader />
           <main className="p-6">
             <div className="flex items-center justify-center h-[calc(100vh-220px)]">
               <div className="text-center">
@@ -308,14 +297,14 @@ export default function ConsultationsPage() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
-      <DoctorSidebar doctor={mockDoctor} pendingCount={pendingCount} />
+      <DoctorSidebar pendingCount={pendingCount} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader doctor={mockDoctor} />
+        <DoctorHeader />
 
         {/* Page Content */}
         <main className="p-6">
