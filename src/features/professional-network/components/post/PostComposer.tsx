@@ -14,9 +14,11 @@ import {
   Globe,
   Users,
   Building2,
+  Loader2,
 } from 'lucide-react';
 import type { PostCategory, PostVisibility } from '../../types';
 import { currentUser } from '../../data';
+import { useCreatePost } from '../../hooks/useCreatePost';
 
 const postTypes: {
   type: PostCategory;
@@ -46,12 +48,26 @@ export function PostComposer() {
   const [visibility, setVisibility] = useState<PostVisibility>('Public');
   const [isExpanded, setIsExpanded] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const createPost = useCreatePost();
 
   const handleSubmit = () => {
-    console.log({ content, selectedType, visibility, images });
-    setContent('');
-    setImages([]);
-    setIsExpanded(false);
+    if (!content.trim()) return;
+    createPost.mutate(
+      {
+        authorType: 'Ophthalmologist',
+        content: content.trim(),
+        category: selectedType,
+        visibility,
+        allowComments: true,
+      },
+      {
+        onSuccess: () => {
+          setContent('');
+          setImages([]);
+          setIsExpanded(false);
+        },
+      }
+    );
   };
 
   return (
@@ -161,9 +177,12 @@ export function PostComposer() {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!content.trim()}
-                  className="btn-primary py-2 px-5 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!content.trim() || createPost.isPending}
+                  className="btn-primary py-2 px-5 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {createPost.isPending && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
                   Post
                 </button>
               </div>
