@@ -270,30 +270,11 @@ export default function ContractTemplatesPage() {
     },
   });
 
-  /* ── Duplicate: load detail then create ── */
+  /* ── Duplicate: single API call ── */
   const handleDuplicate = async (id: string) => {
     setDuplicatingId(id);
     try {
-      const detail = await contractTemplatesApi.getContractTemplateById(id);
-      if (!detail) return;
-      await contractTemplatesApi.createContractTemplate({
-        title: `${detail.title} (copy)`,
-        type: detail.type === 'OphthalmologistContract' ? 1 : 2,
-        contractVersion: detail.contractVersion,
-        contentTemplate: detail.contentTemplate,
-        effectiveDate: detail.effectiveDate,
-        variables: detail.variables.map((v) => ({
-          key: v.key,
-          label: v.label,
-          variableType: 1, // Text default
-          description: v.description,
-          defaultValue: v.defaultValue,
-          selectOptions: v.selectOptions,
-          unit: v.unit,
-          isRequired: v.isRequired,
-          sortOrder: v.sortOrder,
-        })),
-      });
+      await contractTemplatesApi.duplicateContractTemplate(id);
       queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
     } finally {
       setDuplicatingId(null);

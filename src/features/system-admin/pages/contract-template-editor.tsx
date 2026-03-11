@@ -38,6 +38,7 @@ import {
   Plus,
   X,
   Loader2,
+  Undo2,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 
@@ -369,6 +370,32 @@ function extractVariables(html: string): string[] {
   return [...new Set([...matches].map((m) => m[1]))];
 }
 
+/** Count how many times {{key}} appears in the HTML */
+function countVariableOccurrences(html: string, key: string): number {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = html.match(new RegExp(`\\{\\{${escaped}\\}\\}`, 'g'));
+  return matches?.length ?? 0;
+}
+
+/**
+ * Remove ONE occurrence of {{key}} from the HTML.
+ * If the {{key}} sits inside a <p> that contains only whitespace + the variable,
+ * remove the entire <p> block (fixes leftover green bg).
+ */
+function removeOneVariableOccurrence(html: string, key: string): string {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Try to match a <p ...> that only contains optional whitespace and {{key}}
+  const pBlockRegex = new RegExp(
+    `<p[^>]*>\\s*\\{\\{${escaped}\\}\\}\\s*</p>`,
+    'i'
+  );
+  if (pBlockRegex.test(html)) {
+    return html.replace(pBlockRegex, '');
+  }
+  // Otherwise just remove the first {{key}} occurrence
+  return html.replace(new RegExp(`\\{\\{${escaped}\\}\\}`), '');
+}
+
 function getCategoryForVar(key: string) {
   for (const cat of VARIABLE_CATEGORIES) {
     if (cat.variables.some((v) => v.key === key)) return cat;
@@ -414,6 +441,67 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
+/* ─── Category def interface for the variable panel ─────────── */
+interface PanelCatDef {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+/* ─── Custom category definition (fallback for unknown keys) ── */
+const CUSTOM_CAT_DEF: PanelCatDef = {
+  id: 'custom',
+  label: 'Custom Variables',
+  icon: FileText,
+  color: '#64748b',
+  bgColor: '#f1f5f9',
+  borderColor: '#e2e8f0',
+};
+
+/* ─── VariableType string → number ─────────────────────────── */
+const VTYPE_MAP: Record<string, number> = {
+  Text: 1,
+  Number: 2,
+  Currency: 3,
+  Time: 4,
+  Date: 5,
+  Select: 6,
+};
+function vtypeNum(s: string): number {
+  return VTYPE_MAP[s] ?? 1;
+}
+
+/* ─── Group VariablePayload list into category groups ───────── */
+type CategoryGroup = {
+  id: string;
+  catDef: PanelCatDef;
+  vars: VariablePayload[];
+};
+function groupByCategory(vars: VariablePayload[]): CategoryGroup[] {
+  const catMap = new Map<string, VariablePayload[]>();
+  const custom: VariablePayload[] = [];
+  for (const v of vars) {
+    const cat = getCategoryForVar(v.key);
+    if (cat) {
+      if (!catMap.has(cat.id)) catMap.set(cat.id, []);
+      catMap.get(cat.id)!.push(v);
+    } else {
+      custom.push(v);
+    }
+  }
+  const groups: CategoryGroup[] = [];
+  for (const catDef of VARIABLE_CATEGORIES) {
+    const cv = catMap.get(catDef.id);
+    if (cv?.length) groups.push({ id: catDef.id, catDef, vars: cv });
+  }
+  if (custom.length > 0)
+    groups.push({ id: 'custom', catDef: CUSTOM_CAT_DEF, vars: custom });
+  return groups;
+}
+
 /* ─── Variable chip (draggable) ─────────────────────────── */
 function DraggableVariableChip({
   variable,
@@ -423,6 +511,7 @@ function DraggableVariableChip({
   inUse,
   onDragStart,
   onClick,
+  onDelete,
   isHighlighted,
 }: {
   variable: TemplateVariable;
@@ -432,6 +521,7 @@ function DraggableVariableChip({
   inUse: boolean;
   onDragStart: (e: DragEvent<HTMLDivElement>, v: TemplateVariable) => void;
   onClick: (key: string) => void;
+  onDelete?: (key: string) => void;
   isHighlighted: boolean;
 }) {
   return (
@@ -446,25 +536,37 @@ function DraggableVariableChip({
         background: categoryBg,
         borderColor: isHighlighted ? categoryColor : categoryBorder,
       }}
-      title={`Example: ${variable.example}`}
+      title={variable.example ? `e.g. ${variable.example}` : undefined}
     >
       <GripVertical className="w-3 h-3 opacity-30 group-hover:opacity-60 shrink-0" />
       <div className="flex-1 min-w-0">
         <div
-          className="text-xs font-bold font-mono truncate"
+          className="text-xs font-semibold truncate"
           style={{ color: categoryColor }}
         >
-          {`{{${variable.key}}}`}
-        </div>
-        <div className="text-[10px] text-slate-500 truncate">
           {variable.label}
         </div>
+        <div className="text-[10px] font-mono text-slate-400 truncate">
+          {`{{${variable.key}}}`}
+        </div>
       </div>
-      {inUse && (
+      {inUse && !onDelete && (
         <CheckCircle2
           className="w-3 h-3 shrink-0 opacity-60"
           style={{ color: categoryColor }}
         />
+      )}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(variable.key);
+          }}
+          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30"
+          title={inUse ? 'Xóa biến (đang dùng trong template)' : 'Xóa biến'}
+        >
+          <X className="w-3 h-3 text-red-400 hover:text-red-600" />
+        </button>
       )}
     </div>
   );
@@ -548,7 +650,7 @@ export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
-  const isNew = id === 'new';
+  const isNew = !id || id === 'new';
 
   /* Template state */
   const [templateName, setTemplateName] = useState('Untitled Template');
@@ -556,6 +658,10 @@ export default function ContractTemplateEditorPage() {
   const [templateType, setTemplateType] = useState<1 | 2>(1); // 1=Ophthalmologist, 2=Organization
   const [contractVersion, setContractVersion] = useState('1.0');
   const [saved, setSaved] = useState(isNew);
+
+  /* Variables state — populated from API when editing, empty for new */
+  const [localVariables, setLocalVariables] = useState<VariablePayload[]>([]);
+  const [showAddVarModal, setShowAddVarModal] = useState(false);
 
   /* Canvas state */
   const [zoom, setZoom] = useState(90);
@@ -569,11 +675,19 @@ export default function ContractTemplateEditorPage() {
   /* Toast */
   const [toast, setToast] = useState<string | null>(null);
 
+  /* Undo stack for variable deletions */
+  const [undoStack, setUndoStack] = useState<{ html: string; label: string }[]>(
+    []
+  );
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragVarRef = useRef<string | null>(null);
 
   /* Extract variables currently in template */
   const usedVars = extractVariables(templateHTML);
+
+  /* Quick lookup map: key → VariablePayload */
+  const localVarMap = Object.fromEntries(localVariables.map((v) => [v.key, v]));
 
   /* ── Load existing template ── */
   const { data: existingTemplate, isLoading: loadingTemplate } = useQuery({
@@ -592,12 +706,47 @@ export default function ContractTemplateEditorPage() {
     );
     setContractVersion(existingTemplate.contractVersion);
     setSaved(true);
+    // Populate panel with variables loaded from the API
+    setLocalVariables(
+      (existingTemplate.variables ?? [])
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((v, i) => ({
+          key: v.key,
+          label: v.label,
+          variableType: vtypeNum(v.variableType),
+          description: v.description ?? undefined,
+          defaultValue: v.defaultValue ?? undefined,
+          selectOptions: v.selectOptions ?? undefined,
+          unit: v.unit ?? undefined,
+          isRequired: v.isRequired,
+          sortOrder: i,
+        }))
+    );
   }, [existingTemplate]);
+
+  /* Merge localVariables with any HTML-only vars (typed manually) for the save payload */
+  const buildSaveVariables = (): VariablePayload[] => {
+    const merged = [...localVariables];
+    extractVariables(templateHTML).forEach((key) => {
+      if (!merged.some((v) => v.key === key)) {
+        const cat = getCategoryForVar(key);
+        const varDef = cat?.variables.find((v) => v.key === key);
+        merged.push({
+          key,
+          label: varDef?.label ?? key,
+          variableType: cat?.id === 'date' ? 5 : 1,
+          isRequired: false,
+          sortOrder: merged.length,
+        });
+      }
+    });
+    return merged.map((v, i) => ({ ...v, sortOrder: i }));
+  };
 
   /* ── Save mutation ── */
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const variables = buildVariablesPayload(usedVars);
+      const variables = buildSaveVariables();
       const payload = {
         title: templateName,
         type: templateType,
@@ -614,6 +763,13 @@ export default function ContractTemplateEditorPage() {
       setSaved(true);
       setToast('Template saved successfully!');
       queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
+      // Also invalidate the detail cache so stale data isn't served on re-visit
+      const savedId = isNew ? result?.id : id;
+      if (savedId) {
+        queryClient.invalidateQueries({
+          queryKey: ['contract-template', savedId],
+        });
+      }
       if (isNew && result?.id) {
         navigate(`/system-admin/contract-templates/${result.id}/edit`, {
           replace: true,
@@ -672,7 +828,7 @@ export default function ContractTemplateEditorPage() {
     const varKey = e.dataTransfer.getData('text/plain') || dragVarRef.current;
     if (!varKey) return;
 
-    /* Append {{varKey}} before the closing </div> of the document */
+    /* Append {{varKey}} before the closing </table> of the document */
     const insertToken = ` {{${varKey}}}`;
     setTemplateHTML((prev) =>
       prev.replace(
@@ -683,6 +839,50 @@ export default function ContractTemplateEditorPage() {
     setSaved(false);
     setToast(`Variable {{${varKey}}} added to template`);
     setHighlightedVar(varKey);
+
+    /* Auto-register in localVariables if not already tracked */
+    setLocalVariables((prev) => {
+      if (prev.some((v) => v.key === varKey)) return prev;
+      const cat = getCategoryForVar(varKey);
+      const varDef = cat?.variables.find((v) => v.key === varKey);
+      return [
+        ...prev,
+        {
+          key: varKey,
+          label: varDef?.label ?? varKey,
+          variableType: cat?.id === 'date' ? 5 : 1,
+          isRequired: false,
+          sortOrder: prev.length,
+        },
+      ];
+    });
+  }, []);
+
+  /* Delete one occurrence of a variable from the HTML (keeps localVariables intact) */
+  const handleDeleteVariableFromHTML = useCallback((key: string) => {
+    setTemplateHTML((prev) => {
+      // Push current HTML to undo stack before modifying
+      setUndoStack((stack) => [
+        ...stack.slice(-19),
+        { html: prev, label: key },
+      ]);
+      return removeOneVariableOccurrence(prev, key);
+    });
+    setSaved(false);
+    setHighlightedVar(null);
+    setToast(`Removed one {{${key}}} from template`);
+  }, []);
+
+  /* Undo the last variable deletion */
+  const handleUndoDelete = useCallback(() => {
+    setUndoStack((stack) => {
+      if (!stack.length) return stack;
+      const last = stack[stack.length - 1];
+      setTemplateHTML(last.html);
+      setSaved(false);
+      setToast(`Undo: restored {{${last.label}}}`);
+      return stack.slice(0, -1);
+    });
   }, []);
 
   /* Zoom helpers */
@@ -903,9 +1103,18 @@ export default function ContractTemplateEditorPage() {
           <div className="w-72 shrink-0 flex flex-col border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
             {/* Panel header */}
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 shrink-0">
-              <h2 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2">
-                Variables
-              </h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                  Variables
+                </h2>
+                <button
+                  onClick={() => setShowAddVarModal(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-[11px] font-semibold"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add
+                </button>
+              </div>
               {/* Tabs */}
               <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
                 {(
@@ -953,96 +1162,222 @@ export default function ContractTemplateEditorPage() {
             {/* Scrollable variable list */}
             <div className="flex-1 overflow-y-auto px-2 pb-4">
               {activeTab === 'variables' ? (
-                VARIABLE_CATEGORIES.map((cat) => (
-                  <VariableCategorySection
-                    key={cat.id}
-                    cat={cat}
-                    usedVars={usedVars}
-                    searchQ={searchQ}
-                    onDragStart={handleVarDragStart}
-                    onVarClick={(key) =>
-                      setHighlightedVar((prev) => (prev === key ? null : key))
-                    }
-                    highlightedVar={highlightedVar}
-                  />
-                ))
+                localVariables.length > 0 ? (
+                  /* API-loaded variables grouped by category */
+                  <>
+                    {groupByCategory(localVariables).map(
+                      ({ id: catId, catDef, vars }) => {
+                        const filtered = searchQ
+                          ? vars.filter(
+                              (v) =>
+                                v.key.toLowerCase().includes(searchQ) ||
+                                v.label.toLowerCase().includes(searchQ)
+                            )
+                          : vars;
+                        if (!filtered.length) return null;
+                        return (
+                          <ApiVariableCategorySection
+                            key={catId}
+                            catDef={catDef}
+                            vars={filtered}
+                            usedVars={usedVars}
+                            onDragStart={handleVarDragStart}
+                            onVarClick={(key) =>
+                              setHighlightedVar((prev) =>
+                                prev === key ? null : key
+                              )
+                            }
+                            highlightedVar={highlightedVar}
+                          />
+                        );
+                      }
+                    )}
+                    <button
+                      onClick={() => setShowAddVarModal(true)}
+                      className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 text-xs text-slate-500 hover:border-primary hover:text-primary transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      New Variable
+                    </button>
+                  </>
+                ) : (
+                  /* Library mode: show preset categories for new templates */
+                  <>
+                    {VARIABLE_CATEGORIES.map((cat) => (
+                      <VariableCategorySection
+                        key={cat.id}
+                        cat={cat}
+                        usedVars={usedVars}
+                        searchQ={searchQ}
+                        onDragStart={handleVarDragStart}
+                        onVarClick={(key) =>
+                          setHighlightedVar((prev) =>
+                            prev === key ? null : key
+                          )
+                        }
+                        highlightedVar={highlightedVar}
+                      />
+                    ))}
+                    {/* Custom variable quick-add for new templates */}
+                    <div className="mt-4 px-1">
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-2 px-1">
+                          Custom Variable
+                        </p>
+                        <CustomVariableAdder
+                          onAdd={(key) => {
+                            setTemplateHTML((prev) =>
+                              prev.replace(
+                                /<\/table>/,
+                                `<p style="margin-top:12px;"> {{${key}}} </p></table>`
+                              )
+                            );
+                            setSaved(false);
+                            setToast(`Custom variable {{${key}}} added`);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )
               ) : (
-                /* "In Use" tab: show only variables present in the template */
+                /* “In Use” tab: variables currently in the HTML */
                 <div className="space-y-1 pt-1">
                   {usedVars.length === 0 ? (
                     <p className="text-xs text-slate-400 text-center py-8">
                       No variables in template yet.
                     </p>
                   ) : (
-                    usedVars.map((key) => {
-                      const cat = getCategoryForVar(key);
-                      const varDef = cat?.variables.find((v) => v.key === key);
-                      return (
-                        <div
-                          key={key}
-                          onClick={() =>
-                            setHighlightedVar((prev) =>
-                              prev === key ? null : key
-                            )
-                          }
-                          className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all ${
-                            highlightedVar === key
-                              ? 'ring-2 ring-primary/40'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                          }`}
-                          style={{
-                            background: cat?.bgColor ?? '#f1f5f9',
-                            borderColor: cat?.borderColor ?? '#e2e8f0',
-                          }}
+                    <>
+                      {undoStack.length > 0 && (
+                        <button
+                          onClick={handleUndoDelete}
+                          className="w-full flex items-center justify-center gap-1.5 py-1.5 mb-1 rounded-lg border border-dashed border-amber-300 dark:border-amber-600 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                         >
-                          <div className="flex-1 min-w-0">
-                            <div
-                              className="text-xs font-bold font-mono"
-                              style={{ color: cat?.color ?? '#6b7280' }}
+                          <Undo2 className="w-3.5 h-3.5" />
+                          Undo remove{' '}
+                          {`{{${undoStack[undoStack.length - 1].label}}}`}
+                        </button>
+                      )}
+                      {usedVars.map((key) => {
+                        const cat = getCategoryForVar(key);
+                        const apiVar = localVarMap[key];
+                        const displayLabel =
+                          apiVar?.label ??
+                          cat?.variables.find((v) => v.key === key)?.label ??
+                          'Custom variable';
+                        const count = countVariableOccurrences(
+                          templateHTML,
+                          key
+                        );
+                        const selectOpts: string[] = (() => {
+                          try {
+                            return apiVar?.selectOptions
+                              ? (JSON.parse(apiVar.selectOptions) as string[])
+                              : [];
+                          } catch {
+                            return [];
+                          }
+                        })();
+                        return (
+                          <div
+                            key={key}
+                            onClick={() =>
+                              setHighlightedVar((prev) =>
+                                prev === key ? null : key
+                              )
+                            }
+                            className={`group flex items-start gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all ${
+                              highlightedVar === key
+                                ? 'ring-2 ring-primary/40'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                            style={{
+                              background: cat?.bgColor ?? '#f1f5f9',
+                              borderColor: cat?.borderColor ?? '#e2e8f0',
+                            }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                                  {displayLabel}
+                                </span>
+                                {count > 1 && (
+                                  <span
+                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/60 dark:bg-slate-700/60 border"
+                                    style={{
+                                      borderColor:
+                                        cat?.borderColor ?? '#e2e8f0',
+                                      color: cat?.color ?? '#6b7280',
+                                    }}
+                                  >
+                                    x{count}
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                className="text-[10px] font-mono truncate"
+                                style={{ color: cat?.color ?? '#6b7280' }}
+                              >
+                                {`{{${key}}}`}
+                              </div>
+                              {selectOpts.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {selectOpts.map((opt) => (
+                                    <span
+                                      key={opt}
+                                      className="text-[9px] px-1.5 py-0.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300"
+                                    >
+                                      {opt}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteVariableFromHTML(key);
+                              }}
+                              className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all shrink-0 mt-0.5"
+                              title={
+                                count > 1
+                                  ? `Remove one of ${count} occurrences`
+                                  : 'Remove from template'
+                              }
                             >
-                              {`{{${key}}}`}
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                              {varDef?.label ?? 'Custom variable'}
-                            </div>
+                              <X className="w-3.5 h-3.5 text-red-400 hover:text-red-600" />
+                            </button>
                           </div>
-                          <CheckCircle2
-                            className="w-3.5 h-3.5 shrink-0"
-                            style={{ color: cat?.color ?? '#22c55e' }}
-                          />
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                    </>
                   )}
                 </div>
               )}
-
-              {/* Add custom variable */}
-              <div className="mt-4 px-1">
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-2 px-1">
-                    Custom Variable
-                  </p>
-                  <CustomVariableAdder
-                    onAdd={(key) => {
-                      setTemplateHTML((prev) =>
-                        prev.replace(
-                          /<\/table>/,
-                          `<p style="margin-top:12px;"> {{${key}}} </p></table>`
-                        )
-                      );
-                      setSaved(false);
-                      setToast(`Custom variable {{${key}}} added`);
-                    }}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+
+      {showAddVarModal && (
+        <AddVariableModal
+          onClose={() => setShowAddVarModal(false)}
+          onAdd={(v) => {
+            setLocalVariables((prev) => {
+              if (prev.some((x) => x.key === v.key)) {
+                setToast(`Variable key "{{${v.key}}}" already exists`);
+                return prev;
+              }
+              return [...prev, { ...v, sortOrder: prev.length }];
+            });
+            setSaved(false);
+            setToast(`Variable {{${v.key}}} added — drag it into the document`);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1076,6 +1411,278 @@ function CustomVariableAdder({ onAdd }: { onAdd: (key: string) => void }) {
       >
         <Plus className="w-4 h-4" />
       </button>
+    </div>
+  );
+}
+
+/* ─── API Variable category section ─────────────────────── */
+function ApiVariableCategorySection({
+  catDef,
+  vars,
+  usedVars,
+  onDragStart,
+  onVarClick,
+  highlightedVar,
+}: {
+  catDef: PanelCatDef;
+  vars: VariablePayload[];
+  usedVars: string[];
+  onDragStart: (e: DragEvent<HTMLDivElement>, v: TemplateVariable) => void;
+  onVarClick: (key: string) => void;
+  highlightedVar: string | null;
+}) {
+  const [open, setOpen] = useState(true);
+  const Icon = catDef.icon;
+
+  return (
+    <div className="mb-1">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-left"
+      >
+        <Icon className="w-3.5 h-3.5" style={{ color: catDef.color }} />
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex-1">
+          {catDef.label}
+        </span>
+        <span
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          style={{ background: catDef.bgColor, color: catDef.color }}
+        >
+          {vars.filter((v) => usedVars.includes(v.key)).length}/{vars.length}
+        </span>
+        {open ? (
+          <ChevronDown className="w-3 h-3 text-slate-400" />
+        ) : (
+          <ChevronRight className="w-3 h-3 text-slate-400" />
+        )}
+      </button>
+      {open && (
+        <div className="pl-2 pr-1 pb-1 space-y-1">
+          {vars.map((v) => (
+            <DraggableVariableChip
+              key={v.key}
+              variable={{
+                key: v.key,
+                label: v.label,
+                example: v.unit ?? '',
+                category: catDef.id,
+              }}
+              categoryColor={catDef.color}
+              categoryBg={catDef.bgColor}
+              categoryBorder={catDef.borderColor}
+              inUse={usedVars.includes(v.key)}
+              onDragStart={onDragStart}
+              onClick={onVarClick}
+              isHighlighted={v.key === highlightedVar}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Add Variable Modal ─────────────────────────────────── */
+const VAR_TYPE_OPTIONS = [
+  { value: 1, label: 'Text' },
+  { value: 2, label: 'Number' },
+  { value: 3, label: 'Currency' },
+  { value: 4, label: 'Time' },
+  { value: 5, label: 'Date' },
+  { value: 6, label: 'Select (Dropdown)' },
+];
+
+function AddVariableModal({
+  onClose,
+  onAdd,
+}: {
+  onClose: () => void;
+  onAdd: (v: VariablePayload) => void;
+}) {
+  const [key, setKey] = useState('');
+  const [label, setLabel] = useState('');
+  const [varType, setVarType] = useState(1);
+  const [unit, setUnit] = useState('');
+  const [isRequired, setIsRequired] = useState(false);
+  const [selectOptions, setSelectOptions] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleSubmit = () => {
+    const cleanKey = key
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_]/g, '');
+    if (!cleanKey || !label.trim()) return;
+
+    let parsedOptions: string | undefined;
+    if (varType === 6 && selectOptions.trim()) {
+      const opts = selectOptions
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      parsedOptions = JSON.stringify(opts);
+    }
+
+    onAdd({
+      key: cleanKey,
+      label: label.trim(),
+      variableType: varType,
+      unit: unit.trim() || undefined,
+      isRequired,
+      selectOptions: parsedOptions,
+      description: description.trim() || undefined,
+      sortOrder: 0,
+    });
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-96 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+            Add New Variable
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {/* Label — primary display name */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              Label <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="e.g. Loại hình công việc"
+              autoFocus
+              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Displayed in the variable panel
+            </p>
+          </div>
+
+          {/* Key */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              Key <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="e.g. employmentType"
+              className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Used as <span className="font-mono">{'{{key}}'}</span> in the HTML
+            </p>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              Type
+            </label>
+            <select
+              value={varType}
+              onChange={(e) => setVarType(Number(e.target.value))}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              {VAR_TYPE_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Select options — only for Select type */}
+          {varType === 6 && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Options
+              </label>
+              <input
+                value={selectOptions}
+                onChange={(e) => setSelectOptions(e.target.value)}
+                placeholder="Part-time, Full-time, Contract"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Comma-separated values
+              </p>
+            </div>
+          )}
+
+          {/* Unit — for Number / Currency */}
+          {(varType === 2 || varType === 3) && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Unit
+              </label>
+              <input
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="e.g. VNĐ, %, tháng"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+          )}
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+              Description{' '}
+              <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Tooltip / helper text"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+
+          {/* Required */}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isRequired}
+              onChange={(e) => setIsRequired(e.target.checked)}
+              className="rounded border-slate-300"
+            />
+            <span className="text-xs text-slate-600 dark:text-slate-400">
+              Required field
+            </span>
+          </label>
+        </div>
+
+        <div className="flex gap-2 mt-5">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!key.trim() || !label.trim()}
+            className="flex-1 px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Add Variable
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

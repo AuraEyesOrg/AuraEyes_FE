@@ -56,6 +56,13 @@ export const contractTemplatesApi = {
     return response.data.data;
   },
 
+  async duplicateContractTemplate(id: string) {
+    const response = await api.post<ApiResponse<ContractTemplateDetailDto>>(
+      EP.DUPLICATE(id)
+    );
+    return response.data.data;
+  },
+
   async deleteContractTemplate(id: string) {
     const response = await api.delete<ApiResponse<null>>(EP.DELETE(id));
     return response.data;

@@ -122,6 +122,8 @@ export const API_ENDPOINTS = {
       CREATE: '/system-admin/contract-templates',
       UPDATE: (id: string) => `/system-admin/contract-templates/${id}`,
       DELETE: (id: string) => `/system-admin/contract-templates/${id}`,
+      DUPLICATE: (id: string) =>
+        `/system-admin/contract-templates/${id}/duplicate`,
       SET_STATUS: (id: string) =>
         `/system-admin/contract-templates/${id}/status`,
     },
