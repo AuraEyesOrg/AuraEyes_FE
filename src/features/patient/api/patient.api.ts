@@ -445,6 +445,13 @@ interface BackendApiResponse<T> {
   timestamp: string;
 }
 
+export const getWallets = async (): Promise<Wallet> => {
+  const response = await api.get<ApiResponse<Wallet>>(
+    PATIENT_ENDPOINTS.WALLET.GET
+  );
+  return response.data.data!;
+};
+
 export const walletApi = {
   /** GET /wallets - Get current user's wallet */
   async getWallet(): Promise<Wallet> {
