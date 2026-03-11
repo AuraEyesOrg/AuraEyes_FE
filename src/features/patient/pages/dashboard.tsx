@@ -7,18 +7,14 @@ import {
   MessageCircle,
   ArrowRight,
   ChevronRight,
-  Bell,
   Home,
   CheckCircle,
   History,
-  Moon,
-  Sun,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboard } from '../hooks/useDashboard';
 
 // ============ HELPERS ============
@@ -46,7 +42,6 @@ const getRiskLabel = (risk?: string) => {
 };
 
 export default function PatientDashboard() {
-  const { theme, toggleTheme } = useTheme();
   const {
     profile,
     wallet,
@@ -190,21 +185,6 @@ export default function PatientDashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </button>
-            <button className="relative flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
-            </button>
             <Link
               to="/patient/screening/new"
               className="btn-primary flex items-center gap-2"
