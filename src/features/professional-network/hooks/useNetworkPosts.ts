@@ -29,6 +29,12 @@ export const networkKeys = {
     [...networkKeys.all, 'organisations', { page, pageSize }] as const,
   savedPosts: (page: number, pageSize: number) =>
     [...networkKeys.all, 'saved', { page, pageSize }] as const,
+  discover: (authorType?: string, category?: string, searchTerm?: string) =>
+    [
+      ...networkKeys.all,
+      'discover',
+      { authorType, category, searchTerm },
+    ] as const,
 };
 
 export function useFeedPosts(page = 1, pageSize = 10) {
@@ -126,5 +132,27 @@ export function useCommentReplies(postId: string, parentCommentId: string) {
     queryFn: () => postsApi.getComments(postId, 1, 50, parentCommentId),
     enabled: !!postId && !!parentCommentId,
     staleTime: 1000 * 60,
+  });
+}
+
+export function useDiscoverPosts(
+  authorType?: string,
+  category?: string,
+  searchTerm?: string,
+  pageNumber = 1,
+  pageSize = 20
+) {
+  return useQuery({
+    queryKey: networkKeys.discover(authorType, category, searchTerm),
+    queryFn: () =>
+      postsApi.getDiscover(
+        authorType,
+        category,
+        searchTerm,
+        pageNumber,
+        pageSize
+      ),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 2,
   });
 }

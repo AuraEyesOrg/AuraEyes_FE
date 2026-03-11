@@ -96,6 +96,31 @@ export const NETWORK_ENDPOINTS = {
 
 export const postsApi = {
   /**
+   * Discover posts filtered by authorType, category, searchTerm
+   */
+  async getDiscover(
+    authorType?: string,
+    category?: string,
+    searchTerm?: string,
+    pageNumber = 1,
+    pageSize = 20
+  ) {
+    const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
+      '/network/discover',
+      {
+        params: {
+          ...(authorType && { authorType }),
+          ...(category && { category }),
+          ...(searchTerm && { searchTerm }),
+          pageNumber,
+          pageSize,
+        },
+      }
+    );
+    return response.data.data;
+  },
+
+  /**
    * Get feed posts with pagination and optional authorId filter
    */
   async getFeed(pageNumber = 1, pageSize = 10, authorId?: string) {

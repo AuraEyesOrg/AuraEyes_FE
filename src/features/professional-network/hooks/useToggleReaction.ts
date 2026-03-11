@@ -27,45 +27,67 @@ export function useToggleReaction() {
         queryKey: networkKeys.all,
       });
 
-      // Optimistically update all feed queries that contain this post
+      // Snapshot single-post cache for rollback
+      const previousPost = queryClient.getQueryData<ProfessionalPost>(
+        networkKeys.post(postId)
+      );
+
+      // Helper to compute updated reaction fields
+      const applyReaction = (post: ProfessionalPost) => {
+        const isRemoving = currentReaction === type;
+        return {
+          ...post,
+          currentUserReaction: isRemoving ? undefined : type,
+          reactionCount: isRemoving
+            ? post.reactionCount - 1
+            : currentReaction
+              ? post.reactionCount // changing reaction type, count stays same
+              : post.reactionCount + 1,
+        };
+      };
+
+      // Optimistically update all feed/list queries that contain this post
       queryClient.setQueriesData<PagedResult<ProfessionalPost>>(
         { queryKey: networkKeys.all },
         (old) => {
           if (!old?.items) return old;
           return {
             ...old,
-            items: old.items.map((post) => {
-              if (post.id !== postId) return post;
-
-              const isRemoving = currentReaction === type;
-              return {
-                ...post,
-                currentUserReaction: isRemoving ? undefined : type,
-                reactionCount: isRemoving
-                  ? post.reactionCount - 1
-                  : currentReaction
-                    ? post.reactionCount // changing reaction type, count stays same
-                    : post.reactionCount + 1,
-              };
-            }),
+            items: old.items.map((post) =>
+              post.id !== postId ? post : applyReaction(post)
+            ),
           };
         }
       );
 
-      return { previousQueries };
+      // Optimistically update the single-post detail cache
+      queryClient.setQueryData<ProfessionalPost>(
+        networkKeys.post(postId),
+        (old) => (old ? applyReaction(old) : old)
+      );
+
+      return { previousQueries, previousPost };
     },
 
-    onError: (_err, _vars, context) => {
-      // Rollback to snapshots
+    onError: (_err, { postId }, context) => {
+      // Rollback feed/list snapshots
       if (context?.previousQueries) {
         for (const [queryKey, data] of context.previousQueries) {
           queryClient.setQueryData(queryKey, data);
         }
       }
+      // Rollback single-post snapshot
+      if (context?.previousPost !== undefined) {
+        queryClient.setQueryData(
+          networkKeys.post(postId),
+          context.previousPost
+        );
+      }
     },
 
-    onSettled: () => {
+    onSettled: (_data, _err, { postId }) => {
       queryClient.invalidateQueries({ queryKey: networkKeys.all });
+      queryClient.invalidateQueries({ queryKey: networkKeys.post(postId) });
     },
   });
 }
