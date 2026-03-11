@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Users, FileText, Star } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { InitialsAvatar } from './InitialsAvatar';
 
 interface Props {
   professional: Ophthalmologist;
@@ -17,10 +18,11 @@ export function ProfessionalCard({ professional }: Props) {
       <div className="flex gap-3">
         {/* Avatar */}
         <Link to={`/network/profile/${professional.id}`} className="shrink-0">
-          <img
-            src={professional.avatarUrl}
-            alt={professional.fullName}
-            className="w-12 h-12 rounded-full object-cover hover:opacity-90 hover-animation"
+          <InitialsAvatar
+            fullName={professional.fullName}
+            avatarUrl={professional.avatarUrl}
+            size="lg"
+            className="hover:opacity-90 hover-animation"
           />
         </Link>
 

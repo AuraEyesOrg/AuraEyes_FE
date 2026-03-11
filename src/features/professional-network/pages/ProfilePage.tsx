@@ -1,6 +1,6 @@
 /**
  * Profile Page
- * Page for viewing user/professional profiles
+ * Page for viewing user/professional profiles - fetches data from API
  */
 
 import { useState } from 'react';
@@ -9,19 +9,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   BadgeCheck,
-  MapPin,
   Calendar,
-  Star,
   Users,
   FileText,
   Award,
-  Mail,
   MoreHorizontal,
   MessageCircle,
   Edit3,
   Eye,
   X,
-  Settings,
   BarChart3,
   TrendingUp,
   Flag,
@@ -29,44 +25,96 @@ import {
   Copy,
 } from 'lucide-react';
 import { PostCard } from '../components/post/PostCard';
-import type { Ophthalmologist, ProfessionalPost } from '../types';
+import { PostSkeleton } from '../components/post/PostSkeleton';
+import { InitialsAvatar } from '../components/professional/InitialsAvatar';
+import { useUserProfile, useUserPosts } from '../hooks/useNetworkPosts';
+import useAuthStore from '@/store/auth-store';
 
-type TabType = 'posts' | 'about' | 'credentials' | 'analytics';
+type TabType = 'posts' | 'about' | 'analytics';
 
-// TODO: Replace with actual API calls and auth context
-const currentUserId = 'current-user';
+// Profile header skeleton shown while loading
+function ProfileSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-40 bg-gradient-to-r from-brand-primary/30 to-cyan-200/50" />
+      <div className="relative px-6 pt-4">
+        <div className="absolute -top-16 left-6 w-32 h-32 rounded-full bg-gray-200 border-4 border-white" />
+        <div className="pt-20 space-y-3">
+          <div className="h-7 w-48 rounded bg-main-search-background" />
+          <div className="h-4 w-64 rounded bg-main-search-background" />
+          <div className="h-4 w-40 rounded bg-main-search-background" />
+          <div className="flex gap-6 pt-2">
+            <div className="h-5 w-16 rounded bg-main-search-background" />
+            <div className="h-5 w-16 rounded bg-main-search-background" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ProfilePage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const isPreviewMode = searchParams.get('preview') === 'true';
+  const { user: currentUser } = useAuthStore();
+  const currentUserId = currentUser?.id || '';
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [professional, _setProfessional] = useState<Ophthalmologist | null>(
-    null
-  );
-  const [userPosts, _setUserPosts] = useState<ProfessionalPost[]>([]);
 
-  // TODO: Fetch from API using useEffect
+  // Phase 3: Fetch profile from API
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError: profileError,
+  } = useUserProfile(id ?? '');
+
+  // Phase 4: Fetch user's posts from API
+  const { data: postsData, isLoading: postsLoading } = useUserPosts(id ?? '');
+  const userPosts = postsData?.items ?? [];
 
   const isOwnProfile = id === currentUserId && !isPreviewMode;
 
-  // Mock analytics data
+  // Mock analytics data (own profile only)
   const analyticsData = {
     profileViews: 1250,
     profileViewsTrend: 12,
     postImpressions: 8500,
     postImpressionsTrend: 8,
-    searchAppearances: 340,
-    searchAppearancesTrend: -3,
   };
 
   const availableTabs: TabType[] = isOwnProfile
-    ? ['posts', 'about', 'credentials', 'analytics']
-    : ['posts', 'about', 'credentials'];
+    ? ['posts', 'about', 'analytics']
+    : ['posts', 'about'];
 
-  if (!professional) {
+  // ── Loading state ────────────────────────────────────────────────────────
+  if (profileLoading) {
+    return (
+      <div className="pb-6">
+        <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
+          <div className="flex items-center gap-6 px-4 h-[53px]">
+            <Link
+              to="/network/feed"
+              className="p-2 hover:bg-gray-100 rounded-full hover-animation"
+            >
+              <ArrowLeft className="w-5 h-5 text-text-main" />
+            </Link>
+            <h2 className="text-xl font-bold text-text-main">Profile</h2>
+          </div>
+        </header>
+        <ProfileSkeleton />
+        <div className="mt-6 divide-y divide-light-border">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <PostSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error / not found state ──────────────────────────────────────────────
+  if (profileError || !profile) {
     return (
       <>
         <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
@@ -88,6 +136,7 @@ function ProfilePage() {
     );
   }
 
+  // ── Main render ──────────────────────────────────────────────────────────
   return (
     <div className="pb-6">
       {/* Preview Mode Banner */}
@@ -120,10 +169,10 @@ function ProfilePage() {
           </Link>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-bold text-text-main truncate">
-              {professional.fullName}
+              {profile.fullName}
             </h2>
             <p className="text-[13px] text-text-muted">
-              {professional.postCount} posts
+              {profile.postCount} posts
             </p>
           </div>
           {isOwnProfile && (
@@ -149,10 +198,11 @@ function ProfilePage() {
         </div>
         <div className="absolute -bottom-16 left-6">
           <div className="relative">
-            <img
-              src={professional.avatarUrl}
-              alt={professional.fullName}
-              className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg"
+            <InitialsAvatar
+              fullName={profile.fullName}
+              avatarUrl={profile.avatarUrl}
+              size="xl"
+              className="border-4 border-white shadow-lg"
             />
             {isOwnProfile && (
               <button className="absolute bottom-2 right-2 p-1.5 bg-brand-primary hover:brightness-110 text-white rounded-full shadow-lg transition-all">
@@ -169,9 +219,9 @@ function ProfilePage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-text-main">
-                {professional.fullName}
+                {profile.fullName}
               </h1>
-              {professional.isVerified && (
+              {profile.isVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-soft text-brand-primary text-xs font-medium rounded-full">
                   <BadgeCheck className="w-3 h-3" />
                   Verified
@@ -179,32 +229,19 @@ function ProfilePage() {
               )}
             </div>
 
-            {/* Specialties */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {professional.specialty.map((spec) => (
-                <span key={spec} className="badge-specialty">
-                  {spec}
-                </span>
-              ))}
-            </div>
+            {/* Specialties — hidden: not available in UserProfileDto */}
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
             {isOwnProfile ? (
-              <>
-                <button className="btn-primary text-sm py-2 px-4 flex items-center gap-1.5">
-                  <Edit3 className="w-4 h-4" />
-                  Edit Profile
-                </button>
-                <Link
-                  to="/settings/profile"
-                  className="p-2 border border-light-border rounded-lg hover:bg-main-search-background transition-all"
-                  title="Account Settings"
-                >
-                  <Settings className="w-5 h-5 text-text-muted" />
-                </Link>
-              </>
+              <Link
+                to={`/network/profile/${currentUserId}?preview=true`}
+                className="flex items-center gap-1.5 text-sm font-medium text-text-muted border border-light-border rounded-lg px-3 py-2 hover:bg-main-search-background transition-all"
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+              </Link>
             ) : (
               <>
                 <button className="btn-secondary text-sm py-2 px-4 flex items-center gap-1.5">
@@ -252,45 +289,27 @@ function ProfilePage() {
         </div>
 
         {/* Bio */}
-        <p className="mt-4 text-[15px] text-text-main leading-relaxed">
-          {professional.bio}
-        </p>
+        {profile.bio && (
+          <p className="mt-4 text-[15px] text-text-main leading-relaxed">
+            {profile.bio}
+          </p>
+        )}
 
         {/* Meta Info */}
         <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-text-muted">
-          {professional.organisationName && (
+          {profile.yearsOfExperience > 0 && (
             <span className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              {professional.organisationName}
+              <Calendar className="w-4 h-4" />
+              {profile.yearsOfExperience} years experience
             </span>
           )}
-          <span className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            {professional.yearsOfExperience} years experience
-          </span>
-          <span className="flex items-center gap-1">
-            <Star className="w-4 h-4" />
-            {professional.rating.toFixed(1)} rating
-          </span>
         </div>
 
         {/* Stats */}
         <div className="flex items-center gap-6 mt-4 text-[15px]">
           <div>
             <span className="font-bold text-text-main">
-              {professional.connectionCount}
-            </span>
-            <span className="text-text-muted ml-1">Connections</span>
-          </div>
-          <div>
-            <span className="font-bold text-text-main">
-              {professional.followerCount}
-            </span>
-            <span className="text-text-muted ml-1">Followers</span>
-          </div>
-          <div>
-            <span className="font-bold text-text-main">
-              {professional.postCount}
+              {profile.postCount}
             </span>
             <span className="text-text-muted ml-1">Posts</span>
           </div>
@@ -319,10 +338,19 @@ function ProfilePage() {
 
       {/* Tab Content */}
       <div className="mt-1">
+        {/* Posts Tab — Phase 4: real posts from API */}
         {activeTab === 'posts' && (
           <div className="divide-y divide-light-border">
-            {userPosts.length > 0 ? (
-              userPosts.map((post) => <PostCard key={post.id} post={post} />)
+            {postsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)
+            ) : userPosts.length > 0 ? (
+              userPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={currentUserId}
+                />
+              ))
             ) : (
               <div className="text-center py-12 px-4">
                 <FileText className="w-12 h-12 text-text-muted mx-auto mb-3" />
@@ -332,71 +360,34 @@ function ProfilePage() {
           </div>
         )}
 
+        {/* About Tab */}
         {activeTab === 'about' && (
           <div className="px-6 py-4 space-y-6">
             <div>
               <h3 className="font-bold text-[15px] text-text-main mb-2">Bio</h3>
-              <p className="text-[15px] text-text-main leading-relaxed">
-                {professional.bio}
-              </p>
+              {profile.bio ? (
+                <p className="text-[15px] text-text-main leading-relaxed">
+                  {profile.bio}
+                </p>
+              ) : (
+                <p className="text-[15px] text-text-muted">No bio added yet.</p>
+              )}
             </div>
-            <div>
-              <h3 className="font-bold text-[15px] text-text-main mb-2">
-                Specialties
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {professional.specialty.map((spec) => (
-                  <span key={spec} className="badge-specialty">
-                    {spec}
-                  </span>
-                ))}
-              </div>
-            </div>
-            {professional.email && (
+            {profile.yearsOfExperience > 0 && (
               <div>
                 <h3 className="font-bold text-[15px] text-text-main mb-2">
-                  Contact
+                  Experience
                 </h3>
-                <a
-                  href={`mailto:${professional.email}`}
-                  className="flex items-center gap-2 text-brand-primary hover:underline"
-                >
-                  <Mail className="w-4 h-4" />
-                  {professional.email}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'credentials' && (
-          <div className="px-6 py-4 space-y-4">
-            {professional.certificates.length > 0 ? (
-              professional.certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="flex items-start gap-3 p-4 border border-light-border rounded-xl"
-                >
-                  <Award className="w-6 h-6 text-brand-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-[15px] text-text-main">
-                      {cert.title}
-                    </h4>
-                    <p className="text-[13px] text-text-muted">
-                      {cert.issuingOrganisation} · {cert.year}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 text-[15px] text-text-main">
+                  <Award className="w-4 h-4 text-brand-primary" />
+                  {profile.yearsOfExperience} years of experience
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Award className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No credentials added</p>
               </div>
             )}
           </div>
         )}
 
+        {/* Analytics Tab — own profile only */}
         {activeTab === 'analytics' && isOwnProfile && (
           <div className="px-6 py-4 space-y-4">
             <div className="grid grid-cols-1 gap-4">

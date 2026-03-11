@@ -24,9 +24,11 @@ import {
   BookmarkCheck,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
+import { InitialsAvatar } from '../professional/InitialsAvatar';
 
 interface Props {
   post: ProfessionalPost;
+  currentUserId?: string;
   onReaction?: (postId: string, type: ReactionType) => void;
   onSave?: (postId: string) => void;
 }
@@ -77,7 +79,7 @@ const reactionConfig: Record<
   },
 };
 
-export function PostCard({ post, onReaction, onSave }: Props) {
+export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   // Refs for timeout handling
@@ -89,7 +91,9 @@ export function PostCard({ post, onReaction, onSave }: Props) {
   const reactionCount = post.reactionCount;
   const isSaved = post.isBookmarked;
 
-  const TypeConfig = postTypeConfig[post.category];
+  // Safe fallback: if category is unknown/undefined, default to KnowledgeShare
+  const TypeConfig =
+    postTypeConfig[post.category] ?? postTypeConfig['KnowledgeShare'];
   const TypeIcon = TypeConfig.icon;
 
   // Reaction hover handlers with delay
@@ -127,9 +131,16 @@ export function PostCard({ post, onReaction, onSave }: Props) {
     }, 150);
   }, []);
 
-  const CurrentReaction = userReaction ? reactionConfig[userReaction] : null;
+  // Safe fallback: if userReaction value is unknown, treat as null
+  const CurrentReaction =
+    userReaction && reactionConfig[userReaction]
+      ? reactionConfig[userReaction]
+      : null;
+
+  const isOwnPost = !!currentUserId && post.author.id === currentUserId;
 
   const handleSave = () => {
+    if (isOwnPost) return;
     onSave?.(post.id);
   };
 
@@ -139,10 +150,10 @@ export function PostCard({ post, onReaction, onSave }: Props) {
       <div className="flex gap-x-3">
         {/* Avatar - fixed, never shrinks, aligned to top */}
         <div className="flex-shrink-0">
-          <img
-            src={post.author.avatarUrl || '/default-avatar.png'}
-            alt={post.author.fullName}
-            className="w-10 h-10 rounded-full object-cover"
+          <InitialsAvatar
+            fullName={post.author.fullName}
+            avatarUrl={post.author.avatarUrl}
+            size="md"
           />
         </div>
 
@@ -197,17 +208,19 @@ export function PostCard({ post, onReaction, onSave }: Props) {
                       <Copy className="w-4 h-4" />
                       Copy link
                     </button>
-                    <button
-                      onClick={handleSave}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all"
-                    >
-                      {isSaved ? (
-                        <BookmarkCheck className="w-4 h-4 text-brand-primary" />
-                      ) : (
-                        <Bookmark className="w-4 h-4" />
-                      )}
-                      {isSaved ? 'Saved' : 'Save post'}
-                    </button>
+                    {!isOwnPost && (
+                      <button
+                        onClick={handleSave}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all"
+                      >
+                        {isSaved ? (
+                          <BookmarkCheck className="w-4 h-4 text-brand-primary" />
+                        ) : (
+                          <Bookmark className="w-4 h-4" />
+                        )}
+                        {isSaved ? 'Saved' : 'Save post'}
+                      </button>
+                    )}
                     <div className="my-1 border-t border-light-border" />
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                       <Flag className="w-4 h-4" />
@@ -290,8 +303,29 @@ export function PostCard({ post, onReaction, onSave }: Props) {
             </div>
           )}
 
+          {/* Reaction Summary Row — Facebook-style */}
+          {reactionCount > 0 && (
+            <div className="flex items-center gap-1 mt-3 text-[13px] text-text-muted">
+              {Object.entries(reactionConfig)
+                .map(([type, config]) => {
+                  const Icon = config.icon;
+                  return (
+                    <span
+                      key={type}
+                      className={`flex items-center gap-0.5 ${config.color}`}
+                      title={config.label}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </span>
+                  );
+                })
+                .slice(0, 3)}
+              <span className="ml-1 text-text-muted">{reactionCount}</span>
+            </div>
+          )}
+
           {/* Actions Row */}
-          <div className="flex items-center justify-between mt-3 -ml-2 max-w-[425px]">
+          <div className="flex items-center justify-between mt-1 -ml-2 max-w-[425px]">
             {/* Reaction Button with Popup */}
             <div
               className="relative"
@@ -377,22 +411,24 @@ export function PostCard({ post, onReaction, onSave }: Props) {
               </span>
             </Link>
 
-            {/* Save */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleSave}
-              className={`group flex items-center p-2 rounded-full transition-all ${
-                isSaved
-                  ? 'text-brand-primary'
-                  : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
-              }`}
-            >
-              {isSaved ? (
-                <BookmarkCheck className="w-[18px] h-[18px]" />
-              ) : (
-                <Bookmark className="w-[18px] h-[18px]" />
-              )}
-            </motion.button>
+            {/* Save — hidden for own posts */}
+            {!isOwnPost && (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={handleSave}
+                className={`group flex items-center p-2 rounded-full transition-all ${
+                  isSaved
+                    ? 'text-brand-primary'
+                    : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
+                }`}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="w-[18px] h-[18px]" />
+                ) : (
+                  <Bookmark className="w-[18px] h-[18px]" />
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
       </div>

@@ -124,6 +124,17 @@ export type ReactionType =
   | 'Question'
   | 'Celebrate';
 
+// Maps to BE UserProfileDto (GET /api/network/profile/{id})
+export interface UserProfileDto {
+  userId: string;
+  fullName: string;
+  avatarUrl?: string;
+  bio?: string;
+  postCount: number;
+  yearsOfExperience: number;
+  isVerified: boolean;
+}
+
 export interface PostReaction {
   id: string;
   postId: string;

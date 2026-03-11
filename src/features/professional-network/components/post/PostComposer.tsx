@@ -1,9 +1,9 @@
 /**
  * Post Composer Component
- * Component for creating new posts
+ * Component for creating new posts with file upload and anonymization consent
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Image,
   FileText,
@@ -17,8 +17,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { PostCategory, PostVisibility } from '../../types';
-import { currentUser } from '../../data';
 import { useCreatePost } from '../../hooks/useCreatePost';
+import useAuthStore from '@/store/auth-store';
 
 const postTypes: {
   type: PostCategory;
@@ -47,36 +47,95 @@ export function PostComposer() {
     useState<PostCategory>('KnowledgeShare');
   const [visibility, setVisibility] = useState<PostVisibility>('Public');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [isAnonymizationConfirmed, setIsAnonymizationConfirmed] =
+    useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const createPost = useCreatePost();
+  const { user } = useAuthStore();
+
+  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+  const hasFiles = files.length > 0;
+  const isPostDisabled =
+    !content.trim() ||
+    createPost.isPending ||
+    (hasFiles && !isAnonymizationConfirmed);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setFiles((prev) => [...prev, ...selectedFiles]);
+
+    // Generate previews for image files
+    selectedFiles.forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPreviews((prev) => [...prev, event.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPreviews((prev) => [...prev, '']);
+      }
+    });
+
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+    // If no files left, reset checkbox
+    if (files.length <= 1) {
+      setIsAnonymizationConfirmed(false);
+    }
+  };
 
   const handleSubmit = () => {
-    if (!content.trim()) return;
-    createPost.mutate(
-      {
-        authorType: 'Ophthalmologist',
-        content: content.trim(),
-        category: selectedType,
-        visibility,
-        allowComments: true,
-      },
-      {
-        onSuccess: () => {
-          setContent('');
-          setImages([]);
-          setIsExpanded(false);
-        },
-      }
+    if (isPostDisabled) return;
+
+    const formData = new FormData();
+    formData.append('authorType', 'Ophthalmologist');
+    formData.append('content', content.trim());
+    formData.append('category', selectedType);
+    formData.append('visibility', visibility);
+    formData.append('allowComments', 'true');
+    formData.append(
+      'isAnonymizationConfirmed',
+      String(isAnonymizationConfirmed)
     );
+
+    files.forEach((file) => {
+      formData.append('attachments', file);
+    });
+
+    createPost.mutate(formData, {
+      onSuccess: () => {
+        setContent('');
+        setFiles([]);
+        setPreviews([]);
+        setIsAnonymizationConfirmed(false);
+        setIsExpanded(false);
+      },
+    });
   };
 
   return (
     <div className="flex gap-x-3 px-4 py-3 border-b border-light-border">
-      <img
-        src={currentUser.avatarUrl}
-        alt={currentUser.fullName}
-        className="w-10 h-10 rounded-full object-cover shrink-0"
-      />
+      {user?.avatarUrl ? (
+        <img
+          src={user.avatarUrl}
+          alt={user.fullName}
+          className="w-10 h-10 rounded-full object-cover shrink-0"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 font-bold text-sm">
+          {userInitial}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <textarea
           placeholder="Share insights with your network..."
@@ -88,16 +147,29 @@ export function PostComposer() {
           }`}
         />
 
-        {/* Images Preview */}
-        {images.length > 0 && (
+        {/* Files Preview */}
+        {previews.length > 0 && (
           <div className="grid grid-cols-2 gap-0.5 mt-3 rounded-2xl overflow-hidden border border-light-border">
-            {images.map((img, index) => (
+            {previews.map((preview, index) => (
               <div key={index} className="relative">
-                <img src={img} alt="" className="w-full h-32 object-cover" />
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt={files[index]?.name}
+                    className="w-full h-32 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="w-6 h-6 text-text-muted mx-auto mb-1" />
+                      <p className="text-xs text-text-muted truncate max-w-[100px]">
+                        {files[index]?.name}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <button
-                  onClick={() =>
-                    setImages((prev) => prev.filter((_, i) => i !== index))
-                  }
+                  onClick={() => removeFile(index)}
                   className="absolute top-2 right-2 p-1.5 bg-black/70 text-white rounded-full hover:bg-black/80 hover-animation"
                 >
                   <X className="w-4 h-4" />
@@ -130,22 +202,45 @@ export function PostComposer() {
               </div>
             </div>
 
+            {/* Anonymization Consent Checkbox */}
+            {hasFiles && (
+              <label className="flex items-start gap-2 mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isAnonymizationConfirmed}
+                  onChange={(e) =>
+                    setIsAnonymizationConfirmed(e.target.checked)
+                  }
+                  className="mt-0.5 w-4 h-4 rounded border-amber-300 text-brand-primary focus:ring-brand-primary"
+                />
+                <span className="text-[13px] text-amber-800 dark:text-amber-200 leading-snug">
+                  Tôi cam kết hình ảnh đính kèm không chứa thông tin định danh
+                  của bệnh nhân
+                </span>
+              </label>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-between mt-3">
               <div className="flex items-center -ml-2">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
                 <button
-                  onClick={() =>
-                    setImages((prev) => [
-                      ...prev,
-                      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400',
-                    ])
-                  }
+                  onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
                   title="Add Image"
                 >
                   <Image className="w-5 h-5" />
                 </button>
                 <button
+                  onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
                   title="Attach Document"
                 >
@@ -177,7 +272,7 @@ export function PostComposer() {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!content.trim() || createPost.isPending}
+                  disabled={isPostDisabled}
                   className="btn-primary py-2 px-5 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {createPost.isPending && (

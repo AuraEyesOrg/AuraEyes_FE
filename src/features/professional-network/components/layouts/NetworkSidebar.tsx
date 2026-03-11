@@ -17,25 +17,26 @@ import {
   Moon,
   PenSquare,
 } from 'lucide-react';
-import { currentUser } from '../../data';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
-
-const navItems = [
-  { to: '/network', icon: Home, label: 'Feed', end: true },
-  { to: '/network/discover', icon: Compass, label: 'Discover' },
-  { to: '/network/saved', icon: Bookmark, label: 'Saved' },
-  {
-    to: `/network/profile/${currentUser?.id || '1'}`,
-    icon: User,
-    label: 'Profile',
-  },
-];
 
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthStore();
+  const { setIsAuthenticated, user } = useAuthStore();
+
+  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+
+  const navItems = [
+    { to: '/network', icon: Home, label: 'Feed', end: true },
+    { to: '/network/discover', icon: Compass, label: 'Discover' },
+    { to: '/network/saved', icon: Bookmark, label: 'Saved' },
+    {
+      to: `/network/profile/${user?.id || 'me'}`,
+      icon: User,
+      label: 'Profile',
+    },
+  ];
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -118,17 +119,23 @@ export function NetworkSidebar() {
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1">
-              <img
-                src={currentUser.avatarUrl}
-                alt={currentUser.fullName}
-                className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-brand/30 shadow-sm"
-              />
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName}
+                  className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-brand/30 shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 border-2 border-brand/30 shadow-sm font-bold text-sm">
+                  {userInitial}
+                </div>
+              )}
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
-                  {currentUser.fullName}
+                  {user?.fullName || 'User'}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {currentUser.specialty[0]}
+                  {user?.roles?.[0] || 'Member'}
                 </p>
               </div>
             </div>

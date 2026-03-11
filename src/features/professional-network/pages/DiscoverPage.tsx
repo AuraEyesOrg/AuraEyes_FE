@@ -3,11 +3,15 @@
  * Page for discovering professionals, organisations, and groups
  */
 
-import { useState } from 'react';
+import { useState, useDeferredValue } from 'react';
 import { Search, Users, Building2 } from 'lucide-react';
 import { ProfessionalCard } from '../components/professional/ProfessionalCard';
 import { OrganisationCard } from '../components/organisation/OrganisationCard';
-import { mockOphthalmologists, mockOrganisations } from '../data';
+import {
+  useProfessionals,
+  useProfessionalSearch,
+  useOrganisations,
+} from '../hooks/useNetworkPosts';
 
 type TabType = 'professionals' | 'organisations';
 
@@ -29,6 +33,22 @@ function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<TabType>('professionals');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredQuery = useDeferredValue(searchQuery);
+
+  // Real API data
+  const { data: professionalsData, isLoading: proLoading } = useProfessionals();
+  const { data: searchResults, isFetching: searchFetching } =
+    useProfessionalSearch(
+      deferredQuery,
+      selectedSpecialty !== 'All' ? selectedSpecialty : undefined
+    );
+  const { data: orgsData, isLoading: orgsLoading } = useOrganisations();
+
+  const professionals =
+    deferredQuery.length > 1
+      ? (searchResults ?? [])
+      : (professionalsData?.items ?? []);
+  const organisations = orgsData?.items ?? [];
 
   return (
     <>
@@ -105,11 +125,25 @@ function DiscoverPage() {
           <>
             <div className="px-4 py-3">
               <p className="text-[13px] text-text-muted">
-                {mockOphthalmologists.length} professionals found
+                {proLoading || searchFetching
+                  ? 'Loading...'
+                  : `${professionals.length} professionals found`}
               </p>
             </div>
-            {mockOphthalmologists.length > 0 ? (
-              mockOphthalmologists.map((professional) => (
+            {proLoading || searchFetching ? (
+              <div className="divide-y divide-light-border">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 animate-pulse flex gap-3">
+                    <div className="w-12 h-12 rounded-full bg-main-search-background shrink-0" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-4 w-32 rounded bg-main-search-background" />
+                      <div className="h-3 w-48 rounded bg-main-search-background" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : professionals.length > 0 ? (
+              professionals.map((professional) => (
                 <div
                   key={professional.id}
                   className="hover-card hover-animation"
@@ -130,11 +164,25 @@ function DiscoverPage() {
           <>
             <div className="px-4 py-3">
               <p className="text-[13px] text-text-muted">
-                {mockOrganisations.length} organisations found
+                {orgsLoading
+                  ? 'Loading...'
+                  : `${organisations.length} organisations found`}
               </p>
             </div>
-            {mockOrganisations.length > 0 ? (
-              mockOrganisations.map((org) => (
+            {orgsLoading ? (
+              <div className="divide-y divide-light-border">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 animate-pulse flex gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-main-search-background shrink-0" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-4 w-32 rounded bg-main-search-background" />
+                      <div className="h-3 w-48 rounded bg-main-search-background" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : organisations.length > 0 ? (
+              organisations.map((org) => (
                 <div key={org.id} className="hover-card hover-animation">
                   <OrganisationCard organisation={org} />
                 </div>

@@ -11,6 +11,7 @@ import {
   Eye,
   TrendingUp,
   Download,
+  Milestone as MilestoneIcon,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 
@@ -223,7 +224,7 @@ export default function RoadmapPage() {
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-brand/20 rounded-2xl flex items-center justify-center">
-              <Milestone className="w-7 h-7 text-brand" />
+              <MilestoneIcon className="w-7 h-7 text-brand" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-(--text-primary)">

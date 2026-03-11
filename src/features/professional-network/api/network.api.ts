@@ -16,8 +16,8 @@ import type {
   SavedCollection,
   SavedPost,
   TrendingTopic,
-  CreatePostRequest,
   ToggleReactionRequest,
+  UserProfileDto,
 } from '../types';
 
 // ============ API ENDPOINTS ============
@@ -87,18 +87,21 @@ export const NETWORK_ENDPOINTS = {
 
   // Trending
   TRENDING: '/network/trending',
+
+  // Profile
+  PROFILE: (userId: string) => `/network/profile/${userId}`,
 };
 
 // ============ POSTS API ============
 
 export const postsApi = {
   /**
-   * Get feed posts with pagination
+   * Get feed posts with pagination and optional authorId filter
    */
-  async getFeed(page = 1, pageSize = 10) {
+  async getFeed(pageNumber = 1, pageSize = 10, authorId?: string) {
     const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
       NETWORK_ENDPOINTS.POSTS.FEED,
-      { params: { page, pageSize } }
+      { params: { pageNumber, pageSize, ...(authorId ? { authorId } : {}) } }
     );
     return response.data.data;
   },
@@ -114,12 +117,17 @@ export const postsApi = {
   },
 
   /**
-   * Create new post
+   * Create new post with multipart/form-data
    */
-  async createPost(data: CreatePostRequest) {
+  async createPost(data: FormData) {
     const response = await api.post<ApiResponse<string>>(
       NETWORK_ENDPOINTS.POSTS.CREATE,
-      data
+      data,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data.data;
   },
@@ -406,6 +414,32 @@ export const trendingApi = {
   async getTrending() {
     const response = await api.get<ApiResponse<TrendingTopic[]>>(
       NETWORK_ENDPOINTS.TRENDING
+    );
+    return response.data.data;
+  },
+};
+
+// ============ PROFILE API ============
+
+export const profileApi = {
+  /**
+   * Get user public profile by userId
+   * Maps to BE GET /api/network/profile/{userId}
+   */
+  async getProfile(userId: string) {
+    const response = await api.get<ApiResponse<UserProfileDto>>(
+      NETWORK_ENDPOINTS.PROFILE(userId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get posts by a specific author (reuses network/feed with authorId filter)
+   */
+  async getPostsByAuthor(authorId: string, pageNumber = 1, pageSize = 10) {
+    const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
+      NETWORK_ENDPOINTS.POSTS.FEED,
+      { params: { pageNumber, pageSize, authorId } }
     );
     return response.data.data;
   },
