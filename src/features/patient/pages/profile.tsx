@@ -294,7 +294,7 @@ export default function ProfilePage() {
   // ============ RENDER ============
 
   return (
-    <PatientLayout userName={profile.fullName}>
+    <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
           My Profile

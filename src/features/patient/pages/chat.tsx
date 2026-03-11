@@ -214,7 +214,7 @@ export default function ChatPage() {
   // Loading state
   if (sessionsLoading) {
     return (
-      <PatientLayout userName="John Doe">
+      <PatientLayout>
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
             <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
@@ -226,7 +226,7 @@ export default function ChatPage() {
   }
 
   return (
-    <PatientLayout userName="John Doe">
+    <PatientLayout>
       <div className="mb-4">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-1">
           Messages
