@@ -1,13 +1,23 @@
 /**
  * Post Detail Page
- * Page for viewing a single post with comments
+ * Page for viewing a single post with comments and Facebook-style replies
  */
 
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Send, MessageCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Send,
+  MessageCircle,
+  Loader2,
+  CornerDownRight,
+} from 'lucide-react';
 import { PostCard } from '../components/post/PostCard';
-import { usePostDetail, usePostComments } from '../hooks/useNetworkPosts';
+import {
+  usePostDetail,
+  usePostComments,
+  useCommentReplies,
+} from '../hooks/useNetworkPosts';
 import { useAddComment } from '../hooks/useAddComment';
 import useAuthStore from '@/store/auth-store';
 import { InitialsAvatar } from '../components/professional/InitialsAvatar';
@@ -29,9 +39,62 @@ type CommentDto = {
   createdAt: string;
 };
 
+function CommentRepliesList({
+  postId,
+  parentCommentId,
+}: {
+  postId: string;
+  parentCommentId: string;
+}) {
+  const { data: repliesPage, isLoading } = useCommentReplies(
+    postId,
+    parentCommentId
+  );
+  const replies =
+    (repliesPage as PagedResult<CommentDto> | undefined)?.items ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="ml-11 py-2 flex items-center gap-2 text-text-muted text-[13px]">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Loading replies...
+      </div>
+    );
+  }
+
+  return (
+    <div className="ml-11 mt-2 space-y-2">
+      {replies.map((reply) => (
+        <div key={reply.id} className="flex gap-2">
+          {reply.author.avatarUrl ? (
+            <img
+              src={reply.author.avatarUrl}
+              alt={reply.author.fullName}
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <InitialsAvatar fullName={reply.author.fullName} size="xs" />
+          )}
+          <div className="flex-1 bg-main-search-background rounded-2xl px-3 py-2">
+            <p className="font-bold text-[13px] text-text-main">
+              {reply.author.fullName}
+            </p>
+            <p className="text-[13px] text-text-main mt-0.5">{reply.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState('');
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
+    new Set()
+  );
   const { user } = useAuthStore();
 
   const { data: post, isLoading: postLoading } = usePostDetail(id ?? '');
@@ -49,6 +112,29 @@ function PostDetailPage() {
       { postId: id, content: commentText.trim() },
       { onSuccess: () => setCommentText('') }
     );
+  };
+
+  const handleSubmitReply = (parentCommentId: string) => {
+    if (!replyText.trim() || !id) return;
+    addComment.mutate(
+      { postId: id, content: replyText.trim(), parentCommentId },
+      {
+        onSuccess: () => {
+          setReplyText('');
+          setReplyingToId(null);
+          setExpandedReplies((prev) => new Set([...prev, parentCommentId]));
+        },
+      }
+    );
+  };
+
+  const toggleReplies = (commentId: string) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) next.delete(commentId);
+      else next.add(commentId);
+      return next;
+    });
   };
 
   if (postLoading) {
@@ -165,10 +251,8 @@ function PostDetailPage() {
           </p>
         ) : (
           comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="hover-card hover-animation px-4 py-3"
-            >
+            <div key={comment.id} className="hover-animation px-4 py-3">
+              {/* Comment body */}
               <div className="flex gap-3">
                 {comment.author.avatarUrl ? (
                   <img
@@ -191,6 +275,76 @@ function PostDetailPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Reply actions */}
+              <div className="ml-[52px] mt-1.5 flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setReplyingToId(
+                      replyingToId === comment.id ? null : comment.id
+                    );
+                    setReplyText('');
+                  }}
+                  className="text-[13px] font-semibold text-text-muted hover:text-brand-primary hover-animation"
+                >
+                  Reply
+                </button>
+                {comment.replyCount > 0 && (
+                  <button
+                    onClick={() => toggleReplies(comment.id)}
+                    className="flex items-center gap-1 text-[13px] font-semibold text-brand-primary hover-animation"
+                  >
+                    <CornerDownRight className="w-3 h-3" />
+                    {expandedReplies.has(comment.id) ? 'Hide' : 'View'}{' '}
+                    {comment.replyCount}{' '}
+                    {comment.replyCount === 1 ? 'reply' : 'replies'}
+                  </button>
+                )}
+              </div>
+
+              {/* Reply input */}
+              {replyingToId === comment.id && (
+                <div className="ml-[52px] mt-2 flex gap-2">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName}
+                      className="w-8 h-8 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <InitialsAvatar
+                      fullName={user?.fullName ?? '?'}
+                      size="xs"
+                    />
+                  )}
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={`Reply to ${comment.author.fullName}...`}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && handleSubmitReply(comment.id)
+                      }
+                      autoFocus
+                      className="flex-1 bg-main-search-background rounded-full px-3 py-1.5 text-[13px] text-text-main placeholder:text-text-muted hover-animation
+                                 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white"
+                    />
+                    <button
+                      onClick={() => handleSubmitReply(comment.id)}
+                      disabled={!replyText.trim() || addComment.isPending}
+                      className="p-2 rounded-full bg-brand-primary text-white disabled:opacity-50 hover-animation"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Expanded replies */}
+              {expandedReplies.has(comment.id) && id && (
+                <CommentRepliesList postId={id} parentCommentId={comment.id} />
+              )}
             </div>
           ))
         )}

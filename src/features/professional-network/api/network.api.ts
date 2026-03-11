@@ -156,10 +156,21 @@ export const postsApi = {
   /**
    * Get post comments
    */
-  async getComments(postId: string, page = 1, pageSize = 10) {
+  async getComments(
+    postId: string,
+    page = 1,
+    pageSize = 10,
+    parentCommentId?: string
+  ) {
     const response = await api.get<ApiResponse<PagedResult<PostComment>>>(
       NETWORK_ENDPOINTS.POSTS.COMMENTS(postId),
-      { params: { page, pageSize } }
+      {
+        params: {
+          pageNumber: page,
+          pageSize,
+          ...(parentCommentId && { parentCommentId }),
+        },
+      }
     );
     return response.data.data;
   },
@@ -185,20 +196,20 @@ export const professionalsApi = {
   async getList(page = 1, pageSize = 10) {
     const response = await api.get<ApiResponse<PagedResult<Ophthalmologist>>>(
       NETWORK_ENDPOINTS.PROFESSIONALS.LIST,
-      { params: { page, pageSize } }
+      { params: { pageNumber: page, pageSize } }
     );
     return response.data.data;
   },
 
   /**
-   * Search professionals
+   * Search professionals (reuses list endpoint with searchTerm)
    */
   async search(query: string, specialty?: string) {
-    const response = await api.get<ApiResponse<Ophthalmologist[]>>(
-      NETWORK_ENDPOINTS.PROFESSIONALS.SEARCH,
-      { params: { query, specialty } }
+    const response = await api.get<ApiResponse<PagedResult<Ophthalmologist>>>(
+      NETWORK_ENDPOINTS.PROFESSIONALS.LIST,
+      { params: { searchTerm: query, pageNumber: 1, pageSize: 20 } }
     );
-    return response.data.data;
+    return response.data.data?.items ?? [];
   },
 
   /**
@@ -234,7 +245,7 @@ export const organisationsApi = {
   async getList(page = 1, pageSize = 10) {
     const response = await api.get<ApiResponse<PagedResult<Organisation>>>(
       NETWORK_ENDPOINTS.ORGANISATIONS.LIST,
-      { params: { page, pageSize } }
+      { params: { pageNumber: page, pageSize } }
     );
     return response.data.data;
   },

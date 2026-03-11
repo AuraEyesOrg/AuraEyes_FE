@@ -115,3 +115,16 @@ export function usePostComments(postId: string, page = 1, pageSize = 20) {
     staleTime: 1000 * 60,
   });
 }
+
+export function useCommentReplies(postId: string, parentCommentId: string) {
+  return useQuery({
+    queryKey: [
+      ...networkKeys.post(postId),
+      'replies',
+      parentCommentId,
+    ] as const,
+    queryFn: () => postsApi.getComments(postId, 1, 50, parentCommentId),
+    enabled: !!postId && !!parentCommentId,
+    staleTime: 1000 * 60,
+  });
+}

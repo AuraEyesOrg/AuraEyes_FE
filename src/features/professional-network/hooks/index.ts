@@ -2,6 +2,7 @@ export {
   useFeedPosts,
   usePostDetail,
   usePostComments,
+  useCommentReplies,
   networkKeys,
 } from './useNetworkPosts';
 export { useTrendingTopics } from './useTrendingTopics';
