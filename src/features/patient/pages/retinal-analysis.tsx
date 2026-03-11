@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { GoogleGenAI } from '@google/genai';
+import { aiCoreClient } from '../../../lib/axios';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -15,32 +15,238 @@ import {
   Info,
 } from 'lucide-react';
 
-const MOCK_ANOMALIES: Anomaly[] = [
-  {
+/** Map AI DiagnosisType → frontend Anomaly type */
+function mapDiagnosisType(
+  confidence: number
+): 'warning' | 'priority_high' | 'info' {
+  if (confidence >= 0.6) return 'warning';
+  if (confidence >= 0.3) return 'priority_high';
+  return 'info';
+}
+
+/** Get Tailwind color class based on confidence */
+function getColorClass(confidence: number): string {
+  if (confidence >= 0.8) return 'bg-red-600';
+  if (confidence >= 0.6) return 'bg-red-500';
+  if (confidence >= 0.4) return 'bg-orange-500';
+  return 'bg-yellow-500';
+}
+
+/** Patient-friendly name mapping for common retinal disease classes */
+const FRIENDLY_NAMES: Record<string, { name: string; description: string }> = {
+  CRVO: {
+    name: 'Retinal vein blockage',
+    description:
+      'A blood flow issue was detected in one of the veins in your retina. An eye specialist can help determine the best course of action.',
+  },
+  BRVO: {
+    name: 'Branch vein blockage',
+    description:
+      'A partial blood flow issue was found in a branch vein of your retina. Early monitoring can help manage this condition.',
+  },
+  DR2: {
+    name: 'Moderate diabetic eye changes',
+    description:
+      'Moderate changes related to diabetes were noticed. Regular specialist visits can help protect your vision.',
+  },
+  DR3: {
+    name: 'Signs of diabetic eye changes',
+    description:
+      'Some changes related to diabetes were noticed in your retina. Regular specialist visits can help protect your vision.',
+  },
+  CSCR: {
+    name: 'Fluid under the retina',
+    description:
+      'There appears to be some fluid build-up under your retina. This is often manageable with proper care.',
+  },
+  Normal: {
+    name: 'Healthy retina',
+    description:
+      'Your retinal scan looks normal. Keep up with regular eye check-ups to maintain good eye health.',
+  },
+  Glaucoma: {
+    name: 'Eye pressure concern',
+    description:
+      'Signs suggest possible elevated eye pressure. An eye specialist can perform additional tests to confirm.',
+  },
+  Maculopathy: {
+    name: 'Macular area changes',
+    description:
+      'Some changes were detected in the macular region of your retina. A specialist can advise on monitoring.',
+  },
+  'Preretinal hemorrhage': {
+    name: 'Bleeding near the retina',
+    description:
+      'Some bleeding was detected near the surface of your retina. An eye specialist can evaluate this further.',
+  },
+  'Macular hole': {
+    name: 'Small gap in the macula',
+    description:
+      'A small gap was detected in the central area of your retina. A specialist can advise on the best approach.',
+  },
+  'Cotton-wool spots': {
+    name: 'Nerve fiber changes',
+    description:
+      'Some changes in the nerve fibers of your retina were detected. This may warrant further evaluation.',
+  },
+};
+
+/**
+ * Convert AI pixel-based bbox to percentage-based location relative to original image.
+ * AI Score-CAM returns coords in the original image pixel space.
+ */
+function toPercentLocation(
+  bbox: { x: number; y: number; width: number; height: number },
+  imgWidth: number,
+  imgHeight: number
+) {
+  if (imgWidth === 0 || imgHeight === 0) return undefined;
+  return {
+    x: Math.round((bbox.x / imgWidth) * 1000) / 10,
+    y: Math.round((bbox.y / imgHeight) * 1000) / 10,
+    width: Math.round((bbox.width / imgWidth) * 1000) / 10,
+    height: Math.round((bbox.height / imgHeight) * 1000) / 10,
+  };
+}
+
+// --- Standard /analyze response types ---
+interface AICentroid {
+  x: number;
+  y: number;
+}
+interface AIBBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+interface AILesionLocation {
+  centroid: AICentroid;
+  bbox: AIBBox;
+  area: number;
+  confidence: number;
+}
+interface AIPredictionItem {
+  rank: number;
+  class_name: string;
+  class_index: number;
+  confidence: number;
+  status: string; // "primary" | "possible_co_occurrence" | "low_probability"
+}
+interface AIStandardResponse {
+  image_id: string;
+  filename: string;
+  prediction: {
+    primary: { class_name: string; class_index: number; confidence: number };
+    top_k: AIPredictionItem[];
+    multi_disease_analysis: {
+      likely_multi_disease: boolean;
+      num_candidates: number;
+      threshold: number;
+      candidates: string[];
+    };
+  };
+  localization: {
+    primary: AICentroid | null;
+    method: string;
+    type: string;
+    threshold: number;
+    num_lesions: number;
+    all_lesions: AILesionLocation[];
+  } | null;
+}
+
+/** Get the natural dimensions of an image from its URL */
+function getImageNaturalSize(url: string): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ w: 0, h: 0 });
+    img.src = url;
+  });
+}
+
+/**
+ * Map AI standard response → Anomaly[] for the frontend.
+ * - Primary disease gets the best localization lesion(s) merged into one entry.
+ * - Each unique top_k disease (excluding duplicates) is shown as a separate finding.
+ */
+function mapStandardResponseToAnomalies(
+  data: AIStandardResponse,
+  imgWidth: number,
+  imgHeight: number
+): Anomaly[] {
+  const anomalies: Anomaly[] = [];
+  const primary = data.prediction.primary;
+  const lesions = data.localization?.all_lesions ?? [];
+
+  // 1. Primary diagnosis — attach the highest-confidence lesion's bbox
+  const bestLesion = lesions.length > 0 ? lesions[0] : null;
+  const friendly = FRIENDLY_NAMES[primary.class_name];
+  anomalies.push({
     id: '1',
-    name: 'Microaneurysms',
-    confidence: 98,
-    description: 'Cluster detected in the superior temporal quadrant.',
-    color: 'bg-red-500',
-    type: 'warning',
-    location: { x: 58, y: 32, width: 12, height: 10 },
-    friendlyName: 'Tiny blood vessel changes',
-    friendlyDescription:
-      'We found small changes in the blood vessels in the upper area of your eye. This is one of the earliest signs your doctor may want to monitor.',
-  },
-  {
-    id: '2',
-    name: 'Hard Exudates',
-    confidence: 94,
-    description: 'Lipid residues near the macula.',
-    color: 'bg-yellow-400',
-    type: 'priority_high',
-    location: { x: 30, y: 68, width: 15, height: 12 },
-    friendlyName: 'Protein deposits near the retina',
-    friendlyDescription:
-      'Small protein deposits were found near the central part of your eye. Your eye specialist can assess whether any follow-up is needed.',
-  },
-];
+    name: primary.class_name,
+    confidence: Math.round(primary.confidence * 100),
+    description: bestLesion
+      ? `${primary.class_name} — primary region detected with ${Math.round(bestLesion.confidence * 100)}% localization confidence.`
+      : `${primary.class_name} detected in the retinal image.`,
+    color: getColorClass(primary.confidence),
+    type: mapDiagnosisType(primary.confidence),
+    location: bestLesion
+      ? toPercentLocation(bestLesion.bbox, imgWidth, imgHeight)
+      : undefined,
+    friendlyName: friendly?.name,
+    friendlyDescription: friendly?.description,
+  });
+
+  // 2. Add secondary lesion regions (skip first, already used) as area markers
+  //    only if they're meaningfully spread apart (>5% from primary area)
+  if (lesions.length > 1) {
+    const secondaryLesions = lesions.slice(1, 4); // max 3 extra regions
+    secondaryLesions.forEach((lesion, idx) => {
+      const loc = toPercentLocation(lesion.bbox, imgWidth, imgHeight);
+      anomalies.push({
+        id: `region-${idx + 2}`,
+        name: primary.class_name,
+        confidence: Math.round(lesion.confidence * 100),
+        description: `Additional affected region (${Math.round(lesion.confidence * 100)}% confidence).`,
+        color: getColorClass(lesion.confidence),
+        type: mapDiagnosisType(lesion.confidence),
+        location: loc,
+        friendlyName: 'Additional affected area',
+        friendlyDescription:
+          'Another area where our AI detected similar changes. Your specialist can evaluate all regions together.',
+      });
+    });
+  }
+
+  // 3. Other diseases from top_k (only those with status != primary, deduplicated)
+  const seenNames = new Set([primary.class_name]);
+  let nextId = anomalies.length + 1;
+
+  for (const pred of data.prediction.top_k) {
+    if (seenNames.has(pred.class_name)) continue;
+    if (pred.confidence < 0.02) continue; // skip negligible
+    seenNames.add(pred.class_name);
+
+    const predFriendly = FRIENDLY_NAMES[pred.class_name];
+    anomalies.push({
+      id: String(nextId++),
+      name: pred.class_name,
+      confidence: Math.round(pred.confidence * 100),
+      description: `Possible ${pred.class_name} — low probability finding (${Math.round(pred.confidence * 100)}%).`,
+      color: getColorClass(pred.confidence),
+      type: 'info',
+      // No specific location for secondary predictions
+      friendlyName: predFriendly?.name ?? pred.class_name,
+      friendlyDescription:
+        predFriendly?.description ??
+        'A secondary observation our AI flagged. This is a low-probability finding that your specialist can assess.',
+    });
+  }
+
+  return anomalies;
+}
 
 // Interface for route state from screening-new
 interface RouteStateImage {
@@ -175,7 +381,7 @@ export default function RetinalAnalysis() {
 
   const risk = riskConfig[riskLevel];
 
-  // --- AI Analysis Handler ---
+  // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
@@ -192,104 +398,63 @@ export default function RetinalAnalysis() {
         return;
       }
 
-      let base64Image = '';
-      try {
-        const imgResponse = await fetch(imageUrl);
-        const blob = await imgResponse.blob();
-        base64Image = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const res = reader.result as string;
-            resolve(res.split(',')[1]);
-          };
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setAnomalies(MOCK_ANOMALIES);
-        setAnalyzed(true);
-        setIsFallback(true);
-        setErrorMessage('Using demo mode (image fetch failed)');
-        setIsAnalyzing(false);
-        return;
-      }
+      // Get the natural image dimensions for accurate coordinate mapping
+      const { w: imgWidth, h: imgHeight } = await getImageNaturalSize(imageUrl);
 
-      if (!import.meta.env.VITE_API_KEY) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setAnomalies(MOCK_ANOMALIES);
-        setAnalyzed(true);
-        setIsFallback(true);
-        setErrorMessage('Demo mode: No API key configured');
-        setIsAnalyzing(false);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-          parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
-            {
-              text: `Analyze this retinal fundus image. Identify anomalies like Microaneurysms, Hemorrhages, Hard Exudates, Cotton Wool Spots, Drusen, Neovascularization, etc.
-Return a JSON object with a key "anomalies" containing an array.
-Each item must have:
-- id (string)
-- name (string, the medical/clinical term)
-- confidence (number 0-100)
-- description (short clinical description string)
-- type ('warning' | 'priority_high' | 'info')
-- color (tailwind class e.g. 'bg-red-500')
-- location object { x, y, width, height } (percentages 0-100 relative to image)
-- friendlyName (string, a patient-friendly plain-language name, e.g. "Tiny blood vessel changes" instead of "Microaneurysms")
-- friendlyDescription (string, a reassuring 1-2 sentence explanation in simple language that a non-medical person can understand, avoid clinical jargon)
-
-The friendlyName and friendlyDescription should be written as if explaining to a worried patient — use calm, simple words and avoid alarming language.`,
-            },
-          ],
-        },
-        config: { responseMimeType: 'application/json' },
+      // Convert blob/data URL to File for FormData upload
+      const imgResponse = await fetch(imageUrl);
+      const blob = await imgResponse.blob();
+      const fileName = currentImage?.name || 'retinal-scan.jpg';
+      const file = new File([blob], fileName, {
+        type: blob.type || 'image/jpeg',
       });
 
-      const json = JSON.parse(response?.text || '{}');
-      if (json.anomalies) {
-        setAnomalies(json.anomalies);
-        if (currentImage) {
-          setImages((prev) =>
-            prev.map((img) =>
-              img.id === currentImage.id
-                ? { ...img, analyzed: true, anomalies: json.anomalies }
-                : img
-            )
-          );
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Call AURA AI standard /diagnosis/analyze endpoint (includes Score-CAM + top_k)
+      const { data } = await aiCoreClient.post<AIStandardResponse>(
+        '/diagnosis/analyze',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          params: { threshold: 0.6, localization: true },
         }
-      }
-      setAnalyzed(true);
-    } catch (error) {
-      console.error('AI Analysis failed:', error);
-      const err = error as { status?: number; message?: string };
-      const isQuotaError =
-        err.status === 429 ||
-        err.message?.includes('429') ||
-        err.message?.includes('quota') ||
-        err.message?.includes('RESOURCE_EXHAUSTED');
-      setErrorMessage(
-        isQuotaError
-          ? 'API quota exceeded. Showing demo results.'
-          : 'AI analysis unavailable. Showing demo results.'
       );
-      setIsFallback(true);
-      setAnomalies(MOCK_ANOMALIES);
-      setAnalyzed(true);
+
+      // Map AI response → deduplicated Anomaly[] with correct image-relative coords
+      const mapped = mapStandardResponseToAnomalies(data, imgWidth, imgHeight);
+      setAnomalies(mapped);
+      setShowHighlights(true);
+
       if (currentImage) {
         setImages((prev) =>
           prev.map((img) =>
             img.id === currentImage.id
-              ? { ...img, analyzed: true, anomalies: MOCK_ANOMALIES }
+              ? { ...img, analyzed: true, anomalies: mapped }
               : img
           )
         );
       }
+      setAnalyzed(true);
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+
+      const err = error as { response?: { status?: number }; message?: string };
+      const status = err.response?.status;
+
+      if (status === 503) {
+        setErrorMessage('AI model is loading. Please try again in a moment.');
+      } else if (status === 400) {
+        setErrorMessage(
+          'Invalid image. Please upload a valid retinal fundus image.'
+        );
+      } else {
+        setErrorMessage(
+          'AI analysis unavailable. Please check that the AI service is running.'
+        );
+      }
+      setIsFallback(true);
     } finally {
       setIsAnalyzing(false);
     }
