@@ -42,7 +42,7 @@ export function ProfessionalCard({ professional }: Props) {
                 )}
               </div>
               <p className="text-[15px] text-text-muted truncate">
-                {professional.specialty[0]}
+                {professional.specialty?.[0]}
                 {professional.organisationName &&
                   ` · ${professional.organisationName}`}
               </p>
@@ -51,7 +51,7 @@ export function ProfessionalCard({ professional }: Props) {
 
           {/* Specialties */}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {professional.specialty.slice(1).map((spec) => (
+            {professional.specialty?.slice(1).map((spec) => (
               <span key={spec} className="badge-specialty">
                 {spec}
               </span>
@@ -60,18 +60,24 @@ export function ProfessionalCard({ professional }: Props) {
 
           {/* Stats */}
           <div className="flex items-center gap-4 mt-2 text-[13px] text-text-muted">
-            <span className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              {professional.connectionCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              {professional.postCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-500" />
-              {professional.rating}
-            </span>
+            {professional.connectionCount !== undefined && (
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                {professional.connectionCount}
+              </span>
+            )}
+            {professional.postCount !== undefined && (
+              <span className="flex items-center gap-1">
+                <FileText className="w-4 h-4" />
+                {professional.postCount}
+              </span>
+            )}
+            {professional.rating !== undefined && (
+              <span className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500" />
+                {professional.rating}
+              </span>
+            )}
           </div>
 
           {/* Bio */}
