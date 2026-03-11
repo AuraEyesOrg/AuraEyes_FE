@@ -168,8 +168,8 @@ function getImageNaturalSize(url: string): Promise<{ w: number; h: number }> {
 
 /**
  * Map AI standard response → Anomaly[] for the frontend.
- * - Primary disease gets the best localization lesion(s) merged into one entry.
- * - Each unique top_k disease (excluding duplicates) is shown as a separate finding.
+ * Faithfully reflects the API top_k predictions.
+ * The primary prediction gets the best Score-CAM lesion bbox.
  */
 function mapStandardResponseToAnomalies(
   data: AIStandardResponse,
@@ -177,72 +177,58 @@ function mapStandardResponseToAnomalies(
   imgHeight: number
 ): Anomaly[] {
   const anomalies: Anomaly[] = [];
-  const primary = data.prediction.primary;
   const lesions = data.localization?.all_lesions ?? [];
-
-  // 1. Primary diagnosis — attach the highest-confidence lesion's bbox
   const bestLesion = lesions.length > 0 ? lesions[0] : null;
-  const friendly = FRIENDLY_NAMES[primary.class_name];
-  anomalies.push({
-    id: '1',
-    name: primary.class_name,
-    confidence: Math.round(primary.confidence * 100),
-    description: bestLesion
-      ? `${primary.class_name} — primary region detected with ${Math.round(bestLesion.confidence * 100)}% localization confidence.`
-      : `${primary.class_name} detected in the retinal image.`,
-    color: getColorClass(primary.confidence),
-    type: mapDiagnosisType(primary.confidence),
-    location: bestLesion
-      ? toPercentLocation(bestLesion.bbox, imgWidth, imgHeight)
-      : undefined,
-    friendlyName: friendly?.name,
-    friendlyDescription: friendly?.description,
-  });
+  const primaryName = data.prediction.primary.class_name;
 
-  // 2. Add secondary lesion regions (skip first, already used) as area markers
-  //    only if they're meaningfully spread apart (>5% from primary area)
-  if (lesions.length > 1) {
-    const secondaryLesions = lesions.slice(1, 4); // max 3 extra regions
-    secondaryLesions.forEach((lesion, idx) => {
-      const loc = toPercentLocation(lesion.bbox, imgWidth, imgHeight);
-      anomalies.push({
-        id: `region-${idx + 2}`,
-        name: primary.class_name,
-        confidence: Math.round(lesion.confidence * 100),
-        description: `Additional affected region (${Math.round(lesion.confidence * 100)}% confidence).`,
-        color: getColorClass(lesion.confidence),
-        type: mapDiagnosisType(lesion.confidence),
-        location: loc,
-        friendlyName: 'Additional affected area',
-        friendlyDescription:
-          'Another area where our AI detected similar changes. Your specialist can evaluate all regions together.',
-      });
+  // Map each top_k prediction → one Anomaly card
+  for (const pred of data.prediction.top_k) {
+    const isPrimary = pred.rank === 1;
+    const friendly = FRIENDLY_NAMES[pred.class_name];
+
+    // Primary gets the best lesion bbox, others get no location
+    const location =
+      isPrimary && bestLesion
+        ? toPercentLocation(bestLesion.bbox, imgWidth, imgHeight)
+        : undefined;
+
+    anomalies.push({
+      id: String(pred.rank),
+      name: pred.class_name,
+      confidence: Math.round(pred.confidence * 100),
+      description: isPrimary
+        ? `${pred.class_name} detected as the primary finding (${Math.round(pred.confidence * 100)}% confidence).`
+        : `${pred.class_name} — ${pred.status.replace(/_/g, ' ')} (${Math.round(pred.confidence * 100)}% confidence).`,
+      color: getColorClass(pred.confidence),
+      type: mapDiagnosisType(pred.confidence),
+      location,
+      friendlyName: friendly?.name ?? pred.class_name,
+      friendlyDescription:
+        friendly?.description ??
+        `${pred.class_name} was detected by our AI screening. Your specialist can evaluate this further.`,
+      isHighest: isPrimary,
     });
   }
 
-  // 3. Other diseases from top_k (only those with status != primary, deduplicated)
-  const seenNames = new Set([primary.class_name]);
-  let nextId = anomalies.length + 1;
-
-  for (const pred of data.prediction.top_k) {
-    if (seenNames.has(pred.class_name)) continue;
-    if (pred.confidence < 0.02) continue; // skip negligible
-    seenNames.add(pred.class_name);
-
-    const predFriendly = FRIENDLY_NAMES[pred.class_name];
-    anomalies.push({
-      id: String(nextId++),
-      name: pred.class_name,
-      confidence: Math.round(pred.confidence * 100),
-      description: `Possible ${pred.class_name} — low probability finding (${Math.round(pred.confidence * 100)}%).`,
-      color: getColorClass(pred.confidence),
-      type: 'info',
-      // No specific location for secondary predictions
-      friendlyName: predFriendly?.name ?? pred.class_name,
-      friendlyDescription:
-        predFriendly?.description ??
-        'A secondary observation our AI flagged. This is a low-probability finding that your specialist can assess.',
-    });
+  // Additionally, if there are extra lesion regions from Score-CAM,
+  // distribute them among the top candidates that don't already have a location
+  if (lesions.length > 1) {
+    const extraLesions = lesions.slice(1);
+    let lesionIdx = 0;
+    for (const anomaly of anomalies) {
+      if (
+        anomaly.isHighest ||
+        anomaly.location ||
+        lesionIdx >= extraLesions.length
+      )
+        continue;
+      anomaly.location = toPercentLocation(
+        extraLesions[lesionIdx].bbox,
+        imgWidth,
+        imgHeight
+      );
+      lesionIdx++;
+    }
   }
 
   return anomalies;

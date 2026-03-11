@@ -62,13 +62,22 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     return () => window.removeEventListener('resize', updateImgRect);
   }, [updateImgRect]);
 
-  const getAnnotationStyle = (type: string) => {
+  const getAnnotationStyle = (type: string, isHighest?: boolean) => {
+    if (isHighest)
+      return {
+        border: 'rgba(239, 68, 68, 0.9)',
+        bg: 'rgba(239, 68, 68, 0.15)',
+        labelBg: 'rgba(220, 38, 38, 0.92)',
+        icon: <AlertTriangle className="w-3 h-3 text-white" />,
+        glow: true,
+      };
     if (type === 'warning')
       return {
         border: 'rgba(239, 68, 68, 0.7)',
         bg: 'rgba(239, 68, 68, 0.12)',
         labelBg: 'rgba(30, 30, 30, 0.85)',
         icon: <AlertTriangle className="w-3 h-3 text-red-400" />,
+        glow: false,
       };
     if (type === 'priority_high')
       return {
@@ -76,12 +85,14 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         bg: 'rgba(251, 191, 36, 0.1)',
         labelBg: 'rgba(30, 30, 30, 0.85)',
         icon: <Info className="w-3 h-3 text-amber-400" />,
+        glow: false,
       };
     return {
       border: 'rgba(96, 165, 250, 0.6)',
       bg: 'rgba(96, 165, 250, 0.08)',
       labelBg: 'rgba(30, 30, 30, 0.85)',
       icon: <Info className="w-3 h-3 text-blue-400" />,
+      glow: false,
     };
   };
 
@@ -130,7 +141,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 
             if (!isVisible || !anomaly.location) return null;
 
-            const style = getAnnotationStyle(anomaly.type);
+            const style = getAnnotationStyle(anomaly.type, anomaly.isHighest);
 
             return (
               <div
@@ -143,12 +154,22 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                   height: `${anomaly.location.height}%`,
                 }}
               >
-                {/* Rectangle border */}
+                {/* Rectangle border — glowing pulse for highest confidence */}
                 <div
-                  className="absolute inset-0 rounded-md border-2 transition-opacity duration-500"
+                  className={`absolute inset-0 rounded-md border-2 transition-opacity duration-500 ${
+                    style.glow
+                      ? 'animate-[glow-pulse_2s_ease-in-out_infinite]'
+                      : ''
+                  }`}
                   style={{
                     borderColor: style.border,
                     backgroundColor: style.bg,
+                    ...(style.glow
+                      ? {
+                          boxShadow: `0 0 12px 2px ${style.border}, inset 0 0 8px 1px ${style.bg}`,
+                          borderWidth: '3px',
+                        }
+                      : {}),
                   }}
                 />
                 {/* Text label */}
@@ -171,6 +192,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
           10% { opacity: 1; }
           90% { opacity: 1; }
           100% { top: 100%; opacity: 0; }
+        }
+        @keyframes glow-pulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 12px 2px rgba(239,68,68,0.6), inset 0 0 8px 1px rgba(239,68,68,0.15); }
+          50% { opacity: 0.85; box-shadow: 0 0 20px 6px rgba(239,68,68,0.45), inset 0 0 12px 3px rgba(239,68,68,0.1); }
         }
       `}</style>
     </div>
