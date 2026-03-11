@@ -75,6 +75,8 @@ export interface UserInfoResponse {
   emailConfirmed: boolean;
   organizationId?: string;
   twoFactorEnabled: boolean;
+  isVerified?: boolean | null;
+  verificationStatus?: string | null;
 }
 
 export interface AuthResponse {
