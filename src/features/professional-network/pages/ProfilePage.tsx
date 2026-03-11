@@ -14,12 +14,9 @@ import {
   FileText,
   Award,
   MoreHorizontal,
-  MessageCircle,
   Edit3,
   Eye,
   X,
-  BarChart3,
-  TrendingUp,
   Flag,
   Share2,
   Copy,
@@ -30,7 +27,7 @@ import { InitialsAvatar } from '../components/professional/InitialsAvatar';
 import { useUserProfile, useUserPosts } from '../hooks/useNetworkPosts';
 import useAuthStore from '@/store/auth-store';
 
-type TabType = 'posts' | 'about' | 'analytics';
+type TabType = 'posts' | 'about';
 
 // Profile header skeleton shown while loading
 function ProfileSkeleton() {
@@ -76,17 +73,7 @@ function ProfilePage() {
 
   const isOwnProfile = id === currentUserId && !isPreviewMode;
 
-  // Mock analytics data (own profile only)
-  const analyticsData = {
-    profileViews: 1250,
-    profileViewsTrend: 12,
-    postImpressions: 8500,
-    postImpressionsTrend: 8,
-  };
-
-  const availableTabs: TabType[] = isOwnProfile
-    ? ['posts', 'about', 'analytics']
-    : ['posts', 'about'];
+  const availableTabs: TabType[] = ['posts', 'about'];
 
   // ── Loading state ────────────────────────────────────────────────────────
   if (profileLoading) {
@@ -244,11 +231,6 @@ function ProfilePage() {
               </Link>
             ) : (
               <>
-                <button className="btn-secondary text-sm py-2 px-4 flex items-center gap-1.5">
-                  <MessageCircle className="w-4 h-4" />
-                  Message
-                </button>
-
                 {/* More Menu */}
                 <div className="relative">
                   <button
@@ -387,51 +369,7 @@ function ProfilePage() {
           </div>
         )}
 
-        {/* Analytics Tab — own profile only */}
-        {activeTab === 'analytics' && isOwnProfile && (
-          <div className="px-6 py-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="p-4 border border-light-border rounded-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-brand-primary" />
-                    <span className="font-medium text-text-main">
-                      Profile views
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center gap-1 text-sm ${analyticsData.profileViewsTrend >= 0 ? 'text-green-600' : 'text-red-500'}`}
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                    {analyticsData.profileViewsTrend}%
-                  </div>
-                </div>
-                <p className="mt-2 text-2xl font-bold text-text-main">
-                  {analyticsData.profileViews.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 border border-light-border rounded-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-brand-primary" />
-                    <span className="font-medium text-text-main">
-                      Post impressions
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center gap-1 text-sm ${analyticsData.postImpressionsTrend >= 0 ? 'text-green-600' : 'text-red-500'}`}
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                    {analyticsData.postImpressionsTrend}%
-                  </div>
-                </div>
-                <p className="mt-2 text-2xl font-bold text-text-main">
-                  {analyticsData.postImpressions.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Analytics Tab — removed */}
       </div>
     </div>
   );

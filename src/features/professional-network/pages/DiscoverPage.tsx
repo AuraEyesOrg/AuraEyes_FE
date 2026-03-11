@@ -20,28 +20,24 @@ const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
   { id: 'organisations', label: 'Organisations', icon: Building2 },
 ];
 
-const specialties = [
-  'All',
-  'Retina',
-  'Glaucoma',
-  'Cornea',
-  'Pediatric',
-  'AI in Ophthalmology',
+const categories = [
+  { value: null as string | null, label: 'All' },
+  { value: 'CasePresentation', label: 'Case Presentation' },
+  { value: 'PeerDiscussion', label: 'Peer Discussion' },
+  { value: 'KnowledgeShare', label: 'Knowledge Share' },
+  { value: 'Announcement', label: 'Announcement' },
 ];
 
 function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<TabType>('professionals');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredQuery = useDeferredValue(searchQuery);
 
   // Real API data
   const { data: professionalsData, isLoading: proLoading } = useProfessionals();
   const { data: searchResults, isFetching: searchFetching } =
-    useProfessionalSearch(
-      deferredQuery,
-      selectedSpecialty !== 'All' ? selectedSpecialty : undefined
-    );
+    useProfessionalSearch(deferredQuery, selectedCategory ?? undefined);
   const { data: orgsData, isLoading: orgsLoading } = useOrganisations();
 
   const professionals =
@@ -103,17 +99,17 @@ function DiscoverPage() {
       {/* Specialty Filter */}
       {activeTab === 'professionals' && (
         <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto border-b border-light-border">
-          {specialties.map((specialty) => (
+          {categories.map((cat) => (
             <button
-              key={specialty}
-              onClick={() => setSelectedSpecialty(specialty)}
+              key={cat.label}
+              onClick={() => setSelectedCategory(cat.value)}
               className={`px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap hover-animation ${
-                selectedSpecialty === specialty
+                selectedCategory === cat.value
                   ? 'bg-brand-primary text-white'
                   : 'bg-main-search-background text-text-main hover:bg-gray-200'
               }`}
             >
-              {specialty}
+              {cat.label}
             </button>
           ))}
         </div>

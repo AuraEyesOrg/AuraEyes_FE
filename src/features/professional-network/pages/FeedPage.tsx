@@ -12,10 +12,12 @@ import { useFeedPosts } from '../hooks/useNetworkPosts';
 import { useTrendingTopics } from '../hooks/useTrendingTopics';
 import { useToggleReaction } from '../hooks/useToggleReaction';
 import { useToggleSavePost } from '../hooks/useToggleSavePost';
+import useAuthStore from '@/store/auth-store';
 import type { ReactionType } from '../types';
 
 function FeedPage() {
   const [page, setPage] = useState(1);
+  const { user } = useAuthStore();
   const { data: feedData, isLoading, isError, error } = useFeedPosts(page);
   const { data: trendingData } = useTrendingTopics();
   const toggleReaction = useToggleReaction();
@@ -86,6 +88,7 @@ function FeedPage() {
                   post={post}
                   onReaction={handleReaction}
                   onSave={handleSave}
+                  currentUserId={user?.id}
                 />
               </div>
             ))}

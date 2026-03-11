@@ -11,12 +11,9 @@ import {
   HelpCircle,
   Link2,
   X,
-  Globe,
-  Users,
-  Building2,
   Loader2,
 } from 'lucide-react';
-import type { PostCategory, PostVisibility } from '../../types';
+import type { PostCategory } from '../../types';
 import { useCreatePost } from '../../hooks/useCreatePost';
 import useAuthStore from '@/store/auth-store';
 
@@ -31,21 +28,10 @@ const postTypes: {
   { type: 'Announcement', icon: FileText, label: 'Announcement' },
 ];
 
-const visibilityOptions: {
-  value: PostVisibility;
-  icon: React.ElementType;
-  label: string;
-}[] = [
-  { value: 'Public', icon: Globe, label: 'Public' },
-  { value: 'FollowersOnly', icon: Users, label: 'Followers only' },
-  { value: 'OrganisationOnly', icon: Building2, label: 'Organisation only' },
-];
-
 export function PostComposer() {
   const [content, setContent] = useState('');
   const [selectedType, setSelectedType] =
     useState<PostCategory>('KnowledgeShare');
-  const [visibility, setVisibility] = useState<PostVisibility>('Public');
   const [isExpanded, setIsExpanded] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -101,7 +87,7 @@ export function PostComposer() {
     formData.append('authorType', 'Ophthalmologist');
     formData.append('content', content.trim());
     formData.append('category', selectedType);
-    formData.append('visibility', visibility);
+    formData.append('visibility', 'Public');
     formData.append('allowComments', 'true');
     formData.append(
       'isAnonymizationConfirmed',
@@ -255,21 +241,6 @@ export function PostComposer() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Visibility Dropdown */}
-                <select
-                  value={visibility}
-                  onChange={(e) =>
-                    setVisibility(e.target.value as PostVisibility)
-                  }
-                  className="bg-main-search-background border-0 rounded-full px-3 py-1.5 text-[13px] text-text-main focus:outline-none focus:ring-2 focus:ring-brand-primary hover-animation"
-                >
-                  {visibilityOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-
                 <button
                   onClick={handleSubmit}
                   disabled={isPostDisabled}

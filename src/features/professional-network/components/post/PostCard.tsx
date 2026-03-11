@@ -325,7 +325,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
           )}
 
           {/* Actions Row */}
-          <div className="flex items-center justify-between mt-1 -ml-2 max-w-[425px]">
+          <div className="flex items-center justify-evenly mt-1">
             {/* Reaction Button with Popup */}
             <div
               className="relative"

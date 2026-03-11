@@ -102,3 +102,16 @@ export function useSavedPosts(page = 1, pageSize = 20) {
     staleTime: 1000 * 60 * 2,
   });
 }
+
+export function usePostComments(postId: string, page = 1, pageSize = 20) {
+  return useQuery({
+    queryKey: [
+      ...networkKeys.post(postId),
+      'comments',
+      { page, pageSize },
+    ] as const,
+    queryFn: () => postsApi.getComments(postId, page, pageSize),
+    enabled: !!postId,
+    staleTime: 1000 * 60,
+  });
+}

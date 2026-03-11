@@ -69,9 +69,6 @@ export type PostCategory =
 // Maps to BE AuthorType enum
 export type AuthorType = 'Ophthalmologist' | 'Organisation';
 
-// Maps to BE PostVisibility enum
-export type PostVisibility = 'Public' | 'FollowersOnly' | 'OrganisationOnly';
-
 // Maps to BE AttachmentType enum
 export type AttachmentType = 'Image' | 'Document' | 'Research';
 
@@ -90,7 +87,6 @@ export interface ProfessionalPost {
   author: PostAuthor;
   content: string;
   category: PostCategory;
-  visibility: PostVisibility;
   isRepost: boolean;
   repostComment?: string;
   originalPostId?: string;
@@ -272,7 +268,6 @@ export interface CreatePostRequest {
   content: string;
   category: PostCategory;
   organisationId?: string;
-  visibility: PostVisibility;
   allowComments: boolean;
 }
 

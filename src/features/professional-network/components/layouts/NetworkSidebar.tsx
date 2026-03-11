@@ -27,6 +27,14 @@ export function NetworkSidebar() {
 
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
 
+  const dashboardRoute = user?.roles?.includes('Patient')
+    ? '/patient/dashboard'
+    : user?.roles?.includes('Ophthalmologist')
+      ? '/ophthalmologist/dashboard'
+      : user?.roles?.includes('OrgAdmin')
+        ? '/organisation/dashboard'
+        : '/system-admin/dashboard';
+
   const navItems = [
     { to: '/network', icon: Home, label: 'Feed', end: true },
     { to: '/network/discover', icon: Compass, label: 'Discover' },
@@ -63,7 +71,7 @@ export function NetworkSidebar() {
 
         {/* Back to Dashboard */}
         <Link
-          to="/system-admin/dashboard"
+          to={dashboardRoute}
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2"
         >
           <ArrowLeft className="w-5 h-5" />
