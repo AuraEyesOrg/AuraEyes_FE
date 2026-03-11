@@ -90,6 +90,8 @@ export interface ProfessionalPost {
   isRepost: boolean;
   repostComment?: string;
   originalPostId?: string;
+  /** Nested original post data. Populated by BE when isRepost = true. */
+  originalPost?: OriginalPost;
   reactionCount: number;
   commentCount: number;
   repostCount: number;
@@ -98,6 +100,16 @@ export interface ProfessionalPost {
   attachments: PostAttachment[];
   currentUserReaction?: ReactionType;
   isBookmarked: boolean;
+  createdAt: string;
+}
+
+/** Compact original post shown inside a repost card. Maps to BE OriginalPostDto. */
+export interface OriginalPost {
+  id: string;
+  author: PostAuthor;
+  content: string;
+  category: PostCategory;
+  attachments: PostAttachment[];
   createdAt: string;
 }
 

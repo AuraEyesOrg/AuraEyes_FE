@@ -33,6 +33,7 @@ export const NETWORK_ENDPOINTS = {
     REACTIONS: (id: string) => `/network/posts/${id}/reactions`,
     COMMENTS: (id: string) => `/network/posts/${id}/comments`,
     SAVE: (id: string) => `/network/posts/${id}/save`,
+    REPOST: (id: string) => `/network/posts/${id}/repost`,
   },
 
   // Professionals (Ophthalmologists)
@@ -174,6 +175,21 @@ export const postsApi = {
   async toggleSavePost(postId: string) {
     const response = await api.post<ApiResponse<object>>(
       NETWORK_ENDPOINTS.POSTS.SAVE(postId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Repost (share/quote) an existing post.
+   * authorType: the current user's author type (Ophthalmologist | Organisation)
+   */
+  async repostPost(
+    postId: string,
+    data: { authorType: string; repostComment?: string }
+  ) {
+    const response = await api.post<ApiResponse<string>>(
+      NETWORK_ENDPOINTS.POSTS.REPOST(postId),
+      data
     );
     return response.data.data;
   },
