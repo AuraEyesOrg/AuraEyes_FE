@@ -65,6 +65,7 @@ export interface UserInfoResponse {
   id: string;
   email: string;
   fullName: string;
+  avatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string;
