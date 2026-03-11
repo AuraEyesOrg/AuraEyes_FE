@@ -9,3 +9,5 @@ export { userApi } from './user.api';
 export { aiModelApi } from './ai-model.api';
 export { auditApi, complianceApi } from './audit.api';
 export { permissionsApi } from './permissions.api';
+export { contractTemplatesApi } from './contract-templates.api';
+export { contractsApi } from './contracts.api';

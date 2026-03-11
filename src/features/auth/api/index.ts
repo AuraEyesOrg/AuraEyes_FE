@@ -5,6 +5,7 @@
 // Auth API
 export {
   login,
+  googleLogin,
   verifyTwoFactorLogin,
   registerPatient,
   registerOphthalmologist,

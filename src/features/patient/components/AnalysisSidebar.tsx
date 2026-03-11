@@ -103,17 +103,29 @@ const FindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl border border-slate-200 bg-white p-5 border-l-4 ${config.borderLeft} transition-colors hover:bg-slate-50`}
+      className={`rounded-xl border bg-white p-5 border-l-4 ${config.borderLeft} transition-colors hover:bg-slate-50 ${
+        anomaly.isHighest
+          ? 'ring-2 ring-red-400/50 border-red-300 shadow-md shadow-red-100'
+          : 'border-slate-200'
+      }`}
     >
       {/* Title + Severity Badge */}
       <div className="flex items-center gap-2 flex-wrap mb-2">
         <span className="text-[15px] font-bold text-slate-800 leading-snug">
           {friendlyName(anomaly)}
         </span>
+        {anomaly.isHighest && (
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-red-700">
+            Primary finding
+          </span>
+        )}
         <span
           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${config.badgeBg} ${config.labelColor}`}
         >
           {config.label}
+        </span>
+        <span className="ml-auto text-xs font-semibold text-slate-400">
+          {anomaly.confidence}%
         </span>
       </div>
       {/* Description */}

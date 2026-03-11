@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { setItem, getItem } from '@/lib/local-storage';
 import type {
   LoginRequest,
+  GoogleLoginRequest,
   RegisterPatientRequest,
   RegisterOphthalmologistRequest,
   VerifyTwoFactorRequest,
@@ -85,6 +86,37 @@ export const login = async (
   const response = await api.post<
     ApiResponse<AuthResponse | TwoFactorRequiredResponse>
   >(`${AUTH_BASE_URL}/login`, {
+    ...data,
+    deviceInfo: data.deviceInfo || navigator.userAgent,
+  });
+
+  const result = response.data.data;
+
+  // If login successful (not 2FA required), save tokens
+  if (
+    !isTwoFactorRequired(result) &&
+    result.succeeded &&
+    result.accessToken &&
+    result.refreshToken
+  ) {
+    saveAuthTokens(result.accessToken, result.refreshToken);
+    if (result.user) {
+      saveUser(result.user);
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Returns AuthResponse on success, or TwoFactorRequiredResponse if 2FA is enabled
+ */
+export const googleLogin = async (
+  data: GoogleLoginRequest
+): Promise<AuthResponse | TwoFactorRequiredResponse> => {
+  const response = await api.post<
+    ApiResponse<AuthResponse | TwoFactorRequiredResponse>
+  >(`${AUTH_BASE_URL}/google-login`, {
     ...data,
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });

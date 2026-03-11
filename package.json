@@ -28,6 +28,7 @@
     "@google/genai": "^1.36.0",
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.1.1",
+    "@react-oauth/google": "^0.13.4",
     "@tanstack/react-query": "^5.81.5",
     "@types/react-google-recaptcha": "^2.1.9",
     "@vercel/analytics": "^1.6.1",

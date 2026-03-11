@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import {
   Eye,
   EyeOff,
@@ -17,7 +18,12 @@ import {
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
-import { login, registerPatient, isTwoFactorRequired } from '../api';
+import {
+  login,
+  googleLogin,
+  registerPatient,
+  isTwoFactorRequired,
+} from '../api';
 import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
 
@@ -191,9 +197,79 @@ const LoginPage = () => {
     }
   };
 
-  const handleSSOLogin = () => {
-    console.log('SSO Login initiated');
-    // TODO: Implement SSO logic
+  const handleGoogleLoginSuccess = async (
+    credentialResponse: CredentialResponse
+  ) => {
+    if (!credentialResponse.credential) {
+      setError('Google login failed. No credential received.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await googleLogin({
+        credential: credentialResponse.credential,
+      });
+
+      // Check if 2FA is required
+      if (isTwoFactorRequired(response)) {
+        setTwoFactorData(response);
+        navigate('/two-factor-verify', {
+          state: {
+            userId: response.userId,
+            email: '',
+          },
+        });
+        return;
+      }
+
+      // Login successful
+      if (response.succeeded) {
+        if (response.user) {
+          authLogin(response.user);
+        }
+
+        const roles = response.user?.roles || [];
+        if (roles.includes('SystemAdmin')) {
+          navigate('/system-admin/dashboard');
+        } else if (roles.includes('Patient')) {
+          navigate('/patient/dashboard');
+        } else if (roles.includes('Ophthalmologist')) {
+          navigate('/ophthalmologist/dashboard');
+        } else if (roles.includes('Organization')) {
+          navigate('/organisation/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setError(
+          response.errors?.join(', ') ||
+            'Google login failed. Please try again.'
+        );
+      }
+    } catch (err: unknown) {
+      console.error('Google login error:', err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'An error occurred during Google login';
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string; errors?: string[] } };
+        };
+        setError(
+          axiosError.response?.data?.message ||
+            axiosError.response?.data?.errors?.join(', ') ||
+            errorMessage
+        );
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Clear messages when switching auth mode
@@ -469,18 +545,18 @@ const LoginPage = () => {
                     </span>
                   </div>
 
-                  <button
-                    className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-[#1F85F5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1F85F5] transition-all duration-200"
-                    type="button"
-                    onClick={handleSSOLogin}
-                  >
-                    <img
-                      alt="Google Logo"
-                      className="h-5 w-5"
-                      src="https://www.google.com/favicon.ico"
+                  <div className="w-full flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleLoginSuccess}
+                      onError={() =>
+                        setError('Google login failed. Please try again.')
+                      }
+                      text="continue_with"
+                      shape="rectangular"
+                      width="480"
+                      theme="outline"
                     />
-                    <span>Institutional SSO</span>
-                  </button>
+                  </div>
                 </div>
               </form>
 
