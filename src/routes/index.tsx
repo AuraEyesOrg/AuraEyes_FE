@@ -149,12 +149,6 @@ const NetworkFeedPage = lazy(
 const NetworkDiscoverPage = lazy(
   () => import('@/features/professional-network/pages/DiscoverPage')
 );
-const NetworkConnectionsPage = lazy(
-  () => import('@/features/professional-network/pages/ConnectionsPage')
-);
-const NetworkGroupsPage = lazy(
-  () => import('@/features/professional-network/pages/GroupsPage')
-);
 const NetworkSavedPage = lazy(
   () => import('@/features/professional-network/pages/SavedPage')
 );
@@ -336,8 +330,7 @@ const Router = () => (
           <Route index element={<NetworkFeedPage />} />
           <Route path="feed" element={<NetworkFeedPage />} />
           <Route path="discover" element={<NetworkDiscoverPage />} />
-          <Route path="connections" element={<NetworkConnectionsPage />} />
-          <Route path="groups" element={<NetworkGroupsPage />} />
+
           <Route path="saved" element={<NetworkSavedPage />} />
           <Route path="post/:id" element={<NetworkPostDetailPage />} />
           <Route path="profile/:id" element={<NetworkProfilePage />} />

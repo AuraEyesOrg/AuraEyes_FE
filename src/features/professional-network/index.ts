@@ -10,8 +10,6 @@
 export {
   FeedPage,
   DiscoverPage,
-  ConnectionsPage,
-  GroupsPage,
   SavedPage,
   PostDetailPage,
   ProfilePage,
@@ -22,7 +20,6 @@ export {
 export {
   NetworkLayout,
   NetworkSidebar,
-  NetworkRightPanel,
   ProfessionalAvatar,
   ProfessionalCard,
   ProfessionalCardMini,

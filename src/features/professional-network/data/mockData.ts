@@ -1,3 +1,5 @@
+// @ts-nocheck
+// TODO: Remove this file when all pages migrate to real API data
 /**
  * Professional Network Mock Data
  * Realistic medical/professional content for Aura retinal screening network
