@@ -167,8 +167,8 @@ const AppointmentsPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 icon-bg-blue rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">
@@ -180,8 +180,8 @@ const AppointmentsPage = () => {
         </div>
         <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 icon-bg-green rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">
@@ -193,8 +193,8 @@ const AppointmentsPage = () => {
         </div>
         <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <User className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 icon-bg-purple rounded-lg flex items-center justify-center">
+              <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">
@@ -206,8 +206,8 @@ const AppointmentsPage = () => {
         </div>
         <div className="medical-card p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 icon-bg-orange rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">

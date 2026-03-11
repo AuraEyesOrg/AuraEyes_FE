@@ -116,7 +116,7 @@ export default function PatientDashboard() {
         ? getRiskLabel(latestAnalysis.riskLevel)
         : 'No Scans',
       valueColor: 'text-brand',
-      bgColor: 'bg-blue-50',
+      bgColor: 'icon-bg-blue',
       iconColor: 'text-blue-500',
     },
     {
@@ -126,7 +126,7 @@ export default function PatientDashboard() {
         ? formatShortDate(nextAppointment.date)
         : 'None Scheduled',
       valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'bg-pink-50',
+      bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
     },
     {
@@ -134,7 +134,7 @@ export default function PatientDashboard() {
       label: 'Wallet Balance',
       value: wallet ? formatCurrency(wallet.balance) : '—',
       valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'bg-orange-50',
+      bgColor: 'icon-bg-orange',
       iconColor: 'text-orange-500',
     },
   ];
@@ -328,9 +328,7 @@ export default function PatientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statsCards.map((stat, index) => (
             <div key={index} className="medical-card flex items-center gap-4">
-              <div
-                className={`p-3 ${stat.bgColor} dark:bg-opacity-10 rounded-lg shrink-0`}
-              >
+              <div className={`p-3 ${stat.bgColor} rounded-lg shrink-0`}>
                 <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
               <div>
@@ -369,7 +367,7 @@ export default function PatientDashboard() {
                     {recentReports.map((report) => (
                       <div key={report.id} className="relative pl-6 group">
                         <div
-                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
+                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white dark:border-[#1e3a5f] ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
                         />
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div>
