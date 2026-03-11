@@ -245,7 +245,7 @@ export const professionalsApi = {
   /**
    * Search professionals (reuses list endpoint with searchTerm)
    */
-  async search(query: string, specialty?: string) {
+  async search(query: string, _specialty?: string) {
     const response = await api.get<ApiResponse<PagedResult<Ophthalmologist>>>(
       NETWORK_ENDPOINTS.PROFESSIONALS.LIST,
       { params: { searchTerm: query, pageNumber: 1, pageSize: 20 } }
