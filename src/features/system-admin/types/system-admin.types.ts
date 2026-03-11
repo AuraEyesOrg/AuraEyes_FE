@@ -329,6 +329,124 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
+// ============ CONTRACT TEMPLATES ============
+
+export type ContractTypeValue =
+  | 'OphthalmologistContract'
+  | 'MedicalOrganizationContract';
+
+export interface ContractTemplateDto {
+  id: string;
+  title: string;
+  type: ContractTypeValue;
+  contractVersion: string;
+  isActive: boolean;
+  variableCount: number;
+  usageCount: number;
+  effectiveDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ContractTemplateVariableDto {
+  id: string;
+  key: string;
+  label: string;
+  variableType: string;
+  description?: string;
+  defaultValue?: string;
+  selectOptions?: string;
+  unit?: string;
+  isRequired: boolean;
+  sortOrder: number;
+}
+
+export interface ContractTemplateDetailDto extends ContractTemplateDto {
+  contentTemplate: string;
+  variables: ContractTemplateVariableDto[];
+}
+
+export interface VariablePayload {
+  key: string;
+  label: string;
+  variableType: number; // maps to VariableType enum: Text=1, Number=2, Currency=3, Time=4, Date=5, Select=6
+  description?: string;
+  defaultValue?: string;
+  selectOptions?: string;
+  unit?: string;
+  isRequired: boolean;
+  sortOrder: number;
+}
+
+export interface CreateContractTemplatePayload {
+  title: string;
+  type: number; // ContractType enum: OphthalmologistContract=1, MedicalOrganizationContract=2
+  contractVersion: string;
+  contentTemplate: string;
+  effectiveDate?: string;
+  variables: VariablePayload[];
+}
+
+export interface UpdateContractTemplatePayload {
+  title: string;
+  type: number;
+  contractVersion: string;
+  contentTemplate: string;
+  effectiveDate?: string;
+  variables: VariablePayload[];
+}
+
+// ============ CONTRACTS ============
+
+export type ContractStatusValue =
+  | 'Draft'
+  | 'PendingSignature'
+  | 'Active'
+  | 'Expired'
+  | 'Terminated'
+  | 'Cancelled';
+
+export interface ContractDto {
+  id: string;
+  contractNumber: string;
+  status: ContractStatusValue;
+  templateId: string;
+  templateTitle: string;
+  contractType: ContractTypeValue;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
+  aiQuotaLimit: number;
+  platformCommissionRate: number;
+  signedDate?: string;
+  scannedDocumentUrl?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ContractDetailDto extends ContractDto {
+  signedContent?: string;
+}
+
+export interface CreateContractPayload {
+  userId: string;
+  templateId: string;
+  contractNumber: string;
+  aiQuotaLimit: number;
+  platformCommissionRate: number;
+}
+
+export interface UpdateContractPayload {
+  templateId: string;
+  aiQuotaLimit: number;
+  platformCommissionRate: number;
+}
+
+export interface SignContractPayload {
+  signedContent?: string;
+  scannedDocumentUrl?: string;
+}
+
 // ============ PERMISSIONS ============
 
 export interface PermissionDto {
