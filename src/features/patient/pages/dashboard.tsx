@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
+import { QuotaBadge } from '../components';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboard } from '../hooks/useDashboard';
 
@@ -205,6 +206,7 @@ export default function PatientDashboard() {
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
             </button>
+            <QuotaBadge />
             <Link
               to="/patient/screening/new"
               className="btn-primary flex items-center gap-2"

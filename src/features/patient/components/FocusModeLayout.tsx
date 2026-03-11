@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, CheckCircle, Home, ChevronRight } from 'lucide-react';
+import { QuotaBadge } from './index';
 
 type Step = 'upload' | 'analysis' | 'review';
 
@@ -127,8 +128,10 @@ export default function FocusModeLayout({
               </div>
             </div>
 
-            {/* Right: Placeholder for balance */}
-            <div className="w-32" />
+            {/* Right: Quota Badge */}
+            <div className="flex justify-end w-32">
+              <QuotaBadge />
+            </div>
           </div>
         </div>
       </header>
