@@ -14,12 +14,6 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 
-interface PatientSidebarProps {
-  userName?: string;
-  userAvatar?: string;
-  userId?: string;
-}
-
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/patient/dashboard' },
   { icon: Eye, label: 'My Scans', path: '/patient/screening' },
@@ -33,16 +27,16 @@ const navItems = [
   { icon: Settings, label: 'Settings', path: '/patient/settings' },
 ];
 
-export default function PatientSidebar({
-  userName = 'Alex Morgan',
-  userAvatar,
-  userId = '#8823-X',
-}: PatientSidebarProps) {
+export default function PatientSidebar() {
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthStore();
+  const { user, logout } = useAuthStore();
+
+  const userName = user?.fullName ?? 'Patient';
+  const userAvatar = user?.avatarUrl;
+  const userId = user?.email ?? '';
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 

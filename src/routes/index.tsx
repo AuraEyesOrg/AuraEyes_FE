@@ -127,6 +127,15 @@ const SystemAdminAuditLogs = lazy(
 const SystemAdminSettings = lazy(
   () => import('@/features/system-admin/pages/settings')
 );
+const SystemAdminPermissions = lazy(
+  () => import('@/features/system-admin/pages/permissions')
+);
+const SystemAdminContractTemplates = lazy(
+  () => import('@/features/system-admin/pages/contract-templates')
+);
+const SystemAdminContractTemplateEditor = lazy(
+  () => import('@/features/system-admin/pages/contract-template-editor')
+);
 
 // Professional Network pages
 const NetworkLayout = lazy(() =>
@@ -298,6 +307,22 @@ const Router = () => (
         <Route
           path="/system-admin/settings"
           element={<SystemAdminSettings />}
+        />
+        <Route
+          path="/system-admin/permissions"
+          element={<SystemAdminPermissions />}
+        />
+        <Route
+          path="/system-admin/contract-templates"
+          element={<SystemAdminContractTemplates />}
+        />
+        <Route
+          path="/system-admin/contract-templates/:id/edit"
+          element={<SystemAdminContractTemplateEditor />}
+        />
+        <Route
+          path="/system-admin/contract-templates/new"
+          element={<SystemAdminContractTemplateEditor />}
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}

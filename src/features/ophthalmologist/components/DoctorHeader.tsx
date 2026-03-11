@@ -1,17 +1,18 @@
 import { Search, Bell, Moon, Sun, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import type { Doctor } from '../types/ophthalmologist.types';
+import useAuthStore from '@/store/auth-store';
 
 interface DoctorHeaderProps {
-  doctor: Doctor;
   pageName?: string;
 }
 
 export default function DoctorHeader({
-  doctor,
   pageName = 'Dashboard',
 }: DoctorHeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuthStore();
+
+  const displayInitial = user?.fullName?.split(' ').pop()?.charAt(0) || 'D';
 
   return (
     <header className="bg-transparent py-4 px-6">
@@ -57,7 +58,7 @@ export default function DoctorHeader({
               <User size={18} className="text-white" />
             </div>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {doctor.name.split(' ').pop()?.charAt(0) || 'D'}
+              {displayInitial}
             </span>
           </button>
         </div>

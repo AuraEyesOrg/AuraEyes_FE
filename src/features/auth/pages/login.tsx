@@ -49,7 +49,7 @@ const LoginPage = () => {
   const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthStore();
+  const { login: authLogin } = useAuthStore();
 
   const {
     register: registerLogin,
@@ -97,7 +97,9 @@ const LoginPage = () => {
 
       // Login successful
       if (response.succeeded) {
-        setIsAuthenticated(true);
+        if (response.user) {
+          authLogin(response.user);
+        }
 
         // Navigate based on user role
         const roles = response.user?.roles || [];

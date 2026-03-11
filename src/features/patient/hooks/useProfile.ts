@@ -1,0 +1,66 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+  changePassword,
+} from '../api/patient.api';
+import type { PatientProfile, ProfileUpdateData } from '../types';
+
+// ============ QUERY KEYS ============
+
+export const profileKeys = {
+  all: ['patient-profile'] as const,
+  detail: () => [...profileKeys.all, 'detail'] as const,
+};
+
+// ============ QUERIES ============
+
+export const useProfile = () => {
+  return useQuery<PatientProfile, Error>({
+    queryKey: profileKeys.detail(),
+    queryFn: getProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// ============ MUTATIONS ============
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<PatientProfile, Error, ProfileUpdateData>({
+    mutationFn: updateProfile,
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKeys.detail(), data);
+    },
+  });
+};
+
+export const useUploadAvatar = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, Error, File>({
+    mutationFn: uploadAvatar,
+    onSuccess: (avatarUrl) => {
+      // Update the cached profile with new avatar URL
+      queryClient.setQueryData<PatientProfile>(profileKeys.detail(), (old) =>
+        old ? { ...old, avatarUrl } : old
+      );
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation<
+    void,
+    Error,
+    {
+      currentPassword: string;
+      newPassword: string;
+      confirmNewPassword: string;
+    }
+  >({
+    mutationFn: changePassword,
+  });
+};

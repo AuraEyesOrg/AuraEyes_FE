@@ -15,6 +15,8 @@ import {
   LogOut,
   Network,
   Stethoscope,
+  KeyRound,
+  ScrollText,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 
@@ -32,6 +34,12 @@ const navItems = [
   },
   { label: 'Patients', icon: Users, path: '/system-admin/patients' },
   { label: 'AI Performance', icon: Shield, path: '/system-admin/ai-models' },
+  { label: 'Permissions', icon: KeyRound, path: '/system-admin/permissions' },
+  {
+    label: 'Contracts',
+    icon: ScrollText,
+    path: '/system-admin/contract-templates',
+  },
   { label: 'Audit Logs', icon: FileText, path: '/system-admin/audit-logs' },
   { label: 'Aura Network', icon: Network, path: '/network' },
   { label: 'Settings', icon: Settings, path: '/system-admin/settings' },
@@ -39,10 +47,19 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthStore();
+  const { user, logout } = useAuthStore();
+
+  const displayName = user?.fullName ?? 'System Admin';
+  const displayEmail = user?.email ?? '';
+  const initials = displayName
+    .split(' ')
+    .map((w) => w.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 
@@ -95,13 +112,13 @@ export default function Sidebar() {
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1">
               <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm">
-                SA
+                {initials || 'SA'}
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
-                  System Admin
+                  {displayName}
                 </p>
-                <p className="text-xs text-gray-400 truncate">admin@aura.med</p>
+                <p className="text-xs text-gray-400 truncate">{displayEmail}</p>
               </div>
             </div>
             <button

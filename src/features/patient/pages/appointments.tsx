@@ -131,7 +131,7 @@ const AppointmentsPage = () => {
 
   if (isLoading) {
     return (
-      <PatientLayout userName="John Doe">
+      <PatientLayout>
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
             <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
@@ -143,7 +143,7 @@ const AppointmentsPage = () => {
   }
 
   return (
-    <PatientLayout userName="John Doe">
+    <PatientLayout>
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-(--text-primary) mb-2">

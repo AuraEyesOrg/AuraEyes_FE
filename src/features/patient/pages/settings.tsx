@@ -71,7 +71,7 @@ export default function SettingsPage() {
           icon: Palette,
           title: 'Appearance',
           description: 'Theme, display settings, accessibility',
-          action: () => toggleTheme(),
+          action: toggleTheme,
         },
         {
           icon: Globe,
