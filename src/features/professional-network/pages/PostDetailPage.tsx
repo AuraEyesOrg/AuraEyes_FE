@@ -19,7 +19,10 @@ import {
   useCommentReplies,
 } from '../hooks/useNetworkPosts';
 import { useAddComment } from '../hooks/useAddComment';
+import { useToggleReaction } from '../hooks/useToggleReaction';
 import useAuthStore from '@/store/auth-store';
+import { LoadingButton } from '@/components/ui/loading-button';
+import type { ReactionType } from '../types';
 import { InitialsAvatar } from '../components/professional/InitialsAvatar';
 import type { PagedResult } from '../types';
 
@@ -96,8 +99,17 @@ function PostDetailPage() {
     new Set()
   );
   const { user } = useAuthStore();
+  const toggleReaction = useToggleReaction();
 
   const { data: post, isLoading: postLoading } = usePostDetail(id ?? '');
+
+  const handleReaction = (postId: string, type: ReactionType) => {
+    toggleReaction.mutate({
+      postId,
+      type,
+      currentReaction: post?.currentUserReaction,
+    });
+  };
   const { data: commentsPage, isLoading: commentsLoading } = usePostComments(
     id ?? ''
   );
@@ -196,7 +208,11 @@ function PostDetailPage() {
       </header>
 
       {/* Post */}
-      <PostCard post={post} currentUserId={user?.id} />
+      <PostCard
+        post={post}
+        currentUserId={user?.id}
+        onReaction={handleReaction}
+      />
 
       {/* Comment Input */}
       <div className="flex gap-3 px-4 py-3 border-b border-light-border">
@@ -219,17 +235,14 @@ function PostDetailPage() {
             className="flex-1 bg-main-search-background rounded-full px-4 py-2 text-[15px] text-text-main placeholder:text-text-muted hover-animation
                        focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white"
           />
-          <button
+          <LoadingButton
             onClick={handleSubmitComment}
-            disabled={!commentText.trim() || addComment.isPending}
-            className="btn-primary py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            isPending={addComment.isPending}
+            disabled={!commentText.trim()}
+            className="btn-primary py-2 px-4"
           >
-            {addComment.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </button>
+            <Send className="w-4 h-4" />
+          </LoadingButton>
         </div>
       </div>
 

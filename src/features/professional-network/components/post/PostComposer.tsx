@@ -11,11 +11,11 @@ import {
   HelpCircle,
   Link2,
   X,
-  Loader2,
 } from 'lucide-react';
 import type { PostCategory } from '../../types';
 import { useCreatePost } from '../../hooks/useCreatePost';
 import useAuthStore from '@/store/auth-store';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 const postTypes: {
   type: PostCategory;
@@ -241,16 +241,14 @@ export function PostComposer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <button
+                <LoadingButton
                   onClick={handleSubmit}
+                  isPending={createPost.isPending}
                   disabled={isPostDisabled}
-                  className="btn-primary py-2 px-5 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="btn-primary py-2 px-5 text-[15px]"
                 >
-                  {createPost.isPending && (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  )}
                   Post
-                </button>
+                </LoadingButton>
               </div>
             </div>
           </>
