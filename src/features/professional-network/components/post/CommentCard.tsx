@@ -22,11 +22,11 @@ const _reactionConfig: Record<
   ReactionType,
   { icon: React.ElementType; color: string }
 > = {
-  insightful: { icon: Lightbulb, color: 'text-reaction-insightful' },
-  agree: { icon: ThumbsUp, color: 'text-reaction-agree' },
-  helpful: { icon: Heart, color: 'text-reaction-helpful' },
-  question: { icon: HelpCircle, color: 'text-reaction-question' },
-  celebrate: { icon: PartyPopper, color: 'text-reaction-celebrate' },
+  Insightful: { icon: Lightbulb, color: 'text-reaction-insightful' },
+  Agree: { icon: ThumbsUp, color: 'text-reaction-agree' },
+  Helpful: { icon: Heart, color: 'text-reaction-helpful' },
+  Question: { icon: HelpCircle, color: 'text-reaction-question' },
+  Celebrate: { icon: PartyPopper, color: 'text-reaction-celebrate' },
 };
 
 export function CommentCard({ comment, isReply = false }: Props) {
@@ -61,7 +61,7 @@ export function CommentCard({ comment, isReply = false }: Props) {
           <div className="flex items-center gap-4 mt-2 text-[13px]">
             <button
               onClick={() =>
-                setUserReaction(userReaction ? undefined : 'insightful')
+                setUserReaction(userReaction ? undefined : 'Insightful')
               }
               className={`font-medium hover-animation ${userReaction ? 'text-brand-primary' : 'text-text-muted hover:text-brand-primary'}`}
             >

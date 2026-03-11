@@ -6,7 +6,7 @@
 import { api } from '@/lib/api';
 import type {
   ApiResponse,
-  PaginatedResponse,
+  PagedResult,
   ProfessionalPost,
   Ophthalmologist,
   Organisation,
@@ -15,6 +15,9 @@ import type {
   PostComment,
   SavedCollection,
   SavedPost,
+  TrendingTopic,
+  CreatePostRequest,
+  ToggleReactionRequest,
 } from '../types';
 
 // ============ API ENDPOINTS ============
@@ -22,14 +25,14 @@ import type {
 export const NETWORK_ENDPOINTS = {
   // Feed & Posts
   POSTS: {
-    LIST: '/network/posts',
+    FEED: '/network/feed',
     CREATE: '/network/posts',
     GET: (id: string) => `/network/posts/${id}`,
     UPDATE: (id: string) => `/network/posts/${id}`,
     DELETE: (id: string) => `/network/posts/${id}`,
-    REACT: (id: string) => `/network/posts/${id}/react`,
+    REACTIONS: (id: string) => `/network/posts/${id}/reactions`,
     COMMENTS: (id: string) => `/network/posts/${id}/comments`,
-    SHARE: (id: string) => `/network/posts/${id}/share`,
+    SAVE: (id: string) => `/network/posts/${id}/save`,
   },
 
   // Professionals (Ophthalmologists)
@@ -77,12 +80,13 @@ export const NETWORK_ENDPOINTS = {
 
   // Saved
   SAVED: {
-    POSTS: '/network/saved/posts',
+    LIST: '/network/saved-posts',
     COLLECTIONS: '/network/saved/collections',
     CREATE_COLLECTION: '/network/saved/collections',
-    SAVE_POST: (postId: string) => `/network/posts/${postId}/save`,
-    UNSAVE_POST: (postId: string) => `/network/posts/${postId}/unsave`,
   },
+
+  // Trending
+  TRENDING: '/network/trending',
 };
 
 // ============ POSTS API ============
@@ -92,9 +96,10 @@ export const postsApi = {
    * Get feed posts with pagination
    */
   async getFeed(page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PaginatedResponse<ProfessionalPost>>
-    >(NETWORK_ENDPOINTS.POSTS.LIST, { params: { page, pageSize } });
+    const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
+      NETWORK_ENDPOINTS.POSTS.FEED,
+      { params: { page, pageSize } }
+    );
     return response.data.data;
   },
 
@@ -111,8 +116,8 @@ export const postsApi = {
   /**
    * Create new post
    */
-  async createPost(data: Partial<ProfessionalPost>) {
-    const response = await api.post<ApiResponse<ProfessionalPost>>(
+  async createPost(data: CreatePostRequest) {
+    const response = await api.post<ApiResponse<string>>(
       NETWORK_ENDPOINTS.POSTS.CREATE,
       data
     );
@@ -120,12 +125,22 @@ export const postsApi = {
   },
 
   /**
-   * React to a post
+   * Toggle reaction on a post
    */
-  async reactToPost(postId: string, reactionType: string) {
-    const response = await api.post<ApiResponse<{ success: boolean }>>(
-      NETWORK_ENDPOINTS.POSTS.REACT(postId),
-      { type: reactionType }
+  async toggleReaction(postId: string, data: ToggleReactionRequest) {
+    const response = await api.post<ApiResponse<object>>(
+      NETWORK_ENDPOINTS.POSTS.REACTIONS(postId),
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Toggle save/unsave a post
+   */
+  async toggleSavePost(postId: string) {
+    const response = await api.post<ApiResponse<object>>(
+      NETWORK_ENDPOINTS.POSTS.SAVE(postId)
     );
     return response.data.data;
   },
@@ -133,9 +148,10 @@ export const postsApi = {
   /**
    * Get post comments
    */
-  async getComments(postId: string) {
-    const response = await api.get<ApiResponse<PostComment[]>>(
-      NETWORK_ENDPOINTS.POSTS.COMMENTS(postId)
+  async getComments(postId: string, page = 1, pageSize = 10) {
+    const response = await api.get<ApiResponse<PagedResult<PostComment>>>(
+      NETWORK_ENDPOINTS.POSTS.COMMENTS(postId),
+      { params: { page, pageSize } }
     );
     return response.data.data;
   },
@@ -144,7 +160,7 @@ export const postsApi = {
    * Add comment to post
    */
   async addComment(postId: string, content: string, parentCommentId?: string) {
-    const response = await api.post<ApiResponse<PostComment>>(
+    const response = await api.post<ApiResponse<string>>(
       NETWORK_ENDPOINTS.POSTS.COMMENTS(postId),
       { content, parentCommentId }
     );
@@ -159,9 +175,10 @@ export const professionalsApi = {
    * Get list of professionals with pagination
    */
   async getList(page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PaginatedResponse<Ophthalmologist>>
-    >(NETWORK_ENDPOINTS.PROFESSIONALS.LIST, { params: { page, pageSize } });
+    const response = await api.get<ApiResponse<PagedResult<Ophthalmologist>>>(
+      NETWORK_ENDPOINTS.PROFESSIONALS.LIST,
+      { params: { page, pageSize } }
+    );
     return response.data.data;
   },
 
@@ -190,11 +207,12 @@ export const professionalsApi = {
    * Get professional's posts
    */
   async getPosts(id: string, page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PaginatedResponse<ProfessionalPost>>
-    >(NETWORK_ENDPOINTS.PROFESSIONALS.POSTS(id), {
-      params: { page, pageSize },
-    });
+    const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
+      NETWORK_ENDPOINTS.PROFESSIONALS.POSTS(id),
+      {
+        params: { page, pageSize },
+      }
+    );
     return response.data.data;
   },
 };
@@ -206,9 +224,10 @@ export const organisationsApi = {
    * Get list of organisations
    */
   async getList(page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PaginatedResponse<Organisation>>
-    >(NETWORK_ENDPOINTS.ORGANISATIONS.LIST, { params: { page, pageSize } });
+    const response = await api.get<ApiResponse<PagedResult<Organisation>>>(
+      NETWORK_ENDPOINTS.ORGANISATIONS.LIST,
+      { params: { page, pageSize } }
+    );
     return response.data.data;
   },
 
@@ -241,7 +260,7 @@ export const connectionsApi = {
    */
   async getConnections(page = 1, pageSize = 10) {
     const response = await api.get<
-      ApiResponse<PaginatedResponse<ProfessionalConnection>>
+      ApiResponse<PagedResult<ProfessionalConnection>>
     >(NETWORK_ENDPOINTS.CONNECTIONS.LIST, { params: { page, pageSize } });
     return response.data.data;
   },
@@ -315,9 +334,10 @@ export const groupsApi = {
    * Discover groups
    */
   async discoverGroups(page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PaginatedResponse<ProfessionalGroup>>
-    >(NETWORK_ENDPOINTS.GROUPS.DISCOVER, { params: { page, pageSize } });
+    const response = await api.get<ApiResponse<PagedResult<ProfessionalGroup>>>(
+      NETWORK_ENDPOINTS.GROUPS.DISCOVER,
+      { params: { page, pageSize } }
+    );
     return response.data.data;
   },
 
@@ -359,8 +379,8 @@ export const savedApi = {
    * Get saved posts
    */
   async getSavedPosts(page = 1, pageSize = 10) {
-    const response = await api.get<ApiResponse<PaginatedResponse<SavedPost>>>(
-      NETWORK_ENDPOINTS.SAVED.POSTS,
+    const response = await api.get<ApiResponse<PagedResult<SavedPost>>>(
+      NETWORK_ENDPOINTS.SAVED.LIST,
       { params: { page, pageSize } }
     );
     return response.data.data;
@@ -375,24 +395,17 @@ export const savedApi = {
     );
     return response.data.data;
   },
+};
 
-  /**
-   * Save a post
-   */
-  async savePost(postId: string, collectionId?: string) {
-    const response = await api.post<ApiResponse<SavedPost>>(
-      NETWORK_ENDPOINTS.SAVED.SAVE_POST(postId),
-      { collectionId }
-    );
-    return response.data.data;
-  },
+// ============ TRENDING API ============
 
+export const trendingApi = {
   /**
-   * Unsave a post
+   * Get trending topics
    */
-  async unsavePost(postId: string) {
-    const response = await api.delete<ApiResponse<{ success: boolean }>>(
-      NETWORK_ENDPOINTS.SAVED.UNSAVE_POST(postId)
+  async getTrending() {
+    const response = await api.get<ApiResponse<TrendingTopic[]>>(
+      NETWORK_ENDPOINTS.TRENDING
     );
     return response.data.data;
   },

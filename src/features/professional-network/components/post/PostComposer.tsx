@@ -15,30 +15,35 @@ import {
   Users,
   Building2,
 } from 'lucide-react';
-import type { PostType, PostVisibility } from '../../types';
+import type { PostCategory, PostVisibility } from '../../types';
 import { currentUser } from '../../data';
 
-const postTypes: { type: PostType; icon: React.ElementType; label: string }[] =
-  [
-    { type: 'article', icon: FileText, label: 'Article' },
-    { type: 'case_study', icon: FlaskConical, label: 'Case Study' },
-    { type: 'question', icon: HelpCircle, label: 'Question' },
-  ];
+const postTypes: {
+  type: PostCategory;
+  icon: React.ElementType;
+  label: string;
+}[] = [
+  { type: 'KnowledgeShare', icon: FileText, label: 'Knowledge Share' },
+  { type: 'CasePresentation', icon: FlaskConical, label: 'Case Presentation' },
+  { type: 'PeerDiscussion', icon: HelpCircle, label: 'Peer Discussion' },
+  { type: 'Announcement', icon: FileText, label: 'Announcement' },
+];
 
 const visibilityOptions: {
   value: PostVisibility;
   icon: React.ElementType;
   label: string;
 }[] = [
-  { value: 'public', icon: Globe, label: 'Public' },
-  { value: 'connections_only', icon: Users, label: 'Connections only' },
-  { value: 'organisation_only', icon: Building2, label: 'Organisation only' },
+  { value: 'Public', icon: Globe, label: 'Public' },
+  { value: 'FollowersOnly', icon: Users, label: 'Followers only' },
+  { value: 'OrganisationOnly', icon: Building2, label: 'Organisation only' },
 ];
 
 export function PostComposer() {
   const [content, setContent] = useState('');
-  const [selectedType, setSelectedType] = useState<PostType>('article');
-  const [visibility, setVisibility] = useState<PostVisibility>('public');
+  const [selectedType, setSelectedType] =
+    useState<PostCategory>('KnowledgeShare');
+  const [visibility, setVisibility] = useState<PostVisibility>('Public');
   const [isExpanded, setIsExpanded] = useState(false);
   const [images, setImages] = useState<string[]>([]);
 

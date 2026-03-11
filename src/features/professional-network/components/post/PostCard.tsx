@@ -17,47 +17,40 @@ import {
   FileText,
   FlaskConical,
   HelpingHand,
-  Trophy,
   Newspaper,
-  Microscope,
   Copy,
   Flag,
   Bookmark,
   BookmarkCheck,
-  BadgeCheck,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
 
 interface Props {
   post: ProfessionalPost;
+  onReaction?: (postId: string, type: ReactionType) => void;
+  onSave?: (postId: string) => void;
 }
 
 const postTypeConfig = {
-  article: {
-    icon: FileText,
-    label: 'Article',
-    color: 'text-blue-500 bg-blue-50',
-  },
-  case_study: {
+  CasePresentation: {
     icon: FlaskConical,
-    label: 'Case Study',
+    label: 'Case Presentation',
     color: 'text-purple-500 bg-purple-50',
   },
-  question: {
+  PeerDiscussion: {
     icon: HelpingHand,
-    label: 'Question',
+    label: 'Peer Discussion',
     color: 'text-amber-500 bg-amber-50',
   },
-  achievement: {
-    icon: Trophy,
-    label: 'Achievement',
-    color: 'text-green-500 bg-green-50',
+  KnowledgeShare: {
+    icon: FileText,
+    label: 'Knowledge Share',
+    color: 'text-blue-500 bg-blue-50',
   },
-  news: { icon: Newspaper, label: 'News', color: 'text-red-500 bg-red-50' },
-  research: {
-    icon: Microscope,
-    label: 'Research',
-    color: 'text-cyan-500 bg-cyan-50',
+  Announcement: {
+    icon: Newspaper,
+    label: 'Announcement',
+    color: 'text-red-500 bg-red-50',
   },
 };
 
@@ -65,38 +58,38 @@ const reactionConfig: Record<
   ReactionType,
   { icon: React.ElementType; label: string; color: string }
 > = {
-  insightful: {
+  Insightful: {
     icon: Lightbulb,
     label: 'Insightful',
     color: 'text-reaction-insightful',
   },
-  agree: { icon: ThumbsUp, label: 'Agree', color: 'text-reaction-agree' },
-  helpful: { icon: Heart, label: 'Helpful', color: 'text-reaction-helpful' },
-  question: {
+  Agree: { icon: ThumbsUp, label: 'Agree', color: 'text-reaction-agree' },
+  Helpful: { icon: Heart, label: 'Helpful', color: 'text-reaction-helpful' },
+  Question: {
     icon: HelpCircle,
     label: 'Question',
     color: 'text-reaction-question',
   },
-  celebrate: {
+  Celebrate: {
     icon: PartyPopper,
     label: 'Celebrate',
     color: 'text-reaction-celebrate',
   },
 };
 
-export function PostCard({ post }: Props) {
+export function PostCard({ post, onReaction, onSave }: Props) {
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [userReaction, setUserReaction] = useState<ReactionType | undefined>(
-    post.userReaction
+    post.currentUserReaction
   );
-  const [reactionCount, setReactionCount] = useState(post.totalReactions);
-  const [isSaved, setIsSaved] = useState(false);
+  const [reactionCount, setReactionCount] = useState(post.reactionCount);
+  const [isSaved, setIsSaved] = useState(post.isBookmarked);
   // Refs for timeout handling
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const TypeConfig = postTypeConfig[post.type];
+  const TypeConfig = postTypeConfig[post.category];
   const TypeIcon = TypeConfig.icon;
 
   // Reaction hover handlers with delay
@@ -125,6 +118,7 @@ export function PostCard({ post }: Props) {
       setUserReaction(type);
     }
     setShowReactions(false);
+    onReaction?.(post.id, type);
   };
 
   // More menu handlers
@@ -144,7 +138,10 @@ export function PostCard({ post }: Props) {
 
   const CurrentReaction = userReaction ? reactionConfig[userReaction] : null;
 
-  const handleSave = () => setIsSaved((prev) => !prev);
+  const handleSave = () => {
+    setIsSaved((prev) => !prev);
+    onSave?.(post.id);
+  };
 
   return (
     <article className="accent-tab hover-card relative flex flex-col gap-y-4 px-4 py-3 outline-none hover-animation border-b border-light-border">
@@ -153,7 +150,7 @@ export function PostCard({ post }: Props) {
         {/* Avatar - fixed, never shrinks, aligned to top */}
         <div className="flex-shrink-0">
           <img
-            src={post.author.avatarUrl}
+            src={post.author.avatarUrl || '/default-avatar.png'}
             alt={post.author.fullName}
             className="w-10 h-10 rounded-full object-cover"
           />
@@ -170,12 +167,11 @@ export function PostCard({ post }: Props) {
               >
                 {post.author.fullName}
               </Link>
-              {post.author.isVerified && (
-                <BadgeCheck className="w-[18px] h-[18px] text-brand-primary flex-shrink-0 fill-brand-primary/20" />
+              {post.author.organisationName && (
+                <span className="text-text-muted truncate">
+                  · {post.author.organisationName}
+                </span>
               )}
-              <span className="text-text-muted truncate">
-                · {post.author.specialty?.[0]}
-              </span>
               <span className="text-text-muted flex-shrink-0 whitespace-nowrap">
                 ·{' '}
                 {new Date(post.createdAt).toLocaleDateString('vi-VN', {
@@ -262,46 +258,45 @@ export function PostCard({ post }: Props) {
             </div>
           </Link>
 
-          {/* Media */}
-          {post.mediaUrls.length > 0 && (
+          {/* Media - images from attachments */}
+          {post.attachments.filter((a) => a.type === 'Image').length > 0 && (
             <div
-              className={`mt-3 grid gap-0.5 rounded-2xl overflow-hidden border border-light-border ${post.mediaUrls.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
+              className={`mt-3 grid gap-0.5 rounded-2xl overflow-hidden border border-light-border ${post.attachments.filter((a) => a.type === 'Image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
             >
-              {post.mediaUrls.map((url, index) => (
-                <img
-                  key={index}
-                  src={url}
-                  alt={`Post media ${index + 1}`}
-                  className="w-full h-64 object-cover"
-                />
-              ))}
+              {post.attachments
+                .filter((a) => a.type === 'Image')
+                .map((attachment) => (
+                  <img
+                    key={attachment.id}
+                    src={attachment.fileUrl}
+                    alt={attachment.fileName}
+                    className="w-full h-64 object-cover"
+                  />
+                ))}
             </div>
           )}
 
-          {/* Attachments */}
-          {post.attachments.length > 0 && (
+          {/* Document Attachments */}
+          {post.attachments.filter((a) => a.type !== 'Image').length > 0 && (
             <div className="mt-3 space-y-2">
-              {post.attachments.map((attachment, index) => (
-                <a
-                  key={index}
-                  href={attachment.url}
-                  className="flex items-center gap-3 p-3 bg-main-search-background border border-light-border rounded-xl hover:bg-brand-soft transition-all"
-                >
-                  <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-brand-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-[14px] text-text-main">
-                      {attachment.title}
-                    </p>
-                    {attachment.doi && (
-                      <p className="text-[12px] text-text-muted">
-                        DOI: {attachment.doi}
+              {post.attachments
+                .filter((a) => a.type !== 'Image')
+                .map((attachment) => (
+                  <a
+                    key={attachment.id}
+                    href={attachment.fileUrl}
+                    className="flex items-center gap-3 p-3 bg-main-search-background border border-light-border rounded-xl hover:bg-brand-soft transition-all"
+                  >
+                    <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-brand-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-[14px] text-text-main">
+                        {attachment.fileName}
                       </p>
-                    )}
-                  </div>
-                </a>
-              ))}
+                    </div>
+                  </a>
+                ))}
             </div>
           )}
 
@@ -315,7 +310,7 @@ export function PostCard({ post }: Props) {
             >
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleReaction('insightful')}
+                onClick={() => handleReaction('Insightful')}
                 className={`group flex items-center gap-1 p-2 rounded-full transition-all ${
                   CurrentReaction
                     ? `${CurrentReaction.color}`
@@ -388,7 +383,7 @@ export function PostCard({ post }: Props) {
             >
               <MessageCircle className="w-[18px] h-[18px]" />
               <span className="text-[13px]">
-                {post.totalComments > 0 ? post.totalComments : ''}
+                {post.commentCount > 0 ? post.commentCount : ''}
               </span>
             </Link>
 
