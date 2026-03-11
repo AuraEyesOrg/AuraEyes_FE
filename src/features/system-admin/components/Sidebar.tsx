@@ -15,6 +15,7 @@ import {
   LogOut,
   Network,
   Stethoscope,
+  KeyRound,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 
@@ -32,6 +33,7 @@ const navItems = [
   },
   { label: 'Patients', icon: Users, path: '/system-admin/patients' },
   { label: 'AI Performance', icon: Shield, path: '/system-admin/ai-models' },
+  { label: 'Permissions', icon: KeyRound, path: '/system-admin/permissions' },
   { label: 'Audit Logs', icon: FileText, path: '/system-admin/audit-logs' },
   { label: 'Aura Network', icon: Network, path: '/network' },
   { label: 'Settings', icon: Settings, path: '/system-admin/settings' },
