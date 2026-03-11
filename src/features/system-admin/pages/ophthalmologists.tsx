@@ -21,6 +21,8 @@ import {
   Wallet,
   Activity,
   Circle,
+  FileText,
+  X,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -116,6 +118,14 @@ export default function OphthalmologistsPage() {
   const [selectedDoctor, setSelectedDoctor] = useState<Ophthalmologist | null>(
     null
   );
+  const [pendingTotalCount, setPendingTotalCount] = useState(0);
+
+  // Reject modal state
+  const [rejectingDoctor, setRejectingDoctor] =
+    useState<Ophthalmologist | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [rejectError, setRejectError] = useState('');
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -144,6 +154,14 @@ export default function OphthalmologistsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Load total pending count for tab badge (independent of current page filter)
+  useEffect(() => {
+    ophthalmologistApi
+      .getOphthalmologists(1, 1, undefined, 'PendingVerification')
+      .then((r) => setPendingTotalCount(r.totalCount))
+      .catch(() => {});
+  }, []);
 
   // Calculate stats
   const totalDoctors = totalCount;
@@ -180,27 +198,57 @@ export default function OphthalmologistsPage() {
   });
 
   // Handle verification actions
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setPageNumber(1);
+    if (tab === 'requests') setVerificationFilter('PendingVerification');
+    else if (tab === 'overview') setVerificationFilter('all');
+  };
+
   const handleVerify = async (doctorId: string) => {
     try {
       await ophthalmologistApi.verifyOphthalmologist(doctorId, true);
+      setPendingTotalCount((c) => Math.max(0, c - 1));
       loadData();
     } catch (error) {
       console.error('Failed to verify doctor:', error);
     }
   };
 
-  const handleReject = async (doctorId: string) => {
-    const reason = window.prompt('Enter rejection reason:');
-    if (reason === null) return; // user cancelled
+  const handleRejectClick = (doctor: Ophthalmologist) => {
+    setRejectingDoctor(doctor);
+    setRejectReason('');
+    setRejectError('');
+  };
+
+  const handleRejectCancel = () => {
+    if (rejectSubmitting) return;
+    setRejectingDoctor(null);
+    setRejectReason('');
+    setRejectError('');
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectingDoctor) return;
+    if (!rejectReason.trim()) {
+      setRejectError('Vui lòng nhập lý do từ chối.');
+      return;
+    }
+    setRejectSubmitting(true);
+    setRejectError('');
     try {
       await ophthalmologistApi.verifyOphthalmologist(
-        doctorId,
+        rejectingDoctor.id,
         false,
-        reason || 'Not specified'
+        rejectReason.trim()
       );
+      setRejectingDoctor(null);
+      setPendingTotalCount((c) => Math.max(0, c - 1));
       loadData();
-    } catch (error) {
-      console.error('Failed to reject doctor:', error);
+    } catch {
+      setRejectError('Từ chối thất bại. Vui lòng thử lại.');
+    } finally {
+      setRejectSubmitting(false);
     }
   };
 
@@ -337,7 +385,7 @@ export default function OphthalmologistsPage() {
                 <CheckCircle className="w-4 h-4" />
               </button>
               <button
-                onClick={() => handleReject(row.id)}
+                onClick={() => handleRejectClick(row)}
                 className="text-red-500 hover:text-red-600 transition-colors p-1"
                 title="Reject Verification"
               >
@@ -357,9 +405,9 @@ export default function OphthalmologistsPage() {
     { id: 'overview' as const, label: 'Overview', icon: Activity },
     {
       id: 'requests' as const,
-      label: 'Pending Requests',
+      label: 'Pending Verification',
       icon: Clock,
-      count: totalPendingRequests,
+      count: pendingTotalCount,
     },
     { id: 'feedback' as const, label: 'Feedback', icon: MessageSquare },
   ];
@@ -500,7 +548,7 @@ export default function OphthalmologistsPage() {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-primary text-primary'
@@ -594,15 +642,40 @@ export default function OphthalmologistsPage() {
             </div>
 
             {/* Data Table */}
-            <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              <DataTable<Ophthalmologist>
-                columns={ophthalmologistColumns}
-                data={filteredOphthalmologists}
-                keyExtractor={(row) => row.id}
-                isLoading={loading}
-                emptyMessage="No ophthalmologists found"
-              />
-            </div>
+            {activeTab === 'feedback' ? (
+              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 flex flex-col items-center justify-center text-center gap-3">
+                <MessageSquare className="w-12 h-12 text-slate-300" />
+                <p className="text-slate-500 font-medium">
+                  Chức năng đánh giá đang được phát triển
+                </p>
+                <p className="text-slate-400 text-sm">Coming soon</p>
+              </div>
+            ) : (
+              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                {activeTab === 'requests' && (
+                  <div className="px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                      {totalCount} bác sĩ đang chờ xét duyệt hồ sơ chứng chỉ
+                    </span>
+                    <span className="ml-auto text-xs text-amber-500">
+                      Xem tài liệu đính kèm trong hàng chi tiết (biểu tượng mắt)
+                    </span>
+                  </div>
+                )}
+                <DataTable<Ophthalmologist>
+                  columns={ophthalmologistColumns}
+                  data={filteredOphthalmologists}
+                  keyExtractor={(row) => row.id}
+                  isLoading={loading}
+                  emptyMessage={
+                    activeTab === 'requests'
+                      ? 'Không có hồ sơ nào đang chờ xét duyệt'
+                      : 'No ophthalmologists found'
+                  }
+                />
+              </div>
+            )}
 
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
@@ -631,6 +704,124 @@ export default function OphthalmologistsPage() {
           </div>
         </main>
       </div>
+
+      {/* ── Reject Modal ───────────────────────────────────────────────── */}
+      {rejectingDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={handleRejectCancel}
+          />
+          <div className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl m-4 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-red-100 dark:bg-red-900/30">
+                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Từ chối xác minh
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
+                    {rejectingDoctor.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleRejectCancel}
+                disabled={rejectSubmitting}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Credential docs quick-access */}
+              {(rejectingDoctor.licenseUrl || rejectingDoctor.degreeUrl) && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  <div className="flex gap-4 text-sm">
+                    {rejectingDoctor.licenseUrl && (
+                      <a
+                        href={rejectingDoctor.licenseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Xem giấy phép
+                      </a>
+                    )}
+                    {rejectingDoctor.degreeUrl && (
+                      <a
+                        href={rejectingDoctor.degreeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Xem bằng cấp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Lý do từ chối <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => {
+                    setRejectReason(e.target.value);
+                    if (rejectError) setRejectError('');
+                  }}
+                  rows={4}
+                  placeholder="Nhập lý do từ chối hồ sơ (ví dụ: ảnh giấy phép không rõ, chứng chỉ chưa đủ điều kiện...)"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-red-400/50 focus:border-red-400 outline-none transition-all text-sm resize-none"
+                />
+                {rejectError && (
+                  <p className="text-xs text-red-500 font-medium">
+                    {rejectError}
+                  </p>
+                )}
+              </div>
+
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Lý do từ chối sẽ được gửi qua email đến bác sĩ. Hãy mô tả rõ
+                  ràng để họ có thể bổ sung hồ sơ.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+              <button
+                onClick={handleRejectCancel}
+                disabled={rejectSubmitting}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleRejectSubmit}
+                disabled={rejectSubmitting || !rejectReason.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {rejectSubmitting ? (
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <XCircle className="w-4 h-4" />
+                )}
+                Xác nhận từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Doctor Detail Modal */}
       {selectedDoctor && (
