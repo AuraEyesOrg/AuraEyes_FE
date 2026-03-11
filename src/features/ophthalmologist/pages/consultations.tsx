@@ -167,11 +167,10 @@ export default function ConsultationsPage() {
 
   // ---- Data fetching ----
 
-  const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions({
-      ophthalmologistId: CURRENT_DOCTOR_ID,
-      pageSize: 50,
-    });
+  const { data: sessionsData } = useConsultationSessions({
+    ophthalmologistId: CURRENT_DOCTOR_ID,
+    pageSize: 50,
+  });
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -272,29 +271,6 @@ export default function ConsultationsPage() {
       doctorId: CURRENT_DOCTOR_ID,
     });
   };
-
-  // ---- Loading state ----
-
-  if (sessionsLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-        <DoctorSidebar pendingCount={0} />
-        <div className="ml-52">
-          <DoctorHeader />
-          <main className="p-6">
-            <div className="flex items-center justify-center h-[calc(100vh-220px)]">
-              <div className="text-center">
-                <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Loading consultations...
-                </p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">

@@ -3,7 +3,12 @@
  * Uses TanStack Query v5 with proper query keys, stale times, and optimistic updates.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 import {
   getConsultationSessions,
   getConsultationSession,
@@ -46,6 +51,7 @@ export const useConsultationSessions = (
     queryKey: consultationKeys.list(params),
     queryFn: () => getConsultationSessions(params),
     staleTime: 30_000, // 30s - sessions update frequently
+    placeholderData: keepPreviousData,
     ...options,
   });
 
