@@ -15,6 +15,13 @@ export { ProfessionalCardMini } from './professional/ProfessionalCardMini';
 export { PostCard } from './post/PostCard';
 export { PostComposer } from './post/PostComposer';
 export { CommentCard } from './post/CommentCard';
+export { CompactPostCard } from './post/CompactPostCard';
+export {
+  PostSkeleton,
+  FeedSkeleton,
+  CompactPostSkeleton,
+  DiscoverSkeleton,
+} from './post/PostSkeleton';
 
 // Group
 export { GroupCard } from './group/GroupCard';
