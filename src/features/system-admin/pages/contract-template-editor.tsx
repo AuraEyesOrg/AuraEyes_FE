@@ -13,6 +13,9 @@ import {
   type DragEvent,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { contractTemplatesApi } from '../api/contract-templates.api';
+import type { VariablePayload } from '../types/system-admin.types';
 import {
   ArrowLeft,
   Save,
@@ -34,6 +37,7 @@ import {
   RotateCcw,
   Plus,
   X,
+  Loader2,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 
@@ -343,27 +347,21 @@ const MOCK_BLANK_HTML = `<div style="font-family:'Times New Roman',serif;color:#
   </div>
 </div>`;
 
-/* ─── Template mock registry ─────────────────────────────── */
-const TEMPLATE_REGISTRY: Record<
-  string,
-  { name: string; type: string; html: string }
-> = {
-  'tpl-001': {
-    name: 'Hợp đồng hợp tác chuyên môn y khoa',
-    type: 'ophthalmologist',
-    html: MOCK_OPHTHALMOLOGIST_HTML,
-  },
-  'tpl-002': {
-    name: 'Hợp đồng liên kết cung cấp dịch vụ y tế',
-    type: 'organization',
-    html: MOCK_ORGANIZATION_HTML,
-  },
-  'tpl-003': {
-    name: 'Hợp đồng thử nghiệm – Bác sĩ (v2)',
-    type: 'ophthalmologist',
-    html: MOCK_OPHTHALMOLOGIST_HTML,
-  },
-};
+/* ─── Build variables payload from extracted var keys ────── */
+function buildVariablesPayload(varKeys: string[]): VariablePayload[] {
+  return varKeys.map((key, index) => {
+    const cat = getCategoryForVar(key);
+    const varDef = cat?.variables.find((v) => v.key === key);
+    const variableType = cat?.id === 'date' ? 5 : 1; // Date=5, Text=1
+    return {
+      key,
+      label: varDef?.label ?? key,
+      variableType,
+      isRequired: false,
+      sortOrder: index,
+    };
+  });
+}
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function extractVariables(html: string): string[] {
@@ -548,17 +546,16 @@ function VariableCategorySection({
 /* ─── Main editor page ───────────────────────────────────── */
 export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const isNew = id === 'new';
 
   /* Template state */
-  const [templateName, setTemplateName] = useState(
-    isNew ? 'Untitled Template' : (TEMPLATE_REGISTRY[id!]?.name ?? 'Template')
-  );
-  const [templateHTML, setTemplateHTML] = useState(
-    isNew ? MOCK_BLANK_HTML : (TEMPLATE_REGISTRY[id!]?.html ?? MOCK_BLANK_HTML)
-  );
-  const [saved, setSaved] = useState(!isNew);
+  const [templateName, setTemplateName] = useState('Untitled Template');
+  const [templateHTML, setTemplateHTML] = useState(MOCK_BLANK_HTML);
+  const [templateType, setTemplateType] = useState<1 | 2>(1); // 1=Ophthalmologist, 2=Organization
+  const [contractVersion, setContractVersion] = useState('1.0');
+  const [saved, setSaved] = useState(isNew);
 
   /* Canvas state */
   const [zoom, setZoom] = useState(90);
@@ -577,6 +574,56 @@ export default function ContractTemplateEditorPage() {
 
   /* Extract variables currently in template */
   const usedVars = extractVariables(templateHTML);
+
+  /* ── Load existing template ── */
+  const { data: existingTemplate, isLoading: loadingTemplate } = useQuery({
+    queryKey: ['contract-template', id],
+    queryFn: () => contractTemplatesApi.getContractTemplateById(id!),
+    enabled: !isNew && !!id,
+    staleTime: 1000 * 30,
+  });
+
+  useEffect(() => {
+    if (!existingTemplate) return;
+    setTemplateName(existingTemplate.title);
+    setTemplateHTML(existingTemplate.contentTemplate || MOCK_BLANK_HTML);
+    setTemplateType(
+      existingTemplate.type === 'OphthalmologistContract' ? 1 : 2
+    );
+    setContractVersion(existingTemplate.contractVersion);
+    setSaved(true);
+  }, [existingTemplate]);
+
+  /* ── Save mutation ── */
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const variables = buildVariablesPayload(usedVars);
+      const payload = {
+        title: templateName,
+        type: templateType,
+        contractVersion,
+        contentTemplate: templateHTML,
+        variables,
+      };
+      if (isNew) {
+        return contractTemplatesApi.createContractTemplate(payload);
+      }
+      return contractTemplatesApi.updateContractTemplate(id!, payload);
+    },
+    onSuccess: (result) => {
+      setSaved(true);
+      setToast('Template saved successfully!');
+      queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
+      if (isNew && result?.id) {
+        navigate(`/system-admin/contract-templates/${result.id}/edit`, {
+          replace: true,
+        });
+      }
+    },
+    onError: (err: unknown) => {
+      setToast(`Save failed: ${(err as Error)?.message ?? 'Unknown error'}`);
+    },
+  });
 
   /* Render processed HTML into canvas */
   useEffect(() => {
@@ -643,10 +690,7 @@ export default function ContractTemplateEditorPage() {
     setZoom((z) => Math.max(40, Math.min(160, z + delta)));
 
   /* Save */
-  const handleSave = () => {
-    setSaved(true);
-    setToast('Template saved successfully!');
-  };
+  const handleSave = () => saveMutation.mutate();
 
   /* Upload HTML file */
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -697,6 +741,32 @@ export default function ContractTemplateEditorPage() {
             </span>
           )}
 
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Template type */}
+          <select
+            value={templateType}
+            onChange={(e) => {
+              setTemplateType(Number(e.target.value) as 1 | 2);
+              setSaved(false);
+            }}
+            className="text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/40 outline-none"
+          >
+            <option value={1}>Ophthalmologist</option>
+            <option value={2}>Organization</option>
+          </select>
+
+          {/* Contract version */}
+          <input
+            value={contractVersion}
+            onChange={(e) => {
+              setContractVersion(e.target.value);
+              setSaved(false);
+            }}
+            placeholder="v1.0"
+            className="text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 w-20 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/40 outline-none"
+          />
+
           <div className="ml-auto flex items-center gap-2">
             {/* Upload */}
             <label className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -719,10 +789,15 @@ export default function ContractTemplateEditorPage() {
             {/* Save */}
             <button
               onClick={handleSave}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+              disabled={saveMutation.isPending}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
-              <Save className="w-3.5 h-3.5" />
-              Save Template
+              {saveMutation.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              {saveMutation.isPending ? 'Saving…' : 'Save Template'}
             </button>
           </div>
         </div>
@@ -769,7 +844,14 @@ export default function ContractTemplateEditorPage() {
             </div>
 
             {/* Scrollable canvas area */}
-            <div className="flex-1 overflow-auto p-8">
+            {loadingTemplate && (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-60" />
+              </div>
+            )}
+            <div
+              className={`flex-1 overflow-auto p-8 ${loadingTemplate ? 'hidden' : ''}`}
+            >
               {/* Drop zone hint */}
               {isDragOver && (
                 <div className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center">
