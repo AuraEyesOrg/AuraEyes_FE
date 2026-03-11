@@ -106,9 +106,9 @@ export const PATIENT_ENDPOINTS = {
 
   // Wallet
   WALLET: {
-    GET: '/patient/wallet',
-    TRANSACTIONS: '/patient/wallet/transactions',
-    DEPOSIT: '/patient/wallet/deposit',
+    GET: '/wallets',
+    TRANSACTIONS: '/wallets/transactions',
+    DEPOSIT: '/wallets/deposit',
     DEPOSIT_CALLBACK: '/patient/wallet/deposit/callback',
   },
 
