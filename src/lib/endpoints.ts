@@ -114,6 +114,30 @@ export const API_ENDPOINTS = {
           `/system-admin/permissions/users/${userPermId}/revoke`,
       },
     },
+
+    // Contract Templates
+    CONTRACT_TEMPLATES: {
+      LIST: '/system-admin/contract-templates',
+      DETAIL: (id: string) => `/system-admin/contract-templates/${id}`,
+      CREATE: '/system-admin/contract-templates',
+      UPDATE: (id: string) => `/system-admin/contract-templates/${id}`,
+      DELETE: (id: string) => `/system-admin/contract-templates/${id}`,
+      SET_STATUS: (id: string) =>
+        `/system-admin/contract-templates/${id}/status`,
+    },
+
+    // Contracts
+    CONTRACTS: {
+      LIST: '/system-admin/contracts',
+      DETAIL: (id: string) => `/system-admin/contracts/${id}`,
+      CREATE: '/system-admin/contracts',
+      UPDATE: (id: string) => `/system-admin/contracts/${id}`,
+      SEND_FOR_SIGNATURE: (id: string) =>
+        `/system-admin/contracts/${id}/send-for-signature`,
+      SIGN: (id: string) => `/system-admin/contracts/${id}/sign`,
+      TERMINATE: (id: string) => `/system-admin/contracts/${id}/terminate`,
+      CANCEL: (id: string) => `/system-admin/contracts/${id}/cancel`,
+    },
   },
 
   // Patient features
