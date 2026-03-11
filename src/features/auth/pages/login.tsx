@@ -115,7 +115,7 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           navigate('/ophthalmologist/dashboard');
-        } else if (roles.includes('Organization')) {
+        } else if (roles.includes('OrgAdmin')) {
           navigate('/organisation/dashboard');
         } else {
           navigate('/dashboard');
