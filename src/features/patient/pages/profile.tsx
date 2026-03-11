@@ -471,8 +471,8 @@ export default function ProfilePage() {
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border ${
                 profile.isEmailVerified
-                  ? 'bg-green-50 text-green-600 border-green-100'
-                  : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                  ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-100 dark:border-green-800'
+                  : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800'
               }`}
             >
               <CheckCircle className="w-4 h-4" />
