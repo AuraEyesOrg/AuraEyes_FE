@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   getProfile,
-  getWallet,
   getAppointments,
   getReports,
   getAnalysisList,
+  getWallets,
 } from '../api/patient.api';
 import { profileKeys } from './useProfile';
 import type {
@@ -35,7 +35,7 @@ export const useDashboard = () => {
 
   const walletQuery = useQuery<Wallet, Error>({
     queryKey: dashboardKeys.wallet(),
-    queryFn: getWallet,
+    queryFn: getWallets,
   });
 
   const appointmentsQuery = useQuery<Appointment[], Error>({

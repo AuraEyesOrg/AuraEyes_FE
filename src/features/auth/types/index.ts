@@ -10,6 +10,11 @@ export interface LoginRequest {
   recaptchaToken?: string;
 }
 
+export interface GoogleLoginRequest {
+  credential: string;
+  deviceInfo?: string;
+}
+
 export interface RegisterPatientRequest {
   email: string;
   password: string;
