@@ -59,6 +59,12 @@ export default function DoctorSidebar({
 
   const displayName = user?.fullName ?? 'Doctor';
 
+  // Only show full nav when contract is active; otherwise lock to contract page only
+  const contractApproved = user?.contractStatus === 'Active';
+  const visibleNavItems = contractApproved
+    ? navItems
+    : navItems.filter((item) => item.path === '/ophthalmologist/contract');
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -84,7 +90,7 @@ export default function DoctorSidebar({
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
