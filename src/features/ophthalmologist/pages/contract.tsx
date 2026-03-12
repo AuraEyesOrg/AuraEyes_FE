@@ -17,6 +17,7 @@ import {
   X,
   Image,
   RefreshCw,
+  ExternalLink,
 } from 'lucide-react';
 import DoctorSidebar from '../components/DoctorSidebar';
 import DoctorHeader from '../components/DoctorHeader';
@@ -124,6 +125,7 @@ function UploadSection({
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showReupload, setShowReupload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadMutation = useMutation({
@@ -131,6 +133,7 @@ function UploadSection({
     onSuccess: () => {
       setSelectedFile(null);
       setPreviewUrl(null);
+      setShowReupload(false);
       onUploadSuccess();
     },
   });
@@ -170,38 +173,85 @@ function UploadSection({
     uploadMutation.mutate(selectedFile);
   };
 
-  // Already uploaded — show the uploaded document
-  if (contract.scannedDocumentUrl) {
+  const isImageUrl = (url: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url);
+
+  // Already uploaded — show the scanned document prominently
+  if (contract.scannedDocumentUrl && !showReupload) {
     return (
-      <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-blue-600" />
+      <div className="space-y-4">
+        {/* Uploaded document preview */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800">
+          {isImageUrl(contract.scannedDocumentUrl) ? (
+            <img
+              src={contract.scannedDocumentUrl}
+              alt="Hợp đồng đã ký"
+              className="w-full max-h-125 object-contain"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-48">
+              <div className="text-center">
+                <FileText className="w-14 h-14 text-slate-400 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">File PDF đã upload</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Status + actions row */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                Đang chờ admin xác nhận
+              </p>
+              <p className="text-xs text-slate-500">
+                Hợp đồng của bạn đã được gửi đi
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold text-blue-800 dark:text-blue-200">
-              Hợp đồng đã được upload
-            </p>
-            <p className="text-sm text-blue-600 dark:text-blue-400">
-              Đang chờ admin xác nhận hợp đồng của bạn
-            </p>
+          <div className="flex items-center gap-2">
+            <a
+              href={contract.scannedDocumentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Mở ảnh gốc
+            </a>
+            <button
+              onClick={() => setShowReupload(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Upload lại
+            </button>
           </div>
         </div>
-        <a
-          href={contract.scannedDocumentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-blue-700 bg-white border border-blue-200 hover:bg-blue-50 transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          Xem file đã upload
-        </a>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {/* Cancel re-upload */}
+      {showReupload && contract.scannedDocumentUrl && (
+        <button
+          onClick={() => {
+            setShowReupload(false);
+            setSelectedFile(null);
+            setPreviewUrl(null);
+          }}
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+          Hủy, quay lại xem hợp đồng đã nộp
+        </button>
+      )}
+
       {/* Drop zone */}
       <div
         onDragOver={(e) => {
