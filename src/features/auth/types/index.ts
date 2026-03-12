@@ -77,6 +77,7 @@ export interface UserInfoResponse {
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
+  contractStatus?: string | null;
 }
 
 export interface AuthResponse {

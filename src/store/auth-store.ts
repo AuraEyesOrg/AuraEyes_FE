@@ -13,6 +13,7 @@ export interface AuthUser {
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
+  contractStatus?: string | null;
 }
 
 type AuthState = {

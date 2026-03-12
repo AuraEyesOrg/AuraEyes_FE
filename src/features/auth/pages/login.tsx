@@ -116,6 +116,8 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
             navigate('/pending-approval');
+          } else if (response.user?.contractStatus !== 'Active') {
+            navigate('/ophthalmologist/contract');
           } else {
             navigate('/ophthalmologist/dashboard');
           }
@@ -243,6 +245,8 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
             navigate('/pending-approval');
+          } else if (response.user?.contractStatus !== 'Active') {
+            navigate('/ophthalmologist/contract');
           } else {
             navigate('/ophthalmologist/dashboard');
           }

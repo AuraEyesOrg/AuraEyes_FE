@@ -22,6 +22,16 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
     return <Navigate to="/pending-approval" replace />;
   }
 
+  // Redirect ophthalmologists with unsigned contract to the contract page
+  const needsContract =
+    isOphthalmologist &&
+    user?.isVerified === true &&
+    user?.contractStatus !== 'Active';
+
+  if (needsContract && location.pathname !== '/ophthalmologist/contract') {
+    return <Navigate to="/ophthalmologist/contract" replace />;
+  }
+
   return children;
 };
 
