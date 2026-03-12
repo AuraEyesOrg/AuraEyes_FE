@@ -42,14 +42,16 @@ interface SharedScanData {
   scanId?: string;
 }
 
-// TODO: Replace with actual user ID from auth store once auth is fully integrated
-const CURRENT_USER_ID = '4c9ed208-3697-4c9f-b2a0-a12f045bebbf';
-const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
+import useAuthStore from '@/store/auth-store';
 
-const chatStatusConfig: Record<
-  ChatStatus,
-  { label: string; icon: typeof Lock; color: string; description: string }
-> = {
+type ChatStatusEntry = {
+  label: string;
+  icon: typeof Lock;
+  color: string;
+  description: string;
+};
+
+const chatStatusConfig: Record<number, ChatStatusEntry> = {
   [ChatStatus.Locked]: {
     label: 'Locked',
     icon: Lock,
@@ -76,6 +78,13 @@ const chatStatusConfig: Record<
   },
 };
 
+const defaultChatStatus: ChatStatusEntry = {
+  label: 'Unknown',
+  icon: AlertCircle,
+  color: 'text-gray-400',
+  description: 'Chat status unknown.',
+};
+
 export default function ChatPage() {
   const location = useLocation();
   const sharedScan =
@@ -96,10 +105,12 @@ export default function ChatPage() {
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useAuthStore();
+  const currentUserId = user?.id;
+
   // Fetch all sessions for this patient
   const { data: sessionsData, isLoading: sessionsLoading } =
     useConsultationSessions({
-      patientId: CURRENT_PATIENT_ID,
       pageSize: 50,
     });
 
@@ -148,7 +159,12 @@ export default function ChatPage() {
   }, [pendingScan, scrollToBottom]);
 
   const handleSendMessage = () => {
-    if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
+    if (
+      (!newMessage.trim() && !pendingScan) ||
+      !selectedSessionId ||
+      !currentUserId
+    )
+      return;
 
     const messageContent = pendingScan
       ? `${newMessage}\n\n[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
@@ -157,7 +173,7 @@ export default function ChatPage() {
     sendMessageMutation.mutate(
       {
         sessionId: selectedSessionId,
-        senderUserId: CURRENT_USER_ID,
+        senderUserId: currentUserId,
         message: messageContent,
       },
       {
@@ -265,7 +281,8 @@ export default function ChatPage() {
                 </div>
               ) : (
                 filteredSessions.map((session) => {
-                  const statusConfig = chatStatusConfig[session.chatStatus];
+                  const statusConfig =
+                    chatStatusConfig[session.chatStatus] ?? defaultChatStatus;
                   const StatusIcon = statusConfig.icon;
                   return (
                     <div
@@ -377,7 +394,9 @@ export default function ChatPage() {
                   }`}
                 >
                   {(() => {
-                    const cfg = chatStatusConfig[currentSession.chatStatus];
+                    const cfg =
+                      chatStatusConfig[currentSession.chatStatus] ??
+                      defaultChatStatus;
                     const Icon = cfg.icon;
                     return (
                       <>
@@ -400,7 +419,7 @@ export default function ChatPage() {
                 ) : selectedSession?.messages &&
                   selectedSession.messages.length > 0 ? (
                   selectedSession.messages.map((message) => {
-                    const isPatient = message.senderUserId === CURRENT_USER_ID;
+                    const isPatient = message.senderUserId === currentUserId;
                     return (
                       <div
                         key={message.id}

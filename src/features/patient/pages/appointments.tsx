@@ -26,19 +26,24 @@ import {
   SESSION_STATUS_LABELS,
 } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
-
-// TODO: Replace with actual user ID from auth store
-const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
+import useAuthStore from '@/store/auth-store';
 
 type FilterTab = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
 const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
 
-  const { data: sessionsData, isLoading } = useConsultationSessions({
-    patientId: CURRENT_PATIENT_ID,
-    pageSize: 50,
-  });
+  const { user } = useAuthStore();
+  const currentUserId = user?.id;
+
+  const { data: sessionsData, isLoading } = useConsultationSessions(
+    {
+      pageSize: 50,
+    },
+    {
+      enabled: !!currentUserId,
+    }
+  );
 
   const cancelMutation = useCancelSession();
 
@@ -69,7 +74,7 @@ const AppointmentsPage = () => {
   const handleCancel = (sessionId: string) => {
     cancelMutation.mutate({
       sessionId,
-      cancelledByUserId: CURRENT_PATIENT_ID,
+      cancelledByUserId: currentUserId!,
       reason: 'Cancelled by patient',
     });
   };
