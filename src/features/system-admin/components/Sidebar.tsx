@@ -18,6 +18,7 @@ import {
   KeyRound,
   ScrollText,
   ClipboardCheck,
+  FileCheck,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 
@@ -42,9 +43,14 @@ const navItems = [
   { label: 'AI Performance', icon: Shield, path: '/system-admin/ai-models' },
   { label: 'Permissions', icon: KeyRound, path: '/system-admin/permissions' },
   {
-    label: 'Contracts',
+    label: 'Contract Templates',
     icon: ScrollText,
     path: '/system-admin/contract-templates',
+  },
+  {
+    label: 'Contracts',
+    icon: FileCheck,
+    path: '/system-admin/contracts',
   },
   { label: 'Audit Logs', icon: FileText, path: '/system-admin/audit-logs' },
   { label: 'Aura Network', icon: Network, path: '/network' },
