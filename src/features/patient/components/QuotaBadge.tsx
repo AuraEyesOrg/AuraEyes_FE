@@ -50,7 +50,7 @@ export function QuotaBadge() {
       <div className="inline-flex items-center gap-2">
         {/* ── Status pill (read-only) ── */}
         <div
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium select-none ${bg} ${text}`}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium select-none whitespace-nowrap ${bg} ${text}`}
           title={
             remaining === 0
               ? 'Đã hết lượt AI trong hôm nay'
@@ -67,7 +67,7 @@ export function QuotaBadge() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] text-xs font-semibold hover:bg-[var(--color-brand-primary)] hover:text-white transition-all active:scale-95"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] text-xs font-semibold whitespace-nowrap hover:bg-[var(--color-brand-primary)] hover:text-white transition-all active:scale-95"
           title="Mua thêm lượt AI screening"
         >
           <Plus className="w-3 h-3 shrink-0" />
