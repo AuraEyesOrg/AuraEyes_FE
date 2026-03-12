@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const LOGO_SRCSET = [
   '/icon_16x16.png 16w',
   '/icon_32x32.png 32w',
   '/icon_48x48.png 48w',
   '/icon_64x64.png 64w',
-  '/icon_96x96.png 96w',
   '/icon_128x128.png 128w',
   '/icon_256x256.png 256w',
 ].join(', ');
@@ -16,7 +16,7 @@ interface AuraLogoProps {
   subtitle?: string;
   to?: string;
   className?: string;
-  variant?: 'light' | 'dark';
+  variant?: 'light' | 'dark' | 'auto';
 }
 
 const sizeMap = {
@@ -40,10 +40,12 @@ const sizeMap = {
   },
 } as const;
 
-const blendMap = {
-  light: 'mix-blend-screen',
-  dark: 'mix-blend-multiply',
-} as const;
+// variant 'light' = logo dùng trên nền tối → khuếch đại sáng để logo hiện rõ
+// variant 'dark'  = logo dùng trên nền trắng → giữ nguyên màu gốc
+const logoFilter: Record<'light' | 'dark', string> = {
+  light: 'brightness(2)',
+  dark: 'none',
+};
 
 export function AuraLogo({
   size = 'md',
@@ -51,11 +53,17 @@ export function AuraLogo({
   subtitle,
   to,
   className = '',
-  variant = 'dark',
+  variant = 'auto',
 }: AuraLogoProps) {
+  const { theme } = useTheme();
+  const resolvedVariant: 'light' | 'dark' =
+    variant === 'auto' ? (theme === 'dark' ? 'light' : 'dark') : variant;
+
   const s = sizeMap[size];
-  const textColor = variant === 'light' ? 'text-white' : 'text-gray-900';
-  const subtitleColor = variant === 'light' ? 'text-gray-400' : 'text-gray-500';
+  const textColor =
+    resolvedVariant === 'light' ? 'text-white' : 'text-gray-900';
+  const subtitleColor =
+    resolvedVariant === 'light' ? 'text-gray-400' : 'text-gray-500';
 
   const content = (
     <div className={`flex items-center gap-1.5 ${className}`}>
@@ -64,7 +72,8 @@ export function AuraLogo({
         srcSet={LOGO_SRCSET}
         sizes={s.sizes}
         alt="AURA"
-        className={`${s.icon} object-contain ${blendMap[variant]}`}
+        className={`${s.icon} object-contain`}
+        style={{ filter: logoFilter[resolvedVariant] }}
         width={40}
         height={40}
         loading="eager"

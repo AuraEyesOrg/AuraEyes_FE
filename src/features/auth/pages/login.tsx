@@ -294,20 +294,21 @@ const LoginPage = () => {
         </div>
 
         {/* Header */}
-        <div className="relative z-10">
-          <AuraLogo size="lg" variant="light" />
+        <div className="relative z-10 [&_span]:!text-white">
+          <AuraLogo size="lg" to="/" />
         </div>
 
         {/* Center Content */}
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            Precision AI for <br />
-            <span className="text-[#00d1c0]">Vascular Health.</span>
+            AI-Powered <br />
+            <span className="text-[#00d1c0]">Eye Care Platform.</span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            Secure access to the next generation of retinal screening tools.
-            Automated diagnostics with 99.2% clinical accuracy.
+            Secure access for patients, ophthalmologists, and organizations to
+            next-generation retinal screening tools with 99.2% clinical
+            accuracy.
           </p>
           <div className="flex items-center gap-4 mt-4 text-sm font-medium text-gray-400">
             <div className="flex items-center gap-2">
@@ -333,11 +334,6 @@ const LoginPage = () => {
 
       {/* Right Panel: Interaction Workspace */}
       <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto">
-        {/* Mobile Brand Header */}
-        <div className="lg:hidden absolute top-6 left-6">
-          <AuraLogo size="sm" />
-        </div>
-
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           {/* Auth Toggle / Tabs */}
           <div className="w-full">
@@ -407,10 +403,10 @@ const LoginPage = () => {
               {/* Page Heading */}
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-                  Access Portal
+                  Welcome Back
                 </h2>
                 <p className="text-gray-500 text-base">
-                  Welcome Back, Doctor. Please enter your credentials.
+                  Sign in to your AuraEyes account to continue.
                 </p>
               </div>
 
@@ -425,7 +421,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="login-email"
                   >
-                    Medical ID / Email
+                    Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -442,7 +438,7 @@ const LoginPage = () => {
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="login-email"
                       name="email"
-                      placeholder="dr.name@hospital.org"
+                      placeholder="your@email.com"
                       type="email"
                     />
                   </div>
@@ -563,9 +559,10 @@ const LoginPage = () => {
                 <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                   <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Access to this portal is restricted to authorized medical
-                    personnel only. Unauthorized access is a violation of
-                    federal law and HIPAA regulations.
+                    AuraEyes protects your health data under HIPAA regulations.
+                    Access is available to registered patients,
+                    ophthalmologists, and verified healthcare organizations
+                    only.
                   </p>
                 </div>
               </div>
@@ -581,7 +578,8 @@ const LoginPage = () => {
                   Create Account
                 </h2>
                 <p className="text-gray-500 text-base">
-                  Join AURA to access advanced retinal diagnostics.
+                  Register as a patient to access AuraEyes retinal screening
+                  services.
                 </p>
               </div>
 
@@ -629,7 +627,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-email"
                   >
-                    Medical Email
+                    Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -645,7 +643,7 @@ const LoginPage = () => {
                       })}
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-email"
-                      placeholder="dr.smith@hospital.org"
+                      placeholder="your@email.com"
                       type="email"
                     />
                   </div>
