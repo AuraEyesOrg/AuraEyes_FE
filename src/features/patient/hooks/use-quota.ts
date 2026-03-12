@@ -22,7 +22,8 @@ export const useQuotaBalance = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: quotaKeys.balance(),
     queryFn: () => quotaApi.getBalance(),
-    staleTime: 30_000, // 30s - quota can change after buy or screening
+    staleTime: 0, // always fetch fresh — quota resets daily and changes after buy/screening
+    gcTime: 0, // don't hold stale quota in cache
     refetchOnWindowFocus: true,
     ...options,
   });
