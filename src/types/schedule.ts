@@ -107,25 +107,41 @@ export const SLOT_TYPE_LABELS: Record<SlotType, string> = {
 
 // ============ APPOINTMENT SLOT BOOKING TYPES ============
 
-/** Extended slot info for booking view - includes ophthalmologist details */
-export interface AppointmentSlotDto {
+/** List item DTO for appointment slots - matches BE AppointmentSlotListDto */
+export interface AppointmentSlotListDto {
   id: string;
-  ophthalmologistId: string;
-  ophthalmologistName: string | null;
-  organisationId: string | null;
-  organisationName: string | null;
   scheduleTemplateId: string;
+  ophthalId: string | null;
+  orgId: string | null;
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm:ss"
   endTime: string; // "HH:mm:ss"
-  status: ScheduleStatus;
-  statusName: string;
-  slotType: SlotType;
-  slotTypeName: string;
-  cost: number;
+  status: string; // "Available", "Reserved", "Booked", "Blocked"
+  cost: number | null;
+  maxCapacity: number;
+  bookedCount: number;
+  availableCapacity: number;
+  createdAt: string;
+}
+
+/** Full detail DTO for appointment slot - matches BE AppointmentSlotDto */
+export interface AppointmentSlotDto {
+  id: string;
+  scheduleTemplateId: string;
+  ophthalId: string | null;
+  orgId: string | null;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:mm:ss"
+  endTime: string; // "HH:mm:ss"
+  status: string; // "Available", "Reserved", "Booked", "Blocked"
+  cost: number | null;
+  maxCapacity: number;
+  bookedCount: number;
+  availableCapacity: number;
   reservedBy: string | null;
   reservationExpireAt: string | null;
   createdAt: string;
+  updatedAt: string | null;
 }
 
 /** Reservation response */

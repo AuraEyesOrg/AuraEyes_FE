@@ -6,6 +6,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
+  AppointmentSlotListDto,
   AppointmentSlotDto,
   SlotReservationResult,
   BookingConfirmationResult,
@@ -26,7 +27,7 @@ import type { PagedResult } from '@/features/patient/types';
 /** Get available appointment slots with filters */
 export const getAppointmentSlots = async (
   params: GetAppointmentSlotsParams = {}
-): Promise<PagedResult<AppointmentSlotDto>> => {
+): Promise<PagedResult<AppointmentSlotListDto>> => {
   const searchParams = new URLSearchParams();
 
   if (params.ophthalId) searchParams.set('ophthalId', params.ophthalId);
@@ -45,7 +46,7 @@ export const getAppointmentSlots = async (
     ? `${API_ENDPOINTS.APPOINTMENT_SLOTS.LIST}?${queryString}`
     : API_ENDPOINTS.APPOINTMENT_SLOTS.LIST;
 
-  const response = await api.get<PagedResult<AppointmentSlotDto>>(url);
+  const response = await api.get<PagedResult<AppointmentSlotListDto>>(url);
   return response.data;
 };
 

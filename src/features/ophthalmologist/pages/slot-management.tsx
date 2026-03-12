@@ -30,13 +30,14 @@ import {
   useDeleteScheduleTemplate,
 } from '@/features/patient/hooks/use-booking';
 import {
-  ScheduleStatus,
   SlotType,
-  SCHEDULE_STATUS_LABELS,
   SLOT_TYPE_LABELS,
   DAY_OF_WEEK_LABELS,
 } from '@/types/schedule';
-import type { AppointmentSlotDto, ScheduleTemplateDto } from '@/types/schedule';
+import type {
+  AppointmentSlotListDto,
+  ScheduleTemplateDto,
+} from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
 
 // TODO: Replace with actual doctor ID from auth store
@@ -50,24 +51,24 @@ const formatTime = (timeStr: string) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
-const getSlotStatusColor = (status: ScheduleStatus): string => {
-  const colors: Record<ScheduleStatus, string> = {
-    [ScheduleStatus.Available]:
+const getSlotStatusColor = (status: string): string => {
+  const colors: Record<string, string> = {
+    Available:
       'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300',
-    [ScheduleStatus.Reserved]:
+    Reserved:
       'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300',
-    [ScheduleStatus.Booked]:
+    Booked:
       'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300',
-    [ScheduleStatus.Blocked]:
+    Blocked:
       'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-400',
-    [ScheduleStatus.Completed]:
+    Completed:
       'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300',
-    [ScheduleStatus.Cancelled]:
+    Cancelled:
       'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300',
-    [ScheduleStatus.NoShow]:
+    NoShow:
       'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300',
   };
-  return colors[status] || colors[ScheduleStatus.Available];
+  return colors[status] || colors['Available'];
 };
 
 export default function SlotManagementPage() {
@@ -134,7 +135,7 @@ export default function SlotManagementPage() {
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
-    const grouped: Record<string, AppointmentSlotDto[]> = {};
+    const grouped: Record<string, AppointmentSlotListDto[]> = {};
     slots.forEach((slot) => {
       if (!grouped[slot.date]) grouped[slot.date] = [];
       grouped[slot.date].push(slot);
@@ -173,16 +174,15 @@ export default function SlotManagementPage() {
   const stats = useMemo(() => {
     return {
       total: slots.length,
-      available: slots.filter((s) => s.status === ScheduleStatus.Available)
-        .length,
-      booked: slots.filter((s) => s.status === ScheduleStatus.Booked).length,
-      blocked: slots.filter((s) => s.status === ScheduleStatus.Blocked).length,
+      available: slots.filter((s) => s.status === 'Available').length,
+      booked: slots.filter((s) => s.status === 'Booked').length,
+      blocked: slots.filter((s) => s.status === 'Blocked').length,
     };
   }, [slots]);
 
   // Handlers
   const handleBlockSlot = useCallback(
-    (slot: AppointmentSlotDto) => {
+    (slot: AppointmentSlotListDto) => {
       blockMutation.mutate({
         slotId: slot.id,
         request: {
@@ -195,7 +195,7 @@ export default function SlotManagementPage() {
   );
 
   const handleUnblockSlot = useCallback(
-    (slot: AppointmentSlotDto) => {
+    (slot: AppointmentSlotListDto) => {
       unblockMutation.mutate({
         slotId: slot.id,
         request: { ophthalmologistId: doctorId },
@@ -526,11 +526,11 @@ export default function SlotManagementPage() {
                             {formatTime(slot.startTime)}
                           </div>
                           <div className="text-[10px] mt-1 opacity-75 text-center">
-                            {SCHEDULE_STATUS_LABELS[slot.status]}
+                            {slot.status}
                           </div>
 
                           {/* Block/Unblock Button */}
-                          {slot.status === ScheduleStatus.Available && (
+                          {slot.status === 'Available' && (
                             <button
                               onClick={() => handleBlockSlot(slot)}
                               className="absolute -top-1 -right-1 p-1 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow"
@@ -539,7 +539,7 @@ export default function SlotManagementPage() {
                               <PowerOff className="w-3 h-3" />
                             </button>
                           )}
-                          {slot.status === ScheduleStatus.Blocked && (
+                          {slot.status === 'Blocked' && (
                             <button
                               onClick={() => handleUnblockSlot(slot)}
                               className="absolute -top-1 -right-1 p-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow"

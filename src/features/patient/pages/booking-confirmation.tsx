@@ -8,14 +8,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   Clock,
-  User,
   CheckCircle,
   AlertCircle,
   ArrowLeft,
   Timer,
   Eye,
   Brain,
-  Building,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
@@ -24,7 +22,6 @@ import {
   useConfirmReservation,
   useReleaseReservation,
 } from '../hooks/use-booking';
-import { ScheduleStatus, SLOT_TYPE_LABELS } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
 
 // ============ HELPERS ============
@@ -153,7 +150,7 @@ export default function BookingConfirmationPage() {
   }
 
   // Slot not found or not reserved
-  if (!slot || slot.status !== ScheduleStatus.Reserved) {
+  if (!slot || slot.status !== 'Reserved') {
     return (
       <PatientLayout>
         <div className="p-6 max-w-2xl mx-auto">
@@ -215,18 +212,18 @@ export default function BookingConfirmationPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Doctor
-                  </p>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {slot.ophthalmologistName ?? 'Not specified'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Session ID
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white text-sm">
                     {sessionId.slice(0, 8)}...
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Consultation Fee
+                  </p>
+                  <p className="font-medium text-emerald-600 dark:text-emerald-400">
+                    {slot.cost?.toLocaleString('vi-VN')} VND
                   </p>
                 </div>
               </div>
@@ -289,36 +286,6 @@ export default function BookingConfirmationPage() {
 
           <div className="space-y-4">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
-                <User className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Doctor
-                </p>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {slot.ophthalmologistName ?? 'Not specified'}
-                </p>
-              </div>
-            </div>
-
-            {slot.organisationName && (
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                  <Building className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Organisation
-                  </p>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {slot.organisationName}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -340,7 +307,7 @@ export default function BookingConfirmationPage() {
                   {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {SLOT_TYPE_LABELS[slot.slotType]}
+                  Online Consultation
                 </p>
               </div>
             </div>

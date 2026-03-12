@@ -52,6 +52,10 @@ const statusColors: Record<ScheduleStatus, string> = {
     'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
   [ScheduleStatus.NoShow]:
     'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  [ScheduleStatus.Reserved]:
+    'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  [ScheduleStatus.Blocked]:
+    'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500',
 };
 
 const formatTime = (timeStr: string) => {

@@ -8,7 +8,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   Clock,
-  User,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -23,9 +22,8 @@ import {
   useReserveSlot,
   useReleaseReservation,
 } from '../hooks/use-booking';
-import { ScheduleStatus, SLOT_TYPE_LABELS } from '@/types/schedule';
 import type {
-  AppointmentSlotDto,
+  AppointmentSlotListDto,
   SlotReservationResult,
 } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
@@ -49,15 +47,15 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const getSlotStatusColor = (status: ScheduleStatus) => {
+const getSlotStatusColor = (status: string) => {
   switch (status) {
-    case ScheduleStatus.Available:
+    case 'Available':
       return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 cursor-pointer';
-    case ScheduleStatus.Reserved:
+    case 'Reserved':
       return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700';
-    case ScheduleStatus.Booked:
+    case 'Booked':
       return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700';
-    case ScheduleStatus.Blocked:
+    case 'Blocked':
       return 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-700';
     default:
       return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700';
@@ -67,7 +65,7 @@ const getSlotStatusColor = (status: ScheduleStatus) => {
 // ============ RESERVATION MODAL ============
 
 interface ReservationModalProps {
-  slot: AppointmentSlotDto;
+  slot: AppointmentSlotListDto;
   reservation: SlotReservationResult | null;
   onConfirm: () => void;
   onCancel: () => void;
@@ -147,15 +145,6 @@ const ReservationModal = ({
         {/* Slot Details */}
         <div className="space-y-3 mb-6">
           <div className="flex items-center gap-3">
-            <User className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Doctor</p>
-              <p className="font-medium text-gray-900 dark:text-white">
-                {slot.ophthalmologistName ?? 'Not specified'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
@@ -225,9 +214,8 @@ export default function BookAppointmentPage() {
 
   const [selectedDoctorId, setSelectedDoctorId] = useState(doctorId);
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-  const [selectedSlot, setSelectedSlot] = useState<AppointmentSlotDto | null>(
-    null
-  );
+  const [selectedSlot, setSelectedSlot] =
+    useState<AppointmentSlotListDto | null>(null);
   const [reservation, setReservation] = useState<SlotReservationResult | null>(
     null
   );
@@ -252,7 +240,7 @@ export default function BookAppointmentPage() {
   const { data: slotsData, isLoading } = useAppointmentSlots(
     {
       ophthalId: selectedDoctorId || undefined,
-      status: ScheduleStatus.Available,
+      status: 1, // Available status
       fromDate: weekRange.from,
       toDate: weekRange.to,
       pageSize: 100,
@@ -267,7 +255,7 @@ export default function BookAppointmentPage() {
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
-    const grouped: Record<string, AppointmentSlotDto[]> = {};
+    const grouped: Record<string, AppointmentSlotListDto[]> = {};
     slots.forEach((slot) => {
       if (!grouped[slot.date]) grouped[slot.date] = [];
       grouped[slot.date].push(slot);
@@ -304,8 +292,8 @@ export default function BookAppointmentPage() {
   }, [weekRange.from]);
 
   const handleSlotClick = useCallback(
-    async (slot: AppointmentSlotDto) => {
-      if (slot.status !== ScheduleStatus.Available) return;
+    async (slot: AppointmentSlotListDto) => {
+      if (slot.status !== 'Available') return;
       if (!patientId) {
         // Redirect to login or show error
         alert('Please log in to book an appointment');
@@ -472,7 +460,7 @@ export default function BookAppointmentPage() {
                           key={slot.id}
                           onClick={() => handleSlotClick(slot)}
                           disabled={
-                            slot.status !== ScheduleStatus.Available ||
+                            slot.status !== 'Available' ||
                             reserveMutation.isPending
                           }
                           className={`w-full px-2 py-2 rounded-lg border text-xs font-medium transition ${getSlotStatusColor(slot.status)} disabled:cursor-not-allowed`}
@@ -481,9 +469,11 @@ export default function BookAppointmentPage() {
                             <Clock className="w-3 h-3" />
                             {formatTime(slot.startTime)}
                           </div>
-                          <div className="text-[10px] mt-1 opacity-75">
-                            {SLOT_TYPE_LABELS[slot.slotType]}
-                          </div>
+                          {slot.maxCapacity > 1 && (
+                            <div className="text-[10px] mt-1 opacity-75">
+                              {slot.availableCapacity}/{slot.maxCapacity} slots
+                            </div>
+                          )}
                         </button>
                       ))}
                     </div>
