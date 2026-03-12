@@ -7,18 +7,14 @@ import {
   MessageCircle,
   ArrowRight,
   ChevronRight,
-  Bell,
   Home,
   CheckCircle,
   History,
-  Moon,
-  Sun,
   AlertCircle,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useDashboard } from '../hooks/useDashboard';
 
 // ============ HELPERS ============
@@ -46,7 +42,6 @@ const getRiskLabel = (risk?: string) => {
 };
 
 export default function PatientDashboard() {
-  const { theme, toggleTheme } = useTheme();
   const {
     profile,
     wallet,
@@ -116,7 +111,7 @@ export default function PatientDashboard() {
         ? getRiskLabel(latestAnalysis.riskLevel)
         : 'No Scans',
       valueColor: 'text-brand',
-      bgColor: 'bg-blue-50',
+      bgColor: 'icon-bg-blue',
       iconColor: 'text-blue-500',
     },
     {
@@ -126,7 +121,7 @@ export default function PatientDashboard() {
         ? formatShortDate(nextAppointment.date)
         : 'None Scheduled',
       valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'bg-pink-50',
+      bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
     },
     {
@@ -134,7 +129,7 @@ export default function PatientDashboard() {
       label: 'Wallet Balance',
       value: wallet ? formatCurrency(wallet.balance) : '—',
       valueColor: 'text-[var(--text-primary)]',
-      bgColor: 'bg-orange-50',
+      bgColor: 'icon-bg-orange',
       iconColor: 'text-orange-500',
     },
   ];
@@ -190,21 +185,6 @@ export default function PatientDashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </button>
-            <button className="relative flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
-            </button>
             <Link
               to="/patient/screening/new"
               className="btn-primary flex items-center gap-2"
@@ -328,9 +308,7 @@ export default function PatientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statsCards.map((stat, index) => (
             <div key={index} className="medical-card flex items-center gap-4">
-              <div
-                className={`p-3 ${stat.bgColor} dark:bg-opacity-10 rounded-lg shrink-0`}
-              >
+              <div className={`p-3 ${stat.bgColor} rounded-lg shrink-0`}>
                 <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
               <div>
@@ -369,7 +347,7 @@ export default function PatientDashboard() {
                     {recentReports.map((report) => (
                       <div key={report.id} className="relative pl-6 group">
                         <div
-                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
+                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white dark:border-[#1e3a5f] ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
                         />
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div>

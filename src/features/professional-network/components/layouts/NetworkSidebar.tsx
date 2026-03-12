@@ -1,182 +1,162 @@
 /**
  * Network Sidebar Component
- * Left navigation sidebar for professional network
- *
- * EXACT Responsive widths (matching Twitter):
- * - Mobile (<500px): w-0 (hidden) → fixed bottom bar
- * - 500px+: w-[68px] → icons only, centered
- * - 768px+: w-[88px]
- * - 1280px+: w-[275px] → icons + labels, right-aligned content
+ * Unified with System Admin Sidebar structure
+ * Same width (w-64), bg, padding, and user profile at bottom
  */
 
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   Compass,
-  Users,
-  UsersRound,
   Bookmark,
   User,
-  MoreHorizontal,
-  PenSquare,
+  Eye,
+  LogOut,
   ArrowLeft,
   Sun,
   Moon,
+  PenSquare,
 } from 'lucide-react';
-import { currentUser } from '../../data';
 import { useTheme } from '@/contexts/ThemeContext';
-
-const navItems = [
-  { to: '/network', icon: Home, label: 'Feed', end: true },
-  { to: '/network/discover', icon: Compass, label: 'Discover' },
-  { to: '/network/connections', icon: Users, label: 'Connections' },
-  { to: '/network/groups', icon: UsersRound, label: 'Groups' },
-  { to: '/network/saved', icon: Bookmark, label: 'Saved' },
-];
+import useAuthStore from '@/store/auth-store';
 
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const { setIsAuthenticated, user } = useAuthStore();
+
+  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+
+  const dashboardRoute = user?.roles?.includes('Patient')
+    ? '/patient/dashboard'
+    : user?.roles?.includes('Ophthalmologist')
+      ? '/ophthalmologist/dashboard'
+      : user?.roles?.includes('OrgAdmin')
+        ? '/organisation/dashboard'
+        : '/system-admin/dashboard';
+
+  const navItems = [
+    { to: '/network', icon: Home, label: 'Feed', end: true },
+    { to: '/network/discover', icon: Compass, label: 'Discover' },
+    { to: '/network/saved', icon: Bookmark, label: 'Saved' },
+    {
+      to: `/network/profile/${user?.id || 'me'}`,
+      icon: User,
+      label: 'Profile',
+    },
+  ];
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    navigate('/login');
+  };
 
   return (
-    <header id="network-sidebar" className="network-sidebar-header">
-      <div className="network-sidebar-inner">
-        {/* Logo - Aura Eye icon with Aura Network text */}
-        <section className="network-sidebar-section">
-          <h1 className="network-sidebar-logo">
+    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
+      <div className="p-6 flex flex-col h-full">
+        {/* Logo - AURA */}
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white shadow-brand">
+            <Eye className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-(--text-primary) text-lg font-bold leading-none tracking-tight">
+              AURA
+            </h1>
+            <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">
+              Network
+            </p>
+          </div>
+        </div>
+
+        {/* Back to Dashboard */}
+        <Link
+          to={dashboardRoute}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Dashboard</span>
+        </Link>
+
+        {/* Navigation */}
+        <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
+          {navItems.map((item) => (
             <NavLink
-              to="/network"
-              className="custom-button main-tab text-brand-primary transition hover:bg-brand-primary/10 
-                         focus-visible:bg-brand-primary/10 focus-visible:!ring-brand-primary/80 p-3 flex items-center gap-3"
-            >
-              <img
-                src="/icon_64x64.png"
-                alt="AURA"
-                className="w-7 h-7 flex-shrink-0 object-contain"
-                width={28}
-                height={28}
-                loading="eager"
-              />
-              <span className="network-nav-label font-bold text-lg text-brand-primary">
-                Aura Network
-              </span>
-            </NavLink>
-          </h1>
-
-          {/* Back to Dashboard Link */}
-          <Link
-            to="/system-admin/dashboard"
-            className="network-nav-link hover-animation text-text-muted hover:text-brand-primary"
-            title="Back to Dashboard"
-          >
-            <ArrowLeft
-              className="w-[22px] h-[22px] flex-shrink-0"
-              strokeWidth={1.75}
-            />
-            <span className="network-nav-label text-base">Dashboard</span>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="network-sidebar-nav">
-            {navItems.map(({ to, icon: Icon, label, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `network-nav-link hover-animation ${
-                    isActive ? 'font-bold' : ''
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon
-                      className="w-[26px] h-[26px] shrink-0"
-                      strokeWidth={isActive ? 2.5 : 1.75}
-                    />
-                    <span className="network-nav-label">{label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-
-            {/* Profile Link */}
-            <NavLink
-              to={`/network/profile/${currentUser.id}`}
+              key={item.to}
+              to={item.to}
+              end={item.end}
               className={({ isActive }) =>
-                `network-nav-link hover-animation ${
-                  isActive ? 'font-bold' : ''
+                `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  isActive
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  <User
-                    className="w-[26px] h-[26px] shrink-0"
-                    strokeWidth={isActive ? 2.5 : 1.75}
-                  />
-                  <span className="network-nav-label">Profile</span>
-                </>
-              )}
+              <item.icon className="w-5 h-5" />
+              <span className="text-sm font-medium">{item.label}</span>
             </NavLink>
-
-            {/* More */}
-            <button className="network-nav-link hover-animation">
-              <MoreHorizontal
-                className="w-[26px] h-[26px] shrink-0"
-                strokeWidth={1.75}
-              />
-              <span className="network-nav-label">More</span>
-            </button>
-
-            {/* Theme Toggle - Synced with system admin */}
-            <button
-              onClick={toggleTheme}
-              className="network-nav-link hover-animation"
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              {theme === 'dark' ? (
-                <Sun
-                  className="w-[26px] h-[26px] shrink-0"
-                  strokeWidth={1.75}
-                />
-              ) : (
-                <Moon
-                  className="w-[26px] h-[26px] shrink-0"
-                  strokeWidth={1.75}
-                />
-              )}
-              <span className="network-nav-label">
-                {theme === 'dark' ? 'Light' : 'Dark'}
-              </span>
-            </button>
-          </nav>
+          ))}
 
           {/* New Post Button */}
-          <button className="network-post-button">
-            <PenSquare className="network-post-icon" />
-            <span className="network-post-text">Post</span>
-          </button>
-        </section>
+          <Link
+            to="/network"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand text-white font-semibold hover:brightness-90 transition-all mt-4"
+          >
+            <PenSquare className="w-5 h-5" />
+            <span className="text-sm">New Post</span>
+          </Link>
 
-        {/* User Profile at bottom - using currentUser from mock data */}
-        <button className="network-profile-button">
-          <img
-            src={currentUser.avatarUrl}
-            alt={currentUser.fullName}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
-          />
-          <div className="network-profile-info">
-            <p className="font-bold text-[15px] text-text-main truncate leading-tight">
-              {currentUser.fullName}
-            </p>
-            <p className="text-[13px] text-text-muted truncate">
-              {currentUser.specialty[0]}
-            </p>
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mt-1"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
+            )}
+            <span className="text-sm font-medium">
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            </span>
+          </button>
+        </nav>
+
+        {/* User Profile Footer - pinned to bottom */}
+        <div className="mt-auto pt-6 border-t border-gray-700">
+          <div className="flex items-center gap-3 px-2">
+            <div className="flex items-center gap-3 flex-1">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName}
+                  className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-brand/30 shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 border-2 border-brand/30 shadow-sm font-bold text-sm">
+                  {userInitial}
+                </div>
+              )}
+              <div className="flex flex-col overflow-hidden">
+                <p className="text-sm font-bold text-(--text-primary) truncate">
+                  {user?.fullName || 'User'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {user?.roles?.[0] || 'Member'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
-          <MoreHorizontal className="network-profile-more" />
-        </button>
+        </div>
       </div>
-    </header>
+    </aside>
   );
 }

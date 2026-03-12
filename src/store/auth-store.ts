@@ -11,6 +11,8 @@ export interface AuthUser {
   emailConfirmed: boolean;
   organizationId?: string | null;
   twoFactorEnabled: boolean;
+  isVerified?: boolean | null;
+  verificationStatus?: string | null;
 }
 
 type AuthState = {

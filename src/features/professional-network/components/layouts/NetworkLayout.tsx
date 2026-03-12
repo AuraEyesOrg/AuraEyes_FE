@@ -1,35 +1,26 @@
 /**
  * Network Layout Component
- * Main 3-column Twitter-style layout for professional network feature
+ * Unified layout matching System Admin Dashboard structure
  *
- * EXACT Layout proportions (matching Twitter reference):
- * - Sidebar Header: w-0 → w-[68px] (500px+) → w-[88px] (768px+) → w-[275px] (1280px+)
- * - Main Content: w-full max-w-[600px], border-x on 500px+
- * - Right Panel: w-[350px], hidden below 1024px
- *
- * Total at xl: 275 + 600 + 350 + gaps = ~1280px container
+ * Layout: w-64 Sidebar + flex-1 Main Content (same as Dashboard)
  */
 
 import { Outlet } from 'react-router-dom';
 import { NetworkSidebar } from './NetworkSidebar';
-import { NetworkRightPanel } from './NetworkRightPanel';
 
 // Import network-specific styles (scoped CSS for this module)
 import '../../styles/network.css';
 
 export function NetworkLayout() {
   return (
-    <div className="network-layout-container">
-      {/* Sidebar - Twitter style: fixed position, responsive widths */}
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
       <NetworkSidebar />
 
-      {/* Main Content - Twitter style: max-w-[600px], border-x, centered */}
-      <main className="network-main-content">
-        <Outlet />
-      </main>
-
-      {/* Right Panel - Aside: w-[350px], search + trends + suggestions */}
-      <NetworkRightPanel />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

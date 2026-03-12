@@ -6,22 +6,23 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Users, FileText, Star } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { InitialsAvatar } from './InitialsAvatar';
 
 interface Props {
   professional: Ophthalmologist;
-  showActions?: boolean;
 }
 
-export function ProfessionalCard({ professional, showActions = true }: Props) {
+export function ProfessionalCard({ professional }: Props) {
   return (
     <div className="px-4 py-3">
       <div className="flex gap-3">
         {/* Avatar */}
         <Link to={`/network/profile/${professional.id}`} className="shrink-0">
-          <img
-            src={professional.avatarUrl}
-            alt={professional.fullName}
-            className="w-12 h-12 rounded-full object-cover hover:opacity-90 hover-animation"
+          <InitialsAvatar
+            fullName={professional.fullName}
+            avatarUrl={professional.avatarUrl}
+            size="lg"
+            className="hover:opacity-90 hover-animation"
           />
         </Link>
 
@@ -41,23 +42,16 @@ export function ProfessionalCard({ professional, showActions = true }: Props) {
                 )}
               </div>
               <p className="text-[15px] text-text-muted truncate">
-                {professional.specialty[0]}
+                {professional.specialty?.[0]}
                 {professional.organisationName &&
                   ` · ${professional.organisationName}`}
               </p>
             </div>
-
-            {/* Actions */}
-            {showActions && (
-              <button className="btn-primary text-[13px] py-1.5 px-4 shrink-0">
-                Connect
-              </button>
-            )}
           </div>
 
           {/* Specialties */}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {professional.specialty.slice(1).map((spec) => (
+            {professional.specialty?.slice(1).map((spec) => (
               <span key={spec} className="badge-specialty">
                 {spec}
               </span>
@@ -66,18 +60,24 @@ export function ProfessionalCard({ professional, showActions = true }: Props) {
 
           {/* Stats */}
           <div className="flex items-center gap-4 mt-2 text-[13px] text-text-muted">
-            <span className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              {professional.connectionCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              {professional.postCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-500" />
-              {professional.rating}
-            </span>
+            {professional.connectionCount !== undefined && (
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                {professional.connectionCount}
+              </span>
+            )}
+            {professional.postCount !== undefined && (
+              <span className="flex items-center gap-1">
+                <FileText className="w-4 h-4" />
+                {professional.postCount}
+              </span>
+            )}
+            {professional.rating !== undefined && (
+              <span className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500" />
+                {professional.rating}
+              </span>
+            )}
           </div>
 
           {/* Bio */}

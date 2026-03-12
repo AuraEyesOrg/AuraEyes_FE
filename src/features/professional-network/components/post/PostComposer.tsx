@@ -1,9 +1,9 @@
 /**
  * Post Composer Component
- * Component for creating new posts
+ * Component for creating new posts with file upload and anonymization consent
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Image,
   FileText,
@@ -11,51 +11,117 @@ import {
   HelpCircle,
   Link2,
   X,
-  Globe,
-  Users,
-  Building2,
 } from 'lucide-react';
-import type { PostType, PostVisibility } from '../../types';
-import { currentUser } from '../../data';
+import type { PostCategory } from '../../types';
+import { useCreatePost } from '../../hooks/useCreatePost';
+import useAuthStore from '@/store/auth-store';
+import { LoadingButton } from '@/components/ui/loading-button';
 
-const postTypes: { type: PostType; icon: React.ElementType; label: string }[] =
-  [
-    { type: 'article', icon: FileText, label: 'Article' },
-    { type: 'case_study', icon: FlaskConical, label: 'Case Study' },
-    { type: 'question', icon: HelpCircle, label: 'Question' },
-  ];
-
-const visibilityOptions: {
-  value: PostVisibility;
+const postTypes: {
+  type: PostCategory;
   icon: React.ElementType;
   label: string;
 }[] = [
-  { value: 'public', icon: Globe, label: 'Public' },
-  { value: 'connections_only', icon: Users, label: 'Connections only' },
-  { value: 'organisation_only', icon: Building2, label: 'Organisation only' },
+  { type: 'KnowledgeShare', icon: FileText, label: 'Knowledge Share' },
+  { type: 'CasePresentation', icon: FlaskConical, label: 'Case Presentation' },
+  { type: 'PeerDiscussion', icon: HelpCircle, label: 'Peer Discussion' },
+  { type: 'Announcement', icon: FileText, label: 'Announcement' },
 ];
 
 export function PostComposer() {
   const [content, setContent] = useState('');
-  const [selectedType, setSelectedType] = useState<PostType>('article');
-  const [visibility, setVisibility] = useState<PostVisibility>('public');
+  const [selectedType, setSelectedType] =
+    useState<PostCategory>('KnowledgeShare');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [isAnonymizationConfirmed, setIsAnonymizationConfirmed] =
+    useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const createPost = useCreatePost();
+  const { user } = useAuthStore();
+
+  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+  const hasFiles = files.length > 0;
+  const isPostDisabled =
+    !content.trim() ||
+    createPost.isPending ||
+    (hasFiles && !isAnonymizationConfirmed);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setFiles((prev) => [...prev, ...selectedFiles]);
+
+    // Generate previews for image files
+    selectedFiles.forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPreviews((prev) => [...prev, event.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPreviews((prev) => [...prev, '']);
+      }
+    });
+
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+    // If no files left, reset checkbox
+    if (files.length <= 1) {
+      setIsAnonymizationConfirmed(false);
+    }
+  };
 
   const handleSubmit = () => {
-    console.log({ content, selectedType, visibility, images });
-    setContent('');
-    setImages([]);
-    setIsExpanded(false);
+    if (isPostDisabled) return;
+
+    const formData = new FormData();
+    formData.append('authorType', 'Ophthalmologist');
+    formData.append('content', content.trim());
+    formData.append('category', selectedType);
+    formData.append('visibility', 'Public');
+    formData.append('allowComments', 'true');
+    formData.append(
+      'isAnonymizationConfirmed',
+      String(isAnonymizationConfirmed)
+    );
+
+    files.forEach((file) => {
+      formData.append('attachments', file);
+    });
+
+    createPost.mutate(formData, {
+      onSuccess: () => {
+        setContent('');
+        setFiles([]);
+        setPreviews([]);
+        setIsAnonymizationConfirmed(false);
+        setIsExpanded(false);
+      },
+    });
   };
 
   return (
     <div className="flex gap-x-3 px-4 py-3 border-b border-light-border">
-      <img
-        src={currentUser.avatarUrl}
-        alt={currentUser.fullName}
-        className="w-10 h-10 rounded-full object-cover shrink-0"
-      />
+      {user?.avatarUrl ? (
+        <img
+          src={user.avatarUrl}
+          alt={user.fullName}
+          className="w-10 h-10 rounded-full object-cover shrink-0"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 font-bold text-sm">
+          {userInitial}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <textarea
           placeholder="Share insights with your network..."
@@ -67,16 +133,29 @@ export function PostComposer() {
           }`}
         />
 
-        {/* Images Preview */}
-        {images.length > 0 && (
+        {/* Files Preview */}
+        {previews.length > 0 && (
           <div className="grid grid-cols-2 gap-0.5 mt-3 rounded-2xl overflow-hidden border border-light-border">
-            {images.map((img, index) => (
+            {previews.map((preview, index) => (
               <div key={index} className="relative">
-                <img src={img} alt="" className="w-full h-32 object-cover" />
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt={files[index]?.name}
+                    className="w-full h-32 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="w-6 h-6 text-text-muted mx-auto mb-1" />
+                      <p className="text-xs text-text-muted truncate max-w-[100px]">
+                        {files[index]?.name}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <button
-                  onClick={() =>
-                    setImages((prev) => prev.filter((_, i) => i !== index))
-                  }
+                  onClick={() => removeFile(index)}
                   className="absolute top-2 right-2 p-1.5 bg-black/70 text-white rounded-full hover:bg-black/80 hover-animation"
                 >
                   <X className="w-4 h-4" />
@@ -109,22 +188,45 @@ export function PostComposer() {
               </div>
             </div>
 
+            {/* Anonymization Consent Checkbox */}
+            {hasFiles && (
+              <label className="flex items-start gap-2 mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isAnonymizationConfirmed}
+                  onChange={(e) =>
+                    setIsAnonymizationConfirmed(e.target.checked)
+                  }
+                  className="mt-0.5 w-4 h-4 rounded border-amber-300 text-brand-primary focus:ring-brand-primary"
+                />
+                <span className="text-[13px] text-amber-800 dark:text-amber-200 leading-snug">
+                  Tôi cam kết hình ảnh đính kèm không chứa thông tin định danh
+                  của bệnh nhân
+                </span>
+              </label>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-between mt-3">
               <div className="flex items-center -ml-2">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
                 <button
-                  onClick={() =>
-                    setImages((prev) => [
-                      ...prev,
-                      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400',
-                    ])
-                  }
+                  onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
                   title="Add Image"
                 >
                   <Image className="w-5 h-5" />
                 </button>
                 <button
+                  onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
                   title="Attach Document"
                 >
@@ -139,28 +241,14 @@ export function PostComposer() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Visibility Dropdown */}
-                <select
-                  value={visibility}
-                  onChange={(e) =>
-                    setVisibility(e.target.value as PostVisibility)
-                  }
-                  className="bg-main-search-background border-0 rounded-full px-3 py-1.5 text-[13px] text-text-main focus:outline-none focus:ring-2 focus:ring-brand-primary hover-animation"
-                >
-                  {visibilityOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-
-                <button
+                <LoadingButton
                   onClick={handleSubmit}
-                  disabled={!content.trim()}
-                  className="btn-primary py-2 px-5 text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  isPending={createPost.isPending}
+                  disabled={isPostDisabled}
+                  className="btn-primary py-2 px-5 text-[15px]"
                 >
                   Post
-                </button>
+                </LoadingButton>
               </div>
             </div>
           </>

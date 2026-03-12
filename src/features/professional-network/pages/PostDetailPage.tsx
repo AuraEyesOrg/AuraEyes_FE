@@ -1,42 +1,178 @@
 /**
  * Post Detail Page
- * Page for viewing a single post with comments
+ * Page for viewing a single post with comments and Facebook-style replies
  */
 
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Send,
+  MessageCircle,
+  Loader2,
+  CornerDownRight,
+} from 'lucide-react';
 import { PostCard } from '../components/post/PostCard';
-import { CommentCard } from '../components/post/CommentCard';
-import type { ProfessionalPost, PostComment } from '../types';
+import {
+  usePostDetail,
+  usePostComments,
+  useCommentReplies,
+} from '../hooks/useNetworkPosts';
+import { useAddComment } from '../hooks/useAddComment';
+import { useToggleReaction } from '../hooks/useToggleReaction';
+import useAuthStore from '@/store/auth-store';
+import { LoadingButton } from '@/components/ui/loading-button';
+import type { ReactionType } from '../types';
+import { InitialsAvatar } from '../components/professional/InitialsAvatar';
+import type { PagedResult } from '../types';
 
-// TODO: Replace with actual API calls and auth context
-const currentUser = {
-  id: 'current-user',
-  fullName: 'Dr. Current User',
-  avatarUrl:
-    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150',
+type CommentDto = {
+  id: string;
+  postId: string;
+  author: {
+    id: string;
+    authorType: string;
+    fullName: string;
+    avatarUrl?: string;
+  };
+  content: string;
+  parentCommentId?: string;
+  replyCount: number;
+  likeCount: number;
+  createdAt: string;
 };
 
-function PostDetailPage() {
-  const { id: _id } = useParams();
-  const [commentText, setCommentText] = useState('');
-  const [post, _setPost] = useState<ProfessionalPost | null>(null);
-  const [comments, _setComments] = useState<PostComment[]>([]);
+function CommentRepliesList({
+  postId,
+  parentCommentId,
+}: {
+  postId: string;
+  parentCommentId: string;
+}) {
+  const { data: repliesPage, isLoading } = useCommentReplies(
+    postId,
+    parentCommentId
+  );
+  const replies =
+    (repliesPage as PagedResult<CommentDto> | undefined)?.items ?? [];
 
-  // TODO: Fetch post and comments from API
+  if (isLoading) {
+    return (
+      <div className="ml-11 py-2 flex items-center gap-2 text-text-muted text-[13px]">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Loading replies...
+      </div>
+    );
+  }
+
+  return (
+    <div className="ml-11 mt-2 space-y-2">
+      {replies.map((reply) => (
+        <div key={reply.id} className="flex gap-2">
+          {reply.author.avatarUrl ? (
+            <img
+              src={reply.author.avatarUrl}
+              alt={reply.author.fullName}
+              className="w-8 h-8 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <InitialsAvatar fullName={reply.author.fullName} size="xs" />
+          )}
+          <div className="flex-1 bg-main-search-background rounded-2xl px-3 py-2">
+            <p className="font-bold text-[13px] text-text-main">
+              {reply.author.fullName}
+            </p>
+            <p className="text-[13px] text-text-main mt-0.5">{reply.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PostDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [commentText, setCommentText] = useState('');
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(
+    new Set()
+  );
+  const { user } = useAuthStore();
+  const toggleReaction = useToggleReaction();
+
+  const { data: post, isLoading: postLoading } = usePostDetail(id ?? '');
+
+  const handleReaction = (postId: string, type: ReactionType) => {
+    toggleReaction.mutate({
+      postId,
+      type,
+      currentReaction: post?.currentUserReaction,
+    });
+  };
+  const { data: commentsPage, isLoading: commentsLoading } = usePostComments(
+    id ?? ''
+  );
+  const addComment = useAddComment();
+
+  const comments =
+    (commentsPage as PagedResult<CommentDto> | undefined)?.items ?? [];
 
   const handleSubmitComment = () => {
-    if (commentText.trim()) {
-      console.log('Submit comment:', commentText);
-      setCommentText('');
-    }
+    if (!commentText.trim() || !id) return;
+    addComment.mutate(
+      { postId: id, content: commentText.trim() },
+      { onSuccess: () => setCommentText('') }
+    );
   };
+
+  const handleSubmitReply = (parentCommentId: string) => {
+    if (!replyText.trim() || !id) return;
+    addComment.mutate(
+      { postId: id, content: replyText.trim(), parentCommentId },
+      {
+        onSuccess: () => {
+          setReplyText('');
+          setReplyingToId(null);
+          setExpandedReplies((prev) => new Set([...prev, parentCommentId]));
+        },
+      }
+    );
+  };
+
+  const toggleReplies = (commentId: string) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) next.delete(commentId);
+      else next.add(commentId);
+      return next;
+    });
+  };
+
+  if (postLoading) {
+    return (
+      <>
+        <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
+          <div className="flex items-center gap-6 px-4 h-[53px]">
+            <Link
+              to="/network/feed"
+              className="p-2 hover:bg-gray-100 rounded-full hover-animation"
+            >
+              <ArrowLeft className="w-5 h-5 text-text-main" />
+            </Link>
+            <h2 className="text-xl font-bold text-text-main">Post</h2>
+          </div>
+        </header>
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+        </div>
+      </>
+    );
+  }
 
   if (!post) {
     return (
       <>
-        {/* Header */}
         <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
           <div className="flex items-center gap-6 px-4 h-[53px]">
             <Link
@@ -72,15 +208,23 @@ function PostDetailPage() {
       </header>
 
       {/* Post */}
-      <PostCard post={post} />
+      <PostCard
+        post={post}
+        currentUserId={user?.id}
+        onReaction={handleReaction}
+      />
 
       {/* Comment Input */}
       <div className="flex gap-3 px-4 py-3 border-b border-light-border">
-        <img
-          src={currentUser.avatarUrl}
-          alt={currentUser.fullName}
-          className="w-10 h-10 rounded-full object-cover shrink-0"
-        />
+        {user?.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={user.fullName}
+            className="w-10 h-10 rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <InitialsAvatar fullName={user?.fullName ?? '?'} size="sm" />
+        )}
         <div className="flex-1 flex gap-2">
           <input
             type="text"
@@ -91,13 +235,14 @@ function PostDetailPage() {
             className="flex-1 bg-main-search-background rounded-full px-4 py-2 text-[15px] text-text-main placeholder:text-text-muted hover-animation
                        focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white"
           />
-          <button
+          <LoadingButton
             onClick={handleSubmitComment}
+            isPending={addComment.isPending}
             disabled={!commentText.trim()}
-            className="btn-primary py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary py-2 px-4"
           >
             <Send className="w-4 h-4" />
-          </button>
+          </LoadingButton>
         </div>
       </div>
 
@@ -105,18 +250,114 @@ function PostDetailPage() {
       <div className="divide-y divide-light-border">
         <div className="px-4 py-3">
           <h3 className="font-bold text-[15px] text-text-main">
-            Comments ({comments.length})
+            Comments ({post.commentCount})
           </h3>
         </div>
 
-        {comments.length === 0 ? (
+        {commentsLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />
+          </div>
+        ) : comments.length === 0 ? (
           <p className="text-center py-12 px-4 text-text-muted">
             No comments yet. Be the first to comment!
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="hover-card hover-animation">
-              <CommentCard comment={comment} />
+            <div key={comment.id} className="hover-animation px-4 py-3">
+              {/* Comment body */}
+              <div className="flex gap-3">
+                {comment.author.avatarUrl ? (
+                  <img
+                    src={comment.author.avatarUrl}
+                    alt={comment.author.fullName}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <InitialsAvatar
+                    fullName={comment.author.fullName}
+                    size="sm"
+                  />
+                )}
+                <div className="flex-1">
+                  <p className="font-bold text-[15px] text-text-main">
+                    {comment.author.fullName}
+                  </p>
+                  <p className="text-[15px] text-text-main mt-0.5">
+                    {comment.content}
+                  </p>
+                </div>
+              </div>
+
+              {/* Reply actions */}
+              <div className="ml-[52px] mt-1.5 flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setReplyingToId(
+                      replyingToId === comment.id ? null : comment.id
+                    );
+                    setReplyText('');
+                  }}
+                  className="text-[13px] font-semibold text-text-muted hover:text-brand-primary hover-animation"
+                >
+                  Reply
+                </button>
+                {comment.replyCount > 0 && (
+                  <button
+                    onClick={() => toggleReplies(comment.id)}
+                    className="flex items-center gap-1 text-[13px] font-semibold text-brand-primary hover-animation"
+                  >
+                    <CornerDownRight className="w-3 h-3" />
+                    {expandedReplies.has(comment.id) ? 'Hide' : 'View'}{' '}
+                    {comment.replyCount}{' '}
+                    {comment.replyCount === 1 ? 'reply' : 'replies'}
+                  </button>
+                )}
+              </div>
+
+              {/* Reply input */}
+              {replyingToId === comment.id && (
+                <div className="ml-[52px] mt-2 flex gap-2">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName}
+                      className="w-8 h-8 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <InitialsAvatar
+                      fullName={user?.fullName ?? '?'}
+                      size="xs"
+                    />
+                  )}
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={`Reply to ${comment.author.fullName}...`}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && handleSubmitReply(comment.id)
+                      }
+                      autoFocus
+                      className="flex-1 bg-main-search-background rounded-full px-3 py-1.5 text-[13px] text-text-main placeholder:text-text-muted hover-animation
+                                 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white"
+                    />
+                    <button
+                      onClick={() => handleSubmitReply(comment.id)}
+                      disabled={!replyText.trim() || addComment.isPending}
+                      className="p-2 rounded-full bg-brand-primary text-white disabled:opacity-50 hover-animation"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Expanded replies */}
+              {expandedReplies.has(comment.id) && id && (
+                <CommentRepliesList postId={id} parentCommentId={comment.id} />
+              )}
             </div>
           ))
         )}

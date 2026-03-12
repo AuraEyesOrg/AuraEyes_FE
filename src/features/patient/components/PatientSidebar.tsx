@@ -84,9 +84,9 @@ export default function PatientSidebar() {
           <div className="flex items-center gap-3 px-2">
             <NavLink
               to="/patient/profile"
-              className="flex items-center gap-3 flex-1 group cursor-pointer"
+              className="flex items-center gap-3 flex-1 min-w-0 group cursor-pointer"
             >
-              <div className="relative">
+              <div className="relative shrink-0">
                 <div
                   className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
                   style={{

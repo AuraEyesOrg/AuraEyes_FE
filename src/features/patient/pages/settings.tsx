@@ -231,11 +231,13 @@ export default function SettingsPage() {
                 <button
                   onClick={toggleTheme}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    theme === 'dark' ? 'bg-brand' : 'bg-gray-300'
+                    theme === 'dark'
+                      ? 'bg-brand'
+                      : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
                       theme === 'dark' ? 'left-7' : 'left-1'
                     }`}
                   />
@@ -260,11 +262,13 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setEmailNotifications(!emailNotifications)}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    emailNotifications ? 'bg-brand' : 'bg-gray-300'
+                    emailNotifications
+                      ? 'bg-brand'
+                      : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
                       emailNotifications ? 'left-7' : 'left-1'
                     }`}
                   />
@@ -289,11 +293,13 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setPushNotifications(!pushNotifications)}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    pushNotifications ? 'bg-brand' : 'bg-gray-300'
+                    pushNotifications
+                      ? 'bg-brand'
+                      : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
                       pushNotifications ? 'left-7' : 'left-1'
                     }`}
                   />

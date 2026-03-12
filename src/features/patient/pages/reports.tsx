@@ -127,16 +127,16 @@ const ReportsPage = () => {
   const getTypeIcon = (type: string, risk: string) => {
     const bgClass =
       risk === 'low'
-        ? 'bg-green-50'
+        ? 'icon-bg-green'
         : risk === 'medium'
-          ? 'bg-amber-50'
-          : 'bg-red-50';
+          ? 'icon-bg-orange'
+          : 'icon-bg-red';
     const iconClass =
       risk === 'low'
-        ? 'text-green-600'
+        ? 'text-green-600 dark:text-green-400'
         : risk === 'medium'
-          ? 'text-amber-600'
-          : 'text-red-600';
+          ? 'text-amber-600 dark:text-amber-400'
+          : 'text-red-600 dark:text-red-400';
 
     return (
       <div
@@ -162,8 +162,8 @@ const ReportsPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 icon-bg-blue rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-(--text-primary)">
@@ -175,8 +175,8 @@ const ReportsPage = () => {
         </div>
         <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 icon-bg-green rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">
@@ -188,8 +188,8 @@ const ReportsPage = () => {
         </div>
         <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 icon-bg-orange rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[var(--text-primary)]">
@@ -203,14 +203,14 @@ const ReportsPage = () => {
         </div>
         <div className="medical-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Eye className="w-5 h-5 text-purple-400" />
+            <div className="w-10 h-10 icon-bg-purple rounded-lg flex items-center justify-center">
+              <Eye className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-(--text-primary)">
                 {mockReports.filter((r) => r.riskLevel === 'low').length}
               </p>
-              <p className="text-xs text-gray-400">Healthy Results</p>
+              <p className="text-xs text-(--text-secondary)">Healthy Results</p>
             </div>
           </div>
         </div>
@@ -219,17 +219,17 @@ const ReportsPage = () => {
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search reports..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-(--text-primary) placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-(--text-primary) placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#1e3a5f] text-gray-300 rounded-lg text-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#2d4a6f] rounded-lg text-sm">
             <Filter className="w-4 h-4" />
             Filter
           </button>
@@ -240,7 +240,7 @@ const ReportsPage = () => {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filterRisk === risk
                   ? 'bg-primary text-white'
-                  : 'bg-[#1e3a5f]/50 text-gray-400 hover:bg-[#1e3a5f]'
+                  : 'bg-gray-100 dark:bg-[#1e3a5f]/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#1e3a5f]'
               }`}
             >
               {risk === 'all'
@@ -264,7 +264,7 @@ const ReportsPage = () => {
 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold text-(--text-primary)">
                       {getTypeLabel(report.type)}
                     </h3>
                     {getRiskBadge(report.riskLevel)}
@@ -276,19 +276,21 @@ const ReportsPage = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-3">
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-(--text-secondary)">
                       <Calendar className="w-4 h-4" />
                       <span>{report.date}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-(--text-secondary)">
                       <Eye className="w-4 h-4" />
                       <span>Result: {report.result}</span>
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-(--text-secondary)">
                     Analyzed by:{' '}
-                    <span className="text-white">{report.doctor}</span>
+                    <span className="text-(--text-primary)">
+                      {report.doctor}
+                    </span>
                   </p>
 
                   {report.conditions && report.conditions.length > 0 && (
@@ -334,11 +336,11 @@ const ReportsPage = () => {
 
       {filteredReports.length === 0 && (
         <div className="text-center py-16">
-          <FileText className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <FileText className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
             No Reports Found
           </h3>
-          <p className="text-gray-400 mb-6">
+          <p className="text-(--text-secondary) mb-6">
             {searchQuery || filterRisk !== 'all'
               ? 'Try adjusting your search or filters.'
               : "You haven't completed any screenings yet."}

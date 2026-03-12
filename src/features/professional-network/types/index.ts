@@ -59,54 +59,89 @@ export interface Certificate {
 
 // ============ POST TYPES ============
 
-export type PostType =
-  | 'article'
-  | 'case_study'
-  | 'question'
-  | 'achievement'
-  | 'news'
-  | 'research';
+// Maps to BE PostCategory enum
+export type PostCategory =
+  | 'CasePresentation'
+  | 'PeerDiscussion'
+  | 'KnowledgeShare'
+  | 'Announcement';
 
-export type PostVisibility =
-  | 'public'
-  | 'connections_only'
-  | 'organisation_only';
+// Maps to BE AuthorType enum
+export type AuthorType = 'Ophthalmologist' | 'Organisation';
 
+// Maps to BE AttachmentType enum
+export type AttachmentType = 'Image' | 'Document' | 'Research';
+
+// Maps to BE AuthorDto
+export interface PostAuthor {
+  id: string;
+  authorType: AuthorType;
+  fullName: string;
+  avatarUrl?: string;
+  organisationName?: string;
+}
+
+// Maps to BE PostFeedDto
 export interface ProfessionalPost {
   id: string;
-  authorId: string;
-  author: Ophthalmologist;
-  organisationId?: string;
-  organisation?: Organisation;
+  author: PostAuthor;
   content: string;
-  type: PostType;
-  visibility: PostVisibility;
-  mediaUrls: string[];
+  category: PostCategory;
+  isRepost: boolean;
+  repostComment?: string;
+  originalPostId?: string;
+  /** Nested original post data. Populated by BE when isRepost = true. */
+  originalPost?: OriginalPost;
+  reactionCount: number;
+  commentCount: number;
+  repostCount: number;
+  viewCount: number;
+  allowComments: boolean;
   attachments: PostAttachment[];
-  totalReactions: number;
-  totalComments: number;
-  totalShares: number;
-  userReaction?: ReactionType;
-  isEdited: boolean;
-  isPinned: boolean;
-  isBookmarked?: boolean;
+  currentUserReaction?: ReactionType;
+  isBookmarked: boolean;
   createdAt: string;
-  updatedAt?: string;
 }
 
+/** Compact original post shown inside a repost card. Maps to BE OriginalPostDto. */
+export interface OriginalPost {
+  id: string;
+  author: PostAuthor;
+  content: string;
+  category: PostCategory;
+  attachments: PostAttachment[];
+  createdAt: string;
+}
+
+// Maps to BE AttachmentDto
 export interface PostAttachment {
-  type: 'research_paper' | 'case_file' | 'document';
-  title: string;
-  url: string;
-  doi?: string;
+  id: string;
+  type: AttachmentType;
+  fileName: string;
+  fileUrl: string;
+  mimeType?: string;
+  fileSize?: number;
+  displayOrder: number;
 }
 
+// Maps to BE ReactionType enum
 export type ReactionType =
-  | 'insightful'
-  | 'agree'
-  | 'helpful'
-  | 'question'
-  | 'celebrate';
+  | 'Insightful'
+  | 'Agree'
+  | 'Helpful'
+  | 'Question'
+  | 'Celebrate';
+
+// Maps to BE UserProfileDto (GET /api/network/profile/{id})
+export interface UserProfileDto {
+  userId: string;
+  fullName: string;
+  avatarUrl?: string;
+  bio?: string;
+  postCount: number;
+  yearsOfExperience: number;
+  isVerified: boolean;
+}
 
 export interface PostReaction {
   id: string;
@@ -209,18 +244,46 @@ export interface SavedPost {
   createdAt: string;
 }
 
-// ============ API RESPONSE TYPES ============
+// ============ API REQUEST/RESPONSE TYPES ============
 
+// Maps to BE ApiResponse<T>
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+  errors?: string[];
+  timestamp: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
+// Maps to BE PagedResult<T>
+export interface PagedResult<T> {
+  items: T[];
+  pageNumber: number;
   pageSize: number;
   totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+// Maps to BE TrendingTopicDto
+export interface TrendingTopic {
+  category: PostCategory;
+  topicName: string;
+  postCount: number;
+  timeFrame: string;
+}
+
+// Maps to BE CreatePostCommand body
+export interface CreatePostRequest {
+  authorType: AuthorType;
+  content: string;
+  category: PostCategory;
+  organisationId?: string;
+  allowComments: boolean;
+}
+
+// Maps to BE ToggleReactionCommand body
+export interface ToggleReactionRequest {
+  type: ReactionType;
 }

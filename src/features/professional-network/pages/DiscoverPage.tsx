@@ -1,36 +1,61 @@
 /**
  * Discover Page
- * Page for discovering professionals, organisations, and groups
+ * Discover posts from professionals and organisations.
+ * Tabs switch between AuthorType (Ophthalmologist / Organisation).
+ * Category pills and search term narrow results further.
  */
 
-import { useState } from 'react';
-import { Search, Users, Building2, UsersRound } from 'lucide-react';
-import { ProfessionalCard } from '../components/professional/ProfessionalCard';
-import { OrganisationCard } from '../components/organisation/OrganisationCard';
-import { GroupCard } from '../components/group/GroupCard';
-import { mockOphthalmologists, mockOrganisations, mockGroups } from '../data';
+import { useState, useDeferredValue } from 'react';
+import { Search, Users, Building2, BookOpen } from 'lucide-react';
+import { CompactPostCard } from '../components/post/CompactPostCard';
+import { DiscoverSkeleton } from '../components/post/PostSkeleton';
+import { useDiscoverPosts } from '../hooks/useNetworkPosts';
 
-type TabType = 'professionals' | 'organisations' | 'groups';
+type TabType = 'professionals' | 'organisations';
 
-const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
-  { id: 'professionals', label: 'Professionals', icon: Users },
-  { id: 'organisations', label: 'Organisations', icon: Building2 },
-  { id: 'groups', label: 'Groups', icon: UsersRound },
+const tabs: {
+  id: TabType;
+  label: string;
+  icon: React.ElementType;
+  authorType: string;
+}[] = [
+  {
+    id: 'professionals',
+    label: 'Professionals',
+    icon: Users,
+    authorType: 'Ophthalmologist',
+  },
+  {
+    id: 'organisations',
+    label: 'Organisations',
+    icon: Building2,
+    authorType: 'Organisation',
+  },
 ];
 
-const specialties = [
-  'All',
-  'Retina',
-  'Glaucoma',
-  'Cornea',
-  'Pediatric',
-  'AI in Ophthalmology',
+const categories = [
+  { value: null as string | null, label: 'All' },
+  { value: 'CasePresentation', label: 'Case Presentation' },
+  { value: 'PeerDiscussion', label: 'Peer Discussion' },
+  { value: 'KnowledgeShare', label: 'Knowledge Share' },
+  { value: 'Announcement', label: 'Announcement' },
 ];
 
 function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<TabType>('professionals');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredQuery = useDeferredValue(searchQuery);
+
+  const currentAuthorType = tabs.find((t) => t.id === activeTab)!.authorType;
+
+  const { data, isLoading, isFetching } = useDiscoverPosts(
+    currentAuthorType,
+    selectedCategory ?? undefined,
+    deferredQuery.length > 0 ? deferredQuery : undefined
+  );
+
+  const posts = data?.items ?? [];
 
   return (
     <>
@@ -39,7 +64,7 @@ function DiscoverPage() {
         <div className="px-4 py-3">
           <h2 className="text-xl font-bold text-text-main">Discover</h2>
           <p className="text-[13px] text-text-muted mt-0.5">
-            Find professionals, organisations, and groups in ophthalmology
+            Explore posts from professionals and organisations
           </p>
         </div>
 
@@ -49,7 +74,7 @@ function DiscoverPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-text-muted" />
             <input
               type="text"
-              placeholder="Search by name, specialty, or keyword..."
+              placeholder="Search posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-main-search-background rounded-full 
@@ -64,7 +89,10 @@ function DiscoverPage() {
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => {
+                setActiveTab(id);
+                setSelectedCategory(null);
+              }}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-[15px] font-medium hover-animation
                          hover:bg-black/[0.03] relative ${
                            activeTab === id
@@ -80,96 +108,48 @@ function DiscoverPage() {
             </button>
           ))}
         </div>
-      </header>
 
-      {/* Specialty Filter */}
-      {activeTab === 'professionals' && (
+        {/* Category pills */}
         <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto border-b border-light-border">
-          {specialties.map((specialty) => (
+          {categories.map((cat) => (
             <button
-              key={specialty}
-              onClick={() => setSelectedSpecialty(specialty)}
+              key={cat.label}
+              onClick={() => setSelectedCategory(cat.value)}
               className={`px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap hover-animation ${
-                selectedSpecialty === specialty
+                selectedCategory === cat.value
                   ? 'bg-brand-primary text-white'
                   : 'bg-main-search-background text-text-main hover:bg-gray-200'
               }`}
             >
-              {specialty}
+              {cat.label}
             </button>
           ))}
         </div>
-      )}
+      </header>
 
       {/* Results */}
       <div className="divide-y divide-light-border">
-        {activeTab === 'professionals' && (
-          <>
-            <div className="px-4 py-3">
-              <p className="text-[13px] text-text-muted">
-                {mockOphthalmologists.length} professionals found
-              </p>
-            </div>
-            {mockOphthalmologists.length > 0 ? (
-              mockOphthalmologists.map((professional) => (
-                <div
-                  key={professional.id}
-                  className="hover-card hover-animation"
-                >
-                  <ProfessionalCard professional={professional} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 px-4">
-                <Users className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No professionals found</p>
-              </div>
-            )}
-          </>
+        {/* Count row */}
+        {!isLoading && !isFetching && (
+          <div className="px-4 py-2.5">
+            <p className="text-[13px] text-text-muted">
+              {posts.length} post{posts.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
         )}
 
-        {activeTab === 'organisations' && (
-          <>
-            <div className="px-4 py-3">
-              <p className="text-[13px] text-text-muted">
-                {mockOrganisations.length} organisations found
-              </p>
-            </div>
-            {mockOrganisations.length > 0 ? (
-              mockOrganisations.map((org) => (
-                <div key={org.id} className="hover-card hover-animation">
-                  <OrganisationCard organisation={org} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 px-4">
-                <Building2 className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No organisations found</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === 'groups' && (
-          <>
-            <div className="px-4 py-3">
-              <p className="text-[13px] text-text-muted">
-                {mockGroups.length} groups found
-              </p>
-            </div>
-            {mockGroups.length > 0 ? (
-              mockGroups.map((group) => (
-                <div key={group.id} className="hover-card hover-animation">
-                  <GroupCard group={group} />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 px-4">
-                <UsersRound className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No groups found</p>
-              </div>
-            )}
-          </>
+        {isLoading || isFetching ? (
+          <DiscoverSkeleton count={6} />
+        ) : posts.length > 0 ? (
+          posts.map((post) => <CompactPostCard key={post.id} post={post} />)
+        ) : (
+          <div className="text-center py-16 px-4">
+            <BookOpen className="w-12 h-12 text-text-muted mx-auto mb-3" />
+            <p className="text-text-muted text-[15px]">No posts found</p>
+            <p className="text-text-muted text-[13px] mt-1">
+              Try a different category or search term
+            </p>
+          </div>
         )}
       </div>
     </>

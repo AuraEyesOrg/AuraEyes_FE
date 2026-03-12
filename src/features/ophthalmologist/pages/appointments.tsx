@@ -284,10 +284,10 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+      <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader doctor={mockDoctor} pageName="Appointments" />
+        <DoctorHeader pageName="Appointments" />
 
         <main className="p-6">
           {/* Page Header */}
