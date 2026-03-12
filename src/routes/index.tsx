@@ -107,6 +107,9 @@ const OphthalmologistScreeningReviewPage = lazy(
 const OphthalmologistSchedulesPage = lazy(
   () => import('@/features/ophthalmologist/pages/schedules')
 );
+const OphthalmologistContractPage = lazy(
+  () => import('@/features/ophthalmologist/pages/contract')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -144,6 +147,9 @@ const SystemAdminContractTemplates = lazy(
 );
 const SystemAdminContractTemplateEditor = lazy(
   () => import('@/features/system-admin/pages/contract-template-editor')
+);
+const SystemAdminContracts = lazy(
+  () => import('@/features/system-admin/pages/contracts')
 );
 
 // Professional Network pages
@@ -323,6 +329,14 @@ const Router = () => (
             </PrivateRoute>
           }
         />
+        <Route
+          path="/ophthalmologist/contract"
+          element={
+            <PrivateRoute>
+              <OphthalmologistContractPage />
+            </PrivateRoute>
+          }
+        />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
         <Route
@@ -373,6 +387,10 @@ const Router = () => (
         <Route
           path="/system-admin/contract-templates/new"
           element={<SystemAdminContractTemplateEditor />}
+        />
+        <Route
+          path="/system-admin/contracts"
+          element={<SystemAdminContracts />}
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}

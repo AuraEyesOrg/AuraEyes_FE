@@ -9,6 +9,7 @@ import {
   LogOut,
   Settings,
   MessagesSquare,
+  FileText,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 
@@ -46,6 +47,7 @@ const navItems = [
     hasBadge: true,
   },
   { label: 'Analytics', icon: BarChart3, path: '/ophthalmologist/analytics' },
+  { label: 'Contract', icon: FileText, path: '/ophthalmologist/contract' },
   { label: 'Settings', icon: Settings, path: '/ophthalmologist/settings' },
 ];
 
