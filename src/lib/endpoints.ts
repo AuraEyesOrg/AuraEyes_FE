@@ -180,6 +180,31 @@ export const API_ENDPOINTS = {
     END: (sessionId: string) => `/consultation-sessions/${sessionId}/end`,
   },
 
+  // Appointment Slots - Patient Booking Flow
+  APPOINTMENT_SLOTS: {
+    LIST: '/appointment-slots',
+    BY_DOCTOR: (ophthalId: string) =>
+      `/appointment-slots?ophthalId=${ophthalId}`,
+    DETAIL: (slotId: string) => `/appointment-slots/${slotId}`,
+    GENERATE: '/appointment-slots/generate',
+    RESERVE: (slotId: string) => `/appointment-slots/${slotId}/reserve`,
+    CONFIRM: (slotId: string) => `/appointment-slots/${slotId}/confirm`,
+    RELEASE: (slotId: string) => `/appointment-slots/${slotId}/release`,
+    BLOCK: (slotId: string) => `/appointment-slots/${slotId}/block`,
+    UNBLOCK: (slotId: string) => `/appointment-slots/${slotId}/unblock`,
+  },
+
+  // Schedule Templates - Doctor's recurring schedules
+  SCHEDULE_TEMPLATES: {
+    LIST: '/schedule-templates',
+    BY_DOCTOR: (ophthalId: string) =>
+      `/schedule-templates?ophthalId=${ophthalId}`,
+    DETAIL: (templateId: string) => `/schedule-templates/${templateId}`,
+    CREATE: '/schedule-templates',
+    UPDATE: (templateId: string) => `/schedule-templates/${templateId}`,
+    DELETE: (templateId: string) => `/schedule-templates/${templateId}`,
+  },
+
   // Organisation features (from existing setup)
   ORGANISATION: {
     DASHBOARD: '/organisation/dashboard',
