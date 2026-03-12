@@ -10,6 +10,7 @@ import {
   Shield,
   MessageCircle,
   Milestone,
+  Stethoscope,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -20,6 +21,7 @@ const navItems = [
   { icon: Eye, label: 'My Scans', path: '/patient/screening' },
   { icon: FileText, label: 'Reports', path: '/patient/reports' },
   { icon: Calendar, label: 'Appointments', path: '/patient/appointments' },
+  { icon: Stethoscope, label: 'Find Doctors', path: '/patient/doctors' },
   { icon: MapPin, label: 'Find Clinics', path: '/patient/clinics' },
   { icon: Shield, label: 'Verification', path: '/patient/verification' },
   { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
