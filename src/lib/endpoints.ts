@@ -195,6 +195,19 @@ export const API_ENDPOINTS = {
     BUY: '/quotas/buy',
     DEDUCT: '/quota/deduct',
   },
+
+  // Notification Management
+  NOTIFICATIONS: {
+    /** GET - Paginated list of notifications */
+    LIST: '/notifications',
+    /** GET - Get unread notification count */
+    UNREAD_COUNT: '/notifications/unread-count',
+    /** POST - Mark a notification as read */
+    MARK_READ: (notificationId: string) =>
+      `/notifications/${notificationId}/mark-read`,
+    /** POST - Mark all notifications as read */
+    MARK_ALL_READ: '/notifications/mark-all-read',
+  },
 } as const;
 
 export type ApiEndpoints = typeof API_ENDPOINTS;
