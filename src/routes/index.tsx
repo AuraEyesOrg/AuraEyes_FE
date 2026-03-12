@@ -61,6 +61,9 @@ const RetinalAnalysisPage = lazy(
   () => import('@/features/patient/pages/retinal-analysis')
 );
 const ReviewPage = lazy(() => import('@/features/patient/pages/review'));
+const NotificationsPage = lazy(
+  () => import('@/features/patient/pages/notifications')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -214,6 +217,8 @@ const Router = () => (
         <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
+        <Route path="/patient/notifications" element={<NotificationsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
         <Route path="/patient/profile" element={<ProfilePage />} />
         <Route path="/patient/settings" element={<SettingsPage />} />
