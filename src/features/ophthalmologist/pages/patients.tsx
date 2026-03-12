@@ -141,10 +141,10 @@ export default function PatientsPage() {
 
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+      <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader doctor={mockDoctor} pageName="Patients" />
+        <DoctorHeader pageName="Patients" />
 
         <main className="p-6">
           {/* Page Header */}

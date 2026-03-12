@@ -289,9 +289,9 @@ export default function ConsultationsPage() {
   if (sessionsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-        <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
+        <DoctorSidebar pendingCount={0} />
         <div className="ml-52">
-          <DoctorHeader doctor={mockDoctor} />
+          <DoctorHeader />
           <main className="p-6">
             <div className="flex items-center justify-center h-[calc(100vh-220px)]">
               <div className="text-center">
@@ -310,12 +310,12 @@ export default function ConsultationsPage() {
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       {/* Sidebar */}
-      <DoctorSidebar doctor={mockDoctor} pendingCount={pendingCount} />
+      <DoctorSidebar pendingCount={pendingCount} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader doctor={mockDoctor} />
+        <DoctorHeader />
 
         {/* Page Content */}
         <main className="p-6">
