@@ -12,11 +12,11 @@ import {
   CheckCheck,
   X,
   Eye,
-  Loader2,
   AlertCircle,
   Lock,
   Archive,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
   useConsultationSessions,
@@ -217,7 +217,7 @@ export default function ChatPage() {
       <PatientLayout>
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
-            <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
+            <Spinner size={40} className="mx-auto mb-4" />
             <p className="text-(--text-secondary)">Loading conversations...</p>
           </div>
         </div>
@@ -395,7 +395,7 @@ export default function ChatPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-(--bg-secondary)">
                 {sessionLoading ? (
                   <div className="flex items-center justify-center h-full">
-                    <Loader2 className="w-8 h-8 text-brand animate-spin" />
+                    <Spinner size={32} />
                   </div>
                 ) : selectedSession?.messages &&
                   selectedSession.messages.length > 0 ? (
@@ -516,7 +516,7 @@ export default function ChatPage() {
                       className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                     >
                       {sendMessageMutation.isPending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Spinner size={20} />
                       ) : (
                         <Send className="w-5 h-5" />
                       )}

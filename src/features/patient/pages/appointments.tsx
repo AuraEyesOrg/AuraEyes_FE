@@ -11,8 +11,8 @@ import {
   FileText,
   ChevronRight,
   Filter,
-  Loader2,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
 import {
@@ -134,7 +134,7 @@ const AppointmentsPage = () => {
       <PatientLayout>
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
-            <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
+            <Spinner size={40} className="mx-auto mb-4" />
             <p className="text-(--text-secondary)">Loading appointments...</p>
           </div>
         </div>

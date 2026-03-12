@@ -11,13 +11,13 @@ import {
   Shield,
   Building2,
   FileText,
-  Eye,
   LogOut,
   Network,
   Stethoscope,
   KeyRound,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 const navItems = [
   { label: 'Dashboard', icon: BarChart3, path: '/system-admin/dashboard' },
@@ -61,18 +61,12 @@ export default function Sidebar() {
     <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white shadow-brand">
-            <Eye className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-(--text-primary) text-lg font-bold leading-none tracking-tight">
-              AURA
-            </h1>
-            <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">
-              System Admin
-            </p>
-          </div>
+        <div className="mb-10 px-2">
+          <AuraLogo
+            size="md"
+            subtitle="System Admin"
+            to="/system-admin/dashboard"
+          />
         </div>
 
         {/* Navigation */}

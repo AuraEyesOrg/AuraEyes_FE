@@ -15,9 +15,11 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
+import { AuraLogo } from '@/components/ui/aura-logo';
 import {
   login,
   googleLogin,
@@ -118,7 +120,7 @@ const LoginPage = () => {
         } else if (roles.includes('Organization')) {
           navigate('/organisation/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       } else {
         setError(
@@ -241,7 +243,7 @@ const LoginPage = () => {
         } else if (roles.includes('Organization')) {
           navigate('/organisation/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       } else {
         setError(
@@ -293,10 +295,7 @@ const LoginPage = () => {
 
         {/* Header */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <Eye className="text-[#00d1c0] w-10 h-10" />
-            <span className="text-2xl font-bold tracking-tight">AURA</span>
-          </div>
+          <AuraLogo size="lg" variant="light" />
         </div>
 
         {/* Center Content */}
@@ -308,7 +307,7 @@ const LoginPage = () => {
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
             Secure access to the next generation of retinal screening tools.
-            Automated diagnostics with 99.8% clinical accuracy.
+            Automated diagnostics with 99.2% clinical accuracy.
           </p>
           <div className="flex items-center gap-4 mt-4 text-sm font-medium text-gray-400">
             <div className="flex items-center gap-2">
@@ -335,9 +334,8 @@ const LoginPage = () => {
       {/* Right Panel: Interaction Workspace */}
       <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto">
         {/* Mobile Brand Header */}
-        <div className="lg:hidden absolute top-6 left-6 flex items-center gap-2 text-[#1A202C]">
-          <Eye className="text-[#00d1c0] w-6 h-6" />
-          <span className="font-bold">AURA</span>
+        <div className="lg:hidden absolute top-6 left-6">
+          <AuraLogo size="sm" />
         </div>
 
         <div className="w-full max-w-[480px] flex flex-col gap-8">
@@ -528,7 +526,7 @@ const LoginPage = () => {
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Spinner size={20} className="shrink-0" />
                         Signing In...
                       </>
                     ) : (
@@ -551,9 +549,9 @@ const LoginPage = () => {
                       onError={() =>
                         setError('Google login failed. Please try again.')
                       }
-                      text="continue_with"
-                      shape="rectangular"
-                      width="480"
+                      text="signin_with"
+                      shape="circle"
+                      width="280"
                       theme="outline"
                     />
                   </div>

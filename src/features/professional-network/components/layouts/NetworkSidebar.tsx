@@ -19,7 +19,6 @@ import {
   User,
   MoreHorizontal,
   PenSquare,
-  Eye,
   ArrowLeft,
   Sun,
   Moon,
@@ -49,9 +48,14 @@ export function NetworkSidebar() {
               className="custom-button main-tab text-brand-primary transition hover:bg-brand-primary/10 
                          focus-visible:bg-brand-primary/10 focus-visible:!ring-brand-primary/80 p-3 flex items-center gap-3"
             >
-              <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center flex-shrink-0">
-                <Eye className="w-4 h-4 text-white" />
-              </div>
+              <img
+                src="/icon_64x64.png"
+                alt="AURA"
+                className="w-7 h-7 flex-shrink-0 object-contain"
+                width={28}
+                height={28}
+                loading="eager"
+              />
               <span className="network-nav-label font-bold text-lg text-brand-primary">
                 Aura Network
               </span>

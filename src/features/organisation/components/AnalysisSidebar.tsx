@@ -9,6 +9,7 @@ import {
   Download,
   FileText,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 
 interface AnalysisSidebarProps {
   toggles: ToggleState;
@@ -97,7 +98,7 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
             </div>
           ) : isAnalyzing ? (
             <div className="p-4 flex flex-col items-center justify-center gap-3">
-              <div className="size-8 border-4 border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 border-t-[#13ecec] rounded-full animate-spin"></div>
+              <Spinner size={32} />
               <span className="text-[#13ecec] text-xs font-medium animate-pulse">
                 Processing Retinal Data...
               </span>

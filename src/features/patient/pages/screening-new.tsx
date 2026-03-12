@@ -4,7 +4,6 @@ import {
   Upload,
   AlertCircle,
   CheckCircle,
-  Loader2,
   X,
   Sun,
   Focus,
@@ -16,6 +15,7 @@ import {
   Lock,
   Trash2,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
@@ -206,14 +206,14 @@ export default function ScreeningNewPage() {
       case 'uploading':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Spinner size={12} />
             Uploading...
           </span>
         );
       case 'validating':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-full border border-amber-500/30">
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Spinner size={12} />
             Analysing...
           </span>
         );

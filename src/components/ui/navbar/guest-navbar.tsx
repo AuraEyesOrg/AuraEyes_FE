@@ -12,6 +12,7 @@ import {
   Settings,
   Bell,
 } from 'lucide-react';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 const GuestNavbar = () => {
   const location = useLocation();
@@ -62,15 +63,7 @@ const GuestNavbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-lg">
-                <span className="text-xl font-bold">A</span>
-              </div>
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900">AURA</h1>
-                <p className="text-xs text-gray-500">Retinal Health</p>
-              </div>
-            </Link>
+            <AuraLogo size="md" subtitle="Retinal Health" to="/dashboard" />
           </div>
 
           {/* Desktop Navigation */}

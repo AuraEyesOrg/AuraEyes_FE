@@ -15,9 +15,9 @@ import {
   DollarSign,
   X,
   Calendar,
-  Loader2,
   AlertCircle,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
   useWallet,
@@ -191,7 +191,7 @@ export default function WalletPage() {
       <PatientLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto mb-3" />
+            <Spinner size={32} className="mx-auto mb-3" />
             <p className="text-(--text-secondary)">Loading wallet...</p>
           </div>
         </div>
@@ -374,7 +374,7 @@ export default function WalletPage() {
             {/* Loading */}
             {txLoading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-brand" />
+                <Spinner size={24} />
               </div>
             )}
 
@@ -651,7 +651,7 @@ export default function WalletPage() {
               >
                 {createDepositMutation.isPending ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Spinner size={16} className="shrink-0" />
                     Creating...
                   </>
                 ) : (
