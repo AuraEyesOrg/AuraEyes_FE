@@ -287,12 +287,12 @@ export default function ScreeningReviewPage() {
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       {/* Sidebar */}
-      <DoctorSidebar doctor={mockDoctor} pendingCount={12} />
+      <DoctorSidebar pendingCount={12} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader doctor={mockDoctor} />
+        <DoctorHeader />
 
         {/* Review Content */}
         <main className="p-4">

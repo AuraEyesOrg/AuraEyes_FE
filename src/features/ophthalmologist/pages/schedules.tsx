@@ -242,9 +242,9 @@ export default function SchedulesPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-        <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
+        <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader doctor={mockDoctor} />
+          <DoctorHeader />
           <main className="p-6 flex items-center justify-center h-[calc(100vh-220px)]">
             <div className="text-center">
               <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mx-auto mb-4" />
@@ -260,10 +260,10 @@ export default function SchedulesPage() {
 
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <DoctorSidebar doctor={mockDoctor} pendingCount={0} />
+      <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader doctor={mockDoctor} />
+        <DoctorHeader />
 
         <main className="p-6">
           {/* Header */}

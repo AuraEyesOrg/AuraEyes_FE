@@ -41,15 +41,12 @@ export default function OphthalmologistDashboard() {
   return (
     <div className="flex h-screen w-full bg-[var(--bg-primary)]">
       {/* Sidebar */}
-      <DoctorSidebar
-        doctor={data.doctor}
-        pendingCount={data.dashboardStats.pendingReviews}
-      />
+      <DoctorSidebar pendingCount={data.dashboardStats.pendingReviews} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader doctor={data.doctor} />
+        <DoctorHeader />
 
         {/* Dashboard Content */}
         <main className="p-6">
