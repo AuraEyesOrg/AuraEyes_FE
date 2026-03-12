@@ -10,9 +10,9 @@ import {
   Home,
   CheckCircle,
   History,
-  Loader2,
   AlertCircle,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
@@ -143,7 +143,7 @@ export default function PatientDashboard() {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 text-brand animate-spin" />
+          <Spinner size={32} />
         </div>
       </PatientLayout>
     );

@@ -1,5 +1,24 @@
-import classes from './Spinner.module.scss';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-export default function Spinner() {
-  return <div className={classes.loader} />;
+interface SpinnerProps {
+  size?: number;
+  src?: string;
+  className?: string;
+}
+
+const DEFAULT_SRC = '/animations/eye_scanner.json';
+
+export default function Spinner({
+  size = 24,
+  src = DEFAULT_SRC,
+  className = '',
+}: SpinnerProps) {
+  return (
+    <div
+      className={`inline-flex items-center justify-center ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <DotLottieReact src={src} loop autoplay />
+    </div>
+  );
 }

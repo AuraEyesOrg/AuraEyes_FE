@@ -8,7 +8,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale="en">
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>{children}</ThemeProvider>
       </QueryClientProvider>

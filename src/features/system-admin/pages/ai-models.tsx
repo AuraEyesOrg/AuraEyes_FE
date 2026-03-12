@@ -17,6 +17,7 @@ import {
   Verified,
   FlaskConical,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
@@ -158,7 +159,7 @@ export default function AIModelsPage() {
       <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <Spinner size={48} />
         </div>
       </div>
     );
