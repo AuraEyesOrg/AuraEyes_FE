@@ -4,8 +4,10 @@
  * and upload area for signed contract image.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import useAuthStore from '@/store/auth-store';
 import {
   FileText,
   Upload,
@@ -354,6 +356,8 @@ function UploadSection({
 // ─────────────────────────────────────────────
 export default function ContractPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuthStore();
   const [showPreview, setShowPreview] = useState(false);
 
   const {
@@ -364,6 +368,15 @@ export default function ContractPage() {
     queryKey: [...CONTRACT_QUERY_KEY],
     queryFn: contractApi.getMyContract,
   });
+
+  // Sync contractStatus to auth store when admin activates the contract,
+  // then redirect to dashboard so the doctor is no longer gated here.
+  useEffect(() => {
+    if (contract?.status === 'Active' && user?.contractStatus !== 'Active') {
+      setUser({ ...user!, contractStatus: 'Active' });
+      navigate('/ophthalmologist/dashboard', { replace: true });
+    }
+  }, [contract?.status]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
