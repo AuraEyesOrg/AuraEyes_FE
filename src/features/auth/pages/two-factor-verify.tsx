@@ -5,11 +5,11 @@ import {
   Shield,
   ArrowLeft,
   AlertCircle,
-  Loader2,
   Key,
   Smartphone,
   Eye,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
 import '@/styles/auth-animations.css';
@@ -85,7 +85,11 @@ const TwoFactorVerifyPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          navigate('/ophthalmologist/dashboard');
+          if (response.user?.isVerified === false) {
+            navigate('/pending-approval');
+          } else {
+            navigate('/ophthalmologist/dashboard');
+          }
         } else if (roles.includes('Organization')) {
           navigate('/organisation/dashboard');
         } else {
@@ -263,7 +267,7 @@ const TwoFactorVerifyPage = () => {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Spinner size={20} className="shrink-0" />
                   Verifying...
                 </>
               ) : (

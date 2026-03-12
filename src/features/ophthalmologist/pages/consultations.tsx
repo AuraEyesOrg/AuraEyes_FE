@@ -17,10 +17,10 @@ import {
   FileText,
   Calendar,
   Eye,
-  Loader2,
   Lock,
   Archive,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
   useConsultationSessions,
@@ -474,7 +474,7 @@ export default function ConsultationsPage() {
                           className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
                           {endSessionMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Spinner size={16} />
                           ) : (
                             <CheckCircle2 className="w-4 h-4" />
                           )}
@@ -629,7 +629,7 @@ export default function ConsultationsPage() {
                       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-[#0a1929]/50">
                         {sessionLoading ? (
                           <div className="flex items-center justify-center h-full">
-                            <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                            <Spinner size={32} />
                           </div>
                         ) : selectedSession?.messages &&
                           selectedSession.messages.length > 0 ? (
@@ -729,7 +729,7 @@ export default function ConsultationsPage() {
                               className="p-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                             >
                               {sendMessageMutation.isPending ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Spinner size={20} />
                               ) : (
                                 <Send className="w-5 h-5" />
                               )}

@@ -188,6 +188,12 @@ export const API_ENDPOINTS = {
     ANALYTICS: '/organisation/analytics',
     SETTINGS: '/organisation/settings',
   },
+
+  // AI Quota Management
+  QUOTAS: {
+    BALANCE: '/quotas/balance',
+    BUY: '/quotas/buy',
+  },
 } as const;
 
 export type ApiEndpoints = typeof API_ENDPOINTS;

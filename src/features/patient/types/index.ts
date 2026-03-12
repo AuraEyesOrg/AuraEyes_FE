@@ -1,5 +1,6 @@
 // Patient Feature Types
 export * from './type';
+export * from './quota.types';
 
 // ============ USER & PROFILE TYPES ============
 

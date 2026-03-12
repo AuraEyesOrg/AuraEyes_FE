@@ -6,9 +6,9 @@ import {
   FileText,
   User,
   CreditCard,
-  Loader2,
   Download,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 
@@ -293,7 +293,7 @@ export default function VerificationPage() {
                         {verification.status === 'completed' ? (
                           <CheckCircle className="w-6 h-6 text-green-600" />
                         ) : (
-                          <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                          <Spinner size={24} />
                         )}
                       </div>
                       <div>
