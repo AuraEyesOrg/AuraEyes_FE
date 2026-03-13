@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationService } from '@/lib/notificationService';
@@ -21,6 +21,7 @@ import type { Notification } from '@/types/notification';
  */
 export default function NotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState<
@@ -103,7 +104,7 @@ export default function NotificationsPage() {
 
     const route = getNotificationRoute(notification);
     if (route !== '/notifications') {
-      window.location.href = route;
+      navigate(route);
     }
   };
 

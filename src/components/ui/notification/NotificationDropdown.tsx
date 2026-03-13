@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, X, Eye, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationService } from '@/lib/notificationService';
 import {
@@ -25,6 +25,7 @@ interface NotificationDropdownProps {
 export default function NotificationDropdown({
   className = '',
 }: NotificationDropdownProps) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -97,7 +98,7 @@ export default function NotificationDropdown({
     // Navigate to relevant page
     const route = getNotificationRoute(notification);
     if (route !== '#') {
-      window.location.href = route;
+      navigate(route);
     }
 
     setIsOpen(false);
