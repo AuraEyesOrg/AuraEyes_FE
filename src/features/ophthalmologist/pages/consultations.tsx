@@ -259,7 +259,6 @@ export default function ConsultationsPage() {
     sendMessageMutation.mutate(
       {
         sessionId: selectedSessionId,
-        senderUserId: CURRENT_DOCTOR_ID,
         message: newMessage,
       },
       {

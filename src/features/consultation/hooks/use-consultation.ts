@@ -119,6 +119,7 @@ export const useSendMessage = () => {
       queryClient.invalidateQueries({
         queryKey: consultationKeys.detail(variables.sessionId),
       });
+      queryClient.invalidateQueries({ queryKey: consultationKeys.lists() });
     },
   });
 };

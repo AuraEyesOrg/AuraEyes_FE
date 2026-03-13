@@ -123,13 +123,6 @@ export default function ClinicsPage() {
           <p className="text-(--text-secondary)">Loading clinics...</p>
         </div>
       )}
-      {isError && !isLoading && (
-        <div className="medical-card p-8 mb-6 text-center">
-          <p className="text-red-500">
-            Failed to load clinics. Please try again.
-          </p>
-        </div>
-      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {organisationsList.map((org) => (
           <div

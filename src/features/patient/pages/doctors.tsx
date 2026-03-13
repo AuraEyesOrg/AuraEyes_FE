@@ -110,14 +110,6 @@ export default function DoctorsPage() {
         </div>
       )}
 
-      {isError && !isLoading && (
-        <div className="medical-card p-8 mb-6 text-center">
-          <p className="text-red-500">
-            Failed to load ophthalmologists. Please try again.
-          </p>
-        </div>
-      )}
-
       {/* Results */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {doctors.map((doctor) => (

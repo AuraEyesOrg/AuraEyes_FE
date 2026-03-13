@@ -306,14 +306,20 @@ const AppointmentsPage = () => {
                     )}
                     <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <User className="w-4 h-4" />
-                      <span>{SESSION_STATUS_LABELS[session.status]}</span>
+                      <span>
+                        {session.ophthalmologistName
+                          ? `Doctor: ${session.ophthalmologistName}`
+                          : SESSION_STATUS_LABELS[session.status]}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {session.type === ConsultationSessionType.VideoCall ? (
                         <>
                           <Video className="w-4 h-4 text-blue-600" />
                           <span className="text-blue-600">
-                            Video Consultation
+                            {session.meetingLink
+                              ? 'Video consultation (link ready)'
+                              : 'Video consultation'}
                           </span>
                         </>
                       ) : (
