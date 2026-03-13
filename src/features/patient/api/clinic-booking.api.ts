@@ -1,7 +1,10 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import { PATIENT_ENDPOINTS } from './patient.api';
-import type { ApiResponse, PagedResult } from '../types';
+import type {
+  ApiResponse as PatientApiResponse,
+  PagedResult as PatientPagedResult,
+} from '../types';
 import type {
   ClinicAppointmentDto,
   CompleteClinicAppointmentRequest,
@@ -28,7 +31,7 @@ const getOrganisationAvatarUrl = (name: string): string =>
 
 export const getOrganisations = async (): Promise<OrganisationSummaryDto[]> => {
   const response = await api.get<
-    ApiResponse<PagedResult<PatientSearchOrganisationItem>>
+    PatientApiResponse<PatientPagedResult<PatientSearchOrganisationItem>>
   >(PATIENT_ENDPOINTS.SEARCH.ORGANISATIONS, {
     params: {
       pageNumber: 1,
@@ -57,14 +60,13 @@ export const getOrganisationAvailableSlots = async (
   organisationId: string,
   date?: string
 ): Promise<OrganisationAvailableSlotDto[]> => {
-  const response = await api.get<ApiResponse<OrganisationAvailableSlotDto[]>>(
-    API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(organisationId),
-    {
-      params: {
-        date,
-      },
-    }
-  );
+  const response = await api.get<
+    PatientApiResponse<OrganisationAvailableSlotDto[]>
+  >(API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(organisationId), {
+    params: {
+      date,
+    },
+  });
 
   return response.data.data ?? [];
 };
@@ -72,10 +74,9 @@ export const getOrganisationAvailableSlots = async (
 export const createClinicAppointment = async (
   request: CreateClinicAppointmentRequest
 ): Promise<CreateClinicAppointmentResult> => {
-  const response = await api.post<ApiResponse<CreateClinicAppointmentResult>>(
-    API_ENDPOINTS.CLINIC_APPOINTMENTS.CREATE,
-    request
-  );
+  const response = await api.post<
+    PatientApiResponse<CreateClinicAppointmentResult>
+  >(API_ENDPOINTS.CLINIC_APPOINTMENTS.CREATE, request);
 
   if (!response.data.data) {
     throw new Error('Create clinic appointment returned empty payload.');
@@ -93,7 +94,7 @@ export const cancelClinicAppointment = async (
 export const getPatientClinicAppointments = async (
   patientId: string
 ): Promise<ClinicAppointmentDto[]> => {
-  const response = await api.get<ApiResponse<ClinicAppointmentDto[]>>(
+  const response = await api.get<PatientApiResponse<ClinicAppointmentDto[]>>(
     API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId)
   );
 
@@ -104,7 +105,7 @@ export const getOrganisationAppointments = async (
   organisationId: string,
   date?: string
 ): Promise<ClinicAppointmentDto[]> => {
-  const response = await api.get<ApiResponse<ClinicAppointmentDto[]>>(
+  const response = await api.get<PatientApiResponse<ClinicAppointmentDto[]>>(
     API_ENDPOINTS.CLINIC_BOOKING.ORGANISATION_APPOINTMENTS(organisationId),
     {
       params: {
