@@ -15,7 +15,6 @@ import {
   Search,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 
 interface Appointment {
   id: string;
@@ -164,15 +163,6 @@ const mockAppointments: Appointment[] = [
   },
 ];
 
-const mockDoctor: Doctor = {
-  id: 'D001',
-  name: 'Dr. Alistair',
-  specialty: 'Retina Specialist',
-  hospital: 'General Hospital',
-  department: 'Retina Dept',
-  avatar: null,
-};
-
 export default function AppointmentsPage() {
   const [filter, setFilter] = useState<
     | 'all'
@@ -283,7 +273,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">

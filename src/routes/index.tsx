@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import PrivateRoute from './private-route';
+import Spinner from '@/components/ui/spinner';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -180,7 +181,7 @@ const NetworkOrganisationPage = lazy(
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
     <div className="text-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+      <Spinner size={32} className="mx-auto" />
       <p className="mt-4 text-neutral">Loading...</p>
     </div>
   </div>

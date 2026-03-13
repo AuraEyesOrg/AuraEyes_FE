@@ -7,12 +7,11 @@ import {
   XCircle,
   AlertCircle,
   Filter,
-  Loader2,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import {
   useSchedules,
   useCreateSchedule,
@@ -28,15 +27,6 @@ import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
 
 // TODO: Replace with actual doctor ID from auth store
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-const mockDoctor: Doctor = {
-  id: CURRENT_DOCTOR_ID,
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
 
 type FilterTab = 'all' | 'available' | 'booked' | 'past';
 
@@ -241,13 +231,13 @@ export default function SchedulesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+      <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
           <DoctorHeader />
           <main className="p-6 flex items-center justify-center h-[calc(100vh-220px)]">
             <div className="text-center">
-              <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mx-auto mb-4" />
+              <Spinner size={40} className="mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
                 Loading schedules...
               </p>
@@ -259,7 +249,7 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
@@ -608,7 +598,7 @@ export default function SchedulesPage() {
                 className="px-5 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
                 {createMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Spinner size={16} />
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}

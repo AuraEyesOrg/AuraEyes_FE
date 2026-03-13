@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Info,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -572,10 +573,7 @@ export default function RetinalAnalysis() {
                     </div>
                   ) : isAnalyzing ? (
                     <div className="flex items-center gap-4 py-2">
-                      <div className="relative w-10 h-10 flex-shrink-0">
-                        <div className="absolute inset-0 rounded-full border-[3px] border-slate-100" />
-                        <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-cyan-500 animate-spin" />
-                      </div>
+                      <Spinner size={40} className="flex-shrink-0" />
                       <p className="text-[15px] text-slate-500">
                         Analyzing your retinal scan…
                       </p>

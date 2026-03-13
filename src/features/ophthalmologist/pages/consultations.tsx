@@ -17,12 +17,11 @@ import {
   FileText,
   Calendar,
   Eye,
-  Loader2,
   Lock,
   Archive,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import {
   useConsultationSessions,
   useConsultationSession,
@@ -41,16 +40,6 @@ import type { ConsultationSessionListDto } from '@/types/consultation';
 
 // TODO: Replace with actual doctor ID / user ID from auth store once auth is fully integrated
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-// TODO: Replace with actual doctor profile from auth store
-const mockDoctor: Doctor = {
-  id: CURRENT_DOCTOR_ID,
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -178,11 +167,10 @@ export default function ConsultationsPage() {
 
   // ---- Data fetching ----
 
-  const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions({
-      ophthalmologistId: CURRENT_DOCTOR_ID,
-      pageSize: 50,
-    });
+  const { data: sessionsData } = useConsultationSessions({
+    ophthalmologistId: CURRENT_DOCTOR_ID,
+    pageSize: 50,
+  });
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -284,31 +272,8 @@ export default function ConsultationsPage() {
     });
   };
 
-  // ---- Loading state ----
-
-  if (sessionsLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-        <DoctorSidebar pendingCount={0} />
-        <div className="ml-52">
-          <DoctorHeader />
-          <main className="p-6">
-            <div className="flex items-center justify-center h-[calc(100vh-220px)]">
-              <div className="text-center">
-                <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Loading consultations...
-                </p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
       <DoctorSidebar pendingCount={pendingCount} />
 
@@ -509,7 +474,7 @@ export default function ConsultationsPage() {
                           className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
                           {endSessionMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Spinner size={16} />
                           ) : (
                             <CheckCircle2 className="w-4 h-4" />
                           )}
@@ -664,7 +629,7 @@ export default function ConsultationsPage() {
                       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-[#0a1929]/50">
                         {sessionLoading ? (
                           <div className="flex items-center justify-center h-full">
-                            <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                            <Spinner size={32} />
                           </div>
                         ) : selectedSession?.messages &&
                           selectedSession.messages.length > 0 ? (
@@ -764,7 +729,7 @@ export default function ConsultationsPage() {
                               className="p-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                             >
                               {sendMessageMutation.isPending ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Spinner size={20} />
                               ) : (
                                 <Send className="w-5 h-5" />
                               )}

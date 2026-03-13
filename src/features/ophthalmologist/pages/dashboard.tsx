@@ -7,6 +7,7 @@ import {
   ScreeningQueue,
 } from '../components';
 import type { OphthalmologistData } from '../types/ophthalmologist.types';
+import Spinner from '@/components/ui/spinner';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -27,9 +28,9 @@ export default function OphthalmologistDashboard() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
+      <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <Spinner size={40} />
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             Loading dashboard...
           </p>
@@ -39,7 +40,7 @@ export default function OphthalmologistDashboard() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
       <DoctorSidebar pendingCount={data.dashboardStats.pendingReviews} />
 

@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -19,9 +19,9 @@ import {
   Image as ImageIcon,
   X,
   Clipboard,
-  Loader2,
   AlertCircle,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
   useProfile,
@@ -265,7 +265,7 @@ export default function ProfilePage() {
       <PatientLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 text-brand animate-spin" />
+            <Spinner size={40} />
             <p className="text-[var(--text-secondary)]">Loading profile...</p>
           </div>
         </div>
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                     >
                       {uploadAvatarMutation.isPending ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Spinner size={16} />
                           Uploading...
                         </>
                       ) : (
@@ -547,7 +547,7 @@ export default function ProfilePage() {
                     className="btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
                     {updateProfileMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Spinner size={16} />
                     ) : (
                       <Save className="w-4 h-4" />
                     )}
@@ -930,7 +930,7 @@ export default function ProfilePage() {
                 >
                   {changePasswordMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Spinner size={16} />
                       Changing...
                     </>
                   ) : (

@@ -11,6 +11,7 @@ import {
   Clock,
   X,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 
 interface ImageGalleryProps {
   images: RetinalImage[];
@@ -248,7 +249,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
           {isUploading && (
             <div className="flex-none w-14 h-14 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 rounded flex items-center justify-center bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50">
-              <div className="w-4 h-4 border-2 border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 border-t-[#13ecec] rounded-full animate-spin"></div>
+              <Spinner size={16} />
             </div>
           )}
         </div>

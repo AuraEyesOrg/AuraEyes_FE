@@ -19,7 +19,7 @@ function SignalRProvider({ children }: { children: ReactNode }) {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale="en">
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SignalRProvider>{children}</SignalRProvider>
