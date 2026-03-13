@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationService } from '@/lib/notificationService';
+import { useNotifications } from '@/features/notifications/hooks/use-notifications';
 import {
   formatNotificationTime,
   getNotificationTypeLabel,
@@ -22,8 +23,6 @@ import type { Notification } from '@/types/notification';
 export default function NotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState<
     'all' | 'unread' | NotificationType
   >('all');
@@ -35,34 +34,16 @@ export default function NotificationsPage() {
   );
   const [pageSize] = useState(10);
 
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    setNotifications,
-    connectionStatus,
-  } = useNotificationStore();
+  const { unreadCount, markAsRead, markAllAsRead, connectionStatus } =
+    useNotificationStore();
 
-  /**
-   * Load notifications with current filters
-   */
-  const loadNotifications = async (page = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await NotificationService.getMyNotifications(
-        page,
-        pageSize
-      );
-      setNotifications(response.items);
-      setTotalCount(response.totalCount);
-      setCurrentPage(page);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: notificationsResponse, isLoading } = useNotifications({
+    pageNumber: currentPage,
+    pageSize,
+  });
+
+  const notifications = notificationsResponse?.items ?? [];
+  const totalCount = notificationsResponse?.totalCount ?? 0;
 
   /**
    * Filter notifications by type/status
@@ -130,7 +111,6 @@ export default function NotificationsPage() {
       params.set('page', page.toString());
       return params;
     });
-    loadNotifications(page);
   };
 
   /**
@@ -138,6 +118,7 @@ export default function NotificationsPage() {
    */
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1);
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
       if (query) {
@@ -149,11 +130,6 @@ export default function NotificationsPage() {
       return params;
     });
   };
-
-  // Load initial data
-  useEffect(() => {
-    loadNotifications(currentPage);
-  }, []);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 

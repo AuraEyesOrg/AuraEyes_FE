@@ -3,6 +3,7 @@ import { Bell, X, Eye, ExternalLink } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationService } from '@/lib/notificationService';
+import { useNotifications } from '@/features/notifications/hooks/use-notifications';
 import {
   formatNotificationTime,
   getNotificationTypeLabel,
@@ -27,20 +28,23 @@ export default function NotificationDropdown({
 }: NotificationDropdownProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    setNotifications,
-    connectionStatus,
-  } = useNotificationStore();
+  const { unreadCount, markAsRead, markAllAsRead, connectionStatus } =
+    useNotificationStore();
+
+  const { data: notificationsResponse, isLoading } = useNotifications(
+    {
+      pageNumber: 1,
+      pageSize: 5,
+    },
+    {
+      enabled: isOpen,
+    }
+  );
 
   // Get recent notifications (max 5)
-  const recentNotifications = notifications.slice(0, 5);
+  const recentNotifications = notificationsResponse?.items ?? [];
 
   /**
    * Handle click outside to close dropdown
@@ -67,19 +71,8 @@ export default function NotificationDropdown({
   /**
    * Fetch notifications when opening dropdown for first time
    */
-  const handleToggleDropdown = async () => {
-    if (!isOpen && notifications.length === 0) {
-      setIsLoading(true);
-      try {
-        const response = await NotificationService.getMyNotifications(1, 5);
-        setNotifications(response.items);
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    setIsOpen(!isOpen);
+  const handleToggleDropdown = () => {
+    setIsOpen((prev) => !prev);
   };
 
   /**
