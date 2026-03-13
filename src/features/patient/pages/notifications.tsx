@@ -28,6 +28,7 @@ import {
   NotificationType,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
+import { NotificationIcon } from '@/components/ui/notification/NotificationIcon';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -331,34 +332,6 @@ export default function NotificationsPage() {
       </div>
     </PatientLayout>
   );
-}
-
-/**
- * Maps a notification icon name string (from getNotificationIcon) to a Lucide icon element
- */
-function NotificationIcon({
-  name,
-  size = 20,
-}: {
-  name: string;
-  size?: number;
-}) {
-  switch (name) {
-    case 'eye':
-      return <Eye size={size} />;
-    case 'stethoscope':
-      return <Stethoscope size={size} />;
-    case 'file-text':
-      return <FileText size={size} />;
-    case 'message-circle':
-      return <MessageCircle size={size} />;
-    case 'calendar':
-      return <Calendar size={size} />;
-    case 'wallet':
-      return <Wallet size={size} />;
-    default:
-      return <Bell size={size} />;
-  }
 }
 
 /**
