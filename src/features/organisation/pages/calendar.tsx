@@ -19,6 +19,7 @@ import {
   useOrganisationAppointments,
   useStartClinicAppointment,
 } from '@/features/patient/hooks/use-clinic-booking';
+import { mapClinicStaffErrorMessage } from '@/lib/api-error';
 
 const formatTime = (time: string) => {
   const [h, m] = time.split(':');
@@ -49,11 +50,14 @@ export default function CalendarPage() {
     new Date().toISOString().split('T')[0]
   );
   const [doctorInputs, setDoctorInputs] = useState<Record<string, string>>({});
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const {
     data: appointments = [],
     isLoading,
     isFetching,
+    error: appointmentsError,
   } = useOrganisationAppointments(
     organisationId,
     selectedDate,
@@ -91,6 +95,18 @@ export default function CalendarPage() {
     completeMutation.isPending ||
     noShowMutation.isPending;
 
+  const runAction = async (action: () => Promise<unknown>, message: string) => {
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await action();
+      setSuccessMessage(message);
+    } catch (error) {
+      setErrorMessage(mapClinicStaffErrorMessage(error));
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
@@ -99,6 +115,26 @@ export default function CalendarPage() {
         <OrganisationHeader pageName="Calendar" />
 
         <main className="p-6">
+          {(errorMessage || successMessage || appointmentsError) && (
+            <div className="mb-4 space-y-2">
+              {appointmentsError && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {mapClinicStaffErrorMessage(appointmentsError)}
+                </div>
+              )}
+              {errorMessage && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {errorMessage}
+                </div>
+              )}
+              {successMessage && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  {successMessage}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -223,12 +259,16 @@ export default function CalendarPage() {
                                 !doctorInputs[appointment.id] || isMutating
                               }
                               onClick={() =>
-                                assignDoctorMutation.mutate({
-                                  appointmentId: appointment.id,
-                                  request: {
-                                    doctorId: doctorInputs[appointment.id],
-                                  },
-                                })
+                                void runAction(
+                                  () =>
+                                    assignDoctorMutation.mutateAsync({
+                                      appointmentId: appointment.id,
+                                      request: {
+                                        doctorId: doctorInputs[appointment.id],
+                                      },
+                                    }),
+                                  'Đã gán bác sĩ cho lịch khám.'
+                                )
                               }
                               className="inline-flex items-center gap-1 rounded-md border border-cyan-300 px-2 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-50 disabled:opacity-50 dark:border-cyan-700 dark:text-cyan-300 dark:hover:bg-cyan-900/20"
                             >
@@ -252,7 +292,11 @@ export default function CalendarPage() {
                                 appointment.status !== 'Pending' || isMutating
                               }
                               onClick={() =>
-                                checkInMutation.mutate(appointment.id)
+                                void runAction(
+                                  () =>
+                                    checkInMutation.mutateAsync(appointment.id),
+                                  'Check-in thành công.'
+                                )
                               }
                               className="inline-flex items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
                             >
@@ -265,7 +309,11 @@ export default function CalendarPage() {
                                 appointment.status !== 'CheckedIn' || isMutating
                               }
                               onClick={() =>
-                                startMutation.mutate(appointment.id)
+                                void runAction(
+                                  () =>
+                                    startMutation.mutateAsync(appointment.id),
+                                  'Đã chuyển lịch khám sang trạng thái In Progress.'
+                                )
                               }
                               className="inline-flex items-center gap-1 rounded-md border border-violet-300 px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20"
                             >
@@ -279,9 +327,13 @@ export default function CalendarPage() {
                                 isMutating
                               }
                               onClick={() =>
-                                completeMutation.mutate({
-                                  appointmentId: appointment.id,
-                                })
+                                void runAction(
+                                  () =>
+                                    completeMutation.mutateAsync({
+                                      appointmentId: appointment.id,
+                                    }),
+                                  'Đã hoàn thành lịch khám.'
+                                )
                               }
                               className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
                             >
@@ -296,7 +348,11 @@ export default function CalendarPage() {
                                 appointment.status === 'Cancelled'
                               }
                               onClick={() =>
-                                noShowMutation.mutate(appointment.id)
+                                void runAction(
+                                  () =>
+                                    noShowMutation.mutateAsync(appointment.id),
+                                  'Đã đánh dấu no-show cho lịch khám.'
+                                )
                               }
                               className="inline-flex items-center gap-1 rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-900/20"
                             >

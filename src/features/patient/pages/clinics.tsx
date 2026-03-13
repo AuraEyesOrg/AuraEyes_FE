@@ -18,6 +18,7 @@ import {
   usePatientClinicAppointments,
 } from '../hooks/use-clinic-booking';
 import useAuthStore from '@/store/auth-store';
+import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 
 const formatTime = (time: string) => {
   const [h, m] = time.split(':');
@@ -60,19 +61,30 @@ export default function ClinicsPage() {
     new Date().toISOString().split('T')[0]
   );
   const [visitReason, setVisitReason] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const { data: organisations = [], isLoading: loadingOrganisations } =
-    useOrganisations();
+  const {
+    data: organisations = [],
+    isLoading: loadingOrganisations,
+    error: organisationsError,
+  } = useOrganisations();
 
-  const { data: availableSlots = [], isLoading: loadingSlots } =
-    useOrganisationAvailableSlots(
-      selectedOrganisationId,
-      selectedDate,
-      !!selectedOrganisationId
-    );
+  const {
+    data: availableSlots = [],
+    isLoading: loadingSlots,
+    error: availableSlotsError,
+  } = useOrganisationAvailableSlots(
+    selectedOrganisationId,
+    selectedDate,
+    !!selectedOrganisationId
+  );
 
-  const { data: myAppointments = [], isLoading: loadingMyAppointments } =
-    usePatientClinicAppointments(patientId, !!patientId);
+  const {
+    data: myAppointments = [],
+    isLoading: loadingMyAppointments,
+    error: myAppointmentsError,
+  } = usePatientClinicAppointments(patientId, !!patientId);
 
   const createAppointmentMutation = useCreateClinicAppointment();
   const cancelAppointmentMutation = useCancelClinicAppointment();
@@ -96,11 +108,33 @@ export default function ClinicsPage() {
   const handleBookSlot = async (slotId: string) => {
     if (!selectedOrganisationId || !patientId) return;
 
-    await createAppointmentMutation.mutateAsync({
-      organisationId: selectedOrganisationId,
-      slotId,
-      visitReason: visitReason.trim() || undefined,
-    });
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await createAppointmentMutation.mutateAsync({
+        organisationId: selectedOrganisationId,
+        slotId,
+        visitReason: visitReason.trim() || undefined,
+      });
+      setSuccessMessage(
+        'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở My Clinic Appointments.'
+      );
+    } catch (error) {
+      setErrorMessage(mapClinicPatientErrorMessage(error));
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await cancelAppointmentMutation.mutateAsync(appointmentId);
+      setSuccessMessage('Đã hủy lịch khám thành công.');
+    } catch (error) {
+      setErrorMessage(mapClinicPatientErrorMessage(error));
+    }
   };
 
   return (
@@ -115,6 +149,31 @@ export default function ClinicsPage() {
               Pick a clinic, choose a date, and reserve an in-person visit slot.
             </p>
           </div>
+
+          {(errorMessage || successMessage) && (
+            <div className="mb-4 space-y-2">
+              {errorMessage && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {errorMessage}
+                </div>
+              )}
+              {successMessage && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  {successMessage}
+                </div>
+              )}
+            </div>
+          )}
+
+          {(organisationsError ||
+            availableSlotsError ||
+            myAppointmentsError) && (
+            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              {mapClinicPatientErrorMessage(
+                organisationsError ?? availableSlotsError ?? myAppointmentsError
+              )}
+            </div>
+          )}
 
           <div className="medical-card p-5">
             <div className="relative mb-4">
@@ -323,7 +382,7 @@ export default function ClinicsPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          cancelAppointmentMutation.mutate(appointment.id)
+                          void handleCancelAppointment(appointment.id)
                         }
                         disabled={cancelAppointmentMutation.isPending}
                         className="mt-3 inline-flex items-center gap-1 rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
