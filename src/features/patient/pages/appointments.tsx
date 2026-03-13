@@ -24,7 +24,6 @@ import {
   useCancelSession,
 } from '@/features/consultation/hooks';
 import { usePatientClinicAppointments } from '@/features/patient/hooks/use-clinic-booking';
-import { useProfile } from '@/features/patient/hooks/useProfile';
 import {
   feedbackKeys,
   useCreateOphthalmologistFeedback,
@@ -58,19 +57,21 @@ const AppointmentsPage = () => {
     useState<ClinicAppointmentDto | null>(null);
 
   const { user } = useAuthStore();
-  const { data: profile, isLoading: isLoadingProfile } = useProfile();
-  const patientId = profile?.id ?? user?.id ?? '';
+  const currentUserId = user?.id;
+  const patientId = user?.roleId;
 
   const { data: sessionsData, isLoading } = useConsultationSessions(
     {
-      patientId,
+      patientId: patientId ?? undefined,
       pageSize: 50,
     },
-    { enabled: !!patientId }
+    {
+      enabled: !!patientId,
+    }
   );
+
   const { data: clinicAppointmentsData } = usePatientClinicAppointments(
-    patientId,
-    !!patientId
+    patientId ?? ''
   );
 
   const cancelMutation = useCancelSession();
@@ -204,7 +205,7 @@ const AppointmentsPage = () => {
   const handleCancel = (sessionId: string) => {
     cancelMutation.mutate({
       sessionId,
-      cancelledByUserId: patientId,
+      cancelledByUserId: currentUserId!,
       reason: 'Cancelled by patient',
     });
   };
@@ -342,7 +343,7 @@ const AppointmentsPage = () => {
     return 'bg-gray-100 dark:bg-gray-800';
   };
 
-  if (isLoading || isLoadingProfile) {
+  if (isLoading) {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center h-[60vh]">
@@ -514,14 +515,20 @@ const AppointmentsPage = () => {
                     )}
                     <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                       <User className="w-4 h-4" />
-                      <span>{SESSION_STATUS_LABELS[session.status]}</span>
+                      <span>
+                        {session.ophthalmologistName
+                          ? `Doctor: ${session.ophthalmologistName}`
+                          : SESSION_STATUS_LABELS[session.status]}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {session.type === ConsultationSessionType.VideoCall ? (
                         <>
                           <Video className="w-4 h-4 text-blue-600" />
                           <span className="text-blue-600">
-                            Video Consultation
+                            {session.meetingLink
+                              ? 'Video consultation (link ready)'
+                              : 'Video consultation'}
                           </span>
                         </>
                       ) : (

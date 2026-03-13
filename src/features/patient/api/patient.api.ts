@@ -38,6 +38,17 @@ export const PATIENT_ENDPOINTS = {
     CHANGE_PASSWORD: '/patient/profile/change-password',
   },
 
+  // Patient search (ophthalmologists, organisations, slots)
+  SEARCH: {
+    OPHTHALMOLOGISTS: '/patient/search/ophthalmologists',
+    OPHTHALMOLOGIST_DETAIL: (id: string) =>
+      `/patient/search/ophthalmologists/${id}`,
+    ORGANISATIONS: '/patient/search/organisations',
+    AVAILABLE_SLOTS: '/patient/search/available-slots',
+    AVAILABLE_SLOT_DETAIL: (id: string) =>
+      `/patient/search/available-slots/${id}`,
+  },
+
   // Retinal Images & Screening
   IMAGES: {
     LIST: '/patient/images',
@@ -165,6 +176,88 @@ export const changePassword = async (data: {
   confirmNewPassword: string;
 }): Promise<void> => {
   await api.post(PATIENT_ENDPOINTS.PROFILE.CHANGE_PASSWORD, data);
+};
+
+// ============ PATIENT SEARCH API ============
+
+export interface OphthalmologistSearchItem {
+  id: string;
+  userId: string;
+  userFullName?: string | null;
+  userEmail?: string | null;
+  userAvatarUrl?: string | null;
+  bio?: string | null;
+  yearsOfExperience: number;
+  isVerified: boolean;
+  certificateCount: number;
+  createdAt: string;
+}
+
+export interface AvailableSlotItem {
+  id: string;
+  organisationId?: string | null;
+  ophthalmologistId?: string | null;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  bookedCount: number;
+  availableCapacity: number;
+  createdAt: string;
+}
+
+export interface OrganisationSearchItem {
+  id: string;
+  name: string;
+  address?: string | null;
+  licenseNumber?: string | null;
+  orgType: string;
+  deviceCount: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const searchOphthalmologistsForPatient = async (params: {
+  searchTerm?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}): Promise<PagedResult<OphthalmologistSearchItem>> => {
+  const response = await api.get<
+    ApiResponse<PagedResult<OphthalmologistSearchItem>>
+  >(PATIENT_ENDPOINTS.SEARCH.OPHTHALMOLOGISTS, {
+    params,
+  });
+  return response.data.data!;
+};
+
+export const searchOrganisationsForPatient = async (params: {
+  searchTerm?: string;
+  orgType?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}): Promise<PagedResult<OrganisationSearchItem>> => {
+  const response = await api.get<
+    ApiResponse<PagedResult<OrganisationSearchItem>>
+  >(PATIENT_ENDPOINTS.SEARCH.ORGANISATIONS, {
+    params,
+  });
+  return response.data.data!;
+};
+
+export const searchAvailableSlotsForPatient = async (params: {
+  ophthalmologistId?: string;
+  organisationId?: string;
+  fromDate?: string;
+  toDate?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}): Promise<PagedResult<AvailableSlotItem>> => {
+  const response = await api.get<ApiResponse<PagedResult<AvailableSlotItem>>>(
+    PATIENT_ENDPOINTS.SEARCH.AVAILABLE_SLOTS,
+    {
+      params,
+    }
+  );
+  return response.data.data!;
 };
 
 // ============ IMAGES API ============

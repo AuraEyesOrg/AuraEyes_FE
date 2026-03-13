@@ -13,6 +13,10 @@ export interface OrganisationSummaryDto {
   address?: string | null;
   city?: string | null;
   phone?: string | null;
+  orgType?: string | null;
+  ratingAverage?: number | null;
+  ratingCount?: number | null;
+  avatarUrl?: string | null;
 }
 
 export interface OrganisationAvailableSlotDto {
