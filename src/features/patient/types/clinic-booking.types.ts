@@ -41,8 +41,6 @@ export interface ClinicAppointmentDto {
   date: string;
   startTime: string;
   endTime: string;
-  doctorId?: string | null;
-  doctorName?: string | null;
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
@@ -51,10 +49,6 @@ export interface ClinicAppointmentDto {
 export interface CreateClinicAppointmentResult {
   appointmentId: string;
   status: ClinicAppointmentStatus;
-}
-
-export interface AssignDoctorRequest {
-  doctorId: string;
 }
 
 export interface CompleteClinicAppointmentRequest {

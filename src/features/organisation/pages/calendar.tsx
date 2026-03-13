@@ -1,18 +1,10 @@
 import { useMemo, useState } from 'react';
-import {
-  Calendar,
-  Clock,
-  Play,
-  Stethoscope,
-  UserCheck,
-  UserX,
-} from 'lucide-react';
+import { Calendar, Clock, Play, UserCheck, UserX } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import useAuthStore from '@/store/auth-store';
 import {
-  useAssignDoctorClinicAppointment,
   useCheckInClinicAppointment,
   useCompleteClinicAppointment,
   useMarkNoShowClinicAppointment,
@@ -49,7 +41,6 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [doctorInputs, setDoctorInputs] = useState<Record<string, string>>({});
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -65,7 +56,6 @@ export default function CalendarPage() {
   );
 
   const checkInMutation = useCheckInClinicAppointment();
-  const assignDoctorMutation = useAssignDoctorClinicAppointment();
   const startMutation = useStartClinicAppointment();
   const completeMutation = useCompleteClinicAppointment();
   const noShowMutation = useMarkNoShowClinicAppointment();
@@ -81,16 +71,8 @@ export default function CalendarPage() {
     };
   }, [appointments]);
 
-  const setDoctorInput = (appointmentId: string, value: string) => {
-    setDoctorInputs((previous) => ({
-      ...previous,
-      [appointmentId]: value,
-    }));
-  };
-
   const isMutating =
     checkInMutation.isPending ||
-    assignDoctorMutation.isPending ||
     startMutation.isPending ||
     completeMutation.isPending ||
     noShowMutation.isPending;
@@ -141,7 +123,7 @@ export default function CalendarPage() {
                 Organisation Clinic Appointments
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Manage check-in, doctor assignment, and consultation progress.
+                Manage check-in and consultation progress.
               </p>
             </div>
 
@@ -212,7 +194,6 @@ export default function CalendarPage() {
                       <th className="px-3 py-2 font-medium">Time</th>
                       <th className="px-3 py-2 font-medium">Patient</th>
                       <th className="px-3 py-2 font-medium">Reason</th>
-                      <th className="px-3 py-2 font-medium">Doctor</th>
                       <th className="px-3 py-2 font-medium">Status</th>
                       <th className="px-3 py-2 font-medium">Actions</th>
                     </tr>
@@ -235,47 +216,6 @@ export default function CalendarPage() {
                         </td>
                         <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
                           {appointment.visitReason || '-'}
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="space-y-2">
-                            <input
-                              value={
-                                doctorInputs[appointment.id] ??
-                                appointment.doctorId ??
-                                ''
-                              }
-                              onChange={(event) =>
-                                setDoctorInput(
-                                  appointment.id,
-                                  event.target.value
-                                )
-                              }
-                              placeholder="Doctor ID"
-                              className="w-44 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-[#2d4a6f] dark:bg-[#0a1f44] dark:text-white"
-                            />
-                            <button
-                              type="button"
-                              disabled={
-                                !doctorInputs[appointment.id] || isMutating
-                              }
-                              onClick={() =>
-                                void runAction(
-                                  () =>
-                                    assignDoctorMutation.mutateAsync({
-                                      appointmentId: appointment.id,
-                                      request: {
-                                        doctorId: doctorInputs[appointment.id],
-                                      },
-                                    }),
-                                  'Đã gán bác sĩ cho lịch khám.'
-                                )
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-cyan-300 px-2 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-50 disabled:opacity-50 dark:border-cyan-700 dark:text-cyan-300 dark:hover:bg-cyan-900/20"
-                            >
-                              <Stethoscope className="h-3.5 w-3.5" />
-                              Assign
-                            </button>
-                          </div>
                         </td>
                         <td className="px-3 py-3">
                           <span

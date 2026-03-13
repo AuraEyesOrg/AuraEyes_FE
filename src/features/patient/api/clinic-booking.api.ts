@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
-  AssignDoctorRequest,
   ClinicAppointmentDto,
   CompleteClinicAppointmentRequest,
   CreateClinicAppointmentRequest,
@@ -70,16 +69,6 @@ export const checkInClinicAppointment = async (
   appointmentId: string
 ): Promise<void> => {
   await api.put(API_ENDPOINTS.CLINIC_APPOINTMENTS.CHECK_IN(appointmentId));
-};
-
-export const assignDoctorClinicAppointment = async (
-  appointmentId: string,
-  request: AssignDoctorRequest
-): Promise<void> => {
-  await api.put(
-    API_ENDPOINTS.CLINIC_APPOINTMENTS.ASSIGN_DOCTOR(appointmentId),
-    request
-  );
 };
 
 export const startClinicAppointment = async (

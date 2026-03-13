@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  assignDoctorClinicAppointment,
   cancelClinicAppointment,
   checkInClinicAppointment,
   completeClinicAppointment,
@@ -13,7 +12,6 @@ import {
   startClinicAppointment,
 } from '../api/clinic-booking.api';
 import type {
-  AssignDoctorRequest,
   CompleteClinicAppointmentRequest,
   CreateClinicAppointmentRequest,
 } from '../types/clinic-booking.types';
@@ -111,22 +109,6 @@ export const useCheckInClinicAppointment = () => {
   return useMutation({
     mutationFn: (appointmentId: string) =>
       checkInClinicAppointment(appointmentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
-    },
-  });
-};
-
-export const useAssignDoctorClinicAppointment = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      appointmentId,
-      request,
-    }: {
-      appointmentId: string;
-      request: AssignDoctorRequest;
-    }) => assignDoctorClinicAppointment(appointmentId, request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: clinicBookingKeys.all });
     },

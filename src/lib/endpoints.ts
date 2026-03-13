@@ -210,8 +210,6 @@ export const API_ENDPOINTS = {
     CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
     CHECK_IN: (appointmentId: string) =>
       `/clinic-appointments/${appointmentId}/check-in`,
-    ASSIGN_DOCTOR: (appointmentId: string) =>
-      `/clinic-appointments/${appointmentId}/assign-doctor`,
     START: (appointmentId: string) =>
       `/clinic-appointments/${appointmentId}/start`,
     COMPLETE: (appointmentId: string) =>

@@ -114,11 +114,7 @@ export const mapClinicStaffErrorMessage = (error: unknown): string => {
     {
       pattern: /(cannot\s+start|checked\s*in)/i,
       mappedMessage:
-        'Không thể bắt đầu khám. Bệnh nhân cần được check-in trước và có bác sĩ phụ trách.',
-    },
-    {
-      pattern: /(assign\s+doctor|doctor\s+required)/i,
-      mappedMessage: 'Không thể gán bác sĩ. Vui lòng kiểm tra Doctor ID.',
+        'Không thể bắt đầu khám. Bệnh nhân cần được check-in trước.',
     },
     {
       pattern: /(concurrent|modified|CONCURRENT_UPDATE)/i,
