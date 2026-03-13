@@ -1,22 +1,42 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type KeyboardEvent,
+} from 'react';
 import { useLocation } from 'react-router-dom';
 import {
+  Activity,
+  ArrowLeft,
+  BadgeDollarSign,
+  CalendarDays,
+  CheckCheck,
+  ChevronRight,
+  Clock3,
   MessageCircle,
   Send,
   Paperclip,
   Image as ImageIcon,
-  MoreVertical,
+  MoreHorizontal,
   Phone,
   Video,
   Search,
-  CheckCheck,
   X,
   Eye,
-  Loader2,
   AlertCircle,
   Lock,
   Archive,
+  FileText,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  UserRound,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
   useConsultationSessions,
@@ -29,7 +49,6 @@ import {
   ConsultationSessionType,
   SESSION_TYPE_LABELS,
   SESSION_STATUS_LABELS,
-  CHAT_STATUS_LABELS,
 } from '@/types/consultation';
 
 interface SharedScanData {
@@ -42,14 +61,27 @@ interface SharedScanData {
   scanId?: string;
 }
 
-// TODO: Replace with actual user ID from auth store once auth is fully integrated
-const CURRENT_USER_ID = '4c9ed208-3697-4c9f-b2a0-a12f045bebbf';
-const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
+import useAuthStore from '@/store/auth-store';
 
-const chatStatusConfig: Record<
-  ChatStatus,
-  { label: string; icon: typeof Lock; color: string; description: string }
-> = {
+interface ScanAttachmentMeta {
+  title: string;
+  riskLabel: string;
+}
+
+type ChatStatusEntry = {
+  label: string;
+  icon: typeof Lock;
+  color: string;
+  description: string;
+};
+
+type MeetingAccessState = {
+  canJoin: boolean;
+  buttonLabel: string;
+  helperText: string;
+};
+
+const chatStatusConfig: Record<number, ChatStatusEntry> = {
   [ChatStatus.Locked]: {
     label: 'Locked',
     icon: Lock,
@@ -76,6 +108,191 @@ const chatStatusConfig: Record<
   },
 };
 
+const defaultChatStatus: ChatStatusEntry = {
+  label: 'Unknown',
+  icon: AlertCircle,
+  color: 'text-gray-400',
+  description: 'Chat status unknown.',
+};
+
+const formatFullDate = (value: string) =>
+  new Date(value).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+const formatMessageTime = (value: string) =>
+  new Date(value).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+const formatCompactDate = (value: string) =>
+  new Date(value).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+
+const formatAppointmentSlot = (value: string | null) => {
+  if (!value) {
+    return 'Schedule pending';
+  }
+
+  const appointmentDate = new Date(value);
+  return appointmentDate.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const formatRelativeActivity = (value: string) => {
+  const activityDate = new Date(value).getTime();
+  const diffMs = Date.now() - activityDate;
+  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} min ago`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays}d ago`;
+};
+
+const PREJOIN_OPEN_MINUTES = 15;
+const MEETING_ACTIVE_MINUTES = 60;
+
+const formatCountdown = (seconds: number) => {
+  const safeSeconds = Math.max(0, seconds);
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+};
+
+const getMeetingAccessState = (
+  appointmentTime: string | null,
+  nowMs: number
+): MeetingAccessState => {
+  if (!appointmentTime) {
+    return {
+      canJoin: true,
+      buttonLabel: 'Join Meeting',
+      helperText: 'Meeting link is ready.',
+    };
+  }
+
+  const appointmentMs = new Date(appointmentTime).getTime();
+  const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
+  const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
+  const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
+
+  if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
+    return {
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
+    };
+  }
+
+  if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
+    return {
+      canJoin: true,
+      buttonLabel: 'Join Meeting',
+      helperText: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
+    };
+  }
+
+  return {
+    canJoin: false,
+    buttonLabel: 'Meeting Ended',
+    helperText: 'Cuộc hẹn đã qua thời gian tham gia',
+  };
+};
+
+const getInitials = (value: string) =>
+  value
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'AU';
+
+const extractScanAttachment = (message: string): ScanAttachmentMeta | null => {
+  const match = message.match(/\n\n\[Scan Attached: (.+?) - (.+?)\]$/);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    title: match[1],
+    riskLabel: match[2],
+  };
+};
+
+const stripScanAttachment = (message: string) =>
+  message.replace(/\n\n\[Scan Attached: .+? - .+?\]$/, '').trim();
+
+const AvatarBadge = ({
+  name,
+  avatarUrl,
+  size = 'md',
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  size?: 'sm' | 'md' | 'lg';
+}) => {
+  const sizeClass =
+    size === 'sm'
+      ? 'h-9 w-9 text-xs'
+      : size === 'lg'
+        ? 'h-16 w-16 text-lg'
+        : 'h-11 w-11 text-sm';
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClass} flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-cyan-500 to-sky-500 font-semibold text-white shadow-sm`}
+      aria-label={name}
+      title={name}
+    >
+      {getInitials(name)}
+    </div>
+  );
+};
+
 export default function ChatPage() {
   const location = useLocation();
   const sharedScan =
@@ -91,49 +308,83 @@ export default function ChatPage() {
       : ''
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchPending, startSearchTransition] = useTransition();
   const [pendingScan, setPendingScan] = useState<SharedScanData | null>(
     sharedScan
   );
+  const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // Fetch all sessions for this patient
+  const { user } = useAuthStore();
+  const patientId = user?.roleId;
+
   const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions({
-      patientId: CURRENT_PATIENT_ID,
-      pageSize: 50,
-    });
+    useConsultationSessions(
+      {
+        patientId: patientId ?? undefined,
+        pageSize: 50,
+      },
+      {
+        enabled: !!patientId,
+      }
+    );
 
-  // Fetch selected session detail
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
       enabled: !!selectedSessionId,
     });
 
-  // Send message mutation
   const sendMessageMutation = useSendMessage();
 
   const sessions = sessionsData?.items ?? [];
-
-  // Filter sessions that have chat capability
   const chatSessions = sessions.filter(
     (s) => s.status !== SessionStatus.Cancelled
   );
 
   const filteredSessions = chatSessions.filter((session) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
+    if (!deferredSearchQuery) return true;
+    const query = deferredSearchQuery.toLowerCase();
     return (
+      (session.ophthalmologistName ?? '').toLowerCase().includes(query) ||
+      (session.patientName ?? '').toLowerCase().includes(query) ||
       session.typeName.toLowerCase().includes(query) ||
-      session.statusName.toLowerCase().includes(query)
+      session.statusName.toLowerCase().includes(query) ||
+      session.chatStatusName.toLowerCase().includes(query)
     );
   });
 
-  // Auto-select first session
+  const currentSession = chatSessions.find(
+    (session) => session.id === selectedSessionId
+  );
+  const currentSessionStatus = currentSession
+    ? (chatStatusConfig[currentSession.chatStatus] ?? defaultChatStatus)
+    : defaultChatStatus;
+  const messageList = selectedSession?.messages ?? [];
+  const canSendMessage =
+    currentSession?.chatStatus === ChatStatus.Open ||
+    currentSession?.chatStatus === ChatStatus.MemoOnly;
+  const totalOpenSessions = chatSessions.filter(
+    (session) => session.chatStatus === ChatStatus.Open
+  ).length;
+  const upcomingSessions = chatSessions.filter(
+    (session) =>
+      session.appointmentTime && new Date(session.appointmentTime) > new Date()
+  ).length;
+
   useEffect(() => {
-    if (!selectedSessionId && filteredSessions.length > 0) {
-      setSelectedSessionId(filteredSessions[0].id);
+    if (
+      selectedSessionId &&
+      chatSessions.some((session) => session.id === selectedSessionId)
+    ) {
+      return;
     }
-  }, [filteredSessions, selectedSessionId]);
+
+    if (chatSessions.length > 0) {
+      setSelectedSessionId(chatSessions[0].id);
+    }
+  }, [chatSessions, selectedSessionId]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -147,6 +398,20 @@ export default function ChatPage() {
     if (pendingScan) scrollToBottom();
   }, [pendingScan, scrollToBottom]);
 
+  useEffect(() => {
+    if (!selectedSession) {
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [selectedSession?.id]);
+
   const handleSendMessage = () => {
     if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
 
@@ -157,7 +422,6 @@ export default function ChatPage() {
     sendMessageMutation.mutate(
       {
         sessionId: selectedSessionId,
-        senderUserId: CURRENT_USER_ID,
         message: messageContent,
       },
       {
@@ -169,28 +433,21 @@ export default function ChatPage() {
     );
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const currentSession = filteredSessions.find(
-    (s) => s.id === selectedSessionId
-  );
-  const canSendMessage =
-    currentSession?.chatStatus === ChatStatus.Open ||
-    currentSession?.chatStatus === ChatStatus.MemoOnly;
-
   const getSessionTypeColor = (type: ConsultationSessionType) => {
     switch (type) {
       case ConsultationSessionType.Verification:
-        return 'from-blue-500 to-cyan-500';
+        return 'from-sky-500 to-cyan-400';
       case ConsultationSessionType.VideoCall:
-        return 'from-purple-500 to-pink-500';
+        return 'from-emerald-500 to-teal-400';
       case ConsultationSessionType.ClinicBooking:
-        return 'from-green-500 to-teal-500';
+        return 'from-amber-500 to-orange-400';
       default:
         return 'from-brand to-accent';
     }
@@ -207,17 +464,50 @@ export default function ChatPage() {
       case SessionStatus.Cancelled:
         return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
-  // Loading state
+  const getStatusAccentClass = (chatStatus: ChatStatus) => {
+    switch (chatStatus) {
+      case ChatStatus.Open:
+        return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+      case ChatStatus.MemoOnly:
+        return 'bg-amber-50 text-amber-700 ring-amber-200';
+      case ChatStatus.Archived:
+        return 'bg-slate-100 text-slate-600 ring-slate-200';
+      default:
+        return 'bg-rose-50 text-rose-700 ring-rose-200';
+    }
+  };
+
+  const getComposerPlaceholder = () => {
+    if (pendingScan) {
+      return 'Add context for the scan before sending it to your ophthalmologist...';
+    }
+
+    if (currentSession?.chatStatus === ChatStatus.MemoOnly) {
+      return 'Share symptoms, scan notes, or questions before the consultation starts...';
+    }
+
+    return 'Type your message here...';
+  };
+
+  const doctorName =
+    currentSession?.ophthalmologistName ?? 'Assigned ophthalmologist';
+  const patientName =
+    user?.fullName ?? currentSession?.patientName ?? 'Patient';
+  const meetingAccessState = getMeetingAccessState(
+    currentSession?.appointmentTime ?? null,
+    currentTimeMs
+  );
+
   if (sessionsLoading) {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
-            <Loader2 className="w-10 h-10 text-brand animate-spin mx-auto mb-4" />
+            <Spinner size={40} className="mx-auto mb-4" />
             <p className="text-(--text-secondary)">Loading conversations...</p>
           </div>
         </div>
@@ -227,334 +517,751 @@ export default function ChatPage() {
 
   return (
     <PatientLayout>
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold text-(--text-primary) mb-1">
-          Messages
-        </h1>
-        <p className="text-(--text-secondary)">
-          Chat with your assigned ophthalmologists
-        </p>
-      </div>
+      <div className="overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)]">
+        <div className="flex h-[calc(100vh-210px)] min-h-[640px] flex-col md:flex-row">
+          <aside
+            className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r`}
+          >
+            <div className="border-b border-slate-200/80 px-5 pb-4 pt-5">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Consultations
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold text-slate-900">
+                    Your Inbox
+                  </h2>
+                </div>
+                <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200">
+                  {chatSessions.length} sessions
+                </div>
+              </div>
 
-      <div className="medical-card overflow-hidden h-[calc(100vh-180px)]">
-        <div className="flex h-full">
-          {/* Sessions Sidebar */}
-          <div className="w-96 border-r border-(--border-color) flex flex-col">
-            {/* Search */}
-            <div className="p-4 border-b border-(--border-color)">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search sessions..."
+                  placeholder="Search by doctor, status, or session type"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    startSearchTransition(() => {
+                      setSearchQuery(nextValue);
+                    });
+                  }}
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-4 focus:ring-cyan-100"
                 />
+                {isSearchPending && (
+                  <Spinner
+                    size={16}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-500"
+                  />
+                )}
               </div>
             </div>
 
-            {/* Session List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500">
+              <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200">
+                <p className="text-slate-900">{chatSessions.length}</p>
+                <p className="mt-1 uppercase tracking-[0.16em]">All</p>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200">
+                <p className="text-emerald-900">{totalOpenSessions}</p>
+                <p className="mt-1 uppercase tracking-[0.16em]">Open</p>
+              </div>
+              <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200">
+                <p className="text-amber-900">{upcomingSessions}</p>
+                <p className="mt-1 uppercase tracking-[0.16em]">Upcoming</p>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 [content-visibility:auto]">
               {filteredSessions.length === 0 ? (
-                <div className="p-8 text-center">
-                  <MessageCircle className="w-10 h-10 text-(--text-muted) mx-auto mb-3" />
-                  <p className="text-sm text-(--text-secondary)">
-                    No consultation sessions yet
+                <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200">
+                    <Search className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    No sessions match your search
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Try a doctor name, chat status, or consultation type.
                   </p>
                 </div>
               ) : (
                 filteredSessions.map((session) => {
-                  const statusConfig = chatStatusConfig[session.chatStatus];
+                  const statusConfig =
+                    chatStatusConfig[session.chatStatus] ?? defaultChatStatus;
                   const StatusIcon = statusConfig.icon;
+                  const displayDoctorName =
+                    session.ophthalmologistName ?? 'Assigned ophthalmologist';
+                  const displayType = SESSION_TYPE_LABELS[session.type];
+                  const appointmentTime = formatAppointmentSlot(
+                    session.appointmentTime
+                  );
+
                   return (
-                    <div
+                    <button
                       key={session.id}
                       onClick={() => setSelectedSessionId(session.id)}
-                      className={`p-4 cursor-pointer transition-colors border-b border-(--border-color) ${
+                      className={`w-full rounded-[24px] border p-4 text-left transition-all ${
                         selectedSessionId === session.id
-                          ? 'bg-brand-soft'
-                          : 'hover:bg-(--bg-tertiary)'
+                          ? 'border-cyan-300 bg-white shadow-lg shadow-cyan-100/60'
+                          : 'border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        {/* Type avatar */}
-                        <div
-                          className={`w-12 h-12 bg-gradient-to-br ${getSessionTypeColor(session.type)} rounded-full flex items-center justify-center flex-shrink-0`}
-                        >
-                          {session.type ===
-                          ConsultationSessionType.Verification ? (
-                            <Eye className="w-5 h-5 text-white" />
-                          ) : session.type ===
-                            ConsultationSessionType.VideoCall ? (
-                            <Video className="w-5 h-5 text-white" />
-                          ) : (
-                            <MessageCircle className="w-5 h-5 text-white" />
-                          )}
+                        <div className="relative shrink-0">
+                          <AvatarBadge
+                            name={displayDoctorName}
+                            avatarUrl={session.ophthalmologistAvatarUrl}
+                          />
+                          <div
+                            className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(session.type)} p-1 text-white shadow-sm`}
+                          >
+                            {session.type ===
+                            ConsultationSessionType.Verification ? (
+                              <Eye className="h-3 w-3" />
+                            ) : (
+                              <Video className="h-3 w-3" />
+                            )}
+                          </div>
                         </div>
 
-                        {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-(--text-primary) font-medium truncate text-sm">
-                              {SESSION_TYPE_LABELS[session.type]}
-                            </p>
-                            <span className="text-xs text-(--text-muted)">
-                              {new Date(session.createdAt).toLocaleDateString()}
-                            </span>
+                          <div className="mb-2 flex items-start justify-between gap-3">
+                            <div>
+                              <p className="truncate text-sm font-semibold text-slate-900">
+                                {displayDoctorName}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {displayType}
+                              </p>
+                            </div>
+                            <div className="text-right text-[11px] text-slate-400">
+                              <p>{formatCompactDate(session.createdAt)}</p>
+                              <p className="mt-1">
+                                {formatRelativeActivity(session.lastActivityAt)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 mb-1">
+
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
                             <span
-                              className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getStatusBadgeClass(session.status)}`}
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClass(session.status)}`}
                             >
                               {SESSION_STATUS_LABELS[session.status]}
                             </span>
-                            <StatusIcon
-                              className={`w-3 h-3 ${statusConfig.color}`}
-                            />
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(session.chatStatus)}`}
+                            >
+                              <StatusIcon
+                                className={`h-3.5 w-3.5 ${statusConfig.color}`}
+                              />
+                              {statusConfig.label}
+                            </span>
                           </div>
-                          <p className="text-xs text-(--text-secondary) truncate">
-                            {'No notes'}
-                          </p>
+
+                          <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+                              <span>{appointmentTime}</span>
+                            </div>
+                          </div>
                         </div>
+
+                        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300" />
                       </div>
-                    </div>
+                    </button>
                   );
                 })
               )}
             </div>
-          </div>
+          </aside>
 
-          {/* Chat Area */}
           {selectedSessionId && currentSession ? (
-            <div className="flex-1 flex flex-col">
-              {/* Chat Header */}
-              <div className="p-4 border-b border-(--border-color) flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} rounded-full flex items-center justify-center`}
-                  >
-                    {currentSession.type ===
-                    ConsultationSessionType.Verification ? (
-                      <Eye className="w-5 h-5 text-white" />
-                    ) : (
-                      <Video className="w-5 h-5 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-(--text-primary) font-medium">
-                      {SESSION_TYPE_LABELS[currentSession.type]}
-                    </p>
-                    <p className="text-xs text-(--text-secondary)">
-                      {SESSION_STATUS_LABELS[currentSession.status]} &middot;{' '}
-                      {CHAT_STATUS_LABELS[currentSession.chatStatus]}
-                    </p>
-                  </div>
-                </div>
+            <main
+              className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)]`}
+            >
+              <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={() => setSelectedSessionId(null)}
+                      className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
 
-                <div className="flex items-center gap-2">
-                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <Phone className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <Video className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
+                    <div className="relative shrink-0">
+                      <AvatarBadge
+                        name={doctorName}
+                        avatarUrl={currentSession.ophthalmologistAvatarUrl}
+                        size="lg"
+                      />
+                      <div
+                        className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} p-1.5 text-white shadow-sm`}
+                      >
+                        {currentSession.type ===
+                        ConsultationSessionType.Verification ? (
+                          <Eye className="h-4 w-4" />
+                        ) : (
+                          <Video className="h-4 w-4" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-xl font-semibold text-slate-900">
+                          {doctorName}
+                        </h2>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(currentSession.chatStatus)}`}
+                        >
+                          <currentSessionStatus.icon
+                            className={`h-3.5 w-3.5 ${currentSessionStatus.color}`}
+                          />
+                          {currentSessionStatus.label}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                        <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
+                        <span className="text-slate-300">/</span>
+                        <span>
+                          {SESSION_STATUS_LABELS[currentSession.status]}
+                        </span>
+                        <span className="text-slate-300">/</span>
+                        <span>
+                          {formatAppointmentSlot(
+                            currentSession.appointmentTime
+                          )}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 max-w-2xl text-sm text-slate-500">
+                        {currentSession.chatStatus === ChatStatus.MemoOnly
+                          ? 'Pre-consultation notes are enabled. Share symptoms, scan context, and questions so the doctor can review them before the session.'
+                          : currentSessionStatus.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-col items-start gap-1 sm:items-end">
+                      {currentSession.meetingLink ? (
+                        meetingAccessState.canJoin ? (
+                          <a
+                            href={currentSession.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                          >
+                            <Video className="h-4 w-4" />
+                            {meetingAccessState.buttonLabel}
+                          </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                          >
+                            <Video className="h-4 w-4" />
+                            {meetingAccessState.buttonLabel}
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          disabled
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                        >
+                          <Video className="h-4 w-4" />
+                          Link Pending
+                        </button>
+                      )}
+                      {currentSession.meetingLink && (
+                        <p className="text-xs font-medium text-slate-500">
+                          {meetingAccessState.helperText}
+                        </p>
+                      )}
+                    </div>
+                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600">
+                      <Phone className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setIsSessionOverviewOpen((previous) => !previous)
+                      }
+                      aria-label={
+                        isSessionOverviewOpen
+                          ? 'Hide session overview'
+                          : 'Show session overview'
+                      }
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600"
+                    >
+                      {isSessionOverviewOpen ? (
+                        <X className="h-4 w-4" />
+                      ) : (
+                        <MoreHorizontal className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Chat Status Banner */}
               {currentSession.chatStatus !== ChatStatus.Open && (
                 <div
-                  className={`px-4 py-2 flex items-center gap-2 text-sm border-b border-(--border-color) ${
+                  className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${
                     currentSession.chatStatus === ChatStatus.Locked
-                      ? 'bg-red-50 dark:bg-red-950/20'
+                      ? 'bg-rose-50'
                       : currentSession.chatStatus === ChatStatus.MemoOnly
-                        ? 'bg-amber-50 dark:bg-amber-950/20'
-                        : 'bg-gray-50 dark:bg-gray-900/20'
+                        ? 'bg-amber-50'
+                        : 'bg-slate-100'
                   }`}
                 >
-                  {(() => {
-                    const cfg = chatStatusConfig[currentSession.chatStatus];
-                    const Icon = cfg.icon;
-                    return (
-                      <>
-                        <Icon className={`w-4 h-4 ${cfg.color}`} />
-                        <span className="text-(--text-secondary)">
-                          {cfg.description}
-                        </span>
-                      </>
-                    );
-                  })()}
+                  <div className="flex items-start gap-2.5">
+                    <currentSessionStatus.icon
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${currentSessionStatus.color}`}
+                    />
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {currentSessionStatus.label}
+                      </p>
+                      <p className="mt-1 text-slate-600">
+                        {currentSessionStatus.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-(--bg-secondary)">
+              <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
                 {sessionLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Loader2 className="w-8 h-8 text-brand animate-spin" />
+                  <div className="flex h-full items-center justify-center">
+                    <Spinner size={32} />
                   </div>
-                ) : selectedSession?.messages &&
-                  selectedSession.messages.length > 0 ? (
-                  selectedSession.messages.map((message) => {
-                    const isPatient = message.senderUserId === CURRENT_USER_ID;
-                    return (
-                      <div
-                        key={message.id}
-                        className={`flex ${isPatient ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[65%] rounded-2xl ${
-                            isPatient
-                              ? 'bg-brand text-white rounded-br-sm'
-                              : 'bg-white dark:bg-[#1e3a5f] text-(--text-primary) rounded-bl-sm border border-(--border-color) shadow-sm'
-                          }`}
-                        >
-                          <div className="p-3">
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {message.message}
-                            </p>
-                            <div
-                              className={`flex items-center gap-1 mt-1 ${
-                                isPatient ? 'justify-end' : 'justify-start'
-                              }`}
-                            >
-                              <span
-                                className={`text-xs ${isPatient ? 'opacity-70' : 'text-(--text-muted)'}`}
-                              >
-                                {new Date(message.sentAt).toLocaleTimeString(
-                                  'en-US',
-                                  {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true,
-                                  }
-                                )}
+                ) : messageList.length > 0 ? (
+                  <div className="space-y-4">
+                    {messageList.map((message, index) => {
+                      const isPatientMessage =
+                        message.senderUserId === user?.id;
+                      const attachmentMeta = extractScanAttachment(
+                        message.message
+                      );
+                      const messageBody = stripScanAttachment(message.message);
+                      const previousMessage = messageList[index - 1];
+                      const showDateDivider =
+                        !previousMessage ||
+                        formatFullDate(previousMessage.sentAt) !==
+                          formatFullDate(message.sentAt);
+
+                      return (
+                        <Fragment key={message.id}>
+                          {showDateDivider && (
+                            <div className="flex justify-center py-2">
+                              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200">
+                                {formatFullDate(message.sentAt)}
                               </span>
-                              {isPatient && (
-                                <CheckCheck className="w-3 h-3 text-blue-300" />
-                              )}
                             </div>
+                          )}
+
+                          <div
+                            className={`flex items-end gap-3 ${isPatientMessage ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {!isPatientMessage && (
+                              <AvatarBadge
+                                name={doctorName}
+                                avatarUrl={
+                                  currentSession.ophthalmologistAvatarUrl
+                                }
+                                size="sm"
+                              />
+                            )}
+
+                            <div
+                              className={`max-w-[78%] ${isPatientMessage ? 'items-end' : 'items-start'} flex flex-col gap-2`}
+                            >
+                              <div
+                                className={`rounded-[24px] px-4 py-3 shadow-sm ${
+                                  isPatientMessage
+                                    ? 'rounded-br-md bg-gradient-to-br from-emerald-500 to-cyan-500 text-white'
+                                    : 'rounded-bl-md border border-slate-200 bg-white text-slate-900'
+                                }`}
+                              >
+                                <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
+                                  <span
+                                    className={
+                                      isPatientMessage
+                                        ? 'text-white/80'
+                                        : 'text-slate-500'
+                                    }
+                                  >
+                                    {isPatientMessage ? 'You' : doctorName}
+                                  </span>
+                                  <span
+                                    className={
+                                      isPatientMessage
+                                        ? 'text-white/50'
+                                        : 'text-slate-300'
+                                    }
+                                  >
+                                    /
+                                  </span>
+                                  <span
+                                    className={
+                                      isPatientMessage
+                                        ? 'text-white/80'
+                                        : 'text-slate-500'
+                                    }
+                                  >
+                                    {formatMessageTime(message.sentAt)}
+                                  </span>
+                                </div>
+
+                                {messageBody && (
+                                  <p className="whitespace-pre-wrap text-sm leading-6">
+                                    {messageBody}
+                                  </p>
+                                )}
+
+                                {attachmentMeta && (
+                                  <div
+                                    className={`mt-3 rounded-2xl border px-3 py-3 ${
+                                      isPatientMessage
+                                        ? 'border-white/20 bg-white/10'
+                                        : 'border-cyan-100 bg-cyan-50'
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div
+                                        className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                                          isPatientMessage
+                                            ? 'bg-white/15 text-white'
+                                            : 'bg-white text-cyan-600'
+                                        }`}
+                                      >
+                                        <FileText className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-semibold">
+                                          {attachmentMeta.title}
+                                        </p>
+                                        <p
+                                          className={`mt-1 text-xs ${
+                                            isPatientMessage
+                                              ? 'text-white/80'
+                                              : 'text-cyan-700'
+                                          }`}
+                                        >
+                                          {attachmentMeta.riskLabel}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div
+                                className={`flex items-center gap-1 px-1 text-[11px] ${
+                                  isPatientMessage
+                                    ? 'text-slate-400'
+                                    : 'text-slate-500'
+                                }`}
+                              >
+                                {isPatientMessage && (
+                                  <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
+                                )}
+                                <span>
+                                  {isPatientMessage
+                                    ? 'Delivered to your doctor'
+                                    : 'Doctor note'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {isPatientMessage && (
+                              <AvatarBadge
+                                name={patientName}
+                                avatarUrl={user?.avatarUrl}
+                                size="sm"
+                              />
+                            )}
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })
+                        </Fragment>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <MessageCircle className="w-10 h-10 text-(--text-muted) mx-auto mb-3" />
-                      <p className="text-sm text-(--text-secondary)">
-                        No messages yet. Start the conversation!
+                  <div className="flex h-full items-center justify-center">
+                    <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600">
+                        <MessageCircle className="h-7 w-7" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        No messages yet
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        {currentSession.chatStatus === ChatStatus.MemoOnly
+                          ? 'Start by sharing symptoms, concerns, or a brief note before your consultation begins.'
+                          : currentSession.chatStatus === ChatStatus.Locked
+                            ? 'This conversation opens after your doctor reviews the session.'
+                            : 'Start the conversation when you are ready.'}
                       </p>
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
-              {/* Message Input */}
-              <div className="p-4 border-t border-(--border-color) space-y-3">
-                {/* Pending scan attachment preview */}
+              <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6">
                 {pendingScan && (
-                  <div className="flex items-center gap-3 p-3 bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800 rounded-xl">
-                    {pendingScan.imageUrl && (
+                  <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-cyan-200 bg-cyan-50 px-4 py-3">
+                    {pendingScan.imageUrl ? (
                       <img
                         src={pendingScan.imageUrl}
                         alt="Scan preview"
-                        className="w-14 h-14 rounded-lg object-cover bg-slate-900"
+                        className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-200"
                       />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200">
+                        <Eye className="h-6 w-6" />
+                      </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-cyan-800 dark:text-cyan-200 truncate">
-                        Screening Results — {pendingScan.eyeLabel}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-cyan-900">
+                        Ready to share: {pendingScan.eyeLabel ?? 'Retinal Scan'}
                       </p>
-                      <p className="text-xs text-cyan-600 dark:text-cyan-400">
-                        {pendingScan.riskLabel}
-                        {pendingScan.anomalies &&
-                        pendingScan.anomalies.length > 0
-                          ? ` · ${pendingScan.anomalies.length} finding(s)`
+                      <p className="mt-1 truncate text-xs text-cyan-700">
+                        {pendingScan.riskLabel ?? 'Risk label unavailable'}
+                        {pendingScan.anomalies?.length
+                          ? ` / ${pendingScan.anomalies.length} finding(s)`
                           : ''}
                       </p>
                     </div>
                     <button
                       onClick={() => setPendingScan(null)}
-                      className="p-1.5 hover:bg-cyan-100 dark:hover:bg-cyan-900 rounded-lg transition-colors text-cyan-500"
+                      className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200 transition hover:bg-cyan-100"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
 
                 {canSendMessage ? (
-                  <div className="flex items-end gap-3">
-                    <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                      <Paperclip className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-(--text-secondary) hover:text-brand hover:bg-(--bg-secondary) rounded-lg transition-colors">
-                      <ImageIcon className="w-5 h-5" />
-                    </button>
-                    <div className="flex-1">
-                      <textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder="Type a message..."
-                        className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
-                        rows={2}
-                      />
+                  <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm">
+                    <div className="flex items-end gap-3">
+                      <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600">
+                        <Paperclip className="h-4 w-4" />
+                      </button>
+                      <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600">
+                        <ImageIcon className="h-4 w-4" />
+                      </button>
+                      <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70">
+                        <textarea
+                          value={newMessage}
+                          onChange={(event) =>
+                            setNewMessage(event.target.value)
+                          }
+                          onKeyDown={handleKeyPress}
+                          placeholder={getComposerPlaceholder()}
+                          className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                          rows={2}
+                        />
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Messages are encrypted and visible only to your care
+                            team.
+                          </div>
+                          <div>{newMessage.trim().length} characters</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={
+                          (!newMessage.trim() && !pendingScan) ||
+                          sendMessageMutation.isPending
+                        }
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition hover:from-emerald-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
+                      >
+                        {sendMessageMutation.isPending ? (
+                          <Spinner size={18} className="text-white" />
+                        ) : (
+                          <Send className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={
-                        (!newMessage.trim() && !pendingScan) ||
-                        sendMessageMutation.isPending
-                      }
-                      className="p-3 bg-brand hover:bg-brand/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
-                    >
-                      {sendMessageMutation.isPending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
-                    </button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-(--text-muted)">
-                    <Lock className="w-4 h-4" />
+                  <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                    {currentSession.chatStatus === ChatStatus.Archived ? (
+                      <Archive className="h-4 w-4" />
+                    ) : (
+                      <Lock className="h-4 w-4" />
+                    )}
                     <span>
                       {currentSession.chatStatus === ChatStatus.Locked
-                        ? 'Chat is locked until the doctor reviews your session.'
-                        : 'This session is archived. You cannot send new messages.'}
+                        ? 'Chat will unlock after your doctor verifies the session.'
+                        : 'This session is archived. New messages are disabled.'}
                     </span>
                   </div>
                 )}
 
                 {sendMessageMutation.isError && (
-                  <div className="flex items-center gap-2 text-sm text-red-500">
-                    <AlertCircle className="w-4 h-4" />
+                  <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100">
+                    <AlertCircle className="h-4 w-4" />
                     <span>Failed to send message. Please try again.</span>
                   </div>
                 )}
               </div>
-            </div>
+            </main>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-(--bg-secondary) rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-10 h-10 text-(--text-muted)" />
+            <div className="hidden flex-1 items-center justify-center md:flex">
+              <div className="max-w-md text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-400">
+                  <MessageCircle className="h-9 w-9" />
                 </div>
-                <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
+                <h3 className="text-2xl font-semibold text-slate-900">
                   Select a session
                 </h3>
-                <p className="text-(--text-secondary)">
-                  Choose a consultation session to view messages
+                <p className="mt-2 text-slate-500">
+                  Choose a consultation from the left panel to review the full
+                  conversation.
                 </p>
               </div>
             </div>
+          )}
+
+          {currentSession && isSessionOverviewOpen && (
+            <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col">
+              <div className="border-b border-slate-200/80 px-6 py-6">
+                <div className="flex items-center gap-4">
+                  <AvatarBadge
+                    name={doctorName}
+                    avatarUrl={currentSession.ophthalmologistAvatarUrl}
+                    size="lg"
+                  />
+                  <div>
+                    <p className="text-lg font-semibold text-slate-900">
+                      {doctorName}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {SESSION_TYPE_LABELS[currentSession.type]}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+                <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Session Overview
+                  </p>
+                  <div className="mt-4 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
+                      <div>
+                        <p className="text-xs text-slate-500">Appointment</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {formatAppointmentSlot(
+                            currentSession.appointmentTime
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
+                      <div>
+                        <p className="text-xs text-slate-500">Last activity</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {formatRelativeActivity(
+                            currentSession.lastActivityAt
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
+                      <div>
+                        <p className="text-xs text-slate-500">
+                          Consultation fee
+                        </p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {formatCurrency(currentSession.price)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
+                      <div>
+                        <p className="text-xs text-slate-500">Chat mode</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {currentSessionStatus.label}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {pendingScan && (
+                  <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                      <Sparkles className="h-4 w-4" />
+                      Pending Scan Share
+                    </div>
+                    <div className="mt-4 space-y-4">
+                      {pendingScan.imageUrl ? (
+                        <img
+                          src={pendingScan.imageUrl}
+                          alt="Pending scan"
+                          className="h-40 w-full rounded-[24px] object-cover ring-1 ring-slate-200"
+                        />
+                      ) : null}
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {pendingScan.eyeLabel ?? 'Retinal Scan'}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {pendingScan.summary ??
+                            pendingScan.riskLabel ??
+                            'No summary available'}
+                        </p>
+                      </div>
+                      {pendingScan.anomalies?.length ? (
+                        <div className="flex flex-wrap gap-2">
+                          {pendingScan.anomalies.map((anomaly) => (
+                            <span
+                              key={anomaly}
+                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+                            >
+                              {anomaly}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                    <Stethoscope className="h-4 w-4" />
+                    Conversation Guidance
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-slate-200">
+                    Be specific about symptom timing, changes in vision, pain,
+                    and recent scan results. Short, structured notes make it
+                    easier for your ophthalmologist to triage quickly.
+                  </p>
+                  <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
+                    <div className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4 text-cyan-300" />
+                      <span>{patientName}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
           )}
         </div>
       </div>

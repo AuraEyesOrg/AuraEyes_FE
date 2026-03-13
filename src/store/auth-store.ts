@@ -4,6 +4,7 @@ import { getItem, setItem } from '@/lib/local-storage';
 
 export interface AuthUser {
   id: string;
+  roleId?: string | null;
   email: string;
   fullName: string;
   avatarUrl?: string | null;

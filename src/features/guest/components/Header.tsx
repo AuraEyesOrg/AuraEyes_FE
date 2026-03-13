@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 export const Header = () => {
   const location = useLocation();
@@ -22,23 +23,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#319795]/20 text-[#319795]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <circle cx="12" cy="12" r="4" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight text-[#1A202C]">
-            AURA
-          </span>
-        </Link>
+        <AuraLogo variant="dark" size="md" to="/" />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">

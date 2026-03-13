@@ -232,6 +232,25 @@ export interface AIModelMonitoringData {
 }
 
 // ============ AUDIT LOGS & COMPLIANCE ============
+
+/**
+ * DTO matching BE AuditLogDto — real API response shape
+ * oldValue/newValue are JSON strings (JSONB in PostgreSQL)
+ */
+export interface AuditLogDto {
+  id: string;
+  userId: string | null;
+  userName: string | null;
+  action: string;
+  entityName: string;
+  entityId: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+/** @deprecated Use AuditLogDto for real API data */
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

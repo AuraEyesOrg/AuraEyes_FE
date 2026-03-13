@@ -3,11 +3,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
   XCircle,
-  Loader2,
   Wallet,
   ArrowLeft,
   AlertCircle,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { useWallet } from '../hooks/use-wallet';
 import { walletApi } from '../api/patient.api';
@@ -81,7 +81,7 @@ export default function PaymentCallbackPage() {
           {status === 'loading' && (
             <>
               <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                <Spinner size={32} />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
                 Verifying Payment...

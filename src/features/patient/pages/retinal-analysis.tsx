@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
+import { quotaApi } from '../api/quota.api';
+import { quotaKeys } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -14,6 +17,7 @@ import {
   RefreshCw,
   Info,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -263,6 +267,7 @@ function friendlyDescription(anomaly: Anomaly): string {
 export default function RetinalAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const routeState = location.state as LocationState | null;
 
   const [toggles, setToggles] = useState<ToggleState>({
@@ -380,6 +385,22 @@ export default function RetinalAnalysis() {
       const imageUrl = currentImage?.url;
       if (!imageUrl) {
         setErrorMessage('No image available for analysis');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Deduct 1 quota credit before running AI analysis
+      try {
+        await quotaApi.deduct();
+        // Invalidate quota cache so QuotaBadge reflects the deduction
+        queryClient.invalidateQueries({ queryKey: quotaKeys.all });
+      } catch (quotaErr) {
+        const err = quotaErr as { response?: { status?: number } };
+        const message =
+          err.response?.status === 402
+            ? 'Bạn đã hết lượt AI. Vui lòng mua thêm lượt để tiếp tục.'
+            : 'Không thể trừ lượt AI. Vui lòng thử lại.';
+        setErrorMessage(message);
         setIsAnalyzing(false);
         return;
       }
@@ -549,10 +570,7 @@ export default function RetinalAnalysis() {
                     </div>
                   ) : isAnalyzing ? (
                     <div className="flex items-center gap-4 py-2">
-                      <div className="relative w-10 h-10 flex-shrink-0">
-                        <div className="absolute inset-0 rounded-full border-[3px] border-slate-100" />
-                        <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-cyan-500 animate-spin" />
-                      </div>
+                      <Spinner size={40} className="flex-shrink-0" />
                       <p className="text-[15px] text-slate-500">
                         Analyzing your retinal scan…
                       </p>

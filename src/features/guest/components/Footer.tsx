@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { AuraLogo } from '@/components/ui/aura-logo';
 
 export const Footer = () => {
   return (
@@ -7,21 +8,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-[#319795]/20 text-[#319795]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <circle cx="12" cy="12" r="4" fill="currentColor" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-[#1A202C]">AURA</span>
-            </Link>
+            <div className="mb-4">
+              <AuraLogo variant="dark" size="sm" to="/" />
+            </div>
             <p className="text-sm text-[#718096]">
               Advancing retinal health through ethical AI.
             </p>

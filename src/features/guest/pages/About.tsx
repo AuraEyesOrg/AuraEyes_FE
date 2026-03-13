@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -244,7 +244,7 @@ const AboutPage = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[var(--color-bg-medical)]"
+      className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
 
@@ -283,7 +283,7 @@ const AboutPage = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="stats-section py-16 bg-white border-b border-[var(--color-border)]">
+        <section className="stats-section py-16 bg-white border-b border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="stat-item text-center p-6">
@@ -323,7 +323,7 @@ const AboutPage = () => {
         </section>
 
         {/* Mission & Values */}
-        <section className="values-section py-20 bg-[var(--color-bg-medical)]">
+        <section className="values-section py-20 bg-[var(--color-medical-bg)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
@@ -342,7 +342,7 @@ const AboutPage = () => {
               {values.map((value, index) => (
                 <div
                   key={index}
-                  className="value-card bg-white rounded-xl p-6 border border-[var(--color-border)] hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all duration-300 hover:-translate-y-1"
+                  className="value-card bg-white rounded-xl p-6 border border-[var(--color-medical-border)] hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center mb-4">
                     {value.icon}
@@ -401,7 +401,7 @@ const AboutPage = () => {
         </section>
 
         {/* Timeline Section */}
-        <section className="timeline-section py-20 bg-[var(--color-bg-medical)]">
+        <section className="timeline-section py-20 bg-[var(--color-medical-bg)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="text-center mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
@@ -413,7 +413,7 @@ const AboutPage = () => {
             </div>
 
             <div className="relative">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[var(--color-border)]" />
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[var(--color-medical-border)]" />
               <div className="space-y-8">
                 {timeline.map((item, index) => (
                   <div
@@ -425,7 +425,7 @@ const AboutPage = () => {
                         {item.year}
                       </span>
                     </div>
-                    <div className="flex-1 bg-white rounded-xl p-6 border border-[var(--color-border)] ml-12 hover:shadow-md transition-shadow">
+                    <div className="flex-1 bg-white rounded-xl p-6 border border-[var(--color-medical-border)] ml-12 hover:shadow-md transition-shadow">
                       <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-1">
                         {item.title}
                       </h3>

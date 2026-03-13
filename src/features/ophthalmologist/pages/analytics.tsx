@@ -9,16 +9,6 @@ import {
   Clock,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
-
-const mockDoctor: Doctor = {
-  id: 'D001',
-  name: 'Dr. Alistair',
-  specialty: 'Retina Specialist',
-  hospital: 'General Hospital',
-  department: 'Retina Dept',
-  avatar: null,
-};
 
 // Mock analytics data
 const weeklyStats = {
@@ -132,7 +122,7 @@ export default function AnalyticsPage() {
   const maxScreenings = Math.max(...weeklyActivity.map((d) => d.screenings));
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">

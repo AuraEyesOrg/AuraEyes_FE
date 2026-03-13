@@ -32,6 +32,7 @@ import type {
   TwoFactorDisableFormData,
 } from '../types';
 import '@/styles/auth-animations.css';
+import Spinner from '@/components/ui/spinner';
 
 const TwoFactorSettingsPage = () => {
   const navigate = useNavigate();
@@ -194,7 +195,7 @@ After using a recovery code, we recommend generating new codes.`;
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#00d1c0] border-r-transparent"></div>
+          <Spinner size={32} className="mx-auto" />
           <p className="mt-4 text-gray-600">Loading 2FA settings...</p>
         </div>
       </div>
@@ -427,7 +428,7 @@ After using a recovery code, we recommend generating new codes.`;
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-lg text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                    <Spinner size={20} className="shrink-0" />
                   ) : (
                     <>
                       <Check className="w-5 h-5" />
@@ -585,7 +586,7 @@ After using a recovery code, we recommend generating new codes.`;
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-lg text-sm font-bold text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                    <Spinner size={20} className="shrink-0" />
                   ) : (
                     <>
                       <XCircle className="w-5 h-5" />

@@ -1,301 +1,423 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Search,
-  MapPin,
-  Star,
-  Clock,
-  ChevronDown,
-  Navigation,
   Calendar,
-  Building2,
+  Clock,
+  MapPin,
+  Search,
+  Star,
+  Stethoscope,
+  Trash2,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
+import {
+  useCancelClinicAppointment,
+  useCreateClinicAppointment,
+  useOrganisationAvailableSlots,
+  useOrganisations,
+  usePatientClinicAppointments,
+} from '../hooks/use-clinic-booking';
+import useAuthStore from '@/store/auth-store';
+import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 
-interface Clinic {
-  id: string;
-  name: string;
-  type: 'clinic' | 'hospital';
-  address: string;
-  city: string;
-  distance: number;
-  rating: number;
-  reviewCount: number;
-  phone: string;
-  services: string[];
-  imageUrl: string;
-  operatingHours: string;
-  isPartner: boolean;
-}
+const formatTime = (time: string) => {
+  const [h, m] = time.split(':');
+  const hour = Number(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
 
-const mockClinics: Clinic[] = [
-  {
-    id: '1',
-    name: 'AURA Vision Clinic',
-    type: 'clinic',
-    address: '123 Nguyen Hue Street, District 1',
-    city: 'Ho Chi Minh City',
-    distance: 1.2,
-    rating: 4.9,
-    reviewCount: 256,
-    phone: '+84 28 1234 5678',
-    services: ['Retinal Screening', 'OCT Scan', 'Consultation'],
-    imageUrl:
-      'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400',
-    operatingHours: '8:00 AM - 6:00 PM',
-    isPartner: true,
-  },
-  {
-    id: '2',
-    name: 'FV Hospital - Eye Center',
-    type: 'hospital',
-    address: '6 Nguyen Luong Bang, District 7',
-    city: 'Ho Chi Minh City',
-    distance: 3.5,
-    rating: 4.8,
-    reviewCount: 512,
-    phone: '+84 28 5411 3333',
-    services: ['Full Eye Exam', 'Surgery', 'Diabetic Screening', 'Glaucoma'],
-    imageUrl:
-      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=400',
-    operatingHours: '7:00 AM - 9:00 PM',
-    isPartner: true,
-  },
-  {
-    id: '3',
-    name: 'Eye Care Center',
-    type: 'clinic',
-    address: '45 Le Loi Boulevard, District 1',
-    city: 'Ho Chi Minh City',
-    distance: 2.1,
-    rating: 4.7,
-    reviewCount: 189,
-    phone: '+84 28 3822 1234',
-    services: ['Retinal Imaging', 'Contact Lens', 'Vision Test'],
-    imageUrl:
-      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400',
-    operatingHours: '8:30 AM - 5:30 PM',
-    isPartner: false,
-  },
-  {
-    id: '4',
-    name: 'Vinmec Central Park Hospital',
-    type: 'hospital',
-    address: '208 Nguyen Huu Canh, Binh Thanh',
-    city: 'Ho Chi Minh City',
-    distance: 4.8,
-    rating: 4.9,
-    reviewCount: 823,
-    phone: '+84 28 3622 1166',
-    services: ['Comprehensive Eye Care', 'Pediatric', 'Surgery', 'Emergency'],
-    imageUrl: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
-    operatingHours: '24/7',
-    isPartner: true,
-  },
-];
+const formatDate = (value: string) => {
+  const date = new Date(value + 'T00:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
 
-const cities = [
-  'All Cities',
-  'Ho Chi Minh City',
-  'Hanoi',
-  'Da Nang',
-  'Can Tho',
-];
+const statusStyles: Record<string, string> = {
+  Pending:
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  InProgress:
+    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  Completed:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  NoShow: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+};
 
 export default function ClinicsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState('All Cities');
-  const [selectedType, setSelectedType] = useState<
-    'all' | 'clinic' | 'hospital'
-  >('all');
-  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const { user } = useAuthStore();
+  const patientId = user?.id ?? '';
 
-  const filteredClinics = mockClinics.filter((clinic) => {
-    const matchesSearch =
-      clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      clinic.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCity =
-      selectedCity === 'All Cities' || clinic.city === selectedCity;
-    const matchesType = selectedType === 'all' || clinic.type === selectedType;
-    return matchesSearch && matchesCity && matchesType;
-  });
+  const [searchText, setSearchText] = useState('');
+  const [selectedOrganisationId, setSelectedOrganisationId] = useState('');
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [visitReason, setVisitReason] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const {
+    data: organisations = [],
+    isLoading: loadingOrganisations,
+    error: organisationsError,
+  } = useOrganisations();
+
+  const {
+    data: availableSlots = [],
+    isLoading: loadingSlots,
+    error: availableSlotsError,
+  } = useOrganisationAvailableSlots(
+    selectedOrganisationId,
+    selectedDate,
+    !!selectedOrganisationId
+  );
+
+  const {
+    data: myAppointments = [],
+    isLoading: loadingMyAppointments,
+    error: myAppointmentsError,
+  } = usePatientClinicAppointments(patientId, !!patientId);
+
+  const createAppointmentMutation = useCreateClinicAppointment();
+  const cancelAppointmentMutation = useCancelClinicAppointment();
+
+  const filteredOrganisations = useMemo(() => {
+    if (!searchText.trim()) return organisations;
+
+    const query = searchText.toLowerCase();
+    return organisations.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        (item.address ?? '').toLowerCase().includes(query) ||
+        (item.city ?? '').toLowerCase().includes(query)
+    );
+  }, [organisations, searchText]);
+
+  const selectedOrganisation = organisations.find(
+    (item) => item.id === selectedOrganisationId
+  );
+
+  const handleBookSlot = async (slotId: string) => {
+    if (!selectedOrganisationId || !patientId) return;
+
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await createAppointmentMutation.mutateAsync({
+        organisationId: selectedOrganisationId,
+        slotId,
+        visitReason: visitReason.trim() || undefined,
+      });
+      setSuccessMessage(
+        'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở My Clinic Appointments.'
+      );
+    } catch (error) {
+      setErrorMessage(mapClinicPatientErrorMessage(error));
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await cancelAppointmentMutation.mutateAsync(appointmentId);
+      setSuccessMessage('Đã hủy lịch khám thành công.');
+    } catch (error) {
+      setErrorMessage(mapClinicPatientErrorMessage(error));
+    }
+  };
 
   return (
     <PatientLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-          Find Partner Clinics & Hospitals
-        </h1>
-        <p className="text-(--text-secondary)">
-          Search and book appointments at our verified partner locations
-        </p>
-      </div>
-
-      {/* Search & Filters */}
-      <div className="medical-card p-6 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search Input */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted)" />
-            <input
-              type="text"
-              placeholder="Search by clinic name or location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
-            />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section className="xl:col-span-2">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-(--text-primary)">
+              Book At Organisation Clinic
+            </h1>
+            <p className="mt-2 text-(--text-secondary)">
+              Pick a clinic, choose a date, and reserve an in-person visit slot.
+            </p>
           </div>
 
-          {/* City Filter */}
-          <div className="relative">
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="appearance-none w-full lg:w-48 px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-brand/50 cursor-pointer"
-            >
-              {cities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-muted) pointer-events-none" />
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex rounded-xl overflow-hidden border border-[var(--border-color)]">
-            {(['all', 'clinic', 'hospital'] as const).map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(type)}
-                className={`px-4 py-3 text-sm font-medium transition-colors capitalize ${
-                  selectedType === type
-                    ? 'bg-brand text-white'
-                    : 'bg-(--bg-secondary) text-(--text-secondary) hover:text-(--text-primary)'
-                }`}
-              >
-                {type === 'all' ? 'All' : type}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Results */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredClinics.map((clinic) => (
-          <div
-            key={clinic.id}
-            className={`medical-card overflow-hidden transition-all cursor-pointer ${
-              selectedClinic?.id === clinic.id
-                ? 'border-brand ring-2 ring-brand/30'
-                : 'hover:border-brand/50'
-            }`}
-            onClick={() => setSelectedClinic(clinic)}
-          >
-            {/* Image */}
-            <div className="relative h-48">
-              <img
-                src={clinic.imageUrl}
-                alt={clinic.name}
-                className="w-full h-full object-cover"
-              />
-              {clinic.isPartner && (
-                <span className="absolute top-4 left-4 px-3 py-1 bg-primary text-white text-xs font-medium rounded-full">
-                  Partner
-                </span>
+          {(errorMessage || successMessage) && (
+            <div className="mb-4 space-y-2">
+              {errorMessage && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {errorMessage}
+                </div>
               )}
-              <span
-                className={`absolute top-4 right-4 px-3 py-1 text-xs font-medium rounded-full capitalize ${
-                  clinic.type === 'hospital'
-                    ? 'bg-purple-500/80 text-white'
-                    : 'bg-blue-500/80 text-white'
-                }`}
-              >
-                {clinic.type}
-              </span>
+              {successMessage && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  {successMessage}
+                </div>
+              )}
+            </div>
+          )}
+
+          {(organisationsError ||
+            availableSlotsError ||
+            myAppointmentsError) && (
+            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              {mapClinicPatientErrorMessage(
+                organisationsError ?? availableSlotsError ?? myAppointmentsError
+              )}
+            </div>
+          )}
+
+          <div className="medical-card p-5">
+            <div className="relative mb-4">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-muted)" />
+              <input
+                className="w-full rounded-xl border border-(--border-color) bg-(--bg-secondary) py-2.5 pl-10 pr-3 text-(--text-primary) outline-none ring-brand/40 placeholder:text-(--text-muted) focus:ring-2"
+                placeholder="Search organisation by name, city, or address"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+              />
             </div>
 
-            {/* Content */}
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">
-                    {clinic.name}
-                  </h3>
-                  <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <MapPin className="w-4 h-4" />
-                    <span>{clinic.address}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="font-medium">{clinic.rating}</span>
-                  </div>
-                  <p className="text-xs text-(--text-muted)">
-                    {clinic.reviewCount} reviews
-                  </p>
-                </div>
+            {loadingOrganisations ? (
+              <div className="flex items-center gap-3 py-8 text-(--text-secondary)">
+                <Spinner />
+                <span>Loading organisations...</span>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {filteredOrganisations.map((organisation) => {
+                  const isSelected = selectedOrganisationId === organisation.id;
 
-              {/* Services */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {clinic.services.slice(0, 3).map((service) => (
-                  <span
-                    key={service}
-                    className="px-2 py-1 bg-(--bg-secondary) text-(--text-secondary) text-xs rounded-lg"
-                  >
-                    {service}
-                  </span>
-                ))}
-                {clinic.services.length > 3 && (
-                  <span className="px-2 py-1 text-brand text-xs">
-                    +{clinic.services.length - 3} more
-                  </span>
+                  return (
+                    <button
+                      key={organisation.id}
+                      type="button"
+                      onClick={() => setSelectedOrganisationId(organisation.id)}
+                      className={`rounded-xl border p-4 text-left transition ${
+                        isSelected
+                          ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
+                          : 'border-(--border-color) bg-(--bg-secondary) hover:border-cyan-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={organisation.avatarUrl ?? ''}
+                          alt={organisation.name}
+                          className="h-10 w-10 rounded-lg border border-(--border-color) bg-(--bg-tertiary) object-cover"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-(--text-primary)">
+                            {organisation.name}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-(--text-secondary)">
+                            <span className="inline-flex items-center rounded-full bg-cyan-100 px-2 py-0.5 font-medium text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                              {organisation.orgType ?? 'Organisation'}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="h-3.5 w-3.5 text-amber-500" />
+                              {organisation.ratingAverage?.toFixed(1) ?? '0.0'}
+                              <span className="text-(--text-muted)">
+                                ({organisation.ratingCount ?? 0})
+                              </span>
+                            </span>
+                          </div>
+                          <p className="mt-1 flex items-center gap-1 text-xs text-(--text-secondary)">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span className="truncate">
+                              {[organisation.address, organisation.city]
+                                .filter(Boolean)
+                                .join(', ') || 'No address'}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {filteredOrganisations.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-(--border-color) p-6 text-center text-(--text-secondary) md:col-span-2">
+                    No organisation found.
+                  </div>
                 )}
               </div>
+            )}
+          </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-                <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
-                  <span className="flex items-center gap-1">
-                    <Navigation className="w-4 h-4" />
-                    {clinic.distance} km
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {clinic.operatingHours}
-                  </span>
+          <div className="medical-card mt-6 p-5">
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-(--text-primary)">
+                  Available Slots
+                </h2>
+                <p className="text-sm text-(--text-secondary)">
+                  {selectedOrganisation
+                    ? `Organisation: ${selectedOrganisation.name}`
+                    : 'Select an organisation to load available slots.'}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
+                    Visit Date
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(event) => setSelectedDate(event.target.value)}
+                    className="rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
+                  />
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Navigate to booking
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Book
-                </button>
+                <div className="min-w-55">
+                  <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
+                    Visit Reason
+                  </label>
+                  <input
+                    value={visitReason}
+                    onChange={(event) => setVisitReason(event.target.value)}
+                    placeholder="Blurred vision, routine follow-up..."
+                    className="w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {filteredClinics.length === 0 && (
-        <div className="medical-card p-12 text-center">
-          <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-[var(--text-muted)]" />
+            {!selectedOrganisationId ? (
+              <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary)">
+                Please select an organisation first.
+              </div>
+            ) : loadingSlots ? (
+              <div className="flex items-center gap-3 py-8 text-(--text-secondary)">
+                <Spinner />
+                <span>Loading slots...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {availableSlots.map((slot) => (
+                  <div
+                    key={slot.slotId}
+                    className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4"
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium text-(--text-primary)">
+                      <Calendar className="h-4 w-4 text-cyan-600" />
+                      {formatDate(slot.date)}
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-(--text-secondary)">
+                      <Clock className="h-4 w-4" />
+                      {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                    </div>
+                    <div className="mt-2 text-xs text-(--text-secondary)">
+                      Remaining capacity: {slot.remaining}/{slot.maxCapacity}
+                    </div>
+                    <div className="mt-1 text-xs text-(--text-secondary)">
+                      Fee: {(slot.cost ?? 0).toLocaleString('vi-VN')} VND
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={
+                        slot.remaining <= 0 ||
+                        createAppointmentMutation.isPending
+                      }
+                      onClick={() => void handleBookSlot(slot.slotId)}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Stethoscope className="h-4 w-4" />
+                      Book Clinic Visit
+                    </button>
+                  </div>
+                ))}
+
+                {availableSlots.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary) md:col-span-2 xl:col-span-3">
+                    No available slots for selected date.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-            No clinics found
-          </h3>
-          <p className="text-[var(--text-secondary)]">
-            Try adjusting your search or filter criteria
-          </p>
-        </div>
-      )}
+        </section>
+
+        <aside>
+          <div className="medical-card p-5">
+            <h2 className="text-lg font-semibold text-(--text-primary)">
+              My Clinic Appointments
+            </h2>
+            <p className="mt-1 text-sm text-(--text-secondary)">
+              Manage your organisation bookings.
+            </p>
+
+            {loadingMyAppointments ? (
+              <div className="mt-6 flex items-center gap-3 text-(--text-secondary)">
+                <Spinner />
+                <span>Loading your appointments...</span>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {myAppointments.map((appointment) => (
+                  <div
+                    key={appointment.id}
+                    className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-(--text-primary)">
+                          {appointment.organisationName ?? 'Clinic Visit'}
+                        </p>
+                        <p className="text-xs text-(--text-secondary)">
+                          {formatDate(appointment.date)} |{' '}
+                          {formatTime(appointment.startTime)} -{' '}
+                          {formatTime(appointment.endTime)}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-1 text-[11px] font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
+                      >
+                        {appointment.status}
+                      </span>
+                    </div>
+
+                    {appointment.visitReason && (
+                      <p className="mt-2 text-xs text-(--text-secondary)">
+                        Reason: {appointment.visitReason}
+                      </p>
+                    )}
+
+                    {appointment.status === 'Pending' && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void handleCancelAppointment(appointment.id)
+                        }
+                        disabled={cancelAppointmentMutation.isPending}
+                        className="mt-3 inline-flex items-center gap-1 rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {myAppointments.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-(--border-color) p-6 text-center text-sm text-(--text-secondary)">
+                    You have no clinic appointments yet.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
     </PatientLayout>
   );
 }

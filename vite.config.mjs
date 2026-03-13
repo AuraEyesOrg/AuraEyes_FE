@@ -18,28 +18,6 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction, // Disable sourcemaps in prod for security/size
       cssCodeSplit: true,
       reportCompressedSize: false, // Speeds up build slightly
-      rollupOptions: {
-        output: {
-          // 2. Enterprise Chunking Strategy
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              // Split React into its own chunk for long-term caching
-              if (
-                id.includes('react') ||
-                id.includes('react-dom') ||
-                id.includes('react-router')
-              ) {
-                return 'vendor-react';
-              }
-              // Combine other huge libraries (add your own here, e.g., 'lodash', 'axios')
-              // if (id.includes('lodash')) return 'vendor-utils';
-
-              // Default vendor chunk
-              return 'vendor';
-            }
-          },
-        },
-      },
     },
 
     // 3. CSS Configuration

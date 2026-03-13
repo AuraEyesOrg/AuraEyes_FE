@@ -5,11 +5,11 @@ import {
   Shield,
   ArrowLeft,
   AlertCircle,
-  Loader2,
   Key,
   Smartphone,
   Eye,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
 import '@/styles/auth-animations.css';
@@ -27,7 +27,7 @@ const TwoFactorVerifyPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const { login: authLogin } = useAuthStore();
+  const { login: authLogin, setIsAuthenticated } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,12 +78,14 @@ const TwoFactorVerifyPage = () => {
       if (response.succeeded) {
         if (response.user) {
           authLogin(response.user);
+        } else {
+          setIsAuthenticated(true);
         }
 
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/admin/dashboard');
+          navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
@@ -94,10 +96,13 @@ const TwoFactorVerifyPage = () => {
           } else {
             navigate('/ophthalmologist/dashboard');
           }
-        } else if (roles.includes('Organization')) {
+        } else if (
+          roles.includes('OrgAdmin') ||
+          roles.includes('Organization')
+        ) {
           navigate('/organisation/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       } else {
         setError(response.errors?.join(', ') || 'Verification failed');
@@ -271,7 +276,7 @@ const TwoFactorVerifyPage = () => {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Spinner size={20} className="shrink-0" />
                   Verifying...
                 </>
               ) : (

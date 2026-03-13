@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -266,7 +266,7 @@ const HowItWorksPage = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[var(--color-bg-medical)]"
+      className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
 
@@ -334,14 +334,14 @@ const HowItWorksPage = () => {
                     </svg>
                     Watch Demo Video
                   </button>
-                  <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-border)] px-6 py-3 text-base font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
+                  <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-medical-border)] px-6 py-3 text-base font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
                     View Technical Docs
                   </button>
                 </div>
               </div>
 
               {/* Hero Image */}
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[var(--color-border)]">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[var(--color-medical-border)]">
                 <div className="aspect-video bg-gradient-to-br from-[var(--color-brand-dark)] via-[var(--color-brand-primary)] to-[#0F172A] relative">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {/* Animated Eye Scanner */}
@@ -385,7 +385,7 @@ const HowItWorksPage = () => {
         </section>
 
         {/* Process Steps */}
-        <section className="process-section py-20 bg-[var(--color-bg-medical)]">
+        <section className="process-section py-20 bg-[var(--color-medical-bg)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="text-center mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
@@ -401,7 +401,7 @@ const HowItWorksPage = () => {
 
             <div className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-1 bg-[var(--color-border)]">
+              <div className="absolute left-8 top-0 bottom-0 w-1 bg-[var(--color-medical-border)]">
                 <div className="timeline-progress absolute inset-0 bg-gradient-to-b from-[var(--color-brand-primary)] to-[var(--color-brand-dark)]" />
               </div>
 
@@ -416,7 +416,7 @@ const HowItWorksPage = () => {
                     </div>
 
                     {/* Content Card */}
-                    <div className="flex-1 bg-white rounded-xl border border-[var(--color-border)] overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="flex-1 bg-white rounded-xl border border-[var(--color-medical-border)] overflow-hidden hover:shadow-lg transition-shadow">
                       <div className="p-6">
                         <div className="flex items-start gap-4">
                           <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
@@ -441,7 +441,7 @@ const HowItWorksPage = () => {
         </section>
 
         {/* What AI Sees Section */}
-        <section className="features-section py-20 bg-white border-y border-[var(--color-border)]">
+        <section className="features-section py-20 bg-white border-y border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid lg:grid-cols-2 gap-16 items-start">
               <div className="sticky top-24">
@@ -476,7 +476,7 @@ const HowItWorksPage = () => {
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="feature-card bg-[var(--color-bg-medical)] rounded-xl p-6 border border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/30 hover:shadow-md transition-all"
+                    className="feature-card bg-[var(--color-medical-bg)] rounded-xl p-6 border border-[var(--color-medical-border)] hover:border-[var(--color-brand-primary)]/30 hover:shadow-md transition-all"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
@@ -499,7 +499,7 @@ const HowItWorksPage = () => {
         </section>
 
         {/* Trust Section */}
-        <section className="trust-section py-16 bg-[var(--color-bg-medical)]">
+        <section className="trust-section py-16 bg-[var(--color-medical-bg)]">
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="bg-gradient-to-br from-[var(--color-brand-primary)]/5 to-[var(--color-brand-dark)]/5 rounded-2xl p-8 md:p-12 border border-[var(--color-brand-primary)]/20 text-center">
               <div className="w-16 h-16 rounded-full bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center mx-auto mb-6">
@@ -527,7 +527,7 @@ const HowItWorksPage = () => {
                 demographics.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
                   <svg
                     className="w-5 h-5 text-green-600"
                     fill="none"
@@ -545,7 +545,7 @@ const HowItWorksPage = () => {
                     HIPAA Compliant
                   </span>
                 </div>
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
                   <svg
                     className="w-5 h-5 text-blue-600"
                     fill="none"
@@ -563,7 +563,7 @@ const HowItWorksPage = () => {
                     GDPR Ready
                   </span>
                 </div>
-                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-border)]">
+                <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
                   <svg
                     className="w-5 h-5 text-purple-600"
                     fill="none"
@@ -587,7 +587,7 @@ const HowItWorksPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-white border-t border-[var(--color-border)]">
+        <section className="py-20 bg-white border-t border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
               Take Control of Your Vascular Health
@@ -600,7 +600,7 @@ const HowItWorksPage = () => {
               <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-4 text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1">
                 Start Screening Now
               </button>
-              <button className="rounded-lg border-2 border-[var(--color-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
+              <button className="rounded-lg border-2 border-[var(--color-medical-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
                 For Healthcare Providers
               </button>
             </div>

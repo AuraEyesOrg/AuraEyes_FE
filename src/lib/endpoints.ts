@@ -184,6 +184,71 @@ export const API_ENDPOINTS = {
     END: (sessionId: string) => `/consultation-sessions/${sessionId}/end`,
   },
 
+  // Appointment Slots - Patient Booking Flow
+  APPOINTMENT_SLOTS: {
+    LIST: '/appointment-slots',
+    BY_DOCTOR: (ophthalId: string) =>
+      `/appointment-slots?ophthalId=${ophthalId}`,
+    DETAIL: (slotId: string) => `/appointment-slots/${slotId}`,
+    UPDATE_STATUS: (slotId: string) => `/appointment-slots/${slotId}/status`,
+    GENERATE: '/appointment-slots/generate',
+    RESERVE: (slotId: string) => `/appointment-slots/${slotId}/reserve`,
+    CONFIRM: (slotId: string) => `/appointment-slots/${slotId}/confirm`,
+    RELEASE: (slotId: string) => `/appointment-slots/${slotId}/release`,
+    BLOCK: (slotId: string) => `/appointment-slots/${slotId}/block`,
+    UNBLOCK: (slotId: string) => `/appointment-slots/${slotId}/unblock`,
+  },
+
+  // Clinic booking flow (organisation visits)
+  CLINIC_BOOKING: {
+    AVAILABLE_SLOTS: (orgId: string) =>
+      `/organisations/${orgId}/available-slots`,
+    ORGANISATION_APPOINTMENTS: (orgId: string) =>
+      `/organisations/${orgId}/appointments`,
+    PATIENT_CLINIC_APPOINTMENTS: (patientId: string) =>
+      `/patients/${patientId}/clinic-appointments`,
+  },
+
+  CLINIC_APPOINTMENTS: {
+    CREATE: '/clinic-appointments',
+    CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
+    CHECK_IN: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/check-in`,
+    START: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/start`,
+    COMPLETE: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/complete`,
+    NO_SHOW: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/no-show`,
+  },
+
+  FEEDBACK: {
+    WEBSITE: '/feedback/website',
+    ORGANISATION: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}`,
+    OPHTHALMOLOGIST: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}`,
+    ORGANISATION_ITEMS: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}/items`,
+    OPHTHALMOLOGIST_ITEMS: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}/items`,
+    ORGANISATION_RATING: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}/rating`,
+    OPHTHALMOLOGIST_RATING: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}/rating`,
+  },
+
+  // Schedule Templates - Doctor's recurring schedules
+  SCHEDULE_TEMPLATES: {
+    LIST: '/schedule-templates',
+    BY_DOCTOR: (ophthalId: string) =>
+      `/schedule-templates?ophthalId=${ophthalId}`,
+    DETAIL: (templateId: string) => `/schedule-templates/${templateId}`,
+    CREATE: '/schedule-templates',
+    UPDATE: (templateId: string) => `/schedule-templates/${templateId}`,
+    DELETE: (templateId: string) => `/schedule-templates/${templateId}`,
+  },
+
   // Organisation features (from existing setup)
   ORGANISATION: {
     DASHBOARD: '/organisation/dashboard',
@@ -197,6 +262,20 @@ export const API_ENDPOINTS = {
   QUOTAS: {
     BALANCE: '/quotas/balance',
     BUY: '/quotas/buy',
+    DEDUCT: '/quotas/deduct',
+  },
+
+  // Notification Management
+  NOTIFICATIONS: {
+    /** GET - Paginated list of notifications */
+    LIST: '/notifications',
+    /** GET - Get unread notification count */
+    UNREAD_COUNT: '/notifications/unread-count',
+    /** POST - Mark a notification as read */
+    MARK_READ: (notificationId: string) =>
+      `/notifications/${notificationId}/mark-read`,
+    /** POST - Mark all notifications as read */
+    MARK_ALL_READ: '/notifications/mark-all-read',
   },
 } as const;
 

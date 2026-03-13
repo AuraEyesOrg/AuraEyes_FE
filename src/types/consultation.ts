@@ -41,6 +41,11 @@ export interface ConsultationSessionDto {
   ophthalmologistId: string | null;
   organisationId: string | null;
   aiScreeningId: string | null;
+  // Optional human-readable names coming from BE
+  patientName?: string | null;
+  ophthalmologistName?: string | null;
+  organisationName?: string | null;
+  ophthalmologistAvatarUrl?: string | null;
   type: ConsultationSessionType;
   typeName: string;
   status: SessionStatus;
@@ -64,6 +69,11 @@ export interface ConsultationSessionListDto {
   id: string;
   patientId: string;
   ophthalmologistId: string | null;
+  // Optional human-readable names coming from BE
+  patientName?: string | null;
+  ophthalmologistName?: string | null;
+  organisationName?: string | null;
+  ophthalmologistAvatarUrl?: string | null;
   type: ConsultationSessionType;
   typeName: string;
   status: SessionStatus;
@@ -72,6 +82,7 @@ export interface ConsultationSessionListDto {
   chatStatusName: string;
   price: number;
   appointmentTime: string | null;
+  meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
 }
@@ -100,7 +111,6 @@ export interface SubmitVerificationReportRequest {
 }
 
 export interface SendMessageRequest {
-  senderUserId: string;
   message: string;
 }
 

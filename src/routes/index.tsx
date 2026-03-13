@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import PrivateRoute from './private-route';
+import Spinner from '@/components/ui/spinner';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -48,6 +49,7 @@ const AppointmentsPage = lazy(
 const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
+const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
 const VerificationPage = lazy(
   () => import('@/features/patient/pages/verification')
 );
@@ -61,6 +63,18 @@ const RetinalAnalysisPage = lazy(
   () => import('@/features/patient/pages/retinal-analysis')
 );
 const ReviewPage = lazy(() => import('@/features/patient/pages/review'));
+const BookAppointmentPage = lazy(
+  () => import('@/features/patient/pages/book-appointment')
+);
+const BookingConfirmationPage = lazy(
+  () => import('@/features/patient/pages/booking-confirmation')
+);
+const HelpFeedbackPage = lazy(
+  () => import('@/features/patient/pages/help-feedback')
+);
+const NotificationsPage = lazy(
+  () => import('@/features/patient/pages/notifications')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -77,6 +91,9 @@ const OrganisationSettingsPage = lazy(
 );
 const OrganisationAnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
+);
+const OrganisationSlotManagementPage = lazy(
+  () => import('@/features/organisation/pages/slot-management')
 );
 
 // Ophthalmologist pages
@@ -106,6 +123,9 @@ const OphthalmologistScreeningReviewPage = lazy(
 );
 const OphthalmologistSchedulesPage = lazy(
   () => import('@/features/ophthalmologist/pages/schedules')
+);
+const OphthalmologistSlotManagementPage = lazy(
+  () => import('@/features/ophthalmologist/pages/slot-management')
 );
 const OphthalmologistContractPage = lazy(
   () => import('@/features/ophthalmologist/pages/contract')
@@ -183,7 +203,7 @@ const NetworkOrganisationPage = lazy(
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center">
     <div className="text-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+      <Spinner size={32} className="mx-auto" />
       <p className="mt-4 text-neutral">Loading...</p>
     </div>
   </div>
@@ -220,14 +240,23 @@ const Router = () => (
         <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
+        <Route path="/patient/notifications" element={<NotificationsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
+        <Route path="/patient/book" element={<BookAppointmentPage />} />
+        <Route
+          path="/patient/book/confirm"
+          element={<BookingConfirmationPage />}
+        />
         <Route path="/patient/profile" element={<ProfilePage />} />
         <Route path="/patient/settings" element={<SettingsPage />} />
         <Route path="/patient/clinics" element={<ClinicsPage />} />
+        <Route path="/patient/doctors" element={<DoctorsPage />} />
         <Route path="/patient/verification" element={<VerificationPage />} />
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/help-feedback" element={<HelpFeedbackPage />} />
         <Route
           path="/patient/wallet/payment-callback"
           element={<PaymentCallbackPage />}
@@ -250,6 +279,10 @@ const Router = () => (
         <Route
           path="/organisation/calendar"
           element={<OrganisationCalendarPage />}
+        />
+        <Route
+          path="/organisation/slots"
+          element={<OrganisationSlotManagementPage />}
         />
         <Route
           path="/organisation/settings"
@@ -330,6 +363,14 @@ const Router = () => (
           }
         />
         <Route
+          path="/ophthalmologist/slot-management"
+          element={
+            <PrivateRoute>
+              <OphthalmologistSlotManagementPage />
+            </PrivateRoute>
+          }
+        />
+         <Route
           path="/ophthalmologist/contract"
           element={
             <PrivateRoute>
