@@ -121,7 +121,10 @@ const LoginPage = () => {
           } else {
             navigate('/ophthalmologist/dashboard');
           }
-        } else if (roles.includes('Organization')) {
+        } else if (
+          roles.includes('OrgAdmin') ||
+          roles.includes('Organization')
+        ) {
           navigate('/organisation/dashboard');
         } else {
           navigate('/');
@@ -248,7 +251,10 @@ const LoginPage = () => {
           } else {
             navigate('/ophthalmologist/dashboard');
           }
-        } else if (roles.includes('Organization')) {
+        } else if (
+          roles.includes('OrgAdmin') ||
+          roles.includes('Organization')
+        ) {
           navigate('/organisation/dashboard');
         } else {
           navigate('/');

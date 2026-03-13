@@ -85,7 +85,7 @@ const TwoFactorVerifyPage = () => {
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/admin/dashboard');
+          navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
@@ -94,10 +94,13 @@ const TwoFactorVerifyPage = () => {
           } else {
             navigate('/ophthalmologist/dashboard');
           }
-        } else if (roles.includes('Organization')) {
+        } else if (
+          roles.includes('OrgAdmin') ||
+          roles.includes('Organization')
+        ) {
           navigate('/organisation/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       } else {
         setError(response.errors?.join(', ') || 'Verification failed');
