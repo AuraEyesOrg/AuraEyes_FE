@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Footer } from '../components/Footer';
@@ -390,7 +390,7 @@ const HomePage = () => {
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-bg-medical)]"
+      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
       {/* Floating Particles Background */}
       <div
@@ -479,7 +479,7 @@ const HomePage = () => {
                   <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
                     See How It Works
                   </button>
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-border)] bg-transparent px-6 text-base font-bold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-all hover:border-[var(--color-brand-primary)]">
+                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-transparent px-6 text-base font-bold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-all hover:border-[var(--color-brand-primary)]">
                     Read the Research
                   </button>
                 </div>
@@ -629,7 +629,7 @@ const HomePage = () => {
                   </div>
 
                   {/* Floating UI Card overlay - positioned below the eye */}
-                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[var(--color-border)]">
+                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[var(--color-medical-border)]">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">
                         Analysis Result
@@ -710,7 +710,7 @@ const HomePage = () => {
         {/* Feature Grid */}
         <section
           ref={featuresRef}
-          className="bg-[var(--color-bg-medical)] py-16 lg:py-24 border-y border-[var(--color-border)]"
+          className="bg-[var(--color-medical-bg)] py-16 lg:py-24 border-y border-[var(--color-medical-border)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="features-title mb-12 max-w-3xl">
@@ -729,7 +729,7 @@ const HomePage = () => {
             >
               {/* Feature 1 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-medical-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
@@ -759,7 +759,7 @@ const HomePage = () => {
 
               {/* Feature 2 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-medical-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
@@ -789,7 +789,7 @@ const HomePage = () => {
 
               {/* Feature 3 */}
               <div
-                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
+                className="feature-card group relative overflow-hidden rounded-xl border border-[var(--color-medical-border)] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[var(--color-brand-primary)]/10 hover:border-[var(--color-brand-primary)]/50 hover:-translate-y-2"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 <div className="feature-icon mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)] group-hover:text-white transition-all duration-300">
@@ -931,7 +931,7 @@ const HomePage = () => {
         {/* Mission Section */}
         <section
           ref={missionRef}
-          className="py-20 bg-[var(--color-bg-medical)] border-t border-[var(--color-border)]"
+          className="py-20 bg-[var(--color-medical-bg)] border-t border-[var(--color-medical-border)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div
@@ -1026,7 +1026,7 @@ const HomePage = () => {
         {/* Stats / Trust Section */}
         <section ref={statsRef} className="py-16 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[var(--color-border)]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[var(--color-medical-border)]">
               <div className="stat-item p-4">
                 <div
                   className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"

@@ -284,7 +284,7 @@ const CompliancePage = () => {
   return (
     <div
       ref={containerRef}
-      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-bg-medical)]"
+      className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
       <Header />
       <main className="flex-1 relative z-10">
@@ -333,7 +333,7 @@ const CompliancePage = () => {
               </a>
               <a
                 href="/contact"
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
               >
                 Request Security Report
               </a>
@@ -499,7 +499,7 @@ const CompliancePage = () => {
               </a>
               <a
                 href="/ethics"
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
+                className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
               >
                 View Privacy Policy
               </a>

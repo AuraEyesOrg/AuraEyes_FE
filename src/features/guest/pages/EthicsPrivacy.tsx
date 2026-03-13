@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -309,7 +309,7 @@ const EthicsPrivacyPage = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[var(--color-bg-medical)]"
+      className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
 
@@ -351,7 +351,7 @@ const EthicsPrivacyPage = () => {
                   <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors">
                     Read Our Principles
                   </button>
-                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-medical)] transition-colors">
+                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-medical-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-medical-bg)] transition-colors">
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -372,8 +372,8 @@ const EthicsPrivacyPage = () => {
 
               {/* Right Image */}
               <div className="hero-image mt-12 lg:mt-0 lg:col-span-6 flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[var(--color-border)]">
-                  <div className="aspect-[4/3] bg-[var(--color-bg-medical)]">
+                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[var(--color-medical-border)]">
+                  <div className="aspect-[4/3] bg-[var(--color-medical-bg)]">
                     <img
                       src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=450&fit=crop"
                       alt="Secure digital data network"
@@ -413,7 +413,7 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Compliance Banner */}
-        <section className="compliance-section bg-white border-y border-[var(--color-border)] py-8">
+        <section className="compliance-section bg-white border-y border-[var(--color-medical-border)] py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-6">
               Trusted by & Compliant With
@@ -447,7 +447,7 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Three Pillars Section */}
-        <section className="pillars-section py-20 bg-[var(--color-bg-medical)]">
+        <section className="pillars-section py-20 bg-[var(--color-medical-bg)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
@@ -464,7 +464,7 @@ const EthicsPrivacyPage = () => {
               {pillars.map((pillar, index) => (
                 <div
                   key={index}
-                  className="pillar-card group bg-white rounded-2xl p-8 border border-[var(--color-border)] shadow-sm hover:shadow-md transition-shadow"
+                  className="pillar-card group bg-white rounded-2xl p-8 border border-[var(--color-medical-border)] shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="w-14 h-14 bg-[var(--color-brand-primary)]/10 rounded-xl flex items-center justify-center mb-6 text-[var(--color-brand-primary)] group-hover:bg-[var(--color-brand-primary)]/20 transition-colors">
                     {pillar.icon}
@@ -482,7 +482,7 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* Data Journey Section */}
-        <section className="journey-section py-20 bg-white border-t border-[var(--color-border)]">
+        <section className="journey-section py-20 bg-white border-t border-[var(--color-medical-border)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row gap-12 items-start">
               {/* Sticky Left Side */}
@@ -518,7 +518,7 @@ const EthicsPrivacyPage = () => {
 
               {/* Timeline Right Side */}
               <div className="md:w-2/3 w-full">
-                <div className="relative pl-8 border-l-2 border-[var(--color-border)] space-y-10">
+                <div className="relative pl-8 border-l-2 border-[var(--color-medical-border)] space-y-10">
                   {/* Animated line fill */}
                   <div className="timeline-line-fill absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--color-brand-primary)] -ml-[1px]" />
 
@@ -527,8 +527,8 @@ const EthicsPrivacyPage = () => {
                       {/* Dot */}
                       <span className="absolute -left-[41px] top-0 h-5 w-5 rounded-full border-4 border-white bg-[var(--color-brand-primary)]" />
 
-                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[var(--color-bg-medical)] p-6 rounded-xl">
-                        <div className="bg-white p-3 rounded-lg h-fit shadow-sm border border-[var(--color-border)] text-[var(--color-brand-primary)]">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 bg-[var(--color-medical-bg)] p-6 rounded-xl">
+                        <div className="bg-white p-3 rounded-lg h-fit shadow-sm border border-[var(--color-medical-border)] text-[var(--color-brand-primary)]">
                           {step.icon}
                         </div>
                         <div>
@@ -549,7 +549,7 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="faq-section py-20 bg-[var(--color-bg-medical)]">
+        <section className="faq-section py-20 bg-[var(--color-medical-bg)]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
@@ -567,7 +567,7 @@ const EthicsPrivacyPage = () => {
                   className={`faq-item bg-white rounded-lg border transition-all ${
                     openFaq === index
                       ? 'border-[var(--color-brand-primary)]/30 ring-2 ring-[var(--color-brand-primary)]/10'
-                      : 'border-[var(--color-border)]'
+                      : 'border-[var(--color-medical-border)]'
                   }`}
                 >
                   <button
@@ -598,7 +598,7 @@ const EthicsPrivacyPage = () => {
                       openFaq === index ? 'max-h-96' : 'max-h-0'
                     }`}
                   >
-                    <div className="px-6 pb-6 text-[var(--color-text-muted)] leading-relaxed border-t border-[var(--color-border)] pt-4">
+                    <div className="px-6 pb-6 text-[var(--color-text-muted)] leading-relaxed border-t border-[var(--color-medical-border)] pt-4">
                       {faq.answer}
                     </div>
                   </div>
@@ -609,7 +609,7 @@ const EthicsPrivacyPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-white border-t border-[var(--color-border)]">
+        <section className="py-16 bg-white border-t border-[var(--color-medical-border)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-[var(--color-brand-dark)] rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden">
               {/* Subtle dot pattern */}

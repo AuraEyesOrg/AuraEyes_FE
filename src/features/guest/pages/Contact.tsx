@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Header } from '../components/Header';
@@ -173,7 +173,7 @@ const ContactPage = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[var(--color-bg-medical)]"
+      className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
 
@@ -242,7 +242,7 @@ const ContactPage = () => {
         </section>
 
         {/* Partner Types Section */}
-        <section className="partners-section py-20 bg-white border-b border-[var(--color-border)]">
+        <section className="partners-section py-20 bg-white border-b border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
@@ -261,7 +261,7 @@ const ContactPage = () => {
                   className={`partner-card text-left p-8 rounded-2xl border-2 transition-all duration-300 ${
                     userType === partner.type
                       ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 shadow-lg'
-                      : 'border-[var(--color-border)] bg-white hover:border-[var(--color-brand-primary)]/50 hover:shadow-md'
+                      : 'border-[var(--color-medical-border)] bg-white hover:border-[var(--color-brand-primary)]/50 hover:shadow-md'
                   }`}
                 >
                   <div
@@ -340,7 +340,7 @@ const ContactPage = () => {
         {/* Contact Form Section */}
         <section
           id="contact-form"
-          className="form-section py-20 bg-[var(--color-bg-medical)]"
+          className="form-section py-20 bg-[var(--color-medical-bg)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="grid lg:grid-cols-2 gap-16">
@@ -349,19 +349,19 @@ const ContactPage = () => {
                 <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
                   Get Started
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-6">
+                <h2 className="text-3xl sm:text-4xl font-bold text-heading mb-6">
                   {userType === 'specialist'
                     ? 'Register as a Specialist'
                     : 'Request Enterprise Demo'}
                 </h2>
-                <p className="text-lg text-[var(--color-text-muted)] mb-8 leading-relaxed">
+                <p className="text-lg text-body mb-8 leading-relaxed">
                   {userType === 'specialist'
                     ? 'Fill out the form to get API access, training resources, and connect with our clinical support team.'
                     : 'Tell us about your organization and screening needs. Our partnership team will reach out within 24 hours.'}
                 </p>
 
                 {/* Contact Info */}
-                <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-border)]">
+                <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-medical-border)]">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
                       <svg
@@ -451,7 +451,7 @@ const ContactPage = () => {
               {/* Form Side */}
               <form
                 onSubmit={handleSubmit}
-                className="contact-form bg-white p-8 rounded-2xl border border-[var(--color-border)] shadow-sm"
+                className="contact-form bg-white p-8 rounded-2xl border border-[var(--color-medical-border)] shadow-sm"
               >
                 <div className="space-y-6">
                   {/* Email */}
@@ -465,7 +465,7 @@ const ContactPage = () => {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -482,7 +482,7 @@ const ContactPage = () => {
                         required
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                     <div>
@@ -495,7 +495,7 @@ const ContactPage = () => {
                         required
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                   </div>
@@ -513,7 +513,7 @@ const ContactPage = () => {
                         required
                         value={formData.organizationName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                       />
                     </div>
                   )}
@@ -529,7 +529,7 @@ const ContactPage = () => {
                       required
                       value={formData.role}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
                     >
                       <option value="">Select an option</option>
                       {userType === 'specialist' ? (
@@ -568,7 +568,7 @@ const ContactPage = () => {
                         name="estimatedVolume"
                         value={formData.estimatedVolume}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
                       >
                         <option value="">Select range</option>
                         <option value="100-500">100 - 500</option>
@@ -589,7 +589,7 @@ const ContactPage = () => {
                       rows={4}
                       value={formData.message}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
+                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
                       placeholder="Tell us about your needs or questions..."
                     />
                   </div>
@@ -602,7 +602,7 @@ const ContactPage = () => {
                       id="terms"
                       checked={formData.termsAgreed}
                       onChange={handleInputChange}
-                      className="mt-1 w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-brand-primary)] focus:ring-[var(--color-brand-primary)]/20"
+                      className="mt-1 w-4 h-4 rounded border-[var(--color-medical-border)] text-[var(--color-brand-primary)] focus:ring-[var(--color-brand-primary)]/20"
                       required
                     />
                     <label
@@ -643,7 +643,7 @@ const ContactPage = () => {
         </section>
 
         {/* Impact Section */}
-        <section className="impact-section py-16 bg-white border-t border-[var(--color-border)]">
+        <section className="impact-section py-16 bg-white border-t border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
               <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
@@ -670,7 +670,7 @@ const ContactPage = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 bg-[var(--color-bg-medical)]">
+        <section className="py-20 bg-[var(--color-medical-bg)]">
           <div className="mx-auto max-w-3xl px-6 lg:px-10">
             <div className="text-center mb-12">
               <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
@@ -691,7 +691,7 @@ const ContactPage = () => {
               ].map((faq, index) => (
                 <details
                   key={index}
-                  className="group bg-white rounded-xl border border-[var(--color-border)] overflow-hidden"
+                  className="group bg-white rounded-xl border border-[var(--color-medical-border)] overflow-hidden"
                 >
                   <summary className="flex items-center justify-between p-6 cursor-pointer text-[var(--color-brand-dark)] font-semibold hover:bg-gray-50 transition-colors">
                     {faq.q}
