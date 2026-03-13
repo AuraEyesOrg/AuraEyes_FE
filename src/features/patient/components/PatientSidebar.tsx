@@ -10,6 +10,7 @@ import {
   Shield,
   MessageCircle,
   Milestone,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -25,6 +26,11 @@ const navItems = [
   { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
   { icon: MessageCircle, label: 'Chat', path: '/patient/chat', badge: true },
   { icon: Wallet, label: 'Wallet', path: '/patient/wallet' },
+  {
+    icon: MessageSquareHeart,
+    label: 'Help & Feedback',
+    path: '/patient/help-feedback',
+  },
   { icon: Settings, label: 'Settings', path: '/patient/settings' },
 ];
 
