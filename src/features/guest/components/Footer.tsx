@@ -9,7 +9,7 @@ export const Footer = () => {
           {/* Brand */}
           <div>
             <div className="mb-4">
-              <AuraLogo size="sm" to="/" />
+              <AuraLogo variant="dark" size="sm" to="/" />
             </div>
             <p className="text-sm text-[#718096]">
               Advancing retinal health through ethical AI.

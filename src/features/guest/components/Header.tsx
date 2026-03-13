@@ -23,7 +23,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <AuraLogo size="md" to="/" />
+        <AuraLogo variant="dark" size="md" to="/" />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
