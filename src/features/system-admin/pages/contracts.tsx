@@ -188,14 +188,25 @@ function ContractDetailDialog({
               {contract.scannedDocumentUrl && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Ảnh hợp đồng đã ký
+                    Hợp đồng đã ký
                   </p>
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <img
-                      src={contract.scannedDocumentUrl}
-                      alt="Scanned contract"
-                      className="w-full max-h-[400px] object-contain bg-slate-50"
-                    />
+                    {/\.(jpe?g|png|webp|gif)(\?|$)/i.test(
+                      contract.scannedDocumentUrl
+                    ) ? (
+                      <img
+                        src={contract.scannedDocumentUrl}
+                        alt="Scanned contract"
+                        className="w-full max-h-[400px] object-contain bg-slate-50"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-32 bg-slate-50 dark:bg-slate-800 gap-3">
+                        <FileText className="w-10 h-10 text-slate-400" />
+                        <p className="text-sm text-slate-500">
+                          File PDF — nhấn liên kết bên dưới để mở
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <a
                     href={contract.scannedDocumentUrl}
@@ -204,7 +215,7 @@ function ContractDetailDialog({
                     className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Mở ảnh gốc trong tab mới
+                    Mở file gốc trong tab mới
                   </a>
                 </div>
               )}
