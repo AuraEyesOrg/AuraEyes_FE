@@ -18,6 +18,8 @@ on:
       - '.github/workflows/fe-cd.yml'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - 'vite.config.ts' # Thêm cái này
+      - 'index.html' # Thêm cái này nếu có sửa
 
 jobs:
   copy-and-deploy:
