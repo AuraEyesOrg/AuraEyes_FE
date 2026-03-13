@@ -25,47 +25,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Tùy chọn này đảm bảo file LFS thực tế được tải về
           lfs: true
+
       - name: Deploy Source to Production Repo
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          # Git config
-          git config --global user.name "QuocAn108"
-          git config --global user.email "anhoang800140@gmail.com"
-
-          # SSH setup
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf "%s\n" "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-          # Clone production repo
-          git clone git@github.com:QuocAn108/AuraEyes-Host.git production-repo
+          git config --global user.name "QuocAn108"
+          git config --global user.email "anhoang800140@gmail.com"
 
+          git clone git@github.com:QuocAn108/AuraEyes-Host.git production-repo
           cd production-repo
 
-          # Ensure we're using SSH for push
-          git remote set-url origin git@github.com:QuocAn108/AuraEyes-Host.git
-
-          # Reset to latest main branch from origin
           git fetch origin master
+          git checkout master
           git reset --hard origin/master
-
           cd ..
 
-          # Rsync all files into the production-repo (except .github and the repo dir itself)
-          rsync -avc --delete --exclude 'production-repo' --exclude '.git' --exclude '.github' ./ production-repo/
+          rsync -avc --delete \
+            --exclude 'production-repo' \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            ./ production-repo/
 
           cd production-repo
-
-          # Commit and push changes only if there are any
           git add .
 
           if git diff --staged --quiet; then
+            echo "No changes to deploy, but triggering CD anyway."
             git commit --allow-empty -m "Trigger CD"
           else
             git commit -m "Deploy source from ${{ github.ref_name }} branch"
