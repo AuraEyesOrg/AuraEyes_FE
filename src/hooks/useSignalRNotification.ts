@@ -149,17 +149,6 @@ export function useSignalRNotification(): {
     } catch (error) {
       console.error('[SignalR] Connection failed:', error);
       setConnectionStatus('error');
-
-      // Retry with exponential backoff
-      const retryDelay =
-        RECONNECT_DELAYS[
-          Math.min(reconnectAttemptRef.current, RECONNECT_DELAYS.length - 1)
-        ];
-      reconnectAttemptRef.current++;
-
-      setTimeout(() => {
-        startConnection();
-      }, retryDelay);
     }
   }, [isAuthenticated, getAccessToken, buildConnection, setConnectionStatus]);
 

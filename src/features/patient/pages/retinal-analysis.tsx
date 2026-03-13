@@ -396,16 +396,13 @@ export default function RetinalAnalysis() {
         queryClient.invalidateQueries({ queryKey: quotaKeys.all });
       } catch (quotaErr) {
         const err = quotaErr as { response?: { status?: number } };
-        if (err.response?.status === 402) {
-          setErrorMessage(
-            'Bạn đã hết lượt AI. Vui lòng mua thêm lượt để tiếp tục.'
-          );
-          setIsFallback(true);
-          setIsAnalyzing(false);
-          return;
-        }
-        // Other quota errors: log but don't block analysis
-        console.warn('Quota deduct failed (non-blocking):', quotaErr);
+        const message =
+          err.response?.status === 402
+            ? 'Bạn đã hết lượt AI. Vui lòng mua thêm lượt để tiếp tục.'
+            : 'Không thể trừ lượt AI. Vui lòng thử lại.';
+        setErrorMessage(message);
+        setIsAnalyzing(false);
+        return;
       }
 
       // Get the natural image dimensions for accurate coordinate mapping

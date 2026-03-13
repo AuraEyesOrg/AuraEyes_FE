@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, X, Eye, ExternalLink } from 'lucide-react';
+import {
+  Bell,
+  X,
+  Eye,
+  ExternalLink,
+  Stethoscope,
+  FileText,
+  MessageCircle,
+  Calendar,
+  Wallet,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
 import { NotificationService } from '@/lib/notificationService';
@@ -220,6 +230,34 @@ export default function NotificationDropdown({
 }
 
 /**
+ * Maps a notification icon name string (from getNotificationIcon) to a Lucide icon element
+ */
+function NotificationIcon({
+  name,
+  size = 16,
+}: {
+  name: string;
+  size?: number;
+}) {
+  switch (name) {
+    case 'eye':
+      return <Eye size={size} />;
+    case 'stethoscope':
+      return <Stethoscope size={size} />;
+    case 'file-text':
+      return <FileText size={size} />;
+    case 'message-circle':
+      return <MessageCircle size={size} />;
+    case 'calendar':
+      return <Calendar size={size} />;
+    case 'wallet':
+      return <Wallet size={size} />;
+    default:
+      return <Bell size={size} />;
+  }
+}
+
+/**
  * Single notification item component
  */
 interface NotificationItemProps {
@@ -244,7 +282,7 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
         <div
           className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center ${colorClass}`}
         >
-          <Bell size={16} />
+          <NotificationIcon name={iconName} size={16} />
         </div>
 
         {/* Content */}

@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
+import {
+  Bell,
+  Search,
+  Filter,
+  CheckCheck,
+  Eye,
+  EyeOff,
+  Stethoscope,
+  FileText,
+  MessageCircle,
+  Calendar,
+  Wallet,
+} from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
@@ -322,6 +334,34 @@ export default function NotificationsPage() {
 }
 
 /**
+ * Maps a notification icon name string (from getNotificationIcon) to a Lucide icon element
+ */
+function NotificationIcon({
+  name,
+  size = 20,
+}: {
+  name: string;
+  size?: number;
+}) {
+  switch (name) {
+    case 'eye':
+      return <Eye size={size} />;
+    case 'stethoscope':
+      return <Stethoscope size={size} />;
+    case 'file-text':
+      return <FileText size={size} />;
+    case 'message-circle':
+      return <MessageCircle size={size} />;
+    case 'calendar':
+      return <Calendar size={size} />;
+    case 'wallet':
+      return <Wallet size={size} />;
+    default:
+      return <Bell size={size} />;
+  }
+}
+
+/**
  * Individual notification list item component
  */
 interface NotificationListItemProps {
@@ -351,7 +391,7 @@ function NotificationListItem({
                         border-2 ${!notification.isRead ? 'border-blue-200' : 'border-gray-200'} 
                         flex items-center justify-center ${colorClass}`}
         >
-          <Bell size={20} />
+          <NotificationIcon name={iconName} size={20} />
         </div>
 
         {/* Content */}

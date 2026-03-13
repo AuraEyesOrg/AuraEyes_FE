@@ -45,14 +45,3 @@ export class NotificationService {
     await api.post(API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ);
   }
 }
-
-/**
- * React Query hooks for notification operations
- */
-export const notificationKeys = {
-  all: ['notifications'] as const,
-  lists: () => [...notificationKeys.all, 'list'] as const,
-  list: (pageNumber: number, pageSize: number) =>
-    [...notificationKeys.lists(), pageNumber, pageSize] as const,
-  unreadCount: () => [...notificationKeys.all, 'unread-count'] as const,
-};

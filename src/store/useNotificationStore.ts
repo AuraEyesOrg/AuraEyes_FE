@@ -28,7 +28,10 @@ interface NotificationState extends Record<string, unknown> {
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
 
   /** Actions */
-  setNotifications: (notifications: Notification[]) => void;
+  setNotifications: (
+    notifications: Notification[],
+    unreadCount?: number
+  ) => void;
   addNotification: (notification: SignalRNotification) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
@@ -59,11 +62,10 @@ const useNotificationStore = create<NotificationState>()(
       /**
        * Set notifications list (from API fetch)
        */
-      setNotifications: (notifications) => {
-        const unreadCount = notifications.filter((n) => !n.isRead).length;
+      setNotifications: (notifications, unreadCount) => {
         set({
           notifications: notifications.slice(0, MAX_RECENT_NOTIFICATIONS),
-          unreadCount,
+          ...(unreadCount !== undefined ? { unreadCount } : {}),
         });
       },
 
