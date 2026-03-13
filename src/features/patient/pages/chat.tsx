@@ -21,7 +21,7 @@ import {
   Send,
   Paperclip,
   Image as ImageIcon,
-  MoreVertical,
+  MoreHorizontal,
   Phone,
   Video,
   Search,
@@ -73,6 +73,12 @@ type ChatStatusEntry = {
   icon: typeof Lock;
   color: string;
   description: string;
+};
+
+type MeetingAccessState = {
+  canJoin: boolean;
+  buttonLabel: string;
+  helperText: string;
 };
 
 const chatStatusConfig: Record<number, ChatStatusEntry> = {
@@ -170,6 +176,61 @@ const formatRelativeActivity = (value: string) => {
   return `${diffDays}d ago`;
 };
 
+const PREJOIN_OPEN_MINUTES = 15;
+const MEETING_ACTIVE_MINUTES = 60;
+
+const formatCountdown = (seconds: number) => {
+  const safeSeconds = Math.max(0, seconds);
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+};
+
+const getMeetingAccessState = (
+  appointmentTime: string | null,
+  nowMs: number
+): MeetingAccessState => {
+  if (!appointmentTime) {
+    return {
+      canJoin: true,
+      buttonLabel: 'Join Meeting',
+      helperText: 'Meeting link is ready.',
+    };
+  }
+
+  const appointmentMs = new Date(appointmentTime).getTime();
+  const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
+  const secondsUntilStart = Math.ceil((appointmentMs - nowMs) / 1000);
+
+  if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
+    return {
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: `Join mở sau ${formatCountdown(secondsUntilStart)}`,
+    };
+  }
+
+  if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
+    return {
+      canJoin: true,
+      buttonLabel: 'Join Meeting',
+      helperText: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
+    };
+  }
+
+  return {
+    canJoin: false,
+    buttonLabel: 'Meeting Ended',
+    helperText: 'Cuộc hẹn đã qua thời gian tham gia',
+  };
+};
+
 const getInitials = (value: string) =>
   value
     .trim()
@@ -215,14 +276,14 @@ const AvatarBadge = ({
       <img
         src={avatarUrl}
         alt={name}
-        className={`${sizeClass} rounded-2xl object-cover shadow-sm ring-1 ring-slate-200/70`}
+        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-cyan-500 to-sky-500 font-semibold text-white shadow-sm`}
+      className={`${sizeClass} flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-cyan-500 to-sky-500 font-semibold text-white shadow-sm`}
       aria-label={name}
       title={name}
     >
@@ -250,6 +311,8 @@ export default function ChatPage() {
   const [pendingScan, setPendingScan] = useState<SharedScanData | null>(
     sharedScan
   );
+  const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
@@ -326,6 +389,16 @@ export default function ChatPage() {
   useEffect(() => {
     if (pendingScan) scrollToBottom();
   }, [pendingScan, scrollToBottom]);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
 
   const handleSendMessage = () => {
     if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
@@ -412,6 +485,10 @@ export default function ChatPage() {
     currentSession?.ophthalmologistName ?? 'Assigned ophthalmologist';
   const patientName =
     user?.fullName ?? currentSession?.patientName ?? 'Patient';
+  const meetingAccessState = getMeetingAccessState(
+    currentSession?.appointmentTime ?? null,
+    currentTimeMs
+  );
 
   if (sessionsLoading) {
     return (
@@ -660,30 +737,61 @@ export default function ChatPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    {currentSession.meetingLink ? (
-                      <a
-                        href={currentSession.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
-                      >
-                        <Video className="h-4 w-4" />
-                        Join Meeting
-                      </a>
-                    ) : (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
-                      >
-                        <Video className="h-4 w-4" />
-                        Link Pending
-                      </button>
-                    )}
+                    <div className="flex flex-col items-start gap-1 sm:items-end">
+                      {currentSession.meetingLink ? (
+                        meetingAccessState.canJoin ? (
+                          <a
+                            href={currentSession.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                          >
+                            <Video className="h-4 w-4" />
+                            {meetingAccessState.buttonLabel}
+                          </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                          >
+                            <Video className="h-4 w-4" />
+                            {meetingAccessState.buttonLabel}
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          disabled
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                        >
+                          <Video className="h-4 w-4" />
+                          Link Pending
+                        </button>
+                      )}
+                      {currentSession.meetingLink && (
+                        <p className="text-xs font-medium text-slate-500">
+                          {meetingAccessState.helperText}
+                        </p>
+                      )}
+                    </div>
                     <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600">
                       <Phone className="h-4 w-4" />
                     </button>
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600">
-                      <MoreVertical className="h-4 w-4" />
+                    <button
+                      onClick={() =>
+                        setIsSessionOverviewOpen((previous) => !previous)
+                      }
+                      aria-label={
+                        isSessionOverviewOpen
+                          ? 'Hide session overview'
+                          : 'Show session overview'
+                      }
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600"
+                    >
+                      {isSessionOverviewOpen ? (
+                        <X className="h-4 w-4" />
+                      ) : (
+                        <MoreHorizontal className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1012,7 +1120,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          {currentSession && (
+          {currentSession && isSessionOverviewOpen && (
             <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col">
               <div className="border-b border-slate-200/80 px-6 py-6">
                 <div className="flex items-center gap-4">
