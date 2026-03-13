@@ -10,6 +10,7 @@ import type {
   OrganisationAvailableSlotDto,
   OrganisationSummaryDto,
 } from '../types/clinic-booking.types';
+import type { AxiosError } from 'axios';
 
 interface PatientSearchOrganisationItem {
   id: string;
@@ -116,9 +117,21 @@ export const getPatientClinicAppointments = async (
       API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId)
     );
     return response.data;
-  } catch {
-    // Keep clinic page usable while clinic-appointments endpoint is unavailable.
-    return [];
+  } catch (error) {
+    const axiosError = error as AxiosError | undefined;
+    const status = axiosError?.response?.status;
+    if (status === 404 || status === 503) {
+      console.warn(
+        'getPatientClinicAppointments: falling back to empty list due to API unavailability',
+        { patientId, status }
+      );
+      return [];
+    }
+    console.error(
+      'getPatientClinicAppointments: unexpected error while fetching appointments',
+      error
+    );
+    throw error;
   }
 };
 

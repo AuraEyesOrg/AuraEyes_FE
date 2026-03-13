@@ -49,7 +49,7 @@ export default function DoctorsPage() {
   const [selectedDoctor, setSelectedDoctor] =
     useState<OphthalmologistSearchItem | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['patient-ophthalmologists', searchTerm],
     queryFn: () =>
       searchOphthalmologistsForPatient({
@@ -61,15 +61,11 @@ export default function DoctorsPage() {
 
   const doctors: OphthalmologistSearchItem[] = data?.items ?? [];
 
-  const {
-    data: slotsData,
-    isLoading: slotsLoading,
-    isError: slotsError,
-  } = useQuery({
+  const { data: slotsData, isLoading: slotsLoading } = useQuery({
     queryKey: ['patient-available-slots', selectedDoctor?.id],
     queryFn: () =>
       searchAvailableSlotsForPatient({
-        ophthalmologistId: selectedDoctor!.id,
+        ophthalmologistId: selectedDoctor?.id,
         pageNumber: 1,
         pageSize: 30,
       }),
@@ -241,14 +237,6 @@ export default function DoctorsPage() {
                   <Spinner size={32} className="mb-3" />
                   <p className="text-sm text-(--text-secondary)">
                     Loading available slots...
-                  </p>
-                </div>
-              )}
-
-              {slotsError && !slotsLoading && (
-                <div className="text-center py-12">
-                  <p className="text-sm text-red-500">
-                    Failed to load slots. Please try again.
                   </p>
                 </div>
               )}

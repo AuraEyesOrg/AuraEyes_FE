@@ -206,13 +206,14 @@ const getMeetingAccessState = (
 
   const appointmentMs = new Date(appointmentTime).getTime();
   const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
-  const secondsUntilStart = Math.ceil((appointmentMs - nowMs) / 1000);
+  const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
+  const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
 
   if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
     return {
       canJoin: false,
       buttonLabel: 'Join Locked',
-      helperText: `Join mở sau ${formatCountdown(secondsUntilStart)}`,
+      helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
     };
   }
 
@@ -317,11 +318,18 @@ export default function ChatPage() {
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const { user } = useAuthStore();
+  const patientId = user?.roleId;
 
   const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions({
-      pageSize: 50,
-    });
+    useConsultationSessions(
+      {
+        patientId: patientId ?? undefined,
+        pageSize: 50,
+      },
+      {
+        enabled: !!patientId,
+      }
+    );
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -391,6 +399,10 @@ export default function ChatPage() {
   }, [pendingScan, scrollToBottom]);
 
   useEffect(() => {
+    if (!selectedSession) {
+      return;
+    }
+
     const timerId = window.setInterval(() => {
       setCurrentTimeMs(Date.now());
     }, 1000);
@@ -398,7 +410,7 @@ export default function ChatPage() {
     return () => {
       window.clearInterval(timerId);
     };
-  }, []);
+  }, [selectedSession?.id]);
 
   const handleSendMessage = () => {
     if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
@@ -832,7 +844,7 @@ export default function ChatPage() {
                   <div className="space-y-4">
                     {messageList.map((message, index) => {
                       const isPatientMessage =
-                        message.senderUserId === currentSession.patientId;
+                        message.senderUserId === user?.id;
                       const attachmentMeta = extractScanAttachment(
                         message.message
                       );

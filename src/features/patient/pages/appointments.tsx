@@ -62,16 +62,16 @@ const AppointmentsPage = () => {
 
   const { data: sessionsData, isLoading } = useConsultationSessions(
     {
+      patientId: patientId ?? undefined,
       pageSize: 50,
     },
     {
-      enabled: !!currentUserId,
+      enabled: !!patientId,
     }
   );
 
   const { data: clinicAppointmentsData } = usePatientClinicAppointments(
-    patientId!,
-    !!patientId
+    patientId ?? ''
   );
 
   const cancelMutation = useCancelSession();
