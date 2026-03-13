@@ -19,3 +19,12 @@ export { default as HighlightCard } from './highlight-card';
 // Quota Components
 export { QuotaBadge } from './QuotaBadge';
 export { TopUpQuotaModal } from './TopUpQuotaModal';
+
+// Feedback Components
+export {
+  FeedbackModal,
+  FeedbackSubmittedBadge,
+  FeedbackSuccessState,
+  StarRatingInput,
+  WebsiteFeedbackForm,
+} from './feedback';
