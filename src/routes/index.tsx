@@ -71,6 +71,9 @@ const BookingConfirmationPage = lazy(
 const HelpFeedbackPage = lazy(
   () => import('@/features/patient/pages/help-feedback')
 );
+const NotificationsPage = lazy(
+  () => import('@/features/patient/pages/notifications')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -227,6 +230,8 @@ const Router = () => (
         <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
+        <Route path="/patient/notifications" element={<NotificationsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
         <Route path="/patient/book" element={<BookAppointmentPage />} />
         <Route

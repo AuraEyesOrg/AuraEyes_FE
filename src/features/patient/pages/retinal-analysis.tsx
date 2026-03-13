@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
+import { quotaApi } from '../api/quota.api';
+import { quotaKeys } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -264,6 +267,7 @@ function friendlyDescription(anomaly: Anomaly): string {
 export default function RetinalAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const routeState = location.state as LocationState | null;
 
   const [toggles, setToggles] = useState<ToggleState>({
@@ -381,6 +385,22 @@ export default function RetinalAnalysis() {
       const imageUrl = currentImage?.url;
       if (!imageUrl) {
         setErrorMessage('No image available for analysis');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Deduct 1 quota credit before running AI analysis
+      try {
+        await quotaApi.deduct();
+        // Invalidate quota cache so QuotaBadge reflects the deduction
+        queryClient.invalidateQueries({ queryKey: quotaKeys.all });
+      } catch (quotaErr) {
+        const err = quotaErr as { response?: { status?: number } };
+        const message =
+          err.response?.status === 402
+            ? 'Bạn đã hết lượt AI. Vui lòng mua thêm lượt để tiếp tục.'
+            : 'Không thể trừ lượt AI. Vui lòng thử lại.';
+        setErrorMessage(message);
         setIsAnalyzing(false);
         return;
       }

@@ -30,4 +30,9 @@ export const quotaApi = {
     );
     return response.data.data;
   },
+
+  /** POST /api/quota/deduct - Deduct 1 AI screening credit before analysis */
+  async deduct(): Promise<void> {
+    await api.post(API_ENDPOINTS.QUOTAS.DEDUCT);
+  },
 };
