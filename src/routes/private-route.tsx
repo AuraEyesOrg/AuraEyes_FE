@@ -22,6 +22,19 @@ const PrivateRoute: React.FC<Props> = ({ children }) => {
     return <Navigate to="/pending-approval" replace />;
   }
 
+  // Redirect ophthalmologists with unsigned contract to the contract page.
+  // Use !== false (not strict true) so that null/undefined isVerified also triggers
+  // the contract gate — prevents edge-case bypass when the ophthalmologist row
+  // doesn't exist yet.
+  const needsContract =
+    isOphthalmologist &&
+    user?.isVerified !== false &&
+    user?.contractStatus !== 'Active';
+
+  if (needsContract && location.pathname !== '/ophthalmologist/contract') {
+    return <Navigate to="/ophthalmologist/contract" replace />;
+  }
+
   return children;
 };
 

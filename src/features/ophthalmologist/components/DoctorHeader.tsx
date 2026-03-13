@@ -1,4 +1,4 @@
-import { Search, Moon, Sun, User } from 'lucide-react';
+import { Search, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
 import { NotificationDropdown } from '@/components/ui/notification';
@@ -49,16 +49,6 @@ export default function DoctorHeader({
 
           {/* Notifications */}
           <NotificationDropdown />
-
-          {/* User Profile */}
-          <button className="flex items-center gap-2 header-action-btn">
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-teal-500 flex items-center justify-center">
-              <User size={18} className="text-white" />
-            </div>
-            <span className="text-sm font-medium text-heading hidden md:block">
-              {displayInitial}
-            </span>
-          </button>
         </div>
       </div>
     </header>

@@ -154,6 +154,10 @@ export const API_ENDPOINTS = {
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',
+    CONTRACT: {
+      MY_CONTRACT: '/ophthalmologists/my-contract',
+      UPLOAD: '/ophthalmologists/my-contract/upload',
+    },
     SCHEDULES: {
       LIST: (ophthalmologistId: string) =>
         `/ophthalmologists/${ophthalmologistId}/schedules`,

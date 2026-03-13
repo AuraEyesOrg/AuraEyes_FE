@@ -9,6 +9,7 @@ import {
   LogOut,
   Settings,
   MessagesSquare,
+  FileText,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -47,6 +48,7 @@ const navItems = [
     hasBadge: true,
   },
   { label: 'Analytics', icon: BarChart3, path: '/ophthalmologist/analytics' },
+  { label: 'Contract', icon: FileText, path: '/ophthalmologist/contract' },
   { label: 'Settings', icon: Settings, path: '/ophthalmologist/settings' },
 ];
 
@@ -57,6 +59,12 @@ export default function DoctorSidebar({
   const { user, logout } = useAuthStore();
 
   const displayName = user?.fullName ?? 'Doctor';
+
+  // Only show full nav when contract is active; otherwise lock to contract page only
+  const contractApproved = user?.contractStatus === 'Active';
+  const visibleNavItems = contractApproved
+    ? navItems
+    : navItems.filter((item) => item.path === '/ophthalmologist/contract');
 
   const handleLogout = () => {
     logout();
@@ -77,7 +85,7 @@ export default function DoctorSidebar({
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
