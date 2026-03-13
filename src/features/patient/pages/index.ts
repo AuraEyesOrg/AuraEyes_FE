@@ -26,3 +26,4 @@ export { default as ChatPage } from './chat';
 // Wallet
 export { default as WalletPage } from './wallet';
 export { default as PaymentCallbackPage } from './payment-callback';
+export { default as HelpFeedbackPage } from './help-feedback';

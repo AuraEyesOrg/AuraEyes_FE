@@ -68,6 +68,9 @@ const BookAppointmentPage = lazy(
 const BookingConfirmationPage = lazy(
   () => import('@/features/patient/pages/booking-confirmation')
 );
+const HelpFeedbackPage = lazy(
+  () => import('@/features/patient/pages/help-feedback')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -237,6 +240,7 @@ const Router = () => (
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/help-feedback" element={<HelpFeedbackPage />} />
         <Route
           path="/patient/wallet/payment-callback"
           element={<PaymentCallbackPage />}

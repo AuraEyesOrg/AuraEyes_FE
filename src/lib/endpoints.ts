@@ -220,6 +220,22 @@ export const API_ENDPOINTS = {
       `/clinic-appointments/${appointmentId}/no-show`,
   },
 
+  FEEDBACK: {
+    WEBSITE: '/feedback/website',
+    ORGANISATION: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}`,
+    OPHTHALMOLOGIST: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}`,
+    ORGANISATION_ITEMS: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}/items`,
+    OPHTHALMOLOGIST_ITEMS: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}/items`,
+    ORGANISATION_RATING: (organisationId: string) =>
+      `/feedback/organisations/${organisationId}/rating`,
+    OPHTHALMOLOGIST_RATING: (ophthalmologistId: string) =>
+      `/feedback/ophthalmologists/${ophthalmologistId}/rating`,
+  },
+
   // Schedule Templates - Doctor's recurring schedules
   SCHEDULE_TEMPLATES: {
     LIST: '/schedule-templates',
