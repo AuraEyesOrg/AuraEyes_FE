@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
   Calendar,
@@ -23,14 +24,21 @@ import {
   useCancelSession,
 } from '@/features/consultation/hooks';
 import { usePatientClinicAppointments } from '@/features/patient/hooks/use-clinic-booking';
+import { useProfile } from '@/features/patient/hooks/useProfile';
 import {
+  feedbackKeys,
   useCreateOphthalmologistFeedback,
   useCreateOrganisationFeedback,
 } from '@/features/patient/hooks/use-feedback';
 import {
+  listOrganisationFeedback,
+  listOphthalmologistFeedback,
+} from '@/features/patient/api/feedback.api';
+import {
   FeedbackModal,
   FeedbackSubmittedBadge,
 } from '@/features/patient/components';
+import useAuthStore from '@/store/auth-store';
 import {
   SessionStatus,
   ConsultationSessionType,
@@ -40,9 +48,6 @@ import {
 import type { ConsultationSessionListDto } from '@/types/consultation';
 import type { ClinicAppointmentDto } from '@/features/patient/types/clinic-booking.types';
 
-// TODO: Replace with actual user ID from auth store
-const CURRENT_PATIENT_ID = '9648d5eb-7a29-4699-9a37-d0fb991d656c';
-
 type FilterTab = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
 const AppointmentsPage = () => {
@@ -51,18 +56,22 @@ const AppointmentsPage = () => {
     useState<ConsultationSessionListDto | null>(null);
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
-  const [submittedSessionFeedbackIds, setSubmittedSessionFeedbackIds] =
-    useState<Record<string, boolean>>({});
-  const [submittedClinicFeedbackIds, setSubmittedClinicFeedbackIds] = useState<
-    Record<string, boolean>
-  >({});
 
-  const { data: sessionsData, isLoading } = useConsultationSessions({
-    patientId: CURRENT_PATIENT_ID,
-    pageSize: 50,
-  });
-  const { data: clinicAppointmentsData } =
-    usePatientClinicAppointments(CURRENT_PATIENT_ID);
+  const { user } = useAuthStore();
+  const { data: profile, isLoading: isLoadingProfile } = useProfile();
+  const patientId = profile?.id ?? user?.id ?? '';
+
+  const { data: sessionsData, isLoading } = useConsultationSessions(
+    {
+      patientId,
+      pageSize: 50,
+    },
+    { enabled: !!patientId }
+  );
+  const { data: clinicAppointmentsData } = usePatientClinicAppointments(
+    patientId,
+    !!patientId
+  );
 
   const cancelMutation = useCancelSession();
   const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
@@ -101,6 +110,76 @@ const AppointmentsPage = () => {
     [clinicAppointments]
   );
 
+  const uniqueOrganisationIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          completedClinicAppointments
+            .map((appointment) => appointment.organisationId)
+            .filter(Boolean)
+        )
+      ),
+    [completedClinicAppointments]
+  );
+
+  const uniqueOphthalmologistIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          sessions
+            .filter(
+              (session) =>
+                session.status === SessionStatus.Completed &&
+                !!session.ophthalmologistId
+            )
+            .map((session) => session.ophthalmologistId as string)
+        )
+      ),
+    [sessions]
+  );
+
+  const organisationFeedbackQueries = useQueries({
+    queries: uniqueOrganisationIds.map((organisationId) => ({
+      queryKey: feedbackKeys.organisationItems(organisationId, 1, 100),
+      queryFn: () => listOrganisationFeedback(organisationId, 1, 100),
+      enabled: !!organisationId,
+      staleTime: 30_000,
+    })),
+  });
+
+  const ophthalmologistFeedbackQueries = useQueries({
+    queries: uniqueOphthalmologistIds.map((ophthalmologistId) => ({
+      queryKey: feedbackKeys.ophthalmologistItems(ophthalmologistId, 1, 100),
+      queryFn: () => listOphthalmologistFeedback(ophthalmologistId, 1, 100),
+      enabled: !!ophthalmologistId,
+      staleTime: 30_000,
+    })),
+  });
+
+  const submittedClinicFeedbackIds = useMemo(() => {
+    const synced: Record<string, boolean> = {};
+
+    organisationFeedbackQueries.forEach((query) => {
+      query.data?.items.forEach((item) => {
+        synced[item.appointmentId] = true;
+      });
+    });
+
+    return synced;
+  }, [organisationFeedbackQueries]);
+
+  const submittedSessionFeedbackIds = useMemo(() => {
+    const synced: Record<string, boolean> = {};
+
+    ophthalmologistFeedbackQueries.forEach((query) => {
+      query.data?.items.forEach((item) => {
+        synced[item.consultationSessionId] = true;
+      });
+    });
+
+    return synced;
+  }, [ophthalmologistFeedbackQueries]);
+
   useEffect(() => {
     const firstPendingCompletedSession = sessions.find((session) => {
       if (
@@ -125,7 +204,7 @@ const AppointmentsPage = () => {
   const handleCancel = (sessionId: string) => {
     cancelMutation.mutate({
       sessionId,
-      cancelledByUserId: CURRENT_PATIENT_ID,
+      cancelledByUserId: patientId,
       reason: 'Cancelled by patient',
     });
   };
@@ -155,20 +234,20 @@ const AppointmentsPage = () => {
         },
       });
 
-      setSubmittedSessionFeedbackIds((prev) => ({
-        ...prev,
-        [sessionFeedbackTarget.id]: true,
-      }));
+      window.sessionStorage.setItem(
+        `feedback-dismissed-${sessionFeedbackTarget.id}`,
+        '1'
+      );
       setSessionFeedbackTarget(null);
       toast.success('Consultation feedback submitted.');
     } catch (error) {
       const status = (error as { response?: { status?: number } }).response
         ?.status;
       if (status === 409) {
-        setSubmittedSessionFeedbackIds((prev) => ({
-          ...prev,
-          [sessionFeedbackTarget.id]: true,
-        }));
+        window.sessionStorage.setItem(
+          `feedback-dismissed-${sessionFeedbackTarget.id}`,
+          '1'
+        );
         setSessionFeedbackTarget(null);
         toast.info('Feedback already exists for this consultation.');
         return;
@@ -193,20 +272,12 @@ const AppointmentsPage = () => {
         },
       });
 
-      setSubmittedClinicFeedbackIds((prev) => ({
-        ...prev,
-        [clinicFeedbackTarget.id]: true,
-      }));
       setClinicFeedbackTarget(null);
       toast.success('Clinic feedback submitted.');
     } catch (error) {
       const status = (error as { response?: { status?: number } }).response
         ?.status;
       if (status === 409) {
-        setSubmittedClinicFeedbackIds((prev) => ({
-          ...prev,
-          [clinicFeedbackTarget.id]: true,
-        }));
         setClinicFeedbackTarget(null);
         toast.info('Feedback already exists for this appointment.');
         return;
@@ -271,7 +342,7 @@ const AppointmentsPage = () => {
     return 'bg-gray-100 dark:bg-gray-800';
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingProfile) {
     return (
       <PatientLayout>
         <div className="flex items-center justify-center h-[60vh]">
