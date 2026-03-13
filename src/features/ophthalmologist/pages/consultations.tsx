@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import {
   useConsultationSessions,
   useConsultationSession,
@@ -41,16 +40,6 @@ import type { ConsultationSessionListDto } from '@/types/consultation';
 
 // TODO: Replace with actual doctor ID / user ID from auth store once auth is fully integrated
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-// TODO: Replace with actual doctor profile from auth store
-const mockDoctor: Doctor = {
-  id: CURRENT_DOCTOR_ID,
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -178,11 +167,10 @@ export default function ConsultationsPage() {
 
   // ---- Data fetching ----
 
-  const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions({
-      ophthalmologistId: CURRENT_DOCTOR_ID,
-      pageSize: 50,
-    });
+  const { data: sessionsData } = useConsultationSessions({
+    ophthalmologistId: CURRENT_DOCTOR_ID,
+    pageSize: 50,
+  });
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -283,31 +271,8 @@ export default function ConsultationsPage() {
     });
   };
 
-  // ---- Loading state ----
-
-  if (sessionsLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1929]">
-        <DoctorSidebar pendingCount={0} />
-        <div className="ml-52">
-          <DoctorHeader />
-          <main className="p-6">
-            <div className="flex items-center justify-center h-[calc(100vh-220px)]">
-              <div className="text-center">
-                <Spinner size={40} className="mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Loading consultations...
-                </p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
       <DoctorSidebar pendingCount={pendingCount} />
 

@@ -63,6 +63,15 @@ const RetinalAnalysisPage = lazy(
   () => import('@/features/patient/pages/retinal-analysis')
 );
 const ReviewPage = lazy(() => import('@/features/patient/pages/review'));
+const BookAppointmentPage = lazy(
+  () => import('@/features/patient/pages/book-appointment')
+);
+const BookingConfirmationPage = lazy(
+  () => import('@/features/patient/pages/booking-confirmation')
+);
+const HelpFeedbackPage = lazy(
+  () => import('@/features/patient/pages/help-feedback')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -108,6 +117,9 @@ const OphthalmologistScreeningReviewPage = lazy(
 );
 const OphthalmologistSchedulesPage = lazy(
   () => import('@/features/ophthalmologist/pages/schedules')
+);
+const OphthalmologistSlotManagementPage = lazy(
+  () => import('@/features/ophthalmologist/pages/slot-management')
 );
 
 // System Admin pages
@@ -217,6 +229,11 @@ const Router = () => (
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/appointments" element={<AppointmentsPage />} />
+        <Route path="/patient/book" element={<BookAppointmentPage />} />
+        <Route
+          path="/patient/book/confirm"
+          element={<BookingConfirmationPage />}
+        />
         <Route path="/patient/profile" element={<ProfilePage />} />
         <Route path="/patient/settings" element={<SettingsPage />} />
         <Route path="/patient/clinics" element={<ClinicsPage />} />
@@ -225,6 +242,7 @@ const Router = () => (
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
+        <Route path="/patient/help-feedback" element={<HelpFeedbackPage />} />
         <Route
           path="/patient/wallet/payment-callback"
           element={<PaymentCallbackPage />}
@@ -323,6 +341,14 @@ const Router = () => (
           element={
             <PrivateRoute>
               <OphthalmologistSchedulesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/slot-management"
+          element={
+            <PrivateRoute>
+              <OphthalmologistSlotManagementPage />
             </PrivateRoute>
           }
         />

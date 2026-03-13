@@ -1,273 +1,312 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Calendar, Clock, Play, UserCheck, UserX } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
-import { OrganisationData, Appointment } from '../types/organisation.types';
+import useAuthStore from '@/store/auth-store';
+import {
+  useCheckInClinicAppointment,
+  useCompleteClinicAppointment,
+  useMarkNoShowClinicAppointment,
+  useOrganisationAppointments,
+  useStartClinicAppointment,
+} from '@/features/patient/hooks/use-clinic-booking';
+import { mapClinicStaffErrorMessage } from '@/lib/api-error';
+
+const formatTime = (time: string) => {
+  const [h, m] = time.split(':');
+  const hour = Number(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
+
+const statusStyles: Record<string, string> = {
+  Pending:
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  InProgress:
+    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  Completed:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  NoShow: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+};
 
 export default function CalendarPage() {
-  const [data, setData] = useState<OrganisationData | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [_selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const { user } = useAuthStore();
+  const organisationId = user?.organizationId ?? '';
 
-  useEffect(() => {
-    import('@/data/organisation-mock.json').then((module) => {
-      setData(module.default as OrganisationData);
-    });
-  }, []);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
+  const {
+    data: appointments = [],
+    isLoading,
+    isFetching,
+    error: appointmentsError,
+  } = useOrganisationAppointments(
+    organisationId,
+    selectedDate,
+    !!organisationId
+  );
 
-  const daysInMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).getDate();
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).getDay();
+  const checkInMutation = useCheckInClinicAppointment();
+  const startMutation = useStartClinicAppointment();
+  const completeMutation = useCompleteClinicAppointment();
+  const noShowMutation = useMarkNoShowClinicAppointment();
 
-  const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  const stats = useMemo(() => {
+    return {
+      total: appointments.length,
+      pending: appointments.filter((item) => item.status === 'Pending').length,
+      checkedIn: appointments.filter((item) => item.status === 'CheckedIn')
+        .length,
+      inProgress: appointments.filter((item) => item.status === 'InProgress')
+        .length,
+    };
+  }, [appointments]);
 
-  const previousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
-    );
-  };
+  const isMutating =
+    checkInMutation.isPending ||
+    startMutation.isPending ||
+    completeMutation.isPending ||
+    noShowMutation.isPending;
 
-  const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
-    );
-  };
+  const runAction = async (action: () => Promise<unknown>, message: string) => {
+    setErrorMessage('');
+    setSuccessMessage('');
 
-  const isToday = (day: number) => {
-    const today = new Date();
-    return (
-      day === today.getDate() &&
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear()
-    );
-  };
-
-  const isBlocked = (day: number) => {
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return data.calendarAvailability.blockedDates.includes(dateStr);
-  };
-
-  const getAppointmentsForDate = (day: number): Appointment[] => {
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return data.upcomingAppointments.filter((apt) => apt.date === dateStr);
+    try {
+      await action();
+      setSuccessMessage(message);
+    } catch (error) {
+      setErrorMessage(mapClinicStaffErrorMessage(error));
+    }
   };
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <Sidebar pendingCount={data.dashboardStats.pendingReviews.value} />
+    <div className="flex h-screen w-full bg-(--bg-primary)">
+      <Sidebar pendingCount={stats.pending} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Calendar" />
 
         <main className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Appointment Calendar
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage clinic availability and appointments
-            </p>
+          {(errorMessage || successMessage || appointmentsError) && (
+            <div className="mb-4 space-y-2">
+              {appointmentsError && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {mapClinicStaffErrorMessage(appointmentsError)}
+                </div>
+              )}
+              {errorMessage && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                  {errorMessage}
+                </div>
+              )}
+              {successMessage && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  {successMessage}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Organisation Clinic Appointments
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Manage check-in and consultation progress.
+              </p>
+            </div>
+
+            <div className="flex items-end gap-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Visit Date
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-[#2d4a6f] dark:bg-[#1e3a5f] dark:text-white"
+                />
+              </div>
+              {isFetching && <Spinner />}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Calendar */}
-            <div className="lg:col-span-2">
-              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
-                {/* Calendar Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {monthNames[currentDate.getMonth()]}{' '}
-                    {currentDate.getFullYear()}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={previousMonth}
-                      className="p-2 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    >
-                      <ChevronLeft size={20} />
-                    </button>
-                    <button
-                      onClick={nextMonth}
-                      className="p-2 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    >
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                </div>
+          <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+              <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.total}
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Pending
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">
+                {stats.pending}
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Checked In
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-cyan-600 dark:text-cyan-400">
+                {stats.checkedIn}
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                In Progress
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-violet-600 dark:text-violet-400">
+                {stats.inProgress}
+              </p>
+            </div>
+          </div>
 
-                {/* Days of Week */}
-                <div className="grid grid-cols-7 gap-2 mb-2">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
-                    (day) => (
-                      <div
-                        key={day}
-                        className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2"
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            {isLoading ? (
+              <div className="flex items-center gap-3 py-10 text-gray-600 dark:text-gray-400">
+                <Spinner />
+                <span>Loading appointments...</span>
+              </div>
+            ) : appointments.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-600 dark:border-[#2d4a6f] dark:text-gray-400">
+                No clinic appointments for selected date.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-gray-500 dark:border-[#2d4a6f] dark:text-gray-400">
+                      <th className="px-3 py-2 font-medium">Time</th>
+                      <th className="px-3 py-2 font-medium">Patient</th>
+                      <th className="px-3 py-2 font-medium">Reason</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                      <th className="px-3 py-2 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((appointment) => (
+                      <tr
+                        key={appointment.id}
+                        className="border-b border-gray-100 align-top dark:border-[#2d4a6f]"
                       >
-                        {day}
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-2">
-                  {Array.from({ length: firstDayOfMonth }).map((_, index) => (
-                    <div key={`empty-${index}`} />
-                  ))}
-                  {Array.from({ length: daysInMonth }).map((_, index) => {
-                    const day = index + 1;
-                    const appointments = getAppointmentsForDate(day);
-                    const blocked = isBlocked(day);
-
-                    return (
-                      <button
-                        key={day}
-                        onClick={() =>
-                          setSelectedDate(
-                            new Date(
-                              currentDate.getFullYear(),
-                              currentDate.getMonth(),
-                              day
-                            )
-                          )
-                        }
-                        className={`
-                          aspect-square p-2 rounded-lg border transition-all relative
-                          ${
-                            isToday(day)
-                              ? 'bg-primary border-primary text-white'
-                              : blocked
-                                ? 'bg-red-500/10 border-red-500/30 text-red-400 cursor-not-allowed'
-                                : 'bg-gray-50 dark:bg-[#0a1f44] border-gray-200 dark:border-[#2d4a6f] text-gray-700 dark:text-gray-300 hover:border-primary'
-                          }
-                        `}
-                        disabled={blocked}
-                      >
-                        <span className="text-sm font-semibold">{day}</span>
-                        {appointments.length > 0 && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                            {appointments.slice(0, 3).map((_, i) => (
-                              <div
-                                key={i}
-                                className="w-1 h-1 rounded-full bg-green-500"
-                              />
-                            ))}
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
+                            <Clock className="h-3.5 w-3.5" />
+                            {formatTime(appointment.startTime)} -{' '}
+                            {formatTime(appointment.endTime)}
                           </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                        </td>
+                        <td className="px-3 py-3 text-gray-900 dark:text-white">
+                          {appointment.patientId.slice(0, 8)}...
+                        </td>
+                        <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
+                          {appointment.visitReason || '-'}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
+                          >
+                            {appointment.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={
+                                appointment.status !== 'Pending' || isMutating
+                              }
+                              onClick={() =>
+                                void runAction(
+                                  () =>
+                                    checkInMutation.mutateAsync(appointment.id),
+                                  'Check-in thành công.'
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                            >
+                              <UserCheck className="h-3.5 w-3.5" />
+                              Check-in
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                appointment.status !== 'CheckedIn' || isMutating
+                              }
+                              onClick={() =>
+                                void runAction(
+                                  () =>
+                                    startMutation.mutateAsync(appointment.id),
+                                  'Đã chuyển lịch khám sang trạng thái In Progress.'
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-md border border-violet-300 px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20"
+                            >
+                              <Play className="h-3.5 w-3.5" />
+                              Start
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                appointment.status !== 'InProgress' ||
+                                isMutating
+                              }
+                              onClick={() =>
+                                void runAction(
+                                  () =>
+                                    completeMutation.mutateAsync({
+                                      appointmentId: appointment.id,
+                                    }),
+                                  'Đã hoàn thành lịch khám.'
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
+                            >
+                              <Calendar className="h-3.5 w-3.5" />
+                              Complete
+                            </button>
+                            <button
+                              type="button"
+                              disabled={
+                                isMutating ||
+                                appointment.status === 'Completed' ||
+                                appointment.status === 'Cancelled'
+                              }
+                              onClick={() =>
+                                void runAction(
+                                  () =>
+                                    noShowMutation.mutateAsync(appointment.id),
+                                  'Đã đánh dấu no-show cho lịch khám.'
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                            >
+                              <UserX className="h-3.5 w-3.5" />
+                              No-show
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-
-            {/* Sidebar - Working Hours & Appointments */}
-            <div className="space-y-6">
-              {/* Working Hours */}
-              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Working Hours
-                  </h3>
-                  <button className="text-primary hover:text-primary/80 transition-colors text-sm">
-                    Edit
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {Object.entries(data.calendarAvailability.workingHours).map(
-                    ([day, hours]) => (
-                      <div
-                        key={day}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-gray-600 dark:text-gray-400 capitalize">
-                          {day}
-                        </span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {hours.length > 0 ? hours.join(', ') : 'Closed'}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#2d4a6f]">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Clock size={16} />
-                    <span>
-                      {data.calendarAvailability.appointmentDuration} min per
-                      appointment
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Today's Appointments */}
-              <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Today's Schedule
-                  </h3>
-                  <button className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors text-sm">
-                    <Plus size={16} />
-                    Add
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {data.upcomingAppointments.slice(0, 4).map((appointment) => (
-                    <div
-                      key={appointment.id}
-                      className="p-3 rounded-lg bg-gray-50 dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f]"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {appointment.time}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-500">
-                          {appointment.type}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                        {appointment.patientName}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {appointment.doctor}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </main>
       </div>

@@ -28,7 +28,7 @@ export default function OphthalmologistDashboard() {
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
+      <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
         <div className="flex flex-col items-center gap-3">
           <Spinner size={40} />
           <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -40,7 +40,7 @@ export default function OphthalmologistDashboard() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
       <DoctorSidebar pendingCount={data.dashboardStats.pendingReviews} />
 

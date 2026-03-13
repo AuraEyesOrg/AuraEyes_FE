@@ -9,6 +9,8 @@ export { default as RetinalAnalysisPage } from './retinal-analysis';
 // Reports & Appointments
 export { default as ReportsPage } from './reports';
 export { default as AppointmentsPage } from './appointments';
+export { default as BookAppointmentPage } from './book-appointment';
+export { default as BookingConfirmationPage } from './booking-confirmation';
 
 // Profile & Settings
 export { default as ProfilePage } from './profile';
@@ -24,3 +26,4 @@ export { default as ChatPage } from './chat';
 // Wallet
 export { default as WalletPage } from './wallet';
 export { default as PaymentCallbackPage } from './payment-callback';
+export { default as HelpFeedbackPage } from './help-feedback';

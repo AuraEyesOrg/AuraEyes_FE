@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
-import type { Doctor } from '../types/ophthalmologist.types';
 import {
   useSchedules,
   useCreateSchedule,
@@ -28,15 +27,6 @@ import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
 
 // TODO: Replace with actual doctor ID from auth store
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-const mockDoctor: Doctor = {
-  id: CURRENT_DOCTOR_ID,
-  name: 'Dr. Michael Chen',
-  specialty: 'Retina Specialist',
-  hospital: 'Aura Eye Center',
-  department: 'Ophthalmology',
-  avatar: null,
-};
 
 type FilterTab = 'all' | 'available' | 'booked' | 'past';
 
@@ -62,6 +52,10 @@ const statusColors: Record<ScheduleStatus, string> = {
     'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
   [ScheduleStatus.NoShow]:
     'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  [ScheduleStatus.Reserved]:
+    'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  [ScheduleStatus.Blocked]:
+    'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500',
 };
 
 const formatTime = (timeStr: string) => {
@@ -241,7 +235,7 @@ export default function SchedulesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+      <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
           <DoctorHeader />
@@ -259,7 +253,7 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
