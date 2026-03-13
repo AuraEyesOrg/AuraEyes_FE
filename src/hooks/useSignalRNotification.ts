@@ -5,7 +5,6 @@ import {
   HubConnectionState,
   LogLevel,
 } from '@microsoft/signalr';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
@@ -33,7 +32,6 @@ export function useSignalRNotification(): {
 } {
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectAttemptRef = useRef(0);
-  const navigate = useNavigate();
 
   const { isAuthenticated } = useAuthStore();
   const { addNotification, setConnectionStatus, connectionStatus } =
@@ -59,19 +57,20 @@ export function useSignalRNotification(): {
       // Show toast notification with navigation action
       toast.info(notification.title + '\n' + notification.message, {
         onClick: () => {
-          // Navigate to relevant page
           const route = getNotificationRoute({
             ...notification,
             userId: '',
             isRead: false,
           });
-          navigate(route);
+          if (route !== '#') {
+            window.location.assign(route);
+          }
         },
         autoClose: 5000,
         closeOnClick: true,
       });
     },
-    [addNotification, navigate]
+    [addNotification]
   );
 
   /**
