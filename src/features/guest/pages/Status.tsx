@@ -285,7 +285,7 @@ const StatusPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-medical)]">
+    <div className="min-h-screen bg-[var(--color-medical-bg)]">
       <Header />
 
       <main className="flex-grow flex flex-col items-center w-full px-4 py-8 md:py-12">
@@ -302,7 +302,7 @@ const StatusPage = () => {
               </p>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl bg-white border border-[var(--color-border)] p-8 md:p-12 flex flex-col items-center justify-center text-center gap-6 shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl bg-white border border-[var(--color-medical-border)] p-8 md:p-12 flex flex-col items-center justify-center text-center gap-6 shadow-sm">
               {/* Pulse Effect Background */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[var(--color-brand-primary)]/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -348,7 +348,7 @@ const StatusPage = () => {
 
           {/* Metrics Grid */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
+            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
                   Total Screenings
@@ -390,7 +390,7 @@ const StatusPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
+            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
                   AI Model Version
@@ -419,7 +419,7 @@ const StatusPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
+            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
                   Avg. Processing
@@ -454,9 +454,9 @@ const StatusPage = () => {
             <h3 className="text-2xl font-bold text-[var(--color-brand-dark)] px-1">
               Component Status
             </h3>
-            <div className="rounded-2xl border border-[var(--color-border)] overflow-hidden bg-white">
+            <div className="rounded-2xl border border-[var(--color-medical-border)] overflow-hidden bg-white">
               {/* Header Row */}
-              <div className="grid grid-cols-12 gap-4 p-5 bg-gray-50 border-b border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              <div className="grid grid-cols-12 gap-4 p-5 bg-gray-50 border-b border-[var(--color-medical-border)] text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                 <div className="col-span-6 md:col-span-5">Service Name</div>
                 <div className="col-span-3 md:col-span-5 text-right md:text-left">
                   Region
@@ -472,7 +472,7 @@ const StatusPage = () => {
                   key={index}
                   className={`grid grid-cols-12 gap-4 p-5 items-center hover:bg-gray-50 transition-colors ${
                     index < services.length - 1
-                      ? 'border-b border-[var(--color-border)]'
+                      ? 'border-b border-[var(--color-medical-border)]'
                       : ''
                   }`}
                 >
@@ -560,12 +560,12 @@ const StatusPage = () => {
               <h3 className="text-2xl font-bold text-[var(--color-brand-dark)]">
                 Trust & Ethics Center
               </h3>
-              <div className="h-px flex-1 bg-[var(--color-border)]"></div>
+              <div className="h-px flex-1 bg-[var(--color-medical-border)]"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1 - Bias Monitoring */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-border)] hover:shadow-lg transition-all">
+              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
                 <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
                   <svg
@@ -614,7 +614,7 @@ const StatusPage = () => {
               </div>
 
               {/* Card 2 - Data Privacy */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-border)] hover:shadow-lg transition-all">
+              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
                 <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-brand-primary)] rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="size-12 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center">
                   <svg
@@ -663,7 +663,7 @@ const StatusPage = () => {
               </div>
 
               {/* Card 3 - Clinical Validation */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-border)] hover:shadow-lg transition-all">
+              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
                 <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
                   <svg
