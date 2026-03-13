@@ -186,6 +186,7 @@ export const API_ENDPOINTS = {
     BY_DOCTOR: (ophthalId: string) =>
       `/appointment-slots?ophthalId=${ophthalId}`,
     DETAIL: (slotId: string) => `/appointment-slots/${slotId}`,
+    UPDATE_STATUS: (slotId: string) => `/appointment-slots/${slotId}/status`,
     GENERATE: '/appointment-slots/generate',
     RESERVE: (slotId: string) => `/appointment-slots/${slotId}/reserve`,
     CONFIRM: (slotId: string) => `/appointment-slots/${slotId}/confirm`,

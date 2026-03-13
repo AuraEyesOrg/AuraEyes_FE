@@ -27,7 +27,7 @@ const TwoFactorVerifyPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const { setIsAuthenticated } = useAuthStore();
+  const { login: authLogin } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,12 +76,14 @@ const TwoFactorVerifyPage = () => {
       });
 
       if (response.succeeded) {
-        setIsAuthenticated(true);
+        if (response.user) {
+          authLogin(response.user);
+        }
 
         // Navigate based on user role
         const roles = response.user?.roles || [];
         if (roles.includes('SystemAdmin')) {
-          navigate('/admin/dashboard');
+          navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
@@ -90,10 +92,13 @@ const TwoFactorVerifyPage = () => {
           } else {
             navigate('/ophthalmologist/dashboard');
           }
-        } else if (roles.includes('Organization')) {
+        } else if (
+          roles.includes('OrgAdmin') ||
+          roles.includes('Organization')
+        ) {
           navigate('/organisation/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       } else {
         setError(response.errors?.join(', ') || 'Verification failed');

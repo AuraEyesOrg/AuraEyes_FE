@@ -1,5 +1,3 @@
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
 interface SpinnerProps {
   size?: number;
   src?: string;
@@ -10,7 +8,7 @@ const DEFAULT_SRC = '/animations/eye_scanner.json';
 
 export default function Spinner({
   size = 24,
-  src = DEFAULT_SRC,
+  src: _src = DEFAULT_SRC,
   className = '',
 }: SpinnerProps) {
   return (
@@ -18,7 +16,7 @@ export default function Spinner({
       className={`inline-flex items-center justify-center ${className}`}
       style={{ width: size, height: size }}
     >
-      <DotLottieReact src={src} loop autoplay />
+      <span className="h-full w-full animate-spin rounded-full border-2 border-current border-t-transparent text-cyan-600 dark:text-cyan-400" />
     </div>
   );
 }

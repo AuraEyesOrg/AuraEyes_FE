@@ -88,6 +88,9 @@ const OrganisationSettingsPage = lazy(
 const OrganisationAnalyticsPage = lazy(
   () => import('@/features/organisation/pages/analytics')
 );
+const OrganisationSlotManagementPage = lazy(
+  () => import('@/features/organisation/pages/slot-management')
+);
 
 // Ophthalmologist pages
 const OphthalmologistDashboard = lazy(
@@ -263,6 +266,10 @@ const Router = () => (
         <Route
           path="/organisation/calendar"
           element={<OrganisationCalendarPage />}
+        />
+        <Route
+          path="/organisation/slots"
+          element={<OrganisationSlotManagementPage />}
         />
         <Route
           path="/organisation/settings"

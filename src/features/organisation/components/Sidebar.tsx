@@ -2,6 +2,7 @@ import {
   Home,
   Users,
   Calendar,
+  CalendarCog,
   Settings,
   LogOut,
   BarChart3,
@@ -24,6 +25,7 @@ const navItems = [
   },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
+  { icon: CalendarCog, label: 'Slots', path: '/organisation/slots' },
   { icon: Settings, label: 'Settings', path: '/organisation/settings' },
 ];
 
