@@ -197,7 +197,6 @@ export const API_ENDPOINTS = {
 
   // Clinic booking flow (organisation visits)
   CLINIC_BOOKING: {
-    ORGANISATIONS: '/organisations',
     AVAILABLE_SLOTS: (orgId: string) =>
       `/organisations/${orgId}/available-slots`,
     ORGANISATION_APPOINTMENTS: (orgId: string) =>
