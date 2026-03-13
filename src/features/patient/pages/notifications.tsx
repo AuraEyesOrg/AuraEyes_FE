@@ -1,17 +1,5 @@
 import { useState } from 'react';
-import {
-  Bell,
-  Search,
-  Filter,
-  CheckCheck,
-  Eye,
-  EyeOff,
-  Stethoscope,
-  FileText,
-  MessageCircle,
-  Calendar,
-  Wallet,
-} from 'lucide-react';
+import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
@@ -28,7 +16,7 @@ import {
   NotificationType,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
-import { NotificationIcon } from '@/components/ui/notification/NotificationIcon';
+import { NotificationIcon } from '@/components/ui/notification';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
