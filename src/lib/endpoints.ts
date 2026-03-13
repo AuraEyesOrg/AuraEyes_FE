@@ -194,6 +194,32 @@ export const API_ENDPOINTS = {
     UNBLOCK: (slotId: string) => `/appointment-slots/${slotId}/unblock`,
   },
 
+  // Clinic booking flow (organisation visits)
+  CLINIC_BOOKING: {
+    ORGANISATIONS: '/organisations',
+    AVAILABLE_SLOTS: (orgId: string) =>
+      `/organisations/${orgId}/available-slots`,
+    ORGANISATION_APPOINTMENTS: (orgId: string) =>
+      `/organisations/${orgId}/appointments`,
+    PATIENT_CLINIC_APPOINTMENTS: (patientId: string) =>
+      `/patients/${patientId}/clinic-appointments`,
+  },
+
+  CLINIC_APPOINTMENTS: {
+    CREATE: '/clinic-appointments',
+    CANCEL: (appointmentId: string) => `/clinic-appointments/${appointmentId}`,
+    CHECK_IN: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/check-in`,
+    ASSIGN_DOCTOR: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/assign-doctor`,
+    START: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/start`,
+    COMPLETE: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/complete`,
+    NO_SHOW: (appointmentId: string) =>
+      `/clinic-appointments/${appointmentId}/no-show`,
+  },
+
   // Schedule Templates - Doctor's recurring schedules
   SCHEDULE_TEMPLATES: {
     LIST: '/schedule-templates',
