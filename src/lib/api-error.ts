@@ -135,3 +135,43 @@ export const mapClinicStaffErrorMessage = (error: unknown): string => {
     },
   ]);
 };
+
+export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
+  const raw = extractApiErrorMessage(
+    error,
+    'Không thể xử lý thao tác đặt lịch tư vấn online.'
+  );
+
+  return mapByKeywords(raw, [
+    {
+      pattern: /(already\s+reserved|slot\s+is\s+reserved|Reserved)/i,
+      mappedMessage:
+        'Khung giờ này đã được giữ bởi người khác. Vui lòng chọn khung giờ khác.',
+    },
+    {
+      pattern: /(already\s+booked|slot\s+is\s+booked|Booked)/i,
+      mappedMessage: 'Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.',
+    },
+    {
+      pattern: /(not\s+available|blocked|SLOT_BLOCKED)/i,
+      mappedMessage: 'Khung giờ này hiện không khả dụng.',
+    },
+    {
+      pattern: /(reservation\s+expired|expired)/i,
+      mappedMessage: 'Phiên giữ chỗ đã hết hạn. Vui lòng đặt lại từ đầu.',
+    },
+    {
+      pattern: /(different\s+patient|forbidden|403)/i,
+      mappedMessage:
+        'Bạn không có quyền thao tác trên phiên giữ chỗ này. Vui lòng đặt lại.',
+    },
+    {
+      pattern: /(slot\s+not\s+found|not\s+found|INVALID_SLOT)/i,
+      mappedMessage: 'Không tìm thấy khung giờ. Vui lòng tải lại danh sách.',
+    },
+    {
+      pattern: /(timeout|network|ECONNABORTED)/i,
+      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+    },
+  ]);
+};

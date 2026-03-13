@@ -27,6 +27,7 @@ import type {
   SlotReservationResult,
 } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
+import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 
 // ============ HELPERS ============
 
@@ -220,6 +221,7 @@ export default function BookAppointmentPage() {
     null
   );
   const [showModal, setShowModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -237,7 +239,11 @@ export default function BookAppointmentPage() {
     };
   }, [currentWeekOffset]);
 
-  const { data: slotsData, isLoading } = useAppointmentSlots(
+  const {
+    data: slotsData,
+    isLoading,
+    error: slotsError,
+  } = useAppointmentSlots(
     {
       ophthalId: selectedDoctorId || undefined,
       status: 1, // Available status
@@ -295,11 +301,11 @@ export default function BookAppointmentPage() {
     async (slot: AppointmentSlotListDto) => {
       if (slot.status !== 'Available') return;
       if (!patientId) {
-        // Redirect to login or show error
-        alert('Please log in to book an appointment');
+        setErrorMessage('Vui lòng đăng nhập để đặt lịch tư vấn.');
         return;
       }
 
+      setErrorMessage('');
       try {
         const result = await reserveMutation.mutateAsync({
           slotId: slot.id,
@@ -311,10 +317,8 @@ export default function BookAppointmentPage() {
         setSelectedSlot(slot);
         setReservation(result);
         setShowModal(true);
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to reserve slot';
-        alert(errorMessage);
+      } catch (error) {
+        setErrorMessage(mapOnlineConsultationErrorMessage(error));
       }
     },
     [patientId, reserveMutation]
@@ -328,13 +332,14 @@ export default function BookAppointmentPage() {
 
   const handleCancelReservation = useCallback(async () => {
     if (!selectedSlot || !patientId) return;
+    setErrorMessage('');
     try {
       await releaseMutation.mutateAsync({
         slotId: selectedSlot.id,
         request: { patientId },
       });
-    } catch {
-      // Ignore release errors
+    } catch (error) {
+      setErrorMessage(mapOnlineConsultationErrorMessage(error));
     }
     setShowModal(false);
     setSelectedSlot(null);
@@ -354,6 +359,12 @@ export default function BookAppointmentPage() {
             consultation.
           </p>
         </div>
+
+        {(errorMessage || slotsError) && (
+          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
+          </div>
+        )}
 
         {/* Doctor Search */}
         <div className="mb-6">

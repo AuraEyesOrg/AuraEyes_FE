@@ -23,6 +23,7 @@ import {
   useReleaseReservation,
 } from '../hooks/use-booking';
 import useAuthStore from '@/store/auth-store';
+import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 
 // ============ HELPERS ============
 
@@ -57,8 +58,13 @@ export default function BookingConfirmationPage() {
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const { data: slot, isLoading: slotLoading } = useAppointmentSlot(slotId, {
+  const {
+    data: slot,
+    isLoading: slotLoading,
+    error: slotError,
+  } = useAppointmentSlot(slotId, {
     enabled: !!slotId,
   });
 
@@ -94,6 +100,7 @@ export default function BookingConfirmationPage() {
 
   const handleConfirm = useCallback(async () => {
     if (!slotId || !patientId) return;
+    setErrorMessage('');
 
     try {
       const result = await confirmMutation.mutateAsync({
@@ -106,25 +113,23 @@ export default function BookingConfirmationPage() {
       });
       setIsSuccess(true);
       setSessionId(result.consultationSessionId);
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to confirm booking. Please try again.';
-      alert(errorMessage);
+    } catch (error) {
+      setErrorMessage(mapOnlineConsultationErrorMessage(error));
     }
   }, [slotId, patientId, shareRetinalImages, shareAiResults, confirmMutation]);
 
   const handleCancel = useCallback(async () => {
     if (!slotId || !patientId) return;
+    setErrorMessage('');
 
     try {
       await releaseMutation.mutateAsync({
         slotId,
         request: { patientId },
       });
-    } catch {
-      // Ignore release errors
+    } catch (error) {
+      setErrorMessage(mapOnlineConsultationErrorMessage(error));
+      return;
     }
     navigate('/patient/book', { replace: true });
   }, [slotId, patientId, releaseMutation, navigate]);
@@ -252,6 +257,12 @@ export default function BookingConfirmationPage() {
   return (
     <PatientLayout>
       <div className="p-6 max-w-2xl mx-auto">
+        {(errorMessage || slotError) && (
+          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {errorMessage || mapOnlineConsultationErrorMessage(slotError)}
+          </div>
+        )}
+
         {/* Back Button */}
         <button
           onClick={handleCancel}
