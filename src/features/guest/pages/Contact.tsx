@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { toast } from 'react-toastify';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
@@ -8,17 +9,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 const ContactPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [userType, setUserType] = useState<'specialist' | 'organisation'>(
-    'specialist'
-  );
   const [formData, setFormData] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
+    organizationContactName: '',
+    organizationContactRole: '',
+    organizationContactEmail: '',
+    organizationPhone: '',
     organizationName: '',
-    role: '',
+    organizationType: '',
+    organizationLocation: '',
     estimatedVolume: '',
-    message: '',
+    organizationMessage: '',
     termsAgreed: false,
   });
 
@@ -43,7 +43,7 @@ const ContactPage = () => {
           stagger: 0.2,
           ease: 'back.out(1.4)',
           scrollTrigger: {
-            trigger: '.partners-section',
+            trigger: '.partnership-layout-section',
             start: 'top 80%',
             toggleActions: 'play none none reverse',
           },
@@ -104,64 +104,38 @@ const ContactPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', { userType, ...formData });
-    // Add form submission logic here
+    const data = { ...formData };
+    console.log(data);
+    toast.success(
+      'Your request has been sent successfully. Our team will contact you shortly.'
+    );
   };
 
-  const partnerTypes = [
-    {
-      type: 'specialist' as const,
-      title: 'Ophthalmologists & Clinicians',
-      description:
-        'Integrate AURA into your practice. Get fast, reliable AI-assisted reports to enhance your diagnostic workflow.',
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      ),
-      benefits: [
-        'Priority API access',
-        'Dedicated support',
-        'Training materials',
-      ],
-    },
-    {
-      type: 'organisation' as const,
-      title: 'Hospitals & Health Organizations',
-      description:
-        'Deploy AURA at scale. We offer custom solutions for large-volume screening programs and EMR integration.',
-      icon: (
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      ),
-      benefits: [
-        'Volume licensing',
-        'White-label options',
-        'Custom integrations',
-      ],
-    },
-  ];
+  const partnerCard = {
+    title: 'Medical Organization (Hospitals/Clinics)',
+    description:
+      'Deploy AURA at scale. We offer custom solutions for large-volume screening programs and EMR integration.',
+    icon: (
+      <svg
+        className="w-8 h-8"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        />
+      </svg>
+    ),
+    benefits: [
+      'Volume licensing',
+      'White-label options',
+      'Custom integrations',
+    ],
+  };
 
   const impactStats = [
     { value: '120+', label: 'Partner Clinics' },
@@ -217,9 +191,9 @@ const ContactPage = () => {
               </h1>
 
               <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-                Whether you're an individual specialist or a large health
-                organization, AURA provides the tools and support to bring
-                advanced retinal screening to your patients.
+                Whether you're a hospital or a clinic network, AURA provides the
+                tools and support to bring advanced retinal screening to your
+                patients.
               </p>
 
               <div className="flex flex-wrap justify-center gap-4">
@@ -241,126 +215,63 @@ const ContactPage = () => {
           </div>
         </section>
 
-        {/* Partner Types Section */}
-        <section className="partners-section py-20 bg-white border-b border-[var(--color-medical-border)]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="text-center mb-12">
-              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                Partnership Options
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)]">
-                Choose Your Path to Partnership
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {partnerTypes.map((partner, index) => (
-                <button
-                  key={index}
-                  onClick={() => setUserType(partner.type)}
-                  className={`partner-card text-left p-8 rounded-2xl border-2 transition-all duration-300 ${
-                    userType === partner.type
-                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 shadow-lg'
-                      : 'border-[var(--color-medical-border)] bg-white hover:border-[var(--color-brand-primary)]/50 hover:shadow-md'
-                  }`}
-                >
-                  <div
-                    className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
-                      userType === partner.type
-                        ? 'bg-[var(--color-brand-primary)] text-white'
-                        : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
-                    }`}
-                  >
-                    {partner.icon}
-                  </div>
-
-                  <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-2">
-                    {partner.title}
-                  </h3>
-                  <p className="text-[var(--color-text-muted)] mb-4">
-                    {partner.description}
-                  </p>
-
-                  <ul className="space-y-2">
-                    {partner.benefits.map((benefit, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center gap-2 text-sm text-[var(--color-brand-dark)]"
-                      >
-                        <svg
-                          className="w-4 h-4 text-[var(--color-brand-primary)]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div
-                    className={`mt-4 flex items-center gap-2 text-sm font-semibold ${
-                      userType === partner.type
-                        ? 'text-[var(--color-brand-primary)]'
-                        : 'text-[var(--color-text-muted)]'
-                    }`}
-                  >
-                    {userType === partner.type ? (
-                      <>
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Selected
-                      </>
-                    ) : (
-                      'Select this option'
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Form Section */}
+        {/* Partnership Layout Section */}
         <section
           id="contact-form"
-          className="form-section py-20 bg-[var(--color-medical-bg)]"
+          className="partnership-layout-section form-section bg-[var(--color-medical-bg)]"
         >
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid lg:grid-cols-2 gap-16">
-              {/* Info Side */}
-              <div>
-                <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                  Get Started
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-bold text-heading mb-6">
-                  {userType === 'specialist'
-                    ? 'Register as a Specialist'
-                    : 'Request Enterprise Demo'}
-                </h2>
-                <p className="text-lg text-body mb-8 leading-relaxed">
-                  {userType === 'specialist'
-                    ? 'Fill out the form to get API access, training resources, and connect with our clinical support team.'
-                    : 'Tell us about your organization and screening needs. Our partnership team will reach out within 24 hours.'}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto px-4 py-12">
+            {/* Left Column */}
+            <div className="flex flex-col gap-8">
+              <div className="partner-card text-left p-8 rounded-2xl border-2 border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 shadow-md">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 bg-[var(--color-brand-primary)] text-white">
+                  {partnerCard.icon}
+                </div>
+
+                <h3 className="text-xl font-bold text-[var(--color-brand-dark)] mb-2">
+                  {partnerCard.title}
+                </h3>
+                <p className="text-[var(--color-text-muted)] mb-4">
+                  {partnerCard.description}
                 </p>
 
-                {/* Contact Info */}
+                <ul className="space-y-2">
+                  {partnerCard.benefits.map((benefit, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 text-sm text-[var(--color-brand-dark)]"
+                    >
+                      <svg
+                        className="w-4 h-4 text-[var(--color-brand-primary)]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
+                  Contact Information
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-heading mb-6">
+                  Let's Talk Partnership
+                </h2>
+                <p className="text-lg text-body mb-8 leading-relaxed">
+                  Reach out to our team for onboarding guidance, support, and
+                  partnership consultation.
+                </p>
+
                 <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-medical-border)]">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center flex-shrink-0">
@@ -447,151 +358,184 @@ const ContactPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Form Side */}
+            {/* Right Column */}
+            <div>
               <form
                 onSubmit={handleSubmit}
-                className="contact-form bg-white p-8 rounded-2xl border border-[var(--color-medical-border)] shadow-sm"
+                className="contact-form bg-white p-8 lg:p-10 rounded-2xl border border-[var(--color-medical-border)] shadow-lg"
               >
                 <div className="space-y-6">
-                  {/* Email */}
                   <div>
-                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                      Work Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                      placeholder="your.email@example.com"
-                    />
+                    <h3 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
+                      Partner with AURA
+                    </h3>
+                    <p className="text-[var(--color-text-muted)]">
+                      Fill out the form to discuss volume licensing and API
+                      integrations
+                    </p>
                   </div>
 
-                  {/* Name Fields */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        required
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        required
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                      />
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-wide text-[var(--color-brand-primary)] mb-4">
+                      Contact Person
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationContactName"
+                          required
+                          value={formData.organizationContactName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Job Title / Role{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationContactRole"
+                          required
+                          value={formData.organizationContactRole}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Work Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          name="organizationContactEmail"
+                          required
+                          value={formData.organizationContactEmail}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder="contact@organization.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          name="organizationPhone"
+                          required
+                          value={formData.organizationPhone}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder="+84 ..."
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Organization Name (only for organisation type) */}
-                  {userType === 'organisation' && (
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                        Organization Name{' '}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="organizationName"
-                        required
-                        value={formData.organizationName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                      />
-                    </div>
-                  )}
-
-                  {/* Role/Specialty */}
                   <div>
-                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                      {userType === 'specialist' ? 'Specialty' : 'Your Role'}{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="role"
-                      required
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
-                    >
-                      <option value="">Select an option</option>
-                      {userType === 'specialist' ? (
-                        <>
-                          <option value="ophthalmologist">
-                            Ophthalmologist
+                    <p className="text-sm font-bold uppercase tracking-wide text-[var(--color-brand-primary)] mb-4">
+                      Organization Details
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Organization Name{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationName"
+                          required
+                          value={formData.organizationName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Organization Type{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="organizationType"
+                          required
+                          value={formData.organizationType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
+                        >
+                          <option value="">Select an option</option>
+                          <option value="public_hospital">
+                            Public Hospital
                           </option>
-                          <option value="optometrist">Optometrist</option>
-                          <option value="retina_specialist">
-                            Retina Specialist
+                          <option value="private_hospital">
+                            Private Hospital
                           </option>
-                          <option value="general_practitioner">
-                            General Practitioner
-                          </option>
+                          <option value="clinic_chain">Clinic Chain</option>
                           <option value="other">Other</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="cto">CTO / IT Director</option>
-                          <option value="cmo">CMO / Medical Director</option>
-                          <option value="operations">Operations Manager</option>
-                          <option value="procurement">Procurement</option>
-                          <option value="other">Other</option>
-                        </>
-                      )}
-                    </select>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          City / Location
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationLocation"
+                          value={formData.organizationLocation}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Estimated Volume (only for organisation) */}
-                  {userType === 'organisation' && (
-                    <div>
-                      <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                        Estimated Monthly Screenings
-                      </label>
-                      <select
-                        name="estimatedVolume"
-                        value={formData.estimatedVolume}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
-                      >
-                        <option value="">Select range</option>
-                        <option value="100-500">100 - 500</option>
-                        <option value="500-1000">500 - 1,000</option>
-                        <option value="1000-5000">1,000 - 5,000</option>
-                        <option value="5000+">5,000+</option>
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Message */}
                   <div>
-                    <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                      Additional Information
-                    </label>
-                    <textarea
-                      name="message"
-                      rows={4}
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
-                      placeholder="Tell us about your needs or questions..."
-                    />
+                    <p className="text-sm font-bold uppercase tracking-wide text-[var(--color-brand-primary)] mb-4">
+                      Partnership Needs
+                    </p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Estimated Monthly Screenings{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="estimatedVolume"
+                          required
+                          value={formData.estimatedVolume}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
+                        >
+                          <option value="">Select range</option>
+                          <option value="lt_100">&lt;100</option>
+                          <option value="100_500">100-500</option>
+                          <option value="500_2000">500-2000</option>
+                          <option value="gt_2000">&gt;2000</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          Additional Information
+                        </label>
+                        <textarea
+                          name="organizationMessage"
+                          rows={4}
+                          value={formData.organizationMessage}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] resize-none"
+                          placeholder="Share your use case, integration needs, or timeline..."
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Terms */}
@@ -632,9 +576,7 @@ const ContactPage = () => {
                     type="submit"
                     className="w-full py-4 rounded-lg bg-[var(--color-brand-primary)] text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                   >
-                    {userType === 'specialist'
-                      ? 'Request Access'
-                      : 'Request Enterprise Demo'}
+                    Send Partnership Request
                   </button>
                 </div>
               </form>
@@ -686,7 +628,7 @@ const ContactPage = () => {
                 },
                 {
                   q: 'How long does the onboarding process take?',
-                  a: 'Most specialists can be set up and running within 48 hours. Enterprise integrations typically take 2-4 weeks depending on complexity.',
+                  a: 'Most organizations can be set up and running within 2-4 weeks depending on integration complexity.',
                 },
               ].map((faq, index) => (
                 <details
