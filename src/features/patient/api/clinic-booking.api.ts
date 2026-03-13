@@ -1,5 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import { PATIENT_ENDPOINTS } from './patient.api';
+import type { ApiResponse, PagedResult } from '../types';
 import type {
   ClinicAppointmentDto,
   CompleteClinicAppointmentRequest,
@@ -9,23 +11,85 @@ import type {
   OrganisationSummaryDto,
 } from '../types/clinic-booking.types';
 
+interface PatientSearchOrganisationItem {
+  id: string;
+  name: string;
+  address?: string | null;
+  orgType?: string | null;
+  ratingAverage?: number | null;
+  ratingCount?: number | null;
+  ownerAvatarUrl?: string | null;
+}
+
+const ORGANISATION_AVATAR_FALLBACK = import.meta.env.VITE_AVATAR_FALLBACK_URL;
+
+const getOrganisationAvatarUrl = (name: string): string =>
+  `${ORGANISATION_AVATAR_FALLBACK}${encodeURIComponent(name || 'ORG')}`;
+
+interface PatientSearchSlotItem {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  bookedCount: number;
+  availableCapacity: number;
+  cost?: number | null;
+}
+
 export const getOrganisations = async (): Promise<OrganisationSummaryDto[]> => {
-  const response = await api.get<OrganisationSummaryDto[]>(
-    API_ENDPOINTS.CLINIC_BOOKING.ORGANISATIONS
-  );
-  return response.data;
+  const response = await api.get<
+    ApiResponse<PagedResult<PatientSearchOrganisationItem>>
+  >(PATIENT_ENDPOINTS.SEARCH.ORGANISATIONS, {
+    params: {
+      pageNumber: 1,
+      pageSize: 100,
+    },
+  });
+
+  const organisations = response.data.data?.items ?? [];
+
+  return organisations.map((item) => {
+    return {
+      id: item.id,
+      name: item.name,
+      address: item.address ?? null,
+      city: null,
+      phone: null,
+      orgType: item.orgType ?? null,
+      ratingAverage: item.ratingAverage ?? null,
+      ratingCount: item.ratingCount ?? null,
+      avatarUrl: item.ownerAvatarUrl ?? getOrganisationAvatarUrl(item.name),
+    };
+  });
 };
 
 export const getOrganisationAvailableSlots = async (
   organisationId: string,
   date?: string
 ): Promise<OrganisationAvailableSlotDto[]> => {
-  const url = date
-    ? `${API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(organisationId)}?date=${date}`
-    : API_ENDPOINTS.CLINIC_BOOKING.AVAILABLE_SLOTS(organisationId);
+  const response = await api.get<
+    ApiResponse<PagedResult<PatientSearchSlotItem>>
+  >(PATIENT_ENDPOINTS.SEARCH.AVAILABLE_SLOTS, {
+    params: {
+      organisationId,
+      fromDate: date,
+      toDate: date,
+      pageNumber: 1,
+      pageSize: 100,
+    },
+  });
 
-  const response = await api.get<OrganisationAvailableSlotDto[]>(url);
-  return response.data;
+  return (response.data.data?.items ?? []).map((slot) => ({
+    slotId: slot.id,
+    date: slot.date,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    maxCapacity: slot.maxCapacity,
+    bookedCount: slot.bookedCount,
+    remaining: slot.availableCapacity,
+    cost: slot.cost ?? null,
+  }));
 };
 
 export const createClinicAppointment = async (
@@ -47,10 +111,15 @@ export const cancelClinicAppointment = async (
 export const getPatientClinicAppointments = async (
   patientId: string
 ): Promise<ClinicAppointmentDto[]> => {
-  const response = await api.get<ClinicAppointmentDto[]>(
-    API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId)
-  );
-  return response.data;
+  try {
+    const response = await api.get<ClinicAppointmentDto[]>(
+      API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId)
+    );
+    return response.data;
+  } catch {
+    // Keep clinic page usable while clinic-appointments endpoint is unavailable.
+    return [];
+  }
 };
 
 export const getOrganisationAppointments = async (

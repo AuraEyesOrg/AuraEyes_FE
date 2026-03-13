@@ -18,7 +18,7 @@ import {
 } from '../api/patient.api';
 import Spinner from '@/components/ui/spinner';
 
-const FALLBACK_AVATAR = 'https://api.dicebear.com/9.x/personas/svg?seed=';
+const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
 
 function getAvatarUrl(doctor: OphthalmologistSearchItem): string {
   if (doctor.userAvatarUrl) return doctor.userAvatarUrl;
