@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import {
-  Building2,
   Calendar,
   Clock,
   MapPin,
   Search,
+  Star,
   Stethoscope,
   Trash2,
 } from 'lucide-react';
@@ -208,13 +208,27 @@ export default function ClinicsPage() {
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-cyan-100 p-2 dark:bg-cyan-900/20">
-                          <Building2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                        </div>
+                        <img
+                          src={organisation.avatarUrl ?? ''}
+                          alt={organisation.name}
+                          className="h-10 w-10 rounded-lg border border-(--border-color) bg-(--bg-tertiary) object-cover"
+                        />
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-(--text-primary)">
                             {organisation.name}
                           </p>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-(--text-secondary)">
+                            <span className="inline-flex items-center rounded-full bg-cyan-100 px-2 py-0.5 font-medium text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                              {organisation.orgType ?? 'Organisation'}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="h-3.5 w-3.5 text-amber-500" />
+                              {organisation.ratingAverage?.toFixed(1) ?? '0.0'}
+                              <span className="text-(--text-muted)">
+                                ({organisation.ratingCount ?? 0})
+                              </span>
+                            </span>
+                          </div>
                           <p className="mt-1 flex items-center gap-1 text-xs text-(--text-secondary)">
                             <MapPin className="h-3.5 w-3.5" />
                             <span className="truncate">

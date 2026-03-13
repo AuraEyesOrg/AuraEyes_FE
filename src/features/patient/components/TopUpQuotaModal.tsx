@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Zap, CheckCircle, AlertTriangle } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button/loading-button';
 import { useBuyQuota } from '../hooks/use-quota';
@@ -60,7 +61,7 @@ export function TopUpQuotaModal({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       ref={backdropRef}
       role="dialog"
@@ -158,6 +159,7 @@ export function TopUpQuotaModal({
           </LoadingButton>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

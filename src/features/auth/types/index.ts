@@ -74,6 +74,7 @@ export interface UserInfoResponse {
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string;
+  roleId?: string | null;
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
   verificationStatus?: string | null;

@@ -1,0 +1,71 @@
+name: Vercel CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['develop', 'main']
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '.github/workflows/fe-cd.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: ['develop', 'main']
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '.github/workflows/fe-cd.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'vite.config.ts' # Thêm cái này
+      - 'index.html' # Thêm cái này nếu có sửa
+
+jobs:
+  copy-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Deploy Source to Production Repo
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s\n" "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+          git config --global user.name "QuocAn108"
+          git config --global user.email "anhoang800140@gmail.com"
+
+          git clone git@github.com:QuocAn108/AuraEyes-Host.git production-repo
+          cd production-repo
+
+          git fetch origin master
+          git checkout master
+          git reset --hard origin/master
+          cd ..
+
+          rsync -avc --delete \
+            --exclude 'production-repo' \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            ./ production-repo/
+
+          cd production-repo
+          git add .
+
+          if git diff --staged --quiet; then
+            echo "No changes to deploy, but triggering CD anyway."
+            git commit --allow-empty -m "Trigger CD"
+          else
+            git commit -m "Deploy source from ${{ github.ref_name }} branch"
+          fi
+
+          git push origin master

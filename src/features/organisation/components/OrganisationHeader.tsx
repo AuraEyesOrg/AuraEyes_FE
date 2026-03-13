@@ -1,6 +1,7 @@
-import { Search, Bell, Moon, Sun, User } from 'lucide-react';
+import { Search, Moon, Sun, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
+import { NotificationDropdown } from '@/components/ui/notification';
 
 interface OrganisationHeaderProps {
   pageName?: string;
@@ -47,10 +48,7 @@ export default function OrganisationHeader({
           </button>
 
           {/* Notifications */}
-          <button className="header-action-btn relative">
-            <Bell size={20} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationDropdown />
 
           {/* User Profile */}
           <button className="flex items-center gap-2 header-action-btn">

@@ -27,7 +27,7 @@ const TwoFactorVerifyPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const { login: authLogin } = useAuthStore();
+  const { login: authLogin, setIsAuthenticated } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +78,8 @@ const TwoFactorVerifyPage = () => {
       if (response.succeeded) {
         if (response.user) {
           authLogin(response.user);
+        } else {
+          setIsAuthenticated(true);
         }
 
         // Navigate based on user role

@@ -31,6 +31,7 @@ export type {
   AIAlert,
   AIModelMonitoringData,
   // Audit Logs & Compliance
+  AuditLogDto,
   AuditLogEntry,
   ComplianceReport,
   AuditStats,

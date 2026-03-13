@@ -35,7 +35,6 @@ export {
   userApi,
   aiModelApi,
   auditApi,
-  complianceApi,
   permissionsApi,
 } from './api';
 

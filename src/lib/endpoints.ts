@@ -259,6 +259,20 @@ export const API_ENDPOINTS = {
   QUOTAS: {
     BALANCE: '/quotas/balance',
     BUY: '/quotas/buy',
+    DEDUCT: '/quotas/deduct',
+  },
+
+  // Notification Management
+  NOTIFICATIONS: {
+    /** GET - Paginated list of notifications */
+    LIST: '/notifications',
+    /** GET - Get unread notification count */
+    UNREAD_COUNT: '/notifications/unread-count',
+    /** POST - Mark a notification as read */
+    MARK_READ: (notificationId: string) =>
+      `/notifications/${notificationId}/mark-read`,
+    /** POST - Mark all notifications as read */
+    MARK_ALL_READ: '/notifications/mark-all-read',
   },
 } as const;
 
