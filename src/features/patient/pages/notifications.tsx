@@ -17,15 +17,20 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 
+type NotificationFilter = 'all' | 'unread' | NotificationType;
+
+const isNotificationTypeValue = (value: number): value is NotificationType => {
+  return Object.values(NotificationType).includes(value as NotificationType);
+};
+
 /**
  * Notifications Page - Complete notification history with filtering & pagination
  */
 export default function NotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState<
-    'all' | 'unread' | NotificationType
-  >('all');
+  const [selectedFilter, setSelectedFilter] =
+    useState<NotificationFilter>('all');
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get('search') || ''
   );
@@ -131,6 +136,18 @@ export default function NotificationsPage() {
     });
   };
 
+  const handleFilterChange = (value: string) => {
+    if (value === 'all' || value === 'unread') {
+      setSelectedFilter(value);
+      return;
+    }
+
+    const parsedValue = Number(value);
+    if (isNotificationTypeValue(parsedValue)) {
+      setSelectedFilter(parsedValue);
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -195,7 +212,7 @@ export default function NotificationsPage() {
               <Filter size={20} className="text-gray-400" />
               <select
                 value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value as any)}
+                onChange={(e) => handleFilterChange(e.target.value)}
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
                          bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
                          focus:ring-2 focus:ring-blue-500"

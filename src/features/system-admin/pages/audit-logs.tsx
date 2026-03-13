@@ -4,7 +4,7 @@
  * FR-43: Log system activities and financial transactions for auditing
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FileText,
   Search,
@@ -21,6 +21,7 @@ import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import AuditLogDetailModal from '../components/AuditLogDetailModal';
 import { useAuditLogs } from '../hooks/useAuditLogs';
+import useDebounce from '@/hooks/use-debounce';
 import type { AuditLogDto } from '../types/system-admin.types';
 
 // ============ Action Badge Config ============
@@ -104,7 +105,8 @@ export default function AuditLogsPage() {
   const [pageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('');
-  const [entityNameFilter, setEntityNameFilter] = useState('');
+  const [entityNameFilterInput, setEntityNameFilterInput] = useState('');
+  const debouncedEntityNameFilter = useDebounce(entityNameFilterInput, 500);
 
   // Debounced search — simple approach: send on current value
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -118,7 +120,7 @@ export default function AuditLogsPage() {
     pageSize,
     searchTerm: debouncedSearch || undefined,
     action: actionFilter || undefined,
-    entityName: entityNameFilter || undefined,
+    entityName: debouncedEntityNameFilter || undefined,
   });
 
   const logs = data?.items ?? [];
@@ -136,6 +138,10 @@ export default function AuditLogsPage() {
     setter(value);
     setPageNumber(1);
   };
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [debouncedEntityNameFilter]);
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -205,10 +211,8 @@ export default function AuditLogsPage() {
                 </span>
                 <input
                   type="text"
-                  value={entityNameFilter}
-                  onChange={(e) =>
-                    handleFilterChange(setEntityNameFilter, e.target.value)
-                  }
+                  value={entityNameFilterInput}
+                  onChange={(e) => setEntityNameFilterInput(e.target.value)}
                   placeholder="e.g. WalletTransaction"
                   className="bg-transparent border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-0 w-40 py-0 pl-1 placeholder:text-slate-400"
                 />
