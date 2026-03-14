@@ -10,7 +10,7 @@ import {
   useMarkNoShowClinicAppointment,
   useOrganisationAppointments,
   useStartClinicAppointment,
-} from '@/features/patient/hooks/use-clinic-booking';
+} from '../hooks/use-organisation-clinic-booking';
 import { mapClinicStaffErrorMessage } from '@/lib/api-error';
 
 const formatTime = (time: string) => {

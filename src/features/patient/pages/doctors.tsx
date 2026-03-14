@@ -9,6 +9,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import {
   searchOphthalmologistsForPatient,
@@ -45,6 +46,7 @@ function formatSlotDate(iso: string) {
 }
 
 export default function DoctorsPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoctor, setSelectedDoctor] =
     useState<OphthalmologistSearchItem | null>(null);
@@ -282,7 +284,15 @@ export default function DoctorsPage() {
                             : 'Full'}
                         </span>
                         {slot.availableCapacity > 0 && (
-                          <button className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-brand/90 text-white text-xs font-medium rounded-lg transition-colors">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/patient/book?doctorId=${encodeURIComponent(selectedDoctor?.id ?? '')}`
+                              )
+                            }
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-brand/90 text-white text-xs font-medium rounded-lg transition-colors"
+                          >
                             Book
                             <ChevronRight className="w-3 h-3" />
                           </button>

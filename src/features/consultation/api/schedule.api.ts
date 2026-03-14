@@ -1,6 +1,7 @@
 /**
  * Ophthalmologist Schedule API
- * Matches route: api/ophthalmologists/{ophthalmologistId}/schedules
+ * Backend currently exposes appointment slots at /api/appointment-slots.
+ * This adapter keeps the existing schedule page contract stable.
  */
 
 import { api } from '@/lib/api';
@@ -31,59 +32,215 @@ interface PagedResult<T> {
   hasNext: boolean;
 }
 
+interface AppointmentSlotListDto {
+  id: string;
+  scheduleTemplateId: string;
+  ophthalId: string | null;
+  orgId: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  cost: number | null;
+  createdAt: string;
+}
+
+interface AppointmentSlotDto extends AppointmentSlotListDto {
+  updatedAt: string | null;
+}
+
+interface ScheduleTemplateListDto {
+  id: string;
+}
+
+interface CreateScheduleTemplateResponse {
+  id: string;
+}
+
+const toDayOfWeek = (date: string): number => {
+  // JS: 0=Sun..6=Sat, backend also accepts this DayOfWeek numeric mapping.
+  const day = new Date(`${date}T00:00:00`).getDay();
+  return Number.isNaN(day) ? 1 : day;
+};
+
+const calcSlotDurationMinutes = (
+  startTime: string,
+  endTime: string
+): number => {
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+
+  if (
+    Number.isNaN(sh) ||
+    Number.isNaN(sm) ||
+    Number.isNaN(eh) ||
+    Number.isNaN(em)
+  ) {
+    return 30;
+  }
+
+  const start = sh * 60 + sm;
+  const end = eh * 60 + em;
+  const duration = end - start;
+  return duration > 0 ? duration : 30;
+};
+
+const mapStatusToValue = (status: string): number => {
+  switch (status.toLowerCase()) {
+    case 'available':
+      return 1;
+    case 'booked':
+      return 2;
+    case 'cancelled':
+      return 3;
+    case 'completed':
+      return 4;
+    case 'noshow':
+      return 5;
+    case 'reserved':
+      return 6;
+    case 'blocked':
+      return 7;
+    default:
+      return 1;
+  }
+};
+
+const mapSlotToScheduleList = (
+  slot: AppointmentSlotListDto
+): ScheduleListDto => ({
+  id: slot.id,
+  ophthalmologistId: slot.ophthalId ?? '',
+  organisationId: slot.orgId,
+  date: slot.date,
+  startTime: slot.startTime,
+  endTime: slot.endTime,
+  status: mapStatusToValue(slot.status),
+  statusName: slot.status,
+  slotType: 1,
+  slotTypeName: 'Consultation',
+  cost: slot.cost,
+  createdAt: slot.createdAt,
+});
+
+const mapSlotToScheduleDetail = (slot: AppointmentSlotDto): ScheduleDto => ({
+  id: slot.id,
+  ophthalmologistId: slot.ophthalId ?? '',
+  ophthalmologistName: null,
+  organisationId: slot.orgId,
+  organisationName: null,
+  date: slot.date,
+  startTime: slot.startTime,
+  endTime: slot.endTime,
+  status: mapStatusToValue(slot.status),
+  statusName: slot.status,
+  slotType: 1,
+  slotTypeName: 'Consultation',
+  cost: slot.cost,
+  createdAt: slot.createdAt,
+  updatedAt: slot.updatedAt,
+});
+
 // ============ QUERIES ============
 
-/** GET /api/ophthalmologists/:ophId/schedules */
+/** GET /api/appointment-slots?ophthalId=:ophId */
 export const getSchedules = async (
   params: GetSchedulesParams
 ): Promise<PagedResult<ScheduleListDto>> => {
-  const { ophthalmologistId, ...queryParams } = params;
-  const response = await api.get<ApiResponse<PagedResult<ScheduleListDto>>>(
-    API_ENDPOINTS.OPHTHALMOLOGIST.SCHEDULES.LIST(ophthalmologistId),
-    { params: queryParams }
-  );
-  return response.data.data;
+  const { ophthalmologistId, slotType, ...queryParams } = params;
+  const response = await api.get<
+    ApiResponse<PagedResult<AppointmentSlotListDto>>
+  >(API_ENDPOINTS.APPOINTMENT_SLOTS.LIST, {
+    params: {
+      ...queryParams,
+      ophthalId: ophthalmologistId,
+    },
+  });
+
+  return {
+    ...response.data.data,
+    items: response.data.data.items.map(mapSlotToScheduleList),
+  };
 };
 
-/** GET /api/ophthalmologists/:ophId/schedules/:scheduleId */
+/** GET /api/appointment-slots/:slotId */
 export const getSchedule = async (
-  ophthalmologistId: string,
+  _ophthalmologistId: string,
   scheduleId: string
 ): Promise<ScheduleDto> => {
-  const response = await api.get<ApiResponse<ScheduleDto>>(
-    API_ENDPOINTS.OPHTHALMOLOGIST.SCHEDULES.DETAIL(
-      ophthalmologistId,
-      scheduleId
-    )
+  const response = await api.get<ApiResponse<AppointmentSlotDto>>(
+    API_ENDPOINTS.APPOINTMENT_SLOTS.DETAIL(scheduleId)
   );
-  return response.data.data;
+
+  return mapSlotToScheduleDetail(response.data.data);
 };
 
 // ============ MUTATIONS ============
 
-/** POST /api/ophthalmologists/:ophId/schedules */
+/** POST /api/appointment-slots */
 export const createSchedule = async (
   ophthalmologistId: string,
   data: CreateScheduleRequest
 ): Promise<string> => {
+  // Creating a slot requires an existing template on BE.
+  const templateResponse = await api.get<
+    ApiResponse<PagedResult<ScheduleTemplateListDto>>
+  >(API_ENDPOINTS.SCHEDULE_TEMPLATES.LIST, {
+    params: {
+      ophthalId: ophthalmologistId,
+      pageNumber: 1,
+      pageSize: 1,
+    },
+  });
+
+  let template = templateResponse.data.data.items[0];
+
+  // If no template exists, create a minimal one from the requested slot info.
+  if (!template) {
+    const createTemplateResponse = await api.post<
+      ApiResponse<CreateScheduleTemplateResponse | string>
+    >(API_ENDPOINTS.SCHEDULE_TEMPLATES.CREATE, {
+      ophthalId: ophthalmologistId,
+      dayOfWeek: toDayOfWeek(data.date),
+      startTime: data.startTime,
+      endTime: data.endTime,
+      slotDuration: calcSlotDurationMinutes(data.startTime, data.endTime),
+      maxCapacity: 1,
+    });
+
+    const templateId =
+      typeof createTemplateResponse.data.data === 'string'
+        ? createTemplateResponse.data.data
+        : createTemplateResponse.data.data.id;
+
+    if (!templateId) {
+      throw new Error('Failed to create schedule template automatically.');
+    }
+
+    template = { id: templateId };
+  }
+
   const response = await api.post<ApiResponse<string>>(
-    API_ENDPOINTS.OPHTHALMOLOGIST.SCHEDULES.CREATE(ophthalmologistId),
-    data
+    API_ENDPOINTS.APPOINTMENT_SLOTS.LIST,
+    {
+      scheduleTemplateId: template.id,
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      cost: data.cost,
+    }
   );
   return response.data.data;
 };
 
-/** PATCH /api/ophthalmologists/:ophId/schedules/:scheduleId/status */
+/** PATCH /api/appointment-slots/:slotId/status */
 export const updateScheduleStatus = async (
-  ophthalmologistId: string,
+  _ophthalmologistId: string,
   scheduleId: string,
   data: UpdateScheduleStatusRequest
 ): Promise<boolean> => {
   const response = await api.patch<ApiResponse<boolean>>(
-    API_ENDPOINTS.OPHTHALMOLOGIST.SCHEDULES.UPDATE_STATUS(
-      ophthalmologistId,
-      scheduleId
-    ),
+    API_ENDPOINTS.APPOINTMENT_SLOTS.UPDATE_STATUS(scheduleId),
     data
   );
   return response.data.data;

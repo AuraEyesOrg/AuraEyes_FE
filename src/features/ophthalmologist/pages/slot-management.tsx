@@ -39,9 +39,32 @@ import type {
   ScheduleTemplateDto,
 } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
+import { getItem } from '@/lib/local-storage';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // TODO: Replace with actual doctor ID from auth store
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
+
+const getDoctorProfileId = (fallbackUserId?: string) => {
+  const token = getItem<string>('token');
+
+  if (token) {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+      const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+      const decoded = JSON.parse(window.atob(normalized + padding)) as {
+        profile_id?: string;
+      };
+
+      if (decoded.profile_id) return decoded.profile_id;
+    } catch {
+      // Ignore parse errors and use fallback values.
+    }
+  }
+
+  return fallbackUserId ?? CURRENT_DOCTOR_ID;
+};
 
 const formatTime = (timeStr: string) => {
   const [h, m] = timeStr.split(':');
@@ -49,6 +72,14 @@ const formatTime = (timeStr: string) => {
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour % 12 || 12;
   return `${displayHour}:${m} ${ampm}`;
+};
+
+const formatTemplateCost = (cost: number | null | undefined) => {
+  if (typeof cost === 'number' && Number.isFinite(cost) && cost > 0) {
+    return `${cost.toLocaleString('vi-VN')} VND`;
+  }
+
+  return 'Chua cau hinh';
 };
 
 const getSlotStatusColor = (status: string): string => {
@@ -73,9 +104,7 @@ const getSlotStatusColor = (status: string): string => {
 
 export default function SlotManagementPage() {
   const { user } = useAuthStore();
-  // TODO: Get ophthalmologistId from user profile or separate API call
-  // For now, using user ID or constant for development
-  const doctorId = user?.id ?? CURRENT_DOCTOR_ID;
+  const doctorId = useMemo(() => getDoctorProfileId(user?.id), [user?.id]);
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -96,6 +125,8 @@ export default function SlotManagementPage() {
   // Generate form state
   const [generateFromDate, setGenerateFromDate] = useState('');
   const [generateToDate, setGenerateToDate] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -132,6 +163,11 @@ export default function SlotManagementPage() {
   const deleteTemplateMutation = useDeleteScheduleTemplate();
 
   const slots = slotsData?.items ?? [];
+
+  const resetMessages = useCallback(() => {
+    setMessage('');
+    setError('');
+  }, []);
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
@@ -183,28 +219,55 @@ export default function SlotManagementPage() {
   // Handlers
   const handleBlockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
-      blockMutation.mutate({
-        slotId: slot.id,
-        request: {
-          ophthalmologistId: doctorId,
-          reason: 'Blocked by doctor',
+      if (!slot.ophthalId || slot.ophthalId !== doctorId) {
+        setError('Ban chi co the block slot cua chinh minh.');
+        return;
+      }
+
+      resetMessages();
+      blockMutation.mutate(
+        {
+          slotId: slot.id,
+          request: {
+            ophthalmologistId: doctorId,
+            reason: 'Blocked by doctor',
+          },
         },
-      });
+        {
+          onSuccess: () => setMessage('Slot blocked.'),
+          onError: (err) =>
+            setError(extractApiErrorMessage(err, 'Failed to block slot.')),
+        }
+      );
     },
-    [doctorId, blockMutation]
+    [doctorId, blockMutation, resetMessages]
   );
 
   const handleUnblockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
-      unblockMutation.mutate({
-        slotId: slot.id,
-        request: { ophthalmologistId: doctorId },
-      });
+      if (!slot.ophthalId || slot.ophthalId !== doctorId) {
+        setError('Ban chi co the unblock slot cua chinh minh.');
+        return;
+      }
+
+      resetMessages();
+      unblockMutation.mutate(
+        {
+          slotId: slot.id,
+          request: { ophthalmologistId: doctorId },
+        },
+        {
+          onSuccess: () => setMessage('Slot unblocked.'),
+          onError: (err) =>
+            setError(extractApiErrorMessage(err, 'Failed to unblock slot.')),
+        }
+      );
     },
-    [doctorId, unblockMutation]
+    [doctorId, unblockMutation, resetMessages]
   );
 
   const handleCreateTemplate = useCallback(() => {
+    resetMessages();
     createTemplateMutation.mutate(
       {
         ophthalId: doctorId,
@@ -218,6 +281,7 @@ export default function SlotManagementPage() {
       },
       {
         onSuccess: () => {
+          setMessage('Template created successfully.');
           setShowTemplateModal(false);
           // Reset form
           setTemplateDayOfWeek(1);
@@ -226,6 +290,11 @@ export default function SlotManagementPage() {
           setTemplateSlotDuration(30);
           setTemplateSlotType(SlotType.Consultation);
           setTemplateCost('200000');
+        },
+        onError: (err) => {
+          setError(
+            extractApiErrorMessage(err, 'Failed to create schedule template.')
+          );
         },
       }
     );
@@ -238,10 +307,16 @@ export default function SlotManagementPage() {
     templateSlotType,
     templateCost,
     createTemplateMutation,
+    resetMessages,
   ]);
 
   const handleGenerateSlots = useCallback(() => {
-    if (!selectedTemplate || !generateFromDate || !generateToDate) return;
+    if (!selectedTemplate || !generateFromDate || !generateToDate) {
+      setError('Please choose a template and date range before generating.');
+      return;
+    }
+
+    resetMessages();
 
     generateMutation.mutate(
       {
@@ -256,19 +331,33 @@ export default function SlotManagementPage() {
           setSelectedTemplate(null);
           setGenerateFromDate('');
           setGenerateToDate('');
-          alert(`Successfully generated ${count} slots!`);
+          setMessage(`Generated ${count} slots.`);
+        },
+        onError: (err) => {
+          setError(extractApiErrorMessage(err, 'Failed to generate slots.'));
         },
       }
     );
-  }, [selectedTemplate, generateFromDate, generateToDate, generateMutation]);
+  }, [
+    selectedTemplate,
+    generateFromDate,
+    generateToDate,
+    generateMutation,
+    resetMessages,
+  ]);
 
   const handleDeleteTemplate = useCallback(
     (templateId: string) => {
       if (confirm('Are you sure you want to delete this template?')) {
-        deleteTemplateMutation.mutate(templateId);
+        resetMessages();
+        deleteTemplateMutation.mutate(templateId, {
+          onSuccess: () => setMessage('Template deleted.'),
+          onError: (err) =>
+            setError(extractApiErrorMessage(err, 'Failed to delete template.')),
+        });
       }
     },
-    [deleteTemplateMutation]
+    [deleteTemplateMutation, resetMessages]
   );
 
   const openGenerateModal = useCallback((template: ScheduleTemplateDto) => {
@@ -311,6 +400,21 @@ export default function SlotManagementPage() {
         <DoctorHeader />
 
         <main className="p-6">
+          {(message || error) && (
+            <div className="mb-4 space-y-2">
+              {message && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {message}
+                </div>
+              )}
+              {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -430,7 +534,7 @@ export default function SlotManagementPage() {
                           {template.slotDuration} min slots
                         </span>
                         <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          {template.cost?.toLocaleString('vi-VN')} VND
+                          {formatTemplateCost(template.cost)}
                         </span>
                       </div>
                     </div>
@@ -516,40 +620,45 @@ export default function SlotManagementPage() {
                 >
                   {slotsByDate[day.date]?.length ? (
                     <div className="space-y-2">
-                      {slotsByDate[day.date].map((slot) => (
-                        <div
-                          key={slot.id}
-                          className={`relative px-2 py-2 rounded-lg border text-xs font-medium ${getSlotStatusColor(slot.status)}`}
-                        >
-                          <div className="flex items-center justify-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatTime(slot.startTime)}
-                          </div>
-                          <div className="text-[10px] mt-1 opacity-75 text-center">
-                            {slot.status}
-                          </div>
+                      {slotsByDate[day.date].map((slot) => {
+                        const canModifySlot =
+                          !!slot.ophthalId && slot.ophthalId === doctorId;
 
-                          {/* Block/Unblock Button */}
-                          {slot.status === 'Available' && (
-                            <button
-                              onClick={() => handleBlockSlot(slot)}
-                              className="absolute -top-1 -right-1 p-1 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow"
-                              title="Block this slot"
-                            >
-                              <PowerOff className="w-3 h-3" />
-                            </button>
-                          )}
-                          {slot.status === 'Blocked' && (
-                            <button
-                              onClick={() => handleUnblockSlot(slot)}
-                              className="absolute -top-1 -right-1 p-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow"
-                              title="Unblock this slot"
-                            >
-                              <Power className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                        return (
+                          <div
+                            key={slot.id}
+                            className={`relative px-2 py-2 rounded-lg border text-xs font-medium ${getSlotStatusColor(slot.status)}`}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {formatTime(slot.startTime)}
+                            </div>
+                            <div className="text-[10px] mt-1 opacity-75 text-center">
+                              {slot.status}
+                            </div>
+
+                            {/* Block/Unblock Button */}
+                            {slot.status === 'Available' && canModifySlot && (
+                              <button
+                                onClick={() => handleBlockSlot(slot)}
+                                className="absolute -top-1 -right-1 p-1 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow"
+                                title="Block this slot"
+                              >
+                                <PowerOff className="w-3 h-3" />
+                              </button>
+                            )}
+                            {slot.status === 'Blocked' && canModifySlot && (
+                              <button
+                                onClick={() => handleUnblockSlot(slot)}
+                                className="absolute -top-1 -right-1 p-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow"
+                                title="Unblock this slot"
+                              >
+                                <Power className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center">
