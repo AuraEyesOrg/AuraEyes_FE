@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
+import useAuthStore from '@/store/auth-store';
+import { getItem } from '@/lib/local-storage';
+import { extractApiErrorMessage } from '@/lib/api-error';
 import {
   useSchedules,
   useCreateSchedule,
@@ -25,7 +28,7 @@ import {
 } from '@/types/schedule';
 import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
 
-// TODO: Replace with actual doctor ID from auth store
+// Fallback value for local development if auth user does not include profile id.
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
 
 type FilterTab = 'all' | 'available' | 'booked' | 'past';
@@ -67,6 +70,7 @@ const formatTime = (timeStr: string) => {
 };
 
 export default function SchedulesPage() {
+  const { user } = useAuthStore();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
@@ -79,6 +83,26 @@ export default function SchedulesPage() {
     SlotType.Consultation
   );
   const [formCost, setFormCost] = useState('');
+
+  const doctorId = useMemo(() => {
+    if (user?.roleId) return user.roleId;
+
+    const token = getItem<string>('token');
+    if (token) {
+      try {
+        const payloadBase64 = token.split('.')[1];
+        const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+        const decoded = JSON.parse(window.atob(normalized)) as {
+          profile_id?: string;
+        };
+        if (decoded.profile_id) return decoded.profile_id;
+      } catch {
+        // Ignore parsing failures and fall through to fallback id.
+      }
+    }
+
+    return CURRENT_DOCTOR_ID;
+  }, [user?.roleId]);
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -97,7 +121,7 @@ export default function SchedulesPage() {
   }, [currentWeekOffset]);
 
   const { data: schedulesData, isLoading } = useSchedules({
-    ophthalmologistId: CURRENT_DOCTOR_ID,
+    ophthalmologistId: doctorId,
     fromDate: weekRange.from,
     toDate: weekRange.to,
     pageSize: 100,
@@ -204,7 +228,7 @@ export default function SchedulesPage() {
     };
 
     createMutation.mutate(
-      { ...request, ophthalmologistId: CURRENT_DOCTOR_ID },
+      { ...request, ophthalmologistId: doctorId },
       {
         onSuccess: () => {
           setShowCreateModal(false);
@@ -223,15 +247,23 @@ export default function SchedulesPage() {
     formSlotType,
     formCost,
     createMutation,
+    doctorId,
   ]);
 
   const handleCancelSlot = (scheduleId: string) => {
     updateStatusMutation.mutate({
-      ophthalmologistId: CURRENT_DOCTOR_ID,
+      ophthalmologistId: doctorId,
       scheduleId,
       newStatus: ScheduleStatus.Cancelled,
     });
   };
+
+  const createErrorMessage = createMutation.isError
+    ? extractApiErrorMessage(
+        createMutation.error,
+        'Failed to create slot. Please try again.'
+      )
+    : null;
 
   if (isLoading) {
     return (
@@ -577,10 +609,10 @@ export default function SchedulesPage() {
               </div>
             </div>
 
-            {createMutation.isError && (
+            {createErrorMessage && (
               <div className="flex items-center gap-2 mt-3 text-sm text-red-500">
                 <AlertCircle className="w-4 h-4" />
-                <span>Failed to create slot. Please try again.</span>
+                <span>{createErrorMessage}</span>
               </div>
             )}
 

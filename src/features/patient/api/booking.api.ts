@@ -30,6 +30,58 @@ interface ApiResponseEnvelope<T> {
   errors?: string[];
 }
 
+type BackendScheduleTemplateDto = {
+  id: string;
+  orgId?: string | null;
+  ophthalId?: string | null;
+  dayOfWeek?: string | number;
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  maxCapacity: number;
+  cost?: number | null;
+  createdAt: string;
+};
+
+const dayOfWeekToNumber = (value: string | number | undefined): number => {
+  if (typeof value === 'number') return value;
+  if (!value) return 1;
+
+  const normalized = value.toString().trim().toLowerCase();
+  const map: Record<string, number> = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+
+  if (normalized in map) return map[normalized];
+
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 1;
+};
+
+const normalizeScheduleTemplate = (
+  template: BackendScheduleTemplateDto
+): ScheduleTemplateDto => ({
+  id: template.id,
+  ophthalmologistId: template.ophthalId ?? '',
+  organisationId: template.ophthalId ? null : (template.orgId ?? null),
+  dayOfWeek: dayOfWeekToNumber(template.dayOfWeek),
+  startTime: template.startTime,
+  endTime: template.endTime,
+  slotDuration: template.slotDuration,
+  slotType: 1,
+  slotTypeName: 'Consultation',
+  cost: template.cost ?? 0,
+  maxCapacity: template.maxCapacity,
+  isActive: true,
+  createdAt: template.createdAt,
+});
+
 const unwrapApiData = <T>(payload: T | ApiResponseEnvelope<T>): T => {
   if (typeof payload === 'object' && payload !== null && 'data' in payload) {
     return (payload as ApiResponseEnvelope<T>).data as T;
@@ -149,17 +201,51 @@ export const getScheduleTemplates = async (
     ? API_ENDPOINTS.SCHEDULE_TEMPLATES.BY_DOCTOR(ophthalId)
     : API_ENDPOINTS.SCHEDULE_TEMPLATES.LIST;
   const response =
-    await api.get<ApiResponseEnvelope<ScheduleTemplateDto[]>>(url);
-  return unwrapApiData<ScheduleTemplateDto[]>(response.data);
+    await api.get<
+      ApiResponseEnvelope<
+        | BackendScheduleTemplateDto[]
+        | { items?: BackendScheduleTemplateDto[] | null }
+        | null
+        | undefined
+      >
+    >(url);
+
+  const data = unwrapApiData<
+    | BackendScheduleTemplateDto[]
+    | { items?: BackendScheduleTemplateDto[] | null }
+    | null
+    | undefined
+  >(response.data);
+
+  if (Array.isArray(data)) {
+    return data.map(normalizeScheduleTemplate);
+  }
+
+  if (data && typeof data === 'object' && 'items' in data) {
+    return (data.items ?? []).map(normalizeScheduleTemplate);
+  }
+
+  return [];
 };
 
 /** Create a schedule template */
 export const createScheduleTemplate = async (
   request: CreateScheduleTemplateRequest
 ): Promise<ScheduleTemplateDto> => {
+  const payload = {
+    orgId: request.ophthalId ? null : (request.organisationId ?? null),
+    ophthalId: request.ophthalId,
+    dayOfWeek: request.dayOfWeek,
+    startTime: request.startTime,
+    endTime: request.endTime,
+    slotDuration: request.slotDuration,
+    maxCapacity: request.maxCapacity,
+    cost: request.cost,
+  };
+
   const response = await api.post<ApiResponseEnvelope<ScheduleTemplateDto>>(
     API_ENDPOINTS.SCHEDULE_TEMPLATES.CREATE,
-    request
+    payload
   );
   return unwrapApiData<ScheduleTemplateDto>(response.data);
 };

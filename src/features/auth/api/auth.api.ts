@@ -40,6 +40,35 @@ const TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 
+const parseProfileIdFromToken = (token: string): string | null => {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return null;
+
+    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(normalized)) as { profile_id?: string };
+    return payload.profile_id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const enrichUserWithRoleId = (
+  user: UserInfoResponse,
+  accessToken?: string
+): UserInfoResponse => {
+  if (user.roleId) return user;
+  if (!accessToken) return user;
+
+  const profileId = parseProfileIdFromToken(accessToken);
+  if (!profileId) return user;
+
+  return {
+    ...user,
+    roleId: profileId,
+  };
+};
+
 // ==================== Token Management ====================
 
 export const saveAuthTokens = (
@@ -101,7 +130,12 @@ export const login = async (
   ) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      saveUser(result.user);
+      const enrichedUser = enrichUserWithRoleId(
+        result.user,
+        result.accessToken
+      );
+      result.user = enrichedUser;
+      saveUser(enrichedUser);
     }
   }
 
@@ -132,7 +166,12 @@ export const googleLogin = async (
   ) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      saveUser(result.user);
+      const enrichedUser = enrichUserWithRoleId(
+        result.user,
+        result.accessToken
+      );
+      result.user = enrichedUser;
+      saveUser(enrichedUser);
     }
   }
 
@@ -159,7 +198,12 @@ export const verifyTwoFactorLogin = async (
   if (result.succeeded && result.accessToken && result.refreshToken) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      saveUser(result.user);
+      const enrichedUser = enrichUserWithRoleId(
+        result.user,
+        result.accessToken
+      );
+      result.user = enrichedUser;
+      saveUser(enrichedUser);
     }
   }
 
@@ -232,7 +276,12 @@ export const refreshToken = async (): Promise<AuthResponse> => {
   if (result.succeeded && result.accessToken && result.refreshToken) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      saveUser(result.user);
+      const enrichedUser = enrichUserWithRoleId(
+        result.user,
+        result.accessToken
+      );
+      result.user = enrichedUser;
+      saveUser(enrichedUser);
     }
   }
 

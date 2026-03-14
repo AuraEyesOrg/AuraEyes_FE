@@ -121,9 +121,6 @@ const OphthalmologistConsultationsPage = lazy(
 const OphthalmologistScreeningReviewPage = lazy(
   () => import('@/features/ophthalmologist/pages/screening-review')
 );
-const OphthalmologistSchedulesPage = lazy(
-  () => import('@/features/ophthalmologist/pages/schedules')
-);
 const OphthalmologistSlotManagementPage = lazy(
   () => import('@/features/ophthalmologist/pages/slot-management')
 );
@@ -352,7 +349,7 @@ const Router = () => (
           path="/ophthalmologist/schedules"
           element={
             <PrivateRoute>
-              <OphthalmologistSchedulesPage />
+              <OphthalmologistSlotManagementPage />
             </PrivateRoute>
           }
         />

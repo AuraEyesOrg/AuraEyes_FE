@@ -2,8 +2,8 @@ import type { AxiosError } from 'axios';
 
 interface ErrorPayload {
   message?: string;
-  title?: string;
   detail?: string;
+  title?: string;
   code?: string;
   errors?: string[] | Record<string, string[]>;
 }
@@ -19,12 +19,14 @@ const extractMessageFromPayload = (payload: unknown): string | null => {
       return data.message;
     }
 
-    if (typeof data.title === 'string' && data.title.trim()) {
-      return data.title;
-    }
-
     if (typeof data.detail === 'string' && data.detail.trim()) {
       return data.detail;
+    }
+
+    // ASP.NET ProblemDetails often uses a generic title (e.g. "An error occurred").
+    // Prefer it only when no specific message/detail is available.
+    if (typeof data.title === 'string' && data.title.trim()) {
+      return data.title;
     }
 
     if (Array.isArray(data.errors) && data.errors.length > 0) {
