@@ -1,30 +1,28 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   User,
   Shield,
   Bell,
   CreditCard,
-  Globe,
-  Palette,
   ChevronRight,
-  Home,
   Moon,
   Sun,
-  Smartphone,
-  Mail,
+  Globe,
+  Check,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  useLanguageStore,
+  LANGUAGE_OPTIONS,
+  type Language,
+} from '@/store/useLanguageStore';
 
 interface SettingItem {
   icon: React.ElementType;
   title: string;
   description: string;
-  path?: string;
-  action?: () => void;
-  badge?: string;
-  badgeType?: 'success' | 'warning' | 'info';
+  path: string;
 }
 
 interface SettingSection {
@@ -33,10 +31,8 @@ interface SettingSection {
 }
 
 export default function SettingsPage() {
-  const _navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
+  const { language, setLanguage } = useLanguageStore();
 
   const settingSections: SettingSection[] = [
     {
@@ -51,10 +47,8 @@ export default function SettingsPage() {
         {
           icon: Shield,
           title: 'Security',
-          description: 'Password, two-factor authentication, login history',
+          description: 'Two-factor authentication and account security',
           path: '/patient/security',
-          badge: '2FA Enabled',
-          badgeType: 'success',
         },
       ],
     },
@@ -65,19 +59,7 @@ export default function SettingsPage() {
           icon: Bell,
           title: 'Notifications',
           description: 'Email alerts, push notifications, reminders',
-          path: '/patient/settings/notifications',
-        },
-        {
-          icon: Palette,
-          title: 'Appearance',
-          description: 'Theme, display settings, accessibility',
-          action: toggleTheme,
-        },
-        {
-          icon: Globe,
-          title: 'Language & Region',
-          description: 'Language, timezone, date format',
-          path: '/patient/settings/language',
+          path: '/patient/notifications',
         },
       ],
     },
@@ -87,7 +69,7 @@ export default function SettingsPage() {
         {
           icon: CreditCard,
           title: 'Payment Methods',
-          description: 'Manage cards and payment options',
+          description: 'Manage wallet and payment options',
           path: '/patient/wallet',
         },
       ],
@@ -97,27 +79,6 @@ export default function SettingsPage() {
   return (
     <PatientLayout>
       <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="flex text-xs text-[var(--text-secondary)] mb-4">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link
-                to="/patient/dashboard"
-                className="hover:text-brand transition-colors flex items-center gap-1"
-              >
-                <Home className="w-3.5 h-3.5" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <span className="text-[var(--border-color)]">/</span>
-            </li>
-            <li className="font-semibold text-[var(--text-primary)]">
-              Settings
-            </li>
-          </ol>
-        </nav>
-
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
@@ -136,174 +97,121 @@ export default function SettingsPage() {
                 {section.title}
               </h2>
               <div className="space-y-2">
-                {section.items.map((item) => {
-                  const commonClassName =
-                    'w-full flex items-center justify-between p-4 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] rounded-xl transition-colors group border border-transparent hover:border-[var(--border-color)]';
-
-                  const content = (
-                    <>
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center group-hover:bg-brand/20 transition-colors">
-                          <item.icon className="w-5 h-5 text-brand" />
-                        </div>
-                        <div className="text-left">
-                          <div className="flex items-center gap-2">
-                            <p className="text-[var(--text-primary)] font-medium">
-                              {item.title}
-                            </p>
-                            {item.badge && (
-                              <span
-                                className={`px-2 py-0.5 text-xs rounded-full ${
-                                  item.badgeType === 'success'
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                    : item.badgeType === 'warning'
-                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                }`}
-                              >
-                                {item.badge}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-[var(--text-secondary)]">
-                            {item.description}
-                          </p>
-                        </div>
+                {section.items.map((item) => (
+                  <Link
+                    key={item.title}
+                    to={item.path}
+                    className="w-full flex items-center justify-between p-4 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] rounded-xl transition-colors group border border-transparent hover:border-[var(--border-color)]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                        <item.icon className="w-5 h-5 text-brand" />
                       </div>
-                      <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-brand transition-colors" />
-                    </>
-                  );
-
-                  if (item.path) {
-                    return (
-                      <Link
-                        key={item.title}
-                        to={item.path}
-                        className={commonClassName}
-                      >
-                        {content}
-                      </Link>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={item.title}
-                      onClick={item.action}
-                      type="button"
-                      className={commonClassName}
-                    >
-                      {content}
-                    </button>
-                  );
-                })}
+                      <div className="text-left">
+                        <p className="text-[var(--text-primary)] font-medium">
+                          {item.title}
+                        </p>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-brand transition-colors" />
+                  </Link>
+                ))}
               </div>
             </div>
           ))}
 
-          {/* Quick Settings */}
+          {/* Appearance */}
           <div className="medical-card">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-              Quick Settings
+              Appearance
             </h2>
-            <div className="space-y-4">
-              {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                    {theme === 'dark' ? (
-                      <Moon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    ) : (
-                      <Sun className="w-5 h-5 text-yellow-600" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-(--text-primary) font-medium">
-                      Dark Mode
-                    </p>
-                    <p className="text-sm text-(--text-secondary)">
-                      {theme === 'dark'
-                        ? 'Currently using dark theme'
-                        : 'Currently using light theme'}
-                    </p>
-                  </div>
+            <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                  {theme === 'dark' ? (
+                    <Moon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  ) : (
+                    <Sun className="w-5 h-5 text-yellow-600" />
+                  )}
                 </div>
-                <button
-                  onClick={toggleTheme}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    theme === 'dark'
-                      ? 'bg-brand'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                >
-                  <div
-                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
-                      theme === 'dark' ? 'left-7' : 'left-1'
-                    }`}
-                  />
-                </button>
+                <div>
+                  <p className="text-[var(--text-primary)] font-medium">
+                    Dark Mode
+                  </p>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {theme === 'dark'
+                      ? 'Currently using dark theme'
+                      : 'Currently using light theme'}
+                  </p>
+                </div>
               </div>
-
-              {/* Email Notifications */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      Email Notifications
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Receive updates via email
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setEmailNotifications(!emailNotifications)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    emailNotifications
-                      ? 'bg-brand'
-                      : 'bg-gray-300 dark:bg-gray-600'
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle dark mode"
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
+                    theme === 'dark' ? 'left-7' : 'left-1'
                   }`}
-                >
-                  <div
-                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
-                      emailNotifications ? 'left-7' : 'left-1'
-                    }`}
-                  />
-                </button>
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Language & Region */}
+          <div className="medical-card">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
+              Language & Region
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              Choose your preferred display language
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-brand" />
               </div>
-
-              {/* Push Notifications */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                    <Smartphone className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      Push Notifications
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Receive push notifications on your device
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setPushNotifications(!pushNotifications)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    pushNotifications
-                      ? 'bg-brand'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                >
-                  <div
-                    className={`absolute top-1 w-4 h-4 bg-white dark:bg-gray-200 rounded-full transition-transform ${
-                      pushNotifications ? 'left-7' : 'left-1'
-                    }`}
-                  />
-                </button>
+              <div className="flex gap-3 flex-1">
+                {LANGUAGE_OPTIONS.map((opt) => {
+                  const isSelected = language === opt.code;
+                  return (
+                    <button
+                      key={opt.code}
+                      onClick={() => setLanguage(opt.code as Language)}
+                      className={`flex-1 flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'border-brand bg-brand-soft'
+                          : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-brand/40 hover:bg-[var(--bg-tertiary)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl leading-none">{opt.flag}</span>
+                        <div className="text-left">
+                          <p
+                            className={`text-sm font-semibold ${
+                              isSelected
+                                ? 'text-brand'
+                                : 'text-[var(--text-primary)]'
+                            }`}
+                          >
+                            {opt.nativeLabel}
+                          </p>
+                          <p className="text-xs text-[var(--text-muted)]">
+                            {opt.label}
+                          </p>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-brand shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

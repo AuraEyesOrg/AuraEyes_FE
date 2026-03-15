@@ -1,4 +1,4 @@
-import { Search, Moon, Sun } from 'lucide-react';
+import { Search, Moon, Sun, Home } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
@@ -14,7 +14,27 @@ export default function PatientHeader() {
   const pageName = (() => {
     const segments = location.pathname.split('/').filter(Boolean);
     const last = segments[segments.length - 1] || 'dashboard';
-    return last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ');
+
+    const pageNameMap: Record<string, string> = {
+      dashboard: 'Dashboard',
+      screening: 'My Scans',
+      reports: 'Reports',
+      appointments: 'Appointments',
+      doctors: 'Find Doctors',
+      clinics: 'Find Clinics',
+      roadmap: 'Health Roadmap',
+      chat: 'Chat',
+      wallet: 'Wallet',
+      profile: 'My Profile',
+      settings: 'Settings',
+      security: 'Security',
+      notifications: 'Notifications',
+    };
+
+    return (
+      pageNameMap[last] ||
+      last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ')
+    );
   })();
 
   return (
@@ -22,8 +42,9 @@ export default function PatientHeader() {
       <div className="flex items-center justify-between">
         {/* Breadcrumb */}
         <div className="breadcrumb-text flex items-center gap-2">
-          <span>Pages</span>
-          <span>/</span>
+          <Home size={14} />
+          <span>Home</span>
+          <span className="text-[var(--border-color)]">/</span>
           <span className="breadcrumb-active">{pageName}</span>
         </div>
 

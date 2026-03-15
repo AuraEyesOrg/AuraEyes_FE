@@ -7,7 +7,6 @@ import {
   MessageCircle,
   ArrowRight,
   ChevronRight,
-  Home,
   CheckCircle,
   History,
   AlertCircle,
@@ -155,26 +154,6 @@ export default function PatientDashboard() {
         {/* Header Section */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex flex-col gap-2 w-full md:w-auto">
-            {/* Breadcrumb */}
-            <nav className="flex text-xs text-[var(--text-secondary)] mb-1">
-              <ol className="flex items-center space-x-2">
-                <li>
-                  <Link
-                    to="/"
-                    className="hover:text-brand transition-colors flex items-center gap-1"
-                  >
-                    <Home className="w-3.5 h-3.5" />
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <span className="text-[var(--border-color)]">/</span>
-                </li>
-                <li className="font-semibold text-(--text-primary)">
-                  Dashboard
-                </li>
-              </ol>
-            </nav>
             <h2 className="text-3xl font-extrabold text-(--text-primary) tracking-tight">
               {getGreeting()}, {firstName}
             </h2>
