@@ -795,7 +795,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <Link
-                  to="/two-factor-auth"
+                  to="/patient/security"
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
                   Manage
@@ -817,9 +817,12 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]">
+                <Link
+                  to="/patient/notifications"
+                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
+                >
                   Configure
-                </button>
+                </Link>
               </div>
             </div>
           </div>
