@@ -21,6 +21,13 @@ const formatTime = (time: string) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const statusStyles: Record<string, string> = {
   Pending:
     'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
@@ -38,9 +45,7 @@ export default function CalendarPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
 
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
