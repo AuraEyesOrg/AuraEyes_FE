@@ -22,7 +22,6 @@ import {
   Paperclip,
   Image as ImageIcon,
   MoreHorizontal,
-  Phone,
   Video,
   Search,
   X,
@@ -748,7 +747,7 @@ export default function ChatPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <div className="flex flex-col items-start gap-1 sm:items-end">
                       {currentSession.meetingLink ? (
                         meetingAccessState.canJoin ? (
@@ -785,9 +784,6 @@ export default function ChatPage() {
                         </p>
                       )}
                     </div>
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600">
-                      <Phone className="h-4 w-4" />
-                    </button>
                     <button
                       onClick={() =>
                         setIsSessionOverviewOpen((previous) => !previous)
