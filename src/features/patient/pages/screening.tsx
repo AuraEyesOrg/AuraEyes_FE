@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Eye,
   Plus,
@@ -8,14 +8,13 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  ChevronRight,
-  Home,
   Calendar,
   FileText,
   MoreVertical,
   Trash2,
   Download,
   Share2,
+  ChevronRight,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 
@@ -140,25 +139,6 @@ export default function ScreeningPage() {
   return (
     <PatientLayout>
       <div className="flex flex-col h-full">
-        {/* Breadcrumb */}
-        <nav className="flex text-sm mb-4">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link
-                to="/patient/dashboard"
-                className="text-(--text-secondary) hover:text-brand transition-colors flex items-center gap-1"
-              >
-                <Home className="w-4 h-4" />
-                Home
-              </Link>
-            </li>
-            <li>
-              <ChevronRight className="w-4 h-4 text-(--border-color)" />
-            </li>
-            <li className="font-bold text-(--text-primary)">My Scans</li>
-          </ol>
-        </nav>
-
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
