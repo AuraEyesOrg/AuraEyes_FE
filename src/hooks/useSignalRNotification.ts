@@ -10,6 +10,7 @@ import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { SignalRNotification } from '@/types/notification';
 import { getNotificationRoute } from '@/types/notification';
+import { router } from '@/lib/router';
 
 /**
  * SignalR Hub URL - configured via environment variable
@@ -66,7 +67,7 @@ export function useSignalRNotification(): {
             user?.roles ?? []
           );
           if (route !== '#') {
-            window.location.assign(route);
+            router.navigate(route);
           }
         },
         autoClose: 5000,
