@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Mail,
@@ -37,7 +37,6 @@ const RegisterDoctorPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
-  const _navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -45,6 +44,11 @@ const RegisterDoctorPage = () => {
   } = useForm<DoctorFormData>();
 
   const onSubmit = async (data: DoctorFormData) => {
+    if (!licenseFile) {
+      setSubmitError('Contract/License file is required before submitting.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
     try {
@@ -144,8 +148,8 @@ const RegisterDoctorPage = () => {
               </p>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
                 <p className="text-sm text-blue-800">
-                  📧 Please check your email <strong>{submittedEmail}</strong>{' '}
-                  for updates on your application status.
+                  Please check your email <strong>{submittedEmail}</strong> to
+                  verify your account before the admin reviews your contract.
                 </p>
               </div>
               <Link
@@ -448,10 +452,11 @@ const RegisterDoctorPage = () => {
               {/* License Upload */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Medical License
+                  Contract / License <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  Upload medical license (PDF, JPG, PNG - Max 10MB)
+                  Upload your contract or medical license (PDF, JPG, PNG - Max
+                  10MB)
                 </p>
                 {!licenseFile ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
@@ -468,7 +473,7 @@ const RegisterDoctorPage = () => {
                     >
                       <Upload className="h-6 w-6 text-[#00d1c0] mb-1" />
                       <p className="text-sm font-medium text-gray-700">
-                        Click to upload license
+                        Click to upload contract / license
                       </p>
                     </label>
                   </div>
@@ -557,9 +562,8 @@ const RegisterDoctorPage = () => {
                     </h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
                       After submitting your application, our verification team
-                      will review your credentials. Once approved, you'll
-                      receive your login credentials via email within 2-3
-                      business days.
+                      will first verify your email, then review your submitted
+                      contract/license before activating your doctor workflow.
                     </p>
                   </div>
                 </div>
