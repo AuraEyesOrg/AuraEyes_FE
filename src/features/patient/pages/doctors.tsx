@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Search,
   Star,
@@ -27,8 +27,10 @@ function getAvatarUrl(doctor: OphthalmologistSearchItem): string {
   return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
 }
 
-function formatSlotTime(iso: string) {
-  const d = new Date(iso);
+function formatSlotTime(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '--:--';
+
   return d.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -36,8 +38,10 @@ function formatSlotTime(iso: string) {
   });
 }
 
-function formatSlotDate(iso: string) {
-  const d = new Date(iso);
+function formatSlotDate(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return 'Unknown date';
+
   return d.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
@@ -75,6 +79,27 @@ export default function DoctorsPage() {
   });
 
   const slots: AvailableSlotItem[] = slotsData?.items ?? [];
+
+  const slotsByDate = useMemo(() => {
+    const grouped = new Map<string, AvailableSlotItem[]>();
+
+    for (const slot of slots) {
+      const dateKey = slot.date || slot.startDateTime.split('T')[0] || '';
+      const daySlots = grouped.get(dateKey) ?? [];
+      daySlots.push(slot);
+      grouped.set(dateKey, daySlots);
+    }
+
+    return Array.from(grouped.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([dateKey, daySlots]) => ({
+        dateKey,
+        dayLabel: formatSlotDate(`${dateKey}T00:00:00`),
+        slots: daySlots.sort((a, b) =>
+          a.startDateTime.localeCompare(b.startDateTime)
+        ),
+      }));
+  }, [slots]);
 
   return (
     <PatientLayout>
@@ -255,51 +280,57 @@ export default function DoctorsPage() {
                 </div>
               )}
 
-              <div className="space-y-3">
-                {slots.map((slot) => (
-                  <div
-                    key={slot.id}
-                    className="medical-card p-4 hover:border-brand/40 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-(--text-primary)">
-                          {formatSlotDate(slot.startTime)}
-                        </p>
-                        <p className="text-xs text-(--text-secondary) mt-0.5">
-                          {formatSlotTime(slot.startTime)} —{' '}
-                          {formatSlotTime(slot.endTime)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            slot.availableCapacity > 0
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                          }`}
+              <div className="space-y-5">
+                {slotsByDate.map((dayGroup) => (
+                  <section key={dayGroup.dateKey}>
+                    <h3 className="text-sm font-bold text-(--text-primary) mb-2">
+                      {dayGroup.dayLabel}
+                    </h3>
+                    <div className="space-y-3">
+                      {dayGroup.slots.map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="medical-card p-4 hover:border-brand/40 transition-colors"
                         >
-                          {slot.availableCapacity > 0
-                            ? `${slot.availableCapacity} left`
-                            : 'Full'}
-                        </span>
-                        {slot.availableCapacity > 0 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(
-                                `/patient/book?doctorId=${encodeURIComponent(selectedDoctor?.id ?? '')}`
-                              )
-                            }
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-brand/90 text-white text-xs font-medium rounded-lg transition-colors"
-                          >
-                            Book
-                            <ChevronRight className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-(--text-primary)">
+                                {formatSlotTime(slot.startDateTime)} —{' '}
+                                {formatSlotTime(slot.endDateTime)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span
+                                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  slot.availableCapacity > 0
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                }`}
+                              >
+                                {slot.availableCapacity > 0
+                                  ? `${slot.availableCapacity} left`
+                                  : 'Full'}
+                              </span>
+                              {slot.availableCapacity > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    navigate(
+                                      `/patient/book?doctorId=${encodeURIComponent(selectedDoctor?.id ?? '')}`
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-brand/90 text-white text-xs font-medium rounded-lg transition-colors"
+                                >
+                                  Book
+                                  <ChevronRight className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </section>
                 ))}
               </div>
             </div>
