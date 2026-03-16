@@ -178,7 +178,14 @@ export default function ScreeningNewPage() {
   };
 
   const removeImage = (imageId: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== imageId));
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === imageId);
+      if (target?.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(target.preview);
+      }
+
+      return prev.filter((img) => img.id !== imageId);
+    });
   };
 
   const retryImage = (imageId: string) => {
@@ -406,7 +413,14 @@ export default function ScreeningNewPage() {
                     ) : (
                       images.length > 0 && (
                         <button
-                          onClick={() => setImages([])}
+                          onClick={() => {
+                            images.forEach((image) => {
+                              if (image.preview.startsWith('blob:')) {
+                                URL.revokeObjectURL(image.preview);
+                              }
+                            });
+                            setImages([]);
+                          }}
                           className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { quotaKeys } from '../hooks/use-quota';
+import { useQuotaBalance } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -269,6 +270,7 @@ export default function RetinalAnalysis() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const routeState = location.state as LocationState | null;
+  const { data: quotaBalance } = useQuotaBalance();
 
   const [toggles, setToggles] = useState<ToggleState>({
     vesselSegmentation: false,
@@ -289,6 +291,11 @@ export default function RetinalAnalysis() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   useEffect(() => {
+    const blobUrls =
+      routeState?.images
+        ?.map((img) => img.preview)
+        .filter((preview) => preview.startsWith('blob:')) ?? [];
+
     if (routeState?.images && routeState.images.length > 0) {
       const incomingImages: RetinalImage[] = routeState.images.map((img) => ({
         id: img.id,
@@ -311,7 +318,11 @@ export default function RetinalAnalysis() {
     } else {
       navigate('/patient/screening/new', { replace: true });
     }
-  }, []);
+
+    return () => {
+      blobUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [navigate, routeState]);
 
   const currentImage =
     images.find((img) => img.id === selectedImageId) || images[0] || null;
@@ -374,7 +385,7 @@ export default function RetinalAnalysis() {
 
   // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {
-    if (isAnalyzing) return;
+    if (isAnalyzing || (quotaBalance?.remainingQuota ?? 0) <= 0) return;
     setIsAnalyzing(true);
     setAnalyzed(false);
     setAnomalies([]);
@@ -562,11 +573,20 @@ export default function RetinalAnalysis() {
                       </p>
                       <button
                         onClick={handleAnalyze}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
+                        disabled={(quotaBalance?.remainingQuota ?? 0) <= 0}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
                       >
                         <Sparkles className="w-5 h-5" />
-                        Start Screening
+                        {(quotaBalance?.remainingQuota ?? 0) <= 0
+                          ? 'Out of quota'
+                          : 'Start Screening'}
                       </button>
+                      {(quotaBalance?.remainingQuota ?? 0) <= 0 && (
+                        <p className="text-sm text-amber-600">
+                          Bạn đã dùng hết lượt AI hôm nay. Vui lòng mua thêm để
+                          tiếp tục.
+                        </p>
+                      )}
                     </div>
                   ) : isAnalyzing ? (
                     <div className="flex items-center gap-4 py-2">
