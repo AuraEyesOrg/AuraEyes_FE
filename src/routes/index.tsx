@@ -50,9 +50,7 @@ const ProfilePage = lazy(() => import('@/features/patient/pages/profile'));
 const SettingsPage = lazy(() => import('@/features/patient/pages/settings'));
 const ClinicsPage = lazy(() => import('@/features/patient/pages/clinics'));
 const DoctorsPage = lazy(() => import('@/features/patient/pages/doctors'));
-const VerificationPage = lazy(
-  () => import('@/features/patient/pages/verification')
-);
+
 const RoadmapPage = lazy(() => import('@/features/patient/pages/roadmap'));
 const ChatPage = lazy(() => import('@/features/patient/pages/chat'));
 const WalletPage = lazy(() => import('@/features/patient/pages/wallet'));
@@ -249,7 +247,6 @@ const Router = () => (
         <Route path="/patient/settings" element={<SettingsPage />} />
         <Route path="/patient/clinics" element={<ClinicsPage />} />
         <Route path="/patient/doctors" element={<DoctorsPage />} />
-        <Route path="/patient/verification" element={<VerificationPage />} />
         <Route path="/patient/roadmap" element={<RoadmapPage />} />
         <Route path="/patient/chat" element={<ChatPage />} />
         <Route path="/patient/wallet" element={<WalletPage />} />
@@ -367,7 +364,7 @@ const Router = () => (
             </PrivateRoute>
           }
         />
-         <Route
+        <Route
           path="/ophthalmologist/contract"
           element={
             <PrivateRoute>
