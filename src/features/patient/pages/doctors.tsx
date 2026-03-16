@@ -192,7 +192,22 @@ export default function DoctorsPage() {
                 </span>
               </div>
               <button
-                onClick={() => setSelectedDoctor(doctor)}
+                onClick={() =>
+                  navigate('/patient/book', {
+                    state: {
+                      doctorId: doctor.id,
+                      doctorSnapshot: {
+                        id: doctor.id,
+                        userFullName: doctor.userFullName,
+                        userEmail: doctor.userEmail,
+                        userAvatarUrl: doctor.userAvatarUrl,
+                        yearsOfExperience: doctor.yearsOfExperience,
+                        isVerified: doctor.isVerified,
+                        bio: doctor.bio,
+                      },
+                    },
+                  })
+                }
                 className="inline-flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <Calendar className="w-4 h-4" />
@@ -315,9 +330,26 @@ export default function DoctorsPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    navigate(
-                                      `/patient/book?doctorId=${encodeURIComponent(selectedDoctor?.id ?? '')}`
-                                    )
+                                    navigate('/patient/book', {
+                                      state: {
+                                        doctorId: selectedDoctor?.id ?? '',
+                                        preselectedSlotId: slot.id,
+                                        preselectedDate: slot.date,
+                                        doctorSnapshot: {
+                                          id: selectedDoctor?.id ?? '',
+                                          userFullName:
+                                            selectedDoctor?.userFullName,
+                                          userEmail: selectedDoctor?.userEmail,
+                                          userAvatarUrl:
+                                            selectedDoctor?.userAvatarUrl,
+                                          yearsOfExperience:
+                                            selectedDoctor?.yearsOfExperience,
+                                          isVerified:
+                                            selectedDoctor?.isVerified,
+                                          bio: selectedDoctor?.bio,
+                                        },
+                                      },
+                                    })
                                   }
                                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-brand/90 text-white text-xs font-medium rounded-lg transition-colors"
                                 >

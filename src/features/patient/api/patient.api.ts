@@ -193,6 +193,18 @@ export interface OphthalmologistSearchItem {
   createdAt: string;
 }
 
+export interface OphthalmologistDetailItem {
+  id: string;
+  userId: string;
+  userFullName?: string | null;
+  userEmail?: string | null;
+  bio?: string | null;
+  yearsOfExperience: number;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
 export interface AvailableSlotItem {
   id: string;
   organisationId?: string | null;
@@ -292,6 +304,15 @@ export const searchOphthalmologistsForPatient = async (params: {
   >(PATIENT_ENDPOINTS.SEARCH.OPHTHALMOLOGISTS, {
     params,
   });
+  return response.data.data!;
+};
+
+export const getOphthalmologistDetailForPatient = async (
+  id: string
+): Promise<OphthalmologistDetailItem> => {
+  const response = await api.get<ApiResponse<OphthalmologistDetailItem>>(
+    PATIENT_ENDPOINTS.SEARCH.OPHTHALMOLOGIST_DETAIL(id)
+  );
   return response.data.data!;
 };
 
