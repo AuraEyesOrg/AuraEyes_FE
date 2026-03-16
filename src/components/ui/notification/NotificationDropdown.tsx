@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
+import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
 import { useNotifications } from '@/features/notifications/hooks/use-notifications';
 import {
@@ -37,6 +38,7 @@ export default function NotificationDropdown({
   className = '',
 }: NotificationDropdownProps) {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +101,7 @@ export default function NotificationDropdown({
     }
 
     // Navigate to relevant page
-    const route = getNotificationRoute(notification);
+    const route = getNotificationRoute(notification, user?.roles ?? []);
     if (route !== '#') {
       navigate(route);
     }

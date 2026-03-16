@@ -3,8 +3,9 @@
  * Common header for all system admin pages
  */
 
-import { Download, Bell, Moon, Sun } from 'lucide-react';
+import { Download, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { NotificationDropdown } from '@/components/ui/notification';
 
 interface PageHeaderProps {
   title: string;
@@ -53,12 +54,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </button>
 
-        {showNotifications && (
-          <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
-          </button>
-        )}
+        {showNotifications && <NotificationDropdown />}
 
         {actions ? (
           actions

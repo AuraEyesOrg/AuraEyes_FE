@@ -103,6 +103,12 @@ export type NotificationPayload =
   | WalletNotificationPayload
   | Record<string, unknown>;
 
+export type NotificationPayloadRaw =
+  | NotificationPayload
+  | string
+  | null
+  | undefined;
+
 /**
  * Core notification interface matching backend Notification entity
  */
@@ -113,7 +119,7 @@ export interface Notification {
   message: string;
   type: NotificationType;
   isRead: boolean;
-  payload: NotificationPayload;
+  payload: NotificationPayloadRaw;
   createdAt: string;
 }
 
@@ -125,7 +131,7 @@ export interface SignalRNotification {
   title: string;
   message: string;
   type: NotificationType;
-  payload: NotificationPayload;
+  payload: NotificationPayloadRaw;
   createdAt: string;
 }
 
@@ -201,28 +207,134 @@ export function getNotificationColor(type: NotificationType): string {
 /**
  * Helper to get notification route based on type and payload
  */
-export function getNotificationRoute(notification: Notification): string {
-  const { type, payload } = notification;
+function parsePayload(
+  payload: NotificationPayloadRaw
+): Record<string, unknown> {
+  if (!payload) return {};
 
-  switch (type) {
-    case NotificationType.AiScreeningCompleted:
-      return `/screenings/${(payload as ScreeningNotificationPayload).screeningId}`;
+  if (typeof payload === 'string') {
+    try {
+      const parsed = JSON.parse(payload);
+      return parsed && typeof parsed === 'object'
+        ? (parsed as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return payload as Record<string, unknown>;
+}
+
+function readString(
+  payload: Record<string, unknown>,
+  ...keys: string[]
+): string {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === 'string' && value.length > 0) return value;
+  }
+  return '';
+}
+
+function appendIdQuery(path: string, key: string, value: string): string {
+  if (!value) return path;
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}${key}=${encodeURIComponent(value)}`;
+}
+
+function hasRole(roles: string[], roleCandidates: string[]): boolean {
+  return roleCandidates.some((candidate) => roles.includes(candidate));
+}
+
+function getRoleHome(roles: string[]): string {
+  if (hasRole(roles, ['systemadmin'])) return '/system-admin/dashboard';
+  if (hasRole(roles, ['orgadmin', 'organization', 'clinic']))
+    return '/organisation/dashboard';
+  if (hasRole(roles, ['ophthalmologist', 'doctor']))
+    return '/ophthalmologist/dashboard';
+  if (hasRole(roles, ['patient'])) return '/patient/notifications';
+
+  return '/notifications';
+}
+
+/**
+ * Resolve route from notification type + payload with role-aware destination.
+ * Roles are optional and are compared case-insensitively.
+ */
+export function getNotificationRoute(
+  notification: Notification,
+  roles: string[] = []
+): string {
+  const normalizedRoles = roles.map((r) => r.toLowerCase());
+  const payload = parsePayload(notification.payload);
+
+  const screeningId = readString(payload, 'screeningId', 'aiScreeningId');
+  const consultationId = readString(payload, 'sessionId', 'consultationId');
+  const appointmentId = readString(payload, 'appointmentId', 'slotId');
+  const transactionId = readString(payload, 'transactionId');
+
+  const _isSystemAdmin = hasRole(normalizedRoles, ['systemadmin']);
+  const isOrgAdmin = hasRole(normalizedRoles, [
+    'orgadmin',
+    'organization',
+    'clinic',
+  ]);
+  const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
+  const isPatient =
+    hasRole(normalizedRoles, ['patient']) || normalizedRoles.length === 0;
+
+  switch (notification.type) {
+    case NotificationType.AiScreeningCompleted: {
+      const base = isPatient
+        ? '/patient/reports'
+        : isDoctor
+          ? '/ophthalmologist/screenings'
+          : isOrgAdmin
+            ? '/organisation/patients'
+            : '/system-admin/dashboard';
+      return appendIdQuery(base, 'screeningId', screeningId);
+    }
 
     case NotificationType.ConsultationAccepted:
     case NotificationType.ConsultationResultProvided:
     case NotificationType.NewConsultationRequest:
-    case NotificationType.NewPatientMessage:
-      return `/consultations/${(payload as ConsultationNotificationPayload).sessionId}`;
+    case NotificationType.NewPatientMessage: {
+      const base = isDoctor
+        ? '/ophthalmologist/consultations'
+        : isPatient
+          ? '/patient/chat'
+          : isOrgAdmin
+            ? '/organisation/calendar'
+            : '/system-admin/verifications';
+      return appendIdQuery(base, 'sessionId', consultationId);
+    }
 
     case NotificationType.NewAppointmentBooked:
-    case NotificationType.ScheduleChanged:
-      return `/appointments/${(payload as AppointmentNotificationPayload).appointmentId}`;
+    case NotificationType.ScheduleChanged: {
+      const base = isDoctor
+        ? '/ophthalmologist/appointments'
+        : isOrgAdmin
+          ? '/organisation/calendar'
+          : isPatient
+            ? '/patient/appointments'
+            : '/system-admin/dashboard';
+      return appendIdQuery(base, 'appointmentId', appointmentId);
+    }
 
     case NotificationType.WalletDepositSuccess:
-    case NotificationType.WalletPaymentProcessed:
-      return `/wallet/transactions/${(payload as WalletNotificationPayload).transactionId}`;
+    case NotificationType.WalletPaymentProcessed: {
+      const base = isPatient
+        ? '/patient/wallet'
+        : isOrgAdmin
+          ? '/organisation/dashboard'
+          : isDoctor
+            ? '/ophthalmologist/dashboard'
+            : '/system-admin/dashboard';
+      return appendIdQuery(base, 'transactionId', transactionId);
+    }
 
     default:
-      return '/notifications';
+      return getRoleHome(normalizedRoles);
   }
 }
