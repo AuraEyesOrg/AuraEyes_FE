@@ -456,8 +456,16 @@ export default function BookAppointmentPage() {
 
   const handleConfirm = useCallback(() => {
     if (!selectedSlot) return;
-    // Navigate to confirmation page with slot details
-    navigate(`/patient/book/confirm?slotId=${selectedSlot.id}`);
+    sessionStorage.setItem(
+      'patient-booking-confirm-context',
+      JSON.stringify({ slotId: selectedSlot.id })
+    );
+
+    navigate('/patient/book/confirm', {
+      state: {
+        slotId: selectedSlot.id,
+      },
+    });
   }, [selectedSlot, navigate]);
 
   const handleCancelReservation = useCallback(async () => {

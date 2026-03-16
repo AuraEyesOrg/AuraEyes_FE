@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
   Clock,
@@ -47,8 +47,26 @@ const formatDate = (dateStr: string) => {
 
 export default function BookingConfirmationPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const slotId = searchParams.get('slotId') ?? '';
+
+  const querySlotId = searchParams.get('slotId') ?? '';
+  const state = (location.state as { slotId?: string } | null) ?? {};
+  const storedConfirmContextRaw = sessionStorage.getItem(
+    'patient-booking-confirm-context'
+  );
+
+  let storedSlotId = '';
+  if (storedConfirmContextRaw) {
+    try {
+      const parsed = JSON.parse(storedConfirmContextRaw) as { slotId?: string };
+      storedSlotId = parsed.slotId ?? '';
+    } catch {
+      storedSlotId = '';
+    }
+  }
+
+  const slotId = state.slotId ?? storedSlotId ?? querySlotId;
 
   const { user } = useAuthStore();
   const patientId = user?.id ?? '';
@@ -70,6 +88,24 @@ export default function BookingConfirmationPage() {
 
   const confirmMutation = useConfirmReservation();
   const releaseMutation = useReleaseReservation();
+
+  useEffect(() => {
+    if (!slotId) return;
+
+    sessionStorage.setItem(
+      'patient-booking-confirm-context',
+      JSON.stringify({ slotId })
+    );
+  }, [slotId]);
+
+  useEffect(() => {
+    if (!querySlotId || state.slotId) return;
+
+    navigate('/patient/book/confirm', {
+      replace: true,
+      state: { slotId: querySlotId },
+    });
+  }, [querySlotId, state.slotId, navigate]);
 
   // Calculate remaining time from slot's reservationExpireAt
   useEffect(() => {
@@ -111,6 +147,7 @@ export default function BookingConfirmationPage() {
           shareAiResults,
         },
       });
+      sessionStorage.removeItem('patient-booking-confirm-context');
       setIsSuccess(true);
       setSessionId(result.consultationSessionId);
     } catch (error) {
@@ -131,6 +168,7 @@ export default function BookingConfirmationPage() {
       setErrorMessage(mapOnlineConsultationErrorMessage(error));
       return;
     }
+    sessionStorage.removeItem('patient-booking-confirm-context');
     navigate('/patient/book', { replace: true });
   }, [slotId, patientId, releaseMutation, navigate]);
 
