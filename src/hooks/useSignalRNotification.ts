@@ -33,7 +33,7 @@ export function useSignalRNotification(): {
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectAttemptRef = useRef(0);
 
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { addNotification, setConnectionStatus, connectionStatus } =
     useNotificationStore();
 
@@ -41,7 +41,7 @@ export function useSignalRNotification(): {
    * Get access token for SignalR authentication
    */
   const getAccessToken = useCallback((): string => {
-    return localStorage.getItem('token') || '';
+    return localStorage.getItem('token')?.replace(/['"]+/g, '') || '';
   }, []);
 
   /**
@@ -57,11 +57,14 @@ export function useSignalRNotification(): {
       // Show toast notification with navigation action
       toast.info(notification.title + '\n' + notification.message, {
         onClick: () => {
-          const route = getNotificationRoute({
-            ...notification,
-            userId: '',
-            isRead: false,
-          });
+          const route = getNotificationRoute(
+            {
+              ...notification,
+              userId: '',
+              isRead: false,
+            },
+            user?.roles ?? []
+          );
           if (route !== '#') {
             window.location.assign(route);
           }
@@ -70,7 +73,7 @@ export function useSignalRNotification(): {
         closeOnClick: true,
       });
     },
-    [addNotification]
+    [addNotification, user?.roles]
   );
 
   /**

@@ -262,7 +262,7 @@ export const API_ENDPOINTS = {
   QUOTAS: {
     BALANCE: '/quotas/balance',
     BUY: '/quotas/buy',
-    DEDUCT: '/quotas/deduct',
+    DEDUCT: '/quota/deduct',
   },
 
   // Notification Management
