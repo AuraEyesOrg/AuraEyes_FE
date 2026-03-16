@@ -7,16 +7,97 @@ import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type { ApiResponse, DashboardData } from '../types/system-admin.types';
 
+interface AdminMetricsDto {
+  totalScreeningsToday: number;
+  totalScreeningsYesterday: number;
+  screeningsChangePercentage: number;
+  aiAccuracy: number;
+  aiAccuracyChangePercentage: number;
+  pendingReviews: number;
+  criticalCases: number;
+}
+
+interface AdminTrendPointDto {
+  label: string;
+  count: number;
+}
+
+interface AdminTrendDto {
+  dataPoints: AdminTrendPointDto[];
+}
+
+interface AdminRecentScreeningDto {
+  screeningCode: string;
+  clinicName: string | null;
+  riskLevel: string | null;
+  isCritical: boolean;
+  status: string;
+  createdAt: string;
+}
+
+interface AdminRiskCategoryDto {
+  riskLevel: string;
+  count: number;
+  percentage: number;
+}
+
+interface AdminRiskDto {
+  riskCategories: AdminRiskCategoryDto[];
+}
+
+interface AdminSystemHealthComponentDto {
+  componentName: string;
+  status: string;
+  isHealthy: boolean;
+  latencyMs?: number;
+  uptimePercentage?: number;
+}
+
+interface AdminSystemHealthDto {
+  allSystemsOperational: boolean;
+  components: AdminSystemHealthComponentDto[];
+}
+
+interface PagedResult<T> {
+  items: T[];
+}
+
 export const dashboardApi = {
   /**
    * Fetch dashboard statistics
    */
   async getStats() {
     try {
-      const response = await api.get<ApiResponse<DashboardData['stats']>>(
+      const response = await api.get<ApiResponse<AdminMetricsDto>>(
         API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.STATS
       );
-      return response.data.data;
+      const data = response.data.data;
+      if (!data) {
+        throw new Error('Dashboard metrics response is empty.');
+      }
+
+      return {
+        totalScreeningsToday: {
+          value: data.totalScreeningsToday,
+          change: data.screeningsChangePercentage,
+          trend: data.screeningsChangePercentage >= 0 ? 'up' : 'down',
+          description: `vs yesterday ${data.totalScreeningsYesterday}`,
+        },
+        aiAccuracyRate: {
+          value: data.aiAccuracy,
+          change: data.aiAccuracyChangePercentage,
+          trend: data.aiAccuracyChangePercentage >= 0 ? 'up' : 'down',
+          description: 'Average confidence across completed screenings',
+        },
+        pendingReviews: {
+          value: data.pendingReviews,
+          description: 'Waiting for ophthalmologist review',
+        },
+        criticalRisks: {
+          value: data.criticalCases,
+          description: 'High and critical risk cases',
+        },
+      } satisfies DashboardData['stats'];
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
       throw error;
@@ -28,10 +109,21 @@ export const dashboardApi = {
    */
   async getScreeningVolume() {
     try {
-      const response = await api.get<
-        ApiResponse<DashboardData['volumeTrends']>
-      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SCREENING_VOLUME);
-      return response.data.data;
+      const response = await api.get<ApiResponse<AdminTrendDto>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SCREENING_VOLUME,
+        {
+          params: { timeRange: 'monthly', periods: 6 },
+        }
+      );
+      const data = response.data.data;
+      if (!data) {
+        throw new Error('Dashboard trends response is empty.');
+      }
+
+      return data.dataPoints.map((item) => ({
+        week: item.label,
+        screenings: item.count,
+      })) satisfies DashboardData['volumeTrends'];
     } catch (error) {
       console.error('Failed to fetch screening volume:', error);
       throw error;
@@ -44,11 +136,41 @@ export const dashboardApi = {
   async getRecentScreenings(limit = 10) {
     try {
       const response = await api.get<
-        ApiResponse<DashboardData['recentScreenings']>
+        ApiResponse<PagedResult<AdminRecentScreeningDto>>
       >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.RECENT_SCREENINGS, {
-        params: { limit },
+        params: { pageNumber: 1, pageSize: limit },
       });
-      return response.data.data;
+      const data = response.data.data;
+      if (!data) {
+        throw new Error('Recent screenings response is empty.');
+      }
+
+      return data.items.map((item) => ({
+        id: item.screeningCode,
+        clinic: item.clinicName || 'N/A',
+        date: new Date(item.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        time: new Date(item.createdAt).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        aiResult:
+          item.status.toLowerCase() === 'analyzing'
+            ? 'processing'
+            : item.riskLevel?.toLowerCase() === 'moderate'
+              ? 'medium_risk'
+              : item.riskLevel?.toLowerCase() === 'high' || item.isCritical
+                ? 'high_risk'
+                : 'low_risk',
+        status:
+          item.status.toLowerCase() === 'completed'
+            ? item.isCritical
+              ? 'flagged'
+              : 'completed'
+            : 'analyzing',
+      })) satisfies DashboardData['recentScreenings'];
     } catch (error) {
       console.error('Failed to fetch recent screenings:', error);
       throw error;
@@ -60,10 +182,30 @@ export const dashboardApi = {
    */
   async getSystemHealth() {
     try {
-      const response = await api.get<
-        ApiResponse<DashboardData['systemHealth']>
-      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SYSTEM_HEALTH);
-      return response.data.data;
+      const response = await api.get<ApiResponse<AdminSystemHealthDto>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SYSTEM_HEALTH
+      );
+      const data = response.data.data;
+      if (!data) {
+        throw new Error('System health response is empty.');
+      }
+
+      const database = data.components.find(
+        (component) => component.componentName === 'Database'
+      );
+      const aiService = data.components.find(
+        (component) => component.componentName === 'AI Service'
+      );
+
+      return {
+        uptime: data.allSystemsOperational
+          ? 100
+          : (database?.uptimePercentage ?? 0),
+        responseTime: aiService?.latencyMs ?? 0,
+        cpuUsage: 0,
+        memoryUsage: 0,
+        storageUsage: 0,
+      } satisfies DashboardData['systemHealth'];
     } catch (error) {
       console.error('Failed to fetch system health:', error);
       throw error;
@@ -75,10 +217,23 @@ export const dashboardApi = {
    */
   async getRiskDistribution() {
     try {
-      const response = await api.get<
-        ApiResponse<DashboardData['riskDistribution']>
-      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.RISK_DISTRIBUTION);
-      return response.data.data;
+      const response = await api.get<ApiResponse<AdminRiskDto>>(
+        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.RISK_DISTRIBUTION
+      );
+      const data = response.data.data;
+      if (!data) {
+        throw new Error('Risk distribution response is empty.');
+      }
+
+      return data.riskCategories.map((item) => ({
+        riskLevel: item.riskLevel.toLowerCase() as
+          | 'low'
+          | 'medium'
+          | 'high'
+          | 'critical',
+        count: item.count,
+        percentage: item.percentage,
+      })) satisfies DashboardData['riskDistribution'];
     } catch (error) {
       console.error('Failed to fetch risk distribution:', error);
       throw error;
