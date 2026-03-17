@@ -41,7 +41,9 @@ import {
   useConsultationSessions,
   useConsultationSession,
   useSendMessage,
+  consultationKeys,
 } from '@/features/consultation/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   SessionStatus,
   ChatStatus,
@@ -49,6 +51,10 @@ import {
   SESSION_TYPE_LABELS,
   SESSION_STATUS_LABELS,
 } from '@/types/consultation';
+import {
+  SIGNALR_CHAT_MESSAGE_EVENT,
+  type SignalRChatMessageEvent,
+} from '@/types/chat-realtime';
 
 interface SharedScanData {
   imageUrl?: string;
@@ -294,6 +300,7 @@ const AvatarBadge = ({
 
 export default function ChatPage() {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const sharedScan =
     (location.state as { sharedScan?: SharedScanData } | null)?.sharedScan ??
     null;
@@ -314,6 +321,7 @@ export default function ChatPage() {
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processedChatEventIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const { user } = useAuthStore();
@@ -410,6 +418,36 @@ export default function ChatPage() {
       window.clearInterval(timerId);
     };
   }, [selectedSession?.id]);
+
+  useEffect(() => {
+    const handleChatRealtime = (event: Event) => {
+      const customEvent = event as CustomEvent<SignalRChatMessageEvent>;
+      const chatEvent = customEvent.detail;
+      if (!chatEvent?.sessionId) {
+        return;
+      }
+
+      if (processedChatEventIdRef.current === chatEvent.messageId) {
+        return;
+      }
+      processedChatEventIdRef.current = chatEvent.messageId;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(chatEvent.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
+    window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    return () => {
+      window.removeEventListener(
+        SIGNALR_CHAT_MESSAGE_EVENT,
+        handleChatRealtime
+      );
+    };
+  }, [queryClient]);
 
   const handleSendMessage = () => {
     if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;

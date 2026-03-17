@@ -27,7 +27,9 @@ import {
   useConsultationSession,
   useSendMessage,
   useEndSession,
+  consultationKeys,
 } from '@/features/consultation/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   SessionStatus,
   ChatStatus,
@@ -37,9 +39,11 @@ import {
   CHAT_STATUS_LABELS,
 } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
-
-// TODO: Replace with actual doctor ID / user ID from auth store once auth is fully integrated
-const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
+import {
+  SIGNALR_CHAT_MESSAGE_EVENT,
+  type SignalRChatMessageEvent,
+} from '@/types/chat-realtime';
+import useAuthStore from '@/store/auth-store';
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -157,6 +161,9 @@ const formatRequestDate = (dateString: string) => {
 // ============ COMPONENT ============
 
 export default function ConsultationsPage() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const currentDoctorId = user?.roleId ?? '';
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
   );
@@ -164,13 +171,19 @@ export default function ConsultationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processedChatEventIdRef = useRef<string | null>(null);
 
   // ---- Data fetching ----
 
-  const { data: sessionsData } = useConsultationSessions({
-    ophthalmologistId: CURRENT_DOCTOR_ID,
-    pageSize: 50,
-  });
+  const { data: sessionsData } = useConsultationSessions(
+    {
+      ophthalmologistId: currentDoctorId || undefined,
+      pageSize: 50,
+    },
+    {
+      enabled: !!currentDoctorId,
+    }
+  );
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -239,6 +252,36 @@ export default function ConsultationsPage() {
     }
   }, [filteredSessions, selectedSessionId]);
 
+  useEffect(() => {
+    const handleChatRealtime = (event: Event) => {
+      const customEvent = event as CustomEvent<SignalRChatMessageEvent>;
+      const chatEvent = customEvent.detail;
+      if (!chatEvent?.sessionId) {
+        return;
+      }
+
+      if (processedChatEventIdRef.current === chatEvent.messageId) {
+        return;
+      }
+      processedChatEventIdRef.current = chatEvent.messageId;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(chatEvent.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
+    window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    return () => {
+      window.removeEventListener(
+        SIGNALR_CHAT_MESSAGE_EVENT,
+        handleChatRealtime
+      );
+    };
+  }, [queryClient]);
+
   // ---- Handlers ----
 
   const handleSendMessage = () => {
@@ -265,9 +308,13 @@ export default function ConsultationsPage() {
   };
 
   const handleEndSession = (sessionId: string) => {
+    if (!currentDoctorId) {
+      return;
+    }
+
     endSessionMutation.mutate({
       sessionId,
-      doctorId: CURRENT_DOCTOR_ID,
+      doctorId: currentDoctorId,
     });
   };
 
@@ -634,7 +681,7 @@ export default function ConsultationsPage() {
                           selectedSession.messages.length > 0 ? (
                           selectedSession.messages.map((message) => {
                             const isDoctor =
-                              message.senderUserId === CURRENT_DOCTOR_ID;
+                              message.senderUserId === currentDoctorId;
                             return (
                               <div
                                 key={message.id}
