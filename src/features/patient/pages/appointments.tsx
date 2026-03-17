@@ -49,6 +49,48 @@ import type { ClinicAppointmentDto } from '@/features/patient/types/clinic-booki
 
 type FilterTab = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
+const CLINIC_STATUS_STYLES: Record<string, string> = {
+  Pending:
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  InProgress:
+    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  Completed:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  NoShow: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+};
+
+const UPCOMING_CLINIC_STATUSES = [
+  'Pending',
+  'Confirmed',
+  'CheckedIn',
+  'InProgress',
+];
+const CANCELLED_CLINIC_STATUSES = ['Cancelled', 'NoShow'];
+
+const formatClinicDate = (value: string) => {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const formatClinicTime = (time: string) => {
+  const [h = '0', m = '00'] = time.split(':');
+  const hour = Number(h);
+  if (Number.isNaN(hour)) return time;
+
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
+
 const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
   const [sessionFeedbackTarget, setSessionFeedbackTarget] =
@@ -70,9 +112,10 @@ const AppointmentsPage = () => {
     }
   );
 
-  const { data: clinicAppointmentsData } = usePatientClinicAppointments(
-    patientId ?? ''
-  );
+  const {
+    data: clinicAppointmentsData,
+    isLoading: isLoadingClinicAppointments,
+  } = usePatientClinicAppointments(patientId ?? '');
 
   const cancelMutation = useCancelSession();
   const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
@@ -95,6 +138,20 @@ const AppointmentsPage = () => {
       return true;
     });
   }, [sessions, filter]);
+
+  const filteredClinicAppointments = useMemo(() => {
+    return clinicAppointments.filter((appointment) => {
+      if (filter === 'all') return true;
+      if (filter === 'upcoming') {
+        return UPCOMING_CLINIC_STATUSES.includes(appointment.status);
+      }
+      if (filter === 'completed') return appointment.status === 'Completed';
+      if (filter === 'cancelled') {
+        return CANCELLED_CLINIC_STATUSES.includes(appointment.status);
+      }
+      return true;
+    });
+  }, [clinicAppointments, filter]);
 
   const upcomingCount = sessions.filter(
     (s) =>
@@ -364,7 +421,7 @@ const AppointmentsPage = () => {
             Appointments
           </h1>
           <p className="text-(--text-secondary)">
-            Manage your consultation sessions
+            Manage your doctor and organisation appointments
           </p>
         </div>
 
@@ -459,220 +516,298 @@ const AppointmentsPage = () => {
         )}
       </div>
 
-      {/* Sessions List */}
-      <div className="space-y-4">
-        {filteredSessions.map((session) => (
-          <div
-            key={session.id}
-            className={`medical-card p-6 hover:border-brand/30 transition-colors ${
-              session.status === SessionStatus.Cancelled ? 'opacity-60' : ''
-            }`}
-          >
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div className="flex items-start gap-4 flex-1">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+        <section className="flex h-full flex-col">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+              Organisation Slots
+            </h2>
+            <Link
+              to="/patient/clinics"
+              className="text-sm font-semibold text-primary hover:text-primary/80"
+            >
+              Book More Slot
+            </Link>
+          </div>
+
+          {isLoadingClinicAppointments ? (
+            <div className="rounded-xl border border-dashed border-[var(--border-color)] p-6 text-sm text-[var(--text-secondary)]">
+              Loading clinic appointments...
+            </div>
+          ) : filteredClinicAppointments.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--border-color)] p-6 text-sm text-[var(--text-secondary)]">
+              {filter === 'all'
+                ? 'No clinic appointments yet.'
+                : `No ${filter} clinic appointments.`}
+            </div>
+          ) : (
+            <div className="flex-1 space-y-4">
+              {filteredClinicAppointments.map((appointment) => (
                 <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${getSessionIconBg(session)}`}
+                  key={appointment.id}
+                  className={`medical-card p-6 hover:border-brand/30 transition-colors ${
+                    appointment.status === 'Cancelled' ||
+                    appointment.status === 'NoShow'
+                      ? 'opacity-60'
+                      : ''
+                  }`}
                 >
-                  {getSessionIcon(session.type)}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h3 className="text-lg font-bold text-(--text-primary)">
-                      {SESSION_TYPE_LABELS[session.type]}
-                    </h3>
-                    {getStatusBadge(session)}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        {new Date(session.createdAt).toLocaleDateString(
-                          'en-US',
-                          {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          }
-                        )}
-                      </span>
-                    </div>
-                    {session.appointmentTime && (
-                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                        <Clock className="w-4 h-4" />
-                        <span>
-                          {new Date(session.appointmentTime).toLocaleTimeString(
-                            'en-US',
-                            {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true,
-                            }
-                          )}
-                        </span>
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
+                    <div className="flex flex-1 items-start gap-4">
+                      <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-brand-soft">
+                        <Building2 className="w-7 h-7 text-brand" />
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <User className="w-4 h-4" />
-                      <span>
-                        {session.ophthalmologistName
-                          ? `Doctor: ${session.ophthalmologistName}`
-                          : SESSION_STATUS_LABELS[session.status]}
-                      </span>
+
+                      <div className="flex-1">
+                        <div className="mb-3 flex flex-wrap items-center gap-3">
+                          <h3 className="text-lg font-bold text-(--text-primary)">
+                            {appointment.organisationName ?? 'Clinic Visit'}
+                          </h3>
+                          <span
+                            className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${CLINIC_STATUS_STYLES[appointment.status] ?? CLINIC_STATUS_STYLES.Pending}`}
+                          >
+                            {appointment.status}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatClinicDate(appointment.date)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {formatClinicTime(appointment.startTime)} -{' '}
+                              {formatClinicTime(appointment.endTime)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)] md:col-span-2">
+                            <Building2 className="w-4 h-4" />
+                            <span>Organisation appointment</span>
+                          </div>
+                          {appointment.visitReason && (
+                            <div className="flex items-start gap-2 text-[var(--text-secondary)] md:col-span-2">
+                              <FileText className="mt-0.5 h-4 w-4" />
+                              <span>Reason: {appointment.visitReason}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {session.type === ConsultationSessionType.VideoCall ? (
-                        <>
-                          <Video className="w-4 h-4 text-blue-600" />
-                          <span className="text-blue-600">
-                            {session.meetingLink
-                              ? 'Video consultation (link ready)'
-                              : 'Video consultation'}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="w-4 h-4 text-[var(--text-secondary)]" />
-                          <span className="text-[var(--text-secondary)]">
+
+                    <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:justify-end lg:self-stretch">
+                      {appointment.status === 'Completed' &&
+                        (submittedClinicFeedbackIds[appointment.id] ? (
+                          <FeedbackSubmittedBadge label="Clinic feedback submitted" />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setClinicFeedbackTarget(appointment)}
+                            className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                          >
+                            <MessageSquareHeart className="w-4 h-4" />
+                            Rate Clinic
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="flex h-full flex-col">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+              Doctor Slots
+            </h2>
+            <Link
+              to="/patient/doctors"
+              className="text-sm font-semibold text-primary hover:text-primary/80"
+            >
+              Book Doctor Slot
+            </Link>
+          </div>
+
+          {filteredSessions.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--border-color)] p-6 text-sm text-[var(--text-secondary)]">
+              {filter === 'all'
+                ? 'No doctor appointments yet.'
+                : `No ${filter} doctor appointments.`}
+            </div>
+          ) : (
+            <div className="flex-1 space-y-4">
+              {filteredSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={`medical-card p-6 hover:border-brand/30 transition-colors ${
+                    session.status === SessionStatus.Cancelled
+                      ? 'opacity-60'
+                      : ''
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${getSessionIconBg(session)}`}
+                      >
+                        {getSessionIcon(session.type)}
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                          <h3 className="text-lg font-bold text-(--text-primary)">
                             {SESSION_TYPE_LABELS[session.type]}
-                          </span>
+                          </h3>
+                          {getStatusBadge(session)}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              {new Date(session.createdAt).toLocaleDateString(
+                                'en-US',
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )}
+                            </span>
+                          </div>
+                          {session.appointmentTime && (
+                            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                              <Clock className="w-4 h-4" />
+                              <span>
+                                {new Date(
+                                  session.appointmentTime
+                                ).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true,
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                            <User className="w-4 h-4" />
+                            <span>
+                              {session.ophthalmologistName
+                                ? `Doctor: ${session.ophthalmologistName}`
+                                : SESSION_STATUS_LABELS[session.status]}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {session.type ===
+                            ConsultationSessionType.VideoCall ? (
+                              <>
+                                <Video className="w-4 h-4 text-blue-600" />
+                                <span className="text-blue-600">
+                                  {session.meetingLink
+                                    ? 'Video consultation (link ready)'
+                                    : 'Video consultation'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-4 h-4 text-[var(--text-secondary)]" />
+                                <span className="text-[var(--text-secondary)]">
+                                  {SESSION_TYPE_LABELS[session.type]}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:justify-end lg:self-stretch">
+                      {(session.status === SessionStatus.Pending ||
+                        session.status === SessionStatus.Confirmed) && (
+                        <>
+                          <Link
+                            to="/patient/chat"
+                            className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Chat
+                          </Link>
+                          {session.type ===
+                            ConsultationSessionType.VideoCall && (
+                            <button className="flex-1 lg:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                              <Video className="w-4 h-4" />
+                              Join Call
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleCancel(session.id)}
+                            disabled={cancelMutation.isPending}
+                            className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                      {session.status === SessionStatus.Completed && (
+                        <>
+                          {session.ophthalmologistId &&
+                            (submittedSessionFeedbackIds[session.id] ? (
+                              <FeedbackSubmittedBadge label="Consultation feedback submitted" />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSessionFeedbackTarget(session)
+                                }
+                                className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                              >
+                                <MessageSquareHeart className="w-4 h-4" />
+                                Rate Consultation
+                              </button>
+                            ))}
+                          <Link
+                            to="/patient/chat"
+                            className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                          >
+                            <FileText className="w-4 h-4" />
+                            View Details
+                            <ChevronRight className="w-4 h-4" />
+                          </Link>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                {(session.status === SessionStatus.Pending ||
-                  session.status === SessionStatus.Confirmed) && (
-                  <>
-                    <Link
-                      to="/patient/chat"
-                      className="flex-1 lg:flex-none px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View Chat
-                    </Link>
-                    {session.type === ConsultationSessionType.VideoCall && (
-                      <button className="flex-1 lg:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                        <Video className="w-4 h-4" />
-                        Join Call
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleCancel(session.id)}
-                      disabled={cancelMutation.isPending}
-                      className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-                {session.status === SessionStatus.Completed && (
-                  <>
-                    {session.ophthalmologistId &&
-                      (submittedSessionFeedbackIds[session.id] ? (
-                        <FeedbackSubmittedBadge label="Consultation feedback submitted" />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setSessionFeedbackTarget(session)}
-                          className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                        >
-                          <MessageSquareHeart className="w-4 h-4" />
-                          Rate Consultation
-                        </button>
-                      ))}
-                    <Link
-                      to="/patient/chat"
-                      className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                    >
-                      <FileText className="w-4 h-4" />
-                      View Details
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </>
-                )}
-              </div>
+              ))}
             </div>
-          </div>
-        ))}
+          )}
+        </section>
       </div>
 
-      <div className="mt-10">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-            Past Clinic Visits
-          </h2>
-          <Link
-            to="/patient/clinics"
-            className="text-sm font-semibold text-primary hover:text-primary/80"
-          >
-            View Clinic Booking
-          </Link>
-        </div>
-
-        {completedClinicAppointments.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--border-color)] p-6 text-sm text-[var(--text-secondary)]">
-            No completed clinic appointments yet.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {completedClinicAppointments.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="medical-card flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">
-                    {appointment.organisationName ?? 'Clinic Visit'}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                    {appointment.date} • {appointment.startTime} -{' '}
-                    {appointment.endTime}
-                  </p>
-                </div>
-
-                {submittedClinicFeedbackIds[appointment.id] ? (
-                  <FeedbackSubmittedBadge />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setClinicFeedbackTarget(appointment)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
-                  >
-                    <Building2 className="h-4 w-4" />
-                    Leave clinic feedback
-                  </button>
-                )}
-              </div>
-            ))}
+      {filteredSessions.length === 0 &&
+        filteredClinicAppointments.length === 0 && (
+          <div className="text-center py-16">
+            <Calendar className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+              No Appointments Found
+            </h3>
+            <p className="text-[var(--text-secondary)] mb-6">
+              {filter === 'all'
+                ? "You haven't created any appointments yet."
+                : `No ${filter} appointments.`}
+            </p>
+            <Link
+              to="/patient/clinics"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/90 text-white rounded-xl font-semibold transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Book Your First Appointment
+            </Link>
           </div>
         )}
-      </div>
-
-      {filteredSessions.length === 0 && (
-        <div className="text-center py-16">
-          <Calendar className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-            No Sessions Found
-          </h3>
-          <p className="text-[var(--text-secondary)] mb-6">
-            {filter === 'all'
-              ? "You haven't created any consultation sessions yet."
-              : `No ${filter} sessions.`}
-          </p>
-          <Link
-            to="/patient/clinics"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/90 text-white rounded-xl font-semibold transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Book Your First Appointment
-          </Link>
-        </div>
-      )}
 
       <FeedbackModal
         open={!!sessionFeedbackTarget}
