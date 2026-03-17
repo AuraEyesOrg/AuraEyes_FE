@@ -26,7 +26,7 @@ const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
 
 export default function ClinicsPage() {
   const { user } = useAuthStore();
-  const patientId = user?.id ?? '';
+  const patientId = user?.roleId ?? '';
 
   const [searchText, setSearchText] = useState('');
   const [selectedOrganisationId, setSelectedOrganisationId] = useState('');
