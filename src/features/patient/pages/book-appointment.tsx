@@ -305,7 +305,7 @@ export default function BookAppointmentPage() {
     state.doctorSnapshot ?? storedContext?.doctorSnapshot ?? null;
 
   const { user } = useAuthStore();
-  const patientId = user?.id ?? '';
+  const patientId = user?.roleId ?? '';
 
   const selectedDoctorId = doctorId;
   const [currentWeekOffset, setCurrentWeekOffset] = useState(() =>

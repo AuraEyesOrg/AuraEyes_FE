@@ -52,7 +52,7 @@ export default function BookingConfirmationPage() {
   const slotId = state.slotId ?? storedSlotId ?? querySlotId;
 
   const { user } = useAuthStore();
-  const patientId = user?.id ?? '';
+  const patientId = user?.roleId ?? '';
 
   const [shareRetinalImages, setShareRetinalImages] = useState(true);
   const [shareAiResults, setShareAiResults] = useState(true);
