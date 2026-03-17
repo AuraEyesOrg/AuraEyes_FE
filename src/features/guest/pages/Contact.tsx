@@ -459,29 +459,6 @@ const ContactPage = () => {
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
-                          Organization Type{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          name="organizationType"
-                          required
-                          value={formData.organizationType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
-                        >
-                          <option value="">Select an option</option>
-                          <option value="public_hospital">
-                            Public Hospital
-                          </option>
-                          <option value="private_hospital">
-                            Private Hospital
-                          </option>
-                          <option value="clinic_chain">Clinic Chain</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
                           City / Location

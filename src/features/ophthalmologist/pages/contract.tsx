@@ -27,6 +27,44 @@ import { contractApi, type ContractDetailDto } from '../api/contract.api';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
+const getFileExtension = (url: string) => {
+  const cleanUrl = url.split('?')[0] ?? url;
+  return cleanUrl.split('.').pop()?.toLowerCase() ?? '';
+};
+
+const getOfficeViewerUrl = (fileUrl: string) =>
+  `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+
+const openContractTemplate = (fileUrl: string) => {
+  const extension = getFileExtension(fileUrl);
+  const previewUrl = ['doc', 'docx'].includes(extension)
+    ? getOfficeViewerUrl(fileUrl)
+    : fileUrl;
+
+  window.open(previewUrl, '_blank', 'noopener,noreferrer');
+};
+
+const downloadContractTemplate = async (
+  fileUrl: string,
+  contractNumber: string
+) => {
+  const response = await fetch(fileUrl);
+  if (!response.ok) {
+    throw new Error('Không thể tải file mẫu hợp đồng.');
+  }
+
+  const blob = await response.blob();
+  const extension = getFileExtension(fileUrl);
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = `contract-${contractNumber}.${extension || 'docx'}`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+};
+
 // ─────────────────────────────────────────────
 // Status helpers
 // ─────────────────────────────────────────────
@@ -68,50 +106,6 @@ function getStatusConfig(status: string, hasUpload: boolean) {
         icon: FileText,
       };
   }
-}
-
-// ─────────────────────────────────────────────
-// Contract Preview Modal
-// ─────────────────────────────────────────────
-function ContractPreviewModal({
-  html,
-  onClose,
-}: {
-  html: string;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div className="relative z-10 w-full max-w-4xl m-4 max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Xem trước hợp đồng
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-1">
-          <iframe
-            srcDoc={html}
-            className="w-full min-h-[70vh] border-0"
-            title="Contract Preview"
-            sandbox="allow-same-origin"
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────
@@ -358,7 +352,7 @@ export default function ContractPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
-  const [showPreview, setShowPreview] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const {
     data: contract,
@@ -539,7 +533,9 @@ export default function ContractPage() {
                 {/* View contract template */}
                 {contract.signedContent && (
                   <button
-                    onClick={() => setShowPreview(true)}
+                    onClick={() =>
+                      openContractTemplate(contract.signedContent!)
+                    }
                     className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
                   >
                     <Eye className="w-5 h-5 text-primary" />
@@ -548,7 +544,7 @@ export default function ContractPage() {
                         Xem mẫu hợp đồng
                       </p>
                       <p className="text-xs text-slate-500">
-                        Xem nội dung hợp đồng mẫu để in và ký
+                        Mở trực tiếp file mẫu hợp đồng ở tab mới
                       </p>
                     </div>
                   </button>
@@ -557,29 +553,37 @@ export default function ContractPage() {
                 {/* Download link */}
                 {contract.signedContent && (
                   <button
-                    onClick={() => {
-                      const blob = new Blob([contract.signedContent!], {
-                        type: 'text/html',
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `contract-${contract.contractNumber}.html`;
-                      a.click();
-                      URL.revokeObjectURL(url);
+                    onClick={async () => {
+                      try {
+                        setDownloadError(null);
+                        await downloadContractTemplate(
+                          contract.signedContent!,
+                          contract.contractNumber
+                        );
+                      } catch (error) {
+                        setDownloadError(
+                          error instanceof Error
+                            ? error.message
+                            : 'Không thể tải file mẫu hợp đồng.'
+                        );
+                      }
                     }}
                     className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
                   >
                     <Download className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                        Tải hợp đồng
+                        Tải mẫu hợp đồng
                       </p>
                       <p className="text-xs text-slate-500">
-                        Tải file HTML để in ra giấy và ký
+                        Tải file gốc để in ra giấy và ký
                       </p>
                     </div>
                   </button>
+                )}
+
+                {downloadError && (
+                  <p className="text-sm text-red-500">{downloadError}</p>
                 )}
               </div>
 
@@ -654,14 +658,6 @@ export default function ContractPage() {
           )}
         </main>
       </div>
-
-      {/* Contract preview modal */}
-      {showPreview && contract?.signedContent && (
-        <ContractPreviewModal
-          html={contract.signedContent}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
     </div>
   );
 }
