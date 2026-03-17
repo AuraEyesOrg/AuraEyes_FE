@@ -110,6 +110,29 @@ export interface OrganisationDetail extends Organisation {
   monthlyScreeningLimit?: number;
 }
 
+export interface OrganisationOnboardingRequestDto {
+  id: string;
+  organisationName: string;
+  orgType: string;
+  contactFullName: string;
+  contactEmail: string;
+  contactPhone?: string | null;
+  address?: string | null;
+  licenseNumber?: string | null;
+  notes?: string | null;
+  status: string;
+  createdAt: string;
+  approvedAt?: string | null;
+}
+
+export interface ApproveOrganisationOnboardingResult {
+  requestId: string;
+  organisationId: string;
+  orgAdminUserId: string;
+  orgAdminEmail: string;
+  temporaryPassword: string;
+}
+
 // ============ USERS & ROLES ============
 export type UserRole =
   | 'system_admin'
