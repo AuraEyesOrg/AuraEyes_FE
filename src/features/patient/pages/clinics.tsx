@@ -16,24 +16,7 @@ import {
 } from '../hooks/use-clinic-booking';
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
-
-const formatTime = (time: string) => {
-  const [h, m] = time.split(':');
-  const hour = Number(h);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const formatDate = (value: string) => {
-  const date = new Date(value + 'T00:00:00');
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
+import { formatSlotTime, formatDate, toLocalDateKey } from '@/lib/date-utils';
 
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
   const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
@@ -47,9 +30,7 @@ export default function ClinicsPage() {
 
   const [searchText, setSearchText] = useState('');
   const [selectedOrganisationId, setSelectedOrganisationId] = useState('');
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
   const [visitReason, setVisitReason] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -287,7 +268,8 @@ export default function ClinicsPage() {
                     </div>
                     <div className="mt-2 flex items-center gap-2 text-sm text-(--text-secondary)">
                       <Clock className="h-4 w-4" />
-                      {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                      {formatSlotTime(slot.startTime)} -{' '}
+                      {formatSlotTime(slot.endTime)}
                     </div>
                     <div className="mt-2 text-xs text-(--text-secondary)">
                       Remaining capacity: {slot.remaining}/{slot.maxCapacity}

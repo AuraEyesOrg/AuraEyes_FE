@@ -38,6 +38,12 @@ import {
 } from '@/features/patient/components';
 import useAuthStore from '@/store/auth-store';
 import {
+  formatDate,
+  formatSlotTime,
+  formatShortDate,
+  formatShortTime,
+} from '@/lib/date-utils';
+import {
   SessionStatus,
   ConsultationSessionType,
   SESSION_TYPE_LABELS,
@@ -68,27 +74,6 @@ const UPCOMING_CLINIC_STATUSES = [
   'InProgress',
 ];
 const CANCELLED_CLINIC_STATUSES = ['Cancelled', 'NoShow'];
-
-const formatClinicDate = (value: string) => {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const formatClinicTime = (time: string) => {
-  const [h = '0', m = '00'] = time.split(':');
-  const hour = Number(h);
-  if (Number.isNaN(hour)) return time;
-
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
 
 const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
@@ -564,13 +549,13 @@ const AppointmentsPage = () => {
                         <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
                           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                             <Calendar className="w-4 h-4" />
-                            <span>{formatClinicDate(appointment.date)}</span>
+                            <span>{formatDate(appointment.date)}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                             <Clock className="w-4 h-4" />
                             <span>
-                              {formatClinicTime(appointment.startTime)} -{' '}
-                              {formatClinicTime(appointment.endTime)}
+                              {formatSlotTime(appointment.startTime)} -{' '}
+                              {formatSlotTime(appointment.endTime)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[var(--text-secondary)] md:col-span-2">
@@ -658,28 +643,13 @@ const AppointmentsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                             <Calendar className="w-4 h-4" />
-                            <span>
-                              {new Date(session.createdAt).toLocaleDateString(
-                                'en-US',
-                                {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                }
-                              )}
-                            </span>
+                            <span>{formatShortDate(session.createdAt)}</span>
                           </div>
                           {session.appointmentTime && (
                             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                               <Clock className="w-4 h-4" />
                               <span>
-                                {new Date(
-                                  session.appointmentTime
-                                ).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true,
-                                })}
+                                {formatShortTime(session.appointmentTime)}
                               </span>
                             </div>
                           )}

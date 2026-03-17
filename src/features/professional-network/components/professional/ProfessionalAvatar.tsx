@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { formatRequestDate } from '@/lib/date-utils';
 
 interface Props {
   author: Ophthalmologist;
@@ -18,19 +19,6 @@ export function ProfessionalAvatar({
   timestamp,
   showOrganisation = true,
 }: Props) {
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('vi-VN');
-  };
-
   return (
     <div className="flex items-center gap-3">
       <Link to={`/network/profile/${author.id}`}>
@@ -61,7 +49,7 @@ export function ProfessionalAvatar({
             </>
           )}
           <span>·</span>
-          <span>{formatTime(timestamp)}</span>
+          <span>{formatRequestDate(timestamp)}</span>
         </div>
       </div>
     </div>

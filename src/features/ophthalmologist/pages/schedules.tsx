@@ -16,6 +16,12 @@ import useAuthStore from '@/store/auth-store';
 import { getItem } from '@/lib/local-storage';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import {
+  formatSlotTime,
+  toLocalDateKey,
+  formatWeekRange,
+  formatWeekDayLabel,
+} from '@/lib/date-utils';
+import {
   useSchedules,
   useCreateSchedule,
   useUpdateScheduleStatus,
@@ -61,21 +67,6 @@ const statusColors: Record<ScheduleStatus, string> = {
     'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500',
   [ScheduleStatus.Expired]:
     'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-};
-
-const formatTime = (timeStr: string) => {
-  const [h, m] = timeStr.split(':');
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const toLocalDateKey = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 };
 
 export default function SchedulesPage() {
@@ -125,7 +116,7 @@ export default function SchedulesPage() {
     return {
       from: toLocalDateKey(startOfWeek),
       to: toLocalDateKey(endOfWeek),
-      label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      label: formatWeekRange(startOfWeek, endOfWeek),
     };
   }, [currentWeekOffset]);
 
@@ -185,7 +176,7 @@ export default function SchedulesPage() {
       const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayName: formatWeekDayLabel(d),
         dayNum: d.getDate(),
         isToday: dateStr === today,
       });
@@ -491,7 +482,7 @@ export default function SchedulesPage() {
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold">
-                              {formatTime(slot.startTime)}
+                              {formatSlotTime(slot.startTime)}
                             </span>
                             <span
                               className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${statusColors[slot.status]}`}
@@ -500,8 +491,8 @@ export default function SchedulesPage() {
                             </span>
                           </div>
                           <p className="text-[11px] opacity-80">
-                            {formatTime(slot.startTime)} –{' '}
-                            {formatTime(slot.endTime)}
+                            {formatSlotTime(slot.startTime)} –{' '}
+                            {formatSlotTime(slot.endTime)}
                           </p>
                           <p className="text-[11px] font-medium mt-0.5">
                             {SLOT_TYPE_LABELS[slot.slotType]}

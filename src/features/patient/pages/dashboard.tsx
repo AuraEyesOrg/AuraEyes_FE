@@ -15,15 +15,9 @@ import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
+import { formatShortDate } from '@/lib/date-utils';
 
 // ============ HELPERS ============
-
-const formatShortDate = (date: string) =>
-  new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
@@ -95,11 +89,7 @@ export default function PatientDashboard() {
     }
   };
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const currentDate = formatShortDate(new Date().toISOString());
 
   // Build stats cards from real data
   const statsCards = [

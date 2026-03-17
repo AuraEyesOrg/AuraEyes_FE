@@ -27,7 +27,9 @@ import {
   useConsultationSession,
   useSendMessage,
   useEndSession,
+  consultationKeys,
 } from '@/features/consultation/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   SessionStatus,
   ChatStatus,
@@ -37,9 +39,16 @@ import {
   CHAT_STATUS_LABELS,
 } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
-
-// TODO: Replace with actual doctor ID / user ID from auth store once auth is fully integrated
-const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
+import {
+  SIGNALR_CHAT_MESSAGE_EVENT,
+  type SignalRChatMessageEvent,
+} from '@/types/chat-realtime';
+import useAuthStore from '@/store/auth-store';
+import {
+  formatRequestDate,
+  formatMessageTime,
+  formatLongDateTime,
+} from '@/lib/date-utils';
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -135,28 +144,10 @@ const getStatusBadgeClass = (status: SessionStatus) => {
   }
 };
 
-const formatRequestDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-  if (diffHours < 1) {
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes}m ago`;
-  }
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-  if (diffHours < 48) {
-    return 'Yesterday';
-  }
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// ============ COMPONENT ============
-
 export default function ConsultationsPage() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const currentDoctorId = user?.roleId ?? '';
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
   );
@@ -164,13 +155,19 @@ export default function ConsultationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processedChatEventIdRef = useRef<string | null>(null);
 
   // ---- Data fetching ----
 
-  const { data: sessionsData } = useConsultationSessions({
-    ophthalmologistId: CURRENT_DOCTOR_ID,
-    pageSize: 50,
-  });
+  const { data: sessionsData } = useConsultationSessions(
+    {
+      ophthalmologistId: currentDoctorId || undefined,
+      pageSize: 50,
+    },
+    {
+      enabled: !!currentDoctorId,
+    }
+  );
 
   const { data: selectedSession, isLoading: sessionLoading } =
     useConsultationSession(selectedSessionId ?? '', {
@@ -239,6 +236,36 @@ export default function ConsultationsPage() {
     }
   }, [filteredSessions, selectedSessionId]);
 
+  useEffect(() => {
+    const handleChatRealtime = (event: Event) => {
+      const customEvent = event as CustomEvent<SignalRChatMessageEvent>;
+      const chatEvent = customEvent.detail;
+      if (!chatEvent?.sessionId) {
+        return;
+      }
+
+      if (processedChatEventIdRef.current === chatEvent.messageId) {
+        return;
+      }
+      processedChatEventIdRef.current = chatEvent.messageId;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(chatEvent.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
+    window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    return () => {
+      window.removeEventListener(
+        SIGNALR_CHAT_MESSAGE_EVENT,
+        handleChatRealtime
+      );
+    };
+  }, [queryClient]);
+
   // ---- Handlers ----
 
   const handleSendMessage = () => {
@@ -265,9 +292,13 @@ export default function ConsultationsPage() {
   };
 
   const handleEndSession = (sessionId: string) => {
+    if (!currentDoctorId) {
+      return;
+    }
+
     endSessionMutation.mutate({
       sessionId,
-      doctorId: CURRENT_DOCTOR_ID,
+      doctorId: currentDoctorId,
     });
   };
 
@@ -572,16 +603,7 @@ export default function ConsultationsPage() {
                                   Created At
                                 </p>
                                 <p className="text-gray-900 dark:text-white">
-                                  {new Date(
-                                    currentSession.createdAt
-                                  ).toLocaleString('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
+                                  {formatLongDateTime(currentSession.createdAt)}
                                 </p>
                               </div>
                             </div>
@@ -594,16 +616,9 @@ export default function ConsultationsPage() {
                                     Appointment Time
                                   </p>
                                   <p className="text-gray-900 dark:text-white">
-                                    {new Date(
+                                    {formatLongDateTime(
                                       currentSession.appointmentTime
-                                    ).toLocaleString('en-US', {
-                                      weekday: 'long',
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -634,7 +649,7 @@ export default function ConsultationsPage() {
                           selectedSession.messages.length > 0 ? (
                           selectedSession.messages.map((message) => {
                             const isDoctor =
-                              message.senderUserId === CURRENT_DOCTOR_ID;
+                              message.senderUserId === currentDoctorId;
                             return (
                               <div
                                 key={message.id}
@@ -664,13 +679,7 @@ export default function ConsultationsPage() {
                                           : 'text-gray-500 dark:text-gray-400'
                                       }`}
                                     >
-                                      {new Date(
-                                        message.sentAt
-                                      ).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true,
-                                      })}
+                                      {formatMessageTime(message.sentAt)}
                                     </span>
                                     {isDoctor && (
                                       <CheckCheck
