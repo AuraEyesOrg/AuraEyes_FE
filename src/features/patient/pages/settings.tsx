@@ -47,8 +47,8 @@ export default function SettingsPage() {
         {
           icon: Shield,
           title: 'Security',
-          description: 'Two-factor authentication and account security',
-          path: '/patient/security',
+          description: 'Reset password and account security',
+          path: '/forgot-password',
         },
       ],
     },
