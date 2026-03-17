@@ -3,6 +3,7 @@ import { Bell, Search, Filter, CheckCheck, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import useNotificationStore from '@/store/useNotificationStore';
+import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
 import { useNotifications } from '@/features/notifications/hooks/use-notifications';
 import {
@@ -30,6 +31,7 @@ const isNotificationTypeValue = (value: number): value is NotificationType => {
 export default function NotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [selectedFilter, setSelectedFilter] =
     useState<NotificationFilter>('all');
   const [searchQuery, setSearchQuery] = useState(
@@ -89,7 +91,7 @@ export default function NotificationsPage() {
       }
     }
 
-    const route = getNotificationRoute(notification);
+    const route = getNotificationRoute(notification, user?.roles ?? []);
     if (route !== '/notifications') {
       navigate(route);
     }
