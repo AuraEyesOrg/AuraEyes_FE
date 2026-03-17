@@ -9,6 +9,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query';
+import useAuthStore from '@/store/auth-store';
 import {
   getConsultationSessions,
   getConsultationSession,
@@ -27,6 +28,8 @@ import type {
   SendMessageRequest,
   CancelSessionRequest,
   EndSessionRequest,
+  ConsultationSessionDto,
+  ChatMessageDto,
 } from '@/types/consultation';
 
 // ============ QUERY KEYS ============
@@ -115,12 +118,53 @@ export const useSubmitVerificationReport = () => {
 /** Send a message in a session */
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
+  const getAuthUser = useAuthStore.getState;
   return useMutation({
     mutationFn: ({
       sessionId,
       ...data
     }: SendMessageRequest & { sessionId: string }) =>
       sendSessionMessage(sessionId, data),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: consultationKeys.detail(variables.sessionId),
+      });
+
+      const previousSession = queryClient.getQueryData<ConsultationSessionDto>(
+        consultationKeys.detail(variables.sessionId)
+      );
+
+      if (previousSession) {
+        const authUser = getAuthUser().user;
+        const senderUserId = authUser?.roleId ?? authUser?.id ?? '';
+        const optimisticMessage: ChatMessageDto = {
+          id: `optimistic-${Date.now()}`,
+          senderUserId,
+          message: variables.message,
+          isRead: false,
+          sentAt: new Date().toISOString(),
+        };
+
+        queryClient.setQueryData<ConsultationSessionDto>(
+          consultationKeys.detail(variables.sessionId),
+          {
+            ...previousSession,
+            lastActivityAt: optimisticMessage.sentAt,
+            messages: [...previousSession.messages, optimisticMessage],
+          }
+        );
+      }
+
+      return { previousSession };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previousSession) {
+        queryClient.setQueryData(
+          consultationKeys.detail(variables.sessionId),
+          context.previousSession
+        );
+      }
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: consultationKeys.detail(variables.sessionId),
