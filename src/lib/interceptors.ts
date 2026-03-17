@@ -119,7 +119,9 @@ export const successInterceptor = (response: AxiosResponse): AxiosResponse => {
   return response;
 };
 
-export const errorInterceptor = async (error: AxiosError): Promise<never> => {
+export const errorInterceptor = async (
+  error: AxiosError
+): Promise<AxiosResponse> => {
   const originalRequest = error.config as RetryableRequestConfig | undefined;
 
   if (
@@ -135,7 +137,7 @@ export const errorInterceptor = async (error: AxiosError): Promise<never> => {
 
       originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
       originalRequest.headers.set('Authorization', `Bearer ${token}`);
-      throw await axios(originalRequest);
+      return axios(originalRequest);
     }
 
     originalRequest._retry = true;
@@ -146,7 +148,7 @@ export const errorInterceptor = async (error: AxiosError): Promise<never> => {
       processQueue(null, token);
       originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
       originalRequest.headers.set('Authorization', `Bearer ${token}`);
-      throw await axios(originalRequest);
+      return axios(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
       logoutAndRedirect();
