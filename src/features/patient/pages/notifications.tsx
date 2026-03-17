@@ -6,10 +6,7 @@ import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
 import { useNotifications } from '@/features/notifications/hooks/use-notifications';
-import {
-  formatNotificationTime,
-  getNotificationTypeLabel,
-} from '@/store/useNotificationStore';
+import { getNotificationTypeLabel } from '@/store/useNotificationStore';
 import {
   getNotificationIcon,
   getNotificationColor,
@@ -18,6 +15,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
+import { formatRelativeTime } from '@/lib/date-utils';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -370,7 +368,7 @@ function NotificationListItem({
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             )}
             <span className="text-xs text-gray-500 dark:text-gray-500">
-              {formatNotificationTime(notification.createdAt)}
+              {formatRelativeTime(notification.createdAt)}
             </span>
           </div>
 

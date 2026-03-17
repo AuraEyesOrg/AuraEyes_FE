@@ -15,16 +15,14 @@ import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
 import { useNotifications } from '@/features/notifications/hooks/use-notifications';
-import {
-  formatNotificationTime,
-  getNotificationTypeLabel,
-} from '@/store/useNotificationStore';
+import { getNotificationTypeLabel } from '@/store/useNotificationStore';
 import {
   getNotificationIcon,
   getNotificationColor,
   getNotificationRoute,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
+import { formatRelativeTime } from '@/lib/date-utils';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -309,7 +307,7 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           </p>
 
           <p className="text-xs text-gray-500 dark:text-gray-500">
-            {formatNotificationTime(notification.createdAt)}
+            {formatRelativeTime(notification.createdAt)}
           </p>
         </div>
       </div>
