@@ -24,26 +24,9 @@ import {
 } from '../hooks/use-booking';
 import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
+import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
 
 // ============ HELPERS ============
-
-const formatTime = (timeStr: string) => {
-  const [h, m] = timeStr.split(':');
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00');
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-};
 
 export default function BookingConfirmationPage() {
   const navigate = useNavigate();
@@ -127,12 +110,6 @@ export default function BookingConfirmationPage() {
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [slot?.reservationExpireAt, navigate]);
-
-  const formatCountdown = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handleConfirm = useCallback(async () => {
     if (!slotId || !patientId) return;
@@ -250,7 +227,8 @@ export default function BookingConfirmationPage() {
                     Time
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                    {formatSlotTime(slot.startTime)} -{' '}
+                    {formatSlotTime(slot.endTime)}
                   </p>
                 </div>
                 <div>
@@ -353,7 +331,8 @@ export default function BookingConfirmationPage() {
               <div className="flex-1">
                 <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                  {formatSlotTime(slot.startTime)} -{' '}
+                  {formatSlotTime(slot.endTime)}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Online Consultation

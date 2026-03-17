@@ -18,6 +18,7 @@ import {
   type AvailableSlotItem,
 } from '../api/patient.api';
 import Spinner from '@/components/ui/spinner';
+import { formatShortTime, formatShortDate } from '@/lib/date-utils';
 
 const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
 
@@ -29,24 +30,14 @@ function getAvatarUrl(doctor: OphthalmologistSearchItem): string {
 
 function formatSlotTime(value: string) {
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '--:--';
-
-  return d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  return Number.isNaN(d.getTime()) ? '--:--' : formatShortTime(value);
 }
 
 function formatSlotDate(value: string) {
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return 'Unknown date';
-
-  return d.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
+  return Number.isNaN(d.getTime())
+    ? 'Unknown date'
+    : formatShortDate(value, 'short');
 }
 
 export default function DoctorsPage() {
