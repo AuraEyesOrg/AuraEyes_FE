@@ -1,8 +1,3 @@
-/**
- * Slot Management Page for Doctors
- * Generate slots from templates, block/unblock slots
- */
-
 import { useState, useMemo, useCallback } from 'react';
 import {
   Calendar,
@@ -39,47 +34,13 @@ import type {
   ScheduleTemplateDto,
 } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
-import { getItem } from '@/lib/local-storage';
 import { extractApiErrorMessage } from '@/lib/api-error';
-
-// TODO: Replace with actual doctor ID from auth store
-const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
-
-const getDoctorProfileId = (fallbackUserId?: string) => {
-  const token = getItem<string>('token');
-
-  if (token) {
-    try {
-      const payloadBase64 = token.split('.')[1];
-      const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-      const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
-      const decoded = JSON.parse(window.atob(normalized + padding)) as {
-        profile_id?: string;
-      };
-
-      if (decoded.profile_id) return decoded.profile_id;
-    } catch {
-      // Ignore parse errors and use fallback values.
-    }
-  }
-
-  return fallbackUserId ?? CURRENT_DOCTOR_ID;
-};
-
-const formatTime = (timeStr: string) => {
-  const [h, m] = timeStr.split(':');
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const toLocalDateKey = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import {
+  formatSlotTime,
+  toLocalDateKey,
+  formatWeekRange,
+  formatWeekDayLabel,
+} from '@/lib/date-utils';
 
 const formatTemplateCost = (cost: number | null | undefined) => {
   if (typeof cost === 'number' && Number.isFinite(cost) && cost > 0) {
@@ -111,7 +72,7 @@ const getSlotStatusColor = (status: string): string => {
 
 export default function SlotManagementPage() {
   const { user } = useAuthStore();
-  const doctorId = useMemo(() => getDoctorProfileId(user?.id), [user?.id]);
+  const doctorId = useMemo(() => user?.roleId ?? '', [user?.roleId]);
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -147,7 +108,7 @@ export default function SlotManagementPage() {
     return {
       from: toLocalDateKey(startOfWeek),
       to: toLocalDateKey(endOfWeek),
-      label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      label: formatWeekRange(startOfWeek, endOfWeek),
     };
   }, [currentWeekOffset]);
 
@@ -205,7 +166,7 @@ export default function SlotManagementPage() {
       const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayName: formatWeekDayLabel(d),
         dayNum: d.getDate(),
         isToday: dateStr === today,
       });
@@ -533,8 +494,8 @@ export default function SlotManagementPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <Clock className="w-4 h-4" />
-                        {formatTime(template.startTime)} -{' '}
-                        {formatTime(template.endTime)}
+                        {formatSlotTime(template.startTime)} -{' '}
+                        {formatSlotTime(template.endTime)}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">
@@ -638,7 +599,7 @@ export default function SlotManagementPage() {
                           >
                             <div className="flex items-center justify-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {formatTime(slot.startTime)}
+                              {formatSlotTime(slot.startTime)}
                             </div>
                             <div className="text-[10px] mt-1 opacity-75 text-center">
                               {slot.status}
@@ -834,8 +795,8 @@ export default function SlotManagementPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Generate slots from &ldquo;
               {DAY_OF_WEEK_LABELS[selectedTemplate.dayOfWeek]}&rdquo; template (
-              {formatTime(selectedTemplate.startTime)} -{' '}
-              {formatTime(selectedTemplate.endTime)})
+              {formatSlotTime(selectedTemplate.startTime)} -{' '}
+              {formatSlotTime(selectedTemplate.endTime)})
             </p>
 
             <div className="space-y-4">
