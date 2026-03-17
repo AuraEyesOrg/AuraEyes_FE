@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
+import { formatShortDate } from '@/lib/date-utils';
 
 interface Scan {
   id: string;
@@ -302,11 +303,7 @@ export default function ScreeningPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(scan.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {formatShortDate(scan.date)}
                       </span>
                       {scan.findings !== undefined && (
                         <span>

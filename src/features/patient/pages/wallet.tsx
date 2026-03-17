@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
+import { formatDateTimeWithYear } from '@/lib/date-utils';
 import {
   useWallet,
   useWalletTransactions,
@@ -99,17 +100,7 @@ export default function WalletPage() {
       currency: 'VND',
     }).format(Math.abs(amount));
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  const formatDate = formatDateTimeWithYear;
 
   const getTransactionIcon = (txType: TransactionType) => {
     const type = TRANSACTION_TYPE_MAP[txType];

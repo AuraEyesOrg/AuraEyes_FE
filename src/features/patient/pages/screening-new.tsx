@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
+import { toast } from 'react-toastify';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -102,11 +103,27 @@ export default function ScreeningNewPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       handleFiles(Array.from(e.target.files));
+      e.target.value = '';
     }
   };
 
   const handleFiles = (files: File[]) => {
-    const newImages: UploadedImage[] = files.map((file) => ({
+    const newUniqueFiles = files.filter((incomingFile) => {
+      const isDuplicate = images.some(
+        (existingImg) =>
+          existingImg.file.name === incomingFile.name &&
+          existingImg.file.size === incomingFile.size
+      );
+
+      return !isDuplicate;
+    });
+
+    if (newUniqueFiles.length === 0) {
+      toast.warning('These images have already been uploaded!');
+      return;
+    }
+
+    const newImages: UploadedImage[] = newUniqueFiles.map((file) => ({
       id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       file,
       preview: URL.createObjectURL(file),
