@@ -29,6 +29,9 @@ const ConfirmEmailPage = lazy(
 const ForgotPasswordPage = lazy(
   () => import('@/features/auth/pages/forgot-password')
 );
+const ResetPasswordPage = lazy(
+  () => import('@/features/auth/pages/reset-password')
+);
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
 );
@@ -240,6 +243,7 @@ const Router = () => (
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />

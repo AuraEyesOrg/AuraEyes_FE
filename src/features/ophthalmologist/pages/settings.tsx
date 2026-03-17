@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Mail,
@@ -695,7 +696,10 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="p-4 space-y-2">
-                  <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group">
+                  <Link
+                    to="/forgot-password"
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                         <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -705,12 +709,12 @@ export default function SettingsPage() {
                           Security
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Password & 2FA
+                          Reset password & 2FA
                         </p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
-                  </button>
+                  </Link>
 
                   <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group">
                     <div className="flex items-center gap-3">
