@@ -5,6 +5,7 @@
 
 import { X } from 'lucide-react';
 import type { AuditLogDto } from '../types/system-admin.types';
+import { formatViTimestamp } from '@/lib/date-utils';
 
 interface AuditLogDetailModalProps {
   log: AuditLogDto;
@@ -20,16 +21,7 @@ function safeParse(jsonStr: string | null): object | null {
   }
 }
 
-function formatTimestamp(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
+const formatTimestamp = formatViTimestamp;
 
 /** Highlight changed keys between old and new objects */
 function getChangedKeys(
