@@ -367,52 +367,24 @@ export interface ContractTemplateDto {
   updatedAt?: string;
 }
 
-export interface ContractTemplateVariableDto {
-  id: string;
-  key: string;
-  label: string;
-  variableType: string;
-  description?: string;
-  defaultValue?: string;
-  selectOptions?: string;
-  unit?: string;
-  isRequired: boolean;
-  sortOrder: number;
-}
-
 export interface ContractTemplateDetailDto extends ContractTemplateDto {
   contentTemplate: string;
-  variables: ContractTemplateVariableDto[];
-}
-
-export interface VariablePayload {
-  key: string;
-  label: string;
-  variableType: number; // maps to VariableType enum: Text=1, Number=2, Currency=3, Time=4, Date=5, Select=6
-  description?: string;
-  defaultValue?: string;
-  selectOptions?: string;
-  unit?: string;
-  isRequired: boolean;
-  sortOrder: number;
 }
 
 export interface CreateContractTemplatePayload {
   title: string;
   type: number; // ContractType enum: OphthalmologistContract=1, MedicalOrganizationContract=2
   contractVersion: string;
-  contentTemplate: string;
   effectiveDate?: string;
-  variables: VariablePayload[];
+  templateFile: File;
 }
 
 export interface UpdateContractTemplatePayload {
   title: string;
   type: number;
   contractVersion: string;
-  contentTemplate: string;
   effectiveDate?: string;
-  variables: VariablePayload[];
+  templateFile?: File;
 }
 
 // ============ CONTRACTS ============
