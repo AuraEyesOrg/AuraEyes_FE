@@ -193,17 +193,95 @@ export interface OphthalmologistSearchItem {
   createdAt: string;
 }
 
+export interface OphthalmologistDetailItem {
+  id: string;
+  userId: string;
+  userFullName?: string | null;
+  userEmail?: string | null;
+  bio?: string | null;
+  yearsOfExperience: number;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
 export interface AvailableSlotItem {
   id: string;
   organisationId?: string | null;
   ophthalmologistId?: string | null;
+  date: string;
   startTime: string;
   endTime: string;
+  startDateTime: string;
+  endDateTime: string;
   maxCapacity: number;
   bookedCount: number;
   availableCapacity: number;
   createdAt: string;
 }
+
+type BackendAvailableSlotItem = {
+  id?: string;
+  Id?: string;
+  organisationId?: string | null;
+  ophthalmologistId?: string | null;
+  orgId?: string | null;
+  ophthalId?: string | null;
+  date?: string;
+  Date?: string;
+  startTime?: string;
+  StartTime?: string;
+  endTime?: string;
+  EndTime?: string;
+  startDateTime?: string;
+  StartDateTime?: string;
+  endDateTime?: string;
+  EndDateTime?: string;
+  maxCapacity?: number;
+  MaxCapacity?: number;
+  bookedCount?: number;
+  BookedCount?: number;
+  availableCapacity?: number;
+  AvailableCapacity?: number;
+  createdAt?: string;
+  CreatedAt?: string;
+};
+
+const combineDateTime = (date: string, time: string): string =>
+  `${date}T${time}`;
+
+const normalizeAvailableSlot = (
+  slot: BackendAvailableSlotItem
+): AvailableSlotItem => {
+  const date = slot.date ?? slot.Date ?? '';
+  const startTime = slot.startTime ?? slot.StartTime ?? '';
+  const endTime = slot.endTime ?? slot.EndTime ?? '';
+
+  const startDateTime =
+    slot.startDateTime ??
+    slot.StartDateTime ??
+    (date && startTime ? combineDateTime(date, startTime) : '');
+
+  const endDateTime =
+    slot.endDateTime ??
+    slot.EndDateTime ??
+    (date && endTime ? combineDateTime(date, endTime) : '');
+
+  return {
+    id: slot.id ?? slot.Id ?? '',
+    organisationId: slot.organisationId ?? slot.orgId ?? null,
+    ophthalmologistId: slot.ophthalmologistId ?? slot.ophthalId ?? null,
+    date,
+    startTime,
+    endTime,
+    startDateTime,
+    endDateTime,
+    maxCapacity: slot.maxCapacity ?? slot.MaxCapacity ?? 0,
+    bookedCount: slot.bookedCount ?? slot.BookedCount ?? 0,
+    availableCapacity: slot.availableCapacity ?? slot.AvailableCapacity ?? 0,
+    createdAt: slot.createdAt ?? slot.CreatedAt ?? '',
+  };
+};
 
 export interface OrganisationSearchItem {
   id: string;
@@ -229,6 +307,15 @@ export const searchOphthalmologistsForPatient = async (params: {
   return response.data.data!;
 };
 
+export const getOphthalmologistDetailForPatient = async (
+  id: string
+): Promise<OphthalmologistDetailItem> => {
+  const response = await api.get<ApiResponse<OphthalmologistDetailItem>>(
+    PATIENT_ENDPOINTS.SEARCH.OPHTHALMOLOGIST_DETAIL(id)
+  );
+  return response.data.data!;
+};
+
 export const searchOrganisationsForPatient = async (params: {
   searchTerm?: string;
   orgType?: string;
@@ -251,13 +338,18 @@ export const searchAvailableSlotsForPatient = async (params: {
   pageNumber?: number;
   pageSize?: number;
 }): Promise<PagedResult<AvailableSlotItem>> => {
-  const response = await api.get<ApiResponse<PagedResult<AvailableSlotItem>>>(
-    PATIENT_ENDPOINTS.SEARCH.AVAILABLE_SLOTS,
-    {
-      params,
-    }
-  );
-  return response.data.data!;
+  const response = await api.get<
+    ApiResponse<PagedResult<BackendAvailableSlotItem>>
+  >(PATIENT_ENDPOINTS.SEARCH.AVAILABLE_SLOTS, {
+    params,
+  });
+
+  const page = response.data.data!;
+
+  return {
+    ...page,
+    items: (page.items ?? []).map(normalizeAvailableSlot),
+  };
 };
 
 // ============ IMAGES API ============

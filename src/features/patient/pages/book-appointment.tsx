@@ -3,8 +3,8 @@
  * Patient can browse doctors, view available slots, and book appointments.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
   Clock,
@@ -15,6 +15,8 @@ import {
   X,
   CheckCircle,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
@@ -28,6 +30,10 @@ import type {
 } from '@/types/schedule';
 import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
+import {
+  getOphthalmologistDetailForPatient,
+  type OphthalmologistSearchItem,
+} from '../api/patient.api';
 
 // ============ HELPERS ============
 
@@ -46,6 +52,71 @@ const formatDate = (dateStr: string) => {
     month: 'short',
     day: 'numeric',
   });
+};
+
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getStartOfWeekMonday = (input: Date): Date => {
+  const date = new Date(input);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const getInitialWeekOffset = (dateString?: string): number => {
+  if (!dateString) return 0;
+
+  const targetDate = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(targetDate.getTime())) return 0;
+
+  const currentWeekStart = getStartOfWeekMonday(new Date());
+  const targetWeekStart = getStartOfWeekMonday(targetDate);
+  const msInWeek = 7 * 24 * 60 * 60 * 1000;
+
+  return Math.round(
+    (targetWeekStart.getTime() - currentWeekStart.getTime()) / msInWeek
+  );
+};
+
+const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
+
+const getAvatarUrl = (doctor: {
+  userAvatarUrl?: string | null;
+  userFullName?: string | null;
+}) => {
+  if (doctor.userAvatarUrl) return doctor.userAvatarUrl;
+  const name = doctor.userFullName ?? 'Dr';
+  return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
+};
+
+const findNearestAvailableDate = (
+  slots: AppointmentSlotListDto[],
+  referenceDate?: string
+): string | null => {
+  if (!slots.length) return null;
+
+  const base = new Date(
+    `${referenceDate ?? toLocalDateKey(new Date())}T00:00:00`
+  );
+  if (Number.isNaN(base.getTime())) return null;
+
+  const candidates = slots
+    .map((slot) => slot.date)
+    .filter((value, index, arr) => value && arr.indexOf(value) === index)
+    .map((date) => ({
+      date,
+      diff: Math.abs(new Date(`${date}T00:00:00`).getTime() - base.getTime()),
+    }))
+    .sort((a, b) => a.diff - b.diff || a.date.localeCompare(b.date));
+
+  return candidates[0]?.date ?? null;
 };
 
 const getSlotStatusColor = (status: string) => {
@@ -207,14 +278,47 @@ const ReservationModal = ({
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const doctorId = searchParams.get('doctorId') ?? '';
+  const doctorIdFromQuery = searchParams.get('doctorId') ?? '';
+  const storedContextRaw = sessionStorage.getItem('patient-booking-context');
+  let storedContext: {
+    doctorId?: string;
+    doctorSnapshot?: Partial<OphthalmologistSearchItem>;
+  } | null = null;
+
+  if (storedContextRaw) {
+    try {
+      storedContext = JSON.parse(storedContextRaw) as {
+        doctorId?: string;
+        doctorSnapshot?: Partial<OphthalmologistSearchItem>;
+      };
+    } catch {
+      storedContext = null;
+    }
+  }
+
+  const state =
+    (location.state as {
+      doctorId?: string;
+      preselectedSlotId?: string;
+      preselectedDate?: string;
+      doctorSnapshot?: Partial<OphthalmologistSearchItem>;
+    } | null) ?? {};
+  const doctorId =
+    state.doctorId ?? storedContext?.doctorId ?? doctorIdFromQuery ?? '';
+  const preselectedSlotId = state.preselectedSlotId ?? '';
+  const preselectedDate = state.preselectedDate;
+  const doctorSnapshot =
+    state.doctorSnapshot ?? storedContext?.doctorSnapshot ?? null;
 
   const { user } = useAuthStore();
   const patientId = user?.id ?? '';
 
-  const [selectedDoctorId, setSelectedDoctorId] = useState(doctorId);
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const selectedDoctorId = doctorId;
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(() =>
+    getInitialWeekOffset(preselectedDate)
+  );
   const [selectedSlot, setSelectedSlot] =
     useState<AppointmentSlotListDto | null>(null);
   const [reservation, setReservation] = useState<SlotReservationResult | null>(
@@ -222,6 +326,31 @@ export default function BookAppointmentPage() {
   );
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [highlightedDate, setHighlightedDate] = useState<string | null>(
+    preselectedDate ?? null
+  );
+  const autoSelectedRef = useRef(false);
+
+  const { data: doctorDetail, isLoading: doctorLoading } = useQuery({
+    queryKey: ['patient-ophthalmologist-detail', selectedDoctorId],
+    queryFn: () => getOphthalmologistDetailForPatient(selectedDoctorId),
+    enabled: !!selectedDoctorId,
+    retry: false,
+  });
+
+  const doctorInfo = doctorDetail ?? doctorSnapshot;
+
+  useEffect(() => {
+    if (!selectedDoctorId) return;
+
+    sessionStorage.setItem(
+      'patient-booking-context',
+      JSON.stringify({
+        doctorId: selectedDoctorId,
+        doctorSnapshot: doctorSnapshot ?? null,
+      })
+    );
+  }, [selectedDoctorId, doctorSnapshot]);
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -233,8 +362,8 @@ export default function BookAppointmentPage() {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     return {
-      from: startOfWeek.toISOString().split('T')[0],
-      to: endOfWeek.toISOString().split('T')[0],
+      from: toLocalDateKey(startOfWeek),
+      to: toLocalDateKey(endOfWeek),
       label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
     };
   }, [currentWeekOffset]);
@@ -282,11 +411,11 @@ export default function BookAppointmentPage() {
       isToday: boolean;
     }[] = [];
     const startDate = new Date(weekRange.from + 'T00:00:00');
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
       d.setDate(startDate.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -306,6 +435,7 @@ export default function BookAppointmentPage() {
       }
 
       setErrorMessage('');
+      setHighlightedDate(slot.date);
       try {
         const result = await reserveMutation.mutateAsync({
           slotId: slot.id,
@@ -326,8 +456,16 @@ export default function BookAppointmentPage() {
 
   const handleConfirm = useCallback(() => {
     if (!selectedSlot) return;
-    // Navigate to confirmation page with slot details
-    navigate(`/patient/book/confirm?slotId=${selectedSlot.id}`);
+    sessionStorage.setItem(
+      'patient-booking-confirm-context',
+      JSON.stringify({ slotId: selectedSlot.id })
+    );
+
+    navigate('/patient/book/confirm', {
+      state: {
+        slotId: selectedSlot.id,
+      },
+    });
   }, [selectedSlot, navigate]);
 
   const handleCancelReservation = useCallback(async () => {
@@ -345,6 +483,59 @@ export default function BookAppointmentPage() {
     setSelectedSlot(null);
     setReservation(null);
   }, [selectedSlot, patientId, releaseMutation]);
+
+  useEffect(() => {
+    if (!preselectedSlotId || autoSelectedRef.current || isLoading) return;
+
+    const matchedSlot = slots.find((slot) => slot.id === preselectedSlotId);
+    if (!matchedSlot) {
+      const nearestDate = findNearestAvailableDate(slots, preselectedDate);
+      if (nearestDate) setHighlightedDate(nearestDate);
+      return;
+    }
+
+    autoSelectedRef.current = true;
+    setHighlightedDate(matchedSlot.date);
+
+    void (async () => {
+      if (!patientId) {
+        setErrorMessage('Vui lòng đăng nhập để đặt lịch tư vấn.');
+        return;
+      }
+
+      setErrorMessage('');
+      try {
+        const result = await reserveMutation.mutateAsync({
+          slotId: matchedSlot.id,
+          request: {
+            patientId,
+            reservationMinutes: 5,
+          },
+        });
+
+        setSelectedSlot(matchedSlot);
+        setReservation(result);
+        setShowModal(true);
+      } catch (error) {
+        const message = mapOnlineConsultationErrorMessage(error);
+        toast.warn(
+          `${message}. Slot này vừa được giữ bởi người khác. Vui lòng chọn slot còn trống gần nhất.`
+        );
+
+        const nearestDate = findNearestAvailableDate(slots, matchedSlot.date);
+        if (nearestDate) {
+          setHighlightedDate(nearestDate);
+        }
+      }
+    })();
+  }, [
+    preselectedSlotId,
+    preselectedDate,
+    slots,
+    isLoading,
+    patientId,
+    reserveMutation,
+  ]);
 
   return (
     <PatientLayout>
@@ -366,27 +557,51 @@ export default function BookAppointmentPage() {
           </div>
         )}
 
-        {/* Doctor Search */}
+        {/* Doctor Information */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Doctor ID
-          </label>
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={selectedDoctorId}
-                onChange={(e) => setSelectedDoctorId(e.target.value)}
-                placeholder="Enter doctor ID..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-              />
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+              Selected Doctor
+            </p>
+
+            {!selectedDoctorId ? (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                Missing doctorId in URL. Please choose a doctor first.
+              </p>
+            ) : (
+              <div className="flex items-center gap-4">
+                <img
+                  src={getAvatarUrl({
+                    userAvatarUrl: doctorSnapshot?.userAvatarUrl ?? null,
+                    userFullName: doctorInfo?.userFullName ?? null,
+                  })}
+                  alt={doctorInfo?.userFullName ?? 'Doctor'}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                />
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 dark:text-white truncate">
+                    {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {doctorInfo?.userEmail ?? 'No email available'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {doctorInfo?.yearsOfExperience ?? 0} years experience
+                  </p>
+                  {doctorLoading && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Loading doctor profile...
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Enter the ophthalmologist ID to view their available slots. You can
-            get this from the doctor&apos;s profile page.
-          </p>
+          {!!preselectedSlotId && (
+            <p className="mt-2 text-xs text-cyan-700 dark:text-cyan-300">
+              A slot from the doctors page has been pre-selected for you.
+            </p>
+          )}
         </div>
 
         {/* Week Navigation */}
@@ -418,7 +633,8 @@ export default function BookAppointmentPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">
-              Enter a doctor ID above to view available appointment slots.
+              Please pick a doctor from the doctors page to view available
+              appointment slots.
             </p>
           </div>
         ) : isLoading ? (
@@ -439,6 +655,10 @@ export default function BookAppointmentPage() {
                     day.isToday
                       ? 'bg-cyan-50 dark:bg-cyan-900/20'
                       : 'bg-gray-50 dark:bg-gray-800/50'
+                  } ${
+                    highlightedDate === day.date
+                      ? 'ring-2 ring-cyan-400 ring-inset'
+                      : ''
                   }`}
                 >
                   <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">

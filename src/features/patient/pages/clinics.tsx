@@ -6,16 +6,13 @@ import {
   Search,
   Star,
   Stethoscope,
-  Trash2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import {
-  useCancelClinicAppointment,
   useCreateClinicAppointment,
   useOrganisationAvailableSlots,
   useOrganisations,
-  usePatientClinicAppointments,
 } from '../hooks/use-clinic-booking';
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
@@ -36,19 +33,6 @@ const formatDate = (value: string) => {
     month: 'short',
     year: 'numeric',
   });
-};
-
-const statusStyles: Record<string, string> = {
-  Pending:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-  InProgress:
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-  Completed:
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  NoShow: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 };
 
 export default function ClinicsPage() {
@@ -80,14 +64,7 @@ export default function ClinicsPage() {
     !!selectedOrganisationId
   );
 
-  const {
-    data: myAppointments = [],
-    isLoading: loadingMyAppointments,
-    error: myAppointmentsError,
-  } = usePatientClinicAppointments(patientId, !!patientId);
-
   const createAppointmentMutation = useCreateClinicAppointment();
-  const cancelAppointmentMutation = useCancelClinicAppointment();
 
   const filteredOrganisations = useMemo(() => {
     if (!searchText.trim()) return organisations;
@@ -118,20 +95,8 @@ export default function ClinicsPage() {
         visitReason: visitReason.trim() || undefined,
       });
       setSuccessMessage(
-        'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở My Clinic Appointments.'
+        'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở Appointments.'
       );
-    } catch (error) {
-      setErrorMessage(mapClinicPatientErrorMessage(error));
-    }
-  };
-
-  const handleCancelAppointment = async (appointmentId: string) => {
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    try {
-      await cancelAppointmentMutation.mutateAsync(appointmentId);
-      setSuccessMessage('Đã hủy lịch khám thành công.');
     } catch (error) {
       setErrorMessage(mapClinicPatientErrorMessage(error));
     }
@@ -139,8 +104,8 @@ export default function ClinicsPage() {
 
   return (
     <PatientLayout>
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <section className="xl:col-span-2">
+      <div>
+        <section>
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-(--text-primary)">
               Book At Organisation Clinic
@@ -165,12 +130,10 @@ export default function ClinicsPage() {
             </div>
           )}
 
-          {(organisationsError ||
-            availableSlotsError ||
-            myAppointmentsError) && (
+          {(organisationsError || availableSlotsError) && (
             <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
               {mapClinicPatientErrorMessage(
-                organisationsError ?? availableSlotsError ?? myAppointmentsError
+                organisationsError ?? availableSlotsError
               )}
             </div>
           )}
@@ -318,9 +281,6 @@ export default function ClinicsPage() {
                     <div className="mt-2 text-xs text-(--text-secondary)">
                       Remaining capacity: {slot.remaining}/{slot.maxCapacity}
                     </div>
-                    <div className="mt-1 text-xs text-(--text-secondary)">
-                      Fee: {(slot.cost ?? 0).toLocaleString('vi-VN')} VND
-                    </div>
 
                     <button
                       type="button"
@@ -346,77 +306,6 @@ export default function ClinicsPage() {
             )}
           </div>
         </section>
-
-        <aside>
-          <div className="medical-card p-5">
-            <h2 className="text-lg font-semibold text-(--text-primary)">
-              My Clinic Appointments
-            </h2>
-            <p className="mt-1 text-sm text-(--text-secondary)">
-              Manage your organisation bookings.
-            </p>
-
-            {loadingMyAppointments ? (
-              <div className="mt-6 flex items-center gap-3 text-(--text-secondary)">
-                <Spinner />
-                <span>Loading your appointments...</span>
-              </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {myAppointments.map((appointment) => (
-                  <div
-                    key={appointment.id}
-                    className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-(--text-primary)">
-                          {appointment.organisationName ?? 'Clinic Visit'}
-                        </p>
-                        <p className="text-xs text-(--text-secondary)">
-                          {formatDate(appointment.date)} |{' '}
-                          {formatTime(appointment.startTime)} -{' '}
-                          {formatTime(appointment.endTime)}
-                        </p>
-                      </div>
-                      <span
-                        className={`rounded-full px-2 py-1 text-[11px] font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
-                      >
-                        {appointment.status}
-                      </span>
-                    </div>
-
-                    {appointment.visitReason && (
-                      <p className="mt-2 text-xs text-(--text-secondary)">
-                        Reason: {appointment.visitReason}
-                      </p>
-                    )}
-
-                    {appointment.status === 'Pending' && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void handleCancelAppointment(appointment.id)
-                        }
-                        disabled={cancelAppointmentMutation.isPending}
-                        className="mt-3 inline-flex items-center gap-1 rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                ))}
-
-                {myAppointments.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-(--border-color) p-6 text-center text-sm text-(--text-secondary)">
-                    You have no clinic appointments yet.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </aside>
       </div>
     </PatientLayout>
   );
