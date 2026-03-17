@@ -35,6 +35,12 @@ const formatDate = (value: string) => {
   });
 };
 
+const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
+  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  if (Number.isNaN(startAt)) return false;
+  return startAt < Date.now();
+};
+
 export default function ClinicsPage() {
   const { user } = useAuthStore();
   const patientId = user?.id ?? '';
@@ -65,6 +71,11 @@ export default function ClinicsPage() {
   );
 
   const createAppointmentMutation = useCreateClinicAppointment();
+
+  const visibleSlots = useMemo(
+    () => availableSlots.filter((slot) => !isExpiredClinicSlot(slot)),
+    [availableSlots]
+  );
 
   const filteredOrganisations = useMemo(() => {
     if (!searchText.trim()) return organisations;
@@ -265,7 +276,7 @@ export default function ClinicsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {availableSlots.map((slot) => (
+                {visibleSlots.map((slot) => (
                   <div
                     key={slot.slotId}
                     className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4"
@@ -297,7 +308,7 @@ export default function ClinicsPage() {
                   </div>
                 ))}
 
-                {availableSlots.length === 0 && (
+                {visibleSlots.length === 0 && (
                   <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary) md:col-span-2 xl:col-span-3">
                     No available slots for selected date.
                   </div>

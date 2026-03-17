@@ -13,6 +13,7 @@ export enum ScheduleStatus {
   NoShow = 5,
   Reserved = 6, // Slot is temporarily reserved (pending payment)
   Blocked = 7, // Slot is blocked by doctor (not available)
+  Expired = 8, // Slot auto-expired after start time passed without booking
 }
 
 export enum SlotType {
@@ -96,6 +97,7 @@ export const SCHEDULE_STATUS_LABELS: Record<ScheduleStatus, string> = {
   [ScheduleStatus.NoShow]: 'No Show',
   [ScheduleStatus.Reserved]: 'Reserved',
   [ScheduleStatus.Blocked]: 'Blocked',
+  [ScheduleStatus.Expired]: 'Expired',
 };
 
 export const SLOT_TYPE_LABELS: Record<SlotType, string> = {

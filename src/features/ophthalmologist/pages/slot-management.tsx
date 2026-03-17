@@ -105,6 +105,8 @@ const getSlotStatusColor = (status: string): string => {
       'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300',
     NoShow:
       'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-300',
+    Expired:
+      'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300',
   };
   return colors[status] || colors['Available'];
 };
@@ -696,6 +698,10 @@ export default function SlotManagementPage() {
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800 border border-gray-400" />
               <span className="text-gray-600 dark:text-gray-400">Blocked</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-orange-100 dark:bg-orange-900/30 border border-orange-300" />
+              <span className="text-gray-600 dark:text-gray-400">Expired</span>
             </div>
           </div>
         </main>

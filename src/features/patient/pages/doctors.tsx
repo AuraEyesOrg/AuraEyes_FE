@@ -49,6 +49,24 @@ function formatSlotDate(value: string) {
   });
 }
 
+function isExpiredSlot(slot: AvailableSlotItem) {
+  const now = Date.now();
+
+  const startFromDateTime = new Date(slot.startDateTime).getTime();
+  if (!Number.isNaN(startFromDateTime)) {
+    return startFromDateTime < now;
+  }
+
+  const startFromDateAndTime = new Date(
+    `${slot.date}T${slot.startTime}Z`
+  ).getTime();
+  if (!Number.isNaN(startFromDateAndTime)) {
+    return startFromDateAndTime < now;
+  }
+
+  return false;
+}
+
 export default function DoctorsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,7 +96,10 @@ export default function DoctorsPage() {
     enabled: !!selectedDoctor,
   });
 
-  const slots: AvailableSlotItem[] = slotsData?.items ?? [];
+  const slots = useMemo(
+    () => (slotsData?.items ?? []).filter((slot) => !isExpiredSlot(slot)),
+    [slotsData?.items]
+  );
 
   const slotsByDate = useMemo(() => {
     const grouped = new Map<string, AvailableSlotItem[]>();

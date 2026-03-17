@@ -119,6 +119,19 @@ const findNearestAvailableDate = (
   return candidates[0]?.date ?? null;
 };
 
+const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
+  if (slot.status === 'Expired') {
+    return true;
+  }
+
+  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  if (!Number.isNaN(startAt)) {
+    return startAt < Date.now();
+  }
+
+  return false;
+};
+
 const getSlotStatusColor = (status: string) => {
   switch (status) {
     case 'Available':
@@ -386,7 +399,13 @@ export default function BookAppointmentPage() {
   const reserveMutation = useReserveSlot();
   const releaseMutation = useReleaseReservation();
 
-  const slots = slotsData?.items ?? [];
+  const slots = useMemo(
+    () =>
+      (slotsData?.items ?? []).filter(
+        (slot) => !isExpiredAppointmentSlot(slot)
+      ),
+    [slotsData?.items]
+  );
 
   // Group slots by date
   const slotsByDate = useMemo(() => {

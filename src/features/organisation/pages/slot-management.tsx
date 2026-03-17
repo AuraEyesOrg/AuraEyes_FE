@@ -41,6 +41,8 @@ const statusStyles: Record<string, string> = {
   Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   NoShow:
     'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  Expired:
+    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
 const formatTime = (value: string) => value.slice(0, 5);
