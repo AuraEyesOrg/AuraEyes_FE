@@ -45,18 +45,21 @@ const statusStyles: Record<string, string> = {
 
 const formatTime = (value: string) => value.slice(0, 5);
 
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function OrganisationSlotManagementPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
 
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
   const [templateId, setTemplateId] = useState('');
-  const [fromDate, setFromDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState(toLocalDateKey(new Date()));
+  const [toDate, setToDate] = useState(toLocalDateKey(new Date()));
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('12:00');

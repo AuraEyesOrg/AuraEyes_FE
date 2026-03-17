@@ -69,6 +69,13 @@ const formatTime = (timeStr: string) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function SchedulesPage() {
   const { user } = useAuthStore();
   const [filter, setFilter] = useState<FilterTab>('all');
@@ -114,8 +121,8 @@ export default function SchedulesPage() {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     return {
-      from: startOfWeek.toISOString().split('T')[0],
-      to: endOfWeek.toISOString().split('T')[0],
+      from: toLocalDateKey(startOfWeek),
+      to: toLocalDateKey(endOfWeek),
       label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
     };
   }, [currentWeekOffset]);
@@ -169,11 +176,11 @@ export default function SchedulesPage() {
       isToday: boolean;
     }[] = [];
     const startDate = new Date(weekRange.from + 'T00:00:00');
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
       d.setDate(startDate.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),

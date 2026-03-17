@@ -74,6 +74,13 @@ const formatTime = (timeStr: string) => {
   return `${displayHour}:${m} ${ampm}`;
 };
 
+const toLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const formatTemplateCost = (cost: number | null | undefined) => {
   if (typeof cost === 'number' && Number.isFinite(cost) && cost > 0) {
     return `${cost.toLocaleString('vi-VN')} VND`;
@@ -138,8 +145,8 @@ export default function SlotManagementPage() {
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     return {
-      from: startOfWeek.toISOString().split('T')[0],
-      to: endOfWeek.toISOString().split('T')[0],
+      from: toLocalDateKey(startOfWeek),
+      to: toLocalDateKey(endOfWeek),
       label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
     };
   }, [currentWeekOffset]);
@@ -191,11 +198,11 @@ export default function SlotManagementPage() {
       isToday: boolean;
     }[] = [];
     const startDate = new Date(weekRange.from + 'T00:00:00');
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
       d.setDate(startDate.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -368,8 +375,8 @@ export default function SlotManagementPage() {
     fromDate.setDate(now.getDate() + 1);
     const toDate = new Date(now);
     toDate.setDate(now.getDate() + 14);
-    setGenerateFromDate(fromDate.toISOString().split('T')[0]);
-    setGenerateToDate(toDate.toISOString().split('T')[0]);
+    setGenerateFromDate(toLocalDateKey(fromDate));
+    setGenerateToDate(toLocalDateKey(toDate));
     setShowGenerateModal(true);
   }, []);
 
