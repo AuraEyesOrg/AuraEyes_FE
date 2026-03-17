@@ -1,4 +1,9 @@
-import { FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import {
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  CalendarClock,
+} from 'lucide-react';
 import type { DashboardStats } from '../types/ophthalmologist.types';
 
 interface StatsCardGridProps {
@@ -43,7 +48,7 @@ function StatCard({
 
 export default function StatsCardGrid({ stats }: StatsCardGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
       <StatCard
         icon={<FileText className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />}
         label="Pending Reviews"
@@ -68,6 +73,15 @@ export default function StatsCardGrid({ stats }: StatsCardGridProps) {
         value={stats.completedToday}
         iconBgClass="bg-green-50 dark:bg-green-900/30"
         accentColor="#4caf50"
+      />
+      <StatCard
+        icon={
+          <CalendarClock className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+        }
+        label="Open Slots Today"
+        value={stats.openSlotsToday}
+        iconBgClass="bg-violet-50 dark:bg-violet-900/30"
+        accentColor="#8b5cf6"
       />
     </div>
   );

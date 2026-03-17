@@ -33,6 +33,9 @@ export enum NotificationType {
 
   /** FR-49: When payment is processed from wallet */
   WalletPaymentProcessed = 8,
+
+  /** Internal platform alert for operational/admin actions */
+  SystemAlert = 9,
 }
 
 /**
@@ -174,6 +177,8 @@ export function getNotificationIcon(type: NotificationType): string {
     case NotificationType.WalletDepositSuccess:
     case NotificationType.WalletPaymentProcessed:
       return 'wallet';
+    case NotificationType.SystemAlert:
+      return 'bell';
     default:
       return 'bell';
   }
@@ -199,6 +204,8 @@ export function getNotificationColor(type: NotificationType): string {
       return 'text-emerald-500';
     case NotificationType.WalletPaymentProcessed:
       return 'text-amber-500';
+    case NotificationType.SystemAlert:
+      return 'text-sky-500';
     default:
       return 'text-gray-500';
   }

@@ -10,6 +10,9 @@ import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { SignalRNotification } from '@/types/notification';
 import { getNotificationRoute } from '@/types/notification';
+import { router } from '@/lib/router';
+import { api } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/endpoints';
 
 /**
  * SignalR Hub URL - configured via environment variable
@@ -21,6 +24,7 @@ const NOTIFICATION_HUB_URL =
  * Reconnection delays in milliseconds
  */
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
+const TOKEN_EXPIRY_BUFFER_MS = 15000;
 
 /**
  * Custom hook for managing SignalR notification connection
@@ -40,8 +44,50 @@ export function useSignalRNotification(): {
   /**
    * Get access token for SignalR authentication
    */
-  const getAccessToken = useCallback((): string => {
-    return localStorage.getItem('token')?.replace(/['"]+/g, '') || '';
+  const getAccessToken = useCallback(async (): Promise<string> => {
+    const sanitizeToken = (value: string | null): string =>
+      value?.replace(/['"]+/g, '') || '';
+
+    const decodeJwtExp = (token: string): number | null => {
+      const segments = token.split('.');
+      if (segments.length < 2) {
+        return null;
+      }
+
+      const base64Url = segments[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const payloadJson = atob(padded);
+      const payload = JSON.parse(payloadJson) as { exp?: unknown };
+
+      return typeof payload.exp === 'number' ? payload.exp : null;
+    };
+
+    const currentToken = sanitizeToken(localStorage.getItem('token'));
+    if (!currentToken) {
+      return '';
+    }
+
+    try {
+      const exp = decodeJwtExp(currentToken);
+      const isExpiringSoon =
+        typeof exp === 'number' &&
+        exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS;
+
+      if (isExpiringSoon) {
+        try {
+          await api.get(API_ENDPOINTS.AUTH.ME);
+        } catch {
+          // Ignore: interceptor may throw while still refreshing and updating localStorage.
+        }
+
+        return sanitizeToken(localStorage.getItem('token'));
+      }
+    } catch {
+      // Ignore malformed tokens and fall back to the current token.
+    }
+
+    return currentToken;
   }, []);
 
   /**
@@ -66,7 +112,7 @@ export function useSignalRNotification(): {
             user?.roles ?? []
           );
           if (route !== '#') {
-            window.location.assign(route);
+            router.navigate(route);
           }
         },
         autoClose: 5000,
@@ -122,7 +168,7 @@ export function useSignalRNotification(): {
       return;
     }
 
-    const token = getAccessToken();
+    const token = await getAccessToken();
     if (!token) {
       console.log('[SignalR] No token available, skipping connection');
       return;

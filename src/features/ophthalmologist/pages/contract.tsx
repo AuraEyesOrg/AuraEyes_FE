@@ -24,6 +24,7 @@ import {
 import DoctorSidebar from '../components/DoctorSidebar';
 import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
+import Spinner from '@/components/ui/spinner';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -334,7 +335,7 @@ function UploadSection({
           className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {uploadMutation.isPending ? (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <Spinner size={16} className="text-white" />
           ) : (
             <Upload className="w-4 h-4" />
           )}
