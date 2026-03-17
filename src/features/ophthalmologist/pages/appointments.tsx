@@ -22,6 +22,7 @@ import {
   useCancelSession,
 } from '@/features/consultation/hooks';
 import useAuthStore from '@/store/auth-store';
+import { formatShortDate, formatShortTime, isToday } from '@/lib/date-utils';
 import {
   ConsultationSessionType,
   SessionStatus,
@@ -33,31 +34,13 @@ import type { ConsultationSessionListDto } from '@/types/consultation';
 type StatusFilter = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return {
-      dateLabel: 'Not scheduled',
-      timeLabel: '--:--',
-    };
-  }
-
+  if (!value) return { dateLabel: 'Not scheduled', timeLabel: '--:--' };
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return {
-      dateLabel: 'Invalid date',
-      timeLabel: '--:--',
-    };
-  }
-
+  if (Number.isNaN(date.getTime()))
+    return { dateLabel: 'Invalid date', timeLabel: '--:--' };
   return {
-    dateLabel: date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }),
-    timeLabel: date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
+    dateLabel: formatShortDate(value),
+    timeLabel: formatShortTime(value),
   };
 };
 
@@ -146,11 +129,10 @@ export default function AppointmentsPage() {
     });
   }, [sessions, filter, searchQuery]);
 
-  const todayKey = new Date().toDateString();
   const todayCount = sessions.filter((session) => {
     if (!session.appointmentTime) return false;
     const date = new Date(session.appointmentTime);
-    return !Number.isNaN(date.getTime()) && date.toDateString() === todayKey;
+    return !Number.isNaN(date.getTime()) && isToday(date);
   }).length;
 
   const upcomingCount = sessions.filter(

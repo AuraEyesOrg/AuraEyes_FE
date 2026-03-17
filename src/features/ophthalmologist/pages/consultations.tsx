@@ -44,6 +44,11 @@ import {
   type SignalRChatMessageEvent,
 } from '@/types/chat-realtime';
 import useAuthStore from '@/store/auth-store';
+import {
+  formatRequestDate,
+  formatMessageTime,
+  formatLongDateTime,
+} from '@/lib/date-utils';
 
 // ============ STATUS / CHAT CONFIG ============
 
@@ -138,27 +143,6 @@ const getStatusBadgeClass = (status: SessionStatus) => {
       return 'bg-gray-100 text-gray-700';
   }
 };
-
-const formatRequestDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-  if (diffHours < 1) {
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return `${diffMinutes}m ago`;
-  }
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-  if (diffHours < 48) {
-    return 'Yesterday';
-  }
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// ============ COMPONENT ============
 
 export default function ConsultationsPage() {
   const queryClient = useQueryClient();
@@ -619,16 +603,7 @@ export default function ConsultationsPage() {
                                   Created At
                                 </p>
                                 <p className="text-gray-900 dark:text-white">
-                                  {new Date(
-                                    currentSession.createdAt
-                                  ).toLocaleString('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
+                                  {formatLongDateTime(currentSession.createdAt)}
                                 </p>
                               </div>
                             </div>
@@ -641,16 +616,9 @@ export default function ConsultationsPage() {
                                     Appointment Time
                                   </p>
                                   <p className="text-gray-900 dark:text-white">
-                                    {new Date(
+                                    {formatLongDateTime(
                                       currentSession.appointmentTime
-                                    ).toLocaleString('en-US', {
-                                      weekday: 'long',
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -711,13 +679,7 @@ export default function ConsultationsPage() {
                                           : 'text-gray-500 dark:text-gray-400'
                                       }`}
                                     >
-                                      {new Date(
-                                        message.sentAt
-                                      ).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true,
-                                      })}
+                                      {formatMessageTime(message.sentAt)}
                                     </span>
                                     {isDoctor && (
                                       <CheckCheck

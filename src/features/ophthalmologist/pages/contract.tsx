@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
+import { formatViDate } from '@/lib/date-utils';
 import {
   FileText,
   Upload,
@@ -472,9 +473,7 @@ export default function ContractPage() {
                   <div className="text-right text-xs">
                     <p className="opacity-60">Ngày ký</p>
                     <p className="font-medium">
-                      {new Date(contract.signedDate).toLocaleDateString(
-                        'vi-VN'
-                      )}
+                      {formatViDate(contract.signedDate)}
                     </p>
                   </div>
                 )}
@@ -502,9 +501,7 @@ export default function ContractPage() {
                     <div className="flex justify-between">
                       <span className="text-sm text-slate-500">Ngày tạo</span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
-                        {new Date(contract.createdAt).toLocaleDateString(
-                          'vi-VN'
-                        )}
+                        {formatViDate(contract.createdAt)}
                       </span>
                     </div>
                   </div>
