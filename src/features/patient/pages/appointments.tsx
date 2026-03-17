@@ -6,7 +6,6 @@ import {
   Clock,
   User,
   Video,
-  Plus,
   CheckCircle,
   XCircle,
   Eye,
@@ -424,14 +423,6 @@ const AppointmentsPage = () => {
             Manage your doctor and organisation appointments
           </p>
         </div>
-
-        <Link
-          to="/patient/clinics"
-          className="btn-primary flex items-center gap-2 px-6 py-3 rounded-xl font-semibold w-fit"
-        >
-          <Plus className="h-5 w-5" />
-          Book Appointment
-        </Link>
       </div>
 
       {/* Stats */}
@@ -627,7 +618,7 @@ const AppointmentsPage = () => {
               to="/patient/doctors"
               className="text-sm font-semibold text-primary hover:text-primary/80"
             >
-              Book Doctor Slot
+              Book More Slot
             </Link>
           </div>
 
@@ -803,7 +794,6 @@ const AppointmentsPage = () => {
               to="/patient/clinics"
               className="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/90 text-white rounded-xl font-semibold transition-colors"
             >
-              <Plus className="w-5 h-5" />
               Book Your First Appointment
             </Link>
           </div>
