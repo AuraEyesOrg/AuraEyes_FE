@@ -15,7 +15,6 @@ import {
   Copy,
   Search,
   Calendar,
-  Hash,
   CheckCircle2,
   AlertCircle,
   Stethoscope,
@@ -52,13 +51,17 @@ function TemplateCard({
   onEdit,
   onDuplicate,
   onDelete,
+  onToggleStatus,
   isDuplicating,
+  isUpdatingStatus,
 }: {
   template: ContractTemplateDto;
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (tpl: ContractTemplateDto) => void;
+  onToggleStatus: (id: string, isActive: boolean) => void;
   isDuplicating: boolean;
+  isUpdatingStatus: boolean;
 }) {
   const isOphthalmologist = template.type === 'OphthalmologistContract';
   const TypeIcon = isOphthalmologist ? Stethoscope : Building2;
@@ -130,8 +133,8 @@ function TemplateCard({
         {/* Stats row */}
         <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1">
-            <Hash className="w-3.5 h-3.5" />
-            {template.variableCount} variables
+            <FileText className="w-3.5 h-3.5" />
+            DOCX template
           </span>
           <span className="flex items-center gap-1">
             <FileText className="w-3.5 h-3.5" />
@@ -147,6 +150,17 @@ function TemplateCard({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <button
+            onClick={() => onToggleStatus(template.id, !template.isActive)}
+            disabled={isUpdatingStatus}
+            className="px-2.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-50"
+          >
+            {isUpdatingStatus
+              ? 'Updating...'
+              : template.isActive
+                ? 'Deactivate'
+                : 'Activate'}
+          </button>
           <button
             onClick={() => onEdit(template.id)}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
@@ -243,17 +257,23 @@ export default function ContractTemplatesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all');
   const [deleteTarget, setDeleteTarget] = useState<ContractTemplateDto | null>(
     null
   );
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
   /* ── Fetch templates ── */
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['contract-templates', search],
+    queryKey: ['contract-templates', search, statusFilter],
     queryFn: () =>
       contractTemplatesApi.getContractTemplates({
         searchTerm: search || undefined,
+        isActive:
+          statusFilter === 'all' ? undefined : statusFilter === 'active',
         pageSize: 100,
       }),
     staleTime: 1000 * 30,
@@ -284,6 +304,17 @@ export default function ContractTemplatesPage() {
   const handleEdit = (id: string) =>
     navigate(`/system-admin/contract-templates/${id}/edit`);
 
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    setUpdatingStatusId(id);
+    try {
+      await contractTemplatesApi.setContractTemplateStatus(id, isActive);
+      queryClient.invalidateQueries({ queryKey: ['contract-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-template', id] });
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
   const handleDelete = (tpl: ContractTemplateDto) => setDeleteTarget(tpl);
 
   const confirmDelete = () => {
@@ -301,7 +332,7 @@ export default function ContractTemplatesPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
           title="Contract Templates"
-          description="Manage reusable contract templates with dynamic variable placeholders"
+          description="Manage DOCX contract templates and activation status by version"
           actions={
             <button
               onClick={() => navigate('/system-admin/contract-templates/new')}
@@ -367,6 +398,17 @@ export default function ContractTemplatesPage() {
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
+              }
+              className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
+            </select>
             <span className="text-sm text-slate-400">
               {templates.length} template{templates.length !== 1 ? 's' : ''}
             </span>
@@ -420,7 +462,9 @@ export default function ContractTemplatesPage() {
                       onEdit={handleEdit}
                       onDuplicate={handleDuplicate}
                       onDelete={handleDelete}
+                      onToggleStatus={handleToggleStatus}
                       isDuplicating={duplicatingId === tpl.id}
+                      isUpdatingStatus={updatingStatusId === tpl.id}
                     />
                   ))}
                 </div>

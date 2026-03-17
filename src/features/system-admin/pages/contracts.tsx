@@ -220,20 +220,21 @@ function ContractDetailDialog({
                 </div>
               )}
 
-              {/* Contract content preview */}
+              {/* Contract template file */}
               {contract.signedContent && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Nội dung hợp đồng
+                    Mẫu hợp đồng (DOCX)
                   </p>
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <iframe
-                      srcDoc={contract.signedContent}
-                      className="w-full h-64 border-0"
-                      title="Contract content"
-                      sandbox="allow-same-origin"
-                    />
-                  </div>
+                  <a
+                    href={contract.signedContent}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Mở file mẫu hợp đồng
+                  </a>
                 </div>
               )}
             </>
