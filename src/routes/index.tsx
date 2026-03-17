@@ -29,6 +29,9 @@ const ConfirmEmailPage = lazy(
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
 );
+const RegisterOrganisationPage = lazy(
+  () => import('@/features/auth/pages/register-organisation')
+);
 
 // Pending Approval page
 const PendingApprovalPage = lazy(
@@ -93,6 +96,9 @@ const OrganisationAnalyticsPage = lazy(
 );
 const OrganisationSlotManagementPage = lazy(
   () => import('@/features/organisation/pages/slot-management')
+);
+const OrganisationContractPage = lazy(
+  () => import('@/features/organisation/pages/contract')
 );
 
 // Ophthalmologist pages
@@ -237,6 +243,10 @@ const Router = () => (
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-doctor" element={<RegisterDoctorPage />} />
+        <Route
+          path="/register-organisation"
+          element={<RegisterOrganisationPage />}
+        />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/two-factor-auth" element={<TwoFactorSettingsPage />} />
         <Route path="/two-factor-verify" element={<TwoFactorVerifyPage />} />
@@ -274,27 +284,59 @@ const Router = () => (
         {/* ============ ORGANISATION ROUTES ============ */}
         <Route
           path="/organisation/dashboard"
-          element={<OrganisationDashboard />}
+          element={
+            <PrivateRoute>
+              <OrganisationDashboard />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/organisation/patients"
-          element={<OrganisationPatientsPage />}
+          element={
+            <PrivateRoute>
+              <OrganisationPatientsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/organisation/analytics"
-          element={<OrganisationAnalyticsPage />}
+          element={
+            <PrivateRoute>
+              <OrganisationAnalyticsPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/organisation/calendar"
-          element={<OrganisationCalendarPage />}
+          element={
+            <PrivateRoute>
+              <OrganisationCalendarPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/organisation/slots"
-          element={<OrganisationSlotManagementPage />}
+          element={
+            <PrivateRoute>
+              <OrganisationSlotManagementPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/organisation/contract"
+          element={
+            <PrivateRoute>
+              <OrganisationContractPage />
+            </PrivateRoute>
+          }
         />
         <Route
           path="/organisation/settings"
-          element={<OrganisationSettingsPage />}
+          element={
+            <PrivateRoute>
+              <OrganisationSettingsPage />
+            </PrivateRoute>
+          }
         />
 
         {/* ============ OPHTHALMOLOGIST ROUTES ============ */}
