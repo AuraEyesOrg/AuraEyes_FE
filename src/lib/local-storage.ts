@@ -23,4 +23,8 @@ const setItem = (key: string, value: unknown) => {
   window.localStorage.setItem(key, JSON.stringify(value));
 };
 
-export { getItem, setItem };
+const removeItem = (key: string) => {
+  window.localStorage.removeItem(key);
+};
+
+export { getItem, setItem, removeItem };

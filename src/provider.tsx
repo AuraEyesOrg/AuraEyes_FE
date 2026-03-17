@@ -4,6 +4,7 @@ import { type ReactNode } from 'react';
 import { queryClient } from './lib/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useSignalRNotification } from './hooks/useSignalRNotification';
+import { useSignalRChat } from './hooks/useSignalRChat';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
@@ -11,8 +12,9 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
  * SignalR provider component to initialize real-time notifications
  */
 function SignalRProvider({ children }: { children: ReactNode }) {
-  // Initialize SignalR connection (will auto-connect when authenticated)
+  // Dedicated hubs: NotificationHub + ChatHub (auto-connect when authenticated)
   useSignalRNotification();
+  useSignalRChat();
 
   return <>{children}</>;
 }

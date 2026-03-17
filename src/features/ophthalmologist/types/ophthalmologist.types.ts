@@ -11,6 +11,7 @@ export interface DashboardStats {
   pendingReviews: number;
   urgentCases: number;
   completedToday: number;
+  openSlotsToday: number;
 }
 
 export type ConditionType =

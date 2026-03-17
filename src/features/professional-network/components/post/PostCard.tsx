@@ -29,6 +29,7 @@ import type { ProfessionalPost, ReactionType } from '../../types';
 import { InitialsAvatar } from '../professional/InitialsAvatar';
 import { useRepostMutation } from '../../hooks/useRepostMutation';
 import { LoadingButton } from '@/components/ui/loading-button';
+import { formatViCompactDate } from '@/lib/date-utils';
 
 interface Props {
   post: ProfessionalPost;
@@ -217,11 +218,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                   </span>
                 )}
                 <span className="text-text-muted flex-shrink-0 whitespace-nowrap">
-                  ·{' '}
-                  {new Date(post.createdAt).toLocaleDateString('vi-VN', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  · {formatViCompactDate(post.createdAt)}
                 </span>
               </div>
 
@@ -309,13 +306,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                         {post.originalPost.author.fullName}
                       </Link>
                       <span className="text-text-muted flex-shrink-0">
-                        ·{' '}
-                        {new Date(
-                          post.originalPost.createdAt
-                        ).toLocaleDateString('vi-VN', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
+                        · {formatViCompactDate(post.originalPost.createdAt)}
                       </span>
                     </div>
                   </div>

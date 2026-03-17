@@ -34,32 +34,16 @@ import {
   getOphthalmologistDetailForPatient,
   type OphthalmologistSearchItem,
 } from '../api/patient.api';
+import {
+  formatSlotTime,
+  formatDate,
+  toLocalDateKey,
+  formatWeekRange,
+  formatWeekDayLabel,
+  formatCountdown,
+} from '@/lib/date-utils';
 
 // ============ HELPERS ============
-
-const formatTime = (timeStr: string) => {
-  const [h, m] = timeStr.split(':');
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00');
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const toLocalDateKey = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 const getStartOfWeekMonday = (input: Date): Date => {
   const date = new Date(input);
@@ -119,6 +103,19 @@ const findNearestAvailableDate = (
   return candidates[0]?.date ?? null;
 };
 
+const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
+  if (slot.status === 'Expired') {
+    return true;
+  }
+
+  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  if (!Number.isNaN(startAt)) {
+    return startAt < Date.now();
+  }
+
+  return false;
+};
+
 const getSlotStatusColor = (status: string) => {
   switch (status) {
     case 'Available':
@@ -173,12 +170,6 @@ const ReservationModal = ({
     return () => clearInterval(interval);
   }, [reservation, onCancel]);
 
-  const formatCountdown = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const urgencyClass =
     remainingSeconds <= 60
       ? 'text-red-600 dark:text-red-400'
@@ -230,7 +221,8 @@ const ReservationModal = ({
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
               <p className="font-medium text-gray-900 dark:text-white">
-                {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                {formatSlotTime(slot.startTime)} -{' '}
+                {formatSlotTime(slot.endTime)}
               </p>
             </div>
           </div>
@@ -313,7 +305,7 @@ export default function BookAppointmentPage() {
     state.doctorSnapshot ?? storedContext?.doctorSnapshot ?? null;
 
   const { user } = useAuthStore();
-  const patientId = user?.id ?? '';
+  const patientId = user?.roleId ?? '';
 
   const selectedDoctorId = doctorId;
   const [currentWeekOffset, setCurrentWeekOffset] = useState(() =>
@@ -364,7 +356,7 @@ export default function BookAppointmentPage() {
     return {
       from: toLocalDateKey(startOfWeek),
       to: toLocalDateKey(endOfWeek),
-      label: `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      label: formatWeekRange(startOfWeek, endOfWeek),
     };
   }, [currentWeekOffset]);
 
@@ -386,7 +378,13 @@ export default function BookAppointmentPage() {
   const reserveMutation = useReserveSlot();
   const releaseMutation = useReleaseReservation();
 
-  const slots = slotsData?.items ?? [];
+  const slots = useMemo(
+    () =>
+      (slotsData?.items ?? []).filter(
+        (slot) => !isExpiredAppointmentSlot(slot)
+      ),
+    [slotsData?.items]
+  );
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
@@ -418,7 +416,7 @@ export default function BookAppointmentPage() {
       const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
-        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayName: formatWeekDayLabel(d),
         dayNum: d.getDate(),
         isToday: dateStr === today,
       });
@@ -698,7 +696,7 @@ export default function BookAppointmentPage() {
                         >
                           <div className="flex items-center justify-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {formatTime(slot.startTime)}
+                            {formatSlotTime(slot.startTime)}
                           </div>
                           {slot.maxCapacity > 1 && (
                             <div className="text-[10px] mt-1 opacity-75">

@@ -1,9 +1,4 @@
-export const formatDate = (date: Date | string): string => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  });
-};
+/**
+ * @deprecated Use `formatLongDateTime` from `@/lib/date-utils` instead.
+ */
+export { formatLongDateTime as formatDate } from '@/lib/date-utils';

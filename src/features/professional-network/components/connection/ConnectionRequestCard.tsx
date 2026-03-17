@@ -5,6 +5,7 @@
 
 import { Check, X, Clock } from 'lucide-react';
 import type { ProfessionalConnection } from '../../types';
+import { formatViDate } from '@/lib/date-utils';
 
 interface Props {
   connection: ProfessionalConnection;
@@ -39,7 +40,7 @@ export function ConnectionRequestCard({ connection, type }: Props) {
               )}
             </div>
             <span className="text-[13px] text-text-muted shrink-0">
-              {new Date(connection.createdAt).toLocaleDateString('vi-VN')}
+              {formatViDate(connection.createdAt)}
             </span>
           </div>
 

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
+import { toast } from 'react-toastify';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -102,11 +103,27 @@ export default function ScreeningNewPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       handleFiles(Array.from(e.target.files));
+      e.target.value = '';
     }
   };
 
   const handleFiles = (files: File[]) => {
-    const newImages: UploadedImage[] = files.map((file) => ({
+    const newUniqueFiles = files.filter((incomingFile) => {
+      const isDuplicate = images.some(
+        (existingImg) =>
+          existingImg.file.name === incomingFile.name &&
+          existingImg.file.size === incomingFile.size
+      );
+
+      return !isDuplicate;
+    });
+
+    if (newUniqueFiles.length === 0) {
+      toast.warning('These images have already been uploaded!');
+      return;
+    }
+
+    const newImages: UploadedImage[] = newUniqueFiles.map((file) => ({
       id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       file,
       preview: URL.createObjectURL(file),
@@ -178,7 +195,14 @@ export default function ScreeningNewPage() {
   };
 
   const removeImage = (imageId: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== imageId));
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === imageId);
+      if (target?.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(target.preview);
+      }
+
+      return prev.filter((img) => img.id !== imageId);
+    });
   };
 
   const retryImage = (imageId: string) => {
@@ -406,7 +430,14 @@ export default function ScreeningNewPage() {
                     ) : (
                       images.length > 0 && (
                         <button
-                          onClick={() => setImages([])}
+                          onClick={() => {
+                            images.forEach((image) => {
+                              if (image.preview.startsWith('blob:')) {
+                                URL.revokeObjectURL(image.preview);
+                              }
+                            });
+                            setImages([]);
+                          }}
                           className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

@@ -41,7 +41,9 @@ import {
   useConsultationSessions,
   useConsultationSession,
   useSendMessage,
+  consultationKeys,
 } from '@/features/consultation/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   SessionStatus,
   ChatStatus,
@@ -49,6 +51,10 @@ import {
   SESSION_TYPE_LABELS,
   SESSION_STATUS_LABELS,
 } from '@/types/consultation';
+import {
+  SIGNALR_CHAT_MESSAGE_EVENT,
+  type SignalRChatMessageEvent,
+} from '@/types/chat-realtime';
 
 interface SharedScanData {
   imageUrl?: string;
@@ -61,6 +67,14 @@ interface SharedScanData {
 }
 
 import useAuthStore from '@/store/auth-store';
+import {
+  formatFullDate,
+  formatMessageTime,
+  formatCompactDate,
+  formatAppointmentSlot,
+  formatRelativeTime,
+  formatCountdown,
+} from '@/lib/date-utils';
 
 interface ScanAttachmentMeta {
   title: string;
@@ -114,41 +128,8 @@ const defaultChatStatus: ChatStatusEntry = {
   description: 'Chat status unknown.',
 };
 
-const formatFullDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
-const formatMessageTime = (value: string) =>
-  new Date(value).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-
-const formatCompactDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-
-const formatAppointmentSlot = (value: string | null) => {
-  if (!value) {
-    return 'Schedule pending';
-  }
-
-  const appointmentDate = new Date(value);
-  return appointmentDate.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
+const formatAppointmentSlotOrPending = (value: string | null) =>
+  value ? formatAppointmentSlot(value) : 'Schedule pending';
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', {
@@ -157,39 +138,8 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatRelativeActivity = (value: string) => {
-  const activityDate = new Date(value).getTime();
-  const diffMs = Date.now() - activityDate;
-  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes} min ago`;
-  }
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-
-  const diffDays = Math.round(diffHours / 24);
-  return `${diffDays}d ago`;
-};
-
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 60;
-
-const formatCountdown = (seconds: number) => {
-  const safeSeconds = Math.max(0, seconds);
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const remainingSeconds = safeSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-  }
-
-  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-};
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
@@ -294,6 +244,7 @@ const AvatarBadge = ({
 
 export default function ChatPage() {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const sharedScan =
     (location.state as { sharedScan?: SharedScanData } | null)?.sharedScan ??
     null;
@@ -314,6 +265,7 @@ export default function ChatPage() {
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processedChatEventIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const { user } = useAuthStore();
@@ -410,6 +362,36 @@ export default function ChatPage() {
       window.clearInterval(timerId);
     };
   }, [selectedSession?.id]);
+
+  useEffect(() => {
+    const handleChatRealtime = (event: Event) => {
+      const customEvent = event as CustomEvent<SignalRChatMessageEvent>;
+      const chatEvent = customEvent.detail;
+      if (!chatEvent?.sessionId) {
+        return;
+      }
+
+      if (processedChatEventIdRef.current === chatEvent.messageId) {
+        return;
+      }
+      processedChatEventIdRef.current = chatEvent.messageId;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(chatEvent.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
+    window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    return () => {
+      window.removeEventListener(
+        SIGNALR_CHAT_MESSAGE_EVENT,
+        handleChatRealtime
+      );
+    };
+  }, [queryClient]);
 
   const handleSendMessage = () => {
     if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
@@ -595,7 +577,7 @@ export default function ChatPage() {
                   const displayDoctorName =
                     session.ophthalmologistName ?? 'Assigned ophthalmologist';
                   const displayType = SESSION_TYPE_LABELS[session.type];
-                  const appointmentTime = formatAppointmentSlot(
+                  const appointmentTime = formatAppointmentSlotOrPending(
                     session.appointmentTime
                   );
 
@@ -640,7 +622,7 @@ export default function ChatPage() {
                             <div className="text-right text-[11px] text-slate-400">
                               <p>{formatCompactDate(session.createdAt)}</p>
                               <p className="mt-1">
-                                {formatRelativeActivity(session.lastActivityAt)}
+                                {formatRelativeTime(session.lastActivityAt)}
                               </p>
                             </div>
                           </div>
@@ -733,7 +715,7 @@ export default function ChatPage() {
                         </span>
                         <span className="text-slate-300">/</span>
                         <span>
-                          {formatAppointmentSlot(
+                          {formatAppointmentSlotOrPending(
                             currentSession.appointmentTime
                           )}
                         </span>
@@ -1159,7 +1141,7 @@ export default function ChatPage() {
                       <div>
                         <p className="text-xs text-slate-500">Appointment</p>
                         <p className="text-sm font-medium text-slate-900">
-                          {formatAppointmentSlot(
+                          {formatAppointmentSlotOrPending(
                             currentSession.appointmentTime
                           )}
                         </p>
@@ -1170,9 +1152,7 @@ export default function ChatPage() {
                       <div>
                         <p className="text-xs text-slate-500">Last activity</p>
                         <p className="text-sm font-medium text-slate-900">
-                          {formatRelativeActivity(
-                            currentSession.lastActivityAt
-                          )}
+                          {formatRelativeTime(currentSession.lastActivityAt)}
                         </p>
                       </div>
                     </div>

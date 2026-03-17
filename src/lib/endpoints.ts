@@ -16,11 +16,11 @@ export const API_ENDPOINTS = {
   // System Admin - Dashboard
   SYSTEM_ADMIN: {
     DASHBOARD: {
-      STATS: '/system-admin/dashboard/stats',
-      SCREENING_VOLUME: '/system-admin/dashboard/screening-volume',
+      STATS: '/system-admin/dashboard/metrics',
+      SCREENING_VOLUME: '/system-admin/dashboard/screening-trends',
       RECENT_SCREENINGS: '/system-admin/dashboard/recent-screenings',
       SYSTEM_HEALTH: '/system-admin/dashboard/system-health',
-      RISK_DISTRIBUTION: '/system-admin/dashboard/risk-distribution',
+      RISK_DISTRIBUTION: '/system-admin/dashboard/risk-analysis',
     },
 
     // Organisation & Device Management (formerly Clinic)
@@ -155,6 +155,7 @@ export const API_ENDPOINTS = {
 
   // Ophthalmologist features
   OPHTHALMOLOGIST: {
+    DASHBOARD_METRICS: '/ophthalmologists/dashboard-metrics',
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',
@@ -260,6 +261,7 @@ export const API_ENDPOINTS = {
       MY_CONTRACT: '/organisations/my-contract',
       UPLOAD: '/organisations/my-contract/upload',
     },
+    DASHBOARD_METRICS: '/organisations/dashboard-metrics',
     PATIENTS: '/organisation/patients',
     CALENDAR: '/organisation/calendar',
     ANALYTICS: '/organisation/analytics',

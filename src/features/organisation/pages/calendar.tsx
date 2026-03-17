@@ -12,21 +12,7 @@ import {
   useStartClinicAppointment,
 } from '../hooks/use-organisation-clinic-booking';
 import { mapClinicStaffErrorMessage } from '@/lib/api-error';
-
-const formatTime = (time: string) => {
-  const [h, m] = time.split(':');
-  const hour = Number(h);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
-};
-
-const toLocalDateKey = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { formatSlotTime, toLocalDateKey } from '@/lib/date-utils';
 
 const statusStyles: Record<string, string> = {
   Pending:
@@ -212,8 +198,8 @@ export default function CalendarPage() {
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
                             <Clock className="h-3.5 w-3.5" />
-                            {formatTime(appointment.startTime)} -{' '}
-                            {formatTime(appointment.endTime)}
+                            {formatSlotTime(appointment.startTime)} -{' '}
+                            {formatSlotTime(appointment.endTime)}
                           </div>
                         </td>
                         <td className="px-3 py-3 text-gray-900 dark:text-white">

@@ -22,6 +22,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { formatDate, formatMonthYear } from '@/lib/date-utils';
 import PatientLayout from '../components/PatientLayout';
 import {
   useProfile,
@@ -35,6 +36,7 @@ import {
   type ProfileFormData,
   type ChangePasswordFormData,
 } from '../schemas/profile.schema';
+import { toast } from 'react-toastify';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
@@ -110,7 +112,11 @@ export default function ProfilePage() {
       },
       {
         onSuccess: () => {
+          toast.success('Profile updated successfully');
           setIsEditing(false);
+        },
+        onError: (err) => {
+          toast.error('Failed to update profile');
         },
       }
     );
@@ -157,7 +163,7 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'Failed to load image');
+        toast.error('Failed to load image');
       }
     },
     [processImageFile]
@@ -194,7 +200,7 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'Failed to load image');
+        toast.error('Failed to load image');
       }
     },
     [processImageFile]
@@ -215,7 +221,9 @@ export default function ProfilePage() {
             setPreviewUrl(dataUrl);
             setAvatarFile(file);
           } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to load image');
+            toast.error(
+              err instanceof Error ? err.message : 'Failed to load image'
+            );
           }
           break;
         }
@@ -233,9 +241,13 @@ export default function ProfilePage() {
     if (!avatarFile) return;
     uploadAvatarMutation.mutate(avatarFile, {
       onSuccess: () => {
+        toast.success('Profile photo updated successfully');
         setShowAvatarUpload(false);
         setPreviewUrl(null);
         setAvatarFile(null);
+      },
+      onError: (err) => {
+        toast.error('Failed to upload avatar');
       },
     });
   };
@@ -252,8 +264,12 @@ export default function ProfilePage() {
   const onPasswordSubmit = (data: ChangePasswordFormData) => {
     changePasswordMutation.mutate(data, {
       onSuccess: () => {
+        toast.success('Password changed successfully');
         setShowChangePassword(false);
         resetPw();
+      },
+      onError: (err) => {
+        toast.error('Failed to change password');
       },
     });
   };
@@ -290,8 +306,6 @@ export default function ProfilePage() {
       </PatientLayout>
     );
   }
-
-  // ============ RENDER ============
 
   return (
     <PatientLayout>
@@ -491,10 +505,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <span className="text-[var(--text-secondary)]">Member Since</span>
               <span className="text-[var(--text-primary)] font-medium">
-                {new Date(profile.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                })}
+                {formatMonthYear(profile.createdAt)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -661,14 +672,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
                     {profile.dateOfBirth
-                      ? new Date(profile.dateOfBirth).toLocaleDateString(
-                          'en-US',
-                          {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          }
-                        )
+                      ? formatDate(profile.dateOfBirth, 'long')
                       : '\u2014'}
                   </p>
                 )}

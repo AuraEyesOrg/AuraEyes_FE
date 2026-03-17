@@ -10,8 +10,12 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent text-white text-2xl font-bold shadow-lg mb-4">
-            A
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white shadow-lg mb-4 border border-gray-100 overflow-hidden p-2">
+            <img
+              src="/logo.png"
+              alt="AURA Logo"
+              className="h-full w-full object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">AURA</h1>
           <p className="text-gray-500 text-sm mt-1">

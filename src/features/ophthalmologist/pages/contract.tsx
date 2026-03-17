@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
+import { formatViDate } from '@/lib/date-utils';
 import {
   FileText,
   Upload,
@@ -24,6 +25,7 @@ import {
 import DoctorSidebar from '../components/DoctorSidebar';
 import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
+import Spinner from '@/components/ui/spinner';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -328,7 +330,7 @@ function UploadSection({
           className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {uploadMutation.isPending ? (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <Spinner size={16} className="text-white" />
           ) : (
             <Upload className="w-4 h-4" />
           )}
@@ -466,9 +468,7 @@ export default function ContractPage() {
                   <div className="text-right text-xs">
                     <p className="opacity-60">Ngày ký</p>
                     <p className="font-medium">
-                      {new Date(contract.signedDate).toLocaleDateString(
-                        'vi-VN'
-                      )}
+                      {formatViDate(contract.signedDate)}
                     </p>
                   </div>
                 )}
@@ -496,9 +496,7 @@ export default function ContractPage() {
                     <div className="flex justify-between">
                       <span className="text-sm text-slate-500">Ngày tạo</span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
-                        {new Date(contract.createdAt).toLocaleDateString(
-                          'vi-VN'
-                        )}
+                        {formatViDate(contract.createdAt)}
                       </span>
                     </div>
                   </div>

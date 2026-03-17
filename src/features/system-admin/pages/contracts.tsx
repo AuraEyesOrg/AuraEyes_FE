@@ -22,6 +22,7 @@ import {
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import { contractsApi } from '../api/contracts.api';
+import { formatViDate } from '@/lib/date-utils';
 import type {
   ContractDto,
   ContractStatusValue,
@@ -162,16 +163,12 @@ function ContractDetailDialog({
                 <InfoRow label="Mẫu hợp đồng" value={contract.templateTitle} />
                 <InfoRow
                   label="Ngày tạo"
-                  value={new Date(contract.createdAt).toLocaleDateString(
-                    'vi-VN'
-                  )}
+                  value={formatViDate(contract.createdAt)}
                 />
                 {contract.signedDate && (
                   <InfoRow
                     label="Ngày ký"
-                    value={new Date(contract.signedDate).toLocaleDateString(
-                      'vi-VN'
-                    )}
+                    value={formatViDate(contract.signedDate)}
                   />
                 )}
                 <InfoRow
@@ -467,7 +464,7 @@ export default function ContractsPage() {
                         <UploadBadge hasUpload={!!c.scannedDocumentUrl} />
                       </td>
                       <td className="px-5 py-3.5 text-sm text-slate-500">
-                        {new Date(c.createdAt).toLocaleDateString('vi-VN')}
+                        {formatViDate(c.createdAt)}
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">

@@ -1,7 +1,8 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import PrivateRoute from './private-route';
 import Spinner from '@/components/ui/spinner';
+import { setRouterNavigator } from '@/lib/router';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -210,11 +211,24 @@ const PageLoader = () => (
   </div>
 );
 
+const RouterBridge = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setRouterNavigator((to, options) => {
+      navigate(to, options);
+    });
+  }, [navigate]);
+
+  return null;
+};
+
 /**
  * Main Router Component
  */
 const Router = () => (
   <BrowserRouter>
+    <RouterBridge />
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* ============ GUEST ROUTES (Public - No Auth) ============ */}

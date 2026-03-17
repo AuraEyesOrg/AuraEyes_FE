@@ -18,6 +18,7 @@ import {
   type AvailableSlotItem,
 } from '../api/patient.api';
 import Spinner from '@/components/ui/spinner';
+import { formatShortTime, formatShortDate } from '@/lib/date-utils';
 
 const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
 
@@ -29,24 +30,32 @@ function getAvatarUrl(doctor: OphthalmologistSearchItem): string {
 
 function formatSlotTime(value: string) {
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '--:--';
-
-  return d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  return Number.isNaN(d.getTime()) ? '--:--' : formatShortTime(value);
 }
 
 function formatSlotDate(value: string) {
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return 'Unknown date';
+  return Number.isNaN(d.getTime())
+    ? 'Unknown date'
+    : formatShortDate(value, 'short');
+}
 
-  return d.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
+function isExpiredSlot(slot: AvailableSlotItem) {
+  const now = Date.now();
+
+  const startFromDateTime = new Date(slot.startDateTime).getTime();
+  if (!Number.isNaN(startFromDateTime)) {
+    return startFromDateTime < now;
+  }
+
+  const startFromDateAndTime = new Date(
+    `${slot.date}T${slot.startTime}Z`
+  ).getTime();
+  if (!Number.isNaN(startFromDateAndTime)) {
+    return startFromDateAndTime < now;
+  }
+
+  return false;
 }
 
 export default function DoctorsPage() {
@@ -78,7 +87,10 @@ export default function DoctorsPage() {
     enabled: !!selectedDoctor,
   });
 
-  const slots: AvailableSlotItem[] = slotsData?.items ?? [];
+  const slots = useMemo(
+    () => (slotsData?.items ?? []).filter((slot) => !isExpiredSlot(slot)),
+    [slotsData?.items]
+  );
 
   const slotsByDate = useMemo(() => {
     const grouped = new Map<string, AvailableSlotItem[]>();

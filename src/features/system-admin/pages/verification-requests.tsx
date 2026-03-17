@@ -31,6 +31,8 @@ import {
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
 import { formatTimeAgo } from '@/lib/utility';
+import Spinner from '@/components/ui/spinner';
+import AvatarFallback from '@/components/ui/avatar-fallback';
 
 // ─────────────────────────────────────────────
 // Query key
@@ -40,15 +42,6 @@ const QUERY_KEY = ['admin', 'verification-requests'] as const;
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 // ─────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────
@@ -126,9 +119,11 @@ function ApproveModal({
         <div className="px-6 py-5 space-y-4">
           {/* Doctor card */}
           <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              {getInitials(doctor.fullName)}
-            </div>
+            <AvatarFallback
+              fullName={doctor.fullName}
+              size="w-12 h-12"
+              className="flex-shrink-0 text-sm"
+            />
             <div>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {doctor.fullName}
@@ -171,7 +166,7 @@ function ApproveModal({
             className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Spinner size={16} className="text-white" />
             ) : (
               <CheckCircle className="w-4 h-4" />
             )}
@@ -239,9 +234,11 @@ function RejectModal({
         <div className="px-6 py-5 space-y-4">
           {/* Doctor card */}
           <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              {getInitials(doctor.fullName)}
-            </div>
+            <AvatarFallback
+              fullName={doctor.fullName}
+              size="w-12 h-12"
+              className="flex-shrink-0 text-sm"
+            />
             <div>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {doctor.fullName}
@@ -316,7 +313,7 @@ function RejectModal({
             className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Spinner size={16} className="text-white" />
             ) : (
               <XCircle className="w-4 h-4" />
             )}
@@ -497,9 +494,11 @@ export default function VerificationRequestsPage() {
                         {/* Doctor info */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                              {getInitials(doctor.fullName)}
-                            </div>
+                            <AvatarFallback
+                              fullName={doctor.fullName}
+                              size="w-10 h-10"
+                              className="flex-shrink-0 text-sm"
+                            />
                             <div className="min-w-0">
                               <p className="font-semibold text-slate-900 dark:text-white truncate">
                                 {doctor.fullName}

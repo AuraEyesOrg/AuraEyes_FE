@@ -11,6 +11,7 @@ import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
+import { formatSlotTimeShort, toLocalDateKey } from '@/lib/date-utils';
 import {
   useCreateOrganisationTemplate,
   useDeleteOrganisationTemplate,
@@ -41,15 +42,8 @@ const statusStyles: Record<string, string> = {
   Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   NoShow:
     'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-};
-
-const formatTime = (value: string) => value.slice(0, 5);
-
-const toLocalDateKey = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  Expired:
+    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
 export default function OrganisationSlotManagementPage() {
@@ -320,8 +314,9 @@ export default function OrganisationSlotManagementPage() {
                     <option value="">Select a template</option>
                     {templates.map((template) => (
                       <option key={template.id} value={template.id}>
-                        {template.dayOfWeek} {formatTime(template.startTime)}-
-                        {formatTime(template.endTime)} (cap{' '}
+                        {template.dayOfWeek}{' '}
+                        {formatSlotTimeShort(template.startTime)}-
+                        {formatSlotTimeShort(template.endTime)} (cap{' '}
                         {template.maxCapacity})
                       </option>
                     ))}
@@ -394,8 +389,8 @@ export default function OrganisationSlotManagementPage() {
                       >
                         <td className="px-3 py-2">{template.dayOfWeek}</td>
                         <td className="px-3 py-2">
-                          {formatTime(template.startTime)}-
-                          {formatTime(template.endTime)}
+                          {formatSlotTimeShort(template.startTime)}-
+                          {formatSlotTimeShort(template.endTime)}
                         </td>
                         <td className="px-3 py-2">{template.slotDuration}m</td>
                         <td className="px-3 py-2">{template.maxCapacity}</td>
@@ -463,8 +458,8 @@ export default function OrganisationSlotManagementPage() {
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
-                            {formatTime(slot.startTime)}-
-                            {formatTime(slot.endTime)}
+                            {formatSlotTimeShort(slot.startTime)}-
+                            {formatSlotTimeShort(slot.endTime)}
                           </div>
                         </td>
                         <td className="px-3 py-2">
