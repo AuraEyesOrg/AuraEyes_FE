@@ -17,7 +17,6 @@ export { default as ProfilePage } from './profile';
 
 // Clinics & Verification
 export { default as ClinicsPage } from './clinics';
-// export { default as VerificationPage } from './verification';
 
 // Health & Communication
 export { default as RoadmapPage } from './roadmap';
