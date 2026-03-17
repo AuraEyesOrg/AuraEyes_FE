@@ -26,6 +26,7 @@ import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import { contractTemplatesApi } from '../api/contract-templates.api';
 import type { ContractTemplateDto } from '../types/system-admin.types';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 /* ─── Status badge ─────────────────────────────────────── */
 function StatusBadge({ isActive }: { isActive: boolean }) {
@@ -280,6 +281,9 @@ export default function ContractTemplatesPage() {
   });
 
   const templates = data?.items ?? [];
+  const loadErrorMessage = isError
+    ? extractApiErrorMessage(error, 'Failed to load templates.')
+    : null;
 
   /* ── Delete mutation ── */
   const deleteMutation = useMutation({
@@ -425,8 +429,7 @@ export default function ContractTemplatesPage() {
           {isError && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              Failed to load templates:{' '}
-              {(error as Error)?.message ?? 'Unknown error'}
+              Failed to load templates: {loadErrorMessage ?? 'Unknown error'}
             </div>
           )}
 

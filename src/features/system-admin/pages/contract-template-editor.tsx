@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { contractTemplatesApi } from '../api/contract-templates.api';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
@@ -114,6 +115,12 @@ export default function ContractTemplateEditorPage() {
   });
 
   const active = existingTemplate?.isActive ?? true;
+  const saveErrorMessage = saveMutation.error
+    ? extractApiErrorMessage(
+        saveMutation.error,
+        'Could not save contract template. Please try again.'
+      )
+    : null;
 
   return (
     <div className="flex h-screen bg-(--bg-primary) overflow-hidden">
@@ -185,7 +192,7 @@ export default function ContractTemplateEditorPage() {
                 </span>
                 <input
                   type="file"
-                  accept=".docx"
+                  accept=".doc,.docx"
                   className="hidden"
                   onChange={(e) => setTemplateFile(e.target.files?.[0] ?? null)}
                 />
@@ -280,10 +287,8 @@ export default function ContractTemplateEditorPage() {
                 {isNew ? 'Create Template' : 'Save Changes'}
               </button>
 
-              {saveMutation.error && (
-                <p className="text-xs text-red-500">
-                  {(saveMutation.error as Error).message}
-                </p>
+              {saveErrorMessage && (
+                <p className="text-xs text-red-500">{saveErrorMessage}</p>
               )}
 
               {!isNew && existingTemplate && (
