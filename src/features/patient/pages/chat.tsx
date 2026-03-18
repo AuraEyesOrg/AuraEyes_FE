@@ -42,7 +42,9 @@ import {
   useConsultationSession,
   useSendMessage,
   consultationKeys,
+  useConsultationPhase,
 } from '@/features/consultation/hooks';
+import type { ConsultationPhase } from '@/features/consultation/hooks/use-consultation-phase';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   SessionStatus,
@@ -53,7 +55,9 @@ import {
 } from '@/types/consultation';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
+  SIGNALR_ROOM_STATE_CHANGED_EVENT,
   type SignalRChatMessageEvent,
+  type SignalRRoomStateChangedEvent,
 } from '@/types/chat-realtime';
 
 interface SharedScanData {
@@ -81,10 +85,12 @@ interface ScanAttachmentMeta {
   riskLabel: string;
 }
 
-type ChatStatusEntry = {
+type PhaseUIEntry = {
   label: string;
   icon: typeof Lock;
   color: string;
+  badgeBg: string;
+  bannerBg: string;
   description: string;
 };
 
@@ -94,38 +100,42 @@ type MeetingAccessState = {
   helperText: string;
 };
 
-const chatStatusConfig: Record<number, ChatStatusEntry> = {
-  [ChatStatus.Locked]: {
-    label: 'Locked',
-    icon: Lock,
-    color: 'text-red-500',
-    description: 'Chat is locked. Waiting for doctor verification.',
-  },
-  [ChatStatus.MemoOnly]: {
-    label: 'Memo Only',
-    icon: MessageCircle,
+const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
+  PRE_VISIT: {
+    label: 'Pre-visit',
+    icon: FileText,
     color: 'text-amber-500',
-    description: 'Doctor can add notes. Chat opens after consultation.',
+    badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
+    bannerBg: 'bg-amber-50',
+    description:
+      'Share symptoms, scan notes, or questions before the consultation starts. The doctor will review them at appointment time.',
   },
-  [ChatStatus.Open]: {
-    label: 'Open',
-    icon: MessageCircle,
-    color: 'text-green-500',
-    description: 'Chat is open. You can send messages.',
+  IN_PROGRESS: {
+    label: 'In Progress',
+    icon: Activity,
+    color: 'text-emerald-500',
+    badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    bannerBg: 'bg-emerald-50',
+    description:
+      'Consultation is active. You can chat and join the video call.',
   },
-  [ChatStatus.Archived]: {
-    label: 'Archived',
+  POST_VISIT: {
+    label: 'Post-visit',
+    icon: Clock3,
+    color: 'text-sky-500',
+    badgeBg: 'bg-sky-50 text-sky-700 ring-sky-200',
+    bannerBg: 'bg-sky-50',
+    description:
+      'The video slot has ended. Chat remains open for follow-up notes and prescriptions.',
+  },
+  COMPLETED: {
+    label: 'Completed',
     icon: Archive,
-    color: 'text-gray-500',
-    description: 'Session ended. Chat is archived.',
+    color: 'text-slate-500',
+    badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
+    bannerBg: 'bg-slate-100',
+    description: 'Consultation has been completed. Chat is now read-only.',
   },
-};
-
-const defaultChatStatus: ChatStatusEntry = {
-  label: 'Unknown',
-  icon: AlertCircle,
-  color: 'text-gray-400',
-  description: 'Chat status unknown.',
 };
 
 const formatAppointmentSlotOrPending = (value: string | null) =>
@@ -309,13 +319,16 @@ export default function ChatPage() {
   const currentSession = chatSessions.find(
     (session) => session.id === selectedSessionId
   );
-  const currentSessionStatus = currentSession
-    ? (chatStatusConfig[currentSession.chatStatus] ?? defaultChatStatus)
-    : defaultChatStatus;
+
+  const phaseInfo = useConsultationPhase(
+    currentSession?.chatStatus,
+    currentSession?.appointmentTime ?? null,
+    currentTimeMs
+  );
+  const currentPhaseUI = phaseUIConfig[phaseInfo.phase];
+
   const messageList = selectedSession?.messages ?? [];
-  const canSendMessage =
-    currentSession?.chatStatus === ChatStatus.Open ||
-    currentSession?.chatStatus === ChatStatus.MemoOnly;
+  const canSendMessage = phaseInfo.patientCanSend;
   const totalOpenSessions = chatSessions.filter(
     (session) => session.chatStatus === ChatStatus.Open
   ).length;
@@ -384,11 +397,31 @@ export default function ChatPage() {
       });
     };
 
+    const handleRoomStateChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<SignalRRoomStateChangedEvent>;
+      if (!detail?.sessionId) return;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(detail.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
     window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    window.addEventListener(
+      SIGNALR_ROOM_STATE_CHANGED_EVENT,
+      handleRoomStateChanged
+    );
     return () => {
       window.removeEventListener(
         SIGNALR_CHAT_MESSAGE_EVENT,
         handleChatRealtime
+      );
+      window.removeEventListener(
+        SIGNALR_ROOM_STATE_CHANGED_EVENT,
+        handleRoomStateChanged
       );
     };
   }, [queryClient]);
@@ -462,13 +495,27 @@ export default function ChatPage() {
     }
   };
 
+  const getListItemPhaseLabel = (session: (typeof chatSessions)[0]) => {
+    if (session.chatStatus === ChatStatus.MemoOnly) return 'Pre-visit';
+    if (session.chatStatus === ChatStatus.Archived) return 'Completed';
+    if (session.chatStatus === ChatStatus.Locked) return 'Locked';
+    if (!session.appointmentTime) return 'In Progress';
+    const slotEnd =
+      new Date(session.appointmentTime).getTime() + 60 * 60 * 1000;
+    return currentTimeMs >= slotEnd ? 'Post-visit' : 'In Progress';
+  };
+
   const getComposerPlaceholder = () => {
     if (pendingScan) {
       return 'Add context for the scan before sending it to your ophthalmologist...';
     }
 
-    if (currentSession?.chatStatus === ChatStatus.MemoOnly) {
+    if (phaseInfo.phase === 'PRE_VISIT') {
       return 'Share symptoms, scan notes, or questions before the consultation starts...';
+    }
+
+    if (phaseInfo.phase === 'POST_VISIT') {
+      return 'Follow-up message or question for your doctor...';
     }
 
     return 'Type your message here...';
@@ -482,6 +529,8 @@ export default function ChatPage() {
     currentSession?.appointmentTime ?? null,
     currentTimeMs
   );
+  const meetingButtonActive =
+    phaseInfo.meetingActive && meetingAccessState.canJoin;
 
   if (sessionsLoading) {
     return (
@@ -571,9 +620,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 filteredSessions.map((session) => {
-                  const statusConfig =
-                    chatStatusConfig[session.chatStatus] ?? defaultChatStatus;
-                  const StatusIcon = statusConfig.icon;
+                  const itemPhaseLabel = getListItemPhaseLabel(session);
                   const displayDoctorName =
                     session.ophthalmologistName ?? 'Assigned ophthalmologist';
                   const displayType = SESSION_TYPE_LABELS[session.type];
@@ -636,10 +683,7 @@ export default function ChatPage() {
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(session.chatStatus)}`}
                             >
-                              <StatusIcon
-                                className={`h-3.5 w-3.5 ${statusConfig.color}`}
-                              />
-                              {statusConfig.label}
+                              {itemPhaseLabel}
                             </span>
                           </div>
 
@@ -698,12 +742,12 @@ export default function ChatPage() {
                           {doctorName}
                         </h2>
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(currentSession.chatStatus)}`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${currentPhaseUI.badgeBg}`}
                         >
-                          <currentSessionStatus.icon
-                            className={`h-3.5 w-3.5 ${currentSessionStatus.color}`}
+                          <currentPhaseUI.icon
+                            className={`h-3.5 w-3.5 ${currentPhaseUI.color}`}
                           />
-                          {currentSessionStatus.label}
+                          {currentPhaseUI.label}
                         </span>
                       </div>
 
@@ -722,9 +766,7 @@ export default function ChatPage() {
                       </div>
 
                       <p className="mt-3 max-w-2xl text-sm text-slate-500">
-                        {currentSession.chatStatus === ChatStatus.MemoOnly
-                          ? 'Pre-consultation notes are enabled. Share symptoms, scan context, and questions so the doctor can review them before the session.'
-                          : currentSessionStatus.description}
+                        {currentPhaseUI.description}
                       </p>
                     </div>
                   </div>
@@ -732,7 +774,7 @@ export default function ChatPage() {
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col items-start gap-1 sm:items-end">
                       {currentSession.meetingLink ? (
-                        meetingAccessState.canJoin ? (
+                        meetingButtonActive ? (
                           <a
                             href={currentSession.meetingLink}
                             target="_blank"
@@ -740,7 +782,7 @@ export default function ChatPage() {
                             className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
                           >
                             <Video className="h-4 w-4" />
-                            {meetingAccessState.buttonLabel}
+                            Join Meeting
                           </a>
                         ) : (
                           <button
@@ -748,7 +790,11 @@ export default function ChatPage() {
                             className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
                           >
                             <Video className="h-4 w-4" />
-                            {meetingAccessState.buttonLabel}
+                            {phaseInfo.phase === 'COMPLETED'
+                              ? 'Meeting Ended'
+                              : phaseInfo.phase === 'POST_VISIT'
+                                ? 'Meeting Ended'
+                                : meetingAccessState.buttonLabel}
                           </button>
                         )
                       ) : (
@@ -762,7 +808,13 @@ export default function ChatPage() {
                       )}
                       {currentSession.meetingLink && (
                         <p className="text-xs font-medium text-slate-500">
-                          {meetingAccessState.helperText}
+                          {phaseInfo.phase === 'PRE_VISIT'
+                            ? meetingAccessState.helperText
+                            : phaseInfo.phase === 'POST_VISIT'
+                              ? 'Video slot has ended'
+                              : phaseInfo.phase === 'COMPLETED'
+                                ? 'Consultation completed'
+                                : meetingAccessState.helperText}
                         </p>
                       )}
                     </div>
@@ -787,27 +839,36 @@ export default function ChatPage() {
                 </div>
               </div>
 
-              {currentSession.chatStatus !== ChatStatus.Open && (
+              {phaseInfo.phase !== 'IN_PROGRESS' && (
                 <div
-                  className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${
-                    currentSession.chatStatus === ChatStatus.Locked
-                      ? 'bg-rose-50'
-                      : currentSession.chatStatus === ChatStatus.MemoOnly
-                        ? 'bg-amber-50'
-                        : 'bg-slate-100'
-                  }`}
+                  className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${currentPhaseUI.bannerBg}`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <currentSessionStatus.icon
-                      className={`mt-0.5 h-4 w-4 shrink-0 ${currentSessionStatus.color}`}
+                    <currentPhaseUI.icon
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${currentPhaseUI.color}`}
                     />
                     <div>
                       <p className="font-medium text-slate-900">
-                        {currentSessionStatus.label}
+                        {currentPhaseUI.label}
                       </p>
                       <p className="mt-1 text-slate-600">
-                        {currentSessionStatus.description}
+                        {currentPhaseUI.description}
                       </p>
+                      {phaseInfo.phase === 'PRE_VISIT' &&
+                        phaseInfo.msUntilNextTransition !== null &&
+                        phaseInfo.msUntilNextTransition > 0 && (
+                          <p className="mt-2 font-medium text-amber-700">
+                            Chat opens in{' '}
+                            {formatCountdown(
+                              Math.ceil(phaseInfo.msUntilNextTransition / 1000)
+                            )}
+                          </p>
+                        )}
+                      {phaseInfo.phase === 'POST_VISIT' && (
+                        <p className="mt-2 font-medium text-sky-700">
+                          Chat will close automatically after the grace period.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -946,12 +1007,15 @@ export default function ChatPage() {
                                     : 'text-slate-500'
                                 }`}
                               >
-                                {isPatientMessage && (
-                                  <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
-                                )}
+                                {isPatientMessage &&
+                                  phaseInfo.phase !== 'PRE_VISIT' && (
+                                    <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
+                                  )}
                                 <span>
                                   {isPatientMessage
-                                    ? 'Delivered to your doctor'
+                                    ? phaseInfo.phase === 'PRE_VISIT'
+                                      ? 'Saved as pre-visit note'
+                                      : 'Delivered to your doctor'
                                     : 'Doctor note'}
                                 </span>
                               </div>
@@ -974,17 +1038,23 @@ export default function ChatPage() {
                   <div className="flex h-full items-center justify-center">
                     <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm">
                       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600">
-                        <MessageCircle className="h-7 w-7" />
+                        <currentPhaseUI.icon className="h-7 w-7" />
                       </div>
                       <h3 className="text-lg font-semibold text-slate-900">
-                        No messages yet
+                        {phaseInfo.phase === 'PRE_VISIT'
+                          ? 'Leave a note for your doctor'
+                          : phaseInfo.phase === 'COMPLETED'
+                            ? 'No messages in this session'
+                            : 'No messages yet'}
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-500">
-                        {currentSession.chatStatus === ChatStatus.MemoOnly
+                        {phaseInfo.phase === 'PRE_VISIT'
                           ? 'Start by sharing symptoms, concerns, or a brief note before your consultation begins.'
-                          : currentSession.chatStatus === ChatStatus.Locked
-                            ? 'This conversation opens after your doctor reviews the session.'
-                            : 'Start the conversation when you are ready.'}
+                          : phaseInfo.phase === 'IN_PROGRESS'
+                            ? 'The consultation is active. Start the conversation when you are ready.'
+                            : phaseInfo.phase === 'POST_VISIT'
+                              ? 'The video slot has ended but you can still send follow-up messages.'
+                              : 'This consultation has been completed.'}
                       </p>
                     </div>
                   </div>
@@ -1072,15 +1142,11 @@ export default function ChatPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                    {currentSession.chatStatus === ChatStatus.Archived ? (
-                      <Archive className="h-4 w-4" />
-                    ) : (
-                      <Lock className="h-4 w-4" />
-                    )}
+                    <currentPhaseUI.icon className="h-4 w-4" />
                     <span>
-                      {currentSession.chatStatus === ChatStatus.Locked
-                        ? 'Chat will unlock after your doctor verifies the session.'
-                        : 'This session is archived. New messages are disabled.'}
+                      {phaseInfo.phase === 'COMPLETED'
+                        ? 'Consultation has been completed. Chat is now read-only.'
+                        : 'Chat will unlock after your doctor verifies the session.'}
                     </span>
                   </div>
                 )}
@@ -1170,9 +1236,9 @@ export default function ChatPage() {
                     <div className="flex items-start gap-3">
                       <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                       <div>
-                        <p className="text-xs text-slate-500">Chat mode</p>
+                        <p className="text-xs text-slate-500">Phase</p>
                         <p className="text-sm font-medium text-slate-900">
-                          {currentSessionStatus.label}
+                          {currentPhaseUI.label}
                         </p>
                       </div>
                     </div>

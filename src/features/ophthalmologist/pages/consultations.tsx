@@ -41,7 +41,9 @@ import {
 import type { ConsultationSessionListDto } from '@/types/consultation';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
+  SIGNALR_ROOM_STATE_CHANGED_EVENT,
   type SignalRChatMessageEvent,
+  type SignalRRoomStateChangedEvent,
 } from '@/types/chat-realtime';
 import useAuthStore from '@/store/auth-store';
 import {
@@ -214,10 +216,9 @@ export default function ConsultationsPage() {
     (s: ConsultationSessionListDto) => s.id === selectedSessionId
   );
 
-  // Can the doctor send messages in the current session?
-  const canSendMessage =
-    currentSession?.chatStatus === ChatStatus.Open ||
-    currentSession?.chatStatus === ChatStatus.MemoOnly;
+  // Doctor can only send when the chat is fully Open (IN_PROGRESS or POST_VISIT).
+  // In MemoOnly (PRE_VISIT) only the patient can leave notes.
+  const canSendMessage = currentSession?.chatStatus === ChatStatus.Open;
 
   // ---- Scroll ----
 
@@ -257,11 +258,31 @@ export default function ConsultationsPage() {
       });
     };
 
+    const handleRoomStateChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<SignalRRoomStateChangedEvent>;
+      if (!detail?.sessionId) return;
+
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.detail(detail.sessionId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: consultationKeys.lists(),
+      });
+    };
+
     window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
+    window.addEventListener(
+      SIGNALR_ROOM_STATE_CHANGED_EVENT,
+      handleRoomStateChanged
+    );
     return () => {
       window.removeEventListener(
         SIGNALR_CHAT_MESSAGE_EVENT,
         handleChatRealtime
+      );
+      window.removeEventListener(
+        SIGNALR_ROOM_STATE_CHANGED_EVENT,
+        handleRoomStateChanged
       );
     };
   }, [queryClient]);
@@ -754,7 +775,6 @@ export default function ConsultationsPage() {
                           )}
                         </div>
                       ) : (
-                        // Chat locked / archived banner
                         <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f] bg-gray-100 dark:bg-[#1e3a5f]/30">
                           <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
                             {currentSession.chatStatus ===
@@ -762,7 +782,17 @@ export default function ConsultationsPage() {
                               <>
                                 <CheckCircle2 className="w-5 h-5" />
                                 <span className="text-sm font-medium">
-                                  This consultation has been completed
+                                  Consultation has been completed. Chat is now
+                                  read-only.
+                                </span>
+                              </>
+                            ) : currentSession.chatStatus ===
+                              ChatStatus.MemoOnly ? (
+                              <>
+                                <Clock className="w-5 h-5" />
+                                <span className="text-sm font-medium">
+                                  Pre-visit mode — patient notes only. Chat
+                                  opens at appointment time.
                                 </span>
                               </>
                             ) : (

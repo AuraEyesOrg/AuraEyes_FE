@@ -8,7 +8,9 @@ import {
 import useAuthStore from '@/store/auth-store';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
+  SIGNALR_ROOM_STATE_CHANGED_EVENT,
   type SignalRChatMessageEvent,
+  type SignalRRoomStateChangedEvent,
 } from '@/types/chat-realtime';
 
 const CHAT_HUB_URL =
@@ -37,6 +39,18 @@ export function useSignalRChat(): void {
     []
   );
 
+  const handleRoomStateChanged = useCallback(
+    (payload: SignalRRoomStateChangedEvent) => {
+      window.dispatchEvent(
+        new CustomEvent<SignalRRoomStateChangedEvent>(
+          SIGNALR_ROOM_STATE_CHANGED_EVENT,
+          { detail: payload }
+        )
+      );
+    },
+    []
+  );
+
   const buildConnection = useCallback((): HubConnection => {
     const connection = new HubConnectionBuilder()
       .withUrl(CHAT_HUB_URL, {
@@ -49,9 +63,10 @@ export function useSignalRChat(): void {
       .build();
 
     connection.on('ReceiveChatMessage', handleChatMessageReceived);
+    connection.on('RoomStateChanged', handleRoomStateChanged);
 
     return connection;
-  }, [getAccessToken, handleChatMessageReceived]);
+  }, [getAccessToken, handleChatMessageReceived, handleRoomStateChanged]);
 
   const startConnection = useCallback(async (): Promise<void> => {
     if (!isAuthenticated) {
