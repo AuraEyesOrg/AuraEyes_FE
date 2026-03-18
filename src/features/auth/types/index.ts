@@ -38,6 +38,17 @@ export interface RegisterOphthalmologistRequest {
   degreeImage?: File;
 }
 
+export interface RegisterOrganisationRequest {
+  contactEmail: string;
+  contactFullName: string;
+  organisationName: string;
+  orgType: number;
+  contactPhone?: string;
+  address?: string;
+  licenseNumber?: string;
+  notes?: string;
+}
+
 export interface VerifyTwoFactorRequest {
   userId: string;
   code: string;

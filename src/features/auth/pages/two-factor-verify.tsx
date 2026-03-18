@@ -100,7 +100,11 @@ const TwoFactorVerifyPage = () => {
           roles.includes('OrgAdmin') ||
           roles.includes('Organization')
         ) {
-          navigate('/organisation/dashboard');
+          if (response.user?.contractStatus !== 'Active') {
+            navigate('/organisation/contract');
+          } else {
+            navigate('/organisation/dashboard');
+          }
         } else {
           navigate('/');
         }

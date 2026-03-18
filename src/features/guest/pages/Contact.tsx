@@ -4,18 +4,21 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { toast } from 'react-toastify';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { registerOrganisation } from '@/features/auth/api/auth.api';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const ContactPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     organizationContactName: '',
     organizationContactRole: '',
     organizationContactEmail: '',
     organizationPhone: '',
     organizationName: '',
-    organizationType: '',
+    organizationType: 'clinic',
     organizationLocation: '',
     estimatedVolume: '',
     organizationMessage: '',
@@ -102,13 +105,57 @@ const ContactPage = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { ...formData };
-    console.log(data);
-    toast.success(
-      'Your request has been sent successfully. Our team will contact you shortly.'
-    );
+
+    try {
+      setIsSubmitting(true);
+
+      await registerOrganisation({
+        organisationName: formData.organizationName.trim(),
+        orgType: formData.organizationType === 'hospital' ? 1 : 2,
+        contactFullName: formData.organizationContactName.trim(),
+        contactEmail: formData.organizationContactEmail.trim(),
+        contactPhone: formData.organizationPhone.trim() || undefined,
+        address: formData.organizationLocation.trim() || undefined,
+        notes:
+          [
+            `Role: ${formData.organizationContactRole.trim()}`,
+            formData.estimatedVolume
+              ? `Estimated monthly screenings: ${formData.estimatedVolume}`
+              : null,
+            formData.organizationMessage.trim() || null,
+          ]
+            .filter(Boolean)
+            .join('\n') || undefined,
+      });
+
+      toast.success(
+        'Request submitted successfully. The System Admin has been notified by email.'
+      );
+
+      setFormData({
+        organizationContactName: '',
+        organizationContactRole: '',
+        organizationContactEmail: '',
+        organizationPhone: '',
+        organizationName: '',
+        organizationType: 'clinic',
+        organizationLocation: '',
+        estimatedVolume: '',
+        organizationMessage: '',
+        termsAgreed: false,
+      });
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          'Unable to submit request. Please try again.'
+        )
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const partnerCard = {
@@ -471,15 +518,8 @@ const ContactPage = () => {
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)] bg-white"
                         >
-                          <option value="">Select an option</option>
-                          <option value="public_hospital">
-                            Public Hospital
-                          </option>
-                          <option value="private_hospital">
-                            Private Hospital
-                          </option>
-                          <option value="clinic_chain">Clinic Chain</option>
-                          <option value="other">Other</option>
+                          <option value="clinic">Clinic</option>
+                          <option value="hospital">Hospital</option>
                         </select>
                       </div>
                       <div className="sm:col-span-2">
@@ -574,9 +614,12 @@ const ContactPage = () => {
                   {/* Submit Button */}
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="w-full py-4 rounded-lg bg-[var(--color-brand-primary)] text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                   >
-                    Send Partnership Request
+                    {isSubmitting
+                      ? 'Sending Request...'
+                      : 'Send Partnership Request'}
                   </button>
                 </div>
               </form>

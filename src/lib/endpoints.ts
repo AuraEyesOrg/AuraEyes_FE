@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     ME: '/auth/me',
+    REGISTER_ORGANISATION: '/auth/register/organisation',
   },
 
   // System Admin - Dashboard
@@ -26,6 +27,9 @@ export const API_ENDPOINTS = {
     ORGANISATIONS: {
       LIST: '/system-admin/organisations',
       DETAIL: (id: string) => `/system-admin/organisations/${id}`,
+      ONBOARDING_REQUESTS: '/system-admin/organisations/onboarding-requests',
+      APPROVE_ONBOARDING: (id: string) =>
+        `/system-admin/organisations/onboarding-requests/${id}/approve`,
       CREATE: '/system-admin/organisations',
       UPDATE: (id: string) => `/system-admin/organisations/${id}`,
       DELETE: (id: string) => `/system-admin/organisations/${id}`,
@@ -253,6 +257,10 @@ export const API_ENDPOINTS = {
   // Organisation features (from existing setup)
   ORGANISATION: {
     DASHBOARD: '/organisation/dashboard',
+    CONTRACT: {
+      MY_CONTRACT: '/organisations/my-contract',
+      UPLOAD: '/organisations/my-contract/upload',
+    },
     DASHBOARD_METRICS: '/organisations/dashboard-metrics',
     PATIENTS: '/organisation/patients',
     CALENDAR: '/organisation/calendar',

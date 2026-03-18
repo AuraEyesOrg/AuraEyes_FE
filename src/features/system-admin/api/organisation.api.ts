@@ -7,9 +7,11 @@ import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
   ApiResponse,
+  ApproveOrganisationOnboardingResult,
   Device,
   Organisation,
   OrganisationDetail,
+  OrganisationOnboardingRequestDto,
   PaginatedResponse,
   CalibrationLog,
 } from '../types/system-admin.types';
@@ -118,6 +120,20 @@ export const organisationApi = {
       console.error('Failed to delete organisation:', error);
       throw error;
     }
+  },
+
+  async getOnboardingRequests() {
+    const response = await api.get<
+      ApiResponse<OrganisationOnboardingRequestDto[]>
+    >(API_ENDPOINTS.SYSTEM_ADMIN.ORGANISATIONS.ONBOARDING_REQUESTS);
+    return response.data.data;
+  },
+
+  async approveOnboardingRequest(id: string) {
+    const response = await api.post<
+      ApiResponse<ApproveOrganisationOnboardingResult>
+    >(API_ENDPOINTS.SYSTEM_ADMIN.ORGANISATIONS.APPROVE_ONBOARDING(id));
+    return response.data.data;
   },
 };
 

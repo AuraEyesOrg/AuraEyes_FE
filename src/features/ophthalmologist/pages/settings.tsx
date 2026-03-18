@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Mail,
   Phone,
@@ -29,6 +31,15 @@ import {
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { useTheme } from '@/contexts/ThemeContext';
+import { api } from '@/lib/api';
+import useAuthStore from '@/store/auth-store';
+import { getCurrentUser } from '@/features/auth/api/auth.api';
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
 
 interface Certificate {
   id: string;
@@ -80,101 +91,191 @@ interface OphthalmologistProfile {
   createdAt: string;
 }
 
-// Mock data
-const mockProfile: OphthalmologistProfile = {
-  id: 'D001',
-  fullName: 'Dr. Alistair Chen',
-  email: 'dr.alistair@auraeyes.com',
-  phone: '+84 123 456 7890',
-  bio: 'Board-certified ophthalmologist specializing in retinal diseases and AI-assisted diagnostics. Over 15 years of experience in treating diabetic retinopathy, macular degeneration, and other retinal conditions.',
-  yearsOfExperience: 15,
-  specialty: 'Retina Specialist',
-  hospital: 'AURA Vision Center',
-  department: 'Retina Department',
-  address: '123 Medical Plaza, District 1, Ho Chi Minh City',
-  isVerified: true,
-  verifiedAt: '2025-06-15',
-  certificates: [
-    {
-      id: 'cert-1',
-      name: 'Medical License',
-      type: 'license',
-      issuedBy: 'Vietnam Ministry of Health',
-      issuedDate: '2015-03-20',
-      expiryDate: '2027-03-20',
-      status: 'verified',
-    },
-    {
-      id: 'cert-2',
-      name: 'Doctor of Medicine (MD)',
-      type: 'degree',
-      issuedBy: 'Ho Chi Minh City University of Medicine',
-      issuedDate: '2010-06-15',
-      status: 'verified',
-    },
-    {
-      id: 'cert-3',
-      name: 'Retina Fellowship',
-      type: 'certification',
-      issuedBy: 'American Academy of Ophthalmology',
-      issuedDate: '2018-09-01',
-      status: 'verified',
-    },
-  ],
-  createdAt: '2025-01-15',
+interface OphthalmologistProfileApi {
+  id: string;
+  userFullName?: string | null;
+  userEmail?: string | null;
+  bio?: string | null;
+  yearsOfExperience: number;
+  isVerified: boolean;
+  createdAt: string;
+  certificates: Array<{
+    id: string;
+    name: string;
+    issuingAuthority?: string | null;
+    issuedDate: string;
+    expiryDate?: string | null;
+    isExpired: boolean;
+  }>;
+}
+
+interface WalletApi {
+  id: string;
+  balance: number;
+}
+
+interface WalletTransactionApi {
+  id: string;
+  amount: number;
+  transactionType: number | string;
+  description?: string | null;
+  createdAt: string;
+}
+
+interface PagedResult<T> {
+  items: T[];
+}
+
+const DEFAULT_PROFILE: OphthalmologistProfile = {
+  id: '',
+  fullName: 'Unknown Doctor',
+  email: 'N/A',
+  phone: 'N/A',
+  bio: 'No profile bio available.',
+  yearsOfExperience: 0,
+  specialty: 'Ophthalmologist',
+  hospital: 'N/A',
+  department: 'N/A',
+  address: 'N/A',
+  isVerified: false,
+  certificates: [],
+  createdAt: new Date().toISOString(),
 };
 
-const mockWallet: WalletInfo = {
-  id: 'W001',
-  balance: 12500000,
-  transactions: [
-    {
-      id: 'TXN001',
-      amount: 500000,
-      transactionType: 'Payment',
-      description: 'Consultation fee - Elena Miller',
-      createdAt: '2026-02-19T14:30:00',
-    },
-    {
-      id: 'TXN002',
-      amount: 2000000,
-      transactionType: 'Withdrawal',
-      description: 'Bank transfer to ***1234',
-      createdAt: '2026-02-18T10:00:00',
-    },
-    {
-      id: 'TXN003',
-      amount: 750000,
-      transactionType: 'Payment',
-      description: 'Follow-up - David Kim',
-      createdAt: '2026-02-17T16:45:00',
-    },
-    {
-      id: 'TXN004',
-      amount: 5000000,
-      transactionType: 'Deposit',
-      description: 'Platform bonus - Top performer',
-      createdAt: '2026-02-15T09:00:00',
-    },
-    {
-      id: 'TXN005',
-      amount: 350000,
-      transactionType: 'Payment',
-      description: 'Screening review - Sarah Jenkins',
-      createdAt: '2026-02-14T11:20:00',
-    },
-  ],
+const normalizeTransactionType = (value: number | string): TransactionType => {
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (normalized.includes('deposit')) return 'Deposit';
+    if (normalized.includes('withdrawal')) return 'Withdrawal';
+    if (normalized.includes('payment')) return 'Payment';
+    if (normalized.includes('refund')) return 'Refund';
+    if (normalized.includes('transfer')) return 'Transfer';
+    if (normalized.includes('bonus')) return 'Bonus';
+    return 'Transfer';
+  }
+
+  switch (value) {
+    case 1:
+      return 'Deposit';
+    case 2:
+      return 'Withdrawal';
+    case 3:
+      return 'Payment';
+    case 4:
+      return 'Refund';
+    case 5:
+      return 'Transfer';
+    case 6:
+      return 'Bonus';
+    default:
+      return 'Transfer';
+  }
+};
+
+const mapCertificateType = (
+  name: string
+): 'license' | 'degree' | 'certification' => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('license')) return 'license';
+  if (normalized.includes('degree')) return 'degree';
+  return 'certification';
 };
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
-  const [profile] = useState<OphthalmologistProfile>(mockProfile);
-  const [wallet] = useState<WalletInfo>(mockWallet);
+  const { user } = useAuthStore();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+
+  const currentUserQuery = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: getCurrentUser,
+  });
+
+  const ophthalmologistId =
+    currentUserQuery.data?.roleId ?? user?.roleId ?? null;
+
+  const profileQuery = useQuery({
+    queryKey: ['ophthalmologist', 'detail', ophthalmologistId],
+    enabled: Boolean(ophthalmologistId),
+    queryFn: async () => {
+      const response = await api.get<ApiResponse<OphthalmologistProfileApi>>(
+        `/ophthalmologists/${ophthalmologistId}`
+      );
+      return response.data.data;
+    },
+  });
+
+  const walletQuery = useQuery({
+    queryKey: ['wallet', 'detail'],
+    queryFn: async () => {
+      const response = await api.get<ApiResponse<WalletApi>>('/wallets');
+      return response.data.data;
+    },
+  });
+
+  const walletTransactionsQuery = useQuery({
+    queryKey: ['wallet', 'transactions', 'settings-page'],
+    queryFn: async () => {
+      const response = await api.get<
+        ApiResponse<PagedResult<WalletTransactionApi>>
+      >('/wallets/transactions', {
+        params: { pageNumber: 1, pageSize: 8 },
+      });
+      return response.data.data;
+    },
+  });
+
+  const profile = useMemo<OphthalmologistProfile>(() => {
+    const authUser = currentUserQuery.data ?? user;
+    const profileData = profileQuery.data;
+
+    if (!authUser && !profileData) return DEFAULT_PROFILE;
+
+    return {
+      id: profileData?.id ?? authUser?.roleId ?? authUser?.id ?? '',
+      fullName:
+        profileData?.userFullName ?? authUser?.fullName ?? 'Unknown Doctor',
+      email: profileData?.userEmail ?? authUser?.email ?? 'N/A',
+      phone: 'N/A',
+      bio: profileData?.bio?.trim() || 'No profile bio available.',
+      yearsOfExperience: profileData?.yearsOfExperience ?? 0,
+      specialty: 'Ophthalmologist',
+      hospital: authUser?.organizationId ?? 'N/A',
+      department: 'N/A',
+      address: 'N/A',
+      isVerified: profileData?.isVerified ?? Boolean(authUser?.isVerified),
+      createdAt: profileData?.createdAt ?? new Date().toISOString(),
+      certificates:
+        profileData?.certificates.map((cert) => ({
+          id: cert.id,
+          name: cert.name,
+          type: mapCertificateType(cert.name),
+          issuedBy: cert.issuingAuthority ?? 'N/A',
+          issuedDate: cert.issuedDate,
+          expiryDate: cert.expiryDate ?? undefined,
+          status: cert.isExpired ? 'expired' : 'verified',
+        })) ?? [],
+    };
+  }, [currentUserQuery.data, profileQuery.data, user]);
+
+  const wallet = useMemo<WalletInfo>(() => {
+    return {
+      id: walletQuery.data?.id ?? '',
+      balance: walletQuery.data?.balance ?? 0,
+      transactions:
+        walletTransactionsQuery.data?.items.map((txn) => ({
+          id: txn.id,
+          amount: txn.amount,
+          transactionType: normalizeTransactionType(txn.transactionType),
+          description: txn.description ?? undefined,
+          createdAt: txn.createdAt,
+        })) ?? [],
+    };
+  }, [walletQuery.data, walletTransactionsQuery.data]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -280,6 +381,12 @@ export default function SettingsPage() {
                     Edit Profile
                   </button>
                 </div>
+
+                {(currentUserQuery.isLoading || profileQuery.isLoading) && (
+                  <div className="px-6 pt-4 text-sm text-gray-500 dark:text-gray-400">
+                    Loading profile information...
+                  </div>
+                )}
 
                 <div className="p-6">
                   {/* Avatar & Verification Status */}
@@ -514,6 +621,17 @@ export default function SettingsPage() {
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
                       Recent Transactions
                     </p>
+                    {walletTransactionsQuery.isLoading && (
+                      <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
+                        Loading transactions...
+                      </p>
+                    )}
+                    {!walletTransactionsQuery.isLoading &&
+                      wallet.transactions.length === 0 && (
+                        <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
+                          No transactions yet.
+                        </p>
+                      )}
                     {wallet.transactions.slice(0, 4).map((txn) => {
                       const txnStyle = getTransactionIcon(txn.transactionType);
                       const TxnIcon = txnStyle.icon;
@@ -578,7 +696,10 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="p-4 space-y-2">
-                  <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group">
+                  <Link
+                    to="/forgot-password"
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                         <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -588,12 +709,12 @@ export default function SettingsPage() {
                           Security
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Password & 2FA
+                          Reset password & 2FA
                         </p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
-                  </button>
+                  </Link>
 
                   <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group">
                     <div className="flex items-center gap-3">

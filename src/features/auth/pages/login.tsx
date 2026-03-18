@@ -127,7 +127,11 @@ const LoginPage = () => {
           roles.includes('OrgAdmin') ||
           roles.includes('Organization')
         ) {
-          navigate('/organisation/dashboard');
+          if (response.user?.contractStatus !== 'Active') {
+            navigate('/organisation/contract');
+          } else {
+            navigate('/organisation/dashboard');
+          }
         } else {
           navigate('/');
         }
@@ -259,7 +263,11 @@ const LoginPage = () => {
           roles.includes('OrgAdmin') ||
           roles.includes('Organization')
         ) {
-          navigate('/organisation/dashboard');
+          if (response.user?.contractStatus !== 'Active') {
+            navigate('/organisation/contract');
+          } else {
+            navigate('/organisation/dashboard');
+          }
         } else {
           navigate('/');
         }
@@ -872,6 +880,13 @@ const LoginPage = () => {
                     >
                       <Stethoscope className="h-4 w-4" />
                       Register as Doctor
+                    </Link>
+                    <Link
+                      to="/register-organisation"
+                      className="ml-3 inline-flex items-center gap-2 px-4 py-2 border-2 border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:border-slate-900 hover:text-slate-900 transition-all duration-200"
+                    >
+                      <User className="h-4 w-4" />
+                      Register Organisation
                     </Link>
                   </div>
                 </div>

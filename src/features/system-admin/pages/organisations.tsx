@@ -18,6 +18,10 @@ import {
   TrendingUp,
   Users,
   Activity,
+  CheckCircle2,
+  Mail,
+  Phone,
+  ShieldCheck,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -25,7 +29,12 @@ import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { organisationApi } from '../api/organisation.api';
-import type { Organisation as ApiOrganisation } from '../types/system-admin.types';
+import type {
+  ApproveOrganisationOnboardingResult,
+  Organisation as ApiOrganisation,
+  OrganisationOnboardingRequestDto,
+} from '../types/system-admin.types';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
 type TabType = 'organisations' | 'billing' | 'contracts';
@@ -77,6 +86,15 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
 
 export default function OrganisationsPage() {
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
+  const [onboardingRequests, setOnboardingRequests] = useState<
+    OrganisationOnboardingRequestDto[]
+  >([]);
+  const [approvingRequestId, setApprovingRequestId] = useState<string | null>(
+    null
+  );
+  const [approvalResult, setApprovalResult] =
+    useState<ApproveOrganisationOnboardingResult | null>(null);
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasNext, setHasNext] = useState(false);
@@ -103,9 +121,16 @@ export default function OrganisationsPage() {
         setHasNext(result.hasNext ?? false);
         setHasPrevious(result.hasPrevious ?? false);
       }
+
+      const requests = await organisationApi.getOnboardingRequests();
+      setOnboardingRequests(requests ?? []);
+      setOnboardingError(null);
     } catch (error) {
       console.error('Failed to load organisations:', error);
       setOrganisations([]);
+      setOnboardingError(
+        extractApiErrorMessage(error, 'Failed to load onboarding requests.')
+      );
     } finally {
       setLoading(false);
     }
@@ -130,6 +155,25 @@ export default function OrganisationsPage() {
     0
   );
   const totalUsers = organisations.reduce((sum, o) => sum + o.usersCount, 0);
+  const pendingOnboardingRequests = onboardingRequests.filter(
+    (request) => request.status === 'Pending'
+  );
+
+  const handleApproveOnboarding = async (requestId: string) => {
+    try {
+      setApprovingRequestId(requestId);
+      setApprovalResult(null);
+      const result = await organisationApi.approveOnboardingRequest(requestId);
+      setApprovalResult(result ?? null);
+      await loadData();
+    } catch (error) {
+      setOnboardingError(
+        extractApiErrorMessage(error, 'Failed to approve onboarding request.')
+      );
+    } finally {
+      setApprovingRequestId(null);
+    }
+  };
 
   // Server-side filtering is already applied, use all results
   const filteredOrganisations = organisations;
@@ -149,7 +193,7 @@ export default function OrganisationsPage() {
       accessor: 'name',
       render: (_, row) => (
         <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+          <div className="shrink-0 w-9 h-9 rounded-lg bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
             {row.name.substring(0, 2).toUpperCase()}
           </div>
           <div className="flex flex-col">
@@ -453,7 +497,7 @@ export default function OrganisationsPage() {
         />
 
         <main className="flex-1 overflow-y-auto">
-          <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
+          <div className="px-6 md:px-10 py-6 max-w-400 mx-auto w-full space-y-6">
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <StatsCard
@@ -578,6 +622,131 @@ export default function OrganisationsPage() {
               </div>
             </div>
 
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Organisation Onboarding Requests
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Duyệt hồ sơ gửi từ form public và cấp tài khoản quản trị tổ
+                    chức.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-cyan-50 px-4 py-3 text-right dark:bg-cyan-500/10">
+                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">
+                    Pending
+                  </p>
+                  <p className="text-2xl font-bold text-cyan-900 dark:text-cyan-100">
+                    {pendingOnboardingRequests.length}
+                  </p>
+                </div>
+              </div>
+
+              {approvalResult && (
+                <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                        Đã cấp tài khoản thành công
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {onboardingError && (
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+                  {onboardingError}
+                </div>
+              )}
+
+              <div className="mt-5 grid gap-4">
+                {pendingOnboardingRequests.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    Không có yêu cầu onboarding nào đang chờ duyệt.
+                  </div>
+                ) : (
+                  pendingOnboardingRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-2xl border border-slate-200 p-5 dark:border-slate-700"
+                    >
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                              {request.organisationName}
+                            </h3>
+                            <StatusBadge status="warning" label="Pending" />
+                          </div>
+                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            {request.orgType} • Gửi lúc{' '}
+                            {new Date(request.createdAt).toLocaleString(
+                              'vi-VN'
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleApproveOnboarding(request.id)}
+                          disabled={approvingRequestId === request.id}
+                          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:opacity-90 disabled:opacity-60"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          {approvingRequestId === request.id
+                            ? 'Đang cấp tài khoản...'
+                            : 'Xác nhận & cấp tài khoản'}
+                        </button>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <InfoTile
+                          icon={Mail}
+                          label="Email"
+                          value={request.contactEmail}
+                        />
+                        <InfoTile
+                          icon={Phone}
+                          label="Số điện thoại"
+                          value={request.contactPhone || 'Chưa cung cấp'}
+                        />
+                        <InfoTile
+                          label="Người liên hệ"
+                          value={request.contactFullName}
+                        />
+                        <InfoTile
+                          label="Giấy phép"
+                          value={request.licenseNumber || 'Chưa cung cấp'}
+                        />
+                      </div>
+
+                      {(request.address || request.notes) && (
+                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                          <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                              Địa chỉ
+                            </p>
+                            <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">
+                              {request.address || 'Chưa cung cấp'}
+                            </p>
+                          </div>
+                          <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                              Ghi chú
+                            </p>
+                            <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">
+                              {request.notes || 'Không có ghi chú'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
             {/* Tabs */}
             <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
               {tabs.map((tab) => (
@@ -603,7 +772,7 @@ export default function OrganisationsPage() {
 
             {/* Search & Filters */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative flex-1 min-w-[280px] max-w-lg">
+              <div className="relative flex-1 min-w-70 max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
@@ -683,6 +852,28 @@ export default function OrganisationsPage() {
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function InfoTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon?: typeof Mail;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+      <div className="flex items-center gap-2 text-slate-400">
+        {Icon && <Icon className="h-4 w-4" />}
+        <p className="text-xs font-semibold uppercase tracking-[0.18em]">
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{value}</p>
     </div>
   );
 }

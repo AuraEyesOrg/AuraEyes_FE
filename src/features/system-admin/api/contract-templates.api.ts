@@ -38,9 +38,19 @@ export const contractTemplatesApi = {
   },
 
   async createContractTemplate(payload: CreateContractTemplatePayload) {
+    const formData = new FormData();
+    formData.append('title', payload.title);
+    formData.append('type', String(payload.type));
+    formData.append('contractVersion', payload.contractVersion);
+    if (payload.effectiveDate) {
+      formData.append('effectiveDate', payload.effectiveDate);
+    }
+    formData.append('templateFile', payload.templateFile);
+
     const response = await api.post<ApiResponse<ContractTemplateDetailDto>>(
       EP.CREATE,
-      payload
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return response.data.data;
   },
@@ -49,9 +59,21 @@ export const contractTemplatesApi = {
     id: string,
     payload: UpdateContractTemplatePayload
   ) {
+    const formData = new FormData();
+    formData.append('title', payload.title);
+    formData.append('type', String(payload.type));
+    formData.append('contractVersion', payload.contractVersion);
+    if (payload.effectiveDate) {
+      formData.append('effectiveDate', payload.effectiveDate);
+    }
+    if (payload.templateFile) {
+      formData.append('templateFile', payload.templateFile);
+    }
+
     const response = await api.put<ApiResponse<ContractTemplateDetailDto>>(
       EP.UPDATE(id),
-      payload
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return response.data.data;
   },

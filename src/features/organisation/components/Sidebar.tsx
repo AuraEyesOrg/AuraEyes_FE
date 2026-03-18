@@ -1,11 +1,12 @@
 import {
   Home,
-  Users,
   Calendar,
   CalendarCog,
   Settings,
   LogOut,
   BarChart3,
+  FileText,
+  Users,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -17,6 +18,7 @@ interface SidebarProps {
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/organisation/dashboard' },
+  { icon: FileText, label: 'Contract', path: '/organisation/contract' },
   {
     icon: Users,
     label: 'Patients',
@@ -32,6 +34,10 @@ const navItems = [
 export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const contractApproved = user?.contractStatus === 'Active';
+  const visibleNavItems = contractApproved
+    ? navItems
+    : navItems.filter((item) => item.path === '/organisation/contract');
 
   const displayName = user?.fullName ?? 'Organisation';
   const displayEmail = user?.email ?? '';
@@ -61,7 +67,7 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

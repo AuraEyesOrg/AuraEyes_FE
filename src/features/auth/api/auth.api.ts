@@ -10,6 +10,7 @@ import type {
   GoogleLoginRequest,
   RegisterPatientRequest,
   RegisterOphthalmologistRequest,
+  RegisterOrganisationRequest,
   VerifyTwoFactorRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -248,6 +249,15 @@ export const registerOphthalmologist = async (
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
+  return response.data.data;
+};
+
+export const registerOrganisation = async (
+  data: RegisterOrganisationRequest
+): Promise<{ requestId: string; email: string; message: string }> => {
+  const response = await api.post<
+    ApiResponse<{ requestId: string; email: string; message: string }>
+  >(`${AUTH_BASE_URL}/register/organisation`, data);
   return response.data.data;
 };
 
