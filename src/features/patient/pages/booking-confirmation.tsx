@@ -3,7 +3,7 @@
  * Patient confirms their reservation and completes the booking.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -25,6 +25,7 @@ import {
 import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
+import { toast } from 'react-toastify';
 
 // ============ HELPERS ============
 
@@ -60,6 +61,7 @@ export default function BookingConfirmationPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const lastErrorToastRef = useRef('');
 
   const {
     data: slot,
@@ -68,6 +70,11 @@ export default function BookingConfirmationPage() {
   } = useAppointmentSlot(slotId, {
     enabled: !!slotId,
   });
+
+  const slotErrorMessage = slotError
+    ? mapOnlineConsultationErrorMessage(slotError)
+    : '';
+  const displayErrorMessage = errorMessage || slotErrorMessage;
 
   const confirmMutation = useConfirmReservation();
   const releaseMutation = useReleaseReservation();
@@ -89,6 +96,20 @@ export default function BookingConfirmationPage() {
       state: { slotId: querySlotId },
     });
   }, [querySlotId, state.slotId, navigate]);
+
+  useEffect(() => {
+    if (!displayErrorMessage) {
+      lastErrorToastRef.current = '';
+      return;
+    }
+
+    if (lastErrorToastRef.current === displayErrorMessage) return;
+
+    lastErrorToastRef.current = displayErrorMessage;
+    toast.error(displayErrorMessage, {
+      toastId: `booking-confirm-error-${displayErrorMessage}`,
+    });
+  }, [displayErrorMessage]);
 
   // Calculate remaining time from slot's reservationExpireAt
   useEffect(() => {
@@ -273,12 +294,6 @@ export default function BookingConfirmationPage() {
   return (
     <PatientLayout>
       <div className="p-6 max-w-2xl mx-auto">
-        {(errorMessage || slotError) && (
-          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-            {errorMessage || mapOnlineConsultationErrorMessage(slotError)}
-          </div>
-        )}
-
         {/* Back Button */}
         <button
           onClick={handleCancel}
