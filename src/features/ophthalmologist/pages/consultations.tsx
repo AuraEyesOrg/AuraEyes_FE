@@ -26,6 +26,7 @@ import {
   useConsultationSessions,
   useConsultationSession,
   useSendMessage,
+  useCancelSession,
   useEndSession,
   consultationKeys,
 } from '@/features/consultation/hooks';
@@ -177,6 +178,7 @@ export default function ConsultationsPage() {
     });
 
   const sendMessageMutation = useSendMessage();
+  const cancelSessionMutation = useCancelSession();
   const endSessionMutation = useEndSession();
 
   const sessions = sessionsData?.items ?? [];
@@ -216,7 +218,7 @@ export default function ConsultationsPage() {
     (s: ConsultationSessionListDto) => s.id === selectedSessionId
   );
 
-  // Doctor can only send when the chat is fully Open (IN_PROGRESS or POST_VISIT).
+  // Doctor can only send when ChatStatus is Open (IN_PROGRESS).
   // In MemoOnly (PRE_VISIT) only the patient can leave notes.
   const canSendMessage = currentSession?.chatStatus === ChatStatus.Open;
 
@@ -312,10 +314,40 @@ export default function ConsultationsPage() {
     }
   };
 
-  const handleEndSession = (sessionId: string) => {
-    if (!currentDoctorId) {
+  const canCancelCurrentSession = useMemo(() => {
+    if (!currentSession || currentSession.status !== SessionStatus.Confirmed)
+      return false;
+    if (!currentSession.appointmentTime) return true;
+    const msUntilStart =
+      new Date(currentSession.appointmentTime).getTime() - Date.now();
+    const threeHoursMs = 3 * 60 * 60 * 1000;
+    return msUntilStart > threeHoursMs;
+  }, [currentSession]);
+
+  const handleCancelSession = (sessionId: string) => {
+    if (!currentDoctorId) return;
+    if (
+      !confirm(
+        'Cancel this session? The slot will be burned and the patient will be refunded.'
+      )
+    )
       return;
-    }
+
+    cancelSessionMutation.mutate({
+      sessionId,
+      cancelledByUserId: currentDoctorId,
+      reason: 'Cancelled by doctor',
+    });
+  };
+
+  const handleEndSession = (sessionId: string) => {
+    if (!currentDoctorId) return;
+    if (
+      !confirm(
+        'Complete this consultation? The patient will be charged and the chat will be locked.'
+      )
+    )
+      return;
 
     endSessionMutation.mutate({
       sessionId,
@@ -517,7 +549,20 @@ export default function ConsultationsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* End Session button for Confirmed sessions */}
+                      {canCancelCurrentSession && (
+                        <button
+                          onClick={() => handleCancelSession(currentSession.id)}
+                          disabled={cancelSessionMutation.isPending}
+                          className="px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                        >
+                          {cancelSessionMutation.isPending ? (
+                            <Spinner size={16} />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                          Cancel
+                        </button>
+                      )}
                       {currentSession.status === SessionStatus.Confirmed && (
                         <button
                           onClick={() => handleEndSession(currentSession.id)}
@@ -529,7 +574,7 @@ export default function ConsultationsPage() {
                           ) : (
                             <CheckCircle2 className="w-4 h-4" />
                           )}
-                          End Session
+                          Complete
                         </button>
                       )}
                       <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors">
@@ -570,12 +615,27 @@ export default function ConsultationsPage() {
                     </div>
                   )}
 
-                  {/* Content based on status */}
-                  {currentSession.status === SessionStatus.Pending ? (
-                    // Pending — Session Details View
+                  {/* Content based on status + chatStatus */}
+                  {currentSession.status === SessionStatus.Cancelled ? (
+                    // Cancelled View
+                    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[#0a1929]/50">
+                      <div className="text-center p-6">
+                        <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                          Session Cancelled
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 max-w-sm">
+                          This consultation session has been cancelled.
+                        </p>
+                      </div>
+                    </div>
+                  ) : currentSession.status === SessionStatus.Pending &&
+                    currentSession.chatStatus === ChatStatus.Locked ? (
+                    // Pending + Locked — show info card (true pending state)
                     <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#0a1929]/50">
                       <div className="max-w-2xl mx-auto space-y-6">
-                        {/* Request Info Card */}
                         <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-6">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
@@ -647,7 +707,6 @@ export default function ConsultationsPage() {
                           </div>
                         </div>
 
-                        {/* Info Prompt */}
                         <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-6 text-center">
                           <p className="text-cyan-800 dark:text-cyan-200">
                             This session is pending confirmation. The chat will
@@ -656,8 +715,7 @@ export default function ConsultationsPage() {
                         </div>
                       </div>
                     </div>
-                  ) : currentSession.status === SessionStatus.Confirmed ||
-                    currentSession.status === SessionStatus.Completed ? (
+                  ) : (
                     // Chat View — Confirmed / Completed sessions
                     <>
                       {/* Messages */}
@@ -807,21 +865,6 @@ export default function ConsultationsPage() {
                         </div>
                       )}
                     </>
-                  ) : (
-                    // Cancelled View
-                    <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-[#0a1929]/50">
-                      <div className="text-center p-6">
-                        <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                          <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                          Session Cancelled
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 max-w-sm">
-                          This consultation session has been cancelled.
-                        </p>
-                      </div>
-                    </div>
                   )}
                 </div>
               ) : (

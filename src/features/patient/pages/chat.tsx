@@ -59,17 +59,6 @@ import {
   type SignalRChatMessageEvent,
   type SignalRRoomStateChangedEvent,
 } from '@/types/chat-realtime';
-
-interface SharedScanData {
-  imageUrl?: string;
-  eyeLabel?: string;
-  riskLevel?: string;
-  riskLabel?: string;
-  anomalies?: string[];
-  summary?: string;
-  scanId?: string;
-}
-
 import useAuthStore from '@/store/auth-store';
 import {
   formatFullDate,
@@ -80,6 +69,15 @@ import {
   formatCountdown,
 } from '@/lib/date-utils';
 
+interface SharedScanData {
+  imageUrl?: string;
+  eyeLabel?: string;
+  riskLevel?: string;
+  riskLabel?: string;
+  anomalies?: string[];
+  summary?: string;
+  scanId?: string;
+}
 interface ScanAttachmentMeta {
   title: string;
   riskLabel: string;
@@ -119,15 +117,6 @@ const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
     description:
       'Consultation is active. You can chat and join the video call.',
   },
-  POST_VISIT: {
-    label: 'Post-visit',
-    icon: Clock3,
-    color: 'text-sky-500',
-    badgeBg: 'bg-sky-50 text-sky-700 ring-sky-200',
-    bannerBg: 'bg-sky-50',
-    description:
-      'The video slot has ended. Chat remains open for follow-up notes and prescriptions.',
-  },
   COMPLETED: {
     label: 'Completed',
     icon: Archive,
@@ -150,6 +139,7 @@ const formatCurrency = (value: number) =>
 
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 60;
+const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
@@ -169,6 +159,13 @@ const getMeetingAccessState = (
   const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
 
   if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
+    if (minutesUntilStart > COUNTDOWN_VISIBILITY_MINUTES) {
+      return {
+        canJoin: false,
+        buttonLabel: 'Join Locked',
+        helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
+      };
+    }
     return {
       canJoin: false,
       buttonLabel: 'Join Locked',
@@ -514,8 +511,8 @@ export default function ChatPage() {
       return 'Share symptoms, scan notes, or questions before the consultation starts...';
     }
 
-    if (phaseInfo.phase === 'POST_VISIT') {
-      return 'Follow-up message or question for your doctor...';
+    if (phaseInfo.phase === 'IN_PROGRESS') {
+      return 'Type a message...';
     }
 
     return 'Type your message here...';
@@ -792,9 +789,7 @@ export default function ChatPage() {
                             <Video className="h-4 w-4" />
                             {phaseInfo.phase === 'COMPLETED'
                               ? 'Meeting Ended'
-                              : phaseInfo.phase === 'POST_VISIT'
-                                ? 'Meeting Ended'
-                                : meetingAccessState.buttonLabel}
+                              : meetingAccessState.buttonLabel}
                           </button>
                         )
                       ) : (
@@ -810,11 +805,9 @@ export default function ChatPage() {
                         <p className="text-xs font-medium text-slate-500">
                           {phaseInfo.phase === 'PRE_VISIT'
                             ? meetingAccessState.helperText
-                            : phaseInfo.phase === 'POST_VISIT'
-                              ? 'Video slot has ended'
-                              : phaseInfo.phase === 'COMPLETED'
-                                ? 'Consultation completed'
-                                : meetingAccessState.helperText}
+                            : phaseInfo.phase === 'COMPLETED'
+                              ? 'Consultation completed'
+                              : meetingAccessState.helperText}
                         </p>
                       )}
                     </div>
@@ -858,17 +851,22 @@ export default function ChatPage() {
                         phaseInfo.msUntilNextTransition !== null &&
                         phaseInfo.msUntilNextTransition > 0 && (
                           <p className="mt-2 font-medium text-amber-700">
-                            Chat opens in{' '}
-                            {formatCountdown(
-                              Math.ceil(phaseInfo.msUntilNextTransition / 1000)
+                            {/* Chỉ hiện đếm ngược mở chat nếu còn dưới 60 phút, ngược lại hiện text tĩnh */}
+                            {phaseInfo.msUntilNextTransition <=
+                            COUNTDOWN_VISIBILITY_MINUTES * 60 * 1000 ? (
+                              <>
+                                Chat opens in{' '}
+                                {formatCountdown(
+                                  Math.ceil(
+                                    phaseInfo.msUntilNextTransition / 1000
+                                  )
+                                )}
+                              </>
+                            ) : (
+                              'Chat will automatically open at the scheduled appointment time'
                             )}
                           </p>
                         )}
-                      {phaseInfo.phase === 'POST_VISIT' && (
-                        <p className="mt-2 font-medium text-sky-700">
-                          Chat will close automatically after the grace period.
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -883,7 +881,7 @@ export default function ChatPage() {
                   <div className="space-y-4">
                     {messageList.map((message, index) => {
                       const isPatientMessage =
-                        message.senderUserId === user?.id;
+                        message.senderUserId === patientId;
                       const attachmentMeta = extractScanAttachment(
                         message.message
                       );
@@ -1052,9 +1050,7 @@ export default function ChatPage() {
                           ? 'Start by sharing symptoms, concerns, or a brief note before your consultation begins.'
                           : phaseInfo.phase === 'IN_PROGRESS'
                             ? 'The consultation is active. Start the conversation when you are ready.'
-                            : phaseInfo.phase === 'POST_VISIT'
-                              ? 'The video slot has ended but you can still send follow-up messages.'
-                              : 'This consultation has been completed.'}
+                            : 'This consultation has been completed.'}
                       </p>
                     </div>
                   </div>
