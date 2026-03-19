@@ -620,7 +620,8 @@ export default function ProfilePage() {
                   {profile.email}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Email cannot be changed
+                  <span className="text-red-500">(*)</span> Email cannot be
+                  changed{' '}
                 </p>
               </div>
 
@@ -672,7 +673,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-[var(--text-primary)] font-medium">
                     {profile.dateOfBirth
-                      ? formatDate(profile.dateOfBirth, 'long')
+                      ? formatDate(profile.dateOfBirth)
                       : '\u2014'}
                   </p>
                 )}

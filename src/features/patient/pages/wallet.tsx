@@ -30,13 +30,20 @@ import { TransactionType, PaymentMethod } from '../types';
 const DEPOSIT_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
 
 /** Map backend TransactionType enum to display string */
-const TRANSACTION_TYPE_MAP: Record<TransactionType, string> = {
+const TRANSACTION_TYPE_MAP: Record<string | number, string> = {
   [TransactionType.Deposit]: 'deposit',
   [TransactionType.Withdrawal]: 'withdrawal',
   [TransactionType.Payment]: 'payment',
   [TransactionType.Refund]: 'refund',
   [TransactionType.Transfer]: 'transfer',
   [TransactionType.Bonus]: 'bonus',
+  // Map string values if backend uses string enums
+  Deposit: 'deposit',
+  Withdrawal: 'withdrawal',
+  Payment: 'payment',
+  Refund: 'refund',
+  Transfer: 'transfer',
+  Bonus: 'bonus',
 };
 
 export default function WalletPage() {
@@ -66,32 +73,12 @@ export default function WalletPage() {
 
   // ── Computed stats ──
   const monthlyStats = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    let totalDeposits = 0;
-    let totalSpent = 0;
-    let txCount = 0;
-
-    for (const tx of transactions) {
-      const txDate = new Date(tx.createdAt);
-      if (
-        txDate.getMonth() === currentMonth &&
-        txDate.getFullYear() === currentYear
-      ) {
-        txCount++;
-        const type = TRANSACTION_TYPE_MAP[tx.transactionType];
-        if (type === 'deposit' || type === 'refund' || type === 'bonus') {
-          totalDeposits += tx.amount;
-        } else if (type === 'payment' || type === 'withdrawal') {
-          totalSpent += tx.amount;
-        }
-      }
-    }
-
-    return { totalDeposits, totalSpent, txCount };
-  }, [transactions]);
+    return {
+      totalDeposits: wallet?.totalDepositsThisMonth ?? 0,
+      totalSpent: wallet?.totalSpentThisMonth ?? 0,
+      txCount: wallet?.transactionsThisMonth ?? 0,
+    };
+  }, [wallet]);
 
   // ── Helpers ──
   const formatCurrency = (amount: number) =>

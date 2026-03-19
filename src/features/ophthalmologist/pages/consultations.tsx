@@ -36,15 +36,6 @@ export default function ConsultationsPage() {
 
         {/* Page Content */}
         <main className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Consultations
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage consultation requests and chat with patients
-            </p>
-          </div>
-
           <ConsultationsChatView
             sessions={sessions}
             sessionsLoading={sessionsLoading}
