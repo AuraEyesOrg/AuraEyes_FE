@@ -561,20 +561,6 @@ export default function ConsultationsChatView({
         className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r dark:bg-[#0a1929]/50 dark:border-[#1e3a5f]`}
       >
         <div className="border-b border-slate-200/80 px-5 pb-4 pt-5 dark:border-[#1e3a5f]">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                Consultations
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
-                Your Inbox
-              </h2>
-            </div>
-            <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-              {chatSessions.length} sessions
-            </div>
-          </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
