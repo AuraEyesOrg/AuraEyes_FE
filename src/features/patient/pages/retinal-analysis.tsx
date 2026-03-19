@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
+import { useScreeningStore } from '../stores/useScreeningStore';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -239,19 +240,6 @@ function mapStandardResponseToAnomalies(
   return anomalies;
 }
 
-// Interface for route state from screening-new
-interface RouteStateImage {
-  id: string;
-  name: string;
-  preview: string;
-  quality?: 'high' | 'medium' | 'low';
-}
-
-interface LocationState {
-  images?: RouteStateImage[];
-  source?: string;
-}
-
 // --- Helpers: use AI-generated friendly fields, fallback to raw name/description ---
 function friendlyName(anomaly: Anomaly): string {
   return anomaly.friendlyName || anomaly.name;
@@ -266,10 +254,9 @@ function friendlyDescription(anomaly: Anomaly): string {
 }
 
 export default function RetinalAnalysis() {
-  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const routeState = location.state as LocationState | null;
+  const selectedFile = useScreeningStore((state) => state.selectedFile);
   const { data: quotaBalance } = useQuotaBalance();
 
   const [toggles, setToggles] = useState<ToggleState>({
@@ -285,44 +272,55 @@ export default function RetinalAnalysis() {
   const [isFallback, setIsFallback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showHighlights, setShowHighlights] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Image management
   const [images, setImages] = useState<RetinalImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   useEffect(() => {
-    const blobUrls =
-      routeState?.images
-        ?.map((img) => img.preview)
-        .filter((preview) => preview.startsWith('blob:')) ?? [];
-
-    if (routeState?.images && routeState.images.length > 0) {
-      const incomingImages: RetinalImage[] = routeState.images.map((img) => ({
-        id: img.id,
-        url: img.preview,
-        name: img.name,
-        eye:
-          img.name.toLowerCase().includes('od') ||
-          img.name.toLowerCase().includes('right')
-            ? 'Right Eye (OD)'
-            : 'Left Eye (OS)',
-        uploadedAt: new Date().toISOString(),
-        analyzed: false,
-        anomalies: [],
-      }));
-      setImages(incomingImages);
-      setSelectedImageId(incomingImages[0].id);
-      setAnalyzed(false);
-      setAnomalies([]);
-      window.history.replaceState({}, document.title);
-    } else {
+    if (!selectedFile) {
       navigate('/patient/screening/new', { replace: true });
+      return;
     }
 
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(objectUrl);
+
     return () => {
-      blobUrls.forEach((url) => URL.revokeObjectURL(url));
+      URL.revokeObjectURL(objectUrl);
     };
-  }, [navigate, routeState]);
+  }, [navigate, selectedFile]);
+
+  useEffect(() => {
+    if (!selectedFile || !previewUrl) {
+      setImages([]);
+      setSelectedImageId(null);
+      return;
+    }
+
+    const imageId = 'selected-upload';
+    const incomingImage: RetinalImage = {
+      id: imageId,
+      url: previewUrl,
+      name: selectedFile.name,
+      eye:
+        selectedFile.name.toLowerCase().includes('od') ||
+        selectedFile.name.toLowerCase().includes('right')
+          ? 'Right Eye (OD)'
+          : 'Left Eye (OS)',
+      uploadedAt: new Date().toISOString(),
+      analyzed: false,
+      anomalies: [],
+    };
+
+    setImages([incomingImage]);
+    setSelectedImageId(imageId);
+    setAnalyzed(false);
+    setAnomalies([]);
+    setIsFallback(false);
+    setErrorMessage(null);
+  }, [previewUrl, selectedFile]);
 
   const currentImage =
     images.find((img) => img.id === selectedImageId) || images[0] || null;
@@ -420,15 +418,14 @@ export default function RetinalAnalysis() {
       const { w: imgWidth, h: imgHeight } = await getImageNaturalSize(imageUrl);
 
       // Convert blob/data URL to File for FormData upload
-      const imgResponse = await fetch(imageUrl);
-      const blob = await imgResponse.blob();
-      const fileName = currentImage?.name || 'retinal-scan.jpg';
-      const file = new File([blob], fileName, {
-        type: blob.type || 'image/jpeg',
-      });
+      if (!selectedFile) {
+        setErrorMessage('No image file available for analysis.');
+        setIsAnalyzing(false);
+        return;
+      }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', selectedFile);
 
       // Call AURA AI standard /diagnosis/analyze endpoint (includes Score-CAM + top_k)
       const { data } = await aiCoreClient.post<AIStandardResponse>(
@@ -478,7 +475,7 @@ export default function RetinalAnalysis() {
     }
   };
 
-  if (images.length === 0) {
+  if (images.length === 0 || !previewUrl) {
     return null;
   }
 
