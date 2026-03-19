@@ -302,6 +302,7 @@ interface ConsultationsChatViewProps {
   sessions: {
     id: string;
     patientName?: string | null;
+    patientAvatarUrl?: string | null;
     organisationName?: string | null;
     appointmentTime: string | null;
     lastActivityAt: string;
@@ -536,6 +537,8 @@ export default function ConsultationsChatView({
 
   const patientName = currentSession?.patientName?.trim() || 'Patient';
   const doctorName = user?.fullName?.trim() || 'Doctor';
+  const patientAvatarUrl =
+    selectedSession?.patientAvatarUrl ?? currentSession?.patientAvatarUrl;
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
     currentTimeMs
@@ -553,725 +556,730 @@ export default function ConsultationsChatView({
   }
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
-      <div className="flex h-[calc(100vh-220px)] min-h-[640px] flex-col md:flex-row">
-        <aside
-          className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r dark:bg-[#0a1929]/50 dark:border-[#1e3a5f]`}
-        >
-          <div className="border-b border-slate-200/80 px-5 pb-4 pt-5 dark:border-[#1e3a5f]">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                  Consultations
-                </p>
-                <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
-                  Your Inbox
-                </h2>
-              </div>
-              <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                {chatSessions.length} sessions
-              </div>
+    <div className="flex h-[calc(100vh-220px)] min-h-[640px] flex-col md:flex-row">
+      <aside
+        className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r dark:bg-[#0a1929]/50 dark:border-[#1e3a5f]`}
+      >
+        <div className="border-b border-slate-200/80 px-5 pb-4 pt-5 dark:border-[#1e3a5f]">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                Consultations
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-white">
+                Your Inbox
+              </h2>
             </div>
+            <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
+              {chatSessions.length} sessions
+            </div>
+          </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by patient, status, or session type"
-                value={searchQuery}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  startSearchTransition(() => setSearchQuery(nextValue));
-                }}
-                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-4 focus:ring-cyan-100 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-white dark:placeholder-gray-500 dark:focus:ring-cyan-500/20"
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by patient, status, or session type"
+              value={searchQuery}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                startSearchTransition(() => setSearchQuery(nextValue));
+              }}
+              className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-4 focus:ring-cyan-100 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-white dark:placeholder-gray-500 dark:focus:ring-cyan-500/20"
+            />
+            {isSearchPending && (
+              <Spinner
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-500"
               />
-              {isSearchPending && (
-                <Spinner
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-500"
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500 dark:border-[#1e3a5f]">
-            <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-              <p className="text-slate-900 dark:text-white">
-                {chatSessions.length}
-              </p>
-              <p className="mt-1 uppercase tracking-[0.16em]">All</p>
-            </div>
-            <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
-              <p className="text-emerald-900 dark:text-emerald-200">
-                {totalOpenSessions}
-              </p>
-              <p className="mt-1 uppercase tracking-[0.16em]">Open</p>
-            </div>
-            <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
-              <p className="text-amber-900 dark:text-amber-200">
-                {upcomingSessions}
-              </p>
-              <p className="mt-1 uppercase tracking-[0.16em]">Upcoming</p>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 [content-visibility:auto]">
-            {filteredSessions.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-                  <Search className="h-6 w-6" />
-                </div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">
-                  No sessions match your search
-                </p>
-                <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
-                  Try a patient name, chat status, or consultation type.
-                </p>
-              </div>
-            ) : (
-              filteredSessions.map((session) => {
-                const itemPhaseLabel = getListItemPhaseLabel(session);
-                const displayPatientName = session.patientName ?? 'Patient';
-                const displayType = SESSION_TYPE_LABELS[session.type];
-                const appointmentTime = formatAppointmentSlotOrPending(
-                  session.appointmentTime
-                );
-
-                return (
-                  <button
-                    key={session.id}
-                    onClick={() => setSelectedSessionId(session.id)}
-                    className={`w-full rounded-[24px] border p-4 text-left transition-all ${
-                      selectedSessionId === session.id
-                        ? 'border-cyan-300 bg-white shadow-lg shadow-cyan-100/60 dark:bg-[#0a1f44] dark:shadow-cyan-900/10'
-                        : 'border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-[#0a1f44]/70 dark:hover:bg-[#0a1f44] dark:hover:border-[#1e3a5f]'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="relative shrink-0">
-                        <AvatarBadge name={displayPatientName} />
-                        <div
-                          className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(session.type)} p-1 text-white shadow-sm`}
-                        >
-                          {session.type ===
-                          ConsultationSessionType.Verification ? (
-                            <Eye className="h-3 w-3" />
-                          ) : (
-                            <Video className="h-3 w-3" />
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="mb-2 flex items-start justify-between gap-3">
-                          <div>
-                            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                              {displayPatientName}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
-                              {displayType}
-                            </p>
-                          </div>
-                          <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
-                            <p>{formatCompactDate(session.createdAt)}</p>
-                            <p className="mt-1">
-                              {formatRelativeTime(session.lastActivityAt)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClass(session.status)}`}
-                          >
-                            {SESSION_STATUS_LABELS[session.status]}
-                          </span>
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(session.chatStatus)}`}
-                          >
-                            {itemPhaseLabel}
-                          </span>
-                        </div>
-
-                        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-[#0a1929]/40 dark:text-gray-300">
-                          <div className="flex items-center gap-2">
-                            <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-                            <span>{appointmentTime}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300 dark:text-gray-600" />
-                    </div>
-                  </button>
-                );
-              })
             )}
           </div>
-        </aside>
+        </div>
 
-        {selectedSessionId && currentSession ? (
-          <main
-            className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#0a1f44_0%,_#0a1929_55%,_#0a1f44_100%)]`}
-          >
-            <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-start gap-3">
-                  <button
-                    onClick={() => setSelectedSessionId(null)}
-                    className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </button>
+        <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500 dark:border-[#1e3a5f]">
+          <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+            <p className="text-slate-900 dark:text-white">
+              {chatSessions.length}
+            </p>
+            <p className="mt-1 uppercase tracking-[0.16em]">All</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
+            <p className="text-emerald-900 dark:text-emerald-200">
+              {totalOpenSessions}
+            </p>
+            <p className="mt-1 uppercase tracking-[0.16em]">Open</p>
+          </div>
+          <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
+            <p className="text-amber-900 dark:text-amber-200">
+              {upcomingSessions}
+            </p>
+            <p className="mt-1 uppercase tracking-[0.16em]">Upcoming</p>
+          </div>
+        </div>
 
-                  <div className="relative shrink-0">
-                    <AvatarBadge name={patientName} size="lg" />
-                    <div
-                      className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} p-1.5 text-white shadow-sm`}
-                    >
-                      {currentSession.type ===
-                      ConsultationSessionType.Verification ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <Video className="h-4 w-4" />
-                      )}
-                    </div>
-                  </div>
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 [content-visibility:auto]">
+          {filteredSessions.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                <Search className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                No sessions match your search
+              </p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
+                Try a patient name, chat status, or consultation type.
+              </p>
+            </div>
+          ) : (
+            filteredSessions.map((session) => {
+              const itemPhaseLabel = getListItemPhaseLabel(session);
+              const displayPatientName = session.patientName ?? 'Patient';
+              const displayType = SESSION_TYPE_LABELS[session.type];
+              const appointmentTime = formatAppointmentSlotOrPending(
+                session.appointmentTime
+              );
 
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-xl font-semibold text-slate-900 dark:text-white">
-                        {patientName}
-                      </h2>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${phaseUI.badgeBg}`}
+              return (
+                <button
+                  key={session.id}
+                  onClick={() => setSelectedSessionId(session.id)}
+                  className={`w-full rounded-[24px] border p-4 text-left transition-all ${
+                    selectedSessionId === session.id
+                      ? 'border-cyan-300 bg-white shadow-lg shadow-cyan-100/60 dark:bg-[#0a1f44] dark:shadow-cyan-900/10'
+                      : 'border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-[#0a1f44]/70 dark:hover:bg-[#0a1f44] dark:hover:border-[#1e3a5f]'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0">
+                      <AvatarBadge
+                        name={displayPatientName}
+                        avatarUrl={session.patientAvatarUrl}
+                      />
+                      <div
+                        className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(session.type)} p-1 text-white shadow-sm`}
                       >
-                        <phaseUI.icon
-                          className={`h-3.5 w-3.5 ${phaseUI.color}`}
-                        />
-                        {phaseUI.label}
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-gray-300">
-                      <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
-                      <span className="text-slate-300 dark:text-gray-600">
-                        /
-                      </span>
-                      <span>
-                        {SESSION_STATUS_LABELS[currentSession.status]}
-                      </span>
-                      <span className="text-slate-300 dark:text-gray-600">
-                        /
-                      </span>
-                      <span>
-                        {formatAppointmentSlotOrPending(
-                          currentSession.appointmentTime
+                        {session.type ===
+                        ConsultationSessionType.Verification ? (
+                          <Eye className="h-3 w-3" />
+                        ) : (
+                          <Video className="h-3 w-3" />
                         )}
-                      </span>
+                      </div>
                     </div>
 
-                    <p className="mt-3 max-w-2xl text-sm text-slate-500 dark:text-gray-400">
-                      {phaseUI.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                            {displayPatientName}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
+                            {displayType}
+                          </p>
+                        </div>
+                        <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
+                          <p>{formatCompactDate(session.createdAt)}</p>
+                          <p className="mt-1">
+                            {formatRelativeTime(session.lastActivityAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClass(session.status)}`}
+                        >
+                          {SESSION_STATUS_LABELS[session.status]}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(session.chatStatus)}`}
+                        >
+                          {itemPhaseLabel}
+                        </span>
+                      </div>
+
+                      <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-[#0a1929]/40 dark:text-gray-300">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+                          <span>{appointmentTime}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300 dark:text-gray-600" />
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </aside>
+
+      {selectedSessionId && currentSession ? (
+        <main
+          className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#0a1f44_0%,_#0a1929_55%,_#0a1f44_100%)]`}
+        >
+          <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-start gap-3">
+                <button
+                  onClick={() => setSelectedSessionId(null)}
+                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+
+                <div className="relative shrink-0">
+                  <AvatarBadge
+                    name={patientName}
+                    avatarUrl={patientAvatarUrl}
+                    size="lg"
+                  />
+                  <div
+                    className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} p-1.5 text-white shadow-sm`}
+                  >
+                    {currentSession.type ===
+                    ConsultationSessionType.Verification ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <Video className="h-4 w-4" />
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-start gap-2 sm:items-end">
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      {canCancelCurrentSession && (
-                        <button
-                          onClick={() => handleCancelSession(currentSession.id)}
-                          disabled={cancelSessionMutation.isPending}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-800/40 dark:bg-rose-950/20 dark:text-rose-200"
-                        >
-                          {cancelSessionMutation.isPending ? (
-                            <Spinner size={16} />
-                          ) : (
-                            <XCircle className="h-4 w-4" />
-                          )}
-                          Cancel
-                        </button>
-                      )}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="truncate text-xl font-semibold text-slate-900 dark:text-white">
+                      {patientName}
+                    </h2>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${phaseUI.badgeBg}`}
+                    >
+                      <phaseUI.icon
+                        className={`h-3.5 w-3.5 ${phaseUI.color}`}
+                      />
+                      {phaseUI.label}
+                    </span>
+                  </div>
 
-                      {currentSession.status === SessionStatus.Confirmed && (
-                        <button
-                          onClick={() => handleEndSession(currentSession.id)}
-                          disabled={endSessionMutation.isPending}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-                        >
-                          {endSessionMutation.isPending ? (
-                            <Spinner size={16} />
-                          ) : (
-                            <CheckCircle2 className="h-4 w-4" />
-                          )}
-                          Complete
-                        </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-gray-300">
+                    <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
+                    <span className="text-slate-300 dark:text-gray-600">/</span>
+                    <span>{SESSION_STATUS_LABELS[currentSession.status]}</span>
+                    <span className="text-slate-300 dark:text-gray-600">/</span>
+                    <span>
+                      {formatAppointmentSlotOrPending(
+                        currentSession.appointmentTime
                       )}
+                    </span>
+                  </div>
 
-                      {currentSession.meetingLink ? (
-                        meetingAccessState.canJoin ? (
-                          <a
-                            href={currentSession.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
-                          >
-                            <Video className="h-4 w-4" />
-                            Join Meeting
-                          </a>
+                  <p className="mt-3 max-w-2xl text-sm text-slate-500 dark:text-gray-400">
+                    {phaseUI.description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {canCancelCurrentSession && (
+                      <button
+                        onClick={() => handleCancelSession(currentSession.id)}
+                        disabled={cancelSessionMutation.isPending}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-800/40 dark:bg-rose-950/20 dark:text-rose-200"
+                      >
+                        {cancelSessionMutation.isPending ? (
+                          <Spinner size={16} />
                         ) : (
-                          <button
-                            disabled
-                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
-                          >
-                            <Video className="h-4 w-4" />
-                            {phase === 'COMPLETED'
-                              ? 'Meeting Ended'
-                              : meetingAccessState.buttonLabel}
-                          </button>
-                        )
+                          <XCircle className="h-4 w-4" />
+                        )}
+                        Cancel
+                      </button>
+                    )}
+
+                    {currentSession.status === SessionStatus.Confirmed && (
+                      <button
+                        onClick={() => handleEndSession(currentSession.id)}
+                        disabled={endSessionMutation.isPending}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                      >
+                        {endSessionMutation.isPending ? (
+                          <Spinner size={16} />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4" />
+                        )}
+                        Complete
+                      </button>
+                    )}
+
+                    {currentSession.meetingLink ? (
+                      meetingAccessState.canJoin ? (
+                        <a
+                          href={currentSession.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                        >
+                          <Video className="h-4 w-4" />
+                          Join Meeting
+                        </a>
                       ) : (
                         <button
                           disabled
                           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                         >
                           <Video className="h-4 w-4" />
-                          Link Pending
+                          {phase === 'COMPLETED'
+                            ? 'Meeting Ended'
+                            : meetingAccessState.buttonLabel}
                         </button>
-                      )}
-                    </div>
-
-                    {currentSession.meetingLink && (
-                      <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                        {meetingAccessState.helperText}
-                      </p>
+                      )
+                    ) : (
+                      <button
+                        disabled
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
+                      >
+                        <Video className="h-4 w-4" />
+                        Link Pending
+                      </button>
                     )}
                   </div>
 
+                  {currentSession.meetingLink && (
+                    <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
+                      {meetingAccessState.helperText}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setIsSessionOverviewOpen((previous) => !previous)
+                  }
+                  aria-label={
+                    isSessionOverviewOpen
+                      ? 'Hide session overview'
+                      : 'Show session overview'
+                  }
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                >
+                  {isSessionOverviewOpen ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <MoreHorizontal className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {phase !== 'IN_PROGRESS' && (
+            <div
+              className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${phaseUI.bannerBg} dark:border-[#1e3a5f]`}
+            >
+              <div className="flex items-start gap-2.5">
+                <phaseUI.icon
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color}`}
+                />
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">
+                    {phaseUI.label}
+                  </p>
+                  <p className="mt-1 text-slate-600 dark:text-gray-300">
+                    {phaseUI.description}
+                  </p>
+                  {phase === 'PRE_VISIT' &&
+                    currentSession.appointmentTime &&
+                    (() => {
+                      const appointmentMs = new Date(
+                        currentSession.appointmentTime
+                      ).getTime();
+                      const msUntilStart = appointmentMs - currentTimeMs;
+                      if (msUntilStart <= 0) return null;
+                      if (
+                        msUntilStart >
+                        COUNTDOWN_VISIBILITY_MINUTES * 60 * 1000
+                      ) {
+                        return (
+                          <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
+                            Chat will automatically open at the scheduled
+                            appointment time
+                          </p>
+                        );
+                      }
+                      return (
+                        <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
+                          Chat opens in{' '}
+                          {formatCountdown(Math.ceil(msUntilStart / 1000))}
+                        </p>
+                      );
+                    })()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+            {sessionLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Spinner size={32} />
+              </div>
+            ) : messageList.length > 0 ? (
+              <div className="space-y-4">
+                {messageList.map((message, index) => {
+                  const isDoctorMessage =
+                    message.senderUserId === currentDoctorId;
+                  const attachmentMeta = extractScanAttachment(message.message);
+                  const messageBody = stripScanAttachment(message.message);
+                  const previousMessage = messageList[index - 1];
+                  const showDateDivider =
+                    !previousMessage ||
+                    formatFullDate(previousMessage.sentAt) !==
+                      formatFullDate(message.sentAt);
+
+                  return (
+                    <Fragment key={message.id}>
+                      {showDateDivider && (
+                        <div className="flex justify-center py-2">
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
+                            {formatFullDate(message.sentAt)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div
+                        className={`flex items-end gap-3 ${
+                          isDoctorMessage ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {!isDoctorMessage && (
+                          <AvatarBadge
+                            name={patientName}
+                            avatarUrl={patientAvatarUrl}
+                            size="sm"
+                          />
+                        )}
+
+                        <div
+                          className={`max-w-[78%] ${
+                            isDoctorMessage ? 'items-end' : 'items-start'
+                          } flex flex-col gap-2`}
+                        >
+                          <div
+                            className={`rounded-[24px] px-4 py-3 shadow-sm ${
+                              isDoctorMessage
+                                ? 'rounded-br-md bg-gradient-to-br from-emerald-500 to-cyan-500 text-white'
+                                : 'rounded-bl-md border border-slate-200 bg-white text-slate-900 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-white'
+                            }`}
+                          >
+                            <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
+                              <span
+                                className={
+                                  isDoctorMessage
+                                    ? 'text-white/80'
+                                    : 'text-slate-500 dark:text-gray-300'
+                                }
+                              >
+                                {isDoctorMessage ? 'You' : patientName}
+                              </span>
+                              <span
+                                className={
+                                  isDoctorMessage
+                                    ? 'text-white/50'
+                                    : 'text-slate-300 dark:text-gray-600'
+                                }
+                              >
+                                /
+                              </span>
+                              <span
+                                className={
+                                  isDoctorMessage
+                                    ? 'text-white/80'
+                                    : 'text-slate-500 dark:text-gray-300'
+                                }
+                              >
+                                {formatMessageTime(message.sentAt)}
+                              </span>
+                            </div>
+
+                            {messageBody && (
+                              <p className="whitespace-pre-wrap text-sm leading-6">
+                                {messageBody}
+                              </p>
+                            )}
+
+                            {attachmentMeta && (
+                              <div
+                                className={`mt-3 rounded-2xl border px-3 py-3 ${
+                                  isDoctorMessage
+                                    ? 'border-white/20 bg-white/10'
+                                    : 'border-cyan-100 bg-cyan-50 dark:border-cyan-800/40 dark:bg-cyan-950/20'
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                                      isDoctorMessage
+                                        ? 'bg-white/15 text-white'
+                                        : 'bg-white text-cyan-600 dark:bg-[#0a1f44] dark:text-cyan-300'
+                                    }`}
+                                  >
+                                    <FileText className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold">
+                                      {attachmentMeta.title}
+                                    </p>
+                                    <p
+                                      className={`mt-1 text-xs ${
+                                        isDoctorMessage
+                                          ? 'text-white/80'
+                                          : 'text-cyan-700 dark:text-cyan-200'
+                                      }`}
+                                    >
+                                      {attachmentMeta.riskLabel}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            className={`flex items-center gap-1 px-1 text-[11px] ${
+                              isDoctorMessage
+                                ? 'text-slate-400'
+                                : 'text-slate-500 dark:text-gray-400'
+                            }`}
+                          >
+                            {isDoctorMessage && phase !== 'PRE_VISIT' && (
+                              <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
+                            )}
+                            <span>
+                              {isDoctorMessage
+                                ? phase === 'PRE_VISIT'
+                                  ? 'Saved as doctor note'
+                                  : 'Delivered to patient'
+                                : phase === 'PRE_VISIT'
+                                  ? 'Patient pre-visit note'
+                                  : 'Patient message'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isDoctorMessage && (
+                          <AvatarBadge
+                            name={doctorName}
+                            avatarUrl={user?.avatarUrl}
+                            size="sm"
+                          />
+                        )}
+                      </div>
+                    </Fragment>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm dark:bg-[#0a1f44]/60 dark:border-[#1e3a5f]">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-200">
+                    <phaseUI.icon className="h-7 w-7" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {phase === 'PRE_VISIT'
+                      ? 'Review patient notes'
+                      : phase === 'COMPLETED'
+                        ? 'No messages in this session'
+                        : 'No messages yet'}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-gray-400">
+                    {phase === 'PRE_VISIT'
+                      ? 'Patient can leave notes before the consultation begins. Chat opens at appointment time.'
+                      : phase === 'IN_PROGRESS'
+                        ? 'The consultation is active. Start the conversation when you are ready.'
+                        : 'This consultation has been completed.'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
+            {canSendMessage ? (
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+                <div className="flex items-end gap-3">
+                  <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                  <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
+                    <ImageIcon className="h-4 w-4" />
+                  </button>
+                  <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70 dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
+                    <textarea
+                      value={newMessage}
+                      onChange={(event) => setNewMessage(event.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder="Type a message..."
+                      className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
+                      rows={2}
+                    />
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        Messages are encrypted and visible only to your care
+                        team.
+                      </div>
+                      <div>{newMessage.trim().length} characters</div>
+                    </div>
+                  </div>
                   <button
-                    onClick={() =>
-                      setIsSessionOverviewOpen((previous) => !previous)
+                    onClick={handleSendMessage}
+                    disabled={
+                      !newMessage.trim() || sendMessageMutation.isPending
                     }
-                    aria-label={
-                      isSessionOverviewOpen
-                        ? 'Hide session overview'
-                        : 'Show session overview'
-                    }
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition hover:from-emerald-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
                   >
-                    {isSessionOverviewOpen ? (
-                      <X className="h-4 w-4" />
+                    {sendMessageMutation.isPending ? (
+                      <Spinner size={18} className="text-white" />
                     ) : (
-                      <MoreHorizontal className="h-4 w-4" />
+                      <Send className="h-5 w-5" />
                     )}
                   </button>
                 </div>
               </div>
-            </div>
-
-            {phase !== 'IN_PROGRESS' && (
-              <div
-                className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${phaseUI.bannerBg} dark:border-[#1e3a5f]`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <phaseUI.icon
-                    className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color}`}
-                  />
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      {phaseUI.label}
-                    </p>
-                    <p className="mt-1 text-slate-600 dark:text-gray-300">
-                      {phaseUI.description}
-                    </p>
-                    {phase === 'PRE_VISIT' &&
-                      currentSession.appointmentTime &&
-                      (() => {
-                        const appointmentMs = new Date(
-                          currentSession.appointmentTime
-                        ).getTime();
-                        const msUntilStart = appointmentMs - currentTimeMs;
-                        if (msUntilStart <= 0) return null;
-                        if (
-                          msUntilStart >
-                          COUNTDOWN_VISIBILITY_MINUTES * 60 * 1000
-                        ) {
-                          return (
-                            <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
-                              Chat will automatically open at the scheduled
-                              appointment time
-                            </p>
-                          );
-                        }
-                        return (
-                          <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
-                            Chat opens in{' '}
-                            {formatCountdown(Math.ceil(msUntilStart / 1000))}
-                          </p>
-                        );
-                      })()}
-                  </div>
-                </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-[#1e3a5f] dark:bg-[#0a1929]/30 dark:text-gray-300">
+                <phaseUI.icon className="h-4 w-4" />
+                <span>
+                  {phase === 'COMPLETED'
+                    ? 'Consultation has been completed. Chat is now read-only.'
+                    : 'Pre-visit mode — patient notes only. Chat opens at appointment time.'}
+                </span>
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-              {sessionLoading ? (
-                <div className="flex h-full items-center justify-center">
-                  <Spinner size={32} />
-                </div>
-              ) : messageList.length > 0 ? (
-                <div className="space-y-4">
-                  {messageList.map((message, index) => {
-                    const isDoctorMessage =
-                      message.senderUserId === currentDoctorId;
-                    const attachmentMeta = extractScanAttachment(
-                      message.message
-                    );
-                    const messageBody = stripScanAttachment(message.message);
-                    const previousMessage = messageList[index - 1];
-                    const showDateDivider =
-                      !previousMessage ||
-                      formatFullDate(previousMessage.sentAt) !==
-                        formatFullDate(message.sentAt);
+            {sendMessageMutation.isError && (
+              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
+                <AlertCircle className="h-4 w-4" />
+                <span>Failed to send message. Please try again.</span>
+              </div>
+            )}
+          </div>
+        </main>
+      ) : (
+        <div className="hidden flex-1 items-center justify-center md:flex">
+          <div className="max-w-md text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-400 dark:bg-[#0a1929]/40 dark:text-gray-400">
+              <MessageCircle className="h-9 w-9" />
+            </div>
+            <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
+              Select a session
+            </h3>
+            <p className="mt-2 text-slate-500 dark:text-gray-400">
+              Choose a consultation from the left panel to review the full
+              conversation.
+            </p>
+          </div>
+        </div>
+      )}
 
-                    return (
-                      <Fragment key={message.id}>
-                        {showDateDivider && (
-                          <div className="flex justify-center py-2">
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                              {formatFullDate(message.sentAt)}
-                            </span>
-                          </div>
-                        )}
+      {currentSession && isSessionOverviewOpen && (
+        <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+          <div className="border-b border-slate-200/80 px-6 py-6 dark:border-[#1e3a5f]">
+            <div className="flex items-center gap-4">
+              <AvatarBadge
+                name={patientName}
+                avatarUrl={patientAvatarUrl}
+                size="lg"
+              />
+              <div>
+                <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                  {patientName}
+                </p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
+                  {SESSION_TYPE_LABELS[currentSession.type]}
+                </p>
+              </div>
+            </div>
+          </div>
 
-                        <div
-                          className={`flex items-end gap-3 ${
-                            isDoctorMessage ? 'justify-end' : 'justify-start'
-                          }`}
-                        >
-                          {!isDoctorMessage && (
-                            <AvatarBadge name={patientName} size="sm" />
-                          )}
-
-                          <div
-                            className={`max-w-[78%] ${
-                              isDoctorMessage ? 'items-end' : 'items-start'
-                            } flex flex-col gap-2`}
-                          >
-                            <div
-                              className={`rounded-[24px] px-4 py-3 shadow-sm ${
-                                isDoctorMessage
-                                  ? 'rounded-br-md bg-gradient-to-br from-emerald-500 to-cyan-500 text-white'
-                                  : 'rounded-bl-md border border-slate-200 bg-white text-slate-900 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-white'
-                              }`}
-                            >
-                              <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
-                                <span
-                                  className={
-                                    isDoctorMessage
-                                      ? 'text-white/80'
-                                      : 'text-slate-500 dark:text-gray-300'
-                                  }
-                                >
-                                  {isDoctorMessage ? 'You' : patientName}
-                                </span>
-                                <span
-                                  className={
-                                    isDoctorMessage
-                                      ? 'text-white/50'
-                                      : 'text-slate-300 dark:text-gray-600'
-                                  }
-                                >
-                                  /
-                                </span>
-                                <span
-                                  className={
-                                    isDoctorMessage
-                                      ? 'text-white/80'
-                                      : 'text-slate-500 dark:text-gray-300'
-                                  }
-                                >
-                                  {formatMessageTime(message.sentAt)}
-                                </span>
-                              </div>
-
-                              {messageBody && (
-                                <p className="whitespace-pre-wrap text-sm leading-6">
-                                  {messageBody}
-                                </p>
-                              )}
-
-                              {attachmentMeta && (
-                                <div
-                                  className={`mt-3 rounded-2xl border px-3 py-3 ${
-                                    isDoctorMessage
-                                      ? 'border-white/20 bg-white/10'
-                                      : 'border-cyan-100 bg-cyan-50 dark:border-cyan-800/40 dark:bg-cyan-950/20'
-                                  }`}
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div
-                                      className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
-                                        isDoctorMessage
-                                          ? 'bg-white/15 text-white'
-                                          : 'bg-white text-cyan-600 dark:bg-[#0a1f44] dark:text-cyan-300'
-                                      }`}
-                                    >
-                                      <FileText className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-semibold">
-                                        {attachmentMeta.title}
-                                      </p>
-                                      <p
-                                        className={`mt-1 text-xs ${
-                                          isDoctorMessage
-                                            ? 'text-white/80'
-                                            : 'text-cyan-700 dark:text-cyan-200'
-                                        }`}
-                                      >
-                                        {attachmentMeta.riskLabel}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            <div
-                              className={`flex items-center gap-1 px-1 text-[11px] ${
-                                isDoctorMessage
-                                  ? 'text-slate-400'
-                                  : 'text-slate-500 dark:text-gray-400'
-                              }`}
-                            >
-                              {isDoctorMessage && phase !== 'PRE_VISIT' && (
-                                <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
-                              )}
-                              <span>
-                                {isDoctorMessage
-                                  ? phase === 'PRE_VISIT'
-                                    ? 'Saved as doctor note'
-                                    : 'Delivered to patient'
-                                  : phase === 'PRE_VISIT'
-                                    ? 'Patient pre-visit note'
-                                    : 'Patient message'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {isDoctorMessage && (
-                            <AvatarBadge
-                              name={doctorName}
-                              avatarUrl={user?.avatarUrl}
-                              size="sm"
-                            />
-                          )}
-                        </div>
-                      </Fragment>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm dark:bg-[#0a1f44]/60 dark:border-[#1e3a5f]">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-200">
-                      <phaseUI.icon className="h-7 w-7" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {phase === 'PRE_VISIT'
-                        ? 'Review patient notes'
-                        : phase === 'COMPLETED'
-                          ? 'No messages in this session'
-                          : 'No messages yet'}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-gray-400">
-                      {phase === 'PRE_VISIT'
-                        ? 'Patient can leave notes before the consultation begins. Chat opens at appointment time.'
-                        : phase === 'IN_PROGRESS'
-                          ? 'The consultation is active. Start the conversation when you are ready.'
-                          : 'This consultation has been completed.'}
+          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+            <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                Session Overview
+              </p>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-start gap-3">
+                  <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Appointment
+                    </p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {formatAppointmentSlotOrPending(
+                        currentSession.appointmentTime
+                      )}
                     </p>
                   </div>
                 </div>
-              )}
-            </div>
-
-            <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
-              {canSendMessage ? (
-                <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-                  <div className="flex items-end gap-3">
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                      <Paperclip className="h-4 w-4" />
-                    </button>
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                      <ImageIcon className="h-4 w-4" />
-                    </button>
-                    <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70 dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
-                      <textarea
-                        value={newMessage}
-                        onChange={(event) => setNewMessage(event.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder="Type a message..."
-                        className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
-                        rows={2}
-                      />
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Messages are encrypted and visible only to your care
-                          team.
-                        </div>
-                        <div>{newMessage.trim().length} characters</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={
-                        !newMessage.trim() || sendMessageMutation.isPending
-                      }
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition hover:from-emerald-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
-                    >
-                      {sendMessageMutation.isPending ? (
-                        <Spinner size={18} className="text-white" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                    </button>
+                <div className="flex items-start gap-3">
+                  <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Last activity
+                    </p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {formatRelativeTime(currentSession.lastActivityAt)}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-[#1e3a5f] dark:bg-[#0a1929]/30 dark:text-gray-300">
-                  <phaseUI.icon className="h-4 w-4" />
-                  <span>
-                    {phase === 'COMPLETED'
-                      ? 'Consultation has been completed. Chat is now read-only.'
-                      : 'Pre-visit mode — patient notes only. Chat opens at appointment time.'}
-                  </span>
+                <div className="flex items-start gap-3">
+                  <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Consultation fee
+                    </p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {formatCurrency(currentSession.price)}
+                    </p>
+                  </div>
                 </div>
-              )}
-
-              {sendMessageMutation.isError && (
-                <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>Failed to send message. Please try again.</span>
+                <div className="flex items-start gap-3">
+                  <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Phase
+                    </p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {phaseUI.label}
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </main>
-        ) : (
-          <div className="hidden flex-1 items-center justify-center md:flex">
-            <div className="max-w-md text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-400 dark:bg-[#0a1929]/40 dark:text-gray-400">
-                <MessageCircle className="h-9 w-9" />
               </div>
-              <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                Select a session
-              </h3>
-              <p className="mt-2 text-slate-500 dark:text-gray-400">
-                Choose a consultation from the left panel to review the full
-                conversation.
+            </div>
+
+            <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                <Stethoscope className="h-4 w-4" />
+                Conversation Guidance
+              </div>
+              <p className="mt-4 text-sm leading-6 text-slate-200">
+                Be specific about symptom timing, changes in vision, pain, and
+                recent scan results. Short, structured notes make it easier to
+                triage quickly.
               </p>
+              <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
+                <div className="flex items-center gap-2">
+                  <UserRound className="h-4 w-4 text-cyan-300" />
+                  <span>{doctorName}</span>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-
-        {currentSession && isSessionOverviewOpen && (
-          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-            <div className="border-b border-slate-200/80 px-6 py-6 dark:border-[#1e3a5f]">
-              <div className="flex items-center gap-4">
-                <AvatarBadge name={patientName} size="lg" />
-                <div>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                    {patientName}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
-                    {SESSION_TYPE_LABELS[currentSession.type]}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                  Session Overview
-                </p>
-                <div className="mt-4 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
-                    <div>
-                      <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Appointment
-                      </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {formatAppointmentSlotOrPending(
-                          currentSession.appointmentTime
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
-                    <div>
-                      <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Last activity
-                      </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {formatRelativeTime(currentSession.lastActivityAt)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
-                    <div>
-                      <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Consultation fee
-                      </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {formatCurrency(currentSession.price)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
-                    <div>
-                      <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Phase
-                      </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {phaseUI.label}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                  <Stethoscope className="h-4 w-4" />
-                  Conversation Guidance
-                </div>
-                <p className="mt-4 text-sm leading-6 text-slate-200">
-                  Be specific about symptom timing, changes in vision, pain, and
-                  recent scan results. Short, structured notes make it easier to
-                  triage quickly.
-                </p>
-                <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
-                  <div className="flex items-center gap-2">
-                    <UserRound className="h-4 w-4 text-cyan-300" />
-                    <span>{doctorName}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-        )}
-      </div>
+        </aside>
+      )}
     </div>
   );
 }
