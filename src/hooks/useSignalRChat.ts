@@ -8,12 +8,17 @@ import {
 import useAuthStore from '@/store/auth-store';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
+  SIGNALR_ROOM_STATE_CHANGED_EVENT,
   type SignalRChatMessageEvent,
+  type SignalRRoomStateChangedEvent,
 } from '@/types/chat-realtime';
 
 const CHAT_HUB_URL =
   (import.meta.env.VITE_API_END_POINT as string) + '/hubs/chat';
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
+
+const sanitizeToken = (value: string | null): string =>
+  value?.replace(/['"]+/g, '') || '';
 
 /**
  * Manages dedicated ChatHub connection for realtime chat events.
@@ -23,15 +28,29 @@ export function useSignalRChat(): void {
   const { isAuthenticated } = useAuthStore();
 
   const getAccessToken = useCallback((): string => {
-    return localStorage.getItem('token') || '';
+    return sanitizeToken(localStorage.getItem('token'));
   }, []);
 
   const handleChatMessageReceived = useCallback(
     (chatMessage: SignalRChatMessageEvent) => {
+      console.log('[ChatHub] Message received:', chatMessage);
       window.dispatchEvent(
         new CustomEvent<SignalRChatMessageEvent>(SIGNALR_CHAT_MESSAGE_EVENT, {
           detail: chatMessage,
         })
+      );
+    },
+    []
+  );
+
+  const handleRoomStateChanged = useCallback(
+    (payload: SignalRRoomStateChangedEvent) => {
+      console.log('[ChatHub] Room state changed:', payload);
+      window.dispatchEvent(
+        new CustomEvent<SignalRRoomStateChangedEvent>(
+          SIGNALR_ROOM_STATE_CHANGED_EVENT,
+          { detail: payload }
+        )
       );
     },
     []
@@ -48,17 +67,32 @@ export function useSignalRChat(): void {
       )
       .build();
 
+    connection.onreconnecting(() => {
+      console.log('[ChatHub] Reconnecting...');
+    });
+
+    connection.onreconnected((connectionId) => {
+      console.log('[ChatHub] Reconnected:', connectionId);
+    });
+
+    connection.onclose((error) => {
+      console.log('[ChatHub] Connection closed:', error);
+    });
+
     connection.on('ReceiveChatMessage', handleChatMessageReceived);
+    connection.on('RoomStateChanged', handleRoomStateChanged);
 
     return connection;
-  }, [getAccessToken, handleChatMessageReceived]);
+  }, [getAccessToken, handleChatMessageReceived, handleRoomStateChanged]);
 
   const startConnection = useCallback(async (): Promise<void> => {
     if (!isAuthenticated) {
       return;
     }
 
-    if (!getAccessToken()) {
+    const token = getAccessToken();
+    if (!token) {
+      console.log('[ChatHub] No token, skipping connection');
       return;
     }
 
@@ -69,11 +103,17 @@ export function useSignalRChat(): void {
       return;
     }
 
-    if (!connectionRef.current) {
-      connectionRef.current = buildConnection();
-    }
+    try {
+      if (!connectionRef.current) {
+        connectionRef.current = buildConnection();
+      }
 
-    await connectionRef.current.start();
+      await connectionRef.current.start();
+      console.log('[ChatHub] Connected successfully');
+    } catch (error) {
+      console.error('[ChatHub] Connection failed:', error);
+      connectionRef.current = null;
+    }
   }, [buildConnection, getAccessToken, isAuthenticated]);
 
   const stopConnection = useCallback(async (): Promise<void> => {
@@ -83,6 +123,9 @@ export function useSignalRChat(): void {
 
     try {
       await connectionRef.current.stop();
+      console.log('[ChatHub] Disconnected');
+    } catch (error) {
+      console.error('[ChatHub] Error stopping connection:', error);
     } finally {
       connectionRef.current = null;
     }
@@ -99,6 +142,23 @@ export function useSignalRChat(): void {
       void stopConnection();
     };
   }, [isAuthenticated, startConnection, stopConnection]);
+
+  useEffect(() => {
+    const handleVisibilityChange = (): void => {
+      if (
+        document.visibilityState === 'visible' &&
+        isAuthenticated &&
+        connectionRef.current?.state !== HubConnectionState.Connected
+      ) {
+        void startConnection();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, startConnection]);
 }
 
 export default useSignalRChat;

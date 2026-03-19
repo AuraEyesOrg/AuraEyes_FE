@@ -123,11 +123,11 @@ export default function WalletPage() {
     switch (type) {
       case 'deposit':
       case 'bonus':
-        return 'bg-green-50 dark:bg-green-500/20';
+        return 'bg-(--bg-secondary)';
       case 'refund':
-        return 'bg-blue-50 dark:bg-blue-500/20';
+        return 'bg-(--bg-secondary)';
       default:
-        return 'bg-red-50 dark:bg-red-500/20';
+        return 'bg-(--bg-secondary)';
     }
   };
 
@@ -232,16 +232,16 @@ export default function WalletPage() {
         {/* Left Column - Balance & Quick Actions */}
         <div className="space-y-6">
           {/* Balance Card */}
-          <div className="medical-card bg-linear-to-br from-brand via-[#00d4e6] to-[#00b8cc] text-white">
+          <div className="medical-card border border-(--border-color) bg-(--bg-primary)">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Wallet className="w-6 h-6" />
+              <div className="w-12 h-12 bg-(--bg-secondary) rounded-xl flex items-center justify-center border border-(--border-color)">
+                <Wallet className="w-6 h-6 text-brand" />
               </div>
               <div>
-                <p className="text-sm text-white/90 font-medium">
+                <p className="text-sm text-(--text-secondary) font-medium">
                   Available Balance
                 </p>
-                <p className="text-3xl font-bold mt-1">
+                <p className="text-3xl font-bold mt-1 text-(--text-primary)">
                   {formatCurrency(wallet?.balance ?? 0)}
                 </p>
               </div>
@@ -249,9 +249,9 @@ export default function WalletPage() {
 
             <button
               onClick={() => setShowDepositModal(true)}
-              className="w-full py-3 bg-white hover:bg-white/95 rounded-xl font-semibold transition-all text-brand flex items-center justify-center gap-2 shadow-md active:scale-95"
+              className="w-full py-3 rounded-xl font-semibold transition-all border border-(--border-color) bg-(--bg-secondary) text-(--text-primary) hover:bg-(--bg-tertiary) flex items-center justify-center gap-2 active:scale-95"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-5 h-5 text-brand" />
               Top Up Wallet
             </button>
           </div>
@@ -316,7 +316,7 @@ export default function WalletPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
@@ -331,8 +331,8 @@ export default function WalletPage() {
 
               <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-50 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-brand" />
                   </div>
                   <div>
                     <p className="text-(--text-primary) font-medium">PayOS</p>
@@ -573,8 +573,8 @@ export default function WalletPage() {
                       : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-brand" />
                   </div>
                   <div className="text-left flex-1">
                     <p className="text-(--text-primary) font-semibold">PayOS</p>
@@ -595,7 +595,7 @@ export default function WalletPage() {
                       : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="text-left flex-1">
