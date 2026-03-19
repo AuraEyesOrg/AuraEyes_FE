@@ -165,13 +165,13 @@ const getMeetingAccessState = (
       return {
         canJoin: false,
         buttonLabel: 'Join Locked',
-        helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
+        helperText: `Vào phòng trước ${PREJOIN_OPEN_MINUTES} phút`,
       };
     }
     return {
       canJoin: false,
       buttonLabel: 'Join Locked',
-      helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
+      helperText: `mở sau ${formatCountdown(secondsUntilUnlock)}`,
     };
   }
 
