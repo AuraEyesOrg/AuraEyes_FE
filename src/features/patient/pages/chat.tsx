@@ -68,6 +68,8 @@ import {
   formatRelativeTime,
   formatCountdown,
 } from '@/lib/date-utils';
+import { toast } from 'react-toastify';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 interface SharedScanData {
   imageUrl?: string;
@@ -430,15 +432,28 @@ export default function ChatPage() {
       ? `${newMessage}\n\n[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
       : newMessage;
 
+    const draftText = newMessage;
+    const draftScan = pendingScan;
+    setNewMessage('');
+    setPendingScan(null);
+
     sendMessageMutation.mutate(
       {
         sessionId: selectedSessionId,
         message: messageContent,
       },
       {
-        onSuccess: () => {
-          setNewMessage('');
-          setPendingScan(null);
+        onError: (error) => {
+          const raw = extractApiErrorMessage(
+            error,
+            'Failed to send message. Please try again.'
+          );
+          if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
+            toast.warning(raw);
+            sendMessageMutation.reset();
+          }
+          setNewMessage(draftText);
+          setPendingScan(draftScan);
         },
       }
     );

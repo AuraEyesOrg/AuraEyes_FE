@@ -40,7 +40,6 @@ import Spinner from '@/components/ui/spinner';
 import {
   useCancelSession,
   useConsultationSession,
-  useConsultationSessions,
   useEndSession,
   useSendMessage,
   consultationKeys,
@@ -68,6 +67,8 @@ import {
   formatMessageTime,
   formatRelativeTime,
 } from '@/lib/date-utils';
+import { toast } from 'react-toastify';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -297,7 +298,30 @@ const getPhase = (session: {
   return 'PRE_VISIT';
 };
 
-export default function ConsultationsChatView() {
+interface ConsultationsChatViewProps {
+  sessions: {
+    id: string;
+    patientName?: string | null;
+    organisationName?: string | null;
+    appointmentTime: string | null;
+    lastActivityAt: string;
+    createdAt: string;
+    price: number;
+    status: SessionStatus;
+    chatStatus: ChatStatus;
+    type: ConsultationSessionType;
+    typeName: string;
+    statusName: string;
+    chatStatusName: string;
+    meetingLink?: string | null;
+  }[];
+  sessionsLoading: boolean;
+}
+
+export default function ConsultationsChatView({
+  sessions,
+  sessionsLoading,
+}: ConsultationsChatViewProps) {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
@@ -315,18 +339,6 @@ export default function ConsultationsChatView() {
   const processedChatEventIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  const { data: sessionsData, isLoading: sessionsLoading } =
-    useConsultationSessions(
-      {
-        ophthalmologistId: currentDoctorId || undefined,
-        pageSize: 50,
-      },
-      {
-        enabled: !!currentDoctorId,
-      }
-    );
-
-  const sessions = sessionsData?.items ?? [];
   const chatSessions = sessions.filter(
     (s) => s.status !== SessionStatus.Cancelled
   );
@@ -491,9 +503,27 @@ export default function ConsultationsChatView() {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedSessionId) return;
+
+    const draftText = newMessage;
+    // Optimistic clear: prevent accidental "abc + xyz" when sending rapidly.
+    setNewMessage('');
+
     sendMessageMutation.mutate(
-      { sessionId: selectedSessionId, message: newMessage },
-      { onSuccess: () => setNewMessage('') }
+      { sessionId: selectedSessionId, message: draftText },
+      {
+        onError: (error) => {
+          const raw = extractApiErrorMessage(
+            error,
+            'Failed to send message. Please try again.'
+          );
+          if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
+            toast.warning(raw);
+            sendMessageMutation.reset();
+          }
+          // Restore the draft so the user doesn't lose content on failure.
+          setNewMessage(draftText);
+        },
+      }
     );
   };
 

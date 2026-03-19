@@ -2,21 +2,28 @@ import ConsultationsChatView from './ConsultationsChatView';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { useConsultationSessions } from '@/features/consultation/hooks';
 import useAuthStore from '@/store/auth-store';
-import { SessionStatus } from '@/types/consultation';
+import {
+  SessionStatus,
+  type ConsultationSessionListDto,
+} from '@/types/consultation';
 
 export default function ConsultationsPage() {
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
-  const { data: sessionsData } = useConsultationSessions(
-    {
-      ophthalmologistId: currentDoctorId || undefined,
-      pageSize: 50,
-    },
-    { enabled: !!currentDoctorId }
-  );
-  const pendingCount =
-    sessionsData?.items?.filter((s) => s.status === SessionStatus.Pending)
-      .length ?? 0;
+  const { data: sessionsData, isLoading: sessionsLoading } =
+    useConsultationSessions(
+      {
+        ophthalmologistId: currentDoctorId || undefined,
+        pageSize: 50,
+      },
+      { enabled: !!currentDoctorId }
+    );
+
+  const sessions: ConsultationSessionListDto[] = sessionsData?.items ?? [];
+
+  const pendingCount = sessions.filter(
+    (s) => s.status === SessionStatus.Pending
+  ).length;
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
@@ -38,7 +45,10 @@ export default function ConsultationsPage() {
             </p>
           </div>
 
-          <ConsultationsChatView />
+          <ConsultationsChatView
+            sessions={sessions}
+            sessionsLoading={sessionsLoading}
+          />
         </main>
       </div>
     </div>
