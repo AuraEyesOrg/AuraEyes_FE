@@ -65,6 +65,7 @@ interface RawConsultationSessionDto {
   organisationId: string | null;
   aiScreeningId: string | null;
   patientName?: string | null;
+  patientAvatarUrl?: string | null;
   ophthalmologistName?: string | null;
   organisationName?: string | null;
   ophthalmologistAvatarUrl?: string | null;
@@ -91,6 +92,7 @@ interface RawConsultationSessionListDto {
   patientId: string;
   ophthalmologistId: string | null;
   patientName?: string | null;
+  patientAvatarUrl?: string | null;
   ophthalmologistName?: string | null;
   organisationName?: string | null;
   ophthalmologistAvatarUrl?: string | null;
@@ -184,6 +186,7 @@ const mapConsultationSession = (
     organisationId: session.organisationId,
     aiScreeningId: session.aiScreeningId,
     patientName: session.patientName ?? null,
+    patientAvatarUrl: session.patientAvatarUrl ?? null,
     ophthalmologistName: session.ophthalmologistName ?? null,
     organisationName: session.organisationName ?? null,
     ophthalmologistAvatarUrl: session.ophthalmologistAvatarUrl ?? null,
@@ -230,6 +233,7 @@ const mapConsultationSessionListItem = (
     patientId: session.patientId,
     ophthalmologistId: session.ophthalmologistId,
     patientName: session.patientName ?? null,
+    patientAvatarUrl: session.patientAvatarUrl ?? null,
     ophthalmologistName: session.ophthalmologistName ?? null,
     organisationName: session.organisationName ?? null,
     ophthalmologistAvatarUrl: session.ophthalmologistAvatarUrl ?? null,
