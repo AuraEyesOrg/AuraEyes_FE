@@ -6,21 +6,13 @@ import { ChatStatus } from '@/types/consultation';
  *
  *   PRE_VISIT    – Before appointment; patient can leave memo notes.
  *   IN_PROGRESS  – During the consultation slot; full 2-way chat + video.
- *   POST_VISIT   – Grace window after slot ends; chat still open for Rx / notes.
- *   COMPLETED    – Chat archived and read-only.
+ *   COMPLETED    – Doctor clicked "Complete"; chat archived and read-only.
  */
-export type ConsultationPhase =
-  | 'PRE_VISIT'
-  | 'IN_PROGRESS'
-  | 'POST_VISIT'
-  | 'COMPLETED';
-
-/** Duration of the consultation slot in milliseconds. */
-const SLOT_DURATION_MS = 60 * 60 * 1000; // 60 min
+export type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
 export interface ConsultationPhaseInfo {
   phase: ConsultationPhase;
-  /** Whether the chat input should be enabled. */
+  /** Whether the chat input should be enabled (either side). */
   canSend: boolean;
   /** Whether the patient side can send messages. */
   patientCanSend: boolean;
@@ -86,48 +78,16 @@ export function deriveConsultationPhase(
     };
   }
 
-  // ChatStatus.Open — determine IN_PROGRESS vs POST_VISIT
-  if (!appointmentTime) {
-    return {
-      phase: 'IN_PROGRESS',
-      canSend: true,
-      patientCanSend: true,
-      doctorCanSend: true,
-      meetingActive: true,
-      label: 'In Progress',
-      description:
-        'Consultation is active. You can chat and join the video call.',
-      msUntilNextTransition: null,
-    };
-  }
-
-  const appointmentMs = new Date(appointmentTime).getTime();
-  const slotEndMs = appointmentMs + SLOT_DURATION_MS;
-
-  if (nowMs < slotEndMs) {
-    return {
-      phase: 'IN_PROGRESS',
-      canSend: true,
-      patientCanSend: true,
-      doctorCanSend: true,
-      meetingActive: true,
-      label: 'In Progress',
-      description:
-        'Consultation is active. You can chat and join the video call.',
-      msUntilNextTransition: slotEndMs - nowMs,
-    };
-  }
-
-  // Past slot end → POST_VISIT (grace period)
+  // ChatStatus.Open — IN_PROGRESS
   return {
-    phase: 'POST_VISIT',
+    phase: 'IN_PROGRESS',
     canSend: true,
     patientCanSend: true,
     doctorCanSend: true,
-    meetingActive: false,
-    label: 'Post-visit',
+    meetingActive: true,
+    label: 'In Progress',
     description:
-      'The video slot has ended. Chat remains open for follow-up notes and prescriptions.',
+      'Consultation is active. You can chat and join the video call.',
     msUntilNextTransition: null,
   };
 }
