@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/layouts';
 import {
   Mail,
@@ -10,12 +10,18 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import { confirmEmail, resendConfirmation } from '../api';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
 
 const ConfirmEmailPage = () => {
   const { t } = useSafeTranslation();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
   const token = searchParams.get('token');
@@ -27,6 +33,9 @@ const ConfirmEmailPage = () => {
   const [resendEmail, setResendEmail] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const didVerify = useRef(false);
 
@@ -83,7 +92,7 @@ const ConfirmEmailPage = () => {
             {t('AuthPages.confirmEmail.success.description')}
           </p>
           <Link
-            to="/login"
+            to={toLocalizedAuthPath('/login')}
             className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-background-dark font-semibold py-3 px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(19,236,236,0.39)] hover:shadow-[0_6px_20px_rgba(19,236,236,0.23)] hover:-translate-y-0.5"
           >
             {t('AuthPages.confirmEmail.success.cta')}
@@ -111,7 +120,7 @@ const ConfirmEmailPage = () => {
           </button>
           <div className="mt-6 border-t border-gray-100 pt-6 w-full">
             <Link
-              to="/login"
+              to={toLocalizedAuthPath('/login')}
               className="text-sm text-gray-500 hover:text-gray-900"
             >
               ← {t('AuthPages.shared.backToLogin')}
@@ -180,7 +189,7 @@ const ConfirmEmailPage = () => {
 
           <div className="text-center border-t border-gray-100 pt-6 mt-6">
             <Link
-              to="/login"
+              to={toLocalizedAuthPath('/login')}
               className="text-sm text-gray-500 hover:text-gray-900 flex items-center justify-center gap-2"
             >
               ← {t('AuthPages.shared.backToLogin')}

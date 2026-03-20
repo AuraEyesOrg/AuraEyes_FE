@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Mail,
@@ -14,6 +14,11 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import { forgotPassword } from '../api';
 
 interface ForgotPasswordFormData {
@@ -40,6 +45,7 @@ const requestForgotPassword = async (email: string): Promise<void> => {
 
 const ForgotPasswordPage = () => {
   const { t } = useSafeTranslation();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -49,6 +55,9 @@ const ForgotPasswordPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<ForgotPasswordFormData>();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
@@ -81,7 +90,7 @@ const ForgotPasswordPage = () => {
         </div>
 
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to="/" />
+          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -126,7 +135,7 @@ const ForgotPasswordPage = () => {
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           <div>
             <Link
-              to="/login"
+              to={toLocalizedAuthPath('/login')}
               className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#1F85F5] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />

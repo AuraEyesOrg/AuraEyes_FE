@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Shield,
@@ -15,6 +15,11 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import { resetPassword } from '../api';
 
 interface ResetPasswordFormData {
@@ -42,6 +47,7 @@ const requestResetPassword = async (payload: {
 
 const ResetPasswordPage = () => {
   const { t } = useSafeTranslation();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -52,6 +58,9 @@ const ResetPasswordPage = () => {
   const userId = searchParams.get('userId') ?? '';
   const token = searchParams.get('token') ?? '';
   const hasRequiredParams = Boolean(userId && token);
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const {
     register,
@@ -108,7 +117,7 @@ const ResetPasswordPage = () => {
         </div>
 
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to="/" />
+          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -153,7 +162,7 @@ const ResetPasswordPage = () => {
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           <div>
             <Link
-              to="/login"
+              to={toLocalizedAuthPath('/login')}
               className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#1F85F5] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -174,7 +183,7 @@ const ResetPasswordPage = () => {
               <div>
                 <p className="text-sm text-green-700">{successMessage}</p>
                 <Link
-                  to="/login"
+                  to={toLocalizedAuthPath('/login')}
                   className="inline-block mt-2 text-sm font-semibold text-green-700 hover:text-green-800"
                 >
                   {t('AuthPages.resetPassword.messages.goToSignIn')}
