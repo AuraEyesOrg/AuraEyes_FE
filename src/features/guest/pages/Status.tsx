@@ -4,6 +4,7 @@ import { Footer } from '../components/Footer';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Spinner from '@/components/ui/spinner';
+import { useTranslation } from 'react-i18next';
 
 interface ServiceStatus {
   name: string;
@@ -17,36 +18,37 @@ interface ServiceStatus {
 }
 
 const StatusPage = () => {
+  const { t } = useTranslation();
   const [services, setServices] = useState<ServiceStatus[]>([
     {
-      name: 'AI Core Analysis Engine',
+      name: t('Status.services.aiCore.name'),
       endpoint: '/health/ai',
       status: 'checking',
-      description: 'AI-powered retinal analysis',
+      description: t('Status.services.aiCore.description'),
       icon: 'memory',
       region: 'Global (Multi-region)',
     },
     {
-      name: 'Image Ingestion API',
+      name: t('Status.services.imageApi.name'),
       endpoint: '/health',
       status: 'checking',
-      description: 'Image upload and processing',
+      description: t('Status.services.imageApi.description'),
       icon: 'cloud_upload',
       region: 'Vietnam (Southeast Asia)',
     },
     {
-      name: 'Provider Portal',
+      name: t('Status.services.providerPortal.name'),
       endpoint: '/auth/health',
       status: 'checking',
-      description: 'Authentication and user management',
+      description: t('Status.services.providerPortal.description'),
       icon: 'medical_information',
       region: 'Vietnam (Southeast Asia)',
     },
     {
-      name: 'Patient Data Store',
+      name: t('Status.services.patientStore.name'),
       endpoint: '/health/database',
       status: 'checking',
-      description: 'Encrypted database storage',
+      description: t('Status.services.patientStore.description'),
       icon: 'database',
       region: 'Encrypted (At Rest)',
     },
@@ -148,15 +150,15 @@ const StatusPage = () => {
   }, []);
 
   const getLastUpdatedText = () => {
-    if (!lastFullCheck) return 'Checking...';
+    if (!lastFullCheck) return t('Status.labels.checking');
     const now = new Date();
     const diffMs = now.getTime() - lastFullCheck.getTime();
     const diffSec = Math.floor(diffMs / 1000);
 
-    if (diffSec < 5) return 'Just now';
-    if (diffSec < 60) return `${diffSec} seconds ago`;
+    if (diffSec < 5) return t('Status.time.justNow');
+    if (diffSec < 60) return t('Status.time.secondsAgo', { count: diffSec });
     const diffMin = Math.floor(diffSec / 60);
-    return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+    return t('Status.time.minutesAgo', { count: diffMin });
   };
 
   const getStatusBadge = (status: string) => {
@@ -165,21 +167,21 @@ const StatusPage = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-            Operational
+            {t('Status.labels.operational')}
           </span>
         );
       case 'offline':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            Outage
+            {t('Status.labels.outage')}
           </span>
         );
       case 'degraded':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
-            Degraded
+            {t('Status.labels.degraded')}
           </span>
         );
       case 'checking':
@@ -187,7 +189,7 @@ const StatusPage = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
             <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></span>
-            Checking...
+            {t('Status.labels.checking')}
           </span>
         );
     }
@@ -261,13 +263,13 @@ const StatusPage = () => {
   const getOverallStatusText = () => {
     switch (overallStatus) {
       case 'operational':
-        return 'All Systems Operational';
+        return t('Status.overall.allOperational');
       case 'degraded':
-        return 'Partial System Outage';
+        return t('Status.overall.partialOutage');
       case 'outage':
-        return 'Major System Outage';
+        return t('Status.overall.majorOutage');
       default:
-        return 'Checking Systems...';
+        return t('Status.overall.checkingSystems');
     }
   };
 
@@ -294,11 +296,10 @@ const StatusPage = () => {
           <section className="flex flex-col gap-8">
             <div className="flex flex-col gap-2">
               <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[var(--color-brand-dark)]">
-                System Status
+                {t('Status.hero.title')}
               </h1>
               <p className="text-[var(--color-text-muted)] text-lg max-w-2xl">
-                Real-time operational transparency for patients, providers, and
-                partners.
+                {t('Status.hero.description')}
               </p>
             </div>
 
@@ -313,12 +314,12 @@ const StatusPage = () => {
                   {getOverallStatusText()}
                 </h2>
                 <p className="text-[var(--color-text-muted)] font-medium flex items-center gap-2">
-                  Last updated: {getLastUpdatedText()}
+                  {t('Status.hero.lastUpdated')}: {getLastUpdatedText()}
                   <button
                     onClick={checkAllServices}
                     disabled={isRefreshing}
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
-                    title="Refresh status"
+                    title={t('Status.hero.refresh')}
                   >
                     <svg
                       className={`w-4 h-4 text-[var(--color-text-muted)] ${isRefreshing ? 'animate-spin' : ''}`}
@@ -351,7 +352,7 @@ const StatusPage = () => {
             <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  Total Screenings
+                  {t('Status.metrics.totalScreenings')}
                 </p>
                 <svg
                   className="w-6 h-6 text-[var(--color-brand-primary)]"
@@ -385,7 +386,7 @@ const StatusPage = () => {
                       d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                     />
                   </svg>
-                  <span>+12% this month</span>
+                  <span>{t('Status.metrics.totalScreeningsTrend')}</span>
                 </div>
               </div>
             </div>
@@ -393,7 +394,7 @@ const StatusPage = () => {
             <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  AI Model Version
+                  {t('Status.metrics.aiModelVersion')}
                 </p>
                 <svg
                   className="w-6 h-6 text-[var(--color-brand-primary)]"
@@ -414,7 +415,7 @@ const StatusPage = () => {
                   v4.2.1
                 </p>
                 <p className="text-sm font-bold text-[var(--color-brand-primary)] mt-1">
-                  FDA Cleared Class II
+                  {t('Status.metrics.fdaCleared')}
                 </p>
               </div>
             </div>
@@ -422,7 +423,7 @@ const StatusPage = () => {
             <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  Avg. Processing
+                  {t('Status.metrics.avgProcessing')}
                 </p>
                 <svg
                   className="w-6 h-6 text-[var(--color-brand-primary)]"
@@ -443,7 +444,7 @@ const StatusPage = () => {
                   &lt; 1.4s
                 </p>
                 <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                  Per high-res retinal scan
+                  {t('Status.metrics.avgProcessingDetail')}
                 </p>
               </div>
             </div>
@@ -452,17 +453,20 @@ const StatusPage = () => {
           {/* Component Status List */}
           <section className="flex flex-col gap-5">
             <h3 className="text-2xl font-bold text-[var(--color-brand-dark)] px-1">
-              Component Status
+              {t('Status.componentStatus.title')}
             </h3>
             <div className="rounded-2xl border border-[var(--color-medical-border)] overflow-hidden bg-white">
               {/* Header Row */}
               <div className="grid grid-cols-12 gap-4 p-5 bg-gray-50 border-b border-[var(--color-medical-border)] text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                <div className="col-span-6 md:col-span-5">Service Name</div>
+                <div className="col-span-6 md:col-span-5">
+                  {t('Status.componentStatus.serviceName')}
+                </div>
+
                 <div className="col-span-3 md:col-span-5 text-right md:text-left">
-                  Region
+                  {t('Status.componentStatus.region')}
                 </div>
                 <div className="col-span-3 md:col-span-2 text-right">
-                  Status
+                  {t('Status.componentStatus.status')}
                 </div>
               </div>
 
@@ -558,7 +562,7 @@ const StatusPage = () => {
           <section className="flex flex-col gap-6 pt-6">
             <div className="flex items-center gap-3">
               <h3 className="text-2xl font-bold text-[var(--color-brand-dark)]">
-                Trust & Ethics Center
+                {t('Status.trust.title')}
               </h3>
               <div className="h-px flex-1 bg-[var(--color-medical-border)]"></div>
             </div>
@@ -584,19 +588,17 @@ const StatusPage = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Bias Monitoring
+                    {t('Status.trust.cards.bias.title')}
                   </h4>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Continuous automated auditing across diverse demographic
-                    datasets to ensure equitable diagnostic accuracy for all
-                    patient groups.
+                    {t('Status.trust.cards.bias.description')}
                   </p>
                 </div>
                 <Link
                   to="/ethics"
                   className="mt-auto pt-4 flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider hover:underline"
                 >
-                  Read Protocol
+                  {t('Status.trust.cards.bias.cta')}
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -633,19 +635,17 @@ const StatusPage = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Data Privacy & Compliance
+                    {t('Status.trust.cards.privacy.title')}
                   </h4>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Fully HIPAA & GDPR compliant architecture. Zero-knowledge
-                    encryption ensures patient data remains private and
-                    accessible only to authorized providers.
+                    {t('Status.trust.cards.privacy.description')}
                   </p>
                 </div>
                 <Link
                   to="/ethics"
                   className="mt-auto pt-4 flex items-center gap-2 text-cyan-700 text-xs font-bold uppercase tracking-wider hover:underline"
                 >
-                  View Certifications
+                  {t('Status.trust.cards.privacy.cta')}
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -682,19 +682,17 @@ const StatusPage = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Clinical Validation
+                    {t('Status.trust.cards.validation.title')}
                   </h4>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Verified 99.2% sensitivity in multi-center clinical trials.
-                    Peer-reviewed results published in top-tier medical
-                    journals.
+                    {t('Status.trust.cards.validation.description')}
                   </p>
                 </div>
                 <Link
                   to="/about"
                   className="mt-auto pt-4 flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase tracking-wider hover:underline"
                 >
-                  Download Whitepaper
+                  {t('Status.trust.cards.validation.cta')}
                   <svg
                     className="w-4 h-4"
                     fill="none"
