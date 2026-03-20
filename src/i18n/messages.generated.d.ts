@@ -315,6 +315,151 @@ declare module 'i18next' {
           description: string;
         };
       };
+      appointments: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        manageSlots: string;
+        notScheduled: string;
+        invalidDate: string;
+        unknownPatient: string;
+        onlineConsultation: string;
+        inPersonConsultation: string;
+        open: string;
+        view: string;
+        searchPlaceholder: string;
+        filterLabel: string;
+        filter: {
+          all: string;
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
+        stats: {
+          today: string;
+          upcoming: string;
+          completed: string;
+          cancelled: string;
+        };
+        emptyTitle: string;
+        emptyAll: string;
+        emptyPrefix: string;
+        emptySuffix: string;
+        toast: {
+          missingDoctorIdentity: string;
+          cancelReason: string;
+          cancelSuccess: string;
+          cancelError: string;
+        };
+      };
+      schedules: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        addSlot: string;
+        today: string;
+        noSlots: string;
+        cancelSlotTitle: string;
+        errorCreateSlot: string;
+        stats: {
+          thisWeek: string;
+          available: string;
+          booked: string;
+          cancelled: string;
+        };
+        filter: {
+          all: string;
+          available: string;
+          booked: string;
+          past: string;
+        };
+        modal: {
+          title: string;
+          date: string;
+          startTime: string;
+          endTime: string;
+          slotType: string;
+          costOptional: string;
+          createSlot: string;
+        };
+      };
+      consultations: {
+        title: string;
+        chat: {
+          patient: string;
+          doctor: string;
+          you: string;
+          loading: string;
+          searchPlaceholder: string;
+          stats: {
+            all: string;
+            open: string;
+            upcoming: string;
+          };
+          emptySearchTitle: string;
+          emptySearchSubtitle: string;
+          joinMeeting: string;
+          joinLocked: string;
+          joinAvailableAfter: string;
+          canJoinBeforePrefix: string;
+          minutes: string;
+          meetingEnded: string;
+          meetingWindowClosed: string;
+          meetingLinkReady: string;
+          linkPending: string;
+          schedulePending: string;
+          confirmCancelSession: string;
+          confirmCompleteSession: string;
+          cancelReason: string;
+          sendError: string;
+          complete: string;
+          hideSessionOverview: string;
+          showSessionOverview: string;
+          autoOpenAtSchedule: string;
+          opensIn: string;
+          savedAsDoctorNote: string;
+          deliveredToPatient: string;
+          patientPreVisitNote: string;
+          patientMessage: string;
+          reviewPatientNotes: string;
+          noMessagesInSession: string;
+          noMessagesYet: string;
+          preVisitEmptyDescription: string;
+          inProgressEmptyDescription: string;
+          completedEmptyDescription: string;
+          typeMessage: string;
+          encryptionNotice: string;
+          characters: string;
+          completedReadOnly: string;
+          preVisitReadOnly: string;
+          selectSession: string;
+          selectSessionDescription: string;
+          sessionOverview: string;
+          appointment: string;
+          lastActivity: string;
+          consultationFee: string;
+          phaseLabel: string;
+          conversationGuidance: string;
+          guidanceDescription: string;
+          phase: {
+            preVisit: string;
+            inProgress: string;
+            completed: string;
+            locked: string;
+            postVisit: string;
+            preVisitDescription: string;
+            inProgressDescription: string;
+            completedDescription: string;
+          };
+        };
+      };
     };
     MedicalTerms: {
       cardiology: string;

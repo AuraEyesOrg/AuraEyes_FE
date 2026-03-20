@@ -311,6 +311,151 @@
         "deactivate": "Deactivate Account",
         "description": "Temporarily deactivate your account"
       }
+    },
+    "appointments": {
+      "title": "Appointments",
+      "subtitle": "Manage your real-time consultation appointments",
+      "loading": "Loading appointments...",
+      "manageSlots": "Manage Slots",
+      "notScheduled": "Not scheduled",
+      "invalidDate": "Invalid date",
+      "unknownPatient": "Unknown Patient",
+      "onlineConsultation": "Online Consultation",
+      "inPersonConsultation": "In-person Clinic Booking",
+      "open": "Open",
+      "view": "View",
+      "searchPlaceholder": "Search patient, session ID, type...",
+      "filterLabel": "Filter",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "stats": {
+        "today": "Today",
+        "upcoming": "Upcoming",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "emptyTitle": "No Appointments Found",
+      "emptyAll": "No real appointment data matched your search.",
+      "emptyPrefix": "No",
+      "emptySuffix": "appointments found.",
+      "toast": {
+        "missingDoctorIdentity": "Cannot determine current doctor identity.",
+        "cancelReason": "Cancelled by ophthalmologist",
+        "cancelSuccess": "Appointment cancelled successfully.",
+        "cancelError": "Unable to cancel appointment. Please try again."
+      }
+    },
+    "schedules": {
+      "title": "Schedule Management",
+      "subtitle": "Manage your availability and appointment slots",
+      "loading": "Loading schedules...",
+      "addSlot": "Add Slot",
+      "today": "Today",
+      "noSlots": "No slots",
+      "cancelSlotTitle": "Cancel slot",
+      "errorCreateSlot": "Failed to create slot. Please try again.",
+      "stats": {
+        "thisWeek": "This Week",
+        "available": "Available",
+        "booked": "Booked",
+        "cancelled": "Cancelled"
+      },
+      "filter": {
+        "all": "All",
+        "available": "Available",
+        "booked": "Booked",
+        "past": "Past"
+      },
+      "modal": {
+        "title": "Add New Time Slot",
+        "date": "Date",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "slotType": "Slot Type",
+        "costOptional": "Cost (optional)",
+        "createSlot": "Create Slot"
+      }
+    },
+    "consultations": {
+      "title": "Consultations",
+      "chat": {
+        "patient": "Patient",
+        "doctor": "Doctor",
+        "you": "You",
+        "loading": "Loading conversations...",
+        "searchPlaceholder": "Search by patient, status, or session type",
+        "stats": {
+          "all": "All",
+          "open": "Open",
+          "upcoming": "Upcoming"
+        },
+        "emptySearchTitle": "No sessions match your search",
+        "emptySearchSubtitle": "Try a patient name, chat status, or consultation type.",
+        "joinMeeting": "Join Meeting",
+        "joinLocked": "Join Locked",
+        "joinAvailableAfter": "Join available after",
+        "canJoinBeforePrefix": "Can join before",
+        "minutes": "minutes",
+        "meetingEnded": "Meeting Ended",
+        "meetingWindowClosed": "Appointment has passed the meeting window",
+        "meetingLinkReady": "Meeting link is ready.",
+        "linkPending": "Link Pending",
+        "schedulePending": "Schedule pending",
+        "confirmCancelSession": "Cancel this session? The slot will be burned and the patient will be refunded.",
+        "confirmCompleteSession": "Complete this consultation? The patient will be charged and the chat will be locked.",
+        "cancelReason": "Cancelled by doctor",
+        "sendError": "Failed to send message. Please try again.",
+        "complete": "Complete",
+        "hideSessionOverview": "Hide session overview",
+        "showSessionOverview": "Show session overview",
+        "autoOpenAtSchedule": "Chat will automatically open at the scheduled appointment time",
+        "opensIn": "Chat opens in",
+        "savedAsDoctorNote": "Saved as doctor note",
+        "deliveredToPatient": "Delivered to patient",
+        "patientPreVisitNote": "Patient pre-visit note",
+        "patientMessage": "Patient message",
+        "reviewPatientNotes": "Review patient notes",
+        "noMessagesInSession": "No messages in this session",
+        "noMessagesYet": "No messages yet",
+        "preVisitEmptyDescription": "Patient can leave notes before the consultation begins. Chat opens at appointment time.",
+        "inProgressEmptyDescription": "The consultation is active. Start the conversation when you are ready.",
+        "completedEmptyDescription": "This consultation has been completed.",
+        "typeMessage": "Type a message...",
+        "encryptionNotice": "Messages are encrypted and visible only to your care team.",
+        "characters": "characters",
+        "completedReadOnly": "Consultation has been completed. Chat is now read-only.",
+        "preVisitReadOnly": "Pre-visit mode - patient notes only. Chat opens at appointment time.",
+        "selectSession": "Select a session",
+        "selectSessionDescription": "Choose a consultation from the left panel to review the full conversation.",
+        "sessionOverview": "Session Overview",
+        "appointment": "Appointment",
+        "lastActivity": "Last activity",
+        "consultationFee": "Consultation fee",
+        "phaseLabel": "Phase",
+        "conversationGuidance": "Conversation Guidance",
+        "guidanceDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier to triage quickly.",
+        "phase": {
+          "preVisit": "Pre-visit",
+          "inProgress": "In Progress",
+          "completed": "Completed",
+          "locked": "Locked",
+          "postVisit": "Post-visit",
+          "preVisitDescription": "Patient can leave notes before the consultation starts. Chat opens at appointment time.",
+          "inProgressDescription": "Consultation is active. You can chat and join the video call.",
+          "completedDescription": "Consultation has been completed. Chat is now read-only."
+        }
+      }
     }
   },
   "MedicalTerms": {

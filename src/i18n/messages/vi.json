@@ -311,6 +311,151 @@
         "deactivate": "Vô hiệu hóa tài khoản",
         "description": "Tạm thời vô hiệu hóa tài khoản của bạn"
       }
+    },
+    "appointments": {
+      "title": "Lịch hẹn",
+      "subtitle": "Quản lý lịch hẹn tư vấn theo thời gian thực",
+      "loading": "Đang tải lịch hẹn...",
+      "manageSlots": "Quản lý slot",
+      "notScheduled": "Chưa lên lịch",
+      "invalidDate": "Ngày không hợp lệ",
+      "unknownPatient": "Bệnh nhân chưa xác định",
+      "onlineConsultation": "Tư vấn trực tuyến",
+      "inPersonConsultation": "Lịch khám tại phòng khám",
+      "open": "Mở",
+      "view": "Xem",
+      "searchPlaceholder": "Tìm bệnh nhân, mã phiên, loại...",
+      "filterLabel": "Lọc",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "confirmed": "Đã xác nhận",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "status": {
+        "pending": "Chờ xử lý",
+        "confirmed": "Đã xác nhận",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "stats": {
+        "today": "Hôm nay",
+        "upcoming": "Sắp tới",
+        "completed": "Hoàn thành",
+        "cancelled": "Đã hủy"
+      },
+      "emptyTitle": "Không tìm thấy lịch hẹn",
+      "emptyAll": "Không có lịch hẹn thực tế nào khớp với tìm kiếm của bạn.",
+      "emptyPrefix": "Không có",
+      "emptySuffix": "lịch hẹn phù hợp.",
+      "toast": {
+        "missingDoctorIdentity": "Không xác định được tài khoản bác sĩ hiện tại.",
+        "cancelReason": "Đã hủy bởi bác sĩ nhãn khoa",
+        "cancelSuccess": "Đã hủy lịch hẹn thành công.",
+        "cancelError": "Không thể hủy lịch hẹn. Vui lòng thử lại."
+      }
+    },
+    "schedules": {
+      "title": "Quản lý lịch làm việc",
+      "subtitle": "Quản lý thời gian rảnh và các slot lịch hẹn",
+      "loading": "Đang tải lịch làm việc...",
+      "addSlot": "Thêm slot",
+      "today": "Hôm nay",
+      "noSlots": "Không có slot",
+      "cancelSlotTitle": "Hủy slot",
+      "errorCreateSlot": "Tạo slot thất bại. Vui lòng thử lại.",
+      "stats": {
+        "thisWeek": "Tuần này",
+        "available": "Còn trống",
+        "booked": "Đã đặt",
+        "cancelled": "Đã hủy"
+      },
+      "filter": {
+        "all": "Tất cả",
+        "available": "Còn trống",
+        "booked": "Đã đặt",
+        "past": "Đã qua"
+      },
+      "modal": {
+        "title": "Thêm slot thời gian mới",
+        "date": "Ngày",
+        "startTime": "Giờ bắt đầu",
+        "endTime": "Giờ kết thúc",
+        "slotType": "Loại slot",
+        "costOptional": "Chi phí (tùy chọn)",
+        "createSlot": "Tạo slot"
+      }
+    },
+    "consultations": {
+      "title": "Tư vấn",
+      "chat": {
+        "patient": "Bệnh nhân",
+        "doctor": "Bác sĩ",
+        "you": "Bạn",
+        "loading": "Đang tải hội thoại...",
+        "searchPlaceholder": "Tìm theo bệnh nhân, trạng thái hoặc loại phiên",
+        "stats": {
+          "all": "Tất cả",
+          "open": "Đang mở",
+          "upcoming": "Sắp tới"
+        },
+        "emptySearchTitle": "Không có phiên nào khớp tìm kiếm",
+        "emptySearchSubtitle": "Hãy thử tên bệnh nhân, trạng thái chat hoặc loại tư vấn.",
+        "joinMeeting": "Vào phòng họp",
+        "joinLocked": "Chưa thể vào",
+        "joinAvailableAfter": "Có thể vào sau",
+        "canJoinBeforePrefix": "Có thể vào trước",
+        "minutes": "phút",
+        "meetingEnded": "Phòng họp đã kết thúc",
+        "meetingWindowClosed": "Cuộc hẹn đã qua thời gian tham gia",
+        "meetingLinkReady": "Liên kết phòng họp đã sẵn sàng.",
+        "linkPending": "Đang chờ liên kết",
+        "schedulePending": "Đang chờ lịch hẹn",
+        "confirmCancelSession": "Bạn có chắc muốn hủy phiên này? Slot sẽ bị tiêu hao và bệnh nhân sẽ được hoàn tiền.",
+        "confirmCompleteSession": "Bạn có chắc muốn hoàn tất phiên tư vấn này? Bệnh nhân sẽ bị trừ phí và chat sẽ bị khóa.",
+        "cancelReason": "Đã hủy bởi bác sĩ",
+        "sendError": "Gửi tin nhắn thất bại. Vui lòng thử lại.",
+        "complete": "Hoàn tất",
+        "hideSessionOverview": "Ẩn tổng quan phiên",
+        "showSessionOverview": "Hiện tổng quan phiên",
+        "autoOpenAtSchedule": "Chat sẽ tự động mở vào thời gian hẹn",
+        "opensIn": "Chat mở sau",
+        "savedAsDoctorNote": "Đã lưu dưới dạng ghi chú bác sĩ",
+        "deliveredToPatient": "Đã gửi tới bệnh nhân",
+        "patientPreVisitNote": "Ghi chú trước buổi khám của bệnh nhân",
+        "patientMessage": "Tin nhắn bệnh nhân",
+        "reviewPatientNotes": "Xem ghi chú bệnh nhân",
+        "noMessagesInSession": "Không có tin nhắn trong phiên này",
+        "noMessagesYet": "Chưa có tin nhắn",
+        "preVisitEmptyDescription": "Bệnh nhân có thể để lại ghi chú trước buổi tư vấn. Chat sẽ mở vào thời gian hẹn.",
+        "inProgressEmptyDescription": "Phiên tư vấn đang diễn ra. Hãy bắt đầu trò chuyện khi bạn sẵn sàng.",
+        "completedEmptyDescription": "Phiên tư vấn này đã hoàn tất.",
+        "typeMessage": "Nhập tin nhắn...",
+        "encryptionNotice": "Tin nhắn được mã hóa và chỉ hiển thị cho đội ngũ chăm sóc của bạn.",
+        "characters": "ký tự",
+        "completedReadOnly": "Phiên tư vấn đã hoàn tất. Chat hiện ở chế độ chỉ đọc.",
+        "preVisitReadOnly": "Chế độ trước buổi khám - chỉ có ghi chú của bệnh nhân. Chat mở vào thời gian hẹn.",
+        "selectSession": "Chọn một phiên",
+        "selectSessionDescription": "Chọn một phiên tư vấn ở cột bên trái để xem toàn bộ hội thoại.",
+        "sessionOverview": "Tổng quan phiên",
+        "appointment": "Lịch hẹn",
+        "lastActivity": "Hoạt động gần nhất",
+        "consultationFee": "Phí tư vấn",
+        "phaseLabel": "Giai đoạn",
+        "conversationGuidance": "Hướng dẫn hội thoại",
+        "guidanceDescription": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả scan gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp phân luồng nhanh hơn.",
+        "phase": {
+          "preVisit": "Trước buổi khám",
+          "inProgress": "Đang diễn ra",
+          "completed": "Hoàn tất",
+          "locked": "Đã khóa",
+          "postVisit": "Sau buổi khám",
+          "preVisitDescription": "Bệnh nhân có thể để lại ghi chú trước khi phiên tư vấn bắt đầu. Chat sẽ mở vào thời gian hẹn.",
+          "inProgressDescription": "Phiên tư vấn đang hoạt động. Bạn có thể trò chuyện và tham gia cuộc gọi video.",
+          "completedDescription": "Phiên tư vấn đã hoàn tất. Chat hiện ở chế độ chỉ đọc."
+        }
+      }
     }
   },
   "MedicalTerms": {
