@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
+import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
 
@@ -46,6 +48,16 @@ export default function PatientDashboard() {
   } = useDashboard();
 
   const firstName = profile?.fullName?.split(' ')[0] ?? 'there';
+
+  const recentSessionsQuery = useQuery({
+    queryKey: ['screening', 'recent', 'dashboard'],
+    queryFn: async () => {
+      const response = await screeningApi.getRecentSessions(1);
+      return response.data ?? [];
+    },
+  });
+
+  const latestSession = recentSessionsQuery.data?.[0];
 
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
@@ -161,8 +173,47 @@ export default function PatientDashboard() {
               <Upload className="w-4 h-4" />
               Upload New Scan
             </Link>
+            {latestSession && (
+              <Link
+                to="/patient/analysis"
+                state={{ screeningId: latestSession.screeningId }}
+                className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                View Latest Session
+              </Link>
+            )}
           </div>
         </header>
+
+        {latestSession && (
+          <section className="medical-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] font-semibold">
+                Latest Screening Session
+              </p>
+              <p className="text-sm text-[var(--text-primary)] mt-1">
+                Created {formatShortDate(latestSession.createdAt)} •{' '}
+                {latestSession.imagesCount} image
+                {latestSession.imagesCount !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/patient/screening/new"
+                className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+              >
+                Start New Session
+              </Link>
+              <Link
+                to="/patient/analysis"
+                state={{ screeningId: latestSession.screeningId }}
+                className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
+              >
+                Open Latest
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Latest Analysis Result Section */}
         {latestReport ? (
