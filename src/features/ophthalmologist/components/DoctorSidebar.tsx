@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -13,6 +13,12 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface DoctorSidebarProps {
   pendingCount?: number;
@@ -20,43 +26,64 @@ interface DoctorSidebarProps {
 
 const navItems = [
   {
-    label: 'Dashboard',
+    labelKey: 'Ophthalmologist.sidebar.dashboard',
     icon: LayoutDashboard,
     path: '/ophthalmologist/dashboard',
   },
-  { label: 'Patients', icon: Users, path: '/ophthalmologist/patients' },
   {
-    label: 'Screenings',
+    labelKey: 'Ophthalmologist.sidebar.patients',
+    icon: Users,
+    path: '/ophthalmologist/patients',
+  },
+  {
+    labelKey: 'Ophthalmologist.sidebar.screenings',
     icon: Eye,
     path: '/ophthalmologist/screenings',
     hasBadge: true,
   },
   {
-    label: 'Appointments',
+    labelKey: 'Ophthalmologist.sidebar.appointments',
     icon: Calendar,
     path: '/ophthalmologist/appointments',
   },
   {
-    label: 'Schedules',
+    labelKey: 'Ophthalmologist.sidebar.schedules',
     icon: CalendarClock,
     path: '/ophthalmologist/schedules',
   },
   {
-    label: 'Consultations',
+    labelKey: 'Ophthalmologist.sidebar.consultations',
     icon: MessagesSquare,
     path: '/ophthalmologist/consultations',
     hasBadge: true,
   },
-  { label: 'Analytics', icon: BarChart3, path: '/ophthalmologist/analytics' },
-  { label: 'Contract', icon: FileText, path: '/ophthalmologist/contract' },
-  { label: 'Settings', icon: Settings, path: '/ophthalmologist/settings' },
+  {
+    labelKey: 'Ophthalmologist.sidebar.analytics',
+    icon: BarChart3,
+    path: '/ophthalmologist/analytics',
+  },
+  {
+    labelKey: 'Ophthalmologist.sidebar.contract',
+    icon: FileText,
+    path: '/ophthalmologist/contract',
+  },
+  {
+    labelKey: 'Ophthalmologist.sidebar.settings',
+    icon: Settings,
+    path: '/ophthalmologist/settings',
+  },
 ];
 
 export default function DoctorSidebar({
   pendingCount = 0,
 }: DoctorSidebarProps) {
+  const { t } = useSafeTranslation();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const displayName = user?.fullName ?? 'Doctor';
   const userAvatar = user?.avatarUrl;
@@ -69,7 +96,7 @@ export default function DoctorSidebar({
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(toLocalizedPath('/login'));
   };
 
   return (
@@ -79,8 +106,8 @@ export default function DoctorSidebar({
         <div className="mb-10 px-2">
           <AuraLogo
             size="md"
-            subtitle="Ophthalmologist"
-            to="/ophthalmologist/dashboard"
+            subtitle={t('Ophthalmologist.common.role', 'Ophthalmologist')}
+            to={toLocalizedPath('/ophthalmologist/dashboard')}
           />
         </div>
 
@@ -89,7 +116,7 @@ export default function DoctorSidebar({
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={toLocalizedPath(item.path)}
               className={({ isActive }) =>
                 `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
@@ -104,7 +131,12 @@ export default function DoctorSidebar({
                     <span className={isActive ? 'text-primary' : ''}>
                       <item.icon className="w-5 h-5" />
                     </span>
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium">
+                      {t(
+                        item.labelKey,
+                        item.labelKey.split('.').pop() ?? 'Item'
+                      )}
+                    </span>
                   </div>
                   {item.hasBadge && pendingCount > 0 && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
@@ -142,14 +174,14 @@ export default function DoctorSidebar({
                   {displayName.split(' ').pop()}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  Ophthalmologist
+                  {t('Ophthalmologist.common.role', 'Ophthalmologist')}
                 </p>
               </div>
             </div>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-              title="Logout"
+              title={t('Ophthalmologist.common.logout', 'Logout')}
             >
               <LogOut className="w-5 h-5" />
             </button>

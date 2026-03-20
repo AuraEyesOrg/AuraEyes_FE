@@ -38,6 +38,7 @@ export interface OrganisationFeedbackItem {
 export interface OphthalmologistFeedbackItem {
   id: string;
   patientId: string;
+  patientFullName?: string | null;
   ophthalmologistId: string;
   consultationSessionId: string;
   rating: number;

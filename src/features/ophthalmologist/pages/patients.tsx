@@ -7,12 +7,15 @@ import {
   Clock,
   MoreVertical,
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import Spinner from '@/components/ui/spinner';
 import { useConsultationSessions } from '@/features/consultation/hooks';
 import useAuthStore from '@/store/auth-store';
 import { SessionStatus } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
 
 type PatientCardStatus = 'active' | 'urgent' | 'past';
 
@@ -58,11 +61,15 @@ const getAvatarColor = (seed: string) => {
   return AVATAR_COLORS[index];
 };
 
-const formatAppointmentDate = (value?: string | null) => {
-  if (!value) return 'N/A';
+const formatAppointmentDate = (
+  value: string | null | undefined,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'N/A';
-  return date.toLocaleDateString('en-US', {
+  if (Number.isNaN(date.getTime())) return fallback;
+  return date.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -97,6 +104,10 @@ const getStatusStyle = (
 };
 
 export default function PatientsPage() {
+  const { t } = useSafeTranslation();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
@@ -166,7 +177,7 @@ export default function PatientsPage() {
 
       const displayName =
         sortedByTimeDesc[0]?.patientName?.trim() ||
-        `Patient ${patientId.slice(0, 8)}`;
+        `${t('Ophthalmologist.patients.patientPrefix', 'Patient')} ${patientId.slice(0, 8)}`;
 
       result.push({
         id: patientId,
@@ -176,15 +187,29 @@ export default function PatientsPage() {
         status,
         statusLabel:
           status === 'urgent'
-            ? 'Upcoming < 24h'
+            ? t('Ophthalmologist.patients.statusLabel.urgent', 'Upcoming < 24h')
             : status === 'active'
-              ? 'Has upcoming appointment'
-              : 'Past consultations only',
+              ? t(
+                  'Ophthalmologist.patients.statusLabel.active',
+                  'Has upcoming appointment'
+                )
+              : t(
+                  'Ophthalmologist.patients.statusLabel.past',
+                  'Past consultations only'
+                ),
         totalVisits: patientSessions.length,
         upcomingCount: upcomingSessions.length,
         completedCount: completedSessions.length,
-        nextAppointment: formatAppointmentDate(nextUpcoming),
-        lastVisit: formatAppointmentDate(latestCompleted),
+        nextAppointment: formatAppointmentDate(
+          nextUpcoming,
+          dateLocale,
+          t('Ophthalmologist.patients.notAvailable', 'N/A')
+        ),
+        lastVisit: formatAppointmentDate(
+          latestCompleted,
+          dateLocale,
+          t('Ophthalmologist.patients.notAvailable', 'N/A')
+        ),
       });
     });
 
@@ -200,7 +225,7 @@ export default function PatientsPage() {
 
       return a.name.localeCompare(b.name);
     });
-  }, [sessions]);
+  }, [sessions, t, dateLocale]);
 
   const filteredPatients = patients.filter((patient) => {
     const needle = searchQuery.trim().toLowerCase();
@@ -223,13 +248,18 @@ export default function PatientsPage() {
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader pageName="Patients" />
+          <DoctorHeader
+            pageName={t('Ophthalmologist.patients.title', 'Patients')}
+          />
           <main className="p-6">
             <div className="flex items-center justify-center h-[60vh]">
               <div className="text-center">
                 <Spinner size={40} className="mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  Loading patient consultations...
+                  {t(
+                    'Ophthalmologist.patients.loading',
+                    'Loading patient consultations...'
+                  )}
                 </p>
               </div>
             </div>
@@ -244,16 +274,21 @@ export default function PatientsPage() {
       <DoctorSidebar pendingCount={urgentPatients} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader pageName="Patients" />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.patients.title', 'Patients')}
+        />
 
         <main className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                Patients
+                {t('Ophthalmologist.patients.title', 'Patients')}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Patients with past or upcoming consultations assigned to you
+                {t(
+                  'Ophthalmologist.patients.subtitle',
+                  'Patients with past or upcoming consultations assigned to you'
+                )}
               </p>
             </div>
           </div>
@@ -263,7 +298,10 @@ export default function PatientsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search patients by name or profile ID..."
+                placeholder={t(
+                  'Ophthalmologist.patients.searchPlaceholder',
+                  'Search patients by name or profile ID...'
+                )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
@@ -276,15 +314,23 @@ export default function PatientsPage() {
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
               >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="urgent">Urgent</option>
-                <option value="past">Past Only</option>
+                <option value="all">
+                  {t('Ophthalmologist.patients.filter.allStatus', 'All Status')}
+                </option>
+                <option value="active">
+                  {t('Ophthalmologist.patients.filter.active', 'Active')}
+                </option>
+                <option value="urgent">
+                  {t('Ophthalmologist.patients.filter.urgent', 'Urgent')}
+                </option>
+                <option value="past">
+                  {t('Ophthalmologist.patients.filter.pastOnly', 'Past Only')}
+                </option>
               </select>
 
               <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
                 <Filter size={16} />
-                More Filters
+                {t('Ophthalmologist.patients.moreFilters', 'More Filters')}
               </button>
             </div>
           </div>
@@ -292,7 +338,10 @@ export default function PatientsPage() {
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Total Patients
+                {t(
+                  'Ophthalmologist.patients.stats.totalPatients',
+                  'Total Patients'
+                )}
               </p>
               <p className="text-2xl font-bold text-gray-800 dark:text-white">
                 {totalPatients}
@@ -300,7 +349,7 @@ export default function PatientsPage() {
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Active
+                {t('Ophthalmologist.patients.stats.active', 'Active')}
               </p>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {activePatients}
@@ -308,7 +357,7 @@ export default function PatientsPage() {
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Urgent
+                {t('Ophthalmologist.patients.stats.urgent', 'Urgent')}
               </p>
               <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {urgentPatients}
@@ -316,7 +365,7 @@ export default function PatientsPage() {
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Past Only
+                {t('Ophthalmologist.patients.stats.pastOnly', 'Past Only')}
               </p>
               <p className="text-2xl font-bold text-slate-600 dark:text-slate-300">
                 {pastPatients}
@@ -326,7 +375,10 @@ export default function PatientsPage() {
 
           {filteredPatients.length === 0 ? (
             <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-10 text-center text-gray-500 dark:text-gray-400">
-              No patients found for this doctor.
+              {t(
+                'Ophthalmologist.patients.empty',
+                'No patients found for this doctor.'
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -352,7 +404,10 @@ export default function PatientsPage() {
                           </h3>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {patient.id.slice(0, 8)}... • {patient.totalVisits}{' '}
-                            session(s)
+                            {t(
+                              'Ophthalmologist.patients.sessionsSuffix',
+                              'session(s)'
+                            )}
                           </p>
                         </div>
                       </div>
@@ -375,30 +430,47 @@ export default function PatientsPage() {
                           size={14}
                           className="text-gray-400 dark:text-gray-500"
                         />
-                        Next appointment: {patient.nextAppointment}
+                        {t(
+                          'Ophthalmologist.patients.nextAppointment',
+                          'Next appointment'
+                        )}
+                        : {patient.nextAppointment}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Clock
                           size={14}
                           className="text-gray-400 dark:text-gray-500"
                         />
-                        Last completed visit: {patient.lastVisit}
+                        {t(
+                          'Ophthalmologist.patients.lastCompletedVisit',
+                          'Last completed visit'
+                        )}
+                        : {patient.lastVisit}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#1e3a5f]">
                       <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <Calendar size={12} />
-                        Upcoming: {patient.upcomingCount}
+                        {t(
+                          'Ophthalmologist.patients.upcoming',
+                          'Upcoming'
+                        )}: {patient.upcomingCount}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <Eye size={12} />
-                        Completed: {patient.completedCount}
+                        {t(
+                          'Ophthalmologist.patients.completed',
+                          'Completed'
+                        )}: {patient.completedCount}
                       </div>
                     </div>
 
                     <button className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors">
-                      View Details
+                      {t(
+                        'Ophthalmologist.patients.viewDetails',
+                        'View Details'
+                      )}
                     </button>
                   </div>
                 );

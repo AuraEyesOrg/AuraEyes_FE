@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Mail,
@@ -34,6 +34,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
 import { getCurrentUser } from '@/features/auth/api/auth.api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -182,6 +188,8 @@ const mapCertificateType = (
 };
 
 export default function SettingsPage() {
+  const { t } = useSafeTranslation();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuthStore();
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -189,6 +197,10 @@ export default function SettingsPage() {
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+  const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
 
   const currentUserQuery = useQuery({
     queryKey: ['auth', 'me'],
@@ -238,12 +250,19 @@ export default function SettingsPage() {
     return {
       id: profileData?.id ?? authUser?.roleId ?? authUser?.id ?? '',
       fullName:
-        profileData?.userFullName ?? authUser?.fullName ?? 'Unknown Doctor',
+        profileData?.userFullName ??
+        authUser?.fullName ??
+        t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
       email: profileData?.userEmail ?? authUser?.email ?? 'N/A',
       phone: 'N/A',
-      bio: profileData?.bio?.trim() || 'No profile bio available.',
+      bio:
+        profileData?.bio?.trim() ||
+        t(
+          'Ophthalmologist.settings.defaults.noBio',
+          'No profile bio available.'
+        ),
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
-      specialty: 'Ophthalmologist',
+      specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
       hospital: authUser?.organizationId ?? 'N/A',
       department: 'N/A',
       address: 'N/A',
@@ -320,19 +339,31 @@ export default function SettingsPage() {
       case 'verified':
         return (
           <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-            <CheckCircle className="w-3 h-3" /> Verified
+            <CheckCircle className="w-3 h-3" />{' '}
+            {t(
+              'Ophthalmologist.settings.credentials.status.verified',
+              'Verified'
+            )}
           </span>
         );
       case 'pending':
         return (
           <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-            <Clock className="w-3 h-3" /> Pending
+            <Clock className="w-3 h-3" />{' '}
+            {t(
+              'Ophthalmologist.settings.credentials.status.pending',
+              'Pending'
+            )}
           </span>
         );
       case 'expired':
         return (
           <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
-            <AlertCircle className="w-3 h-3" /> Expired
+            <AlertCircle className="w-3 h-3" />{' '}
+            {t(
+              'Ophthalmologist.settings.credentials.status.expired',
+              'Expired'
+            )}
           </span>
         );
     }
@@ -354,16 +385,21 @@ export default function SettingsPage() {
       <DoctorSidebar pendingCount={12} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader pageName="Settings" />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.settings.pageTitle', 'Settings')}
+        />
 
         <main className="p-6">
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              Settings
+              {t('Ophthalmologist.settings.pageTitle', 'Settings')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Manage your profile, credentials, and preferences
+              {t(
+                'Ophthalmologist.settings.pageSubtitle',
+                'Manage your profile, credentials, and preferences'
+              )}
             </p>
           </div>
 
@@ -374,17 +410,23 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Profile Information
+                    {t(
+                      'Ophthalmologist.settings.profile.title',
+                      'Profile Information'
+                    )}
                   </h2>
                   <button className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition-colors">
                     <Edit3 className="w-4 h-4" />
-                    Edit Profile
+                    {t('Ophthalmologist.settings.profile.edit', 'Edit Profile')}
                   </button>
                 </div>
 
                 {(currentUserQuery.isLoading || profileQuery.isLoading) && (
                   <div className="px-6 pt-4 text-sm text-gray-500 dark:text-gray-400">
-                    Loading profile information...
+                    {t(
+                      'Ophthalmologist.settings.profile.loading',
+                      'Loading profile information...'
+                    )}
                   </div>
                 )}
 
@@ -410,19 +452,28 @@ export default function SettingsPage() {
                         </h3>
                         {profile.isVerified && (
                           <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-                            <CheckCircle className="w-3 h-3" /> Verified
-                            Practitioner
+                            <CheckCircle className="w-3 h-3" />{' '}
+                            {t(
+                              'Ophthalmologist.settings.profile.verifiedPractitioner',
+                              'Verified Practitioner'
+                            )}
                           </span>
                         )}
                       </div>
                       <p className="text-gray-600 dark:text-gray-400 mb-1">
-                        {profile.specialty} • {profile.yearsOfExperience} years
-                        experience
+                        {profile.specialty} • {profile.yearsOfExperience}{' '}
+                        {t(
+                          'Ophthalmologist.settings.profile.experienceSuffix',
+                          'years experience'
+                        )}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-500">
-                        Member since{' '}
+                        {t(
+                          'Ophthalmologist.settings.profile.memberSince',
+                          'Member since'
+                        )}{' '}
                         {new Date(profile.createdAt).toLocaleDateString(
-                          'en-US',
+                          dateLocale,
                           { month: 'long', year: 'numeric' }
                         )}
                       </p>
@@ -437,7 +488,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Email Address
+                          {t(
+                            'Ophthalmologist.settings.profile.email',
+                            'Email Address'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {profile.email}
@@ -451,7 +505,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Phone Number
+                          {t(
+                            'Ophthalmologist.settings.profile.phone',
+                            'Phone Number'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {profile.phone}
@@ -465,10 +522,14 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Years of Experience
+                          {t(
+                            'Ophthalmologist.settings.profile.experience',
+                            'Years of Experience'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {profile.yearsOfExperience} years
+                          {profile.yearsOfExperience}{' '}
+                          {t('Ophthalmologist.settings.profile.years', 'years')}
                         </p>
                       </div>
                     </div>
@@ -479,7 +540,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Specialty
+                          {t(
+                            'Ophthalmologist.settings.profile.specialty',
+                            'Specialty'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {profile.specialty}
@@ -493,7 +557,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Hospital / Clinic
+                          {t(
+                            'Ophthalmologist.settings.profile.hospital',
+                            'Hospital / Clinic'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {profile.hospital}
@@ -507,7 +574,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Address
+                          {t(
+                            'Ophthalmologist.settings.profile.address',
+                            'Address'
+                          )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {profile.address}
@@ -519,7 +589,10 @@ export default function SettingsPage() {
                   {/* Bio Section */}
                   <div className="mt-6 p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg">
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      Bio / Description
+                      {t(
+                        'Ophthalmologist.settings.profile.bio',
+                        'Bio / Description'
+                      )}
                     </p>
                     <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                       {profile.bio}
@@ -532,11 +605,17 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Medical Credentials
+                    {t(
+                      'Ophthalmologist.settings.credentials.title',
+                      'Medical Credentials'
+                    )}
                   </h2>
                   <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-sm font-medium transition-colors">
                     <Upload className="w-4 h-4" />
-                    Upload Certificate
+                    {t(
+                      'Ophthalmologist.settings.credentials.upload',
+                      'Upload Certificate'
+                    )}
                   </button>
                 </div>
 
@@ -559,16 +638,27 @@ export default function SettingsPage() {
                             {getStatusBadge(cert.status)}
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            Issued by {cert.issuedBy}
+                            {t(
+                              'Ophthalmologist.settings.credentials.issuedBy',
+                              'Issued by'
+                            )}{' '}
+                            {cert.issuedBy}
                           </p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
                             <span>
-                              Issued:{' '}
-                              {new Date(cert.issuedDate).toLocaleDateString()}
+                              {t(
+                                'Ophthalmologist.settings.credentials.issued',
+                                'Issued'
+                              )}
+                              : {new Date(cert.issuedDate).toLocaleDateString()}
                             </span>
                             {cert.expiryDate && (
                               <span>
-                                Expires:{' '}
+                                {t(
+                                  'Ophthalmologist.settings.credentials.expires',
+                                  'Expires'
+                                )}
+                                :{' '}
                                 {new Date(cert.expiryDate).toLocaleDateString()}
                               </span>
                             )}
@@ -587,7 +677,7 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    E-Wallet
+                    {t('Ophthalmologist.settings.wallet.title', 'E-Wallet')}
                   </h2>
                 </div>
 
@@ -600,7 +690,10 @@ export default function SettingsPage() {
                           <Wallet className="w-5 h-5 text-white" />
                         </div>
                         <span className="text-white/80 text-sm font-medium">
-                          Available Balance
+                          {t(
+                            'Ophthalmologist.settings.wallet.availableBalance',
+                            'Available Balance'
+                          )}
                         </span>
                       </div>
                     </div>
@@ -612,24 +705,36 @@ export default function SettingsPage() {
                       className="w-full py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <ArrowUpRight className="w-4 h-4" />
-                      Withdraw Funds
+                      {t(
+                        'Ophthalmologist.settings.wallet.withdrawFunds',
+                        'Withdraw Funds'
+                      )}
                     </button>
                   </div>
 
                   {/* Recent Transactions */}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-                      Recent Transactions
+                      {t(
+                        'Ophthalmologist.settings.wallet.recentTransactions',
+                        'Recent Transactions'
+                      )}
                     </p>
                     {walletTransactionsQuery.isLoading && (
                       <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
-                        Loading transactions...
+                        {t(
+                          'Ophthalmologist.settings.wallet.loadingTransactions',
+                          'Loading transactions...'
+                        )}
                       </p>
                     )}
                     {!walletTransactionsQuery.isLoading &&
                       wallet.transactions.length === 0 && (
                         <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          No transactions yet.
+                          {t(
+                            'Ophthalmologist.settings.wallet.noTransactions',
+                            'No transactions yet.'
+                          )}
                         </p>
                       )}
                     {wallet.transactions.slice(0, 4).map((txn) => {
@@ -651,7 +756,7 @@ export default function SettingsPage() {
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               {new Date(txn.createdAt).toLocaleDateString(
-                                'en-US',
+                                dateLocale,
                                 {
                                   month: 'short',
                                   day: 'numeric',
@@ -678,7 +783,10 @@ export default function SettingsPage() {
 
                   {/* View All Link */}
                   <button className="w-full mt-3 p-3 text-cyan-600 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1">
-                    View All Transactions
+                    {t(
+                      'Ophthalmologist.settings.wallet.viewAllTransactions',
+                      'View All Transactions'
+                    )}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -691,13 +799,16 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Account Settings
+                    {t(
+                      'Ophthalmologist.settings.accountSettings.title',
+                      'Account Settings'
+                    )}
                   </h2>
                 </div>
 
                 <div className="p-4 space-y-2">
                   <Link
-                    to="/forgot-password"
+                    to={toLocalizedPath('/forgot-password')}
                     className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group"
                   >
                     <div className="flex items-center gap-3">
@@ -706,10 +817,16 @@ export default function SettingsPage() {
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Security
+                          {t(
+                            'Ophthalmologist.settings.accountSettings.security',
+                            'Security'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Reset password & 2FA
+                          {t(
+                            'Ophthalmologist.settings.accountSettings.securityHint',
+                            'Reset password & 2FA'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -723,10 +840,13 @@ export default function SettingsPage() {
                       </div>
                       <div className="text-left">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Language
+                          {t(
+                            'Ophthalmologist.settings.accountSettings.language',
+                            'Language'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          English (US)
+                          {locale === 'vi' ? 'Tieng Viet (VN)' : 'English (US)'}
                         </p>
                       </div>
                     </div>
@@ -739,7 +859,10 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Appearance
+                    {t(
+                      'Ophthalmologist.settings.appearance.title',
+                      'Appearance'
+                    )}
                   </h2>
                 </div>
 
@@ -755,10 +878,21 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Dark Mode
+                          {t(
+                            'Ophthalmologist.settings.appearance.darkMode',
+                            'Dark Mode'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {theme === 'dark' ? 'Currently on' : 'Currently off'}
+                          {theme === 'dark'
+                            ? t(
+                                'Ophthalmologist.settings.appearance.currentlyOn',
+                                'Currently on'
+                              )
+                            : t(
+                                'Ophthalmologist.settings.appearance.currentlyOff',
+                                'Currently off'
+                              )}
                         </p>
                       </div>
                     </div>
@@ -782,7 +916,10 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
                 <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Notifications
+                    {t(
+                      'Ophthalmologist.settings.notifications.title',
+                      'Notifications'
+                    )}
                   </h2>
                 </div>
 
@@ -795,10 +932,16 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Email
+                          {t(
+                            'Ophthalmologist.settings.notifications.email',
+                            'Email'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Receive via email
+                          {t(
+                            'Ophthalmologist.settings.notifications.emailHint',
+                            'Receive via email'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -824,10 +967,16 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Push
+                          {t(
+                            'Ophthalmologist.settings.notifications.push',
+                            'Push'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Browser notifications
+                          {t(
+                            'Ophthalmologist.settings.notifications.pushHint',
+                            'Browser notifications'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -853,10 +1002,16 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          Reminders
+                          {t(
+                            'Ophthalmologist.settings.notifications.reminders',
+                            'Reminders'
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Appointment alerts
+                          {t(
+                            'Ophthalmologist.settings.notifications.remindersHint',
+                            'Appointment alerts'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -882,15 +1037,26 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-red-200 dark:border-red-900/30 overflow-hidden">
                 <div className="p-6 border-b border-red-200 dark:border-red-900/30">
                   <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
-                    Danger Zone
+                    {t(
+                      'Ophthalmologist.settings.dangerZone.title',
+                      'Danger Zone'
+                    )}
                   </h2>
                 </div>
 
                 <div className="p-4">
                   <button className="w-full p-4 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg text-sm font-medium transition-colors text-left">
-                    <p className="font-medium">Deactivate Account</p>
+                    <p className="font-medium">
+                      {t(
+                        'Ophthalmologist.settings.dangerZone.deactivate',
+                        'Deactivate Account'
+                      )}
+                    </p>
                     <p className="text-xs text-red-500 dark:text-red-500 mt-1">
-                      Temporarily disable your account
+                      {t(
+                        'Ophthalmologist.settings.dangerZone.description',
+                        'Temporarily disable your account'
+                      )}
                     </p>
                   </button>
                 </div>
@@ -910,7 +1076,10 @@ export default function SettingsPage() {
           <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Withdraw Funds
+                {t(
+                  'Ophthalmologist.settings.wallet.withdrawFunds',
+                  'Withdraw Funds'
+                )}
               </h3>
               <button
                 onClick={() => setShowWithdrawModal(false)}
@@ -923,7 +1092,10 @@ export default function SettingsPage() {
             {/* Current Balance */}
             <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 mb-6">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Available Balance
+                {t(
+                  'Ophthalmologist.settings.wallet.availableBalance',
+                  'Available Balance'
+                )}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(wallet.balance)}
@@ -933,7 +1105,10 @@ export default function SettingsPage() {
             {/* Amount Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Withdrawal Amount
+                {t(
+                  'Ophthalmologist.settings.wallet.withdrawalAmount',
+                  'Withdrawal Amount'
+                )}
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
@@ -950,7 +1125,11 @@ export default function SettingsPage() {
                 />
               </div>
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Minimum withdrawal: {formatCurrency(100000)}
+                {t(
+                  'Ophthalmologist.settings.wallet.minimumWithdrawal',
+                  'Minimum withdrawal'
+                )}
+                : {formatCurrency(100000)}
               </p>
             </div>
 
@@ -970,7 +1149,10 @@ export default function SettingsPage() {
             {/* Bank Account Info */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
               <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
-                Withdrawal to
+                {t(
+                  'Ophthalmologist.settings.wallet.withdrawalTo',
+                  'Withdrawal to'
+                )}
               </p>
               <p className="text-sm text-gray-900 dark:text-white font-semibold">
                 Vietcombank ***1234
@@ -986,7 +1168,7 @@ export default function SettingsPage() {
                 onClick={() => setShowWithdrawModal(false)}
                 className="flex-1 py-3 px-4 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={() => {
@@ -997,7 +1179,7 @@ export default function SettingsPage() {
                 className="flex-1 py-3 px-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <ArrowUpRight className="w-4 h-4" />
-                Withdraw
+                {t('Ophthalmologist.settings.wallet.withdraw', 'Withdraw')}
               </button>
             </div>
           </div>
