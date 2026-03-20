@@ -6,3 +6,6 @@ dev-dist
 *.local
 .env
 src/styles.css
+playwright-report
+test-results
+tests/.auth
