@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -11,7 +11,7 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 gsap.registerPlugin(ScrollTrigger);
 
 const ContactPage = () => {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({

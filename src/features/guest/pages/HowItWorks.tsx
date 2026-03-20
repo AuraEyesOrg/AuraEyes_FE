@@ -1,14 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HowItWorksPage = () => {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

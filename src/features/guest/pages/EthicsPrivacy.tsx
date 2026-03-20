@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useTranslation } from 'react-i18next';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const EthicsPrivacyPage = () => {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -387,7 +387,6 @@ const EthicsPrivacyPage = () => {
                             />
                           </svg>
                           <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)]">
-                            Secure Enclave
                             {t('EthicsPrivacy.hero.secureEnclave')}
                           </span>
                         </div>
