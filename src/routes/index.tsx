@@ -1,8 +1,24 @@
-import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import PrivateRoute from './private-route';
 import Spinner from '@/components/ui/spinner';
 import { setRouterNavigator } from '@/lib/router';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import { LocaleSync } from '@/i18n/LocaleSync';
+import GuestLayout from '@/features/guest/layout';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -229,6 +245,44 @@ const RouterBridge = () => {
   return null;
 };
 
+interface LocalizedRedirectProps {
+  target: string;
+}
+
+const LocalizedRedirect = ({ target }: LocalizedRedirectProps) => {
+  const location = useLocation();
+  const localizedPath = resolvePathWithLocale(target);
+
+  return (
+    <Navigate
+      replace
+      to={`${localizedPath}${location.search ?? ''}${location.hash ?? ''}`}
+    />
+  );
+};
+
+interface LocalizedAuthRouteProps {
+  element: ReactNode;
+}
+
+const LocalizedAuthRoute = ({ element }: LocalizedAuthRouteProps) => (
+  <>
+    <LocaleSync />
+    {element}
+  </>
+);
+
+interface LocalizedPrivateRouteProps {
+  element: ReactElement;
+}
+
+const LocalizedPrivateRoute = ({ element }: LocalizedPrivateRouteProps) => (
+  <>
+    <LocaleSync />
+    <PrivateRoute>{element}</PrivateRoute>
+  </>
+);
+
 /**
  * Main Router Component
  */
@@ -238,13 +292,157 @@ const Router = () => (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* ============ GUEST ROUTES (Public - No Auth) ============ */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/ethics" element={<EthicsPrivacyPage />} />
-        <Route path="/status" element={<StatusPage />} />
-        <Route path="/compliance" element={<CompliancePage />} />
+        <Route path="/" element={<LocalizedRedirect target="/" />} />
+        <Route path="/about" element={<LocalizedRedirect target="/about" />} />
+        <Route
+          path="/how-it-works"
+          element={<LocalizedRedirect target="/how-it-works" />}
+        />
+        <Route
+          path="/contact"
+          element={<LocalizedRedirect target="/contact" />}
+        />
+        <Route
+          path="/ethics"
+          element={<LocalizedRedirect target="/ethics" />}
+        />
+        <Route
+          path="/status"
+          element={<LocalizedRedirect target="/status" />}
+        />
+        <Route
+          path="/compliance"
+          element={<LocalizedRedirect target="/compliance" />}
+        />
+
+        <Route
+          path="/:locale/login"
+          element={<LocalizedAuthRoute element={<LoginPage />} />}
+        />
+        <Route
+          path="/:locale/forgot-password"
+          element={<LocalizedAuthRoute element={<ForgotPasswordPage />} />}
+        />
+        <Route
+          path="/:locale/reset-password"
+          element={<LocalizedAuthRoute element={<ResetPasswordPage />} />}
+        />
+        <Route
+          path="/:locale/register-doctor"
+          element={<LocalizedAuthRoute element={<RegisterDoctorPage />} />}
+        />
+        <Route
+          path="/:locale/register-organisation"
+          element={
+            <LocalizedAuthRoute element={<RegisterOrganisationPage />} />
+          }
+        />
+        <Route
+          path="/:locale/confirm-email"
+          element={<LocalizedAuthRoute element={<ConfirmEmailPage />} />}
+        />
+        <Route
+          path="/:locale/two-factor-auth"
+          element={<LocalizedAuthRoute element={<TwoFactorSettingsPage />} />}
+        />
+        <Route
+          path="/:locale/two-factor-verify"
+          element={<LocalizedAuthRoute element={<TwoFactorVerifyPage />} />}
+        />
+        <Route
+          path="/:locale/pending-approval"
+          element={<LocalizedAuthRoute element={<PendingApprovalPage />} />}
+        />
+
+        <Route
+          path="/:locale/ophthalmologist/dashboard"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistDashboard />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/patients"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistPatientsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/analytics"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistAnalyticsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/appointments"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistAppointmentsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/settings"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistSettingsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/consultations"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistConsultationsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings/:screeningId/review"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningReviewPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/schedules"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/slot-management"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/contract"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistContractPage />} />
+          }
+        />
+
+        <Route path="/:locale" element={<GuestLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="how-it-works" element={<HowItWorksPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="ethics" element={<EthicsPrivacyPage />} />
+          <Route path="status" element={<StatusPage />} />
+          <Route path="compliance" element={<CompliancePage />} />
+          <Route path="*" element={<Navigate to="." replace />} />
+        </Route>
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
@@ -264,7 +462,10 @@ const Router = () => (
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/screening" element={<ScreeningPage />} />
         <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
-        <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
+        <Route
+          path="/patient/screening/analyze"
+          element={<RetinalAnalysisPage />}
+        />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/notifications" element={<NotificationsPage />} />
@@ -506,6 +707,8 @@ const Router = () => (
             element={<NetworkOrganisationPage />}
           />
         </Route>
+
+        <Route path="*" element={<LocalizedRedirect target="/" />} />
       </Routes>
     </Suspense>
   </BrowserRouter>

@@ -239,6 +239,16 @@ export const registerOphthalmologist = async (
   if (data.phone) formData.append('phone', data.phone);
   if (data.bio) formData.append('bio', data.bio);
   formData.append('yearsOfExperience', String(data.yearsOfExperience));
+  formData.append('employmentType', data.employmentType);
+  if (data.workingHoursPerWeek !== undefined) {
+    formData.append('workingHoursPerWeek', String(data.workingHoursPerWeek));
+  }
+  if (data.expectedMonthlySalary !== undefined) {
+    formData.append(
+      'expectedMonthlySalary',
+      String(data.expectedMonthlySalary)
+    );
+  }
   if (data.organizationId)
     formData.append('organizationId', data.organizationId);
   if (data.licenseImage) formData.append('licenseImage', data.licenseImage);

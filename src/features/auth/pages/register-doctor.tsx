@@ -16,7 +16,7 @@ import {
   Zap,
   Lock,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { registerOphthalmologist } from '../api/auth.api';
 import '@/styles/auth-animations.css';
 
@@ -27,6 +27,9 @@ interface DoctorFormData {
   confirmPassword: string;
   phone: string;
   yearsOfExperience: string;
+  employmentType: 'FullTime' | 'PartTime';
+  workingHoursPerWeek: string;
+  expectedMonthlySalary: string;
   bio: string;
 }
 
@@ -40,8 +43,37 @@ const RegisterDoctorPage = () => {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
+    getValues,
     formState: { errors },
-  } = useForm<DoctorFormData>();
+  } = useForm<DoctorFormData>({
+    defaultValues: {
+      employmentType: 'FullTime',
+      workingHoursPerWeek: '40',
+      expectedMonthlySalary: '',
+    },
+  });
+
+  const selectedEmploymentType = watch('employmentType');
+  const yearsOfExperienceValue = parseInt(
+    watch('yearsOfExperience') || '0',
+    10
+  );
+  const suggestedSalary =
+    selectedEmploymentType === 'PartTime'
+      ? 12000000 + Math.max(yearsOfExperienceValue, 0) * 500000
+      : 25000000 + Math.max(yearsOfExperienceValue, 0) * 1000000;
+
+  useEffect(() => {
+    const currentHours = getValues('workingHoursPerWeek');
+    if (!currentHours) {
+      setValue(
+        'workingHoursPerWeek',
+        selectedEmploymentType === 'PartTime' ? '20' : '40'
+      );
+    }
+  }, [selectedEmploymentType, getValues, setValue]);
 
   const onSubmit = async (data: DoctorFormData) => {
     if (!licenseFile) {
@@ -60,6 +92,11 @@ const RegisterDoctorPage = () => {
         phone: data.phone || undefined,
         bio: data.bio || undefined,
         yearsOfExperience: parseInt(data.yearsOfExperience, 10) || 0,
+        employmentType: data.employmentType,
+        workingHoursPerWeek:
+          parseInt(data.workingHoursPerWeek, 10) || undefined,
+        expectedMonthlySalary:
+          parseFloat(data.expectedMonthlySalary) || undefined,
         licenseImage: licenseFile ?? undefined,
         degreeImage: degreeFile ?? undefined,
       });
@@ -436,6 +473,121 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
+              {/* Employment Type */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Working Mode <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    {
+                      value: 'FullTime' as const,
+                      label: 'Full-time',
+                      description: 'Toàn thời gian, lịch làm ổn định',
+                    },
+                    {
+                      value: 'PartTime' as const,
+                      label: 'Part-time',
+                      description: 'Bán thời gian, lịch làm linh hoạt',
+                    },
+                  ].map((option) => {
+                    const isSelected = selectedEmploymentType === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`rounded-lg border px-4 py-3 cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-[#1F85F5] bg-blue-50'
+                            : 'border-gray-300 bg-white hover:border-[#1F85F5]/60'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value={option.value}
+                          {...register('employmentType', {
+                            required: 'Working mode is required',
+                          })}
+                          className="sr-only"
+                        />
+                        <p className="text-sm font-semibold text-gray-800">
+                          {option.label}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {option.description}
+                        </p>
+                      </label>
+                    );
+                  })}
+                </div>
+                {errors.employmentType && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.employmentType.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Working Hours */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Working Hours / Week <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="number"
+                    {...register('workingHoursPerWeek', {
+                      required: 'Working hours is required',
+                      min: { value: 1, message: 'Minimum is 1 hour/week' },
+                      max: { value: 112, message: 'Maximum is 112 hours/week' },
+                    })}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    placeholder={
+                      selectedEmploymentType === 'PartTime' ? '20' : '40'
+                    }
+                  />
+                </div>
+                {errors.workingHoursPerWeek && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.workingHoursPerWeek.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Expected Salary */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Expected Monthly Salary (VND){' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 text-sm font-semibold">
+                    ₫
+                  </div>
+                  <input
+                    type="number"
+                    {...register('expectedMonthlySalary', {
+                      required: 'Expected salary is required',
+                      min: { value: 0, message: 'Salary cannot be negative' },
+                    })}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    placeholder={String(suggestedSalary)}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Suggested by mode + experience:{' '}
+                  <span className="font-semibold text-gray-700">
+                    {suggestedSalary.toLocaleString('vi-VN')} VND
+                  </span>
+                </p>
+                {errors.expectedMonthlySalary && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.expectedMonthlySalary.message}
+                  </p>
+                )}
+              </div>
+
               {/* Bio / Description */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
@@ -563,7 +715,8 @@ const RegisterDoctorPage = () => {
                     <p className="text-xs text-gray-600 leading-relaxed">
                       After submitting your application, our verification team
                       will first verify your email, then review your submitted
-                      contract/license before activating your doctor workflow.
+                      documents and selected working mode before assigning the
+                      matching full-time/part-time contract template.
                     </p>
                   </div>
                 </div>

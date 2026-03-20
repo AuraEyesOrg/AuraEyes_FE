@@ -3,7 +3,7 @@
  * Patient confirms their reservation and completes the booking.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -14,6 +14,7 @@ import {
   Timer,
   Eye,
   Brain,
+  X,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
@@ -25,10 +26,19 @@ import {
 import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
+import { toast } from 'react-toastify';
 
 // ============ HELPERS ============
 
-export default function BookingConfirmationPage() {
+export interface BookingConfirmationProps {
+  embeddedSlotId?: string;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
+
+export default function BookingConfirmationPage(
+  props: BookingConfirmationProps
+) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -49,7 +59,8 @@ export default function BookingConfirmationPage() {
     }
   }
 
-  const slotId = state.slotId ?? storedSlotId ?? querySlotId;
+  const slotId =
+    props.embeddedSlotId ?? state.slotId ?? storedSlotId ?? querySlotId;
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
@@ -60,6 +71,7 @@ export default function BookingConfirmationPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const lastErrorToastRef = useRef('');
 
   const {
     data: slot,
@@ -68,6 +80,11 @@ export default function BookingConfirmationPage() {
   } = useAppointmentSlot(slotId, {
     enabled: !!slotId,
   });
+
+  const slotErrorMessage = slotError
+    ? mapOnlineConsultationErrorMessage(slotError)
+    : '';
+  const displayErrorMessage = errorMessage || slotErrorMessage;
 
   const confirmMutation = useConfirmReservation();
   const releaseMutation = useReleaseReservation();
@@ -82,13 +99,27 @@ export default function BookingConfirmationPage() {
   }, [slotId]);
 
   useEffect(() => {
-    if (!querySlotId || state.slotId) return;
+    if (props.embeddedSlotId || !querySlotId || state.slotId) return;
 
     navigate('/patient/book/confirm', {
       replace: true,
       state: { slotId: querySlotId },
     });
-  }, [querySlotId, state.slotId, navigate]);
+  }, [props.embeddedSlotId, querySlotId, state.slotId, navigate]);
+
+  useEffect(() => {
+    if (!displayErrorMessage) {
+      lastErrorToastRef.current = '';
+      return;
+    }
+
+    if (lastErrorToastRef.current === displayErrorMessage) return;
+
+    lastErrorToastRef.current = displayErrorMessage;
+    toast.error(displayErrorMessage, {
+      toastId: `booking-confirm-error-${displayErrorMessage}`,
+    });
+  }, [displayErrorMessage]);
 
   // Calculate remaining time from slot's reservationExpireAt
   useEffect(() => {
@@ -102,14 +133,18 @@ export default function BookingConfirmationPage() {
 
       if (diff <= 0) {
         // Reservation expired, redirect back
-        navigate('/patient/book', { replace: true });
+        if (props.onClose) {
+          props.onClose();
+        } else {
+          navigate('/patient/book', { replace: true });
+        }
       }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [slot?.reservationExpireAt, navigate]);
+  }, [slot?.reservationExpireAt, navigate, props]);
 
   const handleConfirm = useCallback(async () => {
     if (!slotId || !patientId) return;
@@ -146,18 +181,37 @@ export default function BookingConfirmationPage() {
       return;
     }
     sessionStorage.removeItem('patient-booking-confirm-context');
-    navigate('/patient/book', { replace: true });
-  }, [slotId, patientId, releaseMutation, navigate]);
+    if (props.onClose) {
+      props.onClose();
+    } else {
+      navigate('/patient/book', { replace: true });
+    }
+  }, [slotId, patientId, releaseMutation, navigate, props]);
 
   const handleGoToAppointments = useCallback(() => {
+    if (props.onSuccess) {
+      props.onSuccess();
+    }
     navigate('/patient/appointments');
-  }, [navigate]);
+  }, [navigate, props]);
+
+  const isEmbedded = !!props.onClose;
+  const Wrapper = isEmbedded ? 'div' : PatientLayout;
+  const wrapperProps = isEmbedded
+    ? {
+        className:
+          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-center',
+      }
+    : {};
+  const innerClass = isEmbedded
+    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8'
+    : 'p-6 max-w-2xl mx-auto';
 
   // Loading state
   if (slotLoading) {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
             <Spinner />
             <span className="ml-3 text-gray-600 dark:text-gray-400">
@@ -165,16 +219,24 @@ export default function BookingConfirmationPage() {
             </span>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
   // Slot not found or not reserved
   if (!slot || slot.status !== 'Reserved') {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
+            {isEmbedded && (
+              <button
+                onClick={props.onClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Reservation Not Found
@@ -184,23 +246,37 @@ export default function BookingConfirmationPage() {
               booking again.
             </p>
             <button
-              onClick={() => navigate('/patient/book')}
+              onClick={() => {
+                if (props.onClose) props.onClose();
+                else navigate('/patient/book');
+              }}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
               Book an Appointment
             </button>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
   // Success state
   if (isSuccess && sessionId) {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
+            {isEmbedded && (
+              <button
+                onClick={() => {
+                  if (props.onSuccess) props.onSuccess();
+                  else navigate('/patient/appointments');
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -258,7 +334,7 @@ export default function BookingConfirmationPage() {
             </button>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
@@ -271,14 +347,8 @@ export default function BookingConfirmationPage() {
         : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
 
   return (
-    <PatientLayout>
-      <div className="p-6 max-w-2xl mx-auto">
-        {(errorMessage || slotError) && (
-          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-            {errorMessage || mapOnlineConsultationErrorMessage(slotError)}
-          </div>
-        )}
-
+    <Wrapper {...wrapperProps}>
+      <div className={innerClass}>
         {/* Back Button */}
         <button
           onClick={handleCancel}
@@ -439,6 +509,6 @@ export default function BookingConfirmationPage() {
           deducted from your wallet.
         </p>
       </div>
-    </PatientLayout>
+    </Wrapper>
   );
 }

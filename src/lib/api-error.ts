@@ -147,6 +147,11 @@ export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
         'Khung giờ này đã được giữ bởi người khác. Vui lòng chọn khung giờ khác.',
     },
     {
+      pattern: /(not\s+in\s+reserved\s+state|reserved\s+state)/i,
+      mappedMessage:
+        'Phiên giữ chỗ không còn hợp lệ. Vui lòng quay lại và đặt lại khung giờ.',
+    },
+    {
       pattern: /(already\s+booked|slot\s+is\s+booked|Booked)/i,
       mappedMessage: 'Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.',
     },
@@ -164,8 +169,20 @@ export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
         'Bạn không có quyền thao tác trên phiên giữ chỗ này. Vui lòng đặt lại.',
     },
     {
+      pattern:
+        /(not\s+authorized\s+to\s+release|unable\s+to\s+resolve\s+patient\s+profile|patient\s+id\s+is\s+required)/i,
+      mappedMessage:
+        'Bạn không có quyền hủy phiên giữ chỗ này. Vui lòng tải lại và thử lại.',
+    },
+    {
       pattern: /(slot\s+not\s+found|not\s+found|INVALID_SLOT)/i,
       mappedMessage: 'Không tìm thấy khung giờ. Vui lòng tải lại danh sách.',
+    },
+    {
+      pattern:
+        /(insufficient\s+wallet\s+balance|wallet\s+not\s+found|top\s*up\s*your\s*wallet)/i,
+      mappedMessage:
+        'Số dư ví không đủ để đặt lịch. Vui lòng nạp thêm và thử lại.',
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
