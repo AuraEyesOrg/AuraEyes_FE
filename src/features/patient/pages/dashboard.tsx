@@ -139,6 +139,7 @@ export default function PatientDashboard() {
   const latestReportSummary =
     latestReport?.summary ?? 'No analysis results yet.';
   const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
+  const hasLatestSession = Boolean(latestSession);
 
   if (isLoading) {
     return (
@@ -308,19 +309,33 @@ export default function PatientDashboard() {
           <section className="medical-card p-8 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-(--text-muted)" />
             <h3 className="text-xl font-bold text-(--text-primary) mb-2">
-              No Screening Results Yet
+              {hasLatestSession
+                ? 'Latest Session Is Processing'
+                : 'No Screening Results Yet'}
             </h3>
             <p className="text-(--text-secondary) mb-6">
-              Upload your first retinal scan to get started with AI-powered
-              analysis.
+              {hasLatestSession
+                ? 'Your latest screening session is available. Open it to continue analysis and review results.'
+                : 'Upload your first retinal scan to get started with AI-powered analysis.'}
             </p>
-            <Link
-              to="/patient/screening/new"
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Your First Scan
-            </Link>
+            {hasLatestSession ? (
+              <Link
+                to="/patient/analysis"
+                state={{ screeningId: latestSession?.screeningId }}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Open Latest Session
+              </Link>
+            ) : (
+              <Link
+                to="/patient/screening/new"
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Your First Scan
+              </Link>
+            )}
           </section>
         )}
 
