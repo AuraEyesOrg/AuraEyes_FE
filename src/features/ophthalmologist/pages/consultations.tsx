@@ -6,8 +6,10 @@ import {
   SessionStatus,
   type ConsultationSessionListDto,
 } from '@/types/consultation';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 export default function ConsultationsPage() {
+  const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
   const { data: sessionsData, isLoading: sessionsLoading } =
@@ -32,7 +34,9 @@ export default function ConsultationsPage() {
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
         {/* Header */}
-        <DoctorHeader />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.consultations.title', 'Consultations')}
+        />
 
         {/* Page Content */}
         <main className="p-6">

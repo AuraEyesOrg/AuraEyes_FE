@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Shield,
@@ -14,6 +14,12 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import { resetPassword } from '../api';
 
 interface ResetPasswordFormData {
@@ -40,6 +46,8 @@ const requestResetPassword = async (payload: {
 };
 
 const ResetPasswordPage = () => {
+  const { t } = useSafeTranslation();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -50,6 +58,9 @@ const ResetPasswordPage = () => {
   const userId = searchParams.get('userId') ?? '';
   const token = searchParams.get('token') ?? '';
   const hasRequiredParams = Boolean(userId && token);
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const {
     register,
@@ -60,9 +71,7 @@ const ResetPasswordPage = () => {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!hasRequiredParams) {
-      setError(
-        'Invalid reset link. Please request a new password reset email.'
-      );
+      setError(t('AuthPages.resetPassword.messages.invalidLink'));
       return;
     }
 
@@ -78,9 +87,7 @@ const ResetPasswordPage = () => {
         confirmPassword: data.confirmPassword,
       });
 
-      setSuccessMessage(
-        'Password has been reset successfully. You can now sign in with your new password.'
-      );
+      setSuccessMessage(t('AuthPages.resetPassword.messages.success'));
     } catch (err: unknown) {
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
@@ -89,10 +96,10 @@ const ResetPasswordPage = () => {
         setError(
           axiosError.response?.data?.message ||
             axiosError.response?.data?.errors?.join(', ') ||
-            'Reset password failed. Please request a new reset link.'
+            t('AuthPages.resetPassword.messages.failed')
         );
       } else {
-        setError('Reset password failed. Please request a new reset link.');
+        setError(t('AuthPages.resetPassword.messages.failed'));
       }
     } finally {
       setIsLoading(false);
@@ -110,34 +117,44 @@ const ResetPasswordPage = () => {
         </div>
 
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to="/" />
+          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            Set a New <br />
-            <span className="text-[#00d1c0]">Secure Password.</span>
+            {t('AuthPages.resetPassword.leftPanel.titleLine1')} <br />
+            <span className="text-[#00d1c0]">
+              {t('AuthPages.resetPassword.leftPanel.titleHighlight')}
+            </span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            Your new password should be unique and used only for your AuraEyes
-            account.
+            {t('AuthPages.resetPassword.leftPanel.description')}
           </p>
           <div className="flex items-center gap-4 mt-4 text-sm font-medium text-gray-400">
             <div className="flex items-center gap-2">
               <Shield className="text-[#00d1c0] w-5 h-5" />
-              <span>Protected Account</span>
+              <span>
+                {t('AuthPages.resetPassword.leftPanel.protectedAccount')}
+              </span>
             </div>
             <div className="h-4 w-px bg-gray-600"></div>
             <div className="flex items-center gap-2">
               <Lock className="text-[#00d1c0] w-5 h-5" />
-              <span>Strong Credentials</span>
+              <span>
+                {t('AuthPages.resetPassword.leftPanel.strongCredentials')}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
+          <p>
+            {t('AuthPages.shared.copyright').replace(
+              '{{year}}',
+              String(new Date().getFullYear())
+            )}
+          </p>
         </div>
       </div>
 
@@ -145,11 +162,11 @@ const ResetPasswordPage = () => {
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           <div>
             <Link
-              to="/login"
+              to={toLocalizedAuthPath('/login')}
               className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#1F85F5] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              {t('AuthPages.shared.backToLogin')}
             </Link>
           </div>
 
@@ -166,10 +183,10 @@ const ResetPasswordPage = () => {
               <div>
                 <p className="text-sm text-green-700">{successMessage}</p>
                 <Link
-                  to="/login"
+                  to={toLocalizedAuthPath('/login')}
                   className="inline-block mt-2 text-sm font-semibold text-green-700 hover:text-green-800"
                 >
-                  Go to Sign In
+                  {t('AuthPages.resetPassword.messages.goToSignIn')}
                 </Link>
               </div>
             </div>
@@ -177,10 +194,10 @@ const ResetPasswordPage = () => {
 
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-              Reset Password
+              {t('AuthPages.resetPassword.form.heading')}
             </h2>
             <p className="text-gray-500 text-base">
-              Create a new password to complete account recovery.
+              {t('AuthPages.resetPassword.form.description')}
             </p>
           </div>
 
@@ -190,7 +207,7 @@ const ResetPasswordPage = () => {
                 className="block text-sm font-semibold text-gray-700"
                 htmlFor="reset-password"
               >
-                New Password
+                {t('AuthPages.resetPassword.form.newPassword')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -198,15 +215,20 @@ const ResetPasswordPage = () => {
                 </div>
                 <input
                   {...register('password', {
-                    required: 'Password is required',
+                    required: t(
+                      'AuthPages.resetPassword.validation.passwordRequired'
+                    ),
                     minLength: {
                       value: 8,
-                      message: 'Password must be at least 8 characters',
+                      message: t(
+                        'AuthPages.resetPassword.validation.passwordMin'
+                      ),
                     },
                     pattern: {
                       value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                      message:
-                        'Password must contain uppercase, lowercase, and number',
+                      message: t(
+                        'AuthPages.resetPassword.validation.passwordPattern'
+                      ),
                     },
                   })}
                   id="reset-password"
@@ -238,7 +260,7 @@ const ResetPasswordPage = () => {
                 className="block text-sm font-semibold text-gray-700"
                 htmlFor="reset-confirm-password"
               >
-                Confirm New Password
+                {t('AuthPages.resetPassword.form.confirmNewPassword')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -246,9 +268,12 @@ const ResetPasswordPage = () => {
                 </div>
                 <input
                   {...register('confirmPassword', {
-                    required: 'Please confirm your password',
+                    required: t(
+                      'AuthPages.resetPassword.validation.confirmPasswordRequired'
+                    ),
                     validate: (value) =>
-                      value === watch('password') || 'Passwords do not match',
+                      value === watch('password') ||
+                      t('AuthPages.resetPassword.validation.passwordMismatch'),
                   })}
                   id="reset-confirm-password"
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -276,8 +301,7 @@ const ResetPasswordPage = () => {
 
             {!hasRequiredParams && (
               <p className="text-xs text-red-500">
-                Missing reset token information. Please use the reset link from
-                your email.
+                {t('AuthPages.resetPassword.messages.missingToken')}
               </p>
             )}
 
@@ -291,10 +315,10 @@ const ResetPasswordPage = () => {
               {isLoading ? (
                 <>
                   <Spinner size={20} className="shrink-0" />
-                  Resetting...
+                  {t('AuthPages.resetPassword.form.submitting')}
                 </>
               ) : (
-                'Reset Password'
+                t('AuthPages.resetPassword.form.submit')
               )}
             </button>
           </form>
@@ -303,8 +327,7 @@ const ResetPasswordPage = () => {
             <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
               <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
               <p className="text-xs text-gray-600 leading-relaxed">
-                Password reset links are time-limited for security. If your link
-                has expired, request a new one from the forgot password page.
+                {t('AuthPages.resetPassword.messages.securityNote')}
               </p>
             </div>
           </div>

@@ -377,10 +377,13 @@ export type ContractTypeValue =
   | 'OphthalmologistContract'
   | 'MedicalOrganizationContract';
 
+export type EmploymentTypeValue = 'FullTime' | 'PartTime';
+
 export interface ContractTemplateDto {
   id: string;
   title: string;
   type: ContractTypeValue;
+  employmentType?: EmploymentTypeValue | null;
   contractVersion: string;
   isActive: boolean;
   variableCount: number;
@@ -397,6 +400,7 @@ export interface ContractTemplateDetailDto extends ContractTemplateDto {
 export interface CreateContractTemplatePayload {
   title: string;
   type: number; // ContractType enum: OphthalmologistContract=1, MedicalOrganizationContract=2
+  employmentType?: EmploymentTypeValue;
   contractVersion: string;
   effectiveDate?: string;
   templateFile: File;
@@ -405,6 +409,7 @@ export interface CreateContractTemplatePayload {
 export interface UpdateContractTemplatePayload {
   title: string;
   type: number;
+  employmentType?: EmploymentTypeValue;
   contractVersion: string;
   effectiveDate?: string;
   templateFile?: File;
