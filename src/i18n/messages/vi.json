@@ -1,0 +1,657 @@
+{
+  "Navigation": {
+    "home": "Trang chủ",
+    "about": "Về chúng tôi",
+    "howItWorks": "Cách hoạt động",
+    "ethicsPrivacy": "Đạo đức và quyền riêng tư",
+    "contact": "Liên hệ",
+    "status": "Trạng thái hệ thống",
+    "compliance": "Tuân thủ"
+  },
+  "Common": {
+    "getStarted": "Bắt đầu",
+    "bookAppointment": "Đặt lịch khám",
+    "findDoctor": "Tìm bác sĩ",
+    "learnMore": "Tìm hiểu thêm",
+    "language": "Ngôn ngữ"
+  },
+  "Auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "forgotPassword": "Quên mật khẩu"
+  },
+  "AuthPages": {
+    "shared": {
+      "copyright": "© {{year}} Aura Medical Systems.",
+      "backToLogin": "Quay lại đăng nhập",
+      "termsOfService": "Điều khoản dịch vụ",
+      "privacyPolicy": "Chính sách quyền riêng tư"
+    },
+    "login": {
+      "leftPanel": {
+        "titleLine1": "Nền tảng chăm sóc mắt",
+        "titleHighlight": "ứng dụng AI.",
+        "description": "Truy cập an toàn cho bệnh nhân, bác sĩ nhãn khoa và tổ chức y tế với công cụ sàng lọc võng mạc thế hệ mới, độ chính xác lâm sàng 99.2%.",
+        "hipaa": "Tuân thủ HIPAA",
+        "encryption": "Mã hóa đầu cuối",
+        "systemStatus": "Trạng thái hệ thống:",
+        "online": "Đang hoạt động"
+      },
+      "tabs": {
+        "login": "Đăng nhập",
+        "register": "Tạo tài khoản"
+      },
+      "messages": {
+        "dismiss": "Đóng",
+        "orContinueWith": "Hoặc tiếp tục với",
+        "registrationSuccess": "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.",
+        "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+        "googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
+        "googleNoCredential": "Đăng nhập Google thất bại. Không nhận được thông tin xác thực.",
+        "loginError": "Đã xảy ra lỗi khi đăng nhập",
+        "registrationError": "Đã xảy ra lỗi khi đăng ký",
+        "googleError": "Đã xảy ra lỗi khi đăng nhập Google",
+        "recaptchaRequired": "Vui lòng hoàn tất xác minh reCAPTCHA."
+      },
+      "loginForm": {
+        "heading": "Chào mừng quay lại",
+        "description": "Đăng nhập vào tài khoản AuraEyes để tiếp tục.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Mật khẩu",
+        "passwordPlaceholder": "••••••••",
+        "forgotPassword": "Quên mật khẩu?",
+        "signIn": "Đăng nhập bảo mật",
+        "signingIn": "Đang đăng nhập...",
+        "securityNote": "AuraEyes bảo vệ dữ liệu sức khỏe của bạn theo quy định HIPAA. Quyền truy cập chỉ dành cho bệnh nhân đã đăng ký, bác sĩ nhãn khoa và tổ chức y tế đã xác minh."
+      },
+      "registerForm": {
+        "heading": "Tạo tài khoản",
+        "description": "Đăng ký với vai trò bệnh nhân để sử dụng dịch vụ sàng lọc võng mạc AuraEyes.",
+        "fullNameLabel": "Họ và tên",
+        "fullNamePlaceholder": "Nguyen Van A",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "phoneLabel": "Số điện thoại",
+        "phonePlaceholder": "+84 900 000 000",
+        "passwordLabel": "Mật khẩu",
+        "passwordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "Xác nhận mật khẩu",
+        "confirmPasswordPlaceholder": "••••••••",
+        "agreePrefix": "Tôi đồng ý với",
+        "and": "và",
+        "createAccount": "Tạo tài khoản",
+        "creatingAccount": "Đang tạo tài khoản...",
+        "doctorCardTitle": "Bạn là chuyên gia y tế?",
+        "doctorCardDescription": "Đăng ký với vai trò bác sĩ để tham gia mạng lưới chăm sóc sức khỏe của chúng tôi",
+        "registerDoctor": "Đăng ký bác sĩ",
+        "securityNote": "Khi tạo tài khoản, bạn xác nhận dữ liệu của mình sẽ được xử lý theo quy định HIPAA và các giao thức bảo mật của chúng tôi."
+      },
+      "validation": {
+        "emailRequired": "Email là bắt buộc",
+        "invalidEmail": "Email không hợp lệ",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordPattern": "Mật khẩu phải bao gồm chữ hoa, chữ thường và số",
+        "fullNameRequired": "Họ tên là bắt buộc",
+        "fullNameMin": "Họ tên phải có ít nhất 2 ký tự",
+        "phoneRequired": "Số điện thoại là bắt buộc",
+        "invalidPhone": "Số điện thoại không hợp lệ",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "agreeTerms": "Bạn phải đồng ý với điều khoản"
+      }
+    },
+    "forgotPassword": {
+      "leftPanel": {
+        "titleLine1": "Khôi phục",
+        "titleHighlight": "quyền truy cập tài khoản.",
+        "description": "Nhập địa chỉ email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu an toàn.",
+        "securityFirst": "Ưu tiên bảo mật",
+        "protectedRecovery": "Khôi phục an toàn"
+      },
+      "form": {
+        "heading": "Quên mật khẩu",
+        "description": "Chúng tôi sẽ gửi liên kết đặt lại đến email đã đăng ký của bạn.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "submit": "Gửi liên kết đặt lại",
+        "submitting": "Đang gửi..."
+      },
+      "messages": {
+        "success": "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu đến hộp thư của bạn.",
+        "fallbackError": "Không thể gửi yêu cầu lúc này. Vui lòng thử lại sau.",
+        "securityNote": "Vì lý do bảo mật, hệ thống luôn trả về cùng một thông báo dù email có tồn tại hay không."
+      },
+      "validation": {
+        "emailRequired": "Email là bắt buộc",
+        "invalidEmail": "Email không hợp lệ"
+      }
+    },
+    "resetPassword": {
+      "leftPanel": {
+        "titleLine1": "Thiết lập",
+        "titleHighlight": "mật khẩu bảo mật mới.",
+        "description": "Mật khẩu mới nên là duy nhất và chỉ dùng cho tài khoản AuraEyes của bạn.",
+        "protectedAccount": "Tài khoản được bảo vệ",
+        "strongCredentials": "Thông tin xác thực mạnh"
+      },
+      "form": {
+        "heading": "Đặt lại mật khẩu",
+        "description": "Tạo mật khẩu mới để hoàn tất khôi phục tài khoản.",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "submit": "Đặt lại mật khẩu",
+        "submitting": "Đang đặt lại..."
+      },
+      "messages": {
+        "invalidLink": "Liên kết đặt lại không hợp lệ. Vui lòng yêu cầu email đặt lại mới.",
+        "success": "Mật khẩu đã được đặt lại thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.",
+        "failed": "Đặt lại mật khẩu thất bại. Vui lòng yêu cầu liên kết đặt lại mới.",
+        "missingToken": "Thiếu thông tin token đặt lại. Vui lòng dùng liên kết đặt lại từ email của bạn.",
+        "goToSignIn": "Đến trang đăng nhập",
+        "securityNote": "Liên kết đặt lại mật khẩu có thời hạn vì lý do bảo mật. Nếu liên kết đã hết hạn, hãy yêu cầu liên kết mới từ trang quên mật khẩu."
+      },
+      "validation": {
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordPattern": "Mật khẩu phải bao gồm chữ hoa, chữ thường và số",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp"
+      }
+    },
+    "confirmEmail": {
+      "verifying": {
+        "title": "Đang xác nhận email...",
+        "description": "Vui lòng đợi trong giây lát."
+      },
+      "success": {
+        "title": "Email đã xác nhận!",
+        "description": "Tài khoản của bạn đã được kích hoạt thành công. Đăng nhập để tiếp tục.",
+        "cta": "Đăng nhập ngay"
+      },
+      "error": {
+        "defaultMessage": "Xác nhận email thất bại. Liên kết có thể đã hết hạn.",
+        "title": "Xác nhận thất bại",
+        "resend": "Gửi lại email xác nhận"
+      },
+      "resend": {
+        "title": "Kiểm tra hộp thư",
+        "description": "Chúng tôi đã gửi link xác nhận đến email của bạn. Nếu chưa nhận được, hãy gửi lại bên dưới.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "email@example.com",
+        "button": "Gửi lại email xác nhận",
+        "successTitle": "Email xác nhận đã được gửi lại!",
+        "successDescription": "Vui lòng kiểm tra hộp thư của bạn."
+      }
+    }
+  },
+  "MedicalTerms": {
+    "cardiology": "Tim mạch",
+    "diagnostics": "Chẩn đoán",
+    "patientRecords": "Hồ sơ bệnh nhân",
+    "retinalScreening": "Sàng lọc võng mạc",
+    "ophthalmology": "Nhãn khoa"
+  },
+  "GuestHome": {
+    "badge": "Nền tảng sàng lọc võng mạc ứng dụng AI",
+    "title": "Phát hiện sớm bệnh lý võng mạc với độ chính xác lâm sàng",
+    "description": "Aura Eyes hỗ trợ cơ sở y tế sàng lọc nhanh, chuẩn hóa dữ liệu và kết nối bệnh nhân với bác sĩ chuyên khoa.",
+    "primaryCta": "Đặt lịch khám",
+    "secondaryCta": "Tìm bác sĩ"
+  },
+  "About": {
+    "heroTitle": "Định hình tương lai sàng lọc võng mạc",
+    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế có trách nhiệm để cải thiện khả năng tiếp cận chẩn đoán sớm."
+  },
+  "HowItWorks": {
+    "hero": {
+      "badge": "Chẩn đoán hỗ trợ AI",
+      "titlePrefix": "Giải mã quy trình sàng lọc",
+      "titleSuffix": "của chúng tôi",
+      "description": "Nền tảng của chúng tôi ứng dụng thị giác máy tính để phân tích ảnh võng mạc, phát hiện sớm bất thường mạch máu. Quy trình không xâm lấn, bảo mật và cho kết quả nhanh.",
+      "primaryCta": "Xem video demo",
+      "secondaryCta": "Xem tài liệu kỹ thuật"
+    },
+    "process": {
+      "badge": "Hành trình",
+      "title": "Từ ảnh chụp đến kết luận chỉ trong vài giây",
+      "description": "Toàn bộ quy trình được thiết kế liền mạch, bảo mật và tốc độ cao."
+    },
+    "steps": {
+      "capture": {
+        "title": "Chụp ảnh võng mạc",
+        "description": "Sử dụng camera đáy mắt tiêu chuẩn hoặc thiết bị gắn điện thoại để chụp ảnh võng mạc độ phân giải cao."
+      },
+      "upload": {
+        "title": "Tải lên bảo mật và mã hóa",
+        "description": "Ảnh được mã hóa đầu-cuối và truyền lên máy chủ đạt chuẩn HIPAA. Dữ liệu bệnh nhân được ẩn danh ngay lập tức."
+      },
+      "analysis": {
+        "title": "Phân tích bằng AI",
+        "description": "Mô hình học sâu phân tích hình học mạch máu, cấu trúc phân nhánh và vi phình mạch để nhận diện dấu hiệu bệnh sớm."
+      },
+      "assessment": {
+        "title": "Nhận đánh giá nguy cơ",
+        "description": "Nhận báo cáo đầy đủ gồm điểm tin cậy, mức nguy cơ và khuyến nghị lâm sàng trong vài giây."
+      }
+    },
+    "ai": {
+      "badge": "Phân tích AI",
+      "titleLine1": "Giải mã võng mạc:",
+      "titleLine2": "AI đang nhìn thấy điều gì",
+      "description": "AURA không chỉ nhìn ảnh mà còn đo các thay đổi vi mô trong mạng lưới mạch máu, giúp liên hệ với nguy cơ bệnh lý toàn thân.",
+      "tags": {
+        "deepLearning": "Học sâu",
+        "computerVision": "Thị giác máy tính",
+        "accuracy": "Độ chính xác 98.5%"
+      }
+    },
+    "features": {
+      "tortuosity": {
+        "title": "Phân tích độ ngoằn ngoèo mạch máu",
+        "description": "Đo độ cong và bất thường của mạch máu, có liên quan đến tăng huyết áp và nguy cơ tim mạch."
+      },
+      "avr": {
+        "title": "Tỷ lệ động mạch - tĩnh mạch",
+        "description": "So sánh đường kính động mạch và tĩnh mạch, chỉ số quan trọng để nhận diện dấu hiệu bệnh mạch máu hệ thống."
+      },
+      "microaneurysm": {
+        "title": "Phát hiện vi phình mạch",
+        "description": "Phát hiện các phình nhỏ trên thành mạch máu, dấu hiệu sớm của bệnh võng mạc do đái tháo đường."
+      }
+    },
+    "trust": {
+      "title": "Xây dựng trên nền tảng tin cậy và AI có đạo đức",
+      "description": "AURA là sáng kiến phi lợi nhuận hướng tới khả năng tiếp cận. Chúng tôi không bán dữ liệu người dùng và luôn tối ưu để giảm thiên lệch mô hình.",
+      "badges": {
+        "hipaa": "Tuân thủ HIPAA",
+        "gdpr": "Sẵn sàng GDPR",
+        "bias": "Đã kiểm định thiên lệch"
+      }
+    },
+    "cta": {
+      "title": "Chủ động bảo vệ sức khỏe mạch máu của bạn",
+      "description": "Phát hiện sớm giúp tăng hiệu quả điều trị. Tìm cơ sở sàng lọc gần bạn hoặc tích hợp AURA cho đơn vị của bạn.",
+      "primary": "Bắt đầu sàng lọc",
+      "secondary": "Dành cho cơ sở y tế"
+    }
+  },
+  "Contact": {
+    "toast": {
+      "success": "Gửi yêu cầu thành công. Quản trị hệ thống đã được thông báo qua email.",
+      "error": "Không thể gửi yêu cầu. Vui lòng thử lại."
+    },
+    "hero": {
+      "badge": "Tham gia mạng lưới của chúng tôi",
+      "titlePrefix": "Đồng hành cùng",
+      "titleSuffix": "để nâng cao chăm sóc thị lực toàn cầu",
+      "description": "Dù bạn là bệnh viện hay chuỗi phòng khám, AURA cung cấp công cụ và hỗ trợ cần thiết để triển khai sàng lọc võng mạc tiên tiến.",
+      "primaryCta": "Đăng ký hợp tác",
+      "secondaryCta": "Đặt lịch demo"
+    },
+    "partnerCard": {
+      "title": "Tổ chức y tế (Bệnh viện/Phòng khám)",
+      "description": "Triển khai AURA ở quy mô lớn với giải pháp tùy chỉnh cho chương trình sàng lọc số lượng cao và tích hợp EMR.",
+      "benefits": {
+        "volumeLicensing": "Bản quyền theo sản lượng",
+        "whiteLabel": "Tùy chọn white-label",
+        "customIntegrations": "Tích hợp theo yêu cầu"
+      }
+    },
+    "info": {
+      "badge": "Thông tin liên hệ",
+      "title": "Trao đổi về hợp tác",
+      "description": "Liên hệ đội ngũ của chúng tôi để được tư vấn onboarding, hỗ trợ kỹ thuật và chiến lược hợp tác.",
+      "emailSupport": "Hỗ trợ qua email",
+      "responseTime": "Thời gian phản hồi",
+      "responseTimeValue": "Trong vòng 24-48 giờ làm việc",
+      "headquarters": "Trụ sở"
+    },
+    "form": {
+      "title": "Hợp tác cùng AURA",
+      "description": "Điền biểu mẫu để trao đổi về giấy phép theo sản lượng và tích hợp API",
+      "contactPerson": "Người liên hệ",
+      "fullName": "Họ và tên",
+      "role": "Chức danh / Vai trò",
+      "workEmail": "Email công việc",
+      "workEmailPlaceholder": "contact@organization.com",
+      "phone": "Số điện thoại",
+      "organizationDetails": "Thông tin tổ chức",
+      "organizationName": "Tên tổ chức",
+      "organizationType": "Loại hình tổ chức",
+      "organizationTypeClinic": "Phòng khám",
+      "organizationTypeHospital": "Bệnh viện",
+      "cityLocation": "Thành phố / Khu vực",
+      "partnershipNeeds": "Nhu cầu hợp tác",
+      "estimatedMonthlyScreenings": "Số ca sàng lọc ước tính mỗi tháng",
+      "selectRange": "Chọn khoảng",
+      "additionalInformation": "Thông tin bổ sung",
+      "additionalInfoPlaceholder": "Chia sẻ kịch bản sử dụng, nhu cầu tích hợp hoặc kế hoạch triển khai...",
+      "termsPrefix": "Tôi đồng ý với",
+      "termsOfService": "Điều khoản dịch vụ",
+      "and": "và",
+      "privacyPolicy": "Chính sách quyền riêng tư",
+      "sending": "Đang gửi yêu cầu...",
+      "send": "Gửi yêu cầu hợp tác"
+    },
+    "impact": {
+      "title": "Tác động đang mở rộng",
+      "description": "Gia nhập mạng lưới đang tạo thay đổi tích cực trên toàn cầu",
+      "partnerClinics": "Phòng khám đối tác",
+      "screeningsPerformed": "Lượt sàng lọc đã thực hiện",
+      "countriesReached": "Quốc gia triển khai",
+      "freeForNonProfits": "Miễn phí cho tổ chức phi lợi nhuận"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "items": {
+        "cost": {
+          "question": "Hợp tác với AURA có mất phí không?",
+          "answer": "Đối với bác sĩ cá nhân và tổ chức phi lợi nhuận, AURA hoàn toàn miễn phí. Với doanh nghiệp quy mô lớn, chúng tôi có các gói theo sản lượng."
+        },
+        "onboarding": {
+          "question": "Quy trình onboarding mất bao lâu?",
+          "answer": "Hầu hết tổ chức có thể triển khai trong 2-4 tuần tùy mức độ tích hợp."
+        }
+      }
+    }
+  },
+  "Status": {
+    "labels": {
+      "operational": "Hoạt động bình thường",
+      "outage": "Gián đoạn",
+      "degraded": "Suy giảm hiệu năng",
+      "checking": "Đang kiểm tra..."
+    },
+    "time": {
+      "justNow": "Vừa xong",
+      "secondsAgo_one": "{{count}} giây trước",
+      "secondsAgo_other": "{{count}} giây trước",
+      "minutesAgo_one": "{{count}} phút trước",
+      "minutesAgo_other": "{{count}} phút trước"
+    },
+    "overall": {
+      "allOperational": "Toàn bộ hệ thống hoạt động ổn định",
+      "partialOutage": "Một phần hệ thống đang gián đoạn",
+      "majorOutage": "Gián đoạn diện rộng",
+      "checkingSystems": "Đang kiểm tra hệ thống..."
+    },
+    "hero": {
+      "title": "Trạng thái hệ thống",
+      "description": "Theo dõi minh bạch trạng thái vận hành theo thời gian thực cho bệnh nhân, bác sĩ và đối tác.",
+      "lastUpdated": "Cập nhật lần cuối",
+      "refresh": "Làm mới trạng thái"
+    },
+    "metrics": {
+      "totalScreenings": "Tổng lượt sàng lọc",
+      "totalScreeningsTrend": "+12% trong tháng này",
+      "aiModelVersion": "Phiên bản mô hình AI",
+      "fdaCleared": "FDA Class II đã phê duyệt",
+      "avgProcessing": "Xử lý trung bình",
+      "avgProcessingDetail": "Mỗi ảnh võng mạc độ phân giải cao"
+    },
+    "componentStatus": {
+      "title": "Trạng thái thành phần",
+      "serviceName": "Tên dịch vụ",
+      "region": "Khu vực",
+      "status": "Trạng thái"
+    },
+    "services": {
+      "aiCore": {
+        "name": "Nhân phân tích AI lõi",
+        "description": "Phân tích võng mạc bằng AI"
+      },
+      "imageApi": {
+        "name": "API tiếp nhận ảnh",
+        "description": "Tải lên và xử lý hình ảnh"
+      },
+      "providerPortal": {
+        "name": "Cổng nhà cung cấp",
+        "description": "Xác thực và quản lý người dùng"
+      },
+      "patientStore": {
+        "name": "Kho dữ liệu bệnh nhân",
+        "description": "Lưu trữ dữ liệu được mã hóa"
+      }
+    },
+    "trust": {
+      "title": "Trung tâm Tin cậy & Đạo đức",
+      "cards": {
+        "bias": {
+          "title": "Giám sát thiên lệch",
+          "description": "Kiểm định tự động liên tục trên tập dữ liệu đa nhân khẩu học để đảm bảo độ chính xác chẩn đoán công bằng cho mọi nhóm bệnh nhân.",
+          "cta": "Xem quy trình"
+        },
+        "privacy": {
+          "title": "Quyền riêng tư & tuân thủ",
+          "description": "Kiến trúc tuân thủ HIPAA và GDPR. Mã hóa zero-knowledge đảm bảo dữ liệu bệnh nhân chỉ được truy cập bởi bên được ủy quyền.",
+          "cta": "Xem chứng nhận"
+        },
+        "validation": {
+          "title": "Thẩm định lâm sàng",
+          "description": "Đạt độ nhạy 99.2% trong thử nghiệm đa trung tâm. Kết quả đã được công bố trên các tạp chí y khoa uy tín.",
+          "cta": "Tải whitepaper"
+        }
+      }
+    }
+  },
+  "Home": {
+    "hero": {
+      "badge": "Sáng kiến mã nguồn mở",
+      "titlePrefix": "Phổ cập chăm sóc võng mạc bằng",
+      "titleHighlight": "AI có đạo đức",
+      "description": "AURA mang đến sàng lọc nhanh, không xâm lấn cho bất thường mạch máu và nguy cơ sức khỏe toàn thân. Mã nguồn mở, dễ tiếp cận và độ chính xác lâm sàng.",
+      "primaryCta": "Xem cách hoạt động",
+      "secondaryCta": "Đọc nghiên cứu",
+      "socialProof": "Được 500+ nhà nghiên cứu toàn cầu sử dụng",
+      "analysisResult": "Kết quả phân tích",
+      "lowRisk": "Nguy cơ thấp",
+      "confidenceScore": "Điểm tin cậy"
+    },
+    "features": {
+      "title": "Công nghệ sàng lọc tiên tiến",
+      "description": "Nền tảng ứng dụng học sâu hiện đại để đánh giá sức khỏe võng mạc nhanh chóng, đáng tin cậy cho cả môi trường lâm sàng và cộng đồng.",
+      "cards": {
+        "aiPrecision": {
+          "title": "Độ chính xác AI",
+          "description": "Mô hình học sâu tối tân được huấn luyện trên dữ liệu đa khu vực để đảm bảo độ chính xác cao cho nhiều nhóm dân số."
+        },
+        "globalAccess": {
+          "title": "Khả năng tiếp cận toàn cầu",
+          "description": "Kiến trúc gọn nhẹ tối ưu cho môi trường băng thông thấp, giúp mở rộng công bằng y tế tại khu vực thiếu nguồn lực."
+        },
+        "privacyFirst": {
+          "title": "Quyền riêng tư ưu tiên",
+          "description": "Kiến trúc tuân thủ HIPAA, ưu tiên xử lý cục bộ và sử dụng dữ liệu huấn luyện đã ẩn danh, có nguồn gốc đạo đức."
+        }
+      }
+    },
+    "workflow": {
+      "badge": "Quy trình",
+      "title": "Từ ảnh chụp đến kết luận chỉ trong vài giây",
+      "steps": {
+        "upload": {
+          "title": "1. Tải ảnh võng mạc",
+          "description": "Tải lên an toàn ảnh đáy mắt từ camera võng mạc tiêu chuẩn hoặc thiết bị gắn điện thoại."
+        },
+        "analysis": {
+          "title": "2. AI xử lý phân tích",
+          "description": "Thuật toán độc quyền phân tích hình học mạch máu, góc phân nhánh và độ ngoằn ngoèo theo thời gian thực."
+        },
+        "report": {
+          "title": "3. Nhận báo cáo nguy cơ",
+          "description": "Nhận báo cáo chi tiết có thể tải xuống, chỉ ra các dấu hiệu tiềm năng của bệnh võng mạc do đái tháo đường hoặc bệnh tim mạch."
+        }
+      }
+    },
+    "mission": {
+      "title": "Sứ mệnh của chúng tôi: Tiếp cận và đạo đức",
+      "description": "Chúng tôi là tổ chức phi lợi nhuận cam kết đưa công cụ phát hiện sớm đến với mọi người, không phụ thuộc vị trí địa lý hay điều kiện kinh tế.",
+      "primaryCta": "Tìm hiểu sứ mệnh",
+      "secondaryCta": "Hợp tác cùng chúng tôi",
+      "info": {
+        "nonProfitTitle": "Mô hình phi lợi nhuận",
+        "nonProfitDescription": "Doanh thu được tái đầu tư cho nghiên cứu",
+        "openSourceTitle": "Mã nguồn mở",
+        "openSourceDescription": "Mã nguồn sẵn sàng cho phản biện chuyên môn"
+      }
+    },
+    "stats": {
+      "scansAnalyzed": "Ca đã phân tích",
+      "accuracyRate": "Tỷ lệ chính xác",
+      "countriesReached": "Quốc gia đã triển khai",
+      "nonProfit": "Phi lợi nhuận"
+    }
+  },
+  "EthicsPrivacy": {
+    "hero": {
+      "badge": "Tin cậy & Minh bạch",
+      "titleLine1": "Dữ liệu sức khỏe của bạn,",
+      "titleLine2": "bảo mật và có đạo đức.",
+      "description": "AURA được xây dựng trên nền tảng đạo đức nghiêm ngặt, bảo vệ dữ liệu võng mạc đồng thời thúc đẩy công bằng y tế toàn cầu.",
+      "primaryCta": "Đọc nguyên tắc của chúng tôi",
+      "secondaryCta": "Chính sách quyền riêng tư",
+      "secureEnclave": "Vùng xử lý bảo mật",
+      "processingNode": "Nút xử lý: US-East-1 (Tuân thủ HIPAA)"
+    },
+    "compliance": {
+      "title": "Được tin cậy và tuân thủ"
+    },
+    "pillarsSection": {
+      "title": "Xây dựng niềm tin bằng minh bạch",
+      "description": "Chúng tôi tin rằng AI y tế phải dựa trên nền tảng đạo đức nghiêm ngặt và quyền riêng tư tuyệt đối."
+    },
+    "pillars": {
+      "privacy": {
+        "title": "Quyền riêng tư dữ liệu là ưu tiên",
+        "description": "Dữ liệu võng mạc được mã hóa đầu-cuối và ẩn danh. Bạn giữ toàn quyền sở hữu và kiểm soát trong toàn bộ quy trình chẩn đoán."
+      },
+      "ethicalAi": {
+        "title": "Thiết kế AI có đạo đức",
+        "description": "Mô hình được huấn luyện trên dữ liệu đa dạng toàn cầu để giảm thiên lệch và cải thiện công bằng kết quả chăm sóc sức khỏe."
+      },
+      "transparency": {
+        "title": "Minh bạch toàn diện",
+        "description": "AURA cung cấp kết quả có thể giải thích, làm rõ điều AI nhìn thấy để bác sĩ luôn trong vòng kiểm soát quyết định."
+      }
+    },
+    "journey": {
+      "title": "Hành trình dữ liệu",
+      "description": "Chúng tôi đơn giản hóa quy trình xử lý dữ liệu thành 4 bước rõ ràng, bảo mật và minh bạch.",
+      "link": "Xem kiến trúc bảo mật"
+    },
+    "dataJourney": {
+      "upload": {
+        "title": "Tải lên và mã hóa",
+        "description": "Ảnh võng mạc được truyền qua kết nối TLS 1.3 bảo mật và mã hóa AES-256 trước khi rời thiết bị."
+      },
+      "anonymization": {
+        "title": "Ẩn danh hóa",
+        "description": "Mọi thông tin PHI được loại bỏ khỏi metadata, hệ thống gán token ngẫu nhiên duy nhất cho dữ liệu ảnh."
+      },
+      "analysis": {
+        "title": "Phân tích AI",
+        "description": "Ảnh ẩn danh được xử lý bởi mạng nơ-ron trong vùng bảo mật, không lưu trữ lâu dài trên máy chủ suy luận."
+      },
+      "delivery": {
+        "title": "Trả kết quả và xóa dữ liệu tạm",
+        "description": "Kết quả được gửi về dashboard bác sĩ, dữ liệu ảnh tạm thời trên máy chủ được xóa ngay sau đó."
+      }
+    },
+    "faq": {
+      "title": "Phân tích sâu: Cách chúng tôi giảm thiên lệch",
+      "description": "Giải đáp các câu hỏi phổ biến về tính công bằng trong mô hình AI của chúng tôi.",
+      "datasets": {
+        "question": "AURA được huấn luyện trên dữ liệu nào?",
+        "answer": "Mô hình được huấn luyện trên hơn 2.5 triệu ảnh võng mạc từ 14 khu vực địa lý, đại diện đa dạng về dân tộc, độ tuổi và giới tính."
+      },
+      "humanLoop": {
+        "question": "Có cơ chế Human-in-the-Loop không?",
+        "answer": "Có. AURA là hệ thống hỗ trợ quyết định, không thay thế bác sĩ. Chẩn đoán cuối cùng luôn do bác sĩ nhãn khoa đủ chuyên môn quyết định."
+      },
+      "edgeCases": {
+        "question": "Bạn xử lý trường hợp khó như thế nào?",
+        "answer": "Chúng tôi dùng định lượng độ bất định. Nếu độ tin cậy thấp do ảnh kém chất lượng hoặc bệnh hiếm, hệ thống sẽ chuyển sang chế độ đánh giá thủ công."
+      }
+    },
+    "cta": {
+      "title": "Hợp tác cùng AURA",
+      "description": "Gia nhập mạng lưới thực hành AI có đạo đức. Chúng tôi cung cấp tài liệu đầy đủ và API cho nghiên cứu y tế có trách nhiệm.",
+      "primary": "Yêu cầu quyền truy cập cho nhà phát triển",
+      "secondary": "Liên hệ hội đồng đạo đức"
+    }
+  },
+  "Compliance": {
+    "hero": {
+      "titlePrefix": "Tuân thủ y tế &",
+      "titleHighlight": "Tiêu chuẩn bảo mật",
+      "description": "AURA Eyes xây dựng bảo mật và tuân thủ làm trọng tâm để bảo vệ dữ liệu bệnh nhân trên mọi khu vực pháp lý.",
+      "primaryCta": "Tìm hiểu thêm",
+      "secondaryCta": "Yêu cầu báo cáo bảo mật"
+    },
+    "certifications": {
+      "title": "Chi tiết chứng nhận",
+      "description": "Chúng tôi duy trì kiểm toán nghiêm ngặt từ bên thứ ba để bảo đảm mức bảo mật và quyền riêng tư cao nhất."
+    },
+    "security": {
+      "title": "Hạ tầng bảo mật",
+      "description": "Các lớp bảo mật cấp doanh nghiệp bảo vệ dữ liệu của bạn ở mọi tầng.",
+      "encryption": {
+        "title": "Mã hóa đầu-cuối",
+        "description": "Toàn bộ dữ liệu được mã hóa khi truyền (TLS 1.3) và khi lưu trữ (AES-256)."
+      },
+      "mfa": {
+        "title": "Xác thực đa yếu tố",
+        "description": "Truy cập an toàn với MFA, tích hợp SSO và tùy chọn sinh trắc học."
+      },
+      "auditLogs": {
+        "title": "Nhật ký kiểm toán toàn diện",
+        "description": "Theo dõi đầy đủ mọi truy cập hệ thống và thay đổi dữ liệu."
+      },
+      "backups": {
+        "title": "Sao lưu tự động",
+        "description": "Sao lưu đa vùng với khả năng phục hồi theo thời điểm."
+      },
+      "uptime": {
+        "title": "SLA uptime 99.99%",
+        "description": "Hạ tầng cấp doanh nghiệp với cam kết sẵn sàng dịch vụ cao."
+      },
+      "rbac": {
+        "title": "Phân quyền theo vai trò",
+        "description": "Quyền truy cập chi tiết theo nguyên tắc đặc quyền tối thiểu."
+      }
+    },
+    "audits": {
+      "title": "Kiểm toán và đánh giá gần đây",
+      "description": "Chúng tôi duy trì lịch kiểm toán liên tục để bảo đảm tuân thủ và an toàn bền vững.",
+      "completed": "Hoàn tất",
+      "soc2": {
+        "date": "Tháng 01/2026",
+        "event": "Kiểm toán thường niên SOC 2 Type II",
+        "details": "Không phát hiện lỗi, duy trì tuân thủ đầy đủ"
+      },
+      "hipaa": {
+        "date": "Tháng 12/2025",
+        "event": "Đánh giá rủi ro bảo mật HIPAA",
+        "details": "164 kiểm soát đã được xác minh và lập hồ sơ"
+      },
+      "iso": {
+        "date": "Tháng 10/2025",
+        "event": "Tái chứng nhận ISO 27001",
+        "details": "Gia hạn chứng nhận đến năm 2028"
+      },
+      "pentest": {
+        "date": "Tháng 09/2025",
+        "event": "Kiểm thử xâm nhập",
+        "details": "Đánh giá bảo mật bởi đơn vị chứng nhận độc lập"
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng tìm hiểu sâu hơn về bảo mật của chúng tôi?",
+      "description": "Liên hệ đội bảo mật để nhận tài liệu chi tiết, báo cáo pentest hoặc đặt lịch tư vấn.",
+      "primary": "Liên hệ đội bảo mật",
+      "secondary": "Xem chính sách quyền riêng tư"
+    }
+  }
+}

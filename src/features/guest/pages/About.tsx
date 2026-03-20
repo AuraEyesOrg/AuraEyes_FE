@@ -1,12 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AboutPage = () => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -265,18 +267,13 @@ const AboutPage = () => {
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium mb-6 border border-white/20">
                 <span className="h-2 w-2 rounded-full bg-[var(--color-brand-primary)] animate-pulse" />
-                Non-Profit Healthcare Initiative
+                {t('MedicalTerms.ophthalmology')}
               </div>
               <h1 className="about-hero-title text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6">
-                Democratizing Access to{' '}
-                <span className="text-[var(--color-brand-primary)]">
-                  Retinal Health
-                </span>
+                {t('About.heroTitle')}
               </h1>
               <p className="about-hero-desc text-lg lg:text-xl text-gray-300 leading-relaxed">
-                We're a team of ophthalmologists, AI researchers, and healthcare
-                advocates united by a single mission: making early disease
-                detection accessible to everyone, everywhere.
+                {t('About.heroDescription')}
               </p>
             </div>
           </div>
