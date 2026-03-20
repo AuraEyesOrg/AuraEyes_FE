@@ -1,8 +1,17 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import PrivateRoute from './private-route';
 import Spinner from '@/components/ui/spinner';
 import { setRouterNavigator } from '@/lib/router';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import GuestLayout from '@/features/guest/layout';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -229,6 +238,22 @@ const RouterBridge = () => {
   return null;
 };
 
+interface LocalizedRedirectProps {
+  target: string;
+}
+
+const LocalizedRedirect = ({ target }: LocalizedRedirectProps) => {
+  const location = useLocation();
+  const localizedPath = resolvePathWithLocale(target);
+
+  return (
+    <Navigate
+      replace
+      to={`${localizedPath}${location.search ?? ''}${location.hash ?? ''}`}
+    />
+  );
+};
+
 /**
  * Main Router Component
  */
@@ -238,13 +263,39 @@ const Router = () => (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* ============ GUEST ROUTES (Public - No Auth) ============ */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/ethics" element={<EthicsPrivacyPage />} />
-        <Route path="/status" element={<StatusPage />} />
-        <Route path="/compliance" element={<CompliancePage />} />
+        <Route path="/" element={<LocalizedRedirect target="/" />} />
+        <Route path="/about" element={<LocalizedRedirect target="/about" />} />
+        <Route
+          path="/how-it-works"
+          element={<LocalizedRedirect target="/how-it-works" />}
+        />
+        <Route
+          path="/contact"
+          element={<LocalizedRedirect target="/contact" />}
+        />
+        <Route
+          path="/ethics"
+          element={<LocalizedRedirect target="/ethics" />}
+        />
+        <Route
+          path="/status"
+          element={<LocalizedRedirect target="/status" />}
+        />
+        <Route
+          path="/compliance"
+          element={<LocalizedRedirect target="/compliance" />}
+        />
+
+        <Route path="/:locale" element={<GuestLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="how-it-works" element={<HowItWorksPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="ethics" element={<EthicsPrivacyPage />} />
+          <Route path="status" element={<StatusPage />} />
+          <Route path="compliance" element={<CompliancePage />} />
+          <Route path="*" element={<Navigate to="." replace />} />
+        </Route>
 
         {/* ============ AUTH ROUTES ============ */}
         <Route path="/login" element={<LoginPage />} />
@@ -509,6 +560,8 @@ const Router = () => (
             element={<NetworkOrganisationPage />}
           />
         </Route>
+
+        <Route path="*" element={<LocalizedRedirect target="/" />} />
       </Routes>
     </Suspense>
   </BrowserRouter>
