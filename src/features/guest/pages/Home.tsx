@@ -1,72 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useTranslation } from 'react-i18next';
-import i18n, { resources } from '@/i18n/i18n';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HomePage = () => {
-  const { t: i18nT } = useTranslation();
-
-  const resolveResourceValue = (locale: 'vi' | 'en', key: string) => {
-    return key.split('.').reduce<unknown>((accumulator, segment) => {
-      if (
-        accumulator &&
-        typeof accumulator === 'object' &&
-        segment in (accumulator as Record<string, unknown>)
-      ) {
-        return (accumulator as Record<string, unknown>)[segment];
-      }
-
-      return undefined;
-    }, resources[locale].translation);
-  };
-
-  const t = (key: string, fallback = '') => {
-    const translated = i18nT(key, { defaultValue: '' });
-
-    if (translated && translated !== key) {
-      return translated;
-    }
-
-    const normalizedLocale = (i18n.resolvedLanguage ?? i18n.language ?? 'vi')
-      .toLowerCase()
-      .startsWith('en')
-      ? 'en'
-      : 'vi';
-
-    const localeCandidates: Array<'vi' | 'en'> =
-      normalizedLocale === 'en' ? ['en', 'vi'] : ['vi', 'en'];
-
-    for (const locale of localeCandidates) {
-      const resourceValue = resolveResourceValue(locale, key);
-
-      if (
-        typeof resourceValue === 'string' &&
-        resourceValue.trim().length > 0
-      ) {
-        return resourceValue;
-      }
-    }
-
-    return fallback || key;
-  };
-
-  const heroTitlePrefix = t(
-    'Home.hero.titlePrefix',
-    i18nT('GuestHome.title', {
-      defaultValue:
-        'Detect retinal diseases early with clinical-grade precision',
-    })
-  );
-  const heroTitleHighlight = t('Home.hero.titleHighlight', '');
-  const hasHeroTitleHighlight =
-    heroTitleHighlight.trim().length > 0 &&
-    heroTitleHighlight !== 'Home.hero.titleHighlight';
-
   // Refs for animations
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -519,29 +459,28 @@ const HomePage = () => {
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span>{t('Home.hero.badge')}</span>
+                  <span>Open Source Initiative</span>
                 </div>
                 <h1
                   className="hero-title text-4xl font-black leading-tight tracking-tight text-[var(--color-brand-dark)] sm:text-5xl lg:text-6xl"
                   style={{ perspective: '1000px' }}
                 >
-                  {heroTitlePrefix}
-                  {hasHeroTitleHighlight ? ' ' : ''}
-                  {hasHeroTitleHighlight ? (
-                    <span className="hero-gradient-text text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5]">
-                      {heroTitleHighlight}
-                    </span>
-                  ) : null}
+                  Democratizing Retinal Health with{' '}
+                  <span className="hero-gradient-text text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5]">
+                    Ethical AI
+                  </span>
                 </h1>
                 <p className="hero-description max-w-xl text-lg text-[var(--color-text-muted)]">
-                  {t('Home.hero.description')}
+                  AURA provides instant, non-invasive screening for vascular
+                  abnormalities and systemic health risks. Open-source,
+                  accessible, and clinically accurate.
                 </p>
                 <div className="hero-buttons flex flex-wrap gap-4">
                   <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
-                    {t('Home.hero.primaryCta')}
+                    See How It Works
                   </button>
                   <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-transparent px-6 text-base font-bold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-all hover:border-[var(--color-brand-primary)]">
-                    {t('Home.hero.secondaryCta')}
+                    Read the Research
                   </button>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-[var(--color-text-muted)] pt-2">
@@ -568,7 +507,7 @@ const HomePage = () => {
                       }}
                     ></div>
                   </div>
-                  <span>{t('Home.hero.socialProof')}</span>
+                  <span>Used by 500+ researchers globally</span>
                 </div>
               </div>
               <div
@@ -693,11 +632,11 @@ const HomePage = () => {
                   <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[var(--color-medical-border)]">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                        {t('Home.hero.analysisResult')}
+                        Analysis Result
                       </span>
                       <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
-                        {t('Home.hero.lowRisk')}
+                        Low Risk
                       </span>
                     </div>
                     <div className="flex items-end gap-2">
@@ -705,7 +644,7 @@ const HomePage = () => {
                         99.2%
                       </span>
                       <span className="text-sm font-medium text-[var(--color-text-muted)] mb-1">
-                        {t('Home.hero.confidenceScore')}
+                        Confidence Score
                       </span>
                     </div>
                     <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
@@ -776,10 +715,12 @@ const HomePage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="features-title mb-12 max-w-3xl">
               <h2 className="text-3xl font-bold tracking-tight text-[var(--color-brand-dark)] sm:text-4xl mb-4">
-                {t('Home.features.title')}
+                Advanced Screening Technology
               </h2>
               <p className="text-lg text-[var(--color-text-muted)]">
-                {t('Home.features.description')}
+                Our platform leverages cutting-edge deep learning to provide
+                rapid, reliable assessments of retinal health, designed for both
+                clinical and field settings.
               </p>
             </div>
             <div
@@ -807,10 +748,12 @@ const HomePage = () => {
                   </svg>
                 </div>
                 <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
-                  {t('Home.features.cards.aiPrecision.title')}
+                  AI Precision
                 </h3>
                 <p className="text-[var(--color-text-muted)] leading-relaxed">
-                  {t('Home.features.cards.aiPrecision.description')}
+                  State-of-the-art deep learning models trained on diverse
+                  global datasets for high accuracy across different
+                  demographics.
                 </p>
               </div>
 
@@ -835,10 +778,12 @@ const HomePage = () => {
                   </svg>
                 </div>
                 <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
-                  {t('Home.features.cards.globalAccess.title')}
+                  Global Access
                 </h3>
                 <p className="text-[var(--color-text-muted)] leading-relaxed">
-                  {t('Home.features.cards.globalAccess.description')}
+                  Lightweight architecture optimized for low-bandwidth
+                  environments, ensuring healthcare equity in underserved
+                  regions.
                 </p>
               </div>
 
@@ -863,10 +808,11 @@ const HomePage = () => {
                   </svg>
                 </div>
                 <h3 className="mb-3 text-xl font-bold text-[var(--color-brand-dark)]">
-                  {t('Home.features.cards.privacyFirst.title')}
+                  Privacy First
                 </h3>
                 <p className="text-[var(--color-text-muted)] leading-relaxed">
-                  {t('Home.features.cards.privacyFirst.description')}
+                  HIPAA compliant architecture processing data locally where
+                  possible, with ethically sourced and anonymized training data.
                 </p>
               </div>
             </div>
@@ -878,10 +824,10 @@ const HomePage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="flex flex-col items-center text-center mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2">
-                {t('Home.workflow.badge')}
+                Workflow
               </span>
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] sm:text-4xl">
-                {t('Home.workflow.title')}
+                From Scan to Insight in Seconds
               </h2>
             </div>
             <div className="relative">
@@ -912,10 +858,11 @@ const HomePage = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    {t('Home.workflow.steps.upload.title')}
+                    1. Upload Retinal Scan
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
-                    {t('Home.workflow.steps.upload.description')}
+                    Securely upload fundus photography from any standard retinal
+                    camera or smartphone adapter.
                   </p>
                 </div>
 
@@ -940,10 +887,11 @@ const HomePage = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    {t('Home.workflow.steps.analysis.title')}
+                    2. AI Analysis Processing
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
-                    {t('Home.workflow.steps.analysis.description')}
+                    Our proprietary algorithms analyze vascular geometry,
+                    branching angles, and tortuosity instantly.
                   </p>
                 </div>
 
@@ -968,10 +916,11 @@ const HomePage = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    {t('Home.workflow.steps.report.title')}
+                    3. Receive Risk Report
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] max-w-xs">
-                    {t('Home.workflow.steps.report.description')}
+                    Get a comprehensive, downloadable report identifying
+                    potential markers for diabetic retinopathy or CVD.
                   </p>
                 </div>
               </div>
@@ -1001,17 +950,20 @@ const HomePage = () => {
               <div className="relative z-10 p-10 lg:p-16 flex flex-col md:flex-row gap-10 items-center">
                 <div className="mission-text flex-1 space-y-6">
                   <h2 className="text-3xl font-bold sm:text-4xl text-white">
-                    {t('Home.mission.title')}
+                    Our Mission: Accessibility & Ethics
                   </h2>
                   <p className="text-gray-300 text-lg leading-relaxed max-w-xl">
-                    {t('Home.mission.description')}
+                    We are a non-profit organization dedicated to making early
+                    detection tools available to everyone, regardless of
+                    location or economic status. We believe healthcare is a
+                    human right, and AI should be a tool for equity.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30 w-fit">
-                      {t('Home.mission.primaryCta')}
+                      Learn About Our Mission
                     </button>
                     <button className="magnetic-btn flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-all w-fit">
-                      {t('Home.mission.secondaryCta')}
+                      Partner With Us
                     </button>
                   </div>
                 </div>
@@ -1036,10 +988,10 @@ const HomePage = () => {
                       </svg>
                       <div>
                         <h4 className="font-bold text-white">
-                          {t('Home.mission.info.nonProfitTitle')}
+                          Non-Profit Model
                         </h4>
                         <p className="text-sm text-gray-300">
-                          {t('Home.mission.info.nonProfitDescription')}
+                          Revenue reinvested in research
                         </p>
                       </div>
                     </div>
@@ -1058,11 +1010,9 @@ const HomePage = () => {
                         />
                       </svg>
                       <div>
-                        <h4 className="font-bold text-white">
-                          {t('Home.mission.info.openSourceTitle')}
-                        </h4>
+                        <h4 className="font-bold text-white">Open Source</h4>
                         <p className="text-sm text-gray-300">
-                          {t('Home.mission.info.openSourceDescription')}
+                          Code available for peer review
                         </p>
                       </div>
                     </div>
@@ -1086,7 +1036,7 @@ const HomePage = () => {
                   50k+
                 </div>
                 <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.scansAnalyzed')}
+                  Scans Analyzed
                 </div>
               </div>
               <div className="stat-item p-4">
@@ -1098,7 +1048,7 @@ const HomePage = () => {
                   98%
                 </div>
                 <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.accuracyRate')}
+                  Accuracy Rate
                 </div>
               </div>
               <div className="stat-item p-4">
@@ -1110,7 +1060,7 @@ const HomePage = () => {
                   30+
                 </div>
                 <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.countriesReached')}
+                  Countries Reached
                 </div>
               </div>
               <div className="stat-item p-4">
@@ -1122,7 +1072,7 @@ const HomePage = () => {
                   100%
                 </div>
                 <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.nonProfit')}
+                  Non-Profit
                 </div>
               </div>
             </div>

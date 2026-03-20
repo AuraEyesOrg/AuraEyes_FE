@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { screeningApi } from '../api/screening.api';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
-import { useScreeningStore } from '../stores/useScreeningStore';
 import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
@@ -361,9 +360,10 @@ function friendlyDescription(anomaly: Anomaly): string {
 }
 
 export default function RetinalAnalysis() {
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const selectedFile = useScreeningStore((state) => state.selectedFile);
+  const routeState = location.state as LocationState | null;
   const { data: quotaBalance } = useQuotaBalance();
 
   const [toggles, setToggles] = useState<ToggleState>({
@@ -386,7 +386,6 @@ export default function RetinalAnalysis() {
   const [resultsPersisted, setResultsPersisted] = useState<boolean>(
     Boolean(routeState?.resultsPersisted)
   );
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Image management
   const [images, setImages] = useState<RetinalImage[]>([]);
@@ -495,48 +494,6 @@ export default function RetinalAnalysis() {
 
     loadSession();
   }, [navigate, routeState]);
-    if (!selectedFile) {
-      navigate('/patient/screening/new', { replace: true });
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreviewUrl(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [navigate, selectedFile]);
-
-  useEffect(() => {
-    if (!selectedFile || !previewUrl) {
-      setImages([]);
-      setSelectedImageId(null);
-      return;
-    }
-
-    const imageId = 'selected-upload';
-    const incomingImage: RetinalImage = {
-      id: imageId,
-      url: previewUrl,
-      name: selectedFile.name,
-      eye:
-        selectedFile.name.toLowerCase().includes('od') ||
-        selectedFile.name.toLowerCase().includes('right')
-          ? 'Right Eye (OD)'
-          : 'Left Eye (OS)',
-      uploadedAt: new Date().toISOString(),
-      analyzed: false,
-      anomalies: [],
-    };
-
-    setImages([incomingImage]);
-    setSelectedImageId(imageId);
-    setAnalyzed(false);
-    setAnomalies([]);
-    setIsFallback(false);
-    setErrorMessage(null);
-  }, [previewUrl, selectedFile]);
 
   const currentImage =
     images.find((img) => img.id === selectedImageId) || images[0] || null;
@@ -634,14 +591,15 @@ export default function RetinalAnalysis() {
       const { w: imgWidth, h: imgHeight } = await getImageNaturalSize(imageUrl);
 
       // Convert blob/data URL to File for FormData upload
-      if (!selectedFile) {
-        setErrorMessage('No image file available for analysis.');
-        setIsAnalyzing(false);
-        return;
-      }
+      const imgResponse = await fetch(imageUrl);
+      const blob = await imgResponse.blob();
+      const fileName = currentImage?.name || 'retinal-scan.jpg';
+      const file = new File([blob], fileName, {
+        type: blob.type || 'image/jpeg',
+      });
 
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('file', file);
 
       // Call AURA AI standard /diagnosis/analyze endpoint (includes Score-CAM + top_k)
       const { data } = await aiCoreClient.post<AIStandardResponse>(
@@ -767,7 +725,7 @@ export default function RetinalAnalysis() {
     }
   };
 
-  if (images.length === 0 || !previewUrl) {
+  if (images.length === 0) {
     return null;
   }
 

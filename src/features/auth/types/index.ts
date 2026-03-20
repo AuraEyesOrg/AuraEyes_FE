@@ -33,9 +33,6 @@ export interface RegisterOphthalmologistRequest {
   phone?: string;
   bio?: string;
   yearsOfExperience: number;
-  employmentType: 'FullTime' | 'PartTime';
-  workingHoursPerWeek?: number;
-  expectedMonthlySalary?: number;
   organizationId?: string;
   licenseImage?: File;
   degreeImage?: File;

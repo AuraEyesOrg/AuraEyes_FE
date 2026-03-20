@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
   Mail,
@@ -13,12 +13,6 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 import { forgotPassword } from '../api';
 
 interface ForgotPasswordFormData {
@@ -44,8 +38,6 @@ const requestForgotPassword = async (email: string): Promise<void> => {
 };
 
 const ForgotPasswordPage = () => {
-  const { t } = useSafeTranslation();
-  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -55,9 +47,6 @@ const ForgotPasswordPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<ForgotPasswordFormData>();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
@@ -67,12 +56,14 @@ const ForgotPasswordPage = () => {
 
       await requestForgotPassword(data.email);
 
-      setSuccessMessage(t('AuthPages.forgotPassword.messages.success'));
+      setSuccessMessage(
+        'Nếu email tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu đến hộp thư của bạn.'
+      );
     } catch (err: unknown) {
       const message =
         err instanceof Error
           ? err.message
-          : t('AuthPages.forgotPassword.messages.fallbackError');
+          : 'Không thể gửi yêu cầu lúc này. Vui lòng thử lại sau.';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -90,44 +81,34 @@ const ForgotPasswordPage = () => {
         </div>
 
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
+          <AuraLogo size="lg" to="/" />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            {t('AuthPages.forgotPassword.leftPanel.titleLine1')} <br />
-            <span className="text-[#00d1c0]">
-              {t('AuthPages.forgotPassword.leftPanel.titleHighlight')}
-            </span>
+            Recover Your <br />
+            <span className="text-[#00d1c0]">Account Access.</span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            {t('AuthPages.forgotPassword.leftPanel.description')}
+            Enter your registered email address and we will send you a secure
+            password reset link.
           </p>
           <div className="flex items-center gap-4 mt-4 text-sm font-medium text-gray-400">
             <div className="flex items-center gap-2">
               <Shield className="text-[#00d1c0] w-5 h-5" />
-              <span>
-                {t('AuthPages.forgotPassword.leftPanel.securityFirst')}
-              </span>
+              <span>Security First</span>
             </div>
             <div className="h-4 w-px bg-gray-600"></div>
             <div className="flex items-center gap-2">
               <Lock className="text-[#00d1c0] w-5 h-5" />
-              <span>
-                {t('AuthPages.forgotPassword.leftPanel.protectedRecovery')}
-              </span>
+              <span>Protected Recovery</span>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 text-sm text-gray-500">
-          <p>
-            {t('AuthPages.shared.copyright').replace(
-              '{{year}}',
-              String(new Date().getFullYear())
-            )}
-          </p>
+          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
         </div>
       </div>
 
@@ -135,11 +116,11 @@ const ForgotPasswordPage = () => {
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           <div>
             <Link
-              to={toLocalizedAuthPath('/login')}
+              to="/login"
               className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#1F85F5] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              {t('AuthPages.shared.backToLogin')}
+              Back to Login
             </Link>
           </div>
 
@@ -159,10 +140,10 @@ const ForgotPasswordPage = () => {
 
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-              {t('AuthPages.forgotPassword.form.heading')}
+              Forgot Password
             </h2>
             <p className="text-gray-500 text-base">
-              {t('AuthPages.forgotPassword.form.description')}
+              We will send a reset link to your registered email.
             </p>
           </div>
 
@@ -172,7 +153,7 @@ const ForgotPasswordPage = () => {
                 className="block text-sm font-semibold text-gray-700"
                 htmlFor="forgot-email"
               >
-                {t('AuthPages.forgotPassword.form.emailLabel')}
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -180,21 +161,15 @@ const ForgotPasswordPage = () => {
                 </div>
                 <input
                   {...register('email', {
-                    required: t(
-                      'AuthPages.forgotPassword.validation.emailRequired'
-                    ),
+                    required: 'Email is required',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: t(
-                        'AuthPages.forgotPassword.validation.invalidEmail'
-                      ),
+                      message: 'Invalid email address',
                     },
                   })}
                   id="forgot-email"
                   type="email"
-                  placeholder={t(
-                    'AuthPages.forgotPassword.form.emailPlaceholder'
-                  )}
+                  placeholder="your@email.com"
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                 />
               </div>
@@ -213,10 +188,10 @@ const ForgotPasswordPage = () => {
               {isLoading ? (
                 <>
                   <Spinner size={20} className="shrink-0" />
-                  {t('AuthPages.forgotPassword.form.submitting')}
+                  Sending...
                 </>
               ) : (
-                t('AuthPages.forgotPassword.form.submit')
+                'Send Reset Link'
               )}
             </button>
           </form>
@@ -225,7 +200,8 @@ const ForgotPasswordPage = () => {
             <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
               <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
               <p className="text-xs text-gray-600 leading-relaxed">
-                {t('AuthPages.forgotPassword.messages.securityNote')}
+                For security reasons, the system always returns the same message
+                whether an email exists or not.
               </p>
             </div>
           </div>

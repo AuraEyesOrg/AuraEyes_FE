@@ -18,7 +18,6 @@ import {
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { toast } from 'react-toastify';
-import { useScreeningStore } from '../stores/useScreeningStore';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -49,7 +48,6 @@ const _STEPS: { key: Step; label: string; number: number }[] = [
 
 export default function ScreeningNewPage() {
   const navigate = useNavigate();
-  const { setSelectedFile } = useScreeningStore();
   const [_currentStep, _setCurrentStep] = useState<Step>('upload');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -131,24 +129,6 @@ export default function ScreeningNewPage() {
     }
 
     const newUniqueFiles = validFiles.filter((incomingFile) => {
-  const toDataUrl = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result === 'string') {
-          resolve(result);
-          return;
-        }
-
-        reject(new Error('Unable to generate local preview.'));
-      };
-      reader.onerror = () => reject(new Error('Unable to read file.'));
-      reader.readAsDataURL(file);
-    });
-
-  const handleFiles = async (files: File[]) => {
-    const newUniqueFiles = files.filter((incomingFile) => {
       const isDuplicate = images.some(
         (existingImg) =>
           existingImg.file.name === incomingFile.name &&
@@ -163,15 +143,13 @@ export default function ScreeningNewPage() {
       return;
     }
 
-    const newImages = await Promise.all(
-      newUniqueFiles.map(async (file) => ({
-        id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        file,
-        preview: await toDataUrl(file),
-        status: 'uploading' as ImageStatus,
-        progress: 0,
-      }))
-    );
+    const newImages: UploadedImage[] = newUniqueFiles.map((file) => ({
+      id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      file,
+      preview: URL.createObjectURL(file),
+      status: 'uploading' as ImageStatus,
+      progress: 0,
+    }));
 
     setImages((prev) => [...prev, ...newImages]);
 
@@ -237,7 +215,14 @@ export default function ScreeningNewPage() {
   };
 
   const removeImage = (imageId: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== imageId));
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === imageId);
+      if (target?.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(target.preview);
+      }
+
+      return prev.filter((img) => img.id !== imageId);
+    });
   };
 
   const retryImage = (imageId: string) => {
@@ -480,6 +465,11 @@ export default function ScreeningNewPage() {
                       images.length > 0 && (
                         <button
                           onClick={() => {
+                            images.forEach((image) => {
+                              if (image.preview.startsWith('blob:')) {
+                                URL.revokeObjectURL(image.preview);
+                              }
+                            });
                             setImages([]);
                           }}
                           className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -599,15 +589,6 @@ export default function ScreeningNewPage() {
                   <button
                     disabled={!canProceed}
                     onClick={() => setShowPolicyPopup(true)}
-                    onClick={() => {
-                      const selected = readyImages[0]?.file;
-                      if (!selected) {
-                        return;
-                      }
-
-                      setSelectedFile(selected);
-                      navigate('/patient/screening/analyze');
-                    }}
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
                     <>

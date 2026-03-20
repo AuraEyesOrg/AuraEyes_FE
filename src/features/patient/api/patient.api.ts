@@ -140,32 +140,11 @@ export const PATIENT_ENDPOINTS = {
 
 // ============ PROFILE API ============
 
-const normalizeDateOnly = (value?: string): string | undefined => {
-  if (!value) return undefined;
-
-  const directDateOnlyMatch = value.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (directDateOnlyMatch) {
-    return directDateOnlyMatch[1];
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
-  return parsedDate.toISOString().split('T')[0];
-};
-
-const normalizePatientProfile = (profile: PatientProfile): PatientProfile => ({
-  ...profile,
-  dateOfBirth: normalizeDateOnly(profile.dateOfBirth),
-});
-
 export const getProfile = async (): Promise<PatientProfile> => {
   const response = await api.get<ApiResponse<PatientProfile>>(
     PATIENT_ENDPOINTS.PROFILE.GET
   );
-  return normalizePatientProfile(response.data.data!);
+  return response.data.data!;
 };
 
 export const updateProfile = async (
@@ -175,7 +154,7 @@ export const updateProfile = async (
     PATIENT_ENDPOINTS.PROFILE.UPDATE,
     data
   );
-  return normalizePatientProfile(response.data.data!);
+  return response.data.data!;
 };
 
 export const uploadAvatar = async (file: File): Promise<string> => {
@@ -212,10 +191,6 @@ export interface OphthalmologistSearchItem {
   isVerified: boolean;
   certificateCount: number;
   createdAt: string;
-  licenseUrl?: string | null;
-  degreeUrl?: string | null;
-  ratingAverage?: number;
-  ratingCount?: number;
 }
 
 export interface OphthalmologistDetailItem {
@@ -228,10 +203,6 @@ export interface OphthalmologistDetailItem {
   isVerified: boolean;
   createdAt: string;
   updatedAt?: string | null;
-  licenseUrl?: string | null;
-  degreeUrl?: string | null;
-  ratingAverage?: number;
-  ratingCount?: number;
 }
 
 export interface AvailableSlotItem {

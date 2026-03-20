@@ -17,15 +17,9 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
 import { AuraLogo } from '@/components/ui/aura-logo';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 import {
   login,
   googleLogin,
@@ -52,11 +46,6 @@ interface RegisterFormData {
 }
 
 const LoginPage = () => {
-  const { t } = useSafeTranslation();
-  const copyrightText = t('AuthPages.shared.copyright').replace(
-    '{{year}}',
-    String(new Date().getFullYear())
-  );
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,11 +57,7 @@ const LoginPage = () => {
   const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { login: authLogin } = useAuthStore();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
 
   const {
     register: registerLogin,
@@ -91,7 +76,7 @@ const LoginPage = () => {
   const onLoginSubmit = async (data: LoginFormData) => {
     // Validate reCAPTCHA
     if (!recaptchaToken) {
-      setError(t('AuthPages.login.messages.recaptchaRequired'));
+      setError('Please complete the reCAPTCHA verification.');
       return;
     }
 
@@ -109,7 +94,7 @@ const LoginPage = () => {
       if (isTwoFactorRequired(response)) {
         setTwoFactorData(response);
         // Navigate to 2FA verification page with userId
-        navigate(toLocalizedAuthPath('/two-factor-verify'), {
+        navigate('/two-factor-verify', {
           state: {
             userId: response.userId,
             email: data.email,
@@ -132,11 +117,11 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
-            navigate(toLocalizedAuthPath('/pending-approval'));
+            navigate('/pending-approval');
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
+            navigate('/ophthalmologist/contract');
           } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
+            navigate('/ophthalmologist/dashboard');
           }
         } else if (
           roles.includes('OrgAdmin') ||
@@ -148,20 +133,17 @@ const LoginPage = () => {
             navigate('/organisation/dashboard');
           }
         } else {
-          navigate(toLocalizedAuthPath('/'));
+          navigate('/');
         }
       } else {
         setError(
-          response.errors?.join(', ') ||
-            t('AuthPages.login.messages.loginFailed')
+          response.errors?.join(', ') || 'Login failed. Please try again.'
         );
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : t('AuthPages.login.messages.loginError');
+        err instanceof Error ? err.message : 'An error occurred during login';
       // Check for axios error response
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
@@ -197,7 +179,9 @@ const LoginPage = () => {
       });
 
       // Registration successful
-      setSuccessMessage(t('AuthPages.login.messages.registrationSuccess'));
+      setSuccessMessage(
+        'Registration successful! Please check your email to confirm your account.'
+      );
       resetRegisterForm();
 
       // Switch to login mode after a delay
@@ -210,7 +194,7 @@ const LoginPage = () => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : t('AuthPages.login.messages.registrationError');
+          : 'An error occurred during registration';
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
@@ -232,7 +216,7 @@ const LoginPage = () => {
     credentialResponse: CredentialResponse
   ) => {
     if (!credentialResponse.credential) {
-      setError(t('AuthPages.login.messages.googleNoCredential'));
+      setError('Google login failed. No credential received.');
       return;
     }
 
@@ -247,7 +231,7 @@ const LoginPage = () => {
       // Check if 2FA is required
       if (isTwoFactorRequired(response)) {
         setTwoFactorData(response);
-        navigate(toLocalizedAuthPath('/two-factor-verify'), {
+        navigate('/two-factor-verify', {
           state: {
             userId: response.userId,
             email: '',
@@ -269,11 +253,11 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
-            navigate(toLocalizedAuthPath('/pending-approval'));
+            navigate('/pending-approval');
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
+            navigate('/ophthalmologist/contract');
           } else {
-            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
+            navigate('/ophthalmologist/dashboard');
           }
         } else if (
           roles.includes('OrgAdmin') ||
@@ -285,12 +269,12 @@ const LoginPage = () => {
             navigate('/organisation/dashboard');
           }
         } else {
-          navigate(toLocalizedAuthPath('/'));
+          navigate('/');
         }
       } else {
         setError(
           response.errors?.join(', ') ||
-            t('AuthPages.login.messages.googleFailed')
+            'Google login failed. Please try again.'
         );
       }
     } catch (err: unknown) {
@@ -298,7 +282,7 @@ const LoginPage = () => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : t('AuthPages.login.messages.googleError');
+          : 'An error occurred during Google login';
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
@@ -337,42 +321,39 @@ const LoginPage = () => {
 
         {/* Header */}
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
+          <AuraLogo size="lg" to="/" />
         </div>
 
         {/* Center Content */}
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            {t('AuthPages.login.leftPanel.titleLine1')} <br />
-            <span className="text-[#00d1c0]">
-              {t('AuthPages.login.leftPanel.titleHighlight')}
-            </span>
+            AI-Powered <br />
+            <span className="text-[#00d1c0]">Eye Care Platform.</span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            {t('AuthPages.login.leftPanel.description')}
+            Secure access for patients, ophthalmologists, and organizations to
+            next-generation retinal screening tools with 99.2% clinical
+            accuracy.
           </p>
           <div className="flex items-center gap-4 mt-4 text-sm font-medium text-gray-400">
             <div className="flex items-center gap-2">
               <Shield className="text-[#00d1c0] w-5 h-5" />
-              <span>{t('AuthPages.login.leftPanel.hipaa')}</span>
+              <span>HIPAA Compliant</span>
             </div>
             <div className="h-4 w-px bg-gray-600"></div>
             <div className="flex items-center gap-2">
               <Lock className="text-[#00d1c0] w-5 h-5" />
-              <span>{t('AuthPages.login.leftPanel.encryption')}</span>
+              <span>End-to-End Encryption</span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
-          <p>{copyrightText}</p>
+          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
           <a className="hover:text-[#00d1c0] transition-colors" href="#">
-            {t('AuthPages.login.leftPanel.systemStatus')}{' '}
-            <span className="text-green-400">
-              ● {t('AuthPages.login.leftPanel.online')}
-            </span>
+            System Status: <span className="text-green-400">● Online</span>
           </a>
         </div>
       </div>
@@ -400,7 +381,7 @@ const LoginPage = () => {
                 }`}
               >
                 <span className="text-sm font-bold tracking-wide uppercase">
-                  {t('AuthPages.login.tabs.login')}
+                  Log In
                 </span>
               </button>
               <button
@@ -412,7 +393,7 @@ const LoginPage = () => {
                 }`}
               >
                 <span className="text-sm font-bold tracking-wide uppercase">
-                  {t('AuthPages.login.tabs.register')}
+                  Create Account
                 </span>
               </button>
             </div>
@@ -428,7 +409,7 @@ const LoginPage = () => {
                   onClick={() => setError(null)}
                   className="text-xs text-red-600 hover:text-red-800 mt-1"
                 >
-                  {t('AuthPages.login.messages.dismiss')}
+                  Dismiss
                 </button>
               </div>
             </div>
@@ -448,10 +429,10 @@ const LoginPage = () => {
               {/* Page Heading */}
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-                  {t('AuthPages.login.loginForm.heading')}
+                  Welcome Back
                 </h2>
                 <p className="text-gray-500 text-base">
-                  {t('AuthPages.login.loginForm.description')}
+                  Sign in to your AuraEyes account to continue.
                 </p>
               </div>
 
@@ -466,7 +447,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="login-email"
                   >
-                    {t('AuthPages.login.loginForm.emailLabel')}
+                    Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -474,18 +455,16 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerLogin('email', {
-                        required: t('AuthPages.login.validation.emailRequired'),
+                        required: 'Email is required',
                         pattern: {
                           value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: t('AuthPages.login.validation.invalidEmail'),
+                          message: 'Invalid email address',
                         },
                       })}
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="login-email"
                       name="email"
-                      placeholder={t(
-                        'AuthPages.login.loginForm.emailPlaceholder'
-                      )}
+                      placeholder="your@email.com"
                       type="email"
                     />
                   </div>
@@ -503,13 +482,13 @@ const LoginPage = () => {
                       className="block text-sm font-semibold text-gray-700"
                       htmlFor="login-password"
                     >
-                      {t('AuthPages.login.loginForm.passwordLabel')}
+                      Password
                     </label>
                     <Link
-                      to={toLocalizedAuthPath('/forgot-password')}
+                      to="/forgot-password"
                       className="text-xs font-medium text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                     >
-                      {t('AuthPages.login.loginForm.forgotPassword')}
+                      Forgot password?
                     </Link>
                   </div>
                   <div className="relative">
@@ -518,12 +497,10 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerLogin('password', {
-                        required: t(
-                          'AuthPages.login.validation.passwordRequired'
-                        ),
+                        required: 'Password is required',
                         minLength: {
                           value: 8,
-                          message: t('AuthPages.login.validation.passwordMin'),
+                          message: 'Password must be at least 8 characters',
                         },
                       })}
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
@@ -572,10 +549,10 @@ const LoginPage = () => {
                     {isLoading ? (
                       <>
                         <Spinner size={20} className="shrink-0" />
-                        {t('AuthPages.login.loginForm.signingIn')}
+                        Signing In...
                       </>
                     ) : (
-                      t('AuthPages.login.loginForm.signIn')
+                      'Secure Sign In'
                     )}
                   </button>
 
@@ -584,7 +561,7 @@ const LoginPage = () => {
                       <div className="w-full border-t border-gray-200"></div>
                     </div>
                     <span className="relative px-4 bg-white text-xs font-medium text-gray-500 uppercase">
-                      {t('AuthPages.login.messages.orContinueWith')}
+                      Or continue with
                     </span>
                   </div>
 
@@ -592,7 +569,7 @@ const LoginPage = () => {
                     <GoogleLogin
                       onSuccess={handleGoogleLoginSuccess}
                       onError={() =>
-                        setError(t('AuthPages.login.messages.googleFailed'))
+                        setError('Google login failed. Please try again.')
                       }
                       text="signin_with"
                       shape="circle"
@@ -608,7 +585,10 @@ const LoginPage = () => {
                 <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                   <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    {t('AuthPages.login.loginForm.securityNote')}
+                    AuraEyes protects your health data under HIPAA regulations.
+                    Access is available to registered patients,
+                    ophthalmologists, and verified healthcare organizations
+                    only.
                   </p>
                 </div>
               </div>
@@ -621,10 +601,11 @@ const LoginPage = () => {
               {/* Page Heading */}
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-                  {t('AuthPages.login.registerForm.heading')}
+                  Create Account
                 </h2>
                 <p className="text-gray-500 text-base">
-                  {t('AuthPages.login.registerForm.description')}
+                  Register as a patient to access AuraEyes retinal screening
+                  services.
                 </p>
               </div>
 
@@ -639,7 +620,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-name"
                   >
-                    {t('AuthPages.login.registerForm.fullNameLabel')}
+                    Full Name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -647,19 +628,15 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerSignup('fullName', {
-                        required: t(
-                          'AuthPages.login.validation.fullNameRequired'
-                        ),
+                        required: 'Full name is required',
                         minLength: {
                           value: 2,
-                          message: t('AuthPages.login.validation.fullNameMin'),
+                          message: 'Name must be at least 2 characters',
                         },
                       })}
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-name"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.fullNamePlaceholder'
-                      )}
+                      placeholder="Dr. John Smith"
                       type="text"
                     />
                   </div>
@@ -676,7 +653,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-email"
                   >
-                    {t('AuthPages.login.registerForm.emailLabel')}
+                    Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -684,17 +661,15 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerSignup('email', {
-                        required: t('AuthPages.login.validation.emailRequired'),
+                        required: 'Email is required',
                         pattern: {
                           value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: t('AuthPages.login.validation.invalidEmail'),
+                          message: 'Invalid email address',
                         },
                       })}
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-email"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.emailPlaceholder'
-                      )}
+                      placeholder="your@email.com"
                       type="email"
                     />
                   </div>
@@ -711,7 +686,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-phone"
                   >
-                    {t('AuthPages.login.registerForm.phoneLabel')}
+                    Phone Number
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -719,17 +694,15 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerSignup('phone', {
-                        required: t('AuthPages.login.validation.phoneRequired'),
+                        required: 'Phone number is required',
                         pattern: {
                           value: /^[0-9\s\-\+\(\)]{10,}$/,
-                          message: t('AuthPages.login.validation.invalidPhone'),
+                          message: 'Invalid phone number',
                         },
                       })}
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-phone"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.phonePlaceholder'
-                      )}
+                      placeholder="+1 (555) 000-0000"
                       type="tel"
                     />
                   </div>
@@ -746,7 +719,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-password"
                   >
-                    {t('AuthPages.login.registerForm.passwordLabel')}
+                    Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -754,18 +727,15 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerSignup('password', {
-                        required: t(
-                          'AuthPages.login.validation.passwordRequired'
-                        ),
+                        required: 'Password is required',
                         minLength: {
                           value: 8,
-                          message: t('AuthPages.login.validation.passwordMin'),
+                          message: 'Password must be at least 8 characters',
                         },
                         pattern: {
                           value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                          message: t(
-                            'AuthPages.login.validation.passwordPattern'
-                          ),
+                          message:
+                            'Password must contain uppercase, lowercase, and number',
                         },
                       })}
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
@@ -798,7 +768,7 @@ const LoginPage = () => {
                     className="block text-sm font-semibold text-gray-700"
                     htmlFor="register-confirm-password"
                   >
-                    {t('AuthPages.login.registerForm.confirmPasswordLabel')}
+                    Confirm Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -806,12 +776,10 @@ const LoginPage = () => {
                     </div>
                     <input
                       {...registerSignup('confirmPassword', {
-                        required: t(
-                          'AuthPages.login.validation.confirmPasswordRequired'
-                        ),
+                        required: 'Please confirm your password',
                         validate: (value) =>
                           value === watch('password') ||
-                          t('AuthPages.login.validation.passwordMismatch'),
+                          'Passwords do not match',
                       })}
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-confirm-password"
@@ -843,7 +811,7 @@ const LoginPage = () => {
                 <div className="flex items-start gap-3">
                   <input
                     {...registerSignup('agreeTerms', {
-                      required: t('AuthPages.login.validation.agreeTerms'),
+                      required: 'You must agree to the terms',
                     })}
                     type="checkbox"
                     id="agree-terms"
@@ -853,19 +821,19 @@ const LoginPage = () => {
                     htmlFor="agree-terms"
                     className="text-xs text-gray-600"
                   >
-                    {t('AuthPages.login.registerForm.agreePrefix')}{' '}
+                    I agree to the{' '}
                     <Link
                       to="/terms"
                       className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
                     >
-                      {t('AuthPages.shared.termsOfService')}
+                      Terms of Service
                     </Link>{' '}
-                    {t('AuthPages.login.registerForm.and')}{' '}
+                    and{' '}
                     <Link
                       to="/privacy"
                       className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
                     >
-                      {t('AuthPages.shared.privacyPolicy')}
+                      Privacy Policy
                     </Link>
                   </label>
                 </div>
@@ -885,10 +853,10 @@ const LoginPage = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        {t('AuthPages.login.registerForm.creatingAccount')}
+                        Creating Account...
                       </>
                     ) : (
-                      t('AuthPages.login.registerForm.createAccount')
+                      'Create Account'
                     )}
                   </button>
                 </div>
@@ -901,17 +869,24 @@ const LoginPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                      {t('AuthPages.login.registerForm.doctorCardTitle')}
+                      Are you a Medical Professional?
                     </h3>
                     <p className="text-xs text-gray-600 mb-3">
-                      {t('AuthPages.login.registerForm.doctorCardDescription')}
+                      Register as a doctor to join our healthcare network
                     </p>
                     <Link
                       to="/register-doctor"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
                     >
                       <Stethoscope className="h-4 w-4" />
-                      {t('AuthPages.login.registerForm.registerDoctor')}
+                      Register as Doctor
+                    </Link>
+                    <Link
+                      to="/register-organisation"
+                      className="ml-3 inline-flex items-center gap-2 px-4 py-2 border-2 border-slate-300 text-slate-700 rounded-lg text-sm font-semibold hover:border-slate-900 hover:text-slate-900 transition-all duration-200"
+                    >
+                      <User className="h-4 w-4" />
+                      Register Organisation
                     </Link>
                   </div>
                 </div>
@@ -922,7 +897,9 @@ const LoginPage = () => {
                 <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                   <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    {t('AuthPages.login.registerForm.securityNote')}
+                    By creating an account, you acknowledge that your data will
+                    be processed in accordance with HIPAA regulations and our
+                    security protocols.
                   </p>
                 </div>
               </div>

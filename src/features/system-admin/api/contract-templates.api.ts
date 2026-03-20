@@ -41,9 +41,6 @@ export const contractTemplatesApi = {
     const formData = new FormData();
     formData.append('title', payload.title);
     formData.append('type', String(payload.type));
-    if (payload.employmentType) {
-      formData.append('employmentType', payload.employmentType);
-    }
     formData.append('contractVersion', payload.contractVersion);
     if (payload.effectiveDate) {
       formData.append('effectiveDate', payload.effectiveDate);
@@ -65,9 +62,6 @@ export const contractTemplatesApi = {
     const formData = new FormData();
     formData.append('title', payload.title);
     formData.append('type', String(payload.type));
-    if (payload.employmentType) {
-      formData.append('employmentType', payload.employmentType);
-    }
     formData.append('contractVersion', payload.contractVersion);
     if (payload.effectiveDate) {
       formData.append('effectiveDate', payload.effectiveDate);

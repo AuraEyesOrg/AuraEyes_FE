@@ -33,7 +33,6 @@ import {
   SLOT_TYPE_LABELS,
 } from '@/types/schedule';
 import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 // Fallback value for local development if auth user does not include profile id.
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
@@ -71,7 +70,6 @@ const statusColors: Record<ScheduleStatus, string> = {
 };
 
 export default function SchedulesPage() {
-  const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -263,10 +261,7 @@ export default function SchedulesPage() {
   const createErrorMessage = createMutation.isError
     ? extractApiErrorMessage(
         createMutation.error,
-        t(
-          'Ophthalmologist.schedules.errorCreateSlot',
-          'Failed to create slot. Please try again.'
-        )
+        'Failed to create slot. Please try again.'
       )
     : null;
 
@@ -275,17 +270,12 @@ export default function SchedulesPage() {
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader
-            pageName={t(
-              'Ophthalmologist.schedules.title',
-              'Schedule Management'
-            )}
-          />
+          <DoctorHeader />
           <main className="p-6 flex items-center justify-center h-[calc(100vh-220px)]">
             <div className="text-center">
               <Spinner size={40} className="mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
-                {t('Ophthalmologist.schedules.loading', 'Loading schedules...')}
+                Loading schedules...
               </p>
             </div>
           </main>
@@ -299,22 +289,17 @@ export default function SchedulesPage() {
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader
-          pageName={t('Ophthalmologist.schedules.title', 'Schedule Management')}
-        />
+        <DoctorHeader />
 
         <main className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {t('Ophthalmologist.schedules.title', 'Schedule Management')}
+                Schedule Management
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {t(
-                  'Ophthalmologist.schedules.subtitle',
-                  'Manage your availability and appointment slots'
-                )}
+                Manage your availability and appointment slots
               </p>
             </div>
             <button
@@ -322,7 +307,7 @@ export default function SchedulesPage() {
               className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
-              {t('Ophthalmologist.schedules.addSlot', 'Add Slot')}
+              Add Slot
             </button>
           </div>
 
@@ -338,7 +323,7 @@ export default function SchedulesPage() {
                     {schedules.length}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.schedules.stats.thisWeek', 'This Week')}
+                    This Week
                   </p>
                 </div>
               </div>
@@ -353,10 +338,7 @@ export default function SchedulesPage() {
                     {availableCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.schedules.stats.available',
-                      'Available'
-                    )}
+                    Available
                   </p>
                 </div>
               </div>
@@ -371,7 +353,7 @@ export default function SchedulesPage() {
                     {bookedCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.schedules.stats.booked', 'Booked')}
+                    Booked
                   </p>
                 </div>
               </div>
@@ -391,10 +373,7 @@ export default function SchedulesPage() {
                     }
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.schedules.stats.cancelled',
-                      'Cancelled'
-                    )}
+                    Cancelled
                   </p>
                 </div>
               </div>
@@ -424,7 +403,7 @@ export default function SchedulesPage() {
                   onClick={() => setCurrentWeekOffset(0)}
                   className="px-3 py-1.5 text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
                 >
-                  {t('Ophthalmologist.schedules.today', 'Today')}
+                  Today
                 </button>
               )}
             </div>
@@ -442,10 +421,7 @@ export default function SchedulesPage() {
                         : 'bg-white dark:bg-[#0a1f44] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-[#1e3a5f] hover:bg-gray-50 dark:hover:bg-[#1e3a5f]'
                     }`}
                   >
-                    {t(
-                      `Ophthalmologist.schedules.filter.${tab}`,
-                      tab.charAt(0).toUpperCase() + tab.slice(1)
-                    )}
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 )
               )}
@@ -495,7 +471,7 @@ export default function SchedulesPage() {
                     {daySlots.length === 0 ? (
                       <div className="flex items-center justify-center h-full min-h-[80px]">
                         <p className="text-xs text-gray-400 dark:text-gray-600">
-                          {t('Ophthalmologist.schedules.noSlots', 'No slots')}
+                          No slots
                         </p>
                       </div>
                     ) : (
@@ -532,10 +508,7 @@ export default function SchedulesPage() {
                             <button
                               onClick={() => handleCancelSlot(slot.id)}
                               className="absolute top-1 right-1 p-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                              title={t(
-                                'Ophthalmologist.schedules.cancelSlotTitle',
-                                'Cancel slot'
-                              )}
+                              title="Cancel slot"
                             >
                               <XCircle className="w-3 h-3" />
                             </button>
@@ -556,14 +529,14 @@ export default function SchedulesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] w-full max-w-md p-6 shadow-2xl">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              {t('Ophthalmologist.schedules.modal.title', 'Add New Time Slot')}
+              Add New Time Slot
             </h2>
 
             <div className="space-y-4">
               {/* Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('Ophthalmologist.schedules.modal.date', 'Date')}
+                  Date
                 </label>
                 <input
                   type="date"
@@ -577,10 +550,7 @@ export default function SchedulesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t(
-                      'Ophthalmologist.schedules.modal.startTime',
-                      'Start Time'
-                    )}
+                    Start Time
                   </label>
                   <input
                     type="time"
@@ -591,7 +561,7 @@ export default function SchedulesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t('Ophthalmologist.schedules.modal.endTime', 'End Time')}
+                    End Time
                   </label>
                   <input
                     type="time"
@@ -605,7 +575,7 @@ export default function SchedulesPage() {
               {/* Slot Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('Ophthalmologist.schedules.modal.slotType', 'Slot Type')}
+                  Slot Type
                 </label>
                 <select
                   value={formSlotType}
@@ -625,10 +595,7 @@ export default function SchedulesPage() {
               {/* Cost */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t(
-                    'Ophthalmologist.schedules.modal.costOptional',
-                    'Cost (optional)'
-                  )}
+                  Cost (optional)
                 </label>
                 <input
                   type="number"
@@ -654,7 +621,7 @@ export default function SchedulesPage() {
                 onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg text-sm font-medium transition-colors"
               >
-                {t('Ophthalmologist.common.cancel', 'Cancel')}
+                Cancel
               </button>
               <button
                 onClick={handleCreateSchedule}
@@ -671,7 +638,7 @@ export default function SchedulesPage() {
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
-                {t('Ophthalmologist.schedules.modal.createSlot', 'Create Slot')}
+                Create Slot
               </button>
             </div>
           </div>

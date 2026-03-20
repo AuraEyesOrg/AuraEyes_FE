@@ -112,7 +112,11 @@ const AppointmentsPage = () => {
   const filteredSessions = useMemo(() => {
     return sessions.filter((s) => {
       if (filter === 'all') return true;
-      if (filter === 'upcoming') return s.status === SessionStatus.Confirmed;
+      if (filter === 'upcoming')
+        return (
+          s.status === SessionStatus.Pending ||
+          s.status === SessionStatus.Confirmed
+        );
       if (filter === 'completed') return s.status === SessionStatus.Completed;
       if (filter === 'cancelled') return s.status === SessionStatus.Cancelled;
       return true;
@@ -134,7 +138,8 @@ const AppointmentsPage = () => {
   }, [clinicAppointments, filter]);
 
   const upcomingCount = sessions.filter(
-    (s) => s.status === SessionStatus.Confirmed
+    (s) =>
+      s.status === SessionStatus.Pending || s.status === SessionStatus.Confirmed
   ).length;
   const completedCount = sessions.filter(
     (s) => s.status === SessionStatus.Completed
@@ -239,26 +244,11 @@ const AppointmentsPage = () => {
   }, [sessions, sessionFeedbackTarget, submittedSessionFeedbackIds]);
 
   const handleCancel = (sessionId: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.'
-      )
-    )
-      return;
     cancelMutation.mutate({
       sessionId,
       cancelledByUserId: currentUserId!,
       reason: 'Cancelled by patient',
     });
-  };
-
-  const canCancelSession = (session: ConsultationSessionListDto): boolean => {
-    if (session.status !== SessionStatus.Confirmed) return false;
-    if (!session.appointmentTime) return true;
-    const msUntilStart =
-      new Date(session.appointmentTime).getTime() - Date.now();
-    const threeHoursMs = 3 * 60 * 60 * 1000;
-    return msUntilStart > threeHoursMs;
   };
 
   const dismissSessionFeedbackModal = () => {
@@ -382,7 +372,10 @@ const AppointmentsPage = () => {
   };
 
   const getSessionIconBg = (session: ConsultationSessionListDto) => {
-    if (session.status === SessionStatus.Confirmed) {
+    if (
+      session.status === SessionStatus.Pending ||
+      session.status === SessionStatus.Confirmed
+    ) {
       return 'bg-brand-soft';
     }
     if (session.status === SessionStatus.Completed) {
@@ -693,7 +686,8 @@ const AppointmentsPage = () => {
                     </div>
 
                     <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:justify-end lg:self-stretch">
-                      {session.status === SessionStatus.Confirmed && (
+                      {(session.status === SessionStatus.Pending ||
+                        session.status === SessionStatus.Confirmed) && (
                         <>
                           <Link
                             to="/patient/chat"
@@ -709,15 +703,13 @@ const AppointmentsPage = () => {
                               Join Call
                             </button>
                           )}
-                          {canCancelSession(session) && (
-                            <button
-                              onClick={() => handleCancel(session.id)}
-                              disabled={cancelMutation.isPending}
-                              className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleCancel(session.id)}
+                            disabled={cancelMutation.isPending}
+                            className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
                         </>
                       )}
                       {session.status === SessionStatus.Completed && (

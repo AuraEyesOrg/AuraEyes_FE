@@ -1,14 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useTranslation } from 'react-i18next';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const CompliancePage = () => {
-  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -151,8 +149,9 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.encryption.title'),
-      description: t('Compliance.security.encryption.description'),
+      title: 'End-to-End Encryption',
+      description:
+        'All data is encrypted in transit (TLS 1.3) and at rest (AES-256).',
     },
     {
       icon: (
@@ -170,8 +169,9 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.mfa.title'),
-      description: t('Compliance.security.mfa.description'),
+      title: 'Multi-Factor Authentication',
+      description:
+        'Secure access with MFA, SSO integration, and biometric options.',
     },
     {
       icon: (
@@ -189,8 +189,9 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.auditLogs.title'),
-      description: t('Compliance.security.auditLogs.description'),
+      title: 'Comprehensive Audit Logs',
+      description:
+        'Complete audit trail of all system access and data modifications.',
     },
     {
       icon: (
@@ -208,8 +209,9 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.backups.title'),
-      description: t('Compliance.security.backups.description'),
+      title: 'Automatic Backups',
+      description:
+        'Geo-redundant backups with point-in-time recovery capabilities.',
     },
     {
       icon: (
@@ -227,8 +229,9 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.uptime.title'),
-      description: t('Compliance.security.uptime.description'),
+      title: '99.99% Uptime SLA',
+      description:
+        'Enterprise-grade infrastructure with guaranteed availability.',
     },
     {
       icon: (
@@ -246,35 +249,35 @@ const CompliancePage = () => {
           />
         </svg>
       ),
-      title: t('Compliance.security.rbac.title'),
-      description: t('Compliance.security.rbac.description'),
+      title: 'Role-Based Access Control',
+      description: 'Granular permissions with principle of least privilege.',
     },
   ];
 
   const auditTimeline = [
     {
-      date: t('Compliance.audits.soc2.date'),
-      event: t('Compliance.audits.soc2.event'),
-      status: t('Compliance.audits.completed'),
-      details: t('Compliance.audits.soc2.details'),
+      date: 'January 2026',
+      event: 'SOC 2 Type II Annual Audit',
+      status: 'Completed',
+      details: 'Zero findings, full compliance maintained',
     },
     {
-      date: t('Compliance.audits.hipaa.date'),
-      event: t('Compliance.audits.hipaa.event'),
-      status: t('Compliance.audits.completed'),
-      details: t('Compliance.audits.hipaa.details'),
+      date: 'December 2025',
+      event: 'HIPAA Security Risk Assessment',
+      status: 'Completed',
+      details: 'All 164 controls verified and documented',
     },
     {
-      date: t('Compliance.audits.iso.date'),
-      event: t('Compliance.audits.iso.event'),
-      status: t('Compliance.audits.completed'),
-      details: t('Compliance.audits.iso.details'),
+      date: 'October 2025',
+      event: 'ISO 27001 Recertification',
+      status: 'Completed',
+      details: 'Extended certification through 2028',
     },
     {
-      date: t('Compliance.audits.pentest.date'),
-      event: t('Compliance.audits.pentest.event'),
-      status: t('Compliance.audits.completed'),
-      details: t('Compliance.audits.pentest.details'),
+      date: 'September 2025',
+      event: 'Penetration Testing',
+      status: 'Completed',
+      details: 'Third-party security assessment by certified firm',
     },
   ];
 
@@ -289,14 +292,16 @@ const CompliancePage = () => {
         <section className="py-20 lg:py-28 bg-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h1 className="compliance-hero-title text-4xl font-bold leading-tight tracking-tight text-[var(--color-brand-dark)] sm:text-5xl lg:text-6xl mb-6">
-              {t('Compliance.hero.titlePrefix')}{' '}
+              Healthcare Compliance &{' '}
               <span className="text-[var(--color-brand-primary)]">
-                {t('Compliance.hero.titleHighlight')}
+                Security Standards
               </span>
             </h1>
 
             <p className="compliance-hero-desc max-w-3xl mx-auto text-lg text-[var(--color-text-muted)] mb-12">
-              {t('Compliance.hero.description')}
+              AURA Eyes is built with security and compliance at its core. We
+              maintain the highest standards to protect patient data and ensure
+              regulatory compliance across all healthcare jurisdictions.
             </p>
 
             {/* Certification Badges */}
@@ -324,13 +329,13 @@ const CompliancePage = () => {
                 href="#details"
                 className="inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                {t('Compliance.hero.primaryCta')}
+                Learn More
               </a>
               <a
                 href="/contact"
                 className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
               >
-                {t('Compliance.hero.secondaryCta')}
+                Request Security Report
               </a>
             </div>
           </div>
@@ -344,10 +349,12 @@ const CompliancePage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('Compliance.certifications.title')}
+                Certification Details
               </h2>
               <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                {t('Compliance.certifications.description')}
+                We undergo rigorous third-party audits and maintain
+                certifications to ensure the highest level of security and
+                privacy protection.
               </p>
             </div>
 
@@ -384,10 +391,11 @@ const CompliancePage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('Compliance.security.title')}
+                Security Infrastructure
               </h2>
               <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                {t('Compliance.security.description')}
+                Enterprise-grade security features protecting your data at every
+                layer.
               </p>
             </div>
 
@@ -419,10 +427,11 @@ const CompliancePage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('Compliance.audits.title')}
+                Recent Audits & Assessments
               </h2>
               <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                {t('Compliance.audits.description')}
+                We maintain a continuous audit schedule to ensure ongoing
+                compliance and security.
               </p>
             </div>
 
@@ -475,23 +484,24 @@ const CompliancePage = () => {
         <section className="py-20 bg-gray-50">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-              {t('Compliance.cta.title')}
+              Ready to Learn More About Our Security?
             </h2>
             <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
-              {t('Compliance.cta.description')}
+              Contact our security team for detailed documentation, penetration
+              test reports, or to schedule a security review call.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="/contact"
                 className="inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                {t('Compliance.cta.primary')}
+                Contact Security Team
               </a>
               <a
                 href="/ethics"
                 className="inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-white px-6 text-base font-semibold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-colors"
               >
-                {t('Compliance.cta.secondary')}
+                View Privacy Policy
               </a>
             </div>
           </div>

@@ -4,12 +4,12 @@ import { toast } from 'react-toastify';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
 import { screeningApi } from '../api';
-import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
   CalendarCheck,
   FileDown,
+  Send,
   ImagePlus,
   ExternalLink,
   Sparkles,
@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Stethoscope,
   Bot,
+  MessageCircle,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
 
@@ -416,8 +417,6 @@ export default function ReviewPage() {
                       onClick={handleSaveAndBook}
                       disabled={saveResultsMutation.isPending}
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
-                      onClick={() => navigate('/patient/doctors', { state })}
-                      className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
                       {saveResultsMutation.isPending ? (
                         <>
@@ -432,7 +431,7 @@ export default function ReviewPage() {
                       )}
                     </button>
                     <button
-                      onClick={openN8nChat}
+                      onClick={() => navigate('/patient/chat')}
                       className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
                     >
                       <Bot className="w-5 h-5" />
@@ -468,7 +467,14 @@ export default function ReviewPage() {
                   subtitle="PDF Format"
                   actionIcon={<FileDown className="w-4 h-4" />}
                 />
-
+                <SecondaryActionCard
+                  icon={<Send className="w-5 h-5" />}
+                  iconBg="bg-violet-50 text-violet-600"
+                  title="Share with Doctor"
+                  subtitle="Send scan to chat"
+                  actionIcon={<MessageCircle className="w-4 h-4" />}
+                  onClick={handleShareToChat}
+                />
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
                   iconBg="bg-emerald-50 text-emerald-600"
@@ -538,7 +544,6 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
-      <N8nChatWidget />
     </FocusModeLayout>
   );
 }

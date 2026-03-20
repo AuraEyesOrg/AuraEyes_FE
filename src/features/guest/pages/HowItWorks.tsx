@@ -1,14 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HowItWorksPage = () => {
-  const { t } = useSafeTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,8 +96,9 @@ const HowItWorksPage = () => {
   const steps = [
     {
       number: '01',
-      title: t('HowItWorks.steps.capture.title'),
-      description: t('HowItWorks.steps.capture.description'),
+      title: 'Capture Retinal Image',
+      description:
+        "Use any standard fundus camera or smartphone-compatible adapter to capture a high-resolution image of the patient's retina.",
       icon: (
         <svg
           className="w-8 h-8"
@@ -126,8 +125,9 @@ const HowItWorksPage = () => {
     },
     {
       number: '02',
-      title: t('HowItWorks.steps.upload.title'),
-      description: t('HowItWorks.steps.upload.description'),
+      title: 'Secure Upload & Encryption',
+      description:
+        'Your image is encrypted end-to-end and transmitted to our HIPAA-compliant servers. Patient data is anonymized immediately.',
       icon: (
         <svg
           className="w-8 h-8"
@@ -148,8 +148,9 @@ const HowItWorksPage = () => {
     },
     {
       number: '03',
-      title: t('HowItWorks.steps.analysis.title'),
-      description: t('HowItWorks.steps.analysis.description'),
+      title: 'AI Analysis Processing',
+      description:
+        'Our deep learning models analyze vessel geometry, branching patterns, and microaneurysms to detect early signs of disease.',
       icon: (
         <svg
           className="w-8 h-8"
@@ -170,8 +171,9 @@ const HowItWorksPage = () => {
     },
     {
       number: '04',
-      title: t('HowItWorks.steps.assessment.title'),
-      description: t('HowItWorks.steps.assessment.description'),
+      title: 'Receive Risk Assessment',
+      description:
+        'Get a comprehensive report with confidence scores, risk levels, and actionable recommendations within seconds.',
       icon: (
         <svg
           className="w-8 h-8"
@@ -194,8 +196,9 @@ const HowItWorksPage = () => {
 
   const features = [
     {
-      title: t('HowItWorks.features.tortuosity.title'),
-      description: t('HowItWorks.features.tortuosity.description'),
+      title: 'Vessel Tortuosity Analysis',
+      description:
+        'Measures the curvature and irregularity of blood vessels, which correlates with hypertension and cardiovascular risk.',
       icon: (
         <svg
           className="w-6 h-6"
@@ -213,8 +216,9 @@ const HowItWorksPage = () => {
       ),
     },
     {
-      title: t('HowItWorks.features.avr.title'),
-      description: t('HowItWorks.features.avr.description'),
+      title: 'Arteriovenous Ratio',
+      description:
+        'Compares the width of arteries to veins, a key indicator for detecting signs of systemic vascular disease.',
       icon: (
         <svg
           className="w-6 h-6"
@@ -232,8 +236,9 @@ const HowItWorksPage = () => {
       ),
     },
     {
-      title: t('HowItWorks.features.microaneurysm.title'),
-      description: t('HowItWorks.features.microaneurysm.description'),
+      title: 'Microaneurysm Detection',
+      description:
+        'Identifies tiny bulges in blood vessel walls that are early indicators of diabetic retinopathy.',
       icon: (
         <svg
           className="w-6 h-6"
@@ -296,19 +301,22 @@ const HowItWorksPage = () => {
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                     />
                   </svg>
-                  {t('HowItWorks.hero.badge')}
+                  AI-Driven Diagnostics
                 </div>
 
                 <h1 className="text-4xl lg:text-5xl font-black leading-tight text-[var(--color-brand-dark)]">
-                  {t('HowItWorks.hero.titlePrefix')}{' '}
+                  Demystifying the{' '}
                   <span className="text-[var(--color-brand-primary)]">
                     AURA
                   </span>{' '}
-                  {t('HowItWorks.hero.titleSuffix')}
+                  Screening Process
                 </h1>
 
                 <p className="text-lg text-[var(--color-text-muted)] leading-relaxed">
-                  {t('HowItWorks.hero.description')}
+                  Our platform leverages advanced computer vision to analyze
+                  retinal images for early signs of vascular abnormalities. A
+                  non-invasive, secure, and instant check-up for your systemic
+                  health.
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-2">
@@ -324,10 +332,10 @@ const HowItWorksPage = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    {t('HowItWorks.hero.primaryCta')}
+                    Watch Demo Video
                   </button>
                   <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-medical-border)] px-6 py-3 text-base font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
-                    {t('HowItWorks.hero.secondaryCta')}
+                    View Technical Docs
                   </button>
                 </div>
               </div>
@@ -381,13 +389,13 @@ const HowItWorksPage = () => {
           <div className="mx-auto max-w-4xl px-6 lg:px-10">
             <div className="text-center mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                {t('HowItWorks.process.badge')}
+                The Journey
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('HowItWorks.process.title')}
+                From Scan to Insight in Seconds
               </h2>
               <p className="text-lg text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                {t('HowItWorks.process.description')}
+                The entire process is designed to be seamless, secure, and fast.
               </p>
             </div>
 
@@ -438,26 +446,28 @@ const HowItWorksPage = () => {
             <div className="grid lg:grid-cols-2 gap-16 items-start">
               <div className="sticky top-24">
                 <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                  {t('HowItWorks.ai.badge')}
+                  AI Analysis
                 </span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-                  {t('HowItWorks.ai.titleLine1')}
+                  Decoding the Retina:
                   <br />
-                  {t('HowItWorks.ai.titleLine2')}
+                  What the AI Sees
                 </h2>
                 <p className="text-lg text-[var(--color-text-muted)] mb-6 leading-relaxed">
-                  {t('HowItWorks.ai.description')}
+                  The AURA Engine doesn't just look at the picture; it measures
+                  microscopic changes in your vascular network. These subtle
+                  indicators correlate strongly with systemic health conditions.
                 </p>
 
                 <div className="flex flex-wrap gap-3">
                   <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-primary)]/10 text-sm font-medium text-[var(--color-brand-primary)]">
-                    {t('HowItWorks.ai.tags.deepLearning')}
+                    Deep Learning
                   </span>
                   <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-dark)]/10 text-sm font-medium text-[var(--color-brand-dark)]">
-                    {t('HowItWorks.ai.tags.computerVision')}
+                    Computer Vision
                   </span>
                   <span className="px-3 py-1.5 rounded-full bg-green-100 text-sm font-medium text-green-700">
-                    {t('HowItWorks.ai.tags.accuracy')}
+                    98.5% Accuracy
                   </span>
                 </div>
               </div>
@@ -508,10 +518,13 @@ const HowItWorksPage = () => {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('HowItWorks.trust.title')}
+                Built on Trust & Ethical AI
               </h2>
               <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
-                {t('HowItWorks.trust.description')}
+                AURA is a non-profit initiative dedicated to accessibility. We
+                do not sell your data. Our models are trained on diverse
+                datasets to minimize bias and ensure accuracy across all
+                demographics.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
@@ -529,7 +542,7 @@ const HowItWorksPage = () => {
                     />
                   </svg>
                   <span className="text-sm font-medium text-[var(--color-brand-dark)]">
-                    {t('HowItWorks.trust.badges.hipaa')}
+                    HIPAA Compliant
                   </span>
                 </div>
                 <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
@@ -547,7 +560,7 @@ const HowItWorksPage = () => {
                     />
                   </svg>
                   <span className="text-sm font-medium text-[var(--color-brand-dark)]">
-                    {t('HowItWorks.trust.badges.gdpr')}
+                    GDPR Ready
                   </span>
                 </div>
                 <div className="trust-badge flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-[var(--color-medical-border)]">
@@ -565,7 +578,7 @@ const HowItWorksPage = () => {
                     />
                   </svg>
                   <span className="text-sm font-medium text-[var(--color-brand-dark)]">
-                    {t('HowItWorks.trust.badges.bias')}
+                    Bias Checked
                   </span>
                 </div>
               </div>
@@ -577,17 +590,18 @@ const HowItWorksPage = () => {
         <section className="py-20 bg-white border-t border-[var(--color-medical-border)]">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-              {t('HowItWorks.cta.title')}
+              Take Control of Your Vascular Health
             </h2>
             <p className="text-lg text-[var(--color-text-muted)] max-w-2xl mx-auto mb-10">
-              {t('HowItWorks.cta.description')}
+              Early detection can save lives. Find a screening partner near you
+              or learn more about integrating AURA into your practice.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-4 text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1">
-                {t('HowItWorks.cta.primary')}
+                Start Screening Now
               </button>
               <button className="rounded-lg border-2 border-[var(--color-medical-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
-                {t('HowItWorks.cta.secondary')}
+                For Healthcare Providers
               </button>
             </div>
           </div>

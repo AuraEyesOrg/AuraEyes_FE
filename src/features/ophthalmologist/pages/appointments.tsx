@@ -13,7 +13,7 @@ import {
   Search,
   MessageSquare,
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
@@ -30,60 +30,44 @@ import {
   SESSION_TYPE_LABELS,
 } from '@/types/consultation';
 import type { ConsultationSessionListDto } from '@/types/consultation';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 type StatusFilter = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
-const formatDateTime = (
-  value: string | null,
-  labels: { notScheduled: string; invalidDate: string }
-) => {
-  if (!value) return { dateLabel: labels.notScheduled, timeLabel: '--:--' };
+const formatDateTime = (value: string | null) => {
+  if (!value) return { dateLabel: 'Not scheduled', timeLabel: '--:--' };
   const date = new Date(value);
   if (Number.isNaN(date.getTime()))
-    return { dateLabel: labels.invalidDate, timeLabel: '--:--' };
+    return { dateLabel: 'Invalid date', timeLabel: '--:--' };
   return {
     dateLabel: formatShortDate(value),
     timeLabel: formatShortTime(value),
   };
 };
 
-const getStatusBadge = (
-  status: SessionStatus,
-  t: (key: string, fallback: string) => string
-) => {
+const getStatusBadge = (status: SessionStatus) => {
   switch (status) {
     case SessionStatus.Pending:
       return (
         <span className="flex items-center gap-1 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-          <Clock className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.pending', 'Pending')}
+          <Clock className="w-3 h-3" /> Pending
         </span>
       );
     case SessionStatus.Confirmed:
       return (
         <span className="flex items-center gap-1 px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full text-xs font-medium">
-          <CheckCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.confirmed', 'Confirmed')}
+          <CheckCircle className="w-3 h-3" /> Confirmed
         </span>
       );
     case SessionStatus.Completed:
       return (
         <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-          <CheckCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.completed', 'Completed')}
+          <CheckCircle className="w-3 h-3" /> Completed
         </span>
       );
     case SessionStatus.Cancelled:
       return (
         <span className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
-          <XCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.cancelled', 'Cancelled')}
+          <XCircle className="w-3 h-3" /> Cancelled
         </span>
       );
     default:
@@ -108,13 +92,8 @@ const sessionMatchesFilter = (
 };
 
 export default function AppointmentsPage() {
-  const { t } = useSafeTranslation();
-  const location = useLocation();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const toLocalizedPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
 
   const { user } = useAuthStore();
   const ophthalmologistId = user?.roleId;
@@ -172,12 +151,7 @@ export default function AppointmentsPage() {
 
   const handleCancelSession = (sessionId: string) => {
     if (!currentUserId) {
-      toast.error(
-        t(
-          'Ophthalmologist.appointments.toast.missingDoctorIdentity',
-          'Cannot determine current doctor identity.'
-        )
-      );
+      toast.error('Cannot determine current doctor identity.');
       return;
     }
 
@@ -185,26 +159,12 @@ export default function AppointmentsPage() {
       {
         sessionId,
         cancelledByUserId: currentUserId,
-        reason: t(
-          'Ophthalmologist.appointments.toast.cancelReason',
-          'Cancelled by ophthalmologist'
-        ),
+        reason: 'Cancelled by ophthalmologist',
       },
       {
-        onSuccess: () =>
-          toast.success(
-            t(
-              'Ophthalmologist.appointments.toast.cancelSuccess',
-              'Appointment cancelled successfully.'
-            )
-          ),
+        onSuccess: () => toast.success('Appointment cancelled successfully.'),
         onError: () =>
-          toast.error(
-            t(
-              'Ophthalmologist.appointments.toast.cancelError',
-              'Unable to cancel appointment. Please try again.'
-            )
-          ),
+          toast.error('Unable to cancel appointment. Please try again.'),
       }
     );
   };
@@ -214,18 +174,13 @@ export default function AppointmentsPage() {
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader
-            pageName={t('Ophthalmologist.appointments.title', 'Appointments')}
-          />
+          <DoctorHeader pageName="Appointments" />
           <main className="p-6">
             <div className="flex items-center justify-center h-[60vh]">
               <div className="text-center">
                 <Spinner size={40} className="mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  {t(
-                    'Ophthalmologist.appointments.loading',
-                    'Loading appointments...'
-                  )}
+                  Loading appointments...
                 </p>
               </div>
             </div>
@@ -240,30 +195,25 @@ export default function AppointmentsPage() {
       <DoctorSidebar pendingCount={upcomingCount} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader
-          pageName={t('Ophthalmologist.appointments.title', 'Appointments')}
-        />
+        <DoctorHeader pageName="Appointments" />
 
         <main className="p-6">
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {t('Ophthalmologist.appointments.title', 'Appointments')}
+                Appointments
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {t(
-                  'Ophthalmologist.appointments.subtitle',
-                  'Manage your real-time consultation appointments'
-                )}
+                Manage your real-time consultation appointments
               </p>
             </div>
 
             <Link
-              to={toLocalizedPath('/ophthalmologist/slot-management')}
+              to="/ophthalmologist/slot-management"
               className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors w-fit"
             >
               <Plus size={18} />
-              {t('Ophthalmologist.appointments.manageSlots', 'Manage Slots')}
+              Manage Slots
             </Link>
           </div>
 
@@ -278,7 +228,7 @@ export default function AppointmentsPage() {
                     {todayCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.appointments.stats.today', 'Today')}
+                    Today
                   </p>
                 </div>
               </div>
@@ -293,10 +243,7 @@ export default function AppointmentsPage() {
                     {upcomingCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.upcoming',
-                      'Upcoming'
-                    )}
+                    Upcoming
                   </p>
                 </div>
               </div>
@@ -311,10 +258,7 @@ export default function AppointmentsPage() {
                     {completedCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.completed',
-                      'Completed'
-                    )}
+                    Completed
                   </p>
                 </div>
               </div>
@@ -329,10 +273,7 @@ export default function AppointmentsPage() {
                     {cancelledCount}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.cancelled',
-                      'Cancelled'
-                    )}
+                    Cancelled
                   </p>
                 </div>
               </div>
@@ -347,10 +288,7 @@ export default function AppointmentsPage() {
               />
               <input
                 type="text"
-                placeholder={t(
-                  'Ophthalmologist.appointments.searchPlaceholder',
-                  'Search patient, session ID, type...'
-                )}
+                placeholder="Search patient, session ID, type..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-cyan-500"
@@ -360,7 +298,7 @@ export default function AppointmentsPage() {
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
               <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-600 dark:text-gray-400 rounded-lg text-sm">
                 <Filter className="w-4 h-4" />
-                {t('Ophthalmologist.appointments.filterLabel', 'Filter')}
+                Filter
               </button>
               {(
                 [
@@ -381,11 +319,8 @@ export default function AppointmentsPage() {
                   }`}
                 >
                   {status === 'all'
-                    ? t('Ophthalmologist.appointments.filter.all', 'All')
-                    : t(
-                        `Ophthalmologist.appointments.filter.${status}`,
-                        status.charAt(0).toUpperCase() + status.slice(1)
-                      )}
+                    ? 'All'
+                    : status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
               ))}
             </div>
@@ -394,17 +329,7 @@ export default function AppointmentsPage() {
           <div className="space-y-4">
             {filteredAppointments.map((session) => {
               const { dateLabel, timeLabel } = formatDateTime(
-                session.appointmentTime,
-                {
-                  notScheduled: t(
-                    'Ophthalmologist.appointments.notScheduled',
-                    'Not scheduled'
-                  ),
-                  invalidDate: t(
-                    'Ophthalmologist.appointments.invalidDate',
-                    'Invalid date'
-                  ),
-                }
+                session.appointmentTime
               );
               const isOnline =
                 session.type === ConsultationSessionType.VideoCall ||
@@ -433,16 +358,12 @@ export default function AppointmentsPage() {
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-3 mb-2">
                           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                            {session.patientName ??
-                              t(
-                                'Ophthalmologist.appointments.unknownPatient',
-                                'Unknown Patient'
-                              )}
+                            {session.patientName ?? 'Unknown Patient'}
                           </h3>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
                             {session.id.slice(0, 8)}...
                           </span>
-                          {getStatusBadge(session.status, t)}
+                          {getStatusBadge(session.status)}
                         </div>
 
                         <div className="flex items-center gap-2 mb-3">
@@ -465,20 +386,14 @@ export default function AppointmentsPage() {
                               <>
                                 <Video className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                 <span className="text-blue-600 dark:text-blue-400">
-                                  {t(
-                                    'Ophthalmologist.appointments.onlineConsultation',
-                                    'Online Consultation'
-                                  )}
+                                  Online Consultation
                                 </span>
                               </>
                             ) : (
                               <>
                                 <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                 <span className="text-gray-600 dark:text-gray-400">
-                                  {t(
-                                    'Ophthalmologist.appointments.inPersonConsultation',
-                                    'In-person Clinic Booking'
-                                  )}
+                                  In-person Clinic Booking
                                 </span>
                               </>
                             )}
@@ -491,11 +406,11 @@ export default function AppointmentsPage() {
                       {(session.status === SessionStatus.Pending ||
                         session.status === SessionStatus.Confirmed) && (
                         <Link
-                          to={toLocalizedPath('/ophthalmologist/consultations')}
+                          to="/ophthalmologist/consultations"
                           className="flex-1 lg:flex-none px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                         >
                           <Eye className="w-4 h-4" />
-                          {t('Ophthalmologist.appointments.open', 'Open')}
+                          Open
                         </Link>
                       )}
 
@@ -505,16 +420,16 @@ export default function AppointmentsPage() {
                           disabled={cancelMutation.isPending}
                           className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
                         >
-                          {t('Ophthalmologist.common.cancel', 'Cancel')}
+                          Cancel
                         </button>
                       )}
 
                       {session.status === SessionStatus.Completed && (
                         <Link
-                          to={toLocalizedPath('/ophthalmologist/consultations')}
+                          to="/ophthalmologist/consultations"
                           className="px-4 py-2 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2d4a6f] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                         >
-                          {t('Ophthalmologist.appointments.view', 'View')}
+                          View
                           <ChevronRight className="w-4 h-4" />
                         </Link>
                       )}
@@ -529,25 +444,19 @@ export default function AppointmentsPage() {
             <div className="text-center py-16 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f]">
               <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {t(
-                  'Ophthalmologist.appointments.emptyTitle',
-                  'No Appointments Found'
-                )}
+                No Appointments Found
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {filter === 'all'
-                  ? t(
-                      'Ophthalmologist.appointments.emptyAll',
-                      'No real appointment data matched your search.'
-                    )
-                  : `${t('Ophthalmologist.appointments.emptyPrefix', 'No')} ${t(`Ophthalmologist.appointments.filter.${filter}`, filter)} ${t('Ophthalmologist.appointments.emptySuffix', 'appointments found.')}`}
+                  ? 'No real appointment data matched your search.'
+                  : `No ${filter} appointments found.`}
               </p>
               <Link
-                to={toLocalizedPath('/ophthalmologist/slot-management')}
+                to="/ophthalmologist/slot-management"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                {t('Ophthalmologist.appointments.manageSlots', 'Manage Slots')}
+                Manage Slots
               </Link>
             </div>
           )}

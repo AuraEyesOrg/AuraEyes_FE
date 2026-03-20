@@ -336,9 +336,6 @@ export interface Wallet {
   balance: number;
   createdAt: string;
   updatedAt: string | null;
-  totalDepositsThisMonth: number;
-  totalSpentThisMonth: number;
-  transactionsThisMonth: number;
 }
 
 /** Maps to backend WalletTransactionDto */
@@ -349,8 +346,6 @@ export interface WalletTransaction {
   transactionType: TransactionType;
   description: string | null;
   createdAt: string;
-  referenceId?: string | null;
-  referenceType?: string | null;
 }
 
 /** Maps to backend DepositRequestDto */

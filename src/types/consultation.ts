@@ -43,7 +43,6 @@ export interface ConsultationSessionDto {
   aiScreeningId: string | null;
   // Optional human-readable names coming from BE
   patientName?: string | null;
-  patientAvatarUrl?: string | null;
   ophthalmologistName?: string | null;
   organisationName?: string | null;
   ophthalmologistAvatarUrl?: string | null;
@@ -72,7 +71,6 @@ export interface ConsultationSessionListDto {
   ophthalmologistId: string | null;
   // Optional human-readable names coming from BE
   patientName?: string | null;
-  patientAvatarUrl?: string | null;
   ophthalmologistName?: string | null;
   organisationName?: string | null;
   ophthalmologistAvatarUrl?: string | null;
