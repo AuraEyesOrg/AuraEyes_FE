@@ -37,5 +37,455 @@
   "About": {
     "heroTitle": "Shaping the future of retinal screening",
     "heroDescription": "Aura Eyes combines clinical expertise and responsible medical AI to improve early diagnosis access."
+  },
+  "HowItWorks": {
+    "hero": {
+      "badge": "AI-Driven Diagnostics",
+      "titlePrefix": "Demystifying the",
+      "titleSuffix": "Screening Process",
+      "description": "Our platform leverages advanced computer vision to analyze retinal images for early signs of vascular abnormalities. A non-invasive, secure, and instant check-up for your systemic health.",
+      "primaryCta": "Watch Demo Video",
+      "secondaryCta": "View Technical Docs"
+    },
+    "process": {
+      "badge": "The Journey",
+      "title": "From Scan to Insight in Seconds",
+      "description": "The entire process is designed to be seamless, secure, and fast."
+    },
+    "steps": {
+      "capture": {
+        "title": "Capture Retinal Image",
+        "description": "Use any standard fundus camera or smartphone-compatible adapter to capture a high-resolution image of the patient's retina."
+      },
+      "upload": {
+        "title": "Secure Upload & Encryption",
+        "description": "Your image is encrypted end-to-end and transmitted to our HIPAA-compliant servers. Patient data is anonymized immediately."
+      },
+      "analysis": {
+        "title": "AI Analysis Processing",
+        "description": "Our deep learning models analyze vessel geometry, branching patterns, and microaneurysms to detect early signs of disease."
+      },
+      "assessment": {
+        "title": "Receive Risk Assessment",
+        "description": "Get a comprehensive report with confidence scores, risk levels, and actionable recommendations within seconds."
+      }
+    },
+    "ai": {
+      "badge": "AI Analysis",
+      "titleLine1": "Decoding the Retina:",
+      "titleLine2": "What the AI Sees",
+      "description": "The AURA Engine doesn't just look at the picture; it measures microscopic changes in your vascular network. These subtle indicators correlate strongly with systemic health conditions.",
+      "tags": {
+        "deepLearning": "Deep Learning",
+        "computerVision": "Computer Vision",
+        "accuracy": "98.5% Accuracy"
+      }
+    },
+    "features": {
+      "tortuosity": {
+        "title": "Vessel Tortuosity Analysis",
+        "description": "Measures the curvature and irregularity of blood vessels, which correlates with hypertension and cardiovascular risk."
+      },
+      "avr": {
+        "title": "Arteriovenous Ratio",
+        "description": "Compares the width of arteries to veins, a key indicator for detecting signs of systemic vascular disease."
+      },
+      "microaneurysm": {
+        "title": "Microaneurysm Detection",
+        "description": "Identifies tiny bulges in blood vessel walls that are early indicators of diabetic retinopathy."
+      }
+    },
+    "trust": {
+      "title": "Built on Trust & Ethical AI",
+      "description": "AURA is a non-profit initiative dedicated to accessibility. We do not sell your data. Our models are trained on diverse datasets to minimize bias and ensure accuracy across all demographics.",
+      "badges": {
+        "hipaa": "HIPAA Compliant",
+        "gdpr": "GDPR Ready",
+        "bias": "Bias Checked"
+      }
+    },
+    "cta": {
+      "title": "Take Control of Your Vascular Health",
+      "description": "Early detection can save lives. Find a screening partner near you or learn more about integrating AURA into your practice.",
+      "primary": "Start Screening Now",
+      "secondary": "For Healthcare Providers"
+    }
+  },
+  "Contact": {
+    "toast": {
+      "success": "Request submitted successfully. The System Admin has been notified by email.",
+      "error": "Unable to submit request. Please try again."
+    },
+    "hero": {
+      "badge": "Join Our Network",
+      "titlePrefix": "Partner with",
+      "titleSuffix": "to Improve Vision Health Worldwide",
+      "description": "Whether you're a hospital or a clinic network, AURA provides the tools and support to bring advanced retinal screening to your patients.",
+      "primaryCta": "Apply for Partnership",
+      "secondaryCta": "Schedule a Demo"
+    },
+    "partnerCard": {
+      "title": "Medical Organization (Hospitals/Clinics)",
+      "description": "Deploy AURA at scale. We offer custom solutions for large-volume screening programs and EMR integration.",
+      "benefits": {
+        "volumeLicensing": "Volume licensing",
+        "whiteLabel": "White-label options",
+        "customIntegrations": "Custom integrations"
+      }
+    },
+    "info": {
+      "badge": "Contact Information",
+      "title": "Let's Talk Partnership",
+      "description": "Reach out to our team for onboarding guidance, support, and partnership consultation.",
+      "emailSupport": "Email Support",
+      "responseTime": "Response Time",
+      "responseTimeValue": "Within 24-48 business hours",
+      "headquarters": "Headquarters"
+    },
+    "form": {
+      "title": "Partner with AURA",
+      "description": "Fill out the form to discuss volume licensing and API integrations",
+      "contactPerson": "Contact Person",
+      "fullName": "Full Name",
+      "role": "Job Title / Role",
+      "workEmail": "Work Email",
+      "workEmailPlaceholder": "contact@organization.com",
+      "phone": "Phone Number",
+      "organizationDetails": "Organization Details",
+      "organizationName": "Organization Name",
+      "organizationType": "Organization Type",
+      "organizationTypeClinic": "Clinic",
+      "organizationTypeHospital": "Hospital",
+      "cityLocation": "City / Location",
+      "partnershipNeeds": "Partnership Needs",
+      "estimatedMonthlyScreenings": "Estimated Monthly Screenings",
+      "selectRange": "Select range",
+      "additionalInformation": "Additional Information",
+      "additionalInfoPlaceholder": "Share your use case, integration needs, or timeline...",
+      "termsPrefix": "I agree to AURA's",
+      "termsOfService": "Terms of Service",
+      "and": "and",
+      "privacyPolicy": "Privacy Policy",
+      "sending": "Sending Request...",
+      "send": "Send Partnership Request"
+    },
+    "impact": {
+      "title": "Our Growing Impact",
+      "description": "Join a network that's making a difference worldwide",
+      "partnerClinics": "Partner Clinics",
+      "screeningsPerformed": "Screenings Performed",
+      "countriesReached": "Countries Reached",
+      "freeForNonProfits": "Free for Non-Profits"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": {
+        "cost": {
+          "question": "Is there a cost to partner with AURA?",
+          "answer": "For individual clinicians and non-profit organizations, AURA is completely free. For large commercial enterprises, we offer tiered pricing based on volume."
+        },
+        "onboarding": {
+          "question": "How long does the onboarding process take?",
+          "answer": "Most organizations can be set up and running within 2-4 weeks depending on integration complexity."
+        }
+      }
+    }
+  },
+  "Status": {
+    "labels": {
+      "operational": "Operational",
+      "outage": "Outage",
+      "degraded": "Degraded",
+      "checking": "Checking..."
+    },
+    "time": {
+      "justNow": "Just now",
+      "secondsAgo_one": "{{count}} second ago",
+      "secondsAgo_other": "{{count}} seconds ago",
+      "minutesAgo_one": "{{count}} minute ago",
+      "minutesAgo_other": "{{count}} minutes ago"
+    },
+    "overall": {
+      "allOperational": "All Systems Operational",
+      "partialOutage": "Partial System Outage",
+      "majorOutage": "Major System Outage",
+      "checkingSystems": "Checking Systems..."
+    },
+    "hero": {
+      "title": "System Status",
+      "description": "Real-time operational transparency for patients, providers, and partners.",
+      "lastUpdated": "Last updated",
+      "refresh": "Refresh status"
+    },
+    "metrics": {
+      "totalScreenings": "Total Screenings",
+      "totalScreeningsTrend": "+12% this month",
+      "aiModelVersion": "AI Model Version",
+      "fdaCleared": "FDA Cleared Class II",
+      "avgProcessing": "Avg. Processing",
+      "avgProcessingDetail": "Per high-res retinal scan"
+    },
+    "componentStatus": {
+      "title": "Component Status",
+      "serviceName": "Service Name",
+      "region": "Region",
+      "status": "Status"
+    },
+    "services": {
+      "aiCore": {
+        "name": "AI Core Analysis Engine",
+        "description": "AI-powered retinal analysis"
+      },
+      "imageApi": {
+        "name": "Image Ingestion API",
+        "description": "Image upload and processing"
+      },
+      "providerPortal": {
+        "name": "Provider Portal",
+        "description": "Authentication and user management"
+      },
+      "patientStore": {
+        "name": "Patient Data Store",
+        "description": "Encrypted database storage"
+      }
+    },
+    "trust": {
+      "title": "Trust & Ethics Center",
+      "cards": {
+        "bias": {
+          "title": "Bias Monitoring",
+          "description": "Continuous automated auditing across diverse demographic datasets to ensure equitable diagnostic accuracy for all patient groups.",
+          "cta": "Read Protocol"
+        },
+        "privacy": {
+          "title": "Data Privacy & Compliance",
+          "description": "Fully HIPAA & GDPR compliant architecture. Zero-knowledge encryption ensures patient data remains private and accessible only to authorized providers.",
+          "cta": "View Certifications"
+        },
+        "validation": {
+          "title": "Clinical Validation",
+          "description": "Verified 99.2% sensitivity in multi-center clinical trials. Peer-reviewed results published in top-tier medical journals.",
+          "cta": "Download Whitepaper"
+        }
+      }
+    }
+  },
+  "Home": {
+    "hero": {
+      "badge": "Open Source Initiative",
+      "titlePrefix": "Democratizing Retinal Health with",
+      "titleHighlight": "Ethical AI",
+      "description": "AURA provides instant, non-invasive screening for vascular abnormalities and systemic health risks. Open-source, accessible, and clinically accurate.",
+      "primaryCta": "See How It Works",
+      "secondaryCta": "Read the Research",
+      "socialProof": "Used by 500+ researchers globally",
+      "analysisResult": "Analysis Result",
+      "lowRisk": "Low Risk",
+      "confidenceScore": "Confidence Score"
+    },
+    "features": {
+      "title": "Advanced Screening Technology",
+      "description": "Our platform leverages cutting-edge deep learning to provide rapid, reliable assessments of retinal health, designed for both clinical and field settings.",
+      "cards": {
+        "aiPrecision": {
+          "title": "AI Precision",
+          "description": "State-of-the-art deep learning models trained on diverse global datasets for high accuracy across different demographics."
+        },
+        "globalAccess": {
+          "title": "Global Access",
+          "description": "Lightweight architecture optimized for low-bandwidth environments, ensuring healthcare equity in underserved regions."
+        },
+        "privacyFirst": {
+          "title": "Privacy First",
+          "description": "HIPAA compliant architecture processing data locally where possible, with ethically sourced and anonymized training data."
+        }
+      }
+    },
+    "workflow": {
+      "badge": "Workflow",
+      "title": "From Scan to Insight in Seconds",
+      "steps": {
+        "upload": {
+          "title": "1. Upload Retinal Scan",
+          "description": "Securely upload fundus photography from any standard retinal camera or smartphone adapter."
+        },
+        "analysis": {
+          "title": "2. AI Analysis Processing",
+          "description": "Our proprietary algorithms analyze vascular geometry, branching angles, and tortuosity instantly."
+        },
+        "report": {
+          "title": "3. Receive Risk Report",
+          "description": "Get a comprehensive, downloadable report identifying potential markers for diabetic retinopathy or CVD."
+        }
+      }
+    },
+    "mission": {
+      "title": "Our Mission: Accessibility & Ethics",
+      "description": "We are a non-profit organization dedicated to making early detection tools available to everyone, regardless of location or economic status.",
+      "primaryCta": "Learn About Our Mission",
+      "secondaryCta": "Partner With Us",
+      "info": {
+        "nonProfitTitle": "Non-Profit Model",
+        "nonProfitDescription": "Revenue reinvested in research",
+        "openSourceTitle": "Open Source",
+        "openSourceDescription": "Code available for peer review"
+      }
+    },
+    "stats": {
+      "scansAnalyzed": "Scans Analyzed",
+      "accuracyRate": "Accuracy Rate",
+      "countriesReached": "Countries Reached",
+      "nonProfit": "Non-Profit"
+    }
+  },
+  "EthicsPrivacy": {
+    "hero": {
+      "badge": "Trust & Transparency",
+      "titleLine1": "Your Health Data,",
+      "titleLine2": "Secure & Ethical.",
+      "description": "AURA is built on a foundation of rigorous ethics. We protect your retinal data while advancing global health equity through transparent, bias-aware technology.",
+      "primaryCta": "Read Our Principles",
+      "secondaryCta": "Privacy Policy",
+      "secureEnclave": "Secure Enclave",
+      "processingNode": "Processing Node: US-East-1 (HIPAA Compliant)"
+    },
+    "compliance": {
+      "title": "Trusted by & Compliant With"
+    },
+    "pillarsSection": {
+      "title": "Building Trust Through Transparency",
+      "description": "We believe that medical AI must be built on a foundation of rigorous ethics and absolute data privacy."
+    },
+    "pillars": {
+      "privacy": {
+        "title": "Data Privacy First",
+        "description": "Your retinal data is end-to-end encrypted and anonymized. You retain full ownership and control at every step of the diagnostic process."
+      },
+      "ethicalAi": {
+        "title": "Ethical AI Design",
+        "description": "Our models are trained on diverse global datasets to mitigate bias and ensure equitable healthcare outcomes for all populations."
+      },
+      "transparency": {
+        "title": "Total Transparency",
+        "description": "AURA provides explainable results, highlighting exactly what the AI sees, while keeping humans in the loop."
+      }
+    },
+    "journey": {
+      "title": "The Data Journey",
+      "description": "We've simplified the complex process of data handling into four clear, secure steps.",
+      "link": "View Security Architecture"
+    },
+    "dataJourney": {
+      "upload": {
+        "title": "Upload & Encryption",
+        "description": "Retinal images are uploaded via a secure TLS 1.3 connection. Before leaving your device, data is encrypted using AES-256 standards."
+      },
+      "anonymization": {
+        "title": "Anonymization",
+        "description": "All Personal Health Information (PHI) is stripped from metadata, and the system assigns a unique randomized token."
+      },
+      "analysis": {
+        "title": "AI Analysis",
+        "description": "The anonymized image is processed by our Neural Network in a secure enclave with no permanent storage on inference servers."
+      },
+      "delivery": {
+        "title": "Result Delivery & Deletion",
+        "description": "Results are sent back to the clinician dashboard, and temporary image data is immediately wiped."
+      }
+    },
+    "faq": {
+      "title": "Deep Dive: How We Mitigate Bias",
+      "description": "Answers to common questions about fairness in our AI models.",
+      "datasets": {
+        "question": "What datasets is AURA trained on?",
+        "answer": "Our model is trained on over 2.5 million retinal scans from 14 distinct geographical regions to ensure broad representation."
+      },
+      "humanLoop": {
+        "question": "Is there a Human in the Loop?",
+        "answer": "Absolutely. AURA is a decision support system and the final diagnosis is always made by a qualified ophthalmologist."
+      },
+      "edgeCases": {
+        "question": "How do you handle edge cases?",
+        "answer": "We apply uncertainty quantification and route low-confidence scans to manual review for safety."
+      }
+    },
+    "cta": {
+      "title": "Partner with AURA",
+      "description": "Join our network of ethical AI practitioners with full documentation and API access.",
+      "primary": "Request Developer Access",
+      "secondary": "Contact Ethics Board"
+    }
+  },
+  "Compliance": {
+    "hero": {
+      "titlePrefix": "Healthcare Compliance &",
+      "titleHighlight": "Security Standards",
+      "description": "AURA Eyes is built with security and compliance at its core. We maintain the highest standards to protect patient data.",
+      "primaryCta": "Learn More",
+      "secondaryCta": "Request Security Report"
+    },
+    "certifications": {
+      "title": "Certification Details",
+      "description": "We undergo rigorous third-party audits and maintain certifications to ensure the highest level of security and privacy protection."
+    },
+    "security": {
+      "title": "Security Infrastructure",
+      "description": "Enterprise-grade security features protecting your data at every layer.",
+      "encryption": {
+        "title": "End-to-End Encryption",
+        "description": "All data is encrypted in transit (TLS 1.3) and at rest (AES-256)."
+      },
+      "mfa": {
+        "title": "Multi-Factor Authentication",
+        "description": "Secure access with MFA, SSO integration, and biometric options."
+      },
+      "auditLogs": {
+        "title": "Comprehensive Audit Logs",
+        "description": "Complete audit trail of all system access and data modifications."
+      },
+      "backups": {
+        "title": "Automatic Backups",
+        "description": "Geo-redundant backups with point-in-time recovery capabilities."
+      },
+      "uptime": {
+        "title": "99.99% Uptime SLA",
+        "description": "Enterprise-grade infrastructure with guaranteed availability."
+      },
+      "rbac": {
+        "title": "Role-Based Access Control",
+        "description": "Granular permissions with principle of least privilege."
+      }
+    },
+    "audits": {
+      "title": "Recent Audits & Assessments",
+      "description": "We maintain a continuous audit schedule to ensure ongoing compliance and security.",
+      "completed": "Completed",
+      "soc2": {
+        "date": "January 2026",
+        "event": "SOC 2 Type II Annual Audit",
+        "details": "Zero findings, full compliance maintained"
+      },
+      "hipaa": {
+        "date": "December 2025",
+        "event": "HIPAA Security Risk Assessment",
+        "details": "All 164 controls verified and documented"
+      },
+      "iso": {
+        "date": "October 2025",
+        "event": "ISO 27001 Recertification",
+        "details": "Extended certification through 2028"
+      },
+      "pentest": {
+        "date": "September 2025",
+        "event": "Penetration Testing",
+        "details": "Third-party security assessment by certified firm"
+      }
+    },
+    "cta": {
+      "title": "Ready to Learn More About Our Security?",
+      "description": "Contact our security team for detailed documentation, penetration test reports, or to schedule a security review call.",
+      "primary": "Contact Security Team",
+      "secondary": "View Privacy Policy"
+    }
   }
 }
