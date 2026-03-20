@@ -164,6 +164,13 @@ export default function PatientDashboard() {
               <Calendar className="w-4 h-4" />
               {currentDate} • Your Retinal Health Overview
             </p>
+            {latestSession && (
+              <p className="text-sm text-(--text-muted)">
+                Latest session: {formatShortDate(latestSession.createdAt)} •{' '}
+                {latestSession.imagesCount} image
+                {latestSession.imagesCount !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 w-full md:w-auto md:justify-end mt-4 md:mt-0">
@@ -172,7 +179,7 @@ export default function PatientDashboard() {
               className="btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Upload New Scan
+              New Screening
             </Link>
             {latestSession && (
               <Link
@@ -180,41 +187,11 @@ export default function PatientDashboard() {
                 state={{ screeningId: latestSession.screeningId }}
                 className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
               >
-                View Latest Session
+                Open Latest
               </Link>
             )}
           </div>
         </header>
-
-        {latestSession && (
-          <section className="medical-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] font-semibold">
-                Latest Screening Session
-              </p>
-              <p className="text-sm text-[var(--text-primary)] mt-1">
-                Created {formatShortDate(latestSession.createdAt)} •{' '}
-                {latestSession.imagesCount} image
-                {latestSession.imagesCount !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                to="/patient/screening/new"
-                className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
-              >
-                Start New Session
-              </Link>
-              <Link
-                to="/patient/analysis"
-                state={{ screeningId: latestSession.screeningId }}
-                className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
-              >
-                Open Latest
-              </Link>
-            </div>
-          </section>
-        )}
 
         {/* Latest Analysis Result Section */}
         {latestReport ? (
