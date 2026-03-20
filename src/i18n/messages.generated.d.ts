@@ -189,6 +189,432 @@ declare module 'i18next' {
         };
       };
     };
+    Ophthalmologist: {
+      common: {
+        doctor: string;
+        role: string;
+        logout: string;
+        cancel: string;
+      };
+      header: {
+        pages: string;
+        searchPlaceholder: string;
+        toggleTheme: string;
+      };
+      sidebar: {
+        dashboard: string;
+        patients: string;
+        screenings: string;
+        appointments: string;
+        schedules: string;
+        consultations: string;
+        analytics: string;
+        contract: string;
+        settings: string;
+      };
+      dashboard: {
+        greeting: {
+          morning: string;
+          afternoon: string;
+          evening: string;
+        };
+        loading: string;
+        loadError: string;
+        organisationLabel: string;
+        defaultOrganisation: string;
+        subtitle: string;
+        reviewQueue: {
+          title: string;
+          description: string;
+          pendingReviews: string;
+          urgentCases: string;
+        };
+        capacity: {
+          title: string;
+          description: string;
+          completedToday: string;
+          openSlotsToday: string;
+        };
+        operationalSummary: {
+          title: string;
+          description: string;
+        };
+      };
+      settings: {
+        defaults: {
+          unknownDoctor: string;
+          noBio: string;
+        };
+        pageTitle: string;
+        pageSubtitle: string;
+        profile: {
+          title: string;
+          edit: string;
+          loading: string;
+          verifiedPractitioner: string;
+          memberSince: string;
+          email: string;
+          phone: string;
+          experience: string;
+          experienceSuffix: string;
+          years: string;
+          specialty: string;
+          hospital: string;
+          address: string;
+          bio: string;
+        };
+        credentials: {
+          title: string;
+          upload: string;
+          issuedBy: string;
+          issued: string;
+          expires: string;
+          status: {
+            verified: string;
+            pending: string;
+            expired: string;
+          };
+        };
+        wallet: {
+          title: string;
+          availableBalance: string;
+          withdrawFunds: string;
+          recentTransactions: string;
+          loadingTransactions: string;
+          noTransactions: string;
+          viewAllTransactions: string;
+          withdrawalAmount: string;
+          minimumWithdrawal: string;
+          withdrawalTo: string;
+          withdraw: string;
+        };
+        accountSettings: {
+          title: string;
+          security: string;
+          securityHint: string;
+          language: string;
+        };
+        appearance: {
+          title: string;
+          darkMode: string;
+          currentlyOn: string;
+          currentlyOff: string;
+        };
+        notifications: {
+          title: string;
+          email: string;
+          emailHint: string;
+          push: string;
+          pushHint: string;
+          reminders: string;
+          remindersHint: string;
+        };
+        dangerZone: {
+          title: string;
+          deactivate: string;
+          description: string;
+        };
+      };
+      appointments: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        manageSlots: string;
+        notScheduled: string;
+        invalidDate: string;
+        unknownPatient: string;
+        onlineConsultation: string;
+        inPersonConsultation: string;
+        open: string;
+        view: string;
+        searchPlaceholder: string;
+        filterLabel: string;
+        filter: {
+          all: string;
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
+        stats: {
+          today: string;
+          upcoming: string;
+          completed: string;
+          cancelled: string;
+        };
+        emptyTitle: string;
+        emptyAll: string;
+        emptyPrefix: string;
+        emptySuffix: string;
+        toast: {
+          missingDoctorIdentity: string;
+          cancelReason: string;
+          cancelSuccess: string;
+          cancelError: string;
+        };
+      };
+      schedules: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        addSlot: string;
+        today: string;
+        noSlots: string;
+        cancelSlotTitle: string;
+        errorCreateSlot: string;
+        stats: {
+          thisWeek: string;
+          available: string;
+          booked: string;
+          cancelled: string;
+        };
+        filter: {
+          all: string;
+          available: string;
+          booked: string;
+          past: string;
+        };
+        modal: {
+          title: string;
+          date: string;
+          startTime: string;
+          endTime: string;
+          slotType: string;
+          costOptional: string;
+          createSlot: string;
+        };
+      };
+      consultations: {
+        title: string;
+        chat: {
+          patient: string;
+          doctor: string;
+          you: string;
+          loading: string;
+          searchPlaceholder: string;
+          stats: {
+            all: string;
+            open: string;
+            upcoming: string;
+          };
+          emptySearchTitle: string;
+          emptySearchSubtitle: string;
+          joinMeeting: string;
+          joinLocked: string;
+          joinAvailableAfter: string;
+          canJoinBeforePrefix: string;
+          minutes: string;
+          meetingEnded: string;
+          meetingWindowClosed: string;
+          meetingLinkReady: string;
+          linkPending: string;
+          schedulePending: string;
+          confirmCancelSession: string;
+          confirmCompleteSession: string;
+          cancelReason: string;
+          sendError: string;
+          complete: string;
+          hideSessionOverview: string;
+          showSessionOverview: string;
+          autoOpenAtSchedule: string;
+          opensIn: string;
+          savedAsDoctorNote: string;
+          deliveredToPatient: string;
+          patientPreVisitNote: string;
+          patientMessage: string;
+          reviewPatientNotes: string;
+          noMessagesInSession: string;
+          noMessagesYet: string;
+          preVisitEmptyDescription: string;
+          inProgressEmptyDescription: string;
+          completedEmptyDescription: string;
+          typeMessage: string;
+          encryptionNotice: string;
+          characters: string;
+          completedReadOnly: string;
+          preVisitReadOnly: string;
+          selectSession: string;
+          selectSessionDescription: string;
+          sessionOverview: string;
+          appointment: string;
+          lastActivity: string;
+          consultationFee: string;
+          phaseLabel: string;
+          conversationGuidance: string;
+          guidanceDescription: string;
+          phase: {
+            preVisit: string;
+            inProgress: string;
+            completed: string;
+            locked: string;
+            postVisit: string;
+            preVisitDescription: string;
+            inProgressDescription: string;
+            completedDescription: string;
+          };
+        };
+      };
+      patients: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        patientPrefix: string;
+        notAvailable: string;
+        searchPlaceholder: string;
+        moreFilters: string;
+        empty: string;
+        sessionsSuffix: string;
+        nextAppointment: string;
+        lastCompletedVisit: string;
+        upcoming: string;
+        completed: string;
+        viewDetails: string;
+        statusLabel: {
+          urgent: string;
+          active: string;
+          past: string;
+        };
+        filter: {
+          allStatus: string;
+          active: string;
+          urgent: string;
+          pastOnly: string;
+        };
+        stats: {
+          totalPatients: string;
+          active: string;
+          urgent: string;
+          pastOnly: string;
+        };
+      };
+      slotManagement: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        newTemplate: string;
+        noSlots: string;
+        notConfigured: string;
+        minutes: string;
+        create: string;
+        creating: string;
+        generate: string;
+        generating: string;
+        blockReason: string;
+        confirmDeleteTemplate: string;
+        blockThisSlot: string;
+        unblockThisSlot: string;
+        stats: {
+          totalSlots: string;
+          available: string;
+          booked: string;
+          blocked: string;
+        };
+        templates: {
+          title: string;
+          generateSlots: string;
+          empty: string;
+        };
+        legend: {
+          available: string;
+          reserved: string;
+          booked: string;
+          blocked: string;
+          expired: string;
+        };
+        modal: {
+          createTemplateTitle: string;
+          dayOfWeek: string;
+          startTime: string;
+          endTime: string;
+          slotDuration: string;
+          slotType: string;
+          costVnd: string;
+          generateTitle: string;
+          generateFromTemplatePrefix: string;
+          fromDate: string;
+          toDate: string;
+        };
+        messages: {
+          slotBlocked: string;
+          slotUnblocked: string;
+          templateCreated: string;
+          templateDeleted: string;
+          generatedPrefix: string;
+          generatedSuffix: string;
+        };
+        errors: {
+          onlyOwnBlock: string;
+          onlyOwnUnblock: string;
+          failedBlock: string;
+          failedUnblock: string;
+          failedCreateTemplate: string;
+          missingGenerateInputs: string;
+          failedGenerate: string;
+          failedDeleteTemplate: string;
+        };
+      };
+      contract: {
+        title: string;
+        subtitle: string;
+        refresh: string;
+        loading: string;
+        emptyTitle: string;
+        emptyDescription: string;
+        contractCode: string;
+        signedDate: string;
+        contractInfo: string;
+        template: string;
+        type: string;
+        ophthalmologistType: string;
+        createdDate: string;
+        signer: string;
+        fullName: string;
+        actions: string;
+        viewTemplate: string;
+        viewTemplateHint: string;
+        downloadTemplate: string;
+        downloadTemplateHint: string;
+        downloadFailed: string;
+        activeTitle: string;
+        activeDescription: string;
+        status: {
+          uploadedPendingApproval: string;
+          pendingSignature: string;
+          active: string;
+          draft: string;
+        };
+        upload: {
+          signedContract: string;
+          pdfUploaded: string;
+          waitingAdmin: string;
+          sentNotice: string;
+          openOriginal: string;
+          reupload: string;
+          cancelReupload: string;
+          dropzoneLabel: string;
+          selectFile: string;
+          dropzoneHint: string;
+          preview: string;
+          uploadSignedContract: string;
+          uploadFailed: string;
+          invalidType: string;
+          fileTooLarge: string;
+          uploadSignedTitle: string;
+          uploadSignedDescription: string;
+          steps: {
+            downloadPrint: string;
+            signStamp: string;
+            captureUpload: string;
+          };
+        };
+      };
+    };
     MedicalTerms: {
       cardiology: string;
       diagnostics: string;

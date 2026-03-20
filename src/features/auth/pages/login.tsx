@@ -17,10 +17,15 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import {
   login,
   googleLogin,
@@ -63,7 +68,11 @@ const LoginPage = () => {
   const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login: authLogin } = useAuthStore();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const {
     register: registerLogin,
@@ -100,7 +109,7 @@ const LoginPage = () => {
       if (isTwoFactorRequired(response)) {
         setTwoFactorData(response);
         // Navigate to 2FA verification page with userId
-        navigate('/two-factor-verify', {
+        navigate(toLocalizedAuthPath('/two-factor-verify'), {
           state: {
             userId: response.userId,
             email: data.email,
@@ -123,11 +132,11 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
-            navigate('/pending-approval');
+            navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate('/ophthalmologist/contract');
+            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
-            navigate('/ophthalmologist/dashboard');
+            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (
           roles.includes('OrgAdmin') ||
@@ -139,7 +148,7 @@ const LoginPage = () => {
             navigate('/organisation/dashboard');
           }
         } else {
-          navigate('/');
+          navigate(toLocalizedAuthPath('/'));
         }
       } else {
         setError(
@@ -238,7 +247,7 @@ const LoginPage = () => {
       // Check if 2FA is required
       if (isTwoFactorRequired(response)) {
         setTwoFactorData(response);
-        navigate('/two-factor-verify', {
+        navigate(toLocalizedAuthPath('/two-factor-verify'), {
           state: {
             userId: response.userId,
             email: '',
@@ -260,11 +269,11 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (response.user?.isVerified === false) {
-            navigate('/pending-approval');
+            navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate('/ophthalmologist/contract');
+            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
-            navigate('/ophthalmologist/dashboard');
+            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (
           roles.includes('OrgAdmin') ||
@@ -276,7 +285,7 @@ const LoginPage = () => {
             navigate('/organisation/dashboard');
           }
         } else {
-          navigate('/');
+          navigate(toLocalizedAuthPath('/'));
         }
       } else {
         setError(
@@ -328,7 +337,7 @@ const LoginPage = () => {
 
         {/* Header */}
         <div className="relative z-10 [&_span]:!text-white">
-          <AuraLogo size="lg" to="/" />
+          <AuraLogo size="lg" to={toLocalizedAuthPath('/')} />
         </div>
 
         {/* Center Content */}
@@ -497,7 +506,7 @@ const LoginPage = () => {
                       {t('AuthPages.login.loginForm.passwordLabel')}
                     </label>
                     <Link
-                      to="/forgot-password"
+                      to={toLocalizedAuthPath('/forgot-password')}
                       className="text-xs font-medium text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                     >
                       {t('AuthPages.login.loginForm.forgotPassword')}
