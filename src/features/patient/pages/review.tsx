@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
+import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -312,7 +313,7 @@ export default function ReviewPage() {
                       Find a Specialist
                     </button>
                     <button
-                      onClick={() => navigate('/patient/chat')}
+                      onClick={openN8nChat}
                       className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
                     >
                       <Bot className="w-5 h-5" />
@@ -415,6 +416,7 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
+      <N8nChatWidget />
     </FocusModeLayout>
   );
 }
