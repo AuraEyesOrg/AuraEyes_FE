@@ -20,6 +20,172 @@
     "register": "Register",
     "forgotPassword": "Forgot Password"
   },
+  "AuthPages": {
+    "shared": {
+      "copyright": "© {{year}} Aura Medical Systems.",
+      "backToLogin": "Back to Login",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "login": {
+      "leftPanel": {
+        "titleLine1": "AI-Powered",
+        "titleHighlight": "Eye Care Platform.",
+        "description": "Secure access for patients, ophthalmologists, and organizations to next-generation retinal screening tools with 99.2% clinical accuracy.",
+        "hipaa": "HIPAA Compliant",
+        "encryption": "End-to-End Encryption",
+        "systemStatus": "System Status:",
+        "online": "Online"
+      },
+      "tabs": {
+        "login": "Log In",
+        "register": "Create Account"
+      },
+      "messages": {
+        "dismiss": "Dismiss",
+        "orContinueWith": "Or continue with",
+        "registrationSuccess": "Registration successful! Please check your email to confirm your account.",
+        "loginFailed": "Login failed. Please try again.",
+        "googleFailed": "Google login failed. Please try again.",
+        "googleNoCredential": "Google login failed. No credential received.",
+        "loginError": "An error occurred during login",
+        "registrationError": "An error occurred during registration",
+        "googleError": "An error occurred during Google login",
+        "recaptchaRequired": "Please complete the reCAPTCHA verification."
+      },
+      "loginForm": {
+        "heading": "Welcome Back",
+        "description": "Sign in to your AuraEyes account to continue.",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "••••••••",
+        "forgotPassword": "Forgot password?",
+        "signIn": "Secure Sign In",
+        "signingIn": "Signing In...",
+        "securityNote": "AuraEyes protects your health data under HIPAA regulations. Access is available to registered patients, ophthalmologists, and verified healthcare organizations only."
+      },
+      "registerForm": {
+        "heading": "Create Account",
+        "description": "Register as a patient to access AuraEyes retinal screening services.",
+        "fullNameLabel": "Full Name",
+        "fullNamePlaceholder": "Dr. John Smith",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "phoneLabel": "Phone Number",
+        "phonePlaceholder": "+1 (555) 000-0000",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordPlaceholder": "••••••••",
+        "agreePrefix": "I agree to the",
+        "and": "and",
+        "createAccount": "Create Account",
+        "creatingAccount": "Creating Account...",
+        "doctorCardTitle": "Are you a Medical Professional?",
+        "doctorCardDescription": "Register as a doctor to join our healthcare network",
+        "registerDoctor": "Register as Doctor",
+        "securityNote": "By creating an account, you acknowledge that your data will be processed in accordance with HIPAA regulations and our security protocols."
+      },
+      "validation": {
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordPattern": "Password must contain uppercase, lowercase, and number",
+        "fullNameRequired": "Full name is required",
+        "fullNameMin": "Name must be at least 2 characters",
+        "phoneRequired": "Phone number is required",
+        "invalidPhone": "Invalid phone number",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match",
+        "agreeTerms": "You must agree to the terms"
+      }
+    },
+    "forgotPassword": {
+      "leftPanel": {
+        "titleLine1": "Recover Your",
+        "titleHighlight": "Account Access.",
+        "description": "Enter your registered email address and we will send you a secure password reset link.",
+        "securityFirst": "Security First",
+        "protectedRecovery": "Protected Recovery"
+      },
+      "form": {
+        "heading": "Forgot Password",
+        "description": "We will send a reset link to your registered email.",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "submit": "Send Reset Link",
+        "submitting": "Sending..."
+      },
+      "messages": {
+        "success": "If the email exists in our system, we have sent a password reset link to your inbox.",
+        "fallbackError": "Unable to send request right now. Please try again later.",
+        "securityNote": "For security reasons, the system always returns the same message whether an email exists or not."
+      },
+      "validation": {
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email address"
+      }
+    },
+    "resetPassword": {
+      "leftPanel": {
+        "titleLine1": "Set a New",
+        "titleHighlight": "Secure Password.",
+        "description": "Your new password should be unique and used only for your AuraEyes account.",
+        "protectedAccount": "Protected Account",
+        "strongCredentials": "Strong Credentials"
+      },
+      "form": {
+        "heading": "Reset Password",
+        "description": "Create a new password to complete account recovery.",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "submit": "Reset Password",
+        "submitting": "Resetting..."
+      },
+      "messages": {
+        "invalidLink": "Invalid reset link. Please request a new password reset email.",
+        "success": "Password has been reset successfully. You can now sign in with your new password.",
+        "failed": "Reset password failed. Please request a new reset link.",
+        "missingToken": "Missing reset token information. Please use the reset link from your email.",
+        "goToSignIn": "Go to Sign In",
+        "securityNote": "Password reset links are time-limited for security. If your link has expired, request a new one from the forgot password page."
+      },
+      "validation": {
+        "passwordRequired": "Password is required",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordPattern": "Password must contain uppercase, lowercase, and number",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordMismatch": "Passwords do not match"
+      }
+    },
+    "confirmEmail": {
+      "verifying": {
+        "title": "Verifying email...",
+        "description": "Please wait a moment."
+      },
+      "success": {
+        "title": "Email Confirmed!",
+        "description": "Your account has been activated successfully. Sign in to continue.",
+        "cta": "Sign In Now"
+      },
+      "error": {
+        "defaultMessage": "Email confirmation failed. The link may have expired.",
+        "title": "Confirmation Failed",
+        "resend": "Resend confirmation email"
+      },
+      "resend": {
+        "title": "Check your inbox",
+        "description": "We sent a confirmation link to your email. If you did not receive it, resend below.",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "email@example.com",
+        "button": "Resend confirmation email",
+        "successTitle": "Confirmation email has been resent!",
+        "successDescription": "Please check your inbox."
+      }
+    }
+  },
   "MedicalTerms": {
     "cardiology": "Cardiology",
     "diagnostics": "Diagnostics",

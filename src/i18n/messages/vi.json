@@ -20,6 +20,172 @@
     "register": "Đăng ký",
     "forgotPassword": "Quên mật khẩu"
   },
+  "AuthPages": {
+    "shared": {
+      "copyright": "© {{year}} Aura Medical Systems.",
+      "backToLogin": "Quay lại đăng nhập",
+      "termsOfService": "Điều khoản dịch vụ",
+      "privacyPolicy": "Chính sách quyền riêng tư"
+    },
+    "login": {
+      "leftPanel": {
+        "titleLine1": "Nền tảng chăm sóc mắt",
+        "titleHighlight": "ứng dụng AI.",
+        "description": "Truy cập an toàn cho bệnh nhân, bác sĩ nhãn khoa và tổ chức y tế với công cụ sàng lọc võng mạc thế hệ mới, độ chính xác lâm sàng 99.2%.",
+        "hipaa": "Tuân thủ HIPAA",
+        "encryption": "Mã hóa đầu cuối",
+        "systemStatus": "Trạng thái hệ thống:",
+        "online": "Đang hoạt động"
+      },
+      "tabs": {
+        "login": "Đăng nhập",
+        "register": "Tạo tài khoản"
+      },
+      "messages": {
+        "dismiss": "Đóng",
+        "orContinueWith": "Hoặc tiếp tục với",
+        "registrationSuccess": "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.",
+        "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+        "googleFailed": "Đăng nhập Google thất bại. Vui lòng thử lại.",
+        "googleNoCredential": "Đăng nhập Google thất bại. Không nhận được thông tin xác thực.",
+        "loginError": "Đã xảy ra lỗi khi đăng nhập",
+        "registrationError": "Đã xảy ra lỗi khi đăng ký",
+        "googleError": "Đã xảy ra lỗi khi đăng nhập Google",
+        "recaptchaRequired": "Vui lòng hoàn tất xác minh reCAPTCHA."
+      },
+      "loginForm": {
+        "heading": "Chào mừng quay lại",
+        "description": "Đăng nhập vào tài khoản AuraEyes để tiếp tục.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Mật khẩu",
+        "passwordPlaceholder": "••••••••",
+        "forgotPassword": "Quên mật khẩu?",
+        "signIn": "Đăng nhập bảo mật",
+        "signingIn": "Đang đăng nhập...",
+        "securityNote": "AuraEyes bảo vệ dữ liệu sức khỏe của bạn theo quy định HIPAA. Quyền truy cập chỉ dành cho bệnh nhân đã đăng ký, bác sĩ nhãn khoa và tổ chức y tế đã xác minh."
+      },
+      "registerForm": {
+        "heading": "Tạo tài khoản",
+        "description": "Đăng ký với vai trò bệnh nhân để sử dụng dịch vụ sàng lọc võng mạc AuraEyes.",
+        "fullNameLabel": "Họ và tên",
+        "fullNamePlaceholder": "Nguyen Van A",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "phoneLabel": "Số điện thoại",
+        "phonePlaceholder": "+84 900 000 000",
+        "passwordLabel": "Mật khẩu",
+        "passwordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "Xác nhận mật khẩu",
+        "confirmPasswordPlaceholder": "••••••••",
+        "agreePrefix": "Tôi đồng ý với",
+        "and": "và",
+        "createAccount": "Tạo tài khoản",
+        "creatingAccount": "Đang tạo tài khoản...",
+        "doctorCardTitle": "Bạn là chuyên gia y tế?",
+        "doctorCardDescription": "Đăng ký với vai trò bác sĩ để tham gia mạng lưới chăm sóc sức khỏe của chúng tôi",
+        "registerDoctor": "Đăng ký bác sĩ",
+        "securityNote": "Khi tạo tài khoản, bạn xác nhận dữ liệu của mình sẽ được xử lý theo quy định HIPAA và các giao thức bảo mật của chúng tôi."
+      },
+      "validation": {
+        "emailRequired": "Email là bắt buộc",
+        "invalidEmail": "Email không hợp lệ",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordPattern": "Mật khẩu phải bao gồm chữ hoa, chữ thường và số",
+        "fullNameRequired": "Họ tên là bắt buộc",
+        "fullNameMin": "Họ tên phải có ít nhất 2 ký tự",
+        "phoneRequired": "Số điện thoại là bắt buộc",
+        "invalidPhone": "Số điện thoại không hợp lệ",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "agreeTerms": "Bạn phải đồng ý với điều khoản"
+      }
+    },
+    "forgotPassword": {
+      "leftPanel": {
+        "titleLine1": "Khôi phục",
+        "titleHighlight": "quyền truy cập tài khoản.",
+        "description": "Nhập địa chỉ email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu an toàn.",
+        "securityFirst": "Ưu tiên bảo mật",
+        "protectedRecovery": "Khôi phục an toàn"
+      },
+      "form": {
+        "heading": "Quên mật khẩu",
+        "description": "Chúng tôi sẽ gửi liên kết đặt lại đến email đã đăng ký của bạn.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "your@email.com",
+        "submit": "Gửi liên kết đặt lại",
+        "submitting": "Đang gửi..."
+      },
+      "messages": {
+        "success": "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu đến hộp thư của bạn.",
+        "fallbackError": "Không thể gửi yêu cầu lúc này. Vui lòng thử lại sau.",
+        "securityNote": "Vì lý do bảo mật, hệ thống luôn trả về cùng một thông báo dù email có tồn tại hay không."
+      },
+      "validation": {
+        "emailRequired": "Email là bắt buộc",
+        "invalidEmail": "Email không hợp lệ"
+      }
+    },
+    "resetPassword": {
+      "leftPanel": {
+        "titleLine1": "Thiết lập",
+        "titleHighlight": "mật khẩu bảo mật mới.",
+        "description": "Mật khẩu mới nên là duy nhất và chỉ dùng cho tài khoản AuraEyes của bạn.",
+        "protectedAccount": "Tài khoản được bảo vệ",
+        "strongCredentials": "Thông tin xác thực mạnh"
+      },
+      "form": {
+        "heading": "Đặt lại mật khẩu",
+        "description": "Tạo mật khẩu mới để hoàn tất khôi phục tài khoản.",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "submit": "Đặt lại mật khẩu",
+        "submitting": "Đang đặt lại..."
+      },
+      "messages": {
+        "invalidLink": "Liên kết đặt lại không hợp lệ. Vui lòng yêu cầu email đặt lại mới.",
+        "success": "Mật khẩu đã được đặt lại thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.",
+        "failed": "Đặt lại mật khẩu thất bại. Vui lòng yêu cầu liên kết đặt lại mới.",
+        "missingToken": "Thiếu thông tin token đặt lại. Vui lòng dùng liên kết đặt lại từ email của bạn.",
+        "goToSignIn": "Đến trang đăng nhập",
+        "securityNote": "Liên kết đặt lại mật khẩu có thời hạn vì lý do bảo mật. Nếu liên kết đã hết hạn, hãy yêu cầu liên kết mới từ trang quên mật khẩu."
+      },
+      "validation": {
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+        "passwordPattern": "Mật khẩu phải bao gồm chữ hoa, chữ thường và số",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp"
+      }
+    },
+    "confirmEmail": {
+      "verifying": {
+        "title": "Đang xác nhận email...",
+        "description": "Vui lòng đợi trong giây lát."
+      },
+      "success": {
+        "title": "Email đã xác nhận!",
+        "description": "Tài khoản của bạn đã được kích hoạt thành công. Đăng nhập để tiếp tục.",
+        "cta": "Đăng nhập ngay"
+      },
+      "error": {
+        "defaultMessage": "Xác nhận email thất bại. Liên kết có thể đã hết hạn.",
+        "title": "Xác nhận thất bại",
+        "resend": "Gửi lại email xác nhận"
+      },
+      "resend": {
+        "title": "Kiểm tra hộp thư",
+        "description": "Chúng tôi đã gửi link xác nhận đến email của bạn. Nếu chưa nhận được, hãy gửi lại bên dưới.",
+        "emailLabel": "Địa chỉ email",
+        "emailPlaceholder": "email@example.com",
+        "button": "Gửi lại email xác nhận",
+        "successTitle": "Email xác nhận đã được gửi lại!",
+        "successDescription": "Vui lòng kiểm tra hộp thư của bạn."
+      }
+    }
+  },
   "MedicalTerms": {
     "cardiology": "Tim mạch",
     "diagnostics": "Chẩn đoán",

@@ -23,6 +23,172 @@ declare module 'i18next' {
       register: string;
       forgotPassword: string;
     };
+    AuthPages: {
+      shared: {
+        copyright: string;
+        backToLogin: string;
+        termsOfService: string;
+        privacyPolicy: string;
+      };
+      login: {
+        leftPanel: {
+          titleLine1: string;
+          titleHighlight: string;
+          description: string;
+          hipaa: string;
+          encryption: string;
+          systemStatus: string;
+          online: string;
+        };
+        tabs: {
+          login: string;
+          register: string;
+        };
+        messages: {
+          dismiss: string;
+          orContinueWith: string;
+          registrationSuccess: string;
+          loginFailed: string;
+          googleFailed: string;
+          googleNoCredential: string;
+          loginError: string;
+          registrationError: string;
+          googleError: string;
+          recaptchaRequired: string;
+        };
+        loginForm: {
+          heading: string;
+          description: string;
+          emailLabel: string;
+          emailPlaceholder: string;
+          passwordLabel: string;
+          passwordPlaceholder: string;
+          forgotPassword: string;
+          signIn: string;
+          signingIn: string;
+          securityNote: string;
+        };
+        registerForm: {
+          heading: string;
+          description: string;
+          fullNameLabel: string;
+          fullNamePlaceholder: string;
+          emailLabel: string;
+          emailPlaceholder: string;
+          phoneLabel: string;
+          phonePlaceholder: string;
+          passwordLabel: string;
+          passwordPlaceholder: string;
+          confirmPasswordLabel: string;
+          confirmPasswordPlaceholder: string;
+          agreePrefix: string;
+          and: string;
+          createAccount: string;
+          creatingAccount: string;
+          doctorCardTitle: string;
+          doctorCardDescription: string;
+          registerDoctor: string;
+          securityNote: string;
+        };
+        validation: {
+          emailRequired: string;
+          invalidEmail: string;
+          passwordRequired: string;
+          passwordMin: string;
+          passwordPattern: string;
+          fullNameRequired: string;
+          fullNameMin: string;
+          phoneRequired: string;
+          invalidPhone: string;
+          confirmPasswordRequired: string;
+          passwordMismatch: string;
+          agreeTerms: string;
+        };
+      };
+      forgotPassword: {
+        leftPanel: {
+          titleLine1: string;
+          titleHighlight: string;
+          description: string;
+          securityFirst: string;
+          protectedRecovery: string;
+        };
+        form: {
+          heading: string;
+          description: string;
+          emailLabel: string;
+          emailPlaceholder: string;
+          submit: string;
+          submitting: string;
+        };
+        messages: {
+          success: string;
+          fallbackError: string;
+          securityNote: string;
+        };
+        validation: {
+          emailRequired: string;
+          invalidEmail: string;
+        };
+      };
+      resetPassword: {
+        leftPanel: {
+          titleLine1: string;
+          titleHighlight: string;
+          description: string;
+          protectedAccount: string;
+          strongCredentials: string;
+        };
+        form: {
+          heading: string;
+          description: string;
+          newPassword: string;
+          confirmNewPassword: string;
+          submit: string;
+          submitting: string;
+        };
+        messages: {
+          invalidLink: string;
+          success: string;
+          failed: string;
+          missingToken: string;
+          goToSignIn: string;
+          securityNote: string;
+        };
+        validation: {
+          passwordRequired: string;
+          passwordMin: string;
+          passwordPattern: string;
+          confirmPasswordRequired: string;
+          passwordMismatch: string;
+        };
+      };
+      confirmEmail: {
+        verifying: {
+          title: string;
+          description: string;
+        };
+        success: {
+          title: string;
+          description: string;
+          cta: string;
+        };
+        error: {
+          defaultMessage: string;
+          title: string;
+          resend: string;
+        };
+        resend: {
+          title: string;
+          description: string;
+          emailLabel: string;
+          emailPlaceholder: string;
+          button: string;
+          successTitle: string;
+          successDescription: string;
+        };
+      };
+    };
     MedicalTerms: {
       cardiology: string;
       diagnostics: string;
