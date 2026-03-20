@@ -264,7 +264,10 @@ const Router = () => (
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/screening" element={<ScreeningPage />} />
         <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
-        <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
+        <Route
+          path="/patient/screening/analyze"
+          element={<RetinalAnalysisPage />}
+        />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/notifications" element={<NotificationsPage />} />
