@@ -14,6 +14,7 @@ import {
 import Sidebar from '../components/Sidebar';
 import { contractTemplatesApi } from '../api/contract-templates.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import type { EmploymentTypeValue } from '../types/system-admin.types';
 
 export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export default function ContractTemplateEditorPage() {
 
   const [title, setTitle] = useState('');
   const [contractType, setContractType] = useState<1 | 2>(1);
+  const [employmentType, setEmploymentType] =
+    useState<EmploymentTypeValue>('FullTime');
   const [contractVersion, setContractVersion] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [templateFile, setTemplateFile] = useState<File | null>(null);
@@ -38,6 +41,7 @@ export default function ContractTemplateEditorPage() {
       if (isNew) {
         setTitle('');
         setContractType(1);
+        setEmploymentType('FullTime');
         setContractVersion('1.0');
         setEffectiveDate('');
       }
@@ -48,6 +52,7 @@ export default function ContractTemplateEditorPage() {
     setContractType(
       existingTemplate.type === 'OphthalmologistContract' ? 1 : 2
     );
+    setEmploymentType(existingTemplate.employmentType ?? 'FullTime');
     setContractVersion(existingTemplate.contractVersion);
     setEffectiveDate(existingTemplate.effectiveDate?.slice(0, 10) ?? '');
   }, [existingTemplate, isNew]);
@@ -68,10 +73,16 @@ export default function ContractTemplateEditorPage() {
       if (!title.trim()) throw new Error('Template name is required.');
       if (!contractVersion.trim())
         throw new Error('Contract version is required.');
+      if (contractType === 1 && !employmentType) {
+        throw new Error(
+          'Please select Full-time or Part-time for ophthalmologist templates.'
+        );
+      }
 
       const payload = {
         title: title.trim(),
         type: contractType,
+        employmentType: contractType === 1 ? employmentType : undefined,
         contractVersion: contractVersion.trim(),
         effectiveDate: effectiveDate || undefined,
         templateFile: templateFile ?? undefined,
@@ -253,6 +264,24 @@ export default function ContractTemplateEditorPage() {
                   <option value={2}>Medical Organization</option>
                 </select>
               </div>
+
+              {contractType === 1 && (
+                <div>
+                  <label className="text-xs text-slate-500">
+                    Employment Mode
+                  </label>
+                  <select
+                    value={employmentType}
+                    onChange={(e) =>
+                      setEmploymentType(e.target.value as EmploymentTypeValue)
+                    }
+                    className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
+                  >
+                    <option value="FullTime">Full-time</option>
+                    <option value="PartTime">Part-time</option>
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs text-slate-500">Version</label>
