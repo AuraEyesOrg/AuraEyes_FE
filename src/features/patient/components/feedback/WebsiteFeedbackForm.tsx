@@ -45,8 +45,8 @@ export const WebsiteFeedbackForm = ({
             {submitted ? (
               <div className="mt-4">
                 <FeedbackSuccessState
-                  title="Thank you for sharing your feedback"
-                  message="We have recorded your website feedback successfully."
+                  title="Feedback submitted"
+                  message="Feedback submitted"
                 />
               </div>
             ) : (
@@ -79,7 +79,7 @@ export const WebsiteFeedbackForm = ({
           });
           setSubmitted(true);
           setOpen(false);
-          toast.success('Website feedback submitted. Thank you.');
+          toast.success('Feedback submitted');
         }}
       />
     </div>
