@@ -268,15 +268,7 @@ const ReservationModal = ({
 
 // ============ MAIN PAGE ============
 
-export interface BookAppointmentProps {
-  embeddedDoctorId?: string;
-  embeddedPreselectedDate?: string;
-  embeddedDoctorSnapshot?: Partial<OphthalmologistSearchItem>;
-  onClose?: () => void;
-  onProceedToConfirm?: (slotId: string) => void;
-}
-
-export default function BookAppointmentPage(props: BookAppointmentProps) {
+export default function BookAppointmentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -306,19 +298,11 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
       doctorSnapshot?: Partial<OphthalmologistSearchItem>;
     } | null) ?? {};
   const doctorId =
-    props.embeddedDoctorId ??
-    state.doctorId ??
-    storedContext?.doctorId ??
-    doctorIdFromQuery ??
-    '';
+    state.doctorId ?? storedContext?.doctorId ?? doctorIdFromQuery ?? '';
   const preselectedSlotId = state.preselectedSlotId ?? '';
-  const preselectedDate =
-    props.embeddedPreselectedDate ?? state.preselectedDate;
+  const preselectedDate = state.preselectedDate;
   const doctorSnapshot =
-    props.embeddedDoctorSnapshot ??
-    state.doctorSnapshot ??
-    storedContext?.doctorSnapshot ??
-    null;
+    state.doctorSnapshot ?? storedContext?.doctorSnapshot ?? null;
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
@@ -475,16 +459,12 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
       JSON.stringify({ slotId: selectedSlot.id })
     );
 
-    if (props.onProceedToConfirm) {
-      props.onProceedToConfirm(selectedSlot.id);
-    } else {
-      navigate('/patient/book/confirm', {
-        state: {
-          slotId: selectedSlot.id,
-        },
-      });
-    }
-  }, [selectedSlot, navigate, props]);
+    navigate('/patient/book/confirm', {
+      state: {
+        slotId: selectedSlot.id,
+      },
+    });
+  }, [selectedSlot, navigate]);
 
   const handleCancelReservation = useCallback(async () => {
     if (!selectedSlot || !patientId) return;
@@ -555,247 +535,219 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
     reserveMutation,
   ]);
 
-  const isEmbedded = !!props.onClose;
-  const Wrapper = isEmbedded ? 'div' : PatientLayout;
-  const wrapperProps = isEmbedded
-    ? {
-        className:
-          'fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm overflow-y-auto flex justify-center items-start py-10 px-4',
-      }
-    : {};
-
   return (
-    <Wrapper {...wrapperProps}>
-      <div
-        className={
-          isEmbedded
-            ? 'bg-(--bg-primary) border border-(--border-color) w-full max-w-5xl rounded-xl shadow-xl relative overflow-hidden flex flex-col'
-            : 'p-6 max-w-6xl mx-auto'
-        }
-      >
-        {isEmbedded && (
-          <button
-            onClick={props.onClose}
-            className="absolute top-3 right-3 z-10 p-1.5 text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-secondary) rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-        <div className={isEmbedded ? 'p-6 overflow-y-auto' : ''}>
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Book an Appointment
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Select a doctor and choose an available time slot for your
-              consultation.
-            </p>
+    <PatientLayout>
+      <div className="p-6 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Book an Appointment
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Select a doctor and choose an available time slot for your
+            consultation.
+          </p>
+        </div>
+
+        {(errorMessage || slotsError) && (
+          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
           </div>
+        )}
 
-          {(errorMessage || slotsError) && (
-            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-              {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
-            </div>
-          )}
+        {/* Doctor Information */}
+        <div className="mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+              Selected Doctor
+            </p>
 
-          {/* Doctor Information */}
-          <div className="mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
-                Selected Doctor
+            {!selectedDoctorId ? (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                Missing doctorId in URL. Please choose a doctor first.
               </p>
-
-              {!selectedDoctorId ? (
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  Missing doctorId in URL. Please choose a doctor first.
-                </p>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <img
-                    src={getAvatarUrl({
-                      userAvatarUrl: doctorSnapshot?.userAvatarUrl ?? null,
-                      userFullName: doctorInfo?.userFullName ?? null,
-                    })}
-                    alt={doctorInfo?.userFullName ?? 'Doctor'}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">
-                      {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+            ) : (
+              <div className="flex items-center gap-4">
+                <img
+                  src={getAvatarUrl({
+                    userAvatarUrl: doctorSnapshot?.userAvatarUrl ?? null,
+                    userFullName: doctorInfo?.userFullName ?? null,
+                  })}
+                  alt={doctorInfo?.userFullName ?? 'Doctor'}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                />
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 dark:text-white truncate">
+                    {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {doctorInfo?.userEmail ?? 'No email available'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {doctorInfo?.yearsOfExperience ?? 0} years experience
+                  </p>
+                  {doctorLoading && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Loading doctor profile...
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                      {doctorInfo?.userEmail ?? 'No email available'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {doctorInfo?.yearsOfExperience ?? 0} years experience
-                    </p>
-                    {doctorLoading && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Loading doctor profile...
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
-            {!!preselectedSlotId && (
-              <p className="mt-2 text-xs text-cyan-700 dark:text-cyan-300">
-                A slot from the doctors page has been pre-selected for you.
-              </p>
+              </div>
             )}
           </div>
-
-          {/* Week Navigation */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-cyan-600" />
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {weekRange.label}
-                </span>
-              </div>
-              <button
-                onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Calendar Grid */}
-          {!selectedDoctorId ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-              <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                Please pick a doctor from the doctors page to view available
-                appointment slots.
-              </p>
-            </div>
-          ) : isLoading ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
-              <Spinner />
-              <span className="ml-3 text-gray-600 dark:text-gray-400">
-                Loading available slots...
-              </span>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              {/* Day Headers */}
-              <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-                {weekDays.map((day) => (
-                  <div
-                    key={day.date}
-                    className={`p-4 text-center border-r last:border-r-0 border-gray-200 dark:border-gray-700 ${
-                      day.isToday
-                        ? 'bg-cyan-50 dark:bg-cyan-900/20'
-                        : 'bg-gray-50 dark:bg-gray-800/50'
-                    } ${
-                      highlightedDate === day.date
-                        ? 'ring-2 ring-cyan-400 ring-inset'
-                        : ''
-                    }`}
-                  >
-                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">
-                      {day.dayName}
-                    </div>
-                    <div
-                      className={`text-lg font-semibold mt-1 ${
-                        day.isToday
-                          ? 'text-cyan-600 dark:text-cyan-400'
-                          : 'text-gray-900 dark:text-white'
-                      }`}
-                    >
-                      {day.dayNum}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Slots Grid */}
-              <div className="grid grid-cols-7 min-h-75">
-                {weekDays.map((day) => (
-                  <div
-                    key={day.date}
-                    className="p-2 border-r last:border-r-0 border-gray-200 dark:border-gray-700"
-                  >
-                    {slotsByDate[day.date]?.length ? (
-                      <div className="space-y-2">
-                        {slotsByDate[day.date].map((slot) => (
-                          <button
-                            key={slot.id}
-                            onClick={() => handleSlotClick(slot)}
-                            disabled={
-                              slot.status !== 'Available' ||
-                              reserveMutation.isPending
-                            }
-                            className={`w-full px-2 py-2 rounded-lg border text-xs font-medium transition ${getSlotStatusColor(slot.status)} disabled:cursor-not-allowed`}
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatSlotTime(slot.startTime)}
-                            </div>
-                            {slot.maxCapacity > 1 && (
-                              <div className="text-[10px] mt-1 opacity-75">
-                                {slot.availableCapacity}/{slot.maxCapacity}{' '}
-                                slots
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="h-full flex items-center justify-center">
-                        <span className="text-xs text-gray-400">No slots</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {!!preselectedSlotId && (
+            <p className="mt-2 text-xs text-cyan-700 dark:text-cyan-300">
+              A slot from the doctors page has been pre-selected for you.
+            </p>
           )}
+        </div>
 
-          {/* Legend */}
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
+        {/* Week Navigation */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300" />
-              <span className="text-gray-600 dark:text-gray-400">
-                Available
+              <Calendar className="w-5 h-5 text-cyan-600" />
+              <span className="font-medium text-gray-900 dark:text-white">
+                {weekRange.label}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-300" />
-              <span className="text-gray-600 dark:text-gray-400">Reserved</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 border border-blue-300" />
-              <span className="text-gray-600 dark:text-gray-400">Booked</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800 border border-gray-300" />
-              <span className="text-gray-600 dark:text-gray-400">Blocked</span>
-            </div>
+            <button
+              onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        {/* Reservation Modal */}
-        {showModal && selectedSlot && reservation && (
-          <ReservationModal
-            slot={selectedSlot}
-            reservation={reservation}
-            onConfirm={handleConfirm}
-            onCancel={handleCancelReservation}
-            isLoading={false}
-          />
+        {/* Calendar Grid */}
+        {!selectedDoctorId ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">
+              Please pick a doctor from the doctors page to view available
+              appointment slots.
+            </p>
+          </div>
+        ) : isLoading ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
+            <Spinner />
+            <span className="ml-3 text-gray-600 dark:text-gray-400">
+              Loading available slots...
+            </span>
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+              {weekDays.map((day) => (
+                <div
+                  key={day.date}
+                  className={`p-4 text-center border-r last:border-r-0 border-gray-200 dark:border-gray-700 ${
+                    day.isToday
+                      ? 'bg-cyan-50 dark:bg-cyan-900/20'
+                      : 'bg-gray-50 dark:bg-gray-800/50'
+                  } ${
+                    highlightedDate === day.date
+                      ? 'ring-2 ring-cyan-400 ring-inset'
+                      : ''
+                  }`}
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">
+                    {day.dayName}
+                  </div>
+                  <div
+                    className={`text-lg font-semibold mt-1 ${
+                      day.isToday
+                        ? 'text-cyan-600 dark:text-cyan-400'
+                        : 'text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    {day.dayNum}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Slots Grid */}
+            <div className="grid grid-cols-7 min-h-75">
+              {weekDays.map((day) => (
+                <div
+                  key={day.date}
+                  className="p-2 border-r last:border-r-0 border-gray-200 dark:border-gray-700"
+                >
+                  {slotsByDate[day.date]?.length ? (
+                    <div className="space-y-2">
+                      {slotsByDate[day.date].map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => handleSlotClick(slot)}
+                          disabled={
+                            slot.status !== 'Available' ||
+                            reserveMutation.isPending
+                          }
+                          className={`w-full px-2 py-2 rounded-lg border text-xs font-medium transition ${getSlotStatusColor(slot.status)} disabled:cursor-not-allowed`}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatSlotTime(slot.startTime)}
+                          </div>
+                          {slot.maxCapacity > 1 && (
+                            <div className="text-[10px] mt-1 opacity-75">
+                              {slot.availableCapacity}/{slot.maxCapacity} slots
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <span className="text-xs text-gray-400">No slots</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
+
+        {/* Legend */}
+        <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300" />
+            <span className="text-gray-600 dark:text-gray-400">Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-300" />
+            <span className="text-gray-600 dark:text-gray-400">Reserved</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 border border-blue-300" />
+            <span className="text-gray-600 dark:text-gray-400">Booked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800 border border-gray-300" />
+            <span className="text-gray-600 dark:text-gray-400">Blocked</span>
+          </div>
+        </div>
       </div>
-    </Wrapper>
+
+      {/* Reservation Modal */}
+      {showModal && selectedSlot && reservation && (
+        <ReservationModal
+          slot={selectedSlot}
+          reservation={reservation}
+          onConfirm={handleConfirm}
+          onCancel={handleCancelReservation}
+          isLoading={false}
+        />
+      )}
+    </PatientLayout>
   );
 }

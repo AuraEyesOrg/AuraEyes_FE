@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -13,12 +13,6 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 interface DoctorSidebarProps {
   pendingCount?: number;
@@ -26,67 +20,45 @@ interface DoctorSidebarProps {
 
 const navItems = [
   {
-    labelKey: 'Ophthalmologist.sidebar.dashboard',
+    label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/ophthalmologist/dashboard',
   },
+  { label: 'Patients', icon: Users, path: '/ophthalmologist/patients' },
   {
-    labelKey: 'Ophthalmologist.sidebar.patients',
-    icon: Users,
-    path: '/ophthalmologist/patients',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.screenings',
+    label: 'Screenings',
     icon: Eye,
     path: '/ophthalmologist/screenings',
     hasBadge: true,
   },
   {
-    labelKey: 'Ophthalmologist.sidebar.appointments',
+    label: 'Appointments',
     icon: Calendar,
     path: '/ophthalmologist/appointments',
   },
   {
-    labelKey: 'Ophthalmologist.sidebar.schedules',
+    label: 'Schedules',
     icon: CalendarClock,
     path: '/ophthalmologist/schedules',
   },
   {
-    labelKey: 'Ophthalmologist.sidebar.consultations',
+    label: 'Consultations',
     icon: MessagesSquare,
     path: '/ophthalmologist/consultations',
     hasBadge: true,
   },
-  {
-    labelKey: 'Ophthalmologist.sidebar.analytics',
-    icon: BarChart3,
-    path: '/ophthalmologist/analytics',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.contract',
-    icon: FileText,
-    path: '/ophthalmologist/contract',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.settings',
-    icon: Settings,
-    path: '/ophthalmologist/settings',
-  },
+  { label: 'Analytics', icon: BarChart3, path: '/ophthalmologist/analytics' },
+  { label: 'Contract', icon: FileText, path: '/ophthalmologist/contract' },
+  { label: 'Settings', icon: Settings, path: '/ophthalmologist/settings' },
 ];
 
 export default function DoctorSidebar({
   pendingCount = 0,
 }: DoctorSidebarProps) {
-  const { t } = useSafeTranslation();
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
 
   const displayName = user?.fullName ?? 'Doctor';
-  const userAvatar = user?.avatarUrl;
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';
@@ -96,7 +68,7 @@ export default function DoctorSidebar({
 
   const handleLogout = () => {
     logout();
-    navigate(toLocalizedPath('/login'));
+    navigate('/login');
   };
 
   return (
@@ -106,8 +78,8 @@ export default function DoctorSidebar({
         <div className="mb-10 px-2">
           <AuraLogo
             size="md"
-            subtitle={t('Ophthalmologist.common.role', 'Ophthalmologist')}
-            to={toLocalizedPath('/ophthalmologist/dashboard')}
+            subtitle="Ophthalmologist"
+            to="/ophthalmologist/dashboard"
           />
         </div>
 
@@ -116,7 +88,7 @@ export default function DoctorSidebar({
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
-              to={toLocalizedPath(item.path)}
+              to={item.path}
               className={({ isActive }) =>
                 `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
@@ -131,12 +103,7 @@ export default function DoctorSidebar({
                     <span className={isActive ? 'text-primary' : ''}>
                       <item.icon className="w-5 h-5" />
                     </span>
-                    <span className="text-sm font-medium">
-                      {t(
-                        item.labelKey,
-                        item.labelKey.split('.').pop() ?? 'Item'
-                      )}
-                    </span>
+                    <span className="text-sm font-medium">{item.label}</span>
                   </div>
                   {item.hasBadge && pendingCount > 0 && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
@@ -153,35 +120,22 @@ export default function DoctorSidebar({
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="relative shrink-0">
-                <div
-                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center"
-                  style={{
-                    backgroundImage: userAvatar
-                      ? `url("${userAvatar}")`
-                      : undefined,
-                  }}
-                >
-                  {!userAvatar && (
-                    <span className="text-white font-bold text-sm">
-                      {displayName.split(' ').pop()?.charAt(0) || 'D'}
-                    </span>
-                  )}
-                </div>
+              <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0">
+                {displayName.split(' ').pop()?.charAt(0) || 'D'}
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {displayName.split(' ').pop()}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {t('Ophthalmologist.common.role', 'Ophthalmologist')}
+                  Ophthalmologist
                 </p>
               </div>
             </div>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-              title={t('Ophthalmologist.common.logout', 'Logout')}
+              title="Logout"
             >
               <LogOut className="w-5 h-5" />
             </button>

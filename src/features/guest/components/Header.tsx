@@ -1,49 +1,36 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { AuraLogo } from '@/components/ui/aura-logo';
-import { LocaleSwitcher } from '@/features/guest/components/LocaleSwitcher';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  stripLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 export const Header = () => {
-  const { t } = useTranslation();
   const location = useLocation();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
 
   const navLinks = [
-    { href: '/', label: t('Navigation.home') },
-    { href: '/about', label: t('Navigation.about') },
-    { href: '/how-it-works', label: t('Navigation.howItWorks') },
-    { href: '/ethics', label: t('Navigation.ethicsPrivacy') },
-    { href: '/contact', label: t('Navigation.contact') },
+    { href: '/', label: 'Home' },
+    { href: '/about', label: 'About Us' },
+    { href: '/how-it-works', label: 'How It Works' },
+    { href: '/ethics', label: 'Ethics & Privacy' },
+    { href: '/contact', label: 'Contact' },
   ];
 
   const isActive = (href: string) => {
-    const currentPath = stripLocaleFromPathname(location.pathname);
-
     if (href === '/') {
-      return currentPath === '/';
+      return location.pathname === '/';
     }
-
-    return currentPath.startsWith(href);
+    return location.pathname.startsWith(href);
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <AuraLogo variant="dark" size="md" to={withLocalePathname(locale)} />
+        <AuraLogo variant="dark" size="md" to="/" />
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
-              to={withLocalePathname(locale, link.href)}
+              to={link.href}
               className={`text-sm font-medium transition-colors ${
                 isActive(link.href)
                   ? 'text-[#319795] font-semibold'
@@ -57,13 +44,11 @@ export const Header = () => {
 
         {/* CTA Button */}
         <div className="flex items-center gap-4">
-          <LocaleSwitcher className="hidden sm:inline-flex" />
-
           <Link
             to="/login"
             className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30"
           >
-            {t('Common.getStarted')}
+            Get Started
           </Link>
 
           {/* Mobile Menu Button */}

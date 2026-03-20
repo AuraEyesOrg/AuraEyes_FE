@@ -5,7 +5,6 @@ import { queryClient } from './lib/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useSignalRNotification } from './hooks/useSignalRNotification';
 import { useSignalRChat } from './hooks/useSignalRChat';
-import { I18nProvider } from '@/i18n/I18nProvider';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 
@@ -22,14 +21,12 @@ function SignalRProvider({ children }: { children: ReactNode }) {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
-    <I18nProvider>
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale="en">
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <SignalRProvider>{children}</SignalRProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </GoogleOAuthProvider>
-    </I18nProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale="en">
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SignalRProvider>{children}</SignalRProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 }

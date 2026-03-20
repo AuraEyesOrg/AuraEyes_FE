@@ -1,17 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { AuraLogo } from '@/components/ui/aura-logo';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 export const Footer = () => {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-
   return (
     <footer className="bg-white border-t border-[#E2E8F0]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-8">
@@ -19,14 +9,10 @@ export const Footer = () => {
           {/* Brand */}
           <div>
             <div className="mb-4">
-              <AuraLogo
-                variant="dark"
-                size="sm"
-                to={withLocalePathname(locale)}
-              />
+              <AuraLogo variant="dark" size="sm" to="/" />
             </div>
             <p className="text-sm text-[#718096]">
-              {t('GuestHome.description')}
+              Advancing retinal health through ethical AI.
             </p>
           </div>
 
@@ -37,9 +23,9 @@ export const Footer = () => {
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/how-it-works')}
+                  to="/how-it-works"
                 >
-                  {t('MedicalTerms.retinalScreening')}
+                  Screening Tool
                 </Link>
               </li>
               <li>
@@ -55,9 +41,9 @@ export const Footer = () => {
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/status')}
+                  to="/status"
                 >
-                  {t('Navigation.status')}
+                  System Status
                 </Link>
               </li>
             </ul>
@@ -70,33 +56,33 @@ export const Footer = () => {
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/about')}
+                  to="/about"
                 >
-                  {t('Navigation.about')}
+                  About Us
                 </Link>
               </li>
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/ethics')}
+                  to="/ethics"
                 >
-                  {t('Navigation.ethicsPrivacy')}
+                  Ethics & Privacy
                 </Link>
               </li>
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/contact')}
+                  to="/contact"
                 >
-                  {t('Navigation.contact')}
+                  Contact
                 </Link>
               </li>
               <li>
                 <Link
                   className="hover:text-[#319795] transition-colors"
-                  to={withLocalePathname(locale, '/compliance')}
+                  to="/compliance"
                 >
-                  {t('Navigation.compliance')}
+                  Compliance
                 </Link>
               </li>
             </ul>

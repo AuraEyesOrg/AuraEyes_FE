@@ -1,14 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const EthicsPrivacyPage = () => {
-  const { t } = useSafeTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -129,8 +127,9 @@ const EthicsPrivacyPage = () => {
 
   const pillars = [
     {
-      title: t('EthicsPrivacy.pillars.privacy.title'),
-      description: t('EthicsPrivacy.pillars.privacy.description'),
+      title: 'Data Privacy First',
+      description:
+        'Your retinal data is end-to-end encrypted and anonymized. You retain full ownership and control at every step of the diagnostic process.',
       icon: (
         <svg
           className="w-7 h-7"
@@ -148,8 +147,9 @@ const EthicsPrivacyPage = () => {
       ),
     },
     {
-      title: t('EthicsPrivacy.pillars.ethicalAi.title'),
-      description: t('EthicsPrivacy.pillars.ethicalAi.description'),
+      title: 'Ethical AI Design',
+      description:
+        'Our models are trained on diverse global datasets to mitigate bias and ensure equitable healthcare outcomes for all populations.',
       icon: (
         <svg
           className="w-7 h-7"
@@ -167,8 +167,9 @@ const EthicsPrivacyPage = () => {
       ),
     },
     {
-      title: t('EthicsPrivacy.pillars.transparency.title'),
-      description: t('EthicsPrivacy.pillars.transparency.description'),
+      title: 'Total Transparency',
+      description:
+        "We open the 'black box'. AURA provides explainable results, highlighting exactly what the AI sees, keeping humans in the loop.",
       icon: (
         <svg
           className="w-7 h-7"
@@ -196,8 +197,9 @@ const EthicsPrivacyPage = () => {
   const dataJourney = [
     {
       step: 1,
-      title: t('EthicsPrivacy.dataJourney.upload.title'),
-      description: t('EthicsPrivacy.dataJourney.upload.description'),
+      title: 'Upload & Encryption',
+      description:
+        'Retinal images are uploaded via a secure TLS 1.3 connection. Before leaving your device, data is encrypted using AES-256 standards.',
       icon: (
         <svg
           className="w-7 h-7"
@@ -216,8 +218,9 @@ const EthicsPrivacyPage = () => {
     },
     {
       step: 2,
-      title: t('EthicsPrivacy.dataJourney.anonymization.title'),
-      description: t('EthicsPrivacy.dataJourney.anonymization.description'),
+      title: 'Anonymization',
+      description:
+        'All Personal Health Information (PHI) is stripped from the metadata. The system assigns a unique, randomized token to the image data.',
       icon: (
         <svg
           className="w-7 h-7"
@@ -236,8 +239,9 @@ const EthicsPrivacyPage = () => {
     },
     {
       step: 3,
-      title: t('EthicsPrivacy.dataJourney.analysis.title'),
-      description: t('EthicsPrivacy.dataJourney.analysis.description'),
+      title: 'AI Analysis',
+      description:
+        'The anonymized image is processed by our Neural Network in a secure enclave. No data is stored permanently on the inference servers.',
       icon: (
         <svg
           className="w-7 h-7"
@@ -256,8 +260,9 @@ const EthicsPrivacyPage = () => {
     },
     {
       step: 4,
-      title: t('EthicsPrivacy.dataJourney.delivery.title'),
-      description: t('EthicsPrivacy.dataJourney.delivery.description'),
+      title: 'Result Delivery & Deletion',
+      description:
+        "Results are sent back to the clinician's dashboard. The temporary image data on our servers is immediately wiped.",
       icon: (
         <svg
           className="w-7 h-7"
@@ -278,16 +283,19 @@ const EthicsPrivacyPage = () => {
 
   const faqs = [
     {
-      question: t('EthicsPrivacy.faq.datasets.question'),
-      answer: t('EthicsPrivacy.faq.datasets.answer'),
+      question: 'What datasets is AURA trained on?',
+      answer:
+        'Our model is trained on a proprietary dataset of over 2.5 million retinal scans sourced from 14 distinct geographical regions, ensuring representation across diverse ethnicities, ages, and genders. This diversity is critical to preventing algorithmic bias common in models trained on homogenous populations.',
     },
     {
-      question: t('EthicsPrivacy.faq.humanLoop.question'),
-      answer: t('EthicsPrivacy.faq.humanLoop.answer'),
+      question: 'Is there a "Human in the Loop"?',
+      answer:
+        'Absolutely. AURA is designed as a Decision Support System (DSS), not a replacement for clinicians. The AI provides a probability score and heatmaps indicating areas of concern, but the final diagnosis and treatment plan are always determined by a qualified ophthalmologist.',
     },
     {
-      question: t('EthicsPrivacy.faq.edgeCases.question'),
-      answer: t('EthicsPrivacy.faq.edgeCases.answer'),
+      question: 'How do you handle edge cases?',
+      answer:
+        'We employ uncertainty quantification. If the AI encounters a scan with low confidence (due to poor image quality or rare pathology), it flags the case for "Manual Review" rather than forcing a potentially incorrect prediction. This safety mechanism reduces false positives/negatives significantly.',
     },
   ];
 
@@ -322,24 +330,26 @@ const EthicsPrivacyPage = () => {
               <div className="hero-content lg:col-span-6 text-center lg:text-left">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-brand-primary)]/10 px-3 py-1 text-sm font-medium text-[var(--color-brand-primary)] mb-6 ring-1 ring-inset ring-[var(--color-brand-primary)]/20">
                   <span className="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span>
-                  {t('EthicsPrivacy.hero.badge')}
+                  Trust & Transparency
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[var(--color-brand-dark)] leading-tight mb-6">
-                  {t('EthicsPrivacy.hero.titleLine1')}
+                  Your Health Data,
                   <br />
                   <span className="text-[var(--color-brand-primary)]">
-                    {t('EthicsPrivacy.hero.titleLine2')}
+                    Secure & Ethical.
                   </span>
                 </h1>
 
                 <p className="text-lg text-[var(--color-text-muted)] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
-                  {t('EthicsPrivacy.hero.description')}
+                  AURA is built on a foundation of rigorous ethics. We protect
+                  your retinal data while advancing global health equity through
+                  transparent, bias-aware technology.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors">
-                    {t('EthicsPrivacy.hero.primaryCta')}
+                    Read Our Principles
                   </button>
                   <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-medical-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-medical-bg)] transition-colors">
                     <svg
@@ -355,7 +365,7 @@ const EthicsPrivacyPage = () => {
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                       />
                     </svg>
-                    {t('EthicsPrivacy.hero.secondaryCta')}
+                    Privacy Policy
                   </button>
                 </div>
               </div>
@@ -387,11 +397,11 @@ const EthicsPrivacyPage = () => {
                             />
                           </svg>
                           <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)]">
-                            {t('EthicsPrivacy.hero.secureEnclave')}
+                            Secure Enclave
                           </span>
                         </div>
                         <p className="text-xs text-gray-300">
-                          {t('EthicsPrivacy.hero.processingNode')}
+                          Processing Node: US-East-1 (HIPAA Compliant)
                         </p>
                       </div>
                     </div>
@@ -406,7 +416,7 @@ const EthicsPrivacyPage = () => {
         <section className="compliance-section bg-white border-y border-[var(--color-medical-border)] py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-6">
-              {t('EthicsPrivacy.compliance.title')}
+              Trusted by & Compliant With
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
               {complianceItems.map((item, index) => (
@@ -441,10 +451,12 @@ const EthicsPrivacyPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('EthicsPrivacy.pillarsSection.title')}
+                Building Trust Through Transparency
               </h2>
               <p className="text-lg text-[var(--color-text-muted)]">
-                {t('EthicsPrivacy.pillarsSection.description')}
+                We believe that medical AI must be built on a foundation of
+                rigorous ethics and absolute data privacy. Here is how we ensure
+                it.
               </p>
             </div>
 
@@ -476,16 +488,18 @@ const EthicsPrivacyPage = () => {
               {/* Sticky Left Side */}
               <div className="md:w-1/3 md:sticky md:top-24">
                 <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-                  {t('EthicsPrivacy.journey.title')}
+                  The Data Journey
                 </h2>
                 <p className="text-[var(--color-text-muted)] mb-8 leading-relaxed">
-                  {t('EthicsPrivacy.journey.description')}
+                  We've simplified the complex process of data handling into
+                  four clear, secure steps. Transparency is key to your peace of
+                  mind.
                 </p>
                 <a
                   href="#"
                   className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] font-bold hover:text-[var(--color-brand-primary)] transition-colors"
                 >
-                  {t('EthicsPrivacy.journey.link')}
+                  View Security Architecture
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -539,10 +553,10 @@ const EthicsPrivacyPage = () => {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--color-brand-dark)] mb-4">
-                {t('EthicsPrivacy.faq.title')}
+                Deep Dive: How We Mitigate Bias
               </h2>
               <p className="text-[var(--color-text-muted)]">
-                {t('EthicsPrivacy.faq.description')}
+                Answers to common questions about fairness in our AI models.
               </p>
             </div>
 
@@ -611,17 +625,19 @@ const EthicsPrivacyPage = () => {
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="max-w-2xl text-center md:text-left">
                   <h2 className="text-3xl font-bold text-white mb-4">
-                    {t('EthicsPrivacy.cta.title')}
+                    Partner with AURA
                   </h2>
                   <p className="text-gray-300 text-lg mb-8">
-                    {t('EthicsPrivacy.cta.description')}
+                    Join our network of ethical AI practitioners. We provide
+                    full documentation and API access for researchers committed
+                    to responsible healthcare innovation.
                   </p>
                   <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                     <button className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                      {t('EthicsPrivacy.cta.primary')}
+                      Request Developer Access
                     </button>
                     <button className="bg-transparent border border-gray-600 text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
-                      {t('EthicsPrivacy.cta.secondary')}
+                      Contact Ethics Board
                     </button>
                   </div>
                 </div>

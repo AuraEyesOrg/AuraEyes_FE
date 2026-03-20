@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '@/components/layouts';
 import {
   Mail,
@@ -9,19 +9,11 @@ import {
   ArrowRight,
   RefreshCw,
 } from 'lucide-react';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 import { confirmEmail, resendConfirmation } from '../api';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
 
 const ConfirmEmailPage = () => {
-  const { t } = useSafeTranslation();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
   const token = searchParams.get('token');
@@ -33,9 +25,6 @@ const ConfirmEmailPage = () => {
   const [resendEmail, setResendEmail] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
 
   const didVerify = useRef(false);
 
@@ -49,7 +38,7 @@ const ConfirmEmailPage = () => {
         const msg =
           err?.response?.data?.message ||
           err?.response?.data?.errors?.[0] ||
-          t('AuthPages.confirmEmail.error.defaultMessage');
+          'Xác nhận email thất bại. Liên kết có thể đã hết hạn.';
         setErrorMessage(msg);
         setState('error');
       });
@@ -72,11 +61,9 @@ const ConfirmEmailPage = () => {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Loader2 className="h-12 w-12 text-primary animate-spin mb-6" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {t('AuthPages.confirmEmail.verifying.title')}
+            Đang xác nhận email...
           </h2>
-          <p className="text-gray-500 text-sm">
-            {t('AuthPages.confirmEmail.verifying.description')}
-          </p>
+          <p className="text-gray-500 text-sm">Vui lòng đợi trong giây lát.</p>
         </div>
       )}
 
@@ -86,16 +73,17 @@ const ConfirmEmailPage = () => {
             <CheckCircle className="h-9 w-9" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            {t('AuthPages.confirmEmail.success.title')}
+            Email đã xác nhận!
           </h2>
           <p className="text-gray-500 text-sm mb-8">
-            {t('AuthPages.confirmEmail.success.description')}
+            Tài khoản của bạn đã được kích hoạt thành công. Đăng nhập để tiếp
+            tục.
           </p>
           <Link
-            to={toLocalizedAuthPath('/login')}
+            to="/login"
             className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-background-dark font-semibold py-3 px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(19,236,236,0.39)] hover:shadow-[0_6px_20px_rgba(19,236,236,0.23)] hover:-translate-y-0.5"
           >
-            {t('AuthPages.confirmEmail.success.cta')}
+            Đăng nhập ngay
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -107,7 +95,7 @@ const ConfirmEmailPage = () => {
             <XCircle className="h-9 w-9" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            {t('AuthPages.confirmEmail.error.title')}
+            Xác nhận thất bại
           </h2>
           <p className="text-gray-500 text-sm mb-6">{errorMessage}</p>
           <button
@@ -116,14 +104,14 @@ const ConfirmEmailPage = () => {
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
           >
             <RefreshCw className="h-4 w-4" />
-            {t('AuthPages.confirmEmail.error.resend')}
+            Gửi lại email xác nhận
           </button>
           <div className="mt-6 border-t border-gray-100 pt-6 w-full">
             <Link
-              to={toLocalizedAuthPath('/login')}
+              to="/login"
               className="text-sm text-gray-500 hover:text-gray-900"
             >
-              ← {t('AuthPages.shared.backToLogin')}
+              ← Quay lại đăng nhập
             </Link>
           </div>
         </div>
@@ -136,10 +124,11 @@ const ConfirmEmailPage = () => {
               <Mail className="h-6 w-6" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('AuthPages.confirmEmail.resend.title')}
+              Kiểm tra hộp thư
             </h2>
             <p className="text-gray-500 text-sm">
-              {t('AuthPages.confirmEmail.resend.description')}
+              Chúng tôi đã gửi link xác nhận đến email của bạn. Nếu chưa nhận
+              được, hãy gửi lại bên dưới.
             </p>
           </div>
 
@@ -147,25 +136,23 @@ const ConfirmEmailPage = () => {
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <CheckCircle className="h-10 w-10 text-green-500 mb-3" />
               <p className="text-gray-700 font-medium">
-                {t('AuthPages.confirmEmail.resend.successTitle')}
+                Email xác nhận đã được gửi lại!
               </p>
               <p className="text-gray-500 text-sm mt-1">
-                {t('AuthPages.confirmEmail.resend.successDescription')}
+                Vui lòng kiểm tra hộp thư của bạn.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="block text-sm font-semibold text-gray-700">
-                  {t('AuthPages.confirmEmail.resend.emailLabel')}
+                  Địa chỉ Email
                 </label>
                 <input
                   type="email"
                   value={resendEmail}
                   onChange={(e) => setResendEmail(e.target.value)}
-                  placeholder={t(
-                    'AuthPages.confirmEmail.resend.emailPlaceholder'
-                  )}
+                  placeholder="email@example.com"
                   className="block w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-gray-900 placeholder-gray-400 text-sm"
                 />
               </div>
@@ -179,7 +166,7 @@ const ConfirmEmailPage = () => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {t('AuthPages.confirmEmail.resend.button')}
+                    Gửi lại email xác nhận
                     <RefreshCw className="h-4 w-4" />
                   </>
                 )}
@@ -189,10 +176,10 @@ const ConfirmEmailPage = () => {
 
           <div className="text-center border-t border-gray-100 pt-6 mt-6">
             <Link
-              to={toLocalizedAuthPath('/login')}
+              to="/login"
               className="text-sm text-gray-500 hover:text-gray-900 flex items-center justify-center gap-2"
             >
-              ← {t('AuthPages.shared.backToLogin')}
+              ← Quay lại đăng nhập
             </Link>
           </div>
         </>
