@@ -1,0 +1,41 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "about": "About Us",
+    "howItWorks": "How It Works",
+    "ethicsPrivacy": "Ethics & Privacy",
+    "contact": "Contact",
+    "status": "System Status",
+    "compliance": "Compliance"
+  },
+  "Common": {
+    "getStarted": "Get Started",
+    "bookAppointment": "Book Appointment",
+    "findDoctor": "Find a Doctor",
+    "learnMore": "Learn More",
+    "language": "Language"
+  },
+  "Auth": {
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password"
+  },
+  "MedicalTerms": {
+    "cardiology": "Cardiology",
+    "diagnostics": "Diagnostics",
+    "patientRecords": "Patient Records",
+    "retinalScreening": "Retinal Screening",
+    "ophthalmology": "Ophthalmology"
+  },
+  "GuestHome": {
+    "badge": "AI-powered retinal health screening platform",
+    "title": "Detect retinal diseases early with clinical-grade precision",
+    "description": "Aura Eyes helps medical organizations accelerate screening, standardize data, and connect patients to specialists.",
+    "primaryCta": "Book Appointment",
+    "secondaryCta": "Find a Doctor"
+  },
+  "About": {
+    "heroTitle": "Shaping the future of retinal screening",
+    "heroDescription": "Aura Eyes combines clinical expertise and responsible medical AI to improve early diagnosis access."
+  }
+}

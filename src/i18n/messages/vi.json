@@ -1,0 +1,41 @@
+{
+  "Navigation": {
+    "home": "Trang chủ",
+    "about": "Về chúng tôi",
+    "howItWorks": "Cách hoạt động",
+    "ethicsPrivacy": "Đạo đức và quyền riêng tư",
+    "contact": "Liên hệ",
+    "status": "Trạng thái hệ thống",
+    "compliance": "Tuân thủ"
+  },
+  "Common": {
+    "getStarted": "Bắt đầu",
+    "bookAppointment": "Đặt lịch khám",
+    "findDoctor": "Tìm bác sĩ",
+    "learnMore": "Tìm hiểu thêm",
+    "language": "Ngôn ngữ"
+  },
+  "Auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "forgotPassword": "Quên mật khẩu"
+  },
+  "MedicalTerms": {
+    "cardiology": "Tim mạch",
+    "diagnostics": "Chẩn đoán",
+    "patientRecords": "Hồ sơ bệnh nhân",
+    "retinalScreening": "Sàng lọc võng mạc",
+    "ophthalmology": "Nhãn khoa"
+  },
+  "GuestHome": {
+    "badge": "Nền tảng sàng lọc võng mạc ứng dụng AI",
+    "title": "Phát hiện sớm bệnh lý võng mạc với độ chính xác lâm sàng",
+    "description": "Aura Eyes hỗ trợ cơ sở y tế sàng lọc nhanh, chuẩn hóa dữ liệu và kết nối bệnh nhân với bác sĩ chuyên khoa.",
+    "primaryCta": "Đặt lịch khám",
+    "secondaryCta": "Tìm bác sĩ"
+  },
+  "About": {
+    "heroTitle": "Định hình tương lai sàng lọc võng mạc",
+    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế có trách nhiệm để cải thiện khả năng tiếp cận chẩn đoán sớm."
+  }
+}
