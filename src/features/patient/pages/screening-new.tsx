@@ -34,6 +34,13 @@ interface UploadedImage {
 
 type Step = 'upload' | 'analysis' | 'review';
 
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff'];
+
+const isSupportedImage = (file: File): boolean => {
+  const lowerName = file.name.toLowerCase();
+  return ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+};
+
 const _STEPS: { key: Step; label: string; number: number }[] = [
   { key: 'upload', label: 'Upload & Validate', number: 1 },
   { key: 'analysis', label: 'Analysis', number: 2 },
@@ -46,6 +53,7 @@ export default function ScreeningNewPage() {
   const [_currentStep, _setCurrentStep] = useState<Step>('upload');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [showPolicyPopup, setShowPolicyPopup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +101,8 @@ export default function ScreeningNewPage() {
     e.stopPropagation();
     setDragActive(false);
 
-    const files = Array.from(e.dataTransfer.files).filter(
-      (file) => file.type.startsWith('image/') || file.name.endsWith('.dcm')
+    const files = Array.from(e.dataTransfer.files).filter((file) =>
+      isSupportedImage(file)
     );
 
     if (files.length > 0) {
@@ -109,6 +117,20 @@ export default function ScreeningNewPage() {
     }
   };
 
+  const handleFiles = (files: File[]) => {
+    const invalidFiles = files.filter((file) => !isSupportedImage(file));
+    if (invalidFiles.length > 0) {
+      toast.error(
+        `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`
+      );
+    }
+
+    const validFiles = files.filter((file) => isSupportedImage(file));
+    if (validFiles.length === 0) {
+      return;
+    }
+
+    const newUniqueFiles = validFiles.filter((incomingFile) => {
   const toDataUrl = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -237,6 +259,20 @@ export default function ScreeningNewPage() {
 
   const readyImages = images.filter((img) => img.status === 'ready');
   const canProceed = readyImages.length > 0;
+
+  const startAnalysis = () => {
+    navigate('/patient/analysis', {
+      state: {
+        images: readyImages.map((img) => ({
+          id: img.id,
+          name: img.file.name,
+          preview: img.preview,
+          quality: img.quality,
+        })),
+        source: 'new-screening',
+      },
+    });
+  };
 
   const getStatusBadge = (img: UploadedImage) => {
     switch (img.status) {
@@ -417,7 +453,7 @@ export default function ScreeningNewPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,application/dicom,.dcm"
+                    accept=".jpg,.jpeg,.png,.bmp,.tiff"
                     multiple
                     onChange={handleFileSelect}
                     className="hidden"
@@ -562,6 +598,7 @@ export default function ScreeningNewPage() {
                   </span>
                   <button
                     disabled={!canProceed}
+                    onClick={() => setShowPolicyPopup(true)}
                     onClick={() => {
                       const selected = readyImages[0]?.file;
                       if (!selected) {
@@ -573,8 +610,10 @@ export default function ScreeningNewPage() {
                     }}
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
-                    Start AI Analysis
-                    <ArrowRight className="w-4 h-4" />
+                    <>
+                      Start AI Analysis
+                      <ArrowRight className="w-4 h-4" />
+                    </>
                   </button>
                 </div>
               </div>
@@ -590,6 +629,40 @@ export default function ScreeningNewPage() {
             solely for your diagnostic session.
           </p>
         </footer>
+
+        {showPolicyPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-lg rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 shadow-2xl">
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">
+                Data Sharing Consent
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
+                By continuing, you agree that your retinal images and AI
+                analysis results can be processed and securely stored for
+                diagnosis, medical review, and improving service quality.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyPopup(false)}
+                  className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPolicyPopup(false);
+                    startAnalysis();
+                  }}
+                  className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
+                >
+                  I Agree, Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </FocusModeLayout>
   );
