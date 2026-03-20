@@ -59,6 +59,7 @@ export default function DoctorSidebar({
   const { user, logout } = useAuthStore();
 
   const displayName = user?.fullName ?? 'Doctor';
+  const userAvatar = user?.avatarUrl;
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';
@@ -120,8 +121,21 @@ export default function DoctorSidebar({
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0">
-                {displayName.split(' ').pop()?.charAt(0) || 'D'}
+              <div className="relative shrink-0">
+                <div
+                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center"
+                  style={{
+                    backgroundImage: userAvatar
+                      ? `url("${userAvatar}")`
+                      : undefined,
+                  }}
+                >
+                  {!userAvatar && (
+                    <span className="text-white font-bold text-sm">
+                      {displayName.split(' ').pop()?.charAt(0) || 'D'}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
