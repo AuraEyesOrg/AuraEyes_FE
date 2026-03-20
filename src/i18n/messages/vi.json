@@ -456,6 +456,160 @@
           "completedDescription": "Phiên tư vấn đã hoàn tất. Chat hiện ở chế độ chỉ đọc."
         }
       }
+    },
+    "patients": {
+      "title": "Bệnh nhân",
+      "subtitle": "Bệnh nhân có lịch tư vấn đã qua hoặc sắp tới được phân cho bạn",
+      "loading": "Đang tải danh sách tư vấn của bệnh nhân...",
+      "patientPrefix": "Bệnh nhân",
+      "notAvailable": "N/A",
+      "searchPlaceholder": "Tìm bệnh nhân theo tên hoặc mã hồ sơ...",
+      "moreFilters": "Bộ lọc nâng cao",
+      "empty": "Không tìm thấy bệnh nhân cho bác sĩ này.",
+      "sessionsSuffix": "phiên",
+      "nextAppointment": "Lịch hẹn kế tiếp",
+      "lastCompletedVisit": "Lần khám hoàn tất gần nhất",
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "viewDetails": "Xem chi tiết",
+      "statusLabel": {
+        "urgent": "Sắp tới < 24h",
+        "active": "Có lịch hẹn sắp tới",
+        "past": "Chỉ có tư vấn đã qua"
+      },
+      "filter": {
+        "allStatus": "Tất cả trạng thái",
+        "active": "Đang hoạt động",
+        "urgent": "Khẩn",
+        "pastOnly": "Chỉ đã qua"
+      },
+      "stats": {
+        "totalPatients": "Tổng bệnh nhân",
+        "active": "Đang hoạt động",
+        "urgent": "Khẩn",
+        "pastOnly": "Chỉ đã qua"
+      }
+    },
+    "slotManagement": {
+      "title": "Slot lịch hẹn",
+      "subtitle": "Quản lý mẫu lịch và các slot lịch hẹn",
+      "loading": "Đang tải quản lý slot...",
+      "newTemplate": "Mẫu mới",
+      "noSlots": "Không có slot",
+      "notConfigured": "Chưa cấu hình",
+      "minutes": "phút",
+      "create": "Tạo",
+      "creating": "Đang tạo...",
+      "generate": "Sinh slot",
+      "generating": "Đang sinh...",
+      "blockReason": "Đã chặn bởi bác sĩ",
+      "confirmDeleteTemplate": "Bạn có chắc muốn xóa mẫu này không?",
+      "blockThisSlot": "Chặn slot này",
+      "unblockThisSlot": "Bỏ chặn slot này",
+      "stats": {
+        "totalSlots": "Tổng slot",
+        "available": "Còn trống",
+        "booked": "Đã đặt",
+        "blocked": "Đã chặn"
+      },
+      "templates": {
+        "title": "Mẫu lịch",
+        "generateSlots": "Sinh slot",
+        "empty": "Chưa có mẫu nào. Hãy tạo mẫu để tự động sinh slot."
+      },
+      "legend": {
+        "available": "Còn trống",
+        "reserved": "Đã giữ chỗ",
+        "booked": "Đã đặt",
+        "blocked": "Đã chặn",
+        "expired": "Hết hạn"
+      },
+      "modal": {
+        "createTemplateTitle": "Tạo mẫu lịch",
+        "dayOfWeek": "Ngày trong tuần",
+        "startTime": "Giờ bắt đầu",
+        "endTime": "Giờ kết thúc",
+        "slotDuration": "Thời lượng slot (phút)",
+        "slotType": "Loại slot",
+        "costVnd": "Chi phí (VND)",
+        "generateTitle": "Sinh slot lịch hẹn",
+        "generateFromTemplatePrefix": "Sinh slot từ mẫu",
+        "fromDate": "Từ ngày",
+        "toDate": "Đến ngày"
+      },
+      "messages": {
+        "slotBlocked": "Đã chặn slot.",
+        "slotUnblocked": "Đã bỏ chặn slot.",
+        "templateCreated": "Tạo mẫu thành công.",
+        "templateDeleted": "Đã xóa mẫu.",
+        "generatedPrefix": "Đã sinh",
+        "generatedSuffix": "slot."
+      },
+      "errors": {
+        "onlyOwnBlock": "Bạn chỉ có thể chặn slot của chính mình.",
+        "onlyOwnUnblock": "Bạn chỉ có thể bỏ chặn slot của chính mình.",
+        "failedBlock": "Không thể chặn slot.",
+        "failedUnblock": "Không thể bỏ chặn slot.",
+        "failedCreateTemplate": "Không thể tạo mẫu lịch.",
+        "missingGenerateInputs": "Vui lòng chọn mẫu và khoảng ngày trước khi sinh slot.",
+        "failedGenerate": "Không thể sinh slot.",
+        "failedDeleteTemplate": "Không thể xóa mẫu."
+      }
+    },
+    "contract": {
+      "title": "Hợp đồng",
+      "subtitle": "Xem, tải và upload hợp đồng hợp tác với AURA",
+      "refresh": "Làm mới",
+      "loading": "Đang tải thông tin hợp đồng...",
+      "emptyTitle": "Chưa có hợp đồng",
+      "emptyDescription": "Hợp đồng sẽ được tạo sau khi admin phê duyệt hồ sơ xác minh của bạn.",
+      "contractCode": "Mã hợp đồng",
+      "signedDate": "Ngày ký",
+      "contractInfo": "Thông tin hợp đồng",
+      "template": "Mẫu",
+      "type": "Loại",
+      "ophthalmologistType": "Bác sĩ nhãn khoa",
+      "createdDate": "Ngày tạo",
+      "signer": "Người ký",
+      "fullName": "Họ tên",
+      "actions": "Hành động",
+      "viewTemplate": "Xem mẫu hợp đồng",
+      "viewTemplateHint": "Mở trực tiếp file mẫu hợp đồng ở tab mới",
+      "downloadTemplate": "Tải mẫu hợp đồng",
+      "downloadTemplateHint": "Tải file gốc để in ra giấy và ký",
+      "downloadFailed": "Không thể tải file mẫu hợp đồng.",
+      "activeTitle": "Hợp đồng đã được kích hoạt!",
+      "activeDescription": "Bạn có thể bắt đầu nhận ca bệnh và tư vấn trên hệ thống AURA.",
+      "status": {
+        "uploadedPendingApproval": "Đã upload - Chờ admin duyệt",
+        "pendingSignature": "Chờ ký hợp đồng",
+        "active": "Đang hiệu lực",
+        "draft": "Nháp"
+      },
+      "upload": {
+        "signedContract": "Hợp đồng đã ký",
+        "pdfUploaded": "Đã upload file PDF",
+        "waitingAdmin": "Đang chờ admin xác nhận",
+        "sentNotice": "Hợp đồng của bạn đã được gửi đi",
+        "openOriginal": "Mở ảnh gốc",
+        "reupload": "Upload lại",
+        "cancelReupload": "Hủy và quay lại xem hợp đồng đã nộp",
+        "dropzoneLabel": "Kéo thả file hợp đồng vào đây hoặc",
+        "selectFile": "chọn file",
+        "dropzoneHint": "JPEG, PNG, WebP hoặc PDF - Tối đa 10MB",
+        "preview": "Xem trước",
+        "uploadSignedContract": "Tải lên hợp đồng đã ký",
+        "uploadFailed": "Upload thất bại. Vui lòng thử lại.",
+        "invalidType": "Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF.",
+        "fileTooLarge": "Kích thước file không được vượt quá 10MB.",
+        "uploadSignedTitle": "Upload hợp đồng đã ký",
+        "uploadSignedDescription": "In hợp đồng, ký tên và đóng dấu, sau đó chụp ảnh hoặc scan để upload",
+        "steps": {
+          "downloadPrint": "Tải và in hợp đồng",
+          "signStamp": "Ký tên và đóng dấu",
+          "captureUpload": "Chụp ảnh và upload"
+        }
+      }
     }
   },
   "MedicalTerms": {

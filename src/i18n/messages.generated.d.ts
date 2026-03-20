@@ -460,6 +460,160 @@ declare module 'i18next' {
           };
         };
       };
+      patients: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        patientPrefix: string;
+        notAvailable: string;
+        searchPlaceholder: string;
+        moreFilters: string;
+        empty: string;
+        sessionsSuffix: string;
+        nextAppointment: string;
+        lastCompletedVisit: string;
+        upcoming: string;
+        completed: string;
+        viewDetails: string;
+        statusLabel: {
+          urgent: string;
+          active: string;
+          past: string;
+        };
+        filter: {
+          allStatus: string;
+          active: string;
+          urgent: string;
+          pastOnly: string;
+        };
+        stats: {
+          totalPatients: string;
+          active: string;
+          urgent: string;
+          pastOnly: string;
+        };
+      };
+      slotManagement: {
+        title: string;
+        subtitle: string;
+        loading: string;
+        newTemplate: string;
+        noSlots: string;
+        notConfigured: string;
+        minutes: string;
+        create: string;
+        creating: string;
+        generate: string;
+        generating: string;
+        blockReason: string;
+        confirmDeleteTemplate: string;
+        blockThisSlot: string;
+        unblockThisSlot: string;
+        stats: {
+          totalSlots: string;
+          available: string;
+          booked: string;
+          blocked: string;
+        };
+        templates: {
+          title: string;
+          generateSlots: string;
+          empty: string;
+        };
+        legend: {
+          available: string;
+          reserved: string;
+          booked: string;
+          blocked: string;
+          expired: string;
+        };
+        modal: {
+          createTemplateTitle: string;
+          dayOfWeek: string;
+          startTime: string;
+          endTime: string;
+          slotDuration: string;
+          slotType: string;
+          costVnd: string;
+          generateTitle: string;
+          generateFromTemplatePrefix: string;
+          fromDate: string;
+          toDate: string;
+        };
+        messages: {
+          slotBlocked: string;
+          slotUnblocked: string;
+          templateCreated: string;
+          templateDeleted: string;
+          generatedPrefix: string;
+          generatedSuffix: string;
+        };
+        errors: {
+          onlyOwnBlock: string;
+          onlyOwnUnblock: string;
+          failedBlock: string;
+          failedUnblock: string;
+          failedCreateTemplate: string;
+          missingGenerateInputs: string;
+          failedGenerate: string;
+          failedDeleteTemplate: string;
+        };
+      };
+      contract: {
+        title: string;
+        subtitle: string;
+        refresh: string;
+        loading: string;
+        emptyTitle: string;
+        emptyDescription: string;
+        contractCode: string;
+        signedDate: string;
+        contractInfo: string;
+        template: string;
+        type: string;
+        ophthalmologistType: string;
+        createdDate: string;
+        signer: string;
+        fullName: string;
+        actions: string;
+        viewTemplate: string;
+        viewTemplateHint: string;
+        downloadTemplate: string;
+        downloadTemplateHint: string;
+        downloadFailed: string;
+        activeTitle: string;
+        activeDescription: string;
+        status: {
+          uploadedPendingApproval: string;
+          pendingSignature: string;
+          active: string;
+          draft: string;
+        };
+        upload: {
+          signedContract: string;
+          pdfUploaded: string;
+          waitingAdmin: string;
+          sentNotice: string;
+          openOriginal: string;
+          reupload: string;
+          cancelReupload: string;
+          dropzoneLabel: string;
+          selectFile: string;
+          dropzoneHint: string;
+          preview: string;
+          uploadSignedContract: string;
+          uploadFailed: string;
+          invalidType: string;
+          fileTooLarge: string;
+          uploadSignedTitle: string;
+          uploadSignedDescription: string;
+          steps: {
+            downloadPrint: string;
+            signStamp: string;
+            captureUpload: string;
+          };
+        };
+      };
     };
     MedicalTerms: {
       cardiology: string;

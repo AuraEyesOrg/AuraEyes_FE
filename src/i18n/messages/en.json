@@ -456,6 +456,160 @@
           "completedDescription": "Consultation has been completed. Chat is now read-only."
         }
       }
+    },
+    "patients": {
+      "title": "Patients",
+      "subtitle": "Patients with past or upcoming consultations assigned to you",
+      "loading": "Loading patient consultations...",
+      "patientPrefix": "Patient",
+      "notAvailable": "N/A",
+      "searchPlaceholder": "Search patients by name or profile ID...",
+      "moreFilters": "More Filters",
+      "empty": "No patients found for this doctor.",
+      "sessionsSuffix": "session(s)",
+      "nextAppointment": "Next appointment",
+      "lastCompletedVisit": "Last completed visit",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "viewDetails": "View Details",
+      "statusLabel": {
+        "urgent": "Upcoming < 24h",
+        "active": "Has upcoming appointment",
+        "past": "Past consultations only"
+      },
+      "filter": {
+        "allStatus": "All Status",
+        "active": "Active",
+        "urgent": "Urgent",
+        "pastOnly": "Past Only"
+      },
+      "stats": {
+        "totalPatients": "Total Patients",
+        "active": "Active",
+        "urgent": "Urgent",
+        "pastOnly": "Past Only"
+      }
+    },
+    "slotManagement": {
+      "title": "Appointment Slots",
+      "subtitle": "Manage your schedule templates and appointment slots",
+      "loading": "Loading slot management...",
+      "newTemplate": "New Template",
+      "noSlots": "No slots",
+      "notConfigured": "Not configured",
+      "minutes": "minutes",
+      "create": "Create",
+      "creating": "Creating...",
+      "generate": "Generate",
+      "generating": "Generating...",
+      "blockReason": "Blocked by doctor",
+      "confirmDeleteTemplate": "Are you sure you want to delete this template?",
+      "blockThisSlot": "Block this slot",
+      "unblockThisSlot": "Unblock this slot",
+      "stats": {
+        "totalSlots": "Total Slots",
+        "available": "Available",
+        "booked": "Booked",
+        "blocked": "Blocked"
+      },
+      "templates": {
+        "title": "Schedule Templates",
+        "generateSlots": "Generate Slots",
+        "empty": "No templates yet. Create a template to auto-generate slots."
+      },
+      "legend": {
+        "available": "Available",
+        "reserved": "Reserved",
+        "booked": "Booked",
+        "blocked": "Blocked",
+        "expired": "Expired"
+      },
+      "modal": {
+        "createTemplateTitle": "Create Schedule Template",
+        "dayOfWeek": "Day of Week",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "slotDuration": "Slot Duration (minutes)",
+        "slotType": "Slot Type",
+        "costVnd": "Cost (VND)",
+        "generateTitle": "Generate Appointment Slots",
+        "generateFromTemplatePrefix": "Generate slots from",
+        "fromDate": "From Date",
+        "toDate": "To Date"
+      },
+      "messages": {
+        "slotBlocked": "Slot blocked.",
+        "slotUnblocked": "Slot unblocked.",
+        "templateCreated": "Template created successfully.",
+        "templateDeleted": "Template deleted.",
+        "generatedPrefix": "Generated",
+        "generatedSuffix": "slots."
+      },
+      "errors": {
+        "onlyOwnBlock": "You can only block your own slots.",
+        "onlyOwnUnblock": "You can only unblock your own slots.",
+        "failedBlock": "Failed to block slot.",
+        "failedUnblock": "Failed to unblock slot.",
+        "failedCreateTemplate": "Failed to create schedule template.",
+        "missingGenerateInputs": "Please choose a template and date range before generating.",
+        "failedGenerate": "Failed to generate slots.",
+        "failedDeleteTemplate": "Failed to delete template."
+      }
+    },
+    "contract": {
+      "title": "Contract",
+      "subtitle": "View, download, and upload your cooperation contract with AURA",
+      "refresh": "Refresh",
+      "loading": "Loading contract information...",
+      "emptyTitle": "No contract yet",
+      "emptyDescription": "A contract will be generated after admin approves your verification profile.",
+      "contractCode": "Contract code",
+      "signedDate": "Signed date",
+      "contractInfo": "Contract information",
+      "template": "Template",
+      "type": "Type",
+      "ophthalmologistType": "Ophthalmologist",
+      "createdDate": "Created date",
+      "signer": "Signer",
+      "fullName": "Full name",
+      "actions": "Actions",
+      "viewTemplate": "View contract template",
+      "viewTemplateHint": "Open the contract template file in a new tab",
+      "downloadTemplate": "Download contract template",
+      "downloadTemplateHint": "Download the original file for printing and signing",
+      "downloadFailed": "Unable to download contract template file.",
+      "activeTitle": "Contract has been activated!",
+      "activeDescription": "You can now start receiving cases and consulting on the AURA platform.",
+      "status": {
+        "uploadedPendingApproval": "Uploaded - Waiting for admin approval",
+        "pendingSignature": "Waiting for signature",
+        "active": "Active",
+        "draft": "Draft"
+      },
+      "upload": {
+        "signedContract": "Signed contract",
+        "pdfUploaded": "PDF file uploaded",
+        "waitingAdmin": "Waiting for admin confirmation",
+        "sentNotice": "Your contract has been submitted",
+        "openOriginal": "Open original",
+        "reupload": "Re-upload",
+        "cancelReupload": "Cancel and return to submitted contract",
+        "dropzoneLabel": "Drag and drop contract file here or",
+        "selectFile": "select file",
+        "dropzoneHint": "JPEG, PNG, WebP, or PDF - Max 10MB",
+        "preview": "Preview",
+        "uploadSignedContract": "Upload signed contract",
+        "uploadFailed": "Upload failed. Please try again.",
+        "invalidType": "Only JPEG, PNG, WebP, or PDF files are allowed.",
+        "fileTooLarge": "File size must not exceed 10MB.",
+        "uploadSignedTitle": "Upload signed contract",
+        "uploadSignedDescription": "Print the contract, sign and stamp it, then upload a photo or scanned copy",
+        "steps": {
+          "downloadPrint": "Download and print contract",
+          "signStamp": "Sign and stamp",
+          "captureUpload": "Capture and upload"
+        }
+      }
     }
   },
   "MedicalTerms": {

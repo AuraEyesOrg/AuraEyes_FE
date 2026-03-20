@@ -41,13 +41,17 @@ import {
   formatWeekRange,
   formatWeekDayLabel,
 } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
-const formatTemplateCost = (cost: number | null | undefined) => {
+const formatTemplateCost = (
+  cost: number | null | undefined,
+  t: (key: string, fallback: string) => string
+) => {
   if (typeof cost === 'number' && Number.isFinite(cost) && cost > 0) {
     return `${cost.toLocaleString('vi-VN')} VND`;
   }
 
-  return 'Chua cau hinh';
+  return t('Ophthalmologist.slotManagement.notConfigured', 'Not configured');
 };
 
 const getSlotStatusColor = (status: string): string => {
@@ -73,6 +77,7 @@ const getSlotStatusColor = (status: string): string => {
 };
 
 export default function SlotManagementPage() {
+  const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const doctorId = useMemo(() => user?.roleId ?? '', [user?.roleId]);
 
@@ -190,7 +195,12 @@ export default function SlotManagementPage() {
   const handleBlockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
       if (!slot.ophthalId || slot.ophthalId !== doctorId) {
-        setError('Ban chi co the block slot cua chinh minh.');
+        setError(
+          t(
+            'Ophthalmologist.slotManagement.errors.onlyOwnBlock',
+            'You can only block your own slots.'
+          )
+        );
         return;
       }
 
@@ -200,23 +210,45 @@ export default function SlotManagementPage() {
           slotId: slot.id,
           request: {
             ophthalmologistId: doctorId,
-            reason: 'Blocked by doctor',
+            reason: t(
+              'Ophthalmologist.slotManagement.blockReason',
+              'Blocked by doctor'
+            ),
           },
         },
         {
-          onSuccess: () => setMessage('Slot blocked.'),
+          onSuccess: () =>
+            setMessage(
+              t(
+                'Ophthalmologist.slotManagement.messages.slotBlocked',
+                'Slot blocked.'
+              )
+            ),
           onError: (err) =>
-            setError(extractApiErrorMessage(err, 'Failed to block slot.')),
+            setError(
+              extractApiErrorMessage(
+                err,
+                t(
+                  'Ophthalmologist.slotManagement.errors.failedBlock',
+                  'Failed to block slot.'
+                )
+              )
+            ),
         }
       );
     },
-    [doctorId, blockMutation, resetMessages]
+    [doctorId, blockMutation, resetMessages, t]
   );
 
   const handleUnblockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
       if (!slot.ophthalId || slot.ophthalId !== doctorId) {
-        setError('Ban chi co the unblock slot cua chinh minh.');
+        setError(
+          t(
+            'Ophthalmologist.slotManagement.errors.onlyOwnUnblock',
+            'You can only unblock your own slots.'
+          )
+        );
         return;
       }
 
@@ -227,13 +259,27 @@ export default function SlotManagementPage() {
           request: { ophthalmologistId: doctorId },
         },
         {
-          onSuccess: () => setMessage('Slot unblocked.'),
+          onSuccess: () =>
+            setMessage(
+              t(
+                'Ophthalmologist.slotManagement.messages.slotUnblocked',
+                'Slot unblocked.'
+              )
+            ),
           onError: (err) =>
-            setError(extractApiErrorMessage(err, 'Failed to unblock slot.')),
+            setError(
+              extractApiErrorMessage(
+                err,
+                t(
+                  'Ophthalmologist.slotManagement.errors.failedUnblock',
+                  'Failed to unblock slot.'
+                )
+              )
+            ),
         }
       );
     },
-    [doctorId, unblockMutation, resetMessages]
+    [doctorId, unblockMutation, resetMessages, t]
   );
 
   const handleCreateTemplate = useCallback(() => {
@@ -251,7 +297,12 @@ export default function SlotManagementPage() {
       },
       {
         onSuccess: () => {
-          setMessage('Template created successfully.');
+          setMessage(
+            t(
+              'Ophthalmologist.slotManagement.messages.templateCreated',
+              'Template created successfully.'
+            )
+          );
           setShowTemplateModal(false);
           // Reset form
           setTemplateDayOfWeek(1);
@@ -263,7 +314,13 @@ export default function SlotManagementPage() {
         },
         onError: (err) => {
           setError(
-            extractApiErrorMessage(err, 'Failed to create schedule template.')
+            extractApiErrorMessage(
+              err,
+              t(
+                'Ophthalmologist.slotManagement.errors.failedCreateTemplate',
+                'Failed to create schedule template.'
+              )
+            )
           );
         },
       }
@@ -278,11 +335,17 @@ export default function SlotManagementPage() {
     templateCost,
     createTemplateMutation,
     resetMessages,
+    t,
   ]);
 
   const handleGenerateSlots = useCallback(() => {
     if (!selectedTemplate || !generateFromDate || !generateToDate) {
-      setError('Please choose a template and date range before generating.');
+      setError(
+        t(
+          'Ophthalmologist.slotManagement.errors.missingGenerateInputs',
+          'Please choose a template and date range before generating.'
+        )
+      );
       return;
     }
 
@@ -301,10 +364,20 @@ export default function SlotManagementPage() {
           setSelectedTemplate(null);
           setGenerateFromDate('');
           setGenerateToDate('');
-          setMessage(`Generated ${count} slots.`);
+          setMessage(
+            `${t('Ophthalmologist.slotManagement.messages.generatedPrefix', 'Generated')} ${count} ${t('Ophthalmologist.slotManagement.messages.generatedSuffix', 'slots.')}`
+          );
         },
         onError: (err) => {
-          setError(extractApiErrorMessage(err, 'Failed to generate slots.'));
+          setError(
+            extractApiErrorMessage(
+              err,
+              t(
+                'Ophthalmologist.slotManagement.errors.failedGenerate',
+                'Failed to generate slots.'
+              )
+            )
+          );
         },
       }
     );
@@ -314,20 +387,42 @@ export default function SlotManagementPage() {
     generateToDate,
     generateMutation,
     resetMessages,
+    t,
   ]);
 
   const handleDeleteTemplate = useCallback(
     (templateId: string) => {
-      if (confirm('Are you sure you want to delete this template?')) {
+      if (
+        confirm(
+          t(
+            'Ophthalmologist.slotManagement.confirmDeleteTemplate',
+            'Are you sure you want to delete this template?'
+          )
+        )
+      ) {
         resetMessages();
         deleteTemplateMutation.mutate(templateId, {
-          onSuccess: () => setMessage('Template deleted.'),
+          onSuccess: () =>
+            setMessage(
+              t(
+                'Ophthalmologist.slotManagement.messages.templateDeleted',
+                'Template deleted.'
+              )
+            ),
           onError: (err) =>
-            setError(extractApiErrorMessage(err, 'Failed to delete template.')),
+            setError(
+              extractApiErrorMessage(
+                err,
+                t(
+                  'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
+                  'Failed to delete template.'
+                )
+              )
+            ),
         });
       }
     },
-    [deleteTemplateMutation, resetMessages]
+    [deleteTemplateMutation, resetMessages, t]
   );
 
   const openGenerateModal = useCallback((template: ScheduleTemplateDto) => {
@@ -348,12 +443,20 @@ export default function SlotManagementPage() {
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader />
+          <DoctorHeader
+            pageName={t(
+              'Ophthalmologist.slotManagement.title',
+              'Appointment Slots'
+            )}
+          />
           <main className="p-6 flex items-center justify-center h-[calc(100vh-220px)]">
             <div className="text-center">
               <Spinner size={40} className="mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400">
-                Loading slot management...
+                {t(
+                  'Ophthalmologist.slotManagement.loading',
+                  'Loading slot management...'
+                )}
               </p>
             </div>
           </main>
@@ -367,7 +470,12 @@ export default function SlotManagementPage() {
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader />
+        <DoctorHeader
+          pageName={t(
+            'Ophthalmologist.slotManagement.title',
+            'Appointment Slots'
+          )}
+        />
 
         <main className="p-6">
           {(message || error) && (
@@ -389,10 +497,13 @@ export default function SlotManagementPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                Appointment Slots
+                {t('Ophthalmologist.slotManagement.title', 'Appointment Slots')}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Manage your schedule templates and appointment slots
+                {t(
+                  'Ophthalmologist.slotManagement.subtitle',
+                  'Manage your schedule templates and appointment slots'
+                )}
               </p>
             </div>
             <button
@@ -400,7 +511,7 @@ export default function SlotManagementPage() {
               className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
-              New Template
+              {t('Ophthalmologist.slotManagement.newTemplate', 'New Template')}
             </button>
           </div>
 
@@ -416,7 +527,10 @@ export default function SlotManagementPage() {
                     {stats.total}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Total Slots
+                    {t(
+                      'Ophthalmologist.slotManagement.stats.totalSlots',
+                      'Total Slots'
+                    )}
                   </p>
                 </div>
               </div>
@@ -431,7 +545,10 @@ export default function SlotManagementPage() {
                     {stats.available}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Available
+                    {t(
+                      'Ophthalmologist.slotManagement.stats.available',
+                      'Available'
+                    )}
                   </p>
                 </div>
               </div>
@@ -446,7 +563,7 @@ export default function SlotManagementPage() {
                     {stats.booked}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Booked
+                    {t('Ophthalmologist.slotManagement.stats.booked', 'Booked')}
                   </p>
                 </div>
               </div>
@@ -461,7 +578,10 @@ export default function SlotManagementPage() {
                     {stats.blocked}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Blocked
+                    {t(
+                      'Ophthalmologist.slotManagement.stats.blocked',
+                      'Blocked'
+                    )}
                   </p>
                 </div>
               </div>
@@ -472,7 +592,10 @@ export default function SlotManagementPage() {
           <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-4 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Schedule Templates
+              {t(
+                'Ophthalmologist.slotManagement.templates.title',
+                'Schedule Templates'
+              )}
             </h2>
 
             {templates && templates.length > 0 ? (
@@ -504,7 +627,7 @@ export default function SlotManagementPage() {
                           {template.slotDuration} min slots
                         </span>
                         <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          {formatTemplateCost(template.cost)}
+                          {formatTemplateCost(template.cost, t)}
                         </span>
                       </div>
                     </div>
@@ -513,7 +636,10 @@ export default function SlotManagementPage() {
                       className="w-full mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-4 h-4" />
-                      Generate Slots
+                      {t(
+                        'Ophthalmologist.slotManagement.templates.generateSlots',
+                        'Generate Slots'
+                      )}
                     </button>
                   </div>
                 ))}
@@ -522,7 +648,10 @@ export default function SlotManagementPage() {
               <div className="text-center py-8">
                 <Settings className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">
-                  No templates yet. Create a template to auto-generate slots.
+                  {t(
+                    'Ophthalmologist.slotManagement.templates.empty',
+                    'No templates yet. Create a template to auto-generate slots.'
+                  )}
                 </p>
               </div>
             )}
@@ -612,7 +741,10 @@ export default function SlotManagementPage() {
                               <button
                                 onClick={() => handleBlockSlot(slot)}
                                 className="absolute -top-1 -right-1 p-1 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow"
-                                title="Block this slot"
+                                title={t(
+                                  'Ophthalmologist.slotManagement.blockThisSlot',
+                                  'Block this slot'
+                                )}
                               >
                                 <PowerOff className="w-3 h-3" />
                               </button>
@@ -621,7 +753,10 @@ export default function SlotManagementPage() {
                               <button
                                 onClick={() => handleUnblockSlot(slot)}
                                 className="absolute -top-1 -right-1 p-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow"
-                                title="Unblock this slot"
+                                title={t(
+                                  'Ophthalmologist.slotManagement.unblockThisSlot',
+                                  'Unblock this slot'
+                                )}
                               >
                                 <Power className="w-3 h-3" />
                               </button>
@@ -632,7 +767,12 @@ export default function SlotManagementPage() {
                     </div>
                   ) : (
                     <div className="h-full flex items-center justify-center">
-                      <span className="text-xs text-gray-400">No slots</span>
+                      <span className="text-xs text-gray-400">
+                        {t(
+                          'Ophthalmologist.slotManagement.noSlots',
+                          'No slots'
+                        )}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -645,24 +785,38 @@ export default function SlotManagementPage() {
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300" />
               <span className="text-gray-600 dark:text-gray-400">
-                Available
+                {t(
+                  'Ophthalmologist.slotManagement.legend.available',
+                  'Available'
+                )}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-300" />
-              <span className="text-gray-600 dark:text-gray-400">Reserved</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t(
+                  'Ophthalmologist.slotManagement.legend.reserved',
+                  'Reserved'
+                )}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 border border-blue-300" />
-              <span className="text-gray-600 dark:text-gray-400">Booked</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t('Ophthalmologist.slotManagement.legend.booked', 'Booked')}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800 border border-gray-400" />
-              <span className="text-gray-600 dark:text-gray-400">Blocked</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t('Ophthalmologist.slotManagement.legend.blocked', 'Blocked')}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-orange-100 dark:bg-orange-900/30 border border-orange-300" />
-              <span className="text-gray-600 dark:text-gray-400">Expired</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t('Ophthalmologist.slotManagement.legend.expired', 'Expired')}
+              </span>
             </div>
           </div>
         </main>
@@ -673,13 +827,19 @@ export default function SlotManagementPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Create Schedule Template
+              {t(
+                'Ophthalmologist.slotManagement.modal.createTemplateTitle',
+                'Create Schedule Template'
+              )}
             </h3>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Day of Week
+                  {t(
+                    'Ophthalmologist.slotManagement.modal.dayOfWeek',
+                    'Day of Week'
+                  )}
                 </label>
                 <select
                   value={templateDayOfWeek}
@@ -699,7 +859,10 @@ export default function SlotManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Start Time
+                    {t(
+                      'Ophthalmologist.slotManagement.modal.startTime',
+                      'Start Time'
+                    )}
                   </label>
                   <input
                     type="time"
@@ -710,7 +873,10 @@ export default function SlotManagementPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    End Time
+                    {t(
+                      'Ophthalmologist.slotManagement.modal.endTime',
+                      'End Time'
+                    )}
                   </label>
                   <input
                     type="time"
@@ -723,7 +889,10 @@ export default function SlotManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Slot Duration (minutes)
+                  {t(
+                    'Ophthalmologist.slotManagement.modal.slotDuration',
+                    'Slot Duration (minutes)'
+                  )}
                 </label>
                 <select
                   value={templateSlotDuration}
@@ -732,17 +901,30 @@ export default function SlotManagementPage() {
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 >
-                  <option value={15}>15 minutes</option>
-                  <option value={20}>20 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>60 minutes</option>
+                  <option value={15}>
+                    15 {t('Ophthalmologist.slotManagement.minutes', 'minutes')}
+                  </option>
+                  <option value={20}>
+                    20 {t('Ophthalmologist.slotManagement.minutes', 'minutes')}
+                  </option>
+                  <option value={30}>
+                    30 {t('Ophthalmologist.slotManagement.minutes', 'minutes')}
+                  </option>
+                  <option value={45}>
+                    45 {t('Ophthalmologist.slotManagement.minutes', 'minutes')}
+                  </option>
+                  <option value={60}>
+                    60 {t('Ophthalmologist.slotManagement.minutes', 'minutes')}
+                  </option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Slot Type
+                  {t(
+                    'Ophthalmologist.slotManagement.modal.slotType',
+                    'Slot Type'
+                  )}
                 </label>
                 <select
                   value={templateSlotType}
@@ -761,7 +943,10 @@ export default function SlotManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Cost (VND)
+                  {t(
+                    'Ophthalmologist.slotManagement.modal.costVnd',
+                    'Cost (VND)'
+                  )}
                 </label>
                 <input
                   type="number"
@@ -777,14 +962,16 @@ export default function SlotManagementPage() {
                 onClick={() => setShowTemplateModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleCreateTemplate}
                 disabled={createTemplateMutation.isPending}
                 className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition disabled:opacity-50"
               >
-                {createTemplateMutation.isPending ? 'Creating...' : 'Create'}
+                {createTemplateMutation.isPending
+                  ? t('Ophthalmologist.slotManagement.creating', 'Creating...')
+                  : t('Ophthalmologist.slotManagement.create', 'Create')}
               </button>
             </div>
           </div>
@@ -796,10 +983,17 @@ export default function SlotManagementPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Generate Appointment Slots
+              {t(
+                'Ophthalmologist.slotManagement.modal.generateTitle',
+                'Generate Appointment Slots'
+              )}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Generate slots from &ldquo;
+              {t(
+                'Ophthalmologist.slotManagement.modal.generateFromTemplatePrefix',
+                'Generate slots from'
+              )}{' '}
+              &ldquo;
               {DAY_OF_WEEK_LABELS[selectedTemplate.dayOfWeek]}&rdquo; template (
               {formatSlotTime(selectedTemplate.startTime)} -{' '}
               {formatSlotTime(selectedTemplate.endTime)})
@@ -808,7 +1002,10 @@ export default function SlotManagementPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  From Date
+                  {t(
+                    'Ophthalmologist.slotManagement.modal.fromDate',
+                    'From Date'
+                  )}
                 </label>
                 <input
                   type="date"
@@ -820,7 +1017,7 @@ export default function SlotManagementPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  To Date
+                  {t('Ophthalmologist.slotManagement.modal.toDate', 'To Date')}
                 </label>
                 <input
                   type="date"
@@ -839,7 +1036,7 @@ export default function SlotManagementPage() {
                 }}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleGenerateSlots}
@@ -851,10 +1048,14 @@ export default function SlotManagementPage() {
                 className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {generateMutation.isPending ? (
-                  'Generating...'
+                  t(
+                    'Ophthalmologist.slotManagement.generating',
+                    'Generating...'
+                  )
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" /> Generate
+                    <Sparkles className="w-4 h-4" />{' '}
+                    {t('Ophthalmologist.slotManagement.generate', 'Generate')}
                   </>
                 )}
               </button>
