@@ -134,9 +134,9 @@ const LoginPage = () => {
           if (response.user?.isVerified === false) {
             navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate('/ophthalmologist/contract');
+            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
-            navigate('/ophthalmologist/dashboard');
+            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (
           roles.includes('OrgAdmin') ||
@@ -271,9 +271,9 @@ const LoginPage = () => {
           if (response.user?.isVerified === false) {
             navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
-            navigate('/ophthalmologist/contract');
+            navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
-            navigate('/ophthalmologist/dashboard');
+            navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (
           roles.includes('OrgAdmin') ||

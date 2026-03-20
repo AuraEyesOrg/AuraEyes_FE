@@ -186,6 +186,133 @@
       }
     }
   },
+  "Ophthalmologist": {
+    "common": {
+      "doctor": "Bác sĩ",
+      "role": "Bác sĩ nhãn khoa",
+      "logout": "Đăng xuất",
+      "cancel": "Hủy"
+    },
+    "header": {
+      "pages": "Trang",
+      "searchPlaceholder": "Tìm bệnh nhân, ID...",
+      "toggleTheme": "Chuyển giao diện"
+    },
+    "sidebar": {
+      "dashboard": "Tổng quan",
+      "patients": "Bệnh nhân",
+      "screenings": "Sàng lọc",
+      "appointments": "Lịch hẹn",
+      "schedules": "Lịch làm việc",
+      "consultations": "Tư vấn",
+      "analytics": "Phân tích",
+      "contract": "Hợp đồng",
+      "settings": "Cài đặt"
+    },
+    "dashboard": {
+      "greeting": {
+        "morning": "Chào buổi sáng",
+        "afternoon": "Chào buổi chiều",
+        "evening": "Chào buổi tối"
+      },
+      "loading": "Đang tải bảng điều khiển...",
+      "loadError": "Không thể tải bảng điều khiển bác sĩ nhãn khoa theo thời gian thực.",
+      "organisationLabel": "Tổ chức",
+      "defaultOrganisation": "Mạng lưới chăm sóc AURA",
+      "subtitle": "Khối lượng duyệt hồ sơ và lịch làm việc theo thời gian thực",
+      "reviewQueue": {
+        "title": "Tổng quan hàng đợi duyệt",
+        "description": "Số liệu trực tiếp từ phiên tư vấn và phân tích nguy cơ sàng lọc.",
+        "pendingReviews": "Ca chờ duyệt",
+        "urgentCases": "Ca khẩn cấp"
+      },
+      "capacity": {
+        "title": "Công suất hôm nay",
+        "description": "Số slot còn trống và lịch hẹn đã hoàn thành trong ngày.",
+        "completedToday": "Đã hoàn thành hôm nay",
+        "openSlotsToday": "Slot còn trống hôm nay"
+      },
+      "operationalSummary": {
+        "title": "Tóm tắt vận hành",
+        "description": "Bảng điều khiển này lấy dữ liệu trực tiếp từ các phiên tư vấn, kết quả sàng lọc, lịch hẹn và slot lịch làm việc. Dữ liệu giả của hàng đợi sàng lọc và cảnh báo khẩn đã được loại bỏ để trang chỉ phản ánh trạng thái backend hiện tại."
+      }
+    },
+    "settings": {
+      "defaults": {
+        "unknownDoctor": "Bác sĩ chưa xác định",
+        "noBio": "Chưa có thông tin giới thiệu hồ sơ."
+      },
+      "pageTitle": "Cài đặt",
+      "pageSubtitle": "Quản lý hồ sơ, chứng chỉ và tùy chọn cá nhân",
+      "profile": {
+        "title": "Thông tin hồ sơ",
+        "edit": "Chỉnh sửa hồ sơ",
+        "loading": "Đang tải thông tin hồ sơ...",
+        "verifiedPractitioner": "Bác sĩ đã xác thực",
+        "memberSince": "Tham gia từ",
+        "email": "Địa chỉ email",
+        "phone": "Số điện thoại",
+        "experience": "Số năm kinh nghiệm",
+        "experienceSuffix": "năm kinh nghiệm",
+        "years": "năm",
+        "specialty": "Chuyên khoa",
+        "hospital": "Bệnh viện / Phòng khám",
+        "address": "Địa chỉ",
+        "bio": "Mô tả / Giới thiệu"
+      },
+      "credentials": {
+        "title": "Chứng chỉ chuyên môn",
+        "upload": "Tải lên chứng chỉ",
+        "issuedBy": "Cấp bởi",
+        "issued": "Ngày cấp",
+        "expires": "Hết hạn",
+        "status": {
+          "verified": "Đã xác thực",
+          "pending": "Chờ duyệt",
+          "expired": "Hết hạn"
+        }
+      },
+      "wallet": {
+        "title": "Ví điện tử",
+        "availableBalance": "Số dư khả dụng",
+        "withdrawFunds": "Rút tiền",
+        "recentTransactions": "Giao dịch gần đây",
+        "loadingTransactions": "Đang tải giao dịch...",
+        "noTransactions": "Chưa có giao dịch.",
+        "viewAllTransactions": "Xem tất cả giao dịch",
+        "withdrawalAmount": "Số tiền rút",
+        "minimumWithdrawal": "Số tiền rút tối thiểu",
+        "withdrawalTo": "Rút về",
+        "withdraw": "Rút"
+      },
+      "accountSettings": {
+        "title": "Cài đặt tài khoản",
+        "security": "Bảo mật",
+        "securityHint": "Đặt lại mật khẩu & 2FA",
+        "language": "Ngôn ngữ"
+      },
+      "appearance": {
+        "title": "Giao diện",
+        "darkMode": "Chế độ tối",
+        "currentlyOn": "Đang bật",
+        "currentlyOff": "Đang tắt"
+      },
+      "notifications": {
+        "title": "Thông báo",
+        "email": "Email",
+        "emailHint": "Nhận qua email",
+        "push": "Push",
+        "pushHint": "Thông báo trình duyệt",
+        "reminders": "Nhắc lịch",
+        "remindersHint": "Nhắc lịch hẹn"
+      },
+      "dangerZone": {
+        "title": "Vùng nguy hiểm",
+        "deactivate": "Vô hiệu hóa tài khoản",
+        "description": "Tạm thời vô hiệu hóa tài khoản của bạn"
+      }
+    }
+  },
   "MedicalTerms": {
     "cardiology": "Tim mạch",
     "diagnostics": "Chẩn đoán",

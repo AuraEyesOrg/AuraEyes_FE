@@ -189,6 +189,133 @@ declare module 'i18next' {
         };
       };
     };
+    Ophthalmologist: {
+      common: {
+        doctor: string;
+        role: string;
+        logout: string;
+        cancel: string;
+      };
+      header: {
+        pages: string;
+        searchPlaceholder: string;
+        toggleTheme: string;
+      };
+      sidebar: {
+        dashboard: string;
+        patients: string;
+        screenings: string;
+        appointments: string;
+        schedules: string;
+        consultations: string;
+        analytics: string;
+        contract: string;
+        settings: string;
+      };
+      dashboard: {
+        greeting: {
+          morning: string;
+          afternoon: string;
+          evening: string;
+        };
+        loading: string;
+        loadError: string;
+        organisationLabel: string;
+        defaultOrganisation: string;
+        subtitle: string;
+        reviewQueue: {
+          title: string;
+          description: string;
+          pendingReviews: string;
+          urgentCases: string;
+        };
+        capacity: {
+          title: string;
+          description: string;
+          completedToday: string;
+          openSlotsToday: string;
+        };
+        operationalSummary: {
+          title: string;
+          description: string;
+        };
+      };
+      settings: {
+        defaults: {
+          unknownDoctor: string;
+          noBio: string;
+        };
+        pageTitle: string;
+        pageSubtitle: string;
+        profile: {
+          title: string;
+          edit: string;
+          loading: string;
+          verifiedPractitioner: string;
+          memberSince: string;
+          email: string;
+          phone: string;
+          experience: string;
+          experienceSuffix: string;
+          years: string;
+          specialty: string;
+          hospital: string;
+          address: string;
+          bio: string;
+        };
+        credentials: {
+          title: string;
+          upload: string;
+          issuedBy: string;
+          issued: string;
+          expires: string;
+          status: {
+            verified: string;
+            pending: string;
+            expired: string;
+          };
+        };
+        wallet: {
+          title: string;
+          availableBalance: string;
+          withdrawFunds: string;
+          recentTransactions: string;
+          loadingTransactions: string;
+          noTransactions: string;
+          viewAllTransactions: string;
+          withdrawalAmount: string;
+          minimumWithdrawal: string;
+          withdrawalTo: string;
+          withdraw: string;
+        };
+        accountSettings: {
+          title: string;
+          security: string;
+          securityHint: string;
+          language: string;
+        };
+        appearance: {
+          title: string;
+          darkMode: string;
+          currentlyOn: string;
+          currentlyOff: string;
+        };
+        notifications: {
+          title: string;
+          email: string;
+          emailHint: string;
+          push: string;
+          pushHint: string;
+          reminders: string;
+          remindersHint: string;
+        };
+        dangerZone: {
+          title: string;
+          deactivate: string;
+          description: string;
+        };
+      };
+    };
     MedicalTerms: {
       cardiology: string;
       diagnostics: string;

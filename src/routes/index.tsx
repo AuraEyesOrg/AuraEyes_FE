@@ -1,4 +1,10 @@
-import { lazy, Suspense, useEffect, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -266,6 +272,17 @@ const LocalizedAuthRoute = ({ element }: LocalizedAuthRouteProps) => (
   </>
 );
 
+interface LocalizedPrivateRouteProps {
+  element: ReactElement;
+}
+
+const LocalizedPrivateRoute = ({ element }: LocalizedPrivateRouteProps) => (
+  <>
+    <LocaleSync />
+    <PrivateRoute>{element}</PrivateRoute>
+  </>
+);
+
 /**
  * Main Router Component
  */
@@ -335,6 +352,85 @@ const Router = () => (
         <Route
           path="/:locale/pending-approval"
           element={<LocalizedAuthRoute element={<PendingApprovalPage />} />}
+        />
+
+        <Route
+          path="/:locale/ophthalmologist/dashboard"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistDashboard />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/patients"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistPatientsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/analytics"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistAnalyticsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/appointments"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistAppointmentsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/settings"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistSettingsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/consultations"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistConsultationsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings/:screeningId/review"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningReviewPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/schedules"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/slot-management"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/contract"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistContractPage />} />
+          }
         />
 
         <Route path="/:locale" element={<GuestLayout />}>

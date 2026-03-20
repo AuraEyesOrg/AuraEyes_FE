@@ -186,6 +186,133 @@
       }
     }
   },
+  "Ophthalmologist": {
+    "common": {
+      "doctor": "Doctor",
+      "role": "Ophthalmologist",
+      "logout": "Logout",
+      "cancel": "Cancel"
+    },
+    "header": {
+      "pages": "Pages",
+      "searchPlaceholder": "Search patient, ID...",
+      "toggleTheme": "Toggle theme"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "screenings": "Screenings",
+      "appointments": "Appointments",
+      "schedules": "Schedules",
+      "consultations": "Consultations",
+      "analytics": "Analytics",
+      "contract": "Contract",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "loading": "Loading dashboard...",
+      "loadError": "Unable to load real-time ophthalmologist dashboard data.",
+      "organisationLabel": "Organisation",
+      "defaultOrganisation": "AURA Care Network",
+      "subtitle": "Real-time review workload and schedule capacity",
+      "reviewQueue": {
+        "title": "Review Queue Snapshot",
+        "description": "Live metrics from consultation sessions and screening risk analyses.",
+        "pendingReviews": "Pending Reviews",
+        "urgentCases": "Urgent Cases"
+      },
+      "capacity": {
+        "title": "Today's Capacity",
+        "description": "Available slots and completed appointments for the current day.",
+        "completedToday": "Completed Today",
+        "openSlotsToday": "Open Slots Today"
+      },
+      "operationalSummary": {
+        "title": "Operational Summary",
+        "description": "This dashboard now streams data from consultation sessions, screening outcomes, appointment bookings, and schedule slots. Mock screening queue and urgent alert metrics were removed so the page reflects current backend state only."
+      }
+    },
+    "settings": {
+      "defaults": {
+        "unknownDoctor": "Unknown doctor",
+        "noBio": "No profile bio available."
+      },
+      "pageTitle": "Settings",
+      "pageSubtitle": "Manage profile, credentials, and personal preferences",
+      "profile": {
+        "title": "Profile Information",
+        "edit": "Edit Profile",
+        "loading": "Loading profile...",
+        "verifiedPractitioner": "Verified Practitioner",
+        "memberSince": "Member since",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "experience": "Experience",
+        "experienceSuffix": "years experience",
+        "years": "years",
+        "specialty": "Specialty",
+        "hospital": "Hospital / Clinic",
+        "address": "Address",
+        "bio": "Bio / Description"
+      },
+      "credentials": {
+        "title": "Professional Credentials",
+        "upload": "Upload Credentials",
+        "issuedBy": "Issued by",
+        "issued": "Issued",
+        "expires": "Expires",
+        "status": {
+          "verified": "Verified",
+          "pending": "Pending",
+          "expired": "Expired"
+        }
+      },
+      "wallet": {
+        "title": "Wallet",
+        "availableBalance": "Available Balance",
+        "withdrawFunds": "Withdraw Funds",
+        "recentTransactions": "Recent Transactions",
+        "loadingTransactions": "Loading transactions...",
+        "noTransactions": "No transactions yet.",
+        "viewAllTransactions": "View All Transactions",
+        "withdrawalAmount": "Withdrawal Amount",
+        "minimumWithdrawal": "Minimum withdrawal amount",
+        "withdrawalTo": "Withdrawal to",
+        "withdraw": "Withdraw"
+      },
+      "accountSettings": {
+        "title": "Account Settings",
+        "security": "Security",
+        "securityHint": "Reset password & 2FA",
+        "language": "Language"
+      },
+      "appearance": {
+        "title": "Appearance",
+        "darkMode": "Dark Mode",
+        "currentlyOn": "Currently on",
+        "currentlyOff": "Currently off"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "email": "Email",
+        "emailHint": "Receive via email",
+        "push": "Push",
+        "pushHint": "Browser notifications",
+        "reminders": "Reminders",
+        "remindersHint": "Appointment reminders"
+      },
+      "dangerZone": {
+        "title": "Danger Zone",
+        "deactivate": "Deactivate Account",
+        "description": "Temporarily deactivate your account"
+      }
+    }
+  },
   "MedicalTerms": {
     "cardiology": "Cardiology",
     "diagnostics": "Diagnostics",
