@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   CalendarCheck,
   FileDown,
-  Send,
   ImagePlus,
   ExternalLink,
   Sparkles,
@@ -16,7 +15,6 @@ import {
   ChevronRight,
   Stethoscope,
   Bot,
-  MessageCircle,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
 
@@ -101,22 +99,6 @@ export default function ReviewPage() {
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
   const remainingMoney = 200000;
   const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-  const handleShareToChat = () => {
-    navigate('/patient/chat', {
-      state: {
-        sharedScan: {
-          imageUrl: thumbnail,
-          eyeLabel,
-          riskLevel,
-          riskLabel: risk.label,
-          anomalies: anomalies.map((a) => a.friendlyName || a.name),
-          summary: risk.summary,
-          scanId,
-        },
-      },
-    });
-  };
 
   /* guard: no route state */
   if (!state) {
@@ -306,7 +288,7 @@ export default function ReviewPage() {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <button
-                      onClick={() => navigate('/patient/appointments')}
+                      onClick={() => navigate('/patient/doctors', { state })}
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
                       <CalendarCheck className="w-5 h-5" />
@@ -318,13 +300,6 @@ export default function ReviewPage() {
                     >
                       <Bot className="w-5 h-5" />
                       Ask AURA AI Assistant
-                    </button>
-                    <button
-                      onClick={handleShareToChat}
-                      className="flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-md shadow-violet-500/20 hover:shadow-violet-500/30 transform hover:-translate-y-0.5"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      Send Results to Doctor
                     </button>
                   </div>
                 </div>
@@ -339,14 +314,7 @@ export default function ReviewPage() {
                   subtitle="PDF Format"
                   actionIcon={<FileDown className="w-4 h-4" />}
                 />
-                <SecondaryActionCard
-                  icon={<Send className="w-5 h-5" />}
-                  iconBg="bg-violet-50 text-violet-600"
-                  title="Share with Doctor"
-                  subtitle="Send scan to chat"
-                  actionIcon={<MessageCircle className="w-4 h-4" />}
-                  onClick={handleShareToChat}
-                />
+
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
                   iconBg="bg-emerald-50 text-emerald-600"
