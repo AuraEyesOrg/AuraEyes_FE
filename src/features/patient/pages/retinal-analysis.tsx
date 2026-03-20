@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
-import { screeningApi } from '../api/screening.api';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
 import { useScreeningStore } from '../stores/useScreeningStore';
@@ -241,112 +240,6 @@ function mapStandardResponseToAnomalies(
   return anomalies;
 }
 
-// Interface for route state from screening-new
-interface RouteStateImage {
-  id: string;
-  name: string;
-  preview: string;
-  quality?: 'high' | 'medium' | 'low';
-}
-
-interface LocationState {
-  screeningId?: string; // From new screening flow
-  images?: RouteStateImage[];
-  source?: string;
-  rawJsonOutput?: string;
-  resultsPersisted?: boolean;
-}
-
-function mapEyeSideLabel(
-  eyeSide?: string
-): 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes' {
-  if (!eyeSide) return 'Both Eyes';
-  const normalized = eyeSide.toLowerCase();
-  if (normalized === 'left') return 'Left Eye (OS)';
-  if (normalized === 'right') return 'Right Eye (OD)';
-  return 'Both Eyes';
-}
-
-function getFileNameFromUrl(url: string): string {
-  try {
-    const clean = url.split('?')[0];
-    const last = clean.substring(clean.lastIndexOf('/') + 1);
-    return last || `retinal-scan-${Date.now()}.jpg`;
-  } catch {
-    return `retinal-scan-${Date.now()}.jpg`;
-  }
-}
-
-function inferEyeSideFromName(
-  name: string,
-  index: number,
-  total: number
-): 'Left' | 'Right' | 'Both' {
-  const n = name.toLowerCase();
-  if (total === 1) return 'Both';
-  if (n.includes('left') || n.includes('_os') || n.includes('(os)'))
-    return 'Left';
-  if (n.includes('right') || n.includes('_od') || n.includes('(od)'))
-    return 'Right';
-  return index % 2 === 0 ? 'Right' : 'Left';
-}
-
-function mapSavedAnomaliesFromRaw(rawJsonOutput?: string): {
-  anomalies: Anomaly[];
-  rawJsonOutput?: string;
-} {
-  if (!rawJsonOutput) return { anomalies: [] };
-
-  try {
-    const parsed = JSON.parse(rawJsonOutput) as any;
-
-    if (parsed?.prediction?.top_k) {
-      const mapped = parsed.prediction.top_k.map((pred: any, idx: number) => ({
-        id: String(pred.rank ?? idx + 1),
-        name: pred.class_name,
-        confidence: Math.round((pred.confidence ?? 0) * 100),
-        description: `${pred.class_name} (${Math.round((pred.confidence ?? 0) * 100)}% confidence).`,
-        color: getColorClass(pred.confidence ?? 0),
-        type: mapDiagnosisType(pred.confidence ?? 0),
-        friendlyName: FRIENDLY_NAMES[pred.class_name]?.name ?? pred.class_name,
-        friendlyDescription:
-          FRIENDLY_NAMES[pred.class_name]?.description ??
-          `${pred.class_name} was detected by our AI screening.`,
-        isHighest: (pred.rank ?? 1) === 1,
-      })) as Anomaly[];
-
-      return { anomalies: mapped, rawJsonOutput };
-    }
-
-    if (Array.isArray(parsed?.anomalies)) {
-      const mapped = parsed.anomalies.map((a: any, idx: number) => ({
-        id: String(idx + 1),
-        name: a.name,
-        confidence: Number(a.confidence ?? 0),
-        description: `${a.name} (${Math.round(Number(a.confidence ?? 0))}% confidence).`,
-        color: getColorClass(
-          Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
-        ),
-        type: mapDiagnosisType(
-          Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
-        ),
-        location: a.location,
-        friendlyName: FRIENDLY_NAMES[a.name]?.name ?? a.name,
-        friendlyDescription:
-          FRIENDLY_NAMES[a.name]?.description ??
-          `${a.name} was detected by our AI screening.`,
-        isHighest: idx === 0,
-      })) as Anomaly[];
-
-      return { anomalies: mapped, rawJsonOutput };
-    }
-  } catch {
-    // Ignore parse errors and fallback to empty anomalies.
-  }
-
-  return { anomalies: [] };
-}
-
 // --- Helpers: use AI-generated friendly fields, fallback to raw name/description ---
 function friendlyName(anomaly: Anomaly): string {
   return anomaly.friendlyName || anomaly.name;
@@ -379,13 +272,6 @@ export default function RetinalAnalysis() {
   const [isFallback, setIsFallback] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showHighlights, setShowHighlights] = useState(false);
-  const [screeningId, setScreeningId] = useState<string | null>(null);
-  const [rawJsonOutput, setRawJsonOutput] = useState<string | undefined>(
-    routeState?.rawJsonOutput
-  );
-  const [resultsPersisted, setResultsPersisted] = useState<boolean>(
-    Boolean(routeState?.resultsPersisted)
-  );
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Image management
@@ -393,108 +279,6 @@ export default function RetinalAnalysis() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   useEffect(() => {
-    const incomingScreeningId = routeState?.screeningId;
-
-    if (incomingScreeningId) {
-      setScreeningId(incomingScreeningId);
-    }
-
-    const loadSession = async () => {
-      if (!incomingScreeningId) {
-        const routeImages: RetinalImage[] =
-          routeState?.images?.map((img) => ({
-            id: img.id,
-            url: img.preview,
-            name: img.name,
-            eye:
-              img.name.toLowerCase().includes('right') ||
-              img.name.toLowerCase().includes('(od)')
-                ? 'Right Eye (OD)'
-                : img.name.toLowerCase().includes('left') ||
-                    img.name.toLowerCase().includes('(os)')
-                  ? 'Left Eye (OS)'
-                  : 'Both Eyes',
-            uploadedAt: new Date().toISOString(),
-            analyzed: false,
-            anomalies: [],
-          })) ?? [];
-
-        if (routeImages.length === 0) {
-          navigate('/patient/screening/new', { replace: true });
-          return;
-        }
-
-        setImages(routeImages);
-        setSelectedImageId(routeImages[0].id);
-        setAnalyzed(false);
-        setAnomalies([]);
-        window.history.replaceState({}, document.title);
-        return;
-      }
-
-      try {
-        const response = await screeningApi.getSessionById(incomingScreeningId);
-        const persisted = response.data?.images ?? [];
-
-        const mappedPersisted: RetinalImage[] = persisted.map((img) => ({
-          id: img.id,
-          url: img.imageUrl,
-          name: getFileNameFromUrl(img.imageUrl),
-          eye: mapEyeSideLabel(img.eyeSide),
-          uploadedAt: img.capturedAt,
-          analyzed: false,
-          anomalies: [],
-        }));
-
-        const fallbackFromRoute: RetinalImage[] =
-          routeState?.images?.map((img) => ({
-            id: img.id,
-            url: img.preview,
-            name: img.name,
-            eye:
-              img.name.toLowerCase().includes('right') ||
-              img.name.toLowerCase().includes('(od)')
-                ? 'Right Eye (OD)'
-                : 'Left Eye (OS)',
-            uploadedAt: new Date().toISOString(),
-            analyzed: false,
-            anomalies: [],
-          })) ?? [];
-
-        const sessionImages =
-          mappedPersisted.length > 0 ? mappedPersisted : fallbackFromRoute;
-
-        const restored = mapSavedAnomaliesFromRaw(response.data?.rawJsonOutput);
-        const restoredAnomalies = restored.anomalies;
-
-        setRawJsonOutput(response.data?.rawJsonOutput);
-        setResultsPersisted(Boolean(response.data?.latestResult));
-
-        if (sessionImages.length === 0) {
-          setErrorMessage('No images found in this screening session.');
-          return;
-        }
-
-        const hydratedImages = sessionImages.map((img, idx) =>
-          idx === 0 && restoredAnomalies.length > 0
-            ? { ...img, analyzed: true, anomalies: restoredAnomalies }
-            : img
-        );
-
-        setImages(hydratedImages);
-        setSelectedImageId(hydratedImages[0].id);
-        setAnalyzed(restoredAnomalies.length > 0);
-        setAnomalies(restoredAnomalies);
-        setShowHighlights(restoredAnomalies.length > 0);
-        window.history.replaceState({}, document.title);
-      } catch (error) {
-        console.error('Failed to load screening session:', error);
-        setErrorMessage('Unable to load screening images. Please try again.');
-      }
-    };
-
-    loadSession();
-  }, [navigate, routeState]);
     if (!selectedFile) {
       navigate('/patient/screening/new', { replace: true });
       return;
@@ -655,82 +439,6 @@ export default function RetinalAnalysis() {
 
       // Map AI response → deduplicated Anomaly[] with correct image-relative coords
       const mapped = mapStandardResponseToAnomalies(data, imgWidth, imgHeight);
-      const rawOutput = JSON.stringify(data);
-      setRawJsonOutput(rawOutput);
-
-      let ensuredScreeningId = screeningId;
-
-      if (!screeningId) {
-        const files = await Promise.all(
-          images.map(async (img, idx) => {
-            const resp = await fetch(img.url);
-            const imgBlob = await resp.blob();
-            const fileType = imgBlob.type || 'image/jpeg';
-            const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
-            return new File([imgBlob], fileNameForUpload, { type: fileType });
-          })
-        );
-
-        const uploadResp = await screeningApi.uploadRetinalImages(files);
-        const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
-
-        if (uploadedUrls.length === 0) {
-          throw new Error('Failed to upload retinal images');
-        }
-
-        const retinalImages = uploadedUrls.map((url, idx) => ({
-          imageUrl: url,
-          eyeSide: inferEyeSideFromName(
-            images[idx]?.name || '',
-            idx,
-            uploadedUrls.length
-          ),
-          deviceName: 'Retinal Camera',
-        }));
-
-        const sessionResp = await screeningApi.createSession({
-          modelVersion: '1.0',
-          retinalImages,
-        });
-
-        if (sessionResp.data?.screeningId) {
-          ensuredScreeningId = sessionResp.data.screeningId;
-          setScreeningId(sessionResp.data.screeningId);
-        }
-      }
-
-      if (!ensuredScreeningId) {
-        throw new Error('Screening session not available to save AI results');
-      }
-
-      const avgConfidence =
-        mapped.length > 0
-          ? Math.round(
-              mapped.reduce((acc, item) => acc + item.confidence, 0) /
-                mapped.length
-            )
-          : 0;
-
-      const mappedRiskLevel: 'Low' | 'Moderate' | 'High' =
-        avgConfidence >= 70 ? 'High' : avgConfidence >= 40 ? 'Moderate' : 'Low';
-
-      await screeningApi.saveAiResults(ensuredScreeningId, {
-        rawJsonOutput: rawOutput,
-        riskLevel: mappedRiskLevel,
-        confidenceScore: avgConfidence,
-        summary:
-          mappedRiskLevel === 'High'
-            ? 'Findings need attention from an ophthalmologist.'
-            : mappedRiskLevel === 'Moderate'
-              ? 'Some findings may need specialist review.'
-              : 'No major risk findings detected.',
-        findings: mapped
-          .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
-          .join(', '),
-      });
-
-      setResultsPersisted(true);
-
       setAnomalies(mapped);
       setShowHighlights(true);
 
@@ -918,15 +626,7 @@ export default function RetinalAnalysis() {
                     <button
                       onClick={() =>
                         navigate('/patient/screening/review', {
-                          state: {
-                            screeningId,
-                            images,
-                            anomalies,
-                            riskLevel,
-                            riskScore,
-                            rawJsonOutput,
-                            resultsPersisted,
-                          },
+                          state: { images, anomalies, riskLevel, riskScore },
                         })
                       }
                       className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/15"

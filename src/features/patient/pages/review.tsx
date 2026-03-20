@@ -1,9 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
-import { screeningApi } from '../api';
 import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import {
   ShieldCheck,
@@ -22,13 +19,10 @@ import {
 import { SecondaryActionCard } from '../components';
 
 interface LocationState {
-  screeningId?: string;
   images?: RetinalImage[];
   anomalies?: Anomaly[];
   riskLevel?: 'low' | 'moderate' | 'high';
   riskScore?: number;
-  rawJsonOutput?: string;
-  resultsPersisted?: boolean;
 }
 
 const RISK_CONFIG = {
@@ -100,125 +94,11 @@ export default function ReviewPage() {
   const anomalies = state?.anomalies ?? [];
   const riskLevel = state?.riskLevel ?? 'low';
   const risk = RISK_CONFIG[riskLevel];
-  const screeningId = state?.screeningId;
 
-  // Save AI results mutation
-  const saveResultsMutation = useMutation({
-    mutationFn: async () => {
-      if (state?.resultsPersisted) {
-        return {
-          succeeded: true,
-          message: 'Results already saved from analysis step.',
-        };
-      }
-
-      if (!screeningId) {
-        throw new Error('Screening ID is required');
-      }
-
-      // Calculate average confidence score from anomalies
-      const confidenceScore =
-        anomalies.length > 0
-          ? Math.round(
-              anomalies.reduce((acc, a) => acc + a.confidence, 0) /
-                anomalies.length
-            )
-          : 0;
-
-      // Map risk level to API format
-      const riskLevelMap: Record<string, 'Low' | 'Moderate' | 'High'> = {
-        low: 'Low',
-        moderate: 'Moderate',
-        high: 'High',
-      };
-
-      // Call API to save results
-      const response = await screeningApi.saveAiResults(screeningId, {
-        rawJsonOutput:
-          state?.rawJsonOutput ||
-          JSON.stringify({
-            anomalies: anomalies.map((a) => ({
-              name: a.name,
-              confidence: a.confidence,
-              location: a.location,
-            })),
-            totalDetections: anomalies.length,
-          }),
-        riskLevel: riskLevelMap[riskLevel],
-        confidenceScore,
-        summary: risk.summary,
-        findings: anomalies
-          .map(
-            (a) => `${a.friendlyName || a.name} (${Math.round(a.confidence)}%)`
-          )
-          .join(', '),
-      });
-
-      return response;
-    },
-    onSuccess: () => {
-      toast.success(
-        'Screening results saved successfully. Ready to book consultation.'
-      );
-    },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.message ||
-        'Failed to save screening results. Please try again.';
-      toast.error(message);
-      console.error('Error saving screening results:', error);
-    },
-  });
-
-  const handleSaveAndBook = async () => {
-    try {
-      await saveResultsMutation.mutateAsync();
-      setTimeout(() => {
-        navigate('/patient/appointments');
-      }, 800);
-    } catch (error) {
-      console.error('Error in handleSaveAndBook:', error);
-    }
-  };
-
-  const handleSaveAndChat = async () => {
-    try {
-      await saveResultsMutation.mutateAsync();
-      setTimeout(() => {
-        navigate('/patient/chat', {
-          state: {
-            sharedScan: {
-              imageUrl: images[0]?.url,
-              eyeLabel: images[0]?.eye ?? 'Left Eye (OS)',
-              riskLevel,
-              riskLabel: risk.label,
-              anomalies: anomalies.map((a) => a.friendlyName || a.name),
-              summary: risk.summary,
-              screeningId,
-            },
-          },
-        });
-      }, 800);
-    } catch (error) {
-      console.error('Error in handleSaveAndChat:', error);
-    }
-  };
-
-  const handleShareToChat = () => {
-    navigate('/patient/chat', {
-      state: {
-        sharedScan: {
-          imageUrl: images[0]?.url,
-          eyeLabel: images[0]?.eye ?? 'Left Eye (OS)',
-          riskLevel,
-          riskLabel: risk.label,
-          anomalies: anomalies.map((a) => a.friendlyName || a.name),
-          summary: risk.summary,
-          screeningId,
-        },
-      },
-    });
-  };
+  const thumbnail = images[0]?.url;
+  const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
+  const remainingMoney = 200000;
+  const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   /* guard: no route state */
   if (!state) {
@@ -246,11 +126,6 @@ export default function ReviewPage() {
       </FocusModeLayout>
     );
   }
-
-  const thumbnail = images[0]?.url;
-  const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
-  const remainingMoney = 200000;
-  const scanId = `#AUR-${screeningId?.substring(0, 8).toUpperCase() || Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   return (
     <FocusModeLayout
@@ -413,23 +288,11 @@ export default function ReviewPage() {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <button
-                      onClick={handleSaveAndBook}
-                      disabled={saveResultsMutation.isPending}
-                      className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                       onClick={() => navigate('/patient/doctors', { state })}
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
-                      {saveResultsMutation.isPending ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <CalendarCheck className="w-5 h-5" />
-                          Find a Specialist
-                        </>
-                      )}
+                      <CalendarCheck className="w-5 h-5" />
+                      Find a Specialist
                     </button>
                     <button
                       onClick={openN8nChat}
@@ -437,23 +300,6 @@ export default function ReviewPage() {
                     >
                       <Bot className="w-5 h-5" />
                       Ask AURA AI Assistant
-                    </button>
-                    <button
-                      onClick={handleSaveAndChat}
-                      disabled={saveResultsMutation.isPending}
-                      className="flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 disabled:bg-violet-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-md shadow-violet-500/20 hover:shadow-violet-500/30 transform hover:-translate-y-0.5"
-                    >
-                      {saveResultsMutation.isPending ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <MessageCircle className="w-5 h-5" />
-                          Send Results to Doctor
-                        </>
-                      )}
                     </button>
                   </div>
                 </div>

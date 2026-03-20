@@ -41,7 +41,7 @@ export interface RetinalImage {
   id: string;
   url: string;
   name: string;
-  eye: 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes';
+  eye: 'Left Eye (OS)' | 'Right Eye (OD)';
   uploadedAt: string;
   analyzed: boolean;
   anomalies: Anomaly[];
