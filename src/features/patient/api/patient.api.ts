@@ -216,6 +216,8 @@ export interface OphthalmologistSearchItem {
   degreeUrl?: string | null;
   ratingAverage?: number;
   ratingCount?: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
 }
 
 export interface OphthalmologistDetailItem {
@@ -232,6 +234,8 @@ export interface OphthalmologistDetailItem {
   degreeUrl?: string | null;
   ratingAverage?: number;
   ratingCount?: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
 }
 
 export interface AvailableSlotItem {

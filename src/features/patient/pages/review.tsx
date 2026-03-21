@@ -101,7 +101,7 @@ export default function ReviewPage() {
   const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   /* guard: no route state */
-  if (!state) {
+  if (state) {
     return (
       <FocusModeLayout
         currentStep="review"
