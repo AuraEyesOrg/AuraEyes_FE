@@ -18,6 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
+import { useSystemSettings } from '../../system-admin/api/system-settings.api';
 import {
   useAppointmentSlots,
   useReserveSlot,
@@ -77,32 +78,18 @@ const getAvatarUrl = (doctor: {
   return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
 };
 
-const findNearestAvailableDate = (
-  slots: AppointmentSlotListDto[],
-  referenceDate?: string
-): string | null => {
-  if (!slots.length) return null;
-
-  const base = new Date(
-    `${referenceDate ?? toLocalDateKey(new Date())}T00:00:00`
+const getNextAvailableDate = (candidates: AppointmentSlotListDto[]) => {
+  if (!candidates.length) return null;
+  candidates.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
-  if (Number.isNaN(base.getTime())) return null;
-
-  const candidates = slots
-    .map((slot) => slot.date)
-    .filter((value, index, arr) => value && arr.indexOf(value) === index)
-    .map((date) => ({
-      date,
-      diff: Math.abs(new Date(`${date}T00:00:00`).getTime() - base.getTime()),
-    }))
-    .sort((a, b) => a.diff - b.diff || a.date.localeCompare(b.date));
-
   return candidates[0]?.date ?? null;
 };
 
-const MINIMUM_ADVANCE_BOOKING_MS = 60 * 60 * 1000; // 1 hour advance notice
-
-const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
+const isExpiredAppointmentSlot = (
+  slot: AppointmentSlotListDto,
+  advanceBookingMs: number
+): boolean => {
   if (slot.status === 'Expired') {
     return true;
   }
@@ -110,7 +97,7 @@ const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
   const startAt = new Date(`${slot.date}T${slot.startTime}`).getTime();
   if (!Number.isNaN(startAt)) {
     // Disable if the slot is in the past OR less than the advance notice time away
-    return startAt < Date.now() + MINIMUM_ADVANCE_BOOKING_MS;
+    return startAt < Date.now() + advanceBookingMs;
   }
 
   return false;
@@ -200,7 +187,7 @@ const ReservationModal = ({
               Time remaining to complete booking
             </span>
           </div>
-          <div className={`text-4xl font-bold ${urgencyClass}`}>
+          <div className="text-4xl font-bold ${urgencyClass}">
             {formatCountdown(remainingSeconds)}
           </div>
         </div>
@@ -336,6 +323,24 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   );
   const [selectedSlot, setSelectedSlot] =
     useState<AppointmentSlotListDto | null>(null);
+  const [slotToRelease, setSlotToRelease] =
+    useState<AppointmentSlotListDto | null>(null);
+
+  const { data: systemSettings, isLoading: isLoadingSettings } =
+    useSystemSettings();
+  const advanceBookingSetting = systemSettings?.['MIN_ADVANCE_BOOKING_HOURS'];
+
+  let advanceBookingHours = advanceBookingSetting
+    ? parseFloat(advanceBookingSetting)
+    : 0;
+  if (advanceBookingHours < 0.5) advanceBookingHours = 0.5; // Enforce minimum 30 minutes
+
+  const minAdvanceBookingMs = advanceBookingHours * 60 * 60 * 1000;
+  const warningText =
+    advanceBookingHours < 1
+      ? `${Math.round(advanceBookingHours * 60)} minutes`
+      : `${advanceBookingHours} hours`;
+
   const [reservation, setReservation] = useState<SlotReservationResult | null>(
     null
   );
@@ -503,7 +508,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
 
     const matchedSlot = slots.find((slot) => slot.id === preselectedSlotId);
     if (!matchedSlot) {
-      const nearestDate = findNearestAvailableDate(slots, preselectedDate);
+      const nearestDate = getNextAvailableDate(slots);
       if (nearestDate) setSelectedDate(nearestDate);
       return;
     }
@@ -578,6 +583,16 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
           {(errorMessage || slotsError) && (
             <div className="mx-6 mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
               {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
+            </div>
+          )}
+
+          {!isLoadingSettings && (
+            <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2 shadow-sm">
+              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>
+                Please note: Appointments must be booked at least{' '}
+                <strong>{warningText}</strong> in advance.
+              </span>
             </div>
           )}
 
@@ -690,7 +705,10 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                       </h4>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {morningSlots.map((slot) => {
-                          const isExpired = isExpiredAppointmentSlot(slot);
+                          const isExpired = isExpiredAppointmentSlot(
+                            slot,
+                            minAdvanceBookingMs
+                          );
                           return (
                             <button
                               key={slot.id}
@@ -724,7 +742,10 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                       </h4>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {afternoonSlots.map((slot) => {
-                          const isExpired = isExpiredAppointmentSlot(slot);
+                          const isExpired = isExpiredAppointmentSlot(
+                            slot,
+                            minAdvanceBookingMs
+                          );
                           return (
                             <button
                               key={slot.id}

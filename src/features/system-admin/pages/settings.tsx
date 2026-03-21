@@ -71,7 +71,9 @@ export default function SettingsPage() {
     timezone: 'UTC',
     language: 'en',
     maintenanceMode: false,
-    minAdvanceBookingHours: 1,
+    minAdvanceBookingHours: 0.5,
+    aiQuotaBundle: 100,
+    defaultPlatformCommission: 0.05,
   });
 
   useEffect(() => {
@@ -79,8 +81,14 @@ export default function SettingsPage() {
       setGeneralSettings((prev) => ({
         ...prev,
         minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
-          ? parseInt(systemSettings['MIN_ADVANCE_BOOKING_HOURS'], 10)
-          : 1,
+          ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
+          : 0.5,
+        aiQuotaBundle: systemSettings['AI_QUOTA_BUNDLE']
+          ? parseInt(systemSettings['AI_QUOTA_BUNDLE'], 10)
+          : 100,
+        defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
+          ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
+          : 0.05,
       }));
     }
   }, [systemSettings]);
@@ -108,8 +116,13 @@ export default function SettingsPage() {
     try {
       const settingsToUpdate = {
         MIN_ADVANCE_BOOKING_HOURS: Math.max(
-          0,
+          0.5,
           generalSettings.minAdvanceBookingHours
+        ).toString(),
+        AI_QUOTA_BUNDLE: Math.max(0, generalSettings.aiQuotaBundle).toString(),
+        DEFAULT_PLATFORM_COMMISSION: Math.max(
+          0,
+          generalSettings.defaultPlatformCommission
         ).toString(),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
@@ -204,13 +217,51 @@ export default function SettingsPage() {
           </label>
           <input
             type="number"
-            min={0}
+            min={0.5}
+            step={0.5}
             max={72}
             value={generalSettings.minAdvanceBookingHours}
             onChange={(e) =>
               setGeneralSettings({
                 ...generalSettings,
-                minAdvanceBookingHours: parseInt(e.target.value) || 0,
+                minAdvanceBookingHours: parseFloat(e.target.value) || 0.5,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Bundle
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.aiQuotaBundle}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaBundle: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Default Platform Commission Rate
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={1}
+            step={0.01}
+            value={generalSettings.defaultPlatformCommission}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                defaultPlatformCommission: parseFloat(e.target.value) || 0,
               })
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
