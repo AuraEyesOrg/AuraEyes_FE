@@ -175,7 +175,7 @@ const ReservationModal = ({
         : 'text-emerald-600 dark:text-emerald-400';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -398,10 +398,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   const reserveMutation = useReserveSlot();
   const releaseMutation = useReleaseReservation();
 
-  const slots = useMemo(
-    () => (slotsData?.items ?? []).filter((s) => !isExpiredAppointmentSlot(s)),
-    [slotsData?.items]
-  );
+  const slots = useMemo(() => slotsData?.items ?? [], [slotsData?.items]);
 
   const slotsByDate = useMemo(() => {
     const grouped: Record<string, AppointmentSlotListDto[]> = {};
@@ -519,8 +516,9 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   const Wrapper = isEmbedded ? 'div' : PatientLayout;
   const wrapperProps = isEmbedded
     ? {
-        className:
-          'fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm overflow-y-auto flex justify-center items-start py-8 px-4',
+        className: `fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-start py-8 px-4 ${
+          showModal ? 'overflow-hidden' : 'overflow-y-auto'
+        }`,
       }
     : {};
 
@@ -538,111 +536,115 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   );
 
   return (
-    <Wrapper {...wrapperProps}>
-      <div
-        className={
-          isEmbedded
-            ? 'bg-white dark:bg-gray-900 border border-gray-200 w-full max-w-4xl rounded-3xl shadow-2xl relative overflow-hidden flex flex-col font-sans'
-            : 'p-6 max-w-4xl mx-auto font-sans'
-        }
-      >
-        {/* Header Section */}
-        <div className="relative p-6 border-b border-gray-100 flex flex-col items-center justify-center text-center bg-white dark:bg-gray-900 border-t-4 border-t-cyan-600">
-          {isEmbedded && (
-            <button
-              onClick={props.onClose}
-              className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-          )}
-          <h1 className="text-xl font-bold tracking-widest text-gray-800 dark:text-gray-100 uppercase mb-4">
-            Aura
-          </h1>
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-            {doctorInfo?.userFullName ?? 'Ophthalmologist'}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-            Ophthalmologist
-          </p>
-          <div className="mt-3 inline-flex bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-            Booking for:{' '}
-            {props.viewMode === 'today'
-              ? 'Video Consultation'
-              : 'In-clinic / Video Consultation'}
-          </div>
-        </div>
-
-        {(errorMessage || slotsError) && (
-          <div className="mx-6 mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
-          </div>
-        )}
-
-        {/* Main Content Split Pane */}
-        <div className="flex flex-col md:flex-row p-6 gap-8 bg-gray-50/50 dark:bg-gray-800/30">
-          {/* LEFT: Calendar */}
-          <div className="flex-1 md:border-r border-gray-200 dark:border-gray-700 md:pr-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                {currentMonthDate.toLocaleString('default', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const d = new Date(currentMonthDate);
-                    d.setMonth(d.getMonth() - 1);
-                    setCurrentMonthDate(d);
-                  }}
-                  className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
-                  disabled={props.viewMode === 'today'}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    const d = new Date(currentMonthDate);
-                    d.setMonth(d.getMonth() + 1);
-                    setCurrentMonthDate(d);
-                  }}
-                  className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
-                  disabled={props.viewMode === 'today'}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+    <>
+      <Wrapper {...wrapperProps}>
+        <div
+          className={
+            isEmbedded
+              ? 'bg-white dark:bg-gray-900 border border-gray-200 w-full max-w-5xl rounded-3xl shadow-2xl relative overflow-hidden flex flex-col font-sans'
+              : 'p-6 max-w-5xl mx-auto font-sans'
+          }
+        >
+          {/* Header Section */}
+          <div className="relative p-6 border-b border-gray-100 flex flex-col items-center justify-center text-center bg-white dark:bg-gray-900 border-t-4 border-t-cyan-600">
+            {isEmbedded && (
+              <button
+                onClick={props.onClose}
+                className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+            )}
+            <h1 className="text-xl font-bold tracking-widest text-gray-800 dark:text-gray-100 uppercase mb-4">
+              Aura
+            </h1>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+              {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+              Ophthalmologist
+            </p>
+            <div className="mt-3 inline-flex bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+              Booking for:{' '}
+              {props.viewMode === 'today'
+                ? 'Video Consultation'
+                : 'In-clinic / Video Consultation'}
             </div>
+          </div>
 
-            <div className="grid grid-cols-7 gap-y-4 gap-x-1 text-center">
-              {WEEK_DAYS.map((day) => (
-                <div key={day} className="text-xs font-semibold text-gray-400">
-                  {day}
-                </div>
-              ))}
+          {(errorMessage || slotsError) && (
+            <div className="mx-6 mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
+            </div>
+          )}
 
-              {calendarDays.map((date, i) => {
-                const dateStr = toLocalDateKey(date);
-                const isCurrentMonth =
-                  date.getMonth() === currentMonthDate.getMonth();
-                const isSelected = selectedDate === dateStr;
-                const isPast = dateStr < todayStr;
-                const hasSlots = (slotsByDate[dateStr]?.length ?? 0) > 0;
-
-                // If today mode, only today is selectable
-                const isDisabled =
-                  props.viewMode === 'today' ? dateStr !== todayStr : isPast;
-
-                return (
+          {/* Main Content Split Pane */}
+          <div className="flex flex-col md:flex-row p-6 gap-8 bg-gray-50/50 dark:bg-gray-800/30">
+            {/* LEFT: Calendar */}
+            <div className="w-full md:w-[40%] md:flex-none md:border-r border-gray-200 dark:border-gray-700 md:pr-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {currentMonthDate.toLocaleString('default', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </h3>
+                <div className="flex gap-2">
                   <button
-                    key={`${dateStr}-${i}`}
                     onClick={() => {
-                      if (!isDisabled) setSelectedDate(dateStr);
+                      const d = new Date(currentMonthDate);
+                      d.setMonth(d.getMonth() - 1);
+                      setCurrentMonthDate(d);
                     }}
-                    disabled={isDisabled}
-                    className={`
+                    className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                    disabled={props.viewMode === 'today'}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const d = new Date(currentMonthDate);
+                      d.setMonth(d.getMonth() + 1);
+                      setCurrentMonthDate(d);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                    disabled={props.viewMode === 'today'}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 gap-y-4 gap-x-1 text-center">
+                {WEEK_DAYS.map((day) => (
+                  <div
+                    key={day}
+                    className="text-xs font-semibold text-gray-400"
+                  >
+                    {day}
+                  </div>
+                ))}
+
+                {calendarDays.map((date, i) => {
+                  const dateStr = toLocalDateKey(date);
+                  const isCurrentMonth =
+                    date.getMonth() === currentMonthDate.getMonth();
+                  const isSelected = selectedDate === dateStr;
+                  const isPast = dateStr < todayStr;
+                  const hasSlots = (slotsByDate[dateStr]?.length ?? 0) > 0;
+
+                  // If today mode, only today is selectable
+                  const isDisabled =
+                    props.viewMode === 'today' ? dateStr !== todayStr : isPast;
+
+                  return (
+                    <button
+                      key={`${dateStr}-${i}`}
+                      onClick={() => {
+                        if (!isDisabled) setSelectedDate(dateStr);
+                      }}
+                      disabled={isDisabled}
+                      className={`
                       w-10 h-10 mx-auto flex items-center justify-center rounded-full text-sm font-medium transition-all
                       ${!isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'}
                       ${isSelected ? 'bg-cyan-600 text-white shadow-md' : ''}
@@ -650,125 +652,142 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                       ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                       ${hasSlots && !isSelected ? 'bg-cyan-100/50 dark:bg-cyan-900/30 font-bold text-cyan-800 dark:text-cyan-400' : ''}
                     `}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
-              })}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* RIGHT: Time Slots */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+                Select a Time
+              </h3>
+
+              {isLoading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Spinner />
+                </div>
+              ) : selectedDaySlots.length === 0 ? (
+                <div className="text-gray-500 text-sm py-8 text-center italic">
+                  No available times for{' '}
+                  {selectedDate
+                    ? new Date(selectedDate).toLocaleDateString()
+                    : 'this date'}
+                  .
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {morningSlots.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                        Morning
+                      </h4>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {morningSlots.map((slot) => {
+                          const isExpired = isExpiredAppointmentSlot(slot);
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() =>
+                                !isExpired && handleSlotClick(slot)
+                              }
+                              disabled={isExpired}
+                              className={`
+                              px-3 py-2 rounded-xl border text-sm font-medium transition-colors text-center w-full
+                              ${
+                                isExpired
+                                  ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed cursor-not-allowed opacity-60'
+                                  : selectedSlot?.id === slot.id
+                                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm cursor-pointer'
+                                    : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40 cursor-pointer'
+                              }
+                            `}
+                            >
+                              {formatSlotTime(slot.startTime)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {afternoonSlots.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                        Afternoon
+                      </h4>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {afternoonSlots.map((slot) => {
+                          const isExpired = isExpiredAppointmentSlot(slot);
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() =>
+                                !isExpired && handleSlotClick(slot)
+                              }
+                              disabled={isExpired}
+                              className={`
+                              px-3 py-2 rounded-xl border text-sm font-medium transition-colors text-center w-full
+                              ${
+                                isExpired
+                                  ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+                                  : selectedSlot?.id === slot.id
+                                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm cursor-pointer'
+                                    : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40 cursor-pointer'
+                              }
+                            `}
+                            >
+                              {formatSlotTime(slot.startTime)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* RIGHT: Time Slots */}
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-              Select a Time
-            </h3>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center py-10">
-                <Spinner />
-              </div>
-            ) : selectedDaySlots.length === 0 ? (
-              <div className="text-gray-500 text-sm py-8 text-center italic">
-                No available times for{' '}
-                {selectedDate
-                  ? new Date(selectedDate).toLocaleDateString()
-                  : 'this date'}
-                .
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {morningSlots.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                      Morning
-                    </h4>
-                    <div className="flex flex-wrap gap-3">
-                      {morningSlots.map((slot) => (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleSlotClick(slot)}
-                          className={`
-                            px-4 py-2 rounded-full border text-sm font-medium transition-colors
-                            ${
-                              selectedSlot?.id === slot.id
-                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
-                                : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40'
-                            }
-                          `}
-                        >
-                          {formatSlotTime(slot.startTime)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {afternoonSlots.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                      Afternoon
-                    </h4>
-                    <div className="flex flex-wrap gap-3">
-                      {afternoonSlots.map((slot) => (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleSlotClick(slot)}
-                          className={`
-                            px-4 py-2 rounded-full border text-sm font-medium transition-colors
-                            ${
-                              selectedSlot?.id === slot.id
-                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
-                                : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40'
-                            }
-                          `}
-                        >
-                          {formatSlotTime(slot.startTime)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+          {/* Footer Area */}
+          <div className="p-6 border-t border-gray-100 bg-white dark:bg-gray-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              {selectedSlot ? (
+                <span>
+                  Selected: {new Date(selectedSlot.date).toLocaleDateString()}{' '}
+                  at {formatSlotTime(selectedSlot.startTime)} |{' '}
+                  {formatVnd(selectedSlot.cost)}
+                </span>
+              ) : (
+                <span>Please select a date and an available time.</span>
+              )}
+            </div>
+            <button
+              onClick={handleConfirmAction}
+              disabled={!selectedSlot || reserveMutation.isPending}
+              className="w-full sm:w-auto px-8 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-full shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              {reserveMutation.isPending ? <Spinner size={16} /> : null}
+              Confirm Booking
+            </button>
           </div>
         </div>
+      </Wrapper>
 
-        {/* Footer Area */}
-        <div className="p-6 border-t border-gray-100 bg-white dark:bg-gray-900 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-            {selectedSlot ? (
-              <span>
-                Selected: {new Date(selectedSlot.date).toLocaleDateString()} at{' '}
-                {formatSlotTime(selectedSlot.startTime)} |{' '}
-                {formatVnd(selectedSlot.cost)}
-              </span>
-            ) : (
-              <span>Please select a date and an available time.</span>
-            )}
-          </div>
-          <button
-            onClick={handleConfirmAction}
-            disabled={!selectedSlot || reserveMutation.isPending}
-            className="w-full sm:w-auto px-8 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-full shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            {reserveMutation.isPending ? <Spinner size={16} /> : null}
-            Confirm Booking
-          </button>
-        </div>
-
-        {/* Reservation Modal layer on top of this one */}
-        {showModal && selectedSlot && reservation && (
-          <ReservationModal
-            slot={selectedSlot}
-            reservation={reservation}
-            onConfirm={handleConfirmReservation}
-            onCancel={handleCancelReservation}
-            isLoading={false}
-          />
-        )}
-      </div>
-    </Wrapper>
+      {/* Reservation Modal layer on top of this one */}
+      {showModal && selectedSlot && reservation && (
+        <ReservationModal
+          slot={selectedSlot}
+          reservation={reservation}
+          onConfirm={handleConfirmReservation}
+          onCancel={handleCancelReservation}
+          isLoading={false}
+        />
+      )}
+    </>
   );
 }
 

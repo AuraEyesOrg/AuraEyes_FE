@@ -200,11 +200,11 @@ export default function BookingConfirmationPage(
   const wrapperProps = isEmbedded
     ? {
         className:
-          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-center',
+          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-start',
       }
     : {};
   const innerClass = isEmbedded
-    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8'
+    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8 mt-auto mb-auto'
     : 'p-6 max-w-2xl mx-auto';
 
   // Loading state
