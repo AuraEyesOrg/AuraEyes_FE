@@ -39,6 +39,7 @@ import {
   formatDate,
   toLocalDateKey,
   formatCountdown,
+  parseSlotDateTimeUtc,
 } from '@/lib/date-utils';
 
 // ============ HELPERS ============
@@ -94,7 +95,7 @@ const isExpiredAppointmentSlot = (
     return true;
   }
 
-  const startAt = new Date(`${slot.date}T${slot.startTime}`).getTime();
+  const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
   if (!Number.isNaN(startAt)) {
     // Disable if the slot is in the past OR less than the advance notice time away
     return startAt < Date.now() + advanceBookingMs;

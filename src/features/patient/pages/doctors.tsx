@@ -551,9 +551,6 @@ export default function DoctorsPage() {
                 ? `${doctor.ratingAverage.toFixed(1)}`
                 : '—';
             const reviewCount = doctor.ratingCount ?? 0;
-            const fromCost = timeFilterEnabled
-              ? (minCostByDoctorId.get(doctor.id) ?? null)
-              : null;
             const titleBadges = getDemoTitleBadges(doctor.id, index);
             const titleString = titleBadges.join(', ');
 

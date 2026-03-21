@@ -16,11 +16,16 @@ import {
 } from '../hooks/use-clinic-booking';
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
-import { formatSlotTime, formatDate, toLocalDateKey } from '@/lib/date-utils';
+import {
+  formatSlotTime,
+  formatDate,
+  toLocalDateKey,
+  parseSlotDateTimeUtc,
+} from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
-  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
   if (Number.isNaN(startAt)) return false;
   return startAt < Date.now();
 };
