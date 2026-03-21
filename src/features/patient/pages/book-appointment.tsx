@@ -100,14 +100,17 @@ const findNearestAvailableDate = (
   return candidates[0]?.date ?? null;
 };
 
+const MINIMUM_ADVANCE_BOOKING_MS = 60 * 60 * 1000; // 1 hour advance notice
+
 const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
   if (slot.status === 'Expired') {
     return true;
   }
 
-  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  const startAt = new Date(`${slot.date}T${slot.startTime}`).getTime();
   if (!Number.isNaN(startAt)) {
-    return startAt < Date.now();
+    // Disable if the slot is in the past OR less than the advance notice time away
+    return startAt < Date.now() + MINIMUM_ADVANCE_BOOKING_MS;
   }
 
   return false;
