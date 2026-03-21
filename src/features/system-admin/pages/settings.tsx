@@ -74,6 +74,8 @@ export default function SettingsPage() {
     minAdvanceBookingHours: 0.5,
     aiQuotaBundle: 100,
     defaultPlatformCommission: 0.05,
+    freeAiQuota: 3,
+    aiQuotaPrice: 50000,
   });
 
   useEffect(() => {
@@ -89,6 +91,12 @@ export default function SettingsPage() {
         defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
           ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
           : 0.05,
+        freeAiQuota: systemSettings['FREE_AI_QUOTA']
+          ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
+          : 3,
+        aiQuotaPrice: systemSettings['AI_QUOTA_PRICE']
+          ? parseFloat(systemSettings['AI_QUOTA_PRICE'])
+          : 50000,
       }));
     }
   }, [systemSettings]);
@@ -124,6 +132,8 @@ export default function SettingsPage() {
           0,
           generalSettings.defaultPlatformCommission
         ).toString(),
+        FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
+        AI_QUOTA_PRICE: Math.max(0, generalSettings.aiQuotaPrice).toString(),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
       toast.success('Settings saved successfully');
@@ -213,7 +223,7 @@ export default function SettingsPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Advance Booking Notice (Hours)
+            Minimum advance booking time (hours)
           </label>
           <input
             type="number"
@@ -262,6 +272,42 @@ export default function SettingsPage() {
               setGeneralSettings({
                 ...generalSettings,
                 defaultPlatformCommission: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Free AI Quota (Per Patient)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={generalSettings.freeAiQuota}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                freeAiQuota: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Price (VND per Bundle)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.aiQuotaPrice}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaPrice: parseFloat(e.target.value) || 0,
               })
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
