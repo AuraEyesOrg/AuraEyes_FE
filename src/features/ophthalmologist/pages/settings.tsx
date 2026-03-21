@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import {
   Mail,
   Phone,
@@ -101,6 +102,8 @@ interface OphthalmologistProfileApi {
   id: string;
   userFullName?: string | null;
   userEmail?: string | null;
+  userPhoneNumber?: string | null;
+  userAddress?: string | null;
   bio?: string | null;
   yearsOfExperience: number;
   isVerified: boolean;
@@ -130,6 +133,18 @@ interface WalletTransactionApi {
 
 interface PagedResult<T> {
   items: T[];
+}
+
+interface UpdateOphthalmologistProfilePayload {
+  fullName: string;
+  phone?: string;
+  address?: string;
+  bio?: string;
+  yearsOfExperience: number;
+}
+
+interface UploadAvatarResponse {
+  avatarUrl: string;
 }
 
 const DEFAULT_PROFILE: OphthalmologistProfile = {
@@ -191,16 +206,26 @@ export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
+  const queryClient = useQueryClient();
+  const avatarFileInputRef = useRef<HTMLInputElement | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
-  const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
+  const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
+    null
+  );
+  const [profileForm, setProfileForm] =
+    useState<UpdateOphthalmologistProfilePayload>({
+      fullName: '',
+      phone: '',
+      address: '',
+      bio: '',
+      yearsOfExperience: 0,
+    });
 
   const currentUserQuery = useQuery({
     queryKey: ['auth', 'me'],
@@ -241,6 +266,80 @@ export default function SettingsPage() {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (payload: UpdateOphthalmologistProfilePayload) => {
+      const response = await api.put<ApiResponse<OphthalmologistProfileApi>>(
+        '/ophthalmologist/profile',
+        payload
+      );
+      return response.data.data;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['ophthalmologist', 'detail', ophthalmologistId],
+        }),
+      ]);
+      setShowEditProfileModal(false);
+      toast.success('Profile updated successfully.');
+    },
+    onError: (error: unknown) => {
+      const err = error as {
+        response?: { data?: { message?: string; errors?: string[] } };
+      };
+      toast.error(
+        err.response?.data?.message ||
+          err.response?.data?.errors?.join(', ') ||
+          'Unable to update profile right now. Please try again.'
+      );
+    },
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await api.post<ApiResponse<UploadAvatarResponse>>(
+        '/ophthalmologist/profile/avatar',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+
+      return response.data.data;
+    },
+    onSuccess: async (data) => {
+      setAvatarUrlOverride(data.avatarUrl);
+
+      if (user) {
+        setUser({
+          ...user,
+          avatarUrl: data.avatarUrl,
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      toast.success('Avatar uploaded successfully.');
+    },
+    onError: (error: unknown) => {
+      const err = error as {
+        response?: { data?: { message?: string; errors?: string[] } };
+      };
+
+      toast.error(
+        err.response?.data?.message ||
+          err.response?.data?.errors?.join(', ') ||
+          'Unable to upload avatar right now. Please try again.'
+      );
+    },
+  });
+
+  const displayAvatarUrl =
+    avatarUrlOverride ?? currentUserQuery.data?.avatarUrl ?? user?.avatarUrl;
+
   const profile = useMemo<OphthalmologistProfile>(() => {
     const authUser = currentUserQuery.data ?? user;
     const profileData = profileQuery.data;
@@ -254,18 +353,13 @@ export default function SettingsPage() {
         authUser?.fullName ??
         t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
       email: profileData?.userEmail ?? authUser?.email ?? 'N/A',
-      phone: 'N/A',
-      bio:
-        profileData?.bio?.trim() ||
-        t(
-          'Ophthalmologist.settings.defaults.noBio',
-          'No profile bio available.'
-        ),
+      phone: profileData?.userPhoneNumber ?? 'N/A',
+      bio: profileData?.bio?.trim() || 'No profile bio available.',
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
       hospital: authUser?.organizationId ?? 'N/A',
       department: 'N/A',
-      address: 'N/A',
+      address: profileData?.userAddress ?? 'N/A',
       isVerified: profileData?.isVerified ?? Boolean(authUser?.isVerified),
       createdAt: profileData?.createdAt ?? new Date().toISOString(),
       certificates:
@@ -280,6 +374,65 @@ export default function SettingsPage() {
         })) ?? [],
     };
   }, [currentUserQuery.data, profileQuery.data, user]);
+
+  useEffect(() => {
+    if (!showEditProfileModal) return;
+
+    setProfileForm({
+      fullName: profile.fullName === 'Unknown Doctor' ? '' : profile.fullName,
+      phone: profile.phone === 'N/A' ? '' : profile.phone,
+      address: profile.address === 'N/A' ? '' : profile.address,
+      bio: profile.bio === 'No profile bio available.' ? '' : profile.bio,
+      yearsOfExperience: profile.yearsOfExperience,
+    });
+  }, [profile, showEditProfileModal]);
+
+  const handleUpdateProfile = () => {
+    if (!profileForm.fullName.trim()) {
+      toast.error('Full name is required.');
+      return;
+    }
+
+    updateProfileMutation.mutate({
+      fullName: profileForm.fullName.trim(),
+      phone: profileForm.phone?.trim() || undefined,
+      address: profileForm.address?.trim() || undefined,
+      bio: profileForm.bio?.trim() || undefined,
+      yearsOfExperience: Number(profileForm.yearsOfExperience) || 0,
+    });
+  };
+
+  const handleAvatarUploadClick = () => {
+    if (uploadAvatarMutation.isPending) return;
+    avatarFileInputRef.current?.click();
+  };
+
+  const handleAvatarFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Supported: JPG, PNG, GIF, WebP');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File must be smaller than 5MB');
+      event.target.value = '';
+      return;
+    }
+
+    uploadAvatarMutation.mutate(file, {
+      onSettled: () => {
+        event.target.value = '';
+      },
+    });
+  };
 
   const wallet = useMemo<WalletInfo>(() => {
     return {
@@ -415,7 +568,10 @@ export default function SettingsPage() {
                       'Profile Information'
                     )}
                   </h2>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition-colors">
+                  <button
+                    onClick={() => setShowEditProfileModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
                     <Edit3 className="w-4 h-4" />
                     {t('Ophthalmologist.settings.profile.edit', 'Edit Profile')}
                   </button>
@@ -435,13 +591,38 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-6 mb-6">
                     <div className="relative">
                       <div className="w-24 h-24 rounded-full bg-linear-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-white font-bold text-2xl">
-                        {profile.fullName
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .slice(0, 2)}
+                        {displayAvatarUrl ? (
+                          <img
+                            src={displayAvatarUrl}
+                            alt={profile.fullName}
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          profile.fullName
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .slice(0, 2)
+                        )}
                       </div>
-                      <button className="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#2d4a6f] transition-colors">
+                      <input
+                        ref={avatarFileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                        onChange={handleAvatarFileChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAvatarUploadClick}
+                        disabled={uploadAvatarMutation.isPending}
+                        className="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#2d4a6f] transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                        title={
+                          uploadAvatarMutation.isPending
+                            ? 'Uploading avatar...'
+                            : 'Upload avatar'
+                        }
+                      >
                         <Upload className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       </button>
                     </div>
@@ -1065,6 +1246,133 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
+
+      {showEditProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowEditProfileModal(false)}
+          />
+          <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-2xl mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Edit Profile Information
+              </h3>
+              <button
+                onClick={() => setShowEditProfileModal(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.fullName}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      fullName: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.phone ?? ''}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Years of Experience
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={70}
+                  value={profileForm.yearsOfExperience}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      yearsOfExperience: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.address ?? ''}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      address: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Bio / Description
+              </label>
+              <textarea
+                rows={4}
+                value={profileForm.bio ?? ''}
+                onChange={(e) =>
+                  setProfileForm((prev) => ({
+                    ...prev,
+                    bio: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowEditProfileModal(false)}
+                className="px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProfile}
+                disabled={updateProfileMutation.isPending}
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors disabled:opacity-60"
+              >
+                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Withdraw Modal */}
       {showWithdrawModal && (
