@@ -5,4 +5,8 @@ dist-ssr
 dev-dist
 *.local
 .env
+.env.test
 src/styles.css
+playwright-report
+test-results
+tests/.auth
