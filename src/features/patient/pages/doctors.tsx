@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   Search,
@@ -19,7 +19,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   searchOphthalmologistsForPatient,
   type OphthalmologistSearchItem,
@@ -32,6 +32,12 @@ import { useAppointmentSlots } from '../hooks/use-booking';
 import { ScheduleStatus, SlotType } from '@/types/schedule';
 import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import Footer from '@/features/guest/components/Footer';
+import {
+  loadScreeningConsultationContext,
+  saveScreeningConsultationContext,
+  type ScreeningConsultationContext,
+} from '../types/consultation-context';
+import type { Anomaly, RetinalImage } from '../types/type';
 
 const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
 
@@ -81,7 +87,44 @@ function matchesLocalSearch(
 
 export default function DoctorsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
+  const routeState = location.state as
+    | {
+        consultationContext?: ScreeningConsultationContext;
+        screeningId?: string;
+        images?: RetinalImage[];
+        anomalies?: Anomaly[];
+        riskLevel?: 'low' | 'moderate' | 'high';
+        riskScore?: number;
+        rawJsonOutput?: string;
+      }
+    | undefined;
+
+  const consultationContext = useMemo(() => {
+    if (routeState?.consultationContext?.screeningId) {
+      return routeState.consultationContext;
+    }
+
+    if (routeState?.screeningId) {
+      return {
+        screeningId: routeState.screeningId,
+        images: routeState.images ?? [],
+        anomalies: routeState.anomalies ?? [],
+        riskLevel: routeState.riskLevel ?? 'low',
+        riskScore: routeState.riskScore,
+        rawJsonOutput: routeState.rawJsonOutput,
+        createdAt: new Date().toISOString(),
+      } satisfies ScreeningConsultationContext;
+    }
+
+    return loadScreeningConsultationContext();
+  }, [routeState]);
+
+  useEffect(() => {
+    if (!consultationContext?.screeningId) return;
+    saveScreeningConsultationContext(consultationContext);
+  }, [consultationContext]);
 
   // Filters
   const [timeFrom, setTimeFrom] = useState<string>('');
@@ -313,7 +356,20 @@ export default function DoctorsPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() =>
+            navigate('/patient/screening/review', {
+              state: consultationContext
+                ? {
+                    screeningId: consultationContext.screeningId,
+                    images: consultationContext.images,
+                    anomalies: consultationContext.anomalies,
+                    riskLevel: consultationContext.riskLevel,
+                    riskScore: consultationContext.riskScore,
+                    rawJsonOutput: consultationContext.rawJsonOutput,
+                  }
+                : undefined,
+            })
+          }
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-(--text-secondary) hover:text-(--text-primary) bg-(--bg-secondary) hover:bg-[var(--border-color)] rounded-xl transition-all border border-(--border-color) shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -325,6 +381,11 @@ export default function DoctorsPage() {
       <div className="w-full bg-brand/5 dark:bg-brand/10 pt-10 pb-28 px-6 relative border-b border-(--border-color)">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
+            {consultationContext?.screeningId && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300 text-xs font-semibold">
+                Case linked: {consultationContext.screeningId.slice(0, 8)}...
+              </div>
+            )}
             <h2 className="text-3xl md:text-5xl font-black text-brand uppercase tracking-tight">
               GỌI VIDEO VỚI BÁC SĨ
             </h2>
