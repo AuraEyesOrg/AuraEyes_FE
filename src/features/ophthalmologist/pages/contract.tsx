@@ -5,7 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { formatViDate } from '@/lib/date-utils';
@@ -26,6 +26,12 @@ import DoctorSidebar from '../components/DoctorSidebar';
 import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
 import Spinner from '@/components/ui/spinner';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -70,32 +76,42 @@ const downloadContractTemplate = async (
 // ─────────────────────────────────────────────
 // Status helpers
 // ─────────────────────────────────────────────
-function getStatusConfig(status: string, hasUpload: boolean) {
+function getStatusConfig(
+  status: string,
+  hasUpload: boolean,
+  t: (key: string, fallback: string) => string
+) {
   switch (status) {
     case 'PendingSignature':
       return hasUpload
         ? {
-            label: 'Đã upload — Chờ admin duyệt',
+            label: t(
+              'Ophthalmologist.contract.status.uploadedPendingApproval',
+              'Uploaded - Waiting for admin approval'
+            ),
             color: 'text-blue-600 bg-blue-50 border-blue-200',
             dotColor: 'bg-blue-500',
             icon: Clock,
           }
         : {
-            label: 'Chờ ký hợp đồng',
+            label: t(
+              'Ophthalmologist.contract.status.pendingSignature',
+              'Waiting for signature'
+            ),
             color: 'text-amber-600 bg-amber-50 border-amber-200',
             dotColor: 'bg-amber-500',
             icon: AlertTriangle,
           };
     case 'Active':
       return {
-        label: 'Đang hiệu lực',
+        label: t('Ophthalmologist.contract.status.active', 'Active'),
         color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
         dotColor: 'bg-emerald-500',
         icon: CheckCircle,
       };
     case 'Draft':
       return {
-        label: 'Nháp',
+        label: t('Ophthalmologist.contract.status.draft', 'Draft'),
         color: 'text-slate-600 bg-slate-50 border-slate-200',
         dotColor: 'bg-slate-400',
         icon: FileText,
@@ -116,9 +132,11 @@ function getStatusConfig(status: string, hasUpload: boolean) {
 function UploadSection({
   contract,
   onUploadSuccess,
+  t,
 }: {
   contract: ContractDetailDto;
   onUploadSuccess: () => void;
+  t: (key: string, fallback: string) => string;
 }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -144,11 +162,21 @@ function UploadSection({
       'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert('Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF.');
+      alert(
+        t(
+          'Ophthalmologist.contract.upload.invalidType',
+          'Only JPEG, PNG, WebP, or PDF files are allowed.'
+        )
+      );
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert('Kích thước file không được vượt quá 10MB.');
+      alert(
+        t(
+          'Ophthalmologist.contract.upload.fileTooLarge',
+          'File size must not exceed 10MB.'
+        )
+      );
       return;
     }
     setSelectedFile(file);
@@ -182,14 +210,22 @@ function UploadSection({
           {isImageUrl(contract.scannedDocumentUrl) ? (
             <img
               src={contract.scannedDocumentUrl}
-              alt="Hợp đồng đã ký"
+              alt={t(
+                'Ophthalmologist.contract.upload.signedContract',
+                'Signed contract'
+              )}
               className="w-full max-h-125 object-contain"
             />
           ) : (
             <div className="flex items-center justify-center h-48">
               <div className="text-center">
                 <FileText className="w-14 h-14 text-slate-400 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">File PDF đã upload</p>
+                <p className="text-sm text-slate-500">
+                  {t(
+                    'Ophthalmologist.contract.upload.pdfUploaded',
+                    'PDF file uploaded'
+                  )}
+                </p>
               </div>
             </div>
           )}
@@ -203,10 +239,16 @@ function UploadSection({
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                Đang chờ admin xác nhận
+                {t(
+                  'Ophthalmologist.contract.upload.waitingAdmin',
+                  'Waiting for admin confirmation'
+                )}
               </p>
               <p className="text-xs text-slate-500">
-                Hợp đồng của bạn đã được gửi đi
+                {t(
+                  'Ophthalmologist.contract.upload.sentNotice',
+                  'Your contract has been submitted'
+                )}
               </p>
             </div>
           </div>
@@ -218,14 +260,17 @@ function UploadSection({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 transition-colors"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              Mở ảnh gốc
+              {t(
+                'Ophthalmologist.contract.upload.openOriginal',
+                'Open original'
+              )}
             </a>
             <button
               onClick={() => setShowReupload(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Upload lại
+              {t('Ophthalmologist.contract.upload.reupload', 'Re-upload')}
             </button>
           </div>
         </div>
@@ -246,7 +291,10 @@ function UploadSection({
           className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
-          Hủy, quay lại xem hợp đồng đã nộp
+          {t(
+            'Ophthalmologist.contract.upload.cancelReupload',
+            'Cancel and return to submitted contract'
+          )}
         </button>
       )}
 
@@ -279,11 +327,19 @@ function UploadSection({
           className={`w-10 h-10 mx-auto mb-3 ${dragActive ? 'text-primary' : 'text-slate-400'}`}
         />
         <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Kéo thả ảnh hợp đồng vào đây hoặc{' '}
-          <span className="text-primary font-semibold">chọn file</span>
+          {t(
+            'Ophthalmologist.contract.upload.dropzoneLabel',
+            'Drag and drop contract file here or'
+          )}{' '}
+          <span className="text-primary font-semibold">
+            {t('Ophthalmologist.contract.upload.selectFile', 'select file')}
+          </span>
         </p>
         <p className="text-xs text-slate-400 mt-1">
-          JPEG, PNG, WebP hoặc PDF — Tối đa 10MB
+          {t(
+            'Ophthalmologist.contract.upload.dropzoneHint',
+            'JPEG, PNG, WebP, or PDF - Max 10MB'
+          )}
         </p>
       </div>
 
@@ -293,7 +349,7 @@ function UploadSection({
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt="Preview"
+              alt={t('Ophthalmologist.contract.upload.preview', 'Preview')}
               className="w-16 h-16 rounded-lg object-cover border border-slate-200"
             />
           ) : (
@@ -334,13 +390,19 @@ function UploadSection({
           ) : (
             <Upload className="w-4 h-4" />
           )}
-          Tải lên hợp đồng đã ký
+          {t(
+            'Ophthalmologist.contract.upload.uploadSignedContract',
+            'Upload signed contract'
+          )}
         </button>
       )}
 
       {uploadMutation.isError && (
         <p className="text-sm text-red-500 text-center">
-          Upload thất bại. Vui lòng thử lại.
+          {t(
+            'Ophthalmologist.contract.upload.uploadFailed',
+            'Upload failed. Please try again.'
+          )}
         </p>
       )}
     </div>
@@ -351,8 +413,11 @@ function UploadSection({
 // Main Page
 // ─────────────────────────────────────────────
 export default function ContractPage() {
+  const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const { user, setUser } = useAuthStore();
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -370,16 +435,18 @@ export default function ContractPage() {
   useEffect(() => {
     if (contract?.status === 'Active' && user?.contractStatus !== 'Active') {
       setUser({ ...user!, contractStatus: 'Active' });
-      navigate('/ophthalmologist/dashboard', { replace: true });
+      navigate(withLocalePathname(locale, '/ophthalmologist/dashboard'), {
+        replace: true,
+      });
     }
-  }, [contract?.status]);
+  }, [contract?.status, locale, navigate, setUser, user]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
   };
 
   const statusConfig = contract
-    ? getStatusConfig(contract.status, !!contract.scannedDocumentUrl)
+    ? getStatusConfig(contract.status, !!contract.scannedDocumentUrl, t)
     : null;
 
   return (
@@ -387,17 +454,22 @@ export default function ContractPage() {
       <DoctorSidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.contract.title', 'Contract')}
+        />
 
         <main className="p-6 max-w-4xl mx-auto space-y-6">
           {/* Page title */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Hợp đồng hợp tác
+                {t('Ophthalmologist.contract.title', 'Contract')}
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                Xem, tải và upload hợp đồng hợp tác chuyên môn với AURA
+                {t(
+                  'Ophthalmologist.contract.subtitle',
+                  'View, download, and upload your cooperation contract with AURA'
+                )}
               </p>
             </div>
             {contract && (
@@ -410,7 +482,7 @@ export default function ContractPage() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
-                Làm mới
+                {t('Ophthalmologist.contract.refresh', 'Refresh')}
               </button>
             )}
           </div>
@@ -421,7 +493,10 @@ export default function ContractPage() {
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                 <p className="text-slate-500 text-sm">
-                  Đang tải thông tin hợp đồng...
+                  {t(
+                    'Ophthalmologist.contract.loading',
+                    'Loading contract information...'
+                  )}
                 </p>
               </div>
             </div>
@@ -431,10 +506,14 @@ export default function ContractPage() {
           {isError && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
               <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-              <p className="font-semibold text-amber-800">Chưa có hợp đồng</p>
+              <p className="font-semibold text-amber-800">
+                {t('Ophthalmologist.contract.emptyTitle', 'No contract yet')}
+              </p>
               <p className="text-sm text-amber-600 mt-1">
-                Hợp đồng sẽ được tạo sau khi admin phê duyệt hồ sơ xác minh của
-                bạn.
+                {t(
+                  'Ophthalmologist.contract.emptyDescription',
+                  'A contract will be generated after admin approves your verification profile.'
+                )}
               </p>
             </div>
           )}
@@ -461,12 +540,18 @@ export default function ContractPage() {
                     </span>
                   </div>
                   <p className="text-xs opacity-80">
-                    Mã hợp đồng: {contract.contractNumber}
+                    {t(
+                      'Ophthalmologist.contract.contractCode',
+                      'Contract code'
+                    )}
+                    : {contract.contractNumber}
                   </p>
                 </div>
                 {contract.signedDate && (
                   <div className="text-right text-xs">
-                    <p className="opacity-60">Ngày ký</p>
+                    <p className="opacity-60">
+                      {t('Ophthalmologist.contract.signedDate', 'Signed date')}
+                    </p>
                     <p className="font-medium">
                       {formatViDate(contract.signedDate)}
                     </p>
@@ -478,23 +563,38 @@ export default function ContractPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    Thông tin hợp đồng
+                    {t(
+                      'Ophthalmologist.contract.contractInfo',
+                      'Contract information'
+                    )}
                   </p>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Mẫu</span>
+                      <span className="text-sm text-slate-500">
+                        {t('Ophthalmologist.contract.template', 'Template')}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {contract.templateTitle}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Loại</span>
+                      <span className="text-sm text-slate-500">
+                        {t('Ophthalmologist.contract.type', 'Type')}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
-                        Bác sĩ nhãn khoa
+                        {t(
+                          'Ophthalmologist.contract.ophthalmologistType',
+                          'Ophthalmologist'
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Ngày tạo</span>
+                      <span className="text-sm text-slate-500">
+                        {t(
+                          'Ophthalmologist.contract.createdDate',
+                          'Created date'
+                        )}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatViDate(contract.createdAt)}
                       </span>
@@ -503,11 +603,13 @@ export default function ContractPage() {
                 </div>
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    Người ký
+                    {t('Ophthalmologist.contract.signer', 'Signer')}
                   </p>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Họ tên</span>
+                      <span className="text-sm text-slate-500">
+                        {t('Ophthalmologist.contract.fullName', 'Full name')}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {contract.userFullName}
                       </span>
@@ -525,7 +627,7 @@ export default function ContractPage() {
               {/* Actions */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Hành động
+                  {t('Ophthalmologist.contract.actions', 'Actions')}
                 </p>
 
                 {/* View contract template */}
@@ -539,10 +641,16 @@ export default function ContractPage() {
                     <Eye className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                        Xem mẫu hợp đồng
+                        {t(
+                          'Ophthalmologist.contract.viewTemplate',
+                          'View contract template'
+                        )}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Mở trực tiếp file mẫu hợp đồng ở tab mới
+                        {t(
+                          'Ophthalmologist.contract.viewTemplateHint',
+                          'Open the contract template file in a new tab'
+                        )}
                       </p>
                     </div>
                   </button>
@@ -562,7 +670,10 @@ export default function ContractPage() {
                         setDownloadError(
                           error instanceof Error
                             ? error.message
-                            : 'Không thể tải file mẫu hợp đồng.'
+                            : t(
+                                'Ophthalmologist.contract.downloadFailed',
+                                'Unable to download contract template file.'
+                              )
                         );
                       }
                     }}
@@ -571,10 +682,16 @@ export default function ContractPage() {
                     <Download className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                        Tải mẫu hợp đồng
+                        {t(
+                          'Ophthalmologist.contract.downloadTemplate',
+                          'Download contract template'
+                        )}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Tải file gốc để in ra giấy và ký
+                        {t(
+                          'Ophthalmologist.contract.downloadTemplateHint',
+                          'Download the original file for printing and signing'
+                        )}
                       </p>
                     </div>
                   </button>
@@ -590,11 +707,16 @@ export default function ContractPage() {
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                      Upload hợp đồng đã ký
+                      {t(
+                        'Ophthalmologist.contract.upload.uploadSignedTitle',
+                        'Upload signed contract'
+                      )}
                     </p>
                     <p className="text-sm text-slate-500">
-                      In hợp đồng, ký tên và đóng dấu, sau đó chụp ảnh hoặc scan
-                      để upload
+                      {t(
+                        'Ophthalmologist.contract.upload.uploadSignedDescription',
+                        'Print the contract, sign and stamp it, then upload a photo or scanned copy'
+                      )}
                     </p>
                   </div>
 
@@ -605,10 +727,27 @@ export default function ContractPage() {
                         {
                           step: 1,
                           icon: Download,
-                          text: 'Tải & in hợp đồng',
+                          text: t(
+                            'Ophthalmologist.contract.upload.steps.downloadPrint',
+                            'Download and print contract'
+                          ),
                         },
-                        { step: 2, icon: FileText, text: 'Ký tên & đóng dấu' },
-                        { step: 3, icon: Image, text: 'Chụp ảnh & upload' },
+                        {
+                          step: 2,
+                          icon: FileText,
+                          text: t(
+                            'Ophthalmologist.contract.upload.steps.signStamp',
+                            'Sign and stamp'
+                          ),
+                        },
+                        {
+                          step: 3,
+                          icon: Image,
+                          text: t(
+                            'Ophthalmologist.contract.upload.steps.captureUpload',
+                            'Capture and upload'
+                          ),
+                        },
                       ].map(({ step, icon: Icon, text }) => (
                         <div
                           key={step}
@@ -631,6 +770,7 @@ export default function ContractPage() {
                   <UploadSection
                     contract={contract}
                     onUploadSuccess={handleUploadSuccess}
+                    t={t}
                   />
                 </div>
               )}
@@ -642,11 +782,16 @@ export default function ContractPage() {
                     <CheckCircle className="w-8 h-8 text-emerald-600" />
                     <div>
                       <p className="font-semibold text-emerald-800 dark:text-emerald-200">
-                        Hợp đồng đã được kích hoạt!
+                        {t(
+                          'Ophthalmologist.contract.activeTitle',
+                          'Contract has been activated!'
+                        )}
                       </p>
                       <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                        Bạn có thể bắt đầu nhận ca bệnh và tư vấn trên hệ thống
-                        AURA.
+                        {t(
+                          'Ophthalmologist.contract.activeDescription',
+                          'You can now start receiving cases and consulting on the AURA platform.'
+                        )}
                       </p>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { Search, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
 import { NotificationDropdown } from '@/components/ui/notification';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface DoctorHeaderProps {
   pageName?: string;
@@ -10,6 +11,7 @@ interface DoctorHeaderProps {
 export default function DoctorHeader({
   pageName = 'Dashboard',
 }: DoctorHeaderProps) {
+  const { t } = useSafeTranslation();
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuthStore();
 
@@ -19,7 +21,7 @@ export default function DoctorHeader({
     <header className="role-header">
       <div className="flex items-center justify-between">
         <div className="breadcrumb-text flex items-center gap-2">
-          <span>Pages</span>
+          <span>{t('Ophthalmologist.header.pages', 'Pages')}</span>
           <span>/</span>
           <span className="breadcrumb-active">{pageName}</span>
         </div>
@@ -33,7 +35,10 @@ export default function DoctorHeader({
             />
             <input
               type="text"
-              placeholder="Search patients, ID..."
+              placeholder={t(
+                'Ophthalmologist.header.searchPlaceholder',
+                'Search patients, ID...'
+              )}
               className="header-search-input w-64"
             />
           </div>
@@ -42,7 +47,7 @@ export default function DoctorHeader({
           <button
             onClick={toggleTheme}
             className="header-action-btn"
-            aria-label="Toggle theme"
+            aria-label={t('Ophthalmologist.header.toggleTheme', 'Toggle theme')}
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>

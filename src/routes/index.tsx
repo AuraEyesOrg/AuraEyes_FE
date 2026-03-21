@@ -1,4 +1,10 @@
-import { lazy, Suspense, useEffect } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -11,6 +17,7 @@ import PrivateRoute from './private-route';
 import Spinner from '@/components/ui/spinner';
 import { setRouterNavigator } from '@/lib/router';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import { LocaleSync } from '@/i18n/LocaleSync';
 import GuestLayout from '@/features/guest/layout';
 
 // Guest/Landing pages (public - no auth required)
@@ -254,6 +261,28 @@ const LocalizedRedirect = ({ target }: LocalizedRedirectProps) => {
   );
 };
 
+interface LocalizedAuthRouteProps {
+  element: ReactNode;
+}
+
+const LocalizedAuthRoute = ({ element }: LocalizedAuthRouteProps) => (
+  <>
+    <LocaleSync />
+    {element}
+  </>
+);
+
+interface LocalizedPrivateRouteProps {
+  element: ReactElement;
+}
+
+const LocalizedPrivateRoute = ({ element }: LocalizedPrivateRouteProps) => (
+  <>
+    <LocaleSync />
+    <PrivateRoute>{element}</PrivateRoute>
+  </>
+);
+
 /**
  * Main Router Component
  */
@@ -286,6 +315,124 @@ const Router = () => (
           element={<LocalizedRedirect target="/compliance" />}
         />
 
+        <Route
+          path="/:locale/login"
+          element={<LocalizedAuthRoute element={<LoginPage />} />}
+        />
+        <Route
+          path="/:locale/forgot-password"
+          element={<LocalizedAuthRoute element={<ForgotPasswordPage />} />}
+        />
+        <Route
+          path="/:locale/reset-password"
+          element={<LocalizedAuthRoute element={<ResetPasswordPage />} />}
+        />
+        <Route
+          path="/:locale/register-doctor"
+          element={<LocalizedAuthRoute element={<RegisterDoctorPage />} />}
+        />
+        <Route
+          path="/:locale/register-organisation"
+          element={
+            <LocalizedAuthRoute element={<RegisterOrganisationPage />} />
+          }
+        />
+        <Route
+          path="/:locale/confirm-email"
+          element={<LocalizedAuthRoute element={<ConfirmEmailPage />} />}
+        />
+        <Route
+          path="/:locale/two-factor-auth"
+          element={<LocalizedAuthRoute element={<TwoFactorSettingsPage />} />}
+        />
+        <Route
+          path="/:locale/two-factor-verify"
+          element={<LocalizedAuthRoute element={<TwoFactorVerifyPage />} />}
+        />
+        <Route
+          path="/:locale/pending-approval"
+          element={<LocalizedAuthRoute element={<PendingApprovalPage />} />}
+        />
+
+        <Route
+          path="/:locale/ophthalmologist/dashboard"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistDashboard />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/patients"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistPatientsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/analytics"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistAnalyticsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/appointments"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistAppointmentsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/settings"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistSettingsPage />} />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/consultations"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistConsultationsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/screenings/:screeningId/review"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistScreeningReviewPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/schedules"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/slot-management"
+          element={
+            <LocalizedPrivateRoute
+              element={<OphthalmologistSlotManagementPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/contract"
+          element={
+            <LocalizedPrivateRoute element={<OphthalmologistContractPage />} />
+          }
+        />
+
         <Route path="/:locale" element={<GuestLayout />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
@@ -315,10 +462,7 @@ const Router = () => (
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/screening" element={<ScreeningPage />} />
         <Route path="/patient/screening/new" element={<ScreeningNewPage />} />
-        <Route
-          path="/patient/screening/analyze"
-          element={<RetinalAnalysisPage />}
-        />
+        <Route path="/patient/analysis" element={<RetinalAnalysisPage />} />
         <Route path="/patient/screening/review" element={<ReviewPage />} />
         <Route path="/patient/reports" element={<ReportsPage />} />
         <Route path="/patient/notifications" element={<NotificationsPage />} />
