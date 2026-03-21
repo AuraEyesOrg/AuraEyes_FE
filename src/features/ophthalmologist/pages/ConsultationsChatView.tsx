@@ -1454,6 +1454,78 @@ export default function ConsultationsChatView({
               </div>
             </div>
 
+            {selectedSession?.caseSnapshot && (
+              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                  AI Case Snapshot
+                </p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                  Screening #
+                  {selectedSession.caseSnapshot.screeningId.slice(0, 8)}
+                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                    {selectedSession.caseSnapshot.originalImageUrls[0] ? (
+                      <img
+                        src={selectedSession.caseSnapshot.originalImageUrls[0]}
+                        alt="Original retinal image"
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
+                        No original image
+                      </div>
+                    )}
+                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                      Original
+                    </p>
+                  </div>
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                    {selectedSession.caseSnapshot.annotatedImageUrl ? (
+                      <img
+                        src={selectedSession.caseSnapshot.annotatedImageUrl}
+                        alt="AI annotated retinal image"
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
+                        No AI image
+                      </div>
+                    )}
+                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                      AI Annotated
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Risk: {selectedSession.caseSnapshot.riskLevel ?? 'Unknown'}{' '}
+                    | Confidence:{' '}
+                    {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
+                  </p>
+                  {selectedSession.caseSnapshot.summary && (
+                    <p className="text-sm text-slate-700 dark:text-gray-300">
+                      {selectedSession.caseSnapshot.summary}
+                    </p>
+                  )}
+                  {selectedSession.caseSnapshot.symptoms.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedSession.caseSnapshot.symptoms.map((symptom) => (
+                        <span
+                          key={symptom}
+                          className="rounded-full bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 px-2 py-1 text-[11px] font-medium border border-cyan-200 dark:border-cyan-800"
+                        >
+                          {symptom}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
                 <Stethoscope className="h-4 w-4" />
