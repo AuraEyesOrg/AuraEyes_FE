@@ -3,7 +3,7 @@
  * Manage system-wide settings and configurations
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   Bell,
@@ -15,8 +15,13 @@ import {
   Save,
   RefreshCw,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import {
+  useSystemSettings,
+  useUpdateSystemSettings,
+} from '../api/system-settings.api';
 
 interface SettingSection {
   id: string;
@@ -56,6 +61,9 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
 
+  const { data: systemSettings, isLoading } = useSystemSettings();
+  const updateSettingsMutation = useUpdateSystemSettings();
+
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
     platformName: 'AURA Medical',
@@ -63,7 +71,19 @@ export default function SettingsPage() {
     timezone: 'UTC',
     language: 'en',
     maintenanceMode: false,
+    minAdvanceBookingHours: 1,
   });
+
+  useEffect(() => {
+    if (systemSettings) {
+      setGeneralSettings((prev) => ({
+        ...prev,
+        minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
+          ? parseInt(systemSettings['MIN_ADVANCE_BOOKING_HOURS'], 10)
+          : 1,
+      }));
+    }
+  }, [systemSettings]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -86,9 +106,17 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: Implement API call to save settings
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Settings saved');
+      const settingsToUpdate = {
+        MIN_ADVANCE_BOOKING_HOURS: Math.max(
+          0,
+          generalSettings.minAdvanceBookingHours
+        ).toString(),
+      };
+      await updateSettingsMutation.mutateAsync(settingsToUpdate);
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -169,6 +197,24 @@ export default function SettingsPage() {
             <option value="fr">French</option>
             <option value="es">Spanish</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Advance Booking Notice (Hours)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={72}
+            value={generalSettings.minAdvanceBookingHours}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                minAdvanceBookingHours: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
         </div>
       </div>
 
