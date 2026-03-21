@@ -12,6 +12,7 @@ import PatientLayout from '../components/PatientLayout';
 import { useWallet } from '../hooks/use-wallet';
 import { walletApi } from '../api/patient.api';
 import type { VerifyPaymentResponse } from '../types';
+import { toast } from 'react-toastify';
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
 
@@ -59,6 +60,9 @@ export default function PaymentCallbackPage() {
       (data) => {
         setPaymentData(data);
         setStatus(data.isSuccess ? 'success' : 'failed');
+        if (data.isSuccess) {
+          toast.success('Bạn đã nạp tiền thành công!');
+        }
         refetchWallet();
       },
       () => {

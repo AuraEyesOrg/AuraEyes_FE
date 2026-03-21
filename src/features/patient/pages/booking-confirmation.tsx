@@ -198,6 +198,7 @@ export default function BookingConfirmationPage(
           shareAiResults,
         },
       });
+      toast.success('Bạn đã đặt lịch thành công!');
       sessionStorage.removeItem('patient-booking-confirm-context');
       setIsSuccess(true);
       setSessionId(result.consultationSessionId);

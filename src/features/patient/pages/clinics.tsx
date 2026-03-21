@@ -17,6 +17,7 @@ import {
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate, toLocalDateKey } from '@/lib/date-utils';
+import { toast } from 'react-toastify';
 
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
   const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
@@ -86,6 +87,7 @@ export default function ClinicsPage() {
         slotId,
         visitReason: visitReason.trim() || undefined,
       });
+      toast.success('Bạn đã đặt lịch thành công!');
       setSuccessMessage(
         'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở Appointments.'
       );
