@@ -80,10 +80,10 @@ const getAvatarUrl = (doctor: {
 
 const getNextAvailableDate = (candidates: AppointmentSlotListDto[]) => {
   if (!candidates.length) return null;
-  candidates.sort(
+  const sortedCandidates = candidates.toSorted(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
-  return candidates[0]?.date ?? null;
+  return sortedCandidates[0]?.date ?? null;
 };
 
 const isExpiredAppointmentSlot = (
@@ -322,8 +322,6 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
     preselectedDate ?? toLocalDateKey(new Date())
   );
   const [selectedSlot, setSelectedSlot] =
-    useState<AppointmentSlotListDto | null>(null);
-  const [slotToRelease, setSlotToRelease] =
     useState<AppointmentSlotListDto | null>(null);
 
   const { data: systemSettings, isLoading: isLoadingSettings } =

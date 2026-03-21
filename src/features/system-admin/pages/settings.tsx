@@ -61,7 +61,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: systemSettings, isLoading } = useSystemSettings();
+  const { data: systemSettings } = useSystemSettings();
   const updateSettingsMutation = useUpdateSystemSettings();
 
   // General settings state
