@@ -71,20 +71,6 @@ function getDemoTitleBadges(doctorId: string, fallbackIndex: number) {
   return result;
 }
 
-function matchesLocalSearch(
-  doctor: OphthalmologistSearchItem,
-  searchTerm: string
-): boolean {
-  const q = searchTerm.trim().toLowerCase();
-  if (!q) return true;
-
-  const fullName = doctor.userFullName ?? '';
-  const email = doctor.userEmail ?? '';
-  const bio = doctor.bio ?? '';
-
-  return [fullName, email, bio].some((v) => v.toLowerCase().includes(q));
-}
-
 export default function DoctorsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -150,7 +136,7 @@ export default function DoctorsPage() {
     setSelectedDoctor(doctor);
   };
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['patient-ophthalmologists', searchTerm],
     queryFn: () =>
       searchOphthalmologistsForPatient({
@@ -162,20 +148,6 @@ export default function DoctorsPage() {
 
   // Real query results
   const apiDoctors: OphthalmologistSearchItem[] = data?.items ?? [];
-  const useDemoDoctors =
-    !searchTerm.trim() && (isError || apiDoctors.length === 0);
-  const apiErrorMessage = !isError
-    ? null
-    : ((error as unknown as { message?: string; response?: { data?: any } })
-        ?.response?.data?.message ??
-      (error as { message?: string })?.message ??
-      'Unknown error');
-
-  const baseDoctors = apiDoctors;
-
-  // If the API list is empty, we show demo doctors so the UI doesn't look broken.
-  // Booking/slot filtering may still depend on backend availability.
-
   const timeFilterEnabled = Boolean(timeFrom && timeTo);
   const maxPriceRangeDays = 30;
   const selectedRangeDays = useMemo(() => {
@@ -188,8 +160,7 @@ export default function DoctorsPage() {
   const slotsEnabled =
     timeFilterEnabled &&
     selectedRangeDays > 0 &&
-    selectedRangeDays <= maxPriceRangeDays &&
-    !useDemoDoctors;
+    selectedRangeDays <= maxPriceRangeDays;
 
   const { data: appointmentSlotsData, isLoading: slotsLoading } =
     useAppointmentSlots(
@@ -212,59 +183,6 @@ export default function DoctorsPage() {
 
     if (!timeFilterEnabled) return map;
 
-    if (useDemoDoctors) {
-      const today = new Date();
-      const demoAvailability = [
-        {
-          doctorId: 'demo-ophthal-1',
-          offsetDays: 0,
-          windowDays: 14,
-          minCost: 250000,
-        },
-        {
-          doctorId: 'demo-ophthal-2',
-          offsetDays: 3,
-          windowDays: 10,
-          minCost: 180000,
-        },
-        {
-          doctorId: 'demo-ophthal-3',
-          offsetDays: 0,
-          windowDays: 20,
-          minCost: 320000,
-        },
-        {
-          doctorId: 'demo-ophthal-4',
-          offsetDays: 7,
-          windowDays: 8,
-          minCost: 150000,
-        },
-      ];
-
-      const from = new Date(`${timeFrom}T00:00:00`).getTime();
-      const to = new Date(`${timeTo}T00:00:00`).getTime();
-      const hasOverlap = (aFrom: number, aTo: number) =>
-        aFrom <= to && aTo >= from;
-
-      for (const d of demoAvailability) {
-        const availableFrom = new Date(today);
-        availableFrom.setDate(availableFrom.getDate() + d.offsetDays);
-        availableFrom.setHours(0, 0, 0, 0);
-
-        const availableTo = new Date(availableFrom);
-        availableTo.setDate(availableTo.getDate() + d.windowDays);
-        availableTo.setHours(0, 0, 0, 0);
-
-        if (hasOverlap(availableFrom.getTime(), availableTo.getTime())) {
-          map.set(d.doctorId, d.minCost);
-        } else {
-          map.set(d.doctorId, null);
-        }
-      }
-
-      return map;
-    }
-
     for (const slot of appointmentSlotsData?.items ?? []) {
       const doctorId = slot.ophthalId;
       if (!doctorId) continue;
@@ -281,23 +199,13 @@ export default function DoctorsPage() {
     }
 
     return map;
-  }, [
-    appointmentSlotsData?.items,
-    timeFilterEnabled,
-    timeFrom,
-    timeTo,
-    useDemoDoctors,
-  ]);
+  }, [appointmentSlotsData?.items, timeFilterEnabled, timeFrom, timeTo]);
 
   const filteredDoctors = useMemo(() => {
-    const localList = baseDoctors.filter((doctor) =>
-      useDemoDoctors ? matchesLocalSearch(doctor, searchTerm) : true
-    );
-
     const ratingFiltered =
       minRating === null
-        ? localList
-        : localList.filter((d) => (d.ratingAverage ?? 0) >= (minRating ?? 0));
+        ? apiDoctors
+        : apiDoctors.filter((d) => (d.ratingAverage ?? 0) >= (minRating ?? 0));
 
     let priceFiltered = ratingFiltered;
     if (priceMin !== null || priceMax !== null) {
@@ -312,7 +220,7 @@ export default function DoctorsPage() {
 
     if (!timeFilterEnabled) return priceFiltered;
 
-    if (slotsLoading && !useDemoDoctors) {
+    if (slotsLoading) {
       // Don't blank the list while prices are still loading
       return priceFiltered;
     }
@@ -326,7 +234,7 @@ export default function DoctorsPage() {
 
     return timeFiltered;
   }, [
-    baseDoctors,
+    apiDoctors,
     minCostByDoctorId,
     minRating,
     priceMax,
@@ -334,13 +242,12 @@ export default function DoctorsPage() {
     searchTerm,
     slotsLoading,
     timeFilterEnabled,
-    useDemoDoctors,
   ]);
 
   const { data: feedbackData, isLoading: feedbackLoading } = useQuery({
     queryKey: ['patient-ophthalmologist-feedback', selectedDoctor?.id],
     queryFn: () => listOphthalmologistFeedback(selectedDoctor!.id, 1, 20),
-    enabled: !!selectedDoctor && !useDemoDoctors,
+    enabled: !!selectedDoctor,
   });
   const feedbacks = feedbackData?.items ?? [];
 
@@ -608,7 +515,6 @@ export default function DoctorsPage() {
 
             {timeFilterEnabled &&
               !slotsEnabled &&
-              !useDemoDoctors &&
               selectedRangeDays > 0 &&
               selectedRangeDays <= maxPriceRangeDays && (
                 <p className="text-sm text-amber-700 mt-2">
@@ -628,27 +534,7 @@ export default function DoctorsPage() {
           </div>
         )}
 
-        {useDemoDoctors && !isLoading && (
-          <div className="medical-card p-4 mb-6 border border-amber-200 bg-amber-50 text-amber-800">
-            <p className="text-sm font-semibold">
-              Không tải được danh sách bác sĩ từ hệ thống.
-            </p>
-            <p className="text-sm">
-              Hiển thị dữ liệu demo để bạn xem UI/UX.
-              {apiErrorMessage ? ` (Lý do: ${apiErrorMessage})` : ''}. Bạn có
-              thể thử lại bằng cách bấm `Refetch`.
-            </p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="mt-3 inline-flex items-center justify-center px-4 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-semibold transition-colors"
-            >
-              Refetch
-            </button>
-          </div>
-        )}
-
-        {slotsLoading && timeFilterEnabled && !useDemoDoctors && (
+        {slotsLoading && timeFilterEnabled && (
           <div className="text-sm text-(--text-secondary) mb-4 flex items-center gap-2">
             <Spinner size={16} />
             Loading price availability...
@@ -756,7 +642,7 @@ export default function DoctorsPage() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedDoctor(doctor);
-                        if (!useDemoDoctors) setBookingMode('select');
+                        setBookingMode('select');
                       }}
                       className="inline-flex items-center justify-center gap-2 px-8 py-2.5 bg-brand hover:bg-brand/90 text-white font-bold rounded-full shadow-md transition-transform transform active:scale-95 z-10 w-full sm:w-auto"
                     >
@@ -772,7 +658,7 @@ export default function DoctorsPage() {
         {!isLoading && filteredDoctors.length === 0 && (
           <div className="medical-card p-12 text-center mt-6">
             <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
-              No ophthalmologists found
+              Chưa có bác sĩ nào
             </h3>
             <p className="text-(--text-secondary)">
               {timeFilterEnabled
@@ -962,7 +848,6 @@ export default function DoctorsPage() {
                   {/* Floating call to action */}
                   <button
                     onClick={() => setBookingMode('select')}
-                    disabled={useDemoDoctors}
                     className="w-full mt-4 py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     Book Appointment
