@@ -18,7 +18,6 @@ import {
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { toast } from 'react-toastify';
-import { useScreeningStore } from '../stores/useScreeningStore';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -34,6 +33,13 @@ interface UploadedImage {
 
 type Step = 'upload' | 'analysis' | 'review';
 
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff'];
+
+const isSupportedImage = (file: File): boolean => {
+  const lowerName = file.name.toLowerCase();
+  return ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+};
+
 const _STEPS: { key: Step; label: string; number: number }[] = [
   { key: 'upload', label: 'Upload & Validate', number: 1 },
   { key: 'analysis', label: 'Analysis', number: 2 },
@@ -42,10 +48,10 @@ const _STEPS: { key: Step; label: string; number: number }[] = [
 
 export default function ScreeningNewPage() {
   const navigate = useNavigate();
-  const { setSelectedFile } = useScreeningStore();
   const [_currentStep, _setCurrentStep] = useState<Step>('upload');
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [showPolicyPopup, setShowPolicyPopup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -93,8 +99,8 @@ export default function ScreeningNewPage() {
     e.stopPropagation();
     setDragActive(false);
 
-    const files = Array.from(e.dataTransfer.files).filter(
-      (file) => file.type.startsWith('image/') || file.name.endsWith('.dcm')
+    const files = Array.from(e.dataTransfer.files).filter((file) =>
+      isSupportedImage(file)
     );
 
     if (files.length > 0) {
@@ -109,24 +115,20 @@ export default function ScreeningNewPage() {
     }
   };
 
-  const toDataUrl = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result === 'string') {
-          resolve(result);
-          return;
-        }
+  const handleFiles = (files: File[]) => {
+    const invalidFiles = files.filter((file) => !isSupportedImage(file));
+    if (invalidFiles.length > 0) {
+      toast.error(
+        `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`
+      );
+    }
 
-        reject(new Error('Unable to generate local preview.'));
-      };
-      reader.onerror = () => reject(new Error('Unable to read file.'));
-      reader.readAsDataURL(file);
-    });
+    const validFiles = files.filter((file) => isSupportedImage(file));
+    if (validFiles.length === 0) {
+      return;
+    }
 
-  const handleFiles = async (files: File[]) => {
-    const newUniqueFiles = files.filter((incomingFile) => {
+    const newUniqueFiles = validFiles.filter((incomingFile) => {
       const isDuplicate = images.some(
         (existingImg) =>
           existingImg.file.name === incomingFile.name &&
@@ -141,15 +143,13 @@ export default function ScreeningNewPage() {
       return;
     }
 
-    const newImages = await Promise.all(
-      newUniqueFiles.map(async (file) => ({
-        id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        file,
-        preview: await toDataUrl(file),
-        status: 'uploading' as ImageStatus,
-        progress: 0,
-      }))
-    );
+    const newImages: UploadedImage[] = newUniqueFiles.map((file) => ({
+      id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      file,
+      preview: URL.createObjectURL(file),
+      status: 'uploading' as ImageStatus,
+      progress: 0,
+    }));
 
     setImages((prev) => [...prev, ...newImages]);
 
@@ -215,7 +215,14 @@ export default function ScreeningNewPage() {
   };
 
   const removeImage = (imageId: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== imageId));
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === imageId);
+      if (target?.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(target.preview);
+      }
+
+      return prev.filter((img) => img.id !== imageId);
+    });
   };
 
   const retryImage = (imageId: string) => {
@@ -237,6 +244,20 @@ export default function ScreeningNewPage() {
 
   const readyImages = images.filter((img) => img.status === 'ready');
   const canProceed = readyImages.length > 0;
+
+  const startAnalysis = () => {
+    navigate('/patient/analysis', {
+      state: {
+        images: readyImages.map((img) => ({
+          id: img.id,
+          name: img.file.name,
+          preview: img.preview,
+          quality: img.quality,
+        })),
+        source: 'new-screening',
+      },
+    });
+  };
 
   const getStatusBadge = (img: UploadedImage) => {
     switch (img.status) {
@@ -417,7 +438,7 @@ export default function ScreeningNewPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,application/dicom,.dcm"
+                    accept=".jpg,.jpeg,.png,.bmp,.tiff"
                     multiple
                     onChange={handleFileSelect}
                     className="hidden"
@@ -444,6 +465,11 @@ export default function ScreeningNewPage() {
                       images.length > 0 && (
                         <button
                           onClick={() => {
+                            images.forEach((image) => {
+                              if (image.preview.startsWith('blob:')) {
+                                URL.revokeObjectURL(image.preview);
+                              }
+                            });
                             setImages([]);
                           }}
                           className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -562,19 +588,13 @@ export default function ScreeningNewPage() {
                   </span>
                   <button
                     disabled={!canProceed}
-                    onClick={() => {
-                      const selected = readyImages[0]?.file;
-                      if (!selected) {
-                        return;
-                      }
-
-                      setSelectedFile(selected);
-                      navigate('/patient/screening/analyze');
-                    }}
+                    onClick={() => setShowPolicyPopup(true)}
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
-                    Start AI Analysis
-                    <ArrowRight className="w-4 h-4" />
+                    <>
+                      Start AI Analysis
+                      <ArrowRight className="w-4 h-4" />
+                    </>
                   </button>
                 </div>
               </div>
@@ -590,6 +610,40 @@ export default function ScreeningNewPage() {
             solely for your diagnostic session.
           </p>
         </footer>
+
+        {showPolicyPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-lg rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 shadow-2xl">
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">
+                Data Sharing Consent
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
+                By continuing, you agree that your retinal images and AI
+                analysis results can be processed and securely stored for
+                diagnosis, medical review, and improving service quality.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyPopup(false)}
+                  className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPolicyPopup(false);
+                    startAnalysis();
+                  }}
+                  className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
+                >
+                  I Agree, Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </FocusModeLayout>
   );

@@ -3,7 +3,7 @@
  * Manage system-wide settings and configurations
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   Bell,
@@ -15,8 +15,13 @@ import {
   Save,
   RefreshCw,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import {
+  useSystemSettings,
+  useUpdateSystemSettings,
+} from '../api/system-settings.api';
 
 interface SettingSection {
   id: string;
@@ -56,6 +61,9 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
 
+  const { data: systemSettings } = useSystemSettings();
+  const updateSettingsMutation = useUpdateSystemSettings();
+
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
     platformName: 'AURA Medical',
@@ -63,7 +71,35 @@ export default function SettingsPage() {
     timezone: 'UTC',
     language: 'en',
     maintenanceMode: false,
+    minAdvanceBookingHours: 0.5,
+    aiQuotaBundle: 100,
+    defaultPlatformCommission: 0.05,
+    freeAiQuota: 3,
+    aiQuotaPrice: 50000,
   });
+
+  useEffect(() => {
+    if (systemSettings) {
+      setGeneralSettings((prev) => ({
+        ...prev,
+        minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
+          ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
+          : 0.5,
+        aiQuotaBundle: systemSettings['AI_QUOTA_BUNDLE']
+          ? parseInt(systemSettings['AI_QUOTA_BUNDLE'], 10)
+          : 100,
+        defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
+          ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
+          : 0.05,
+        freeAiQuota: systemSettings['FREE_AI_QUOTA']
+          ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
+          : 3,
+        aiQuotaPrice: systemSettings['AI_QUOTA_PRICE']
+          ? parseFloat(systemSettings['AI_QUOTA_PRICE'])
+          : 50000,
+      }));
+    }
+  }, [systemSettings]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -86,9 +122,24 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: Implement API call to save settings
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Settings saved');
+      const settingsToUpdate = {
+        MIN_ADVANCE_BOOKING_HOURS: Math.max(
+          0.5,
+          generalSettings.minAdvanceBookingHours
+        ).toString(),
+        AI_QUOTA_BUNDLE: Math.max(0, generalSettings.aiQuotaBundle).toString(),
+        DEFAULT_PLATFORM_COMMISSION: Math.max(
+          0,
+          generalSettings.defaultPlatformCommission
+        ).toString(),
+        FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
+        AI_QUOTA_PRICE: Math.max(0, generalSettings.aiQuotaPrice).toString(),
+      };
+      await updateSettingsMutation.mutateAsync(settingsToUpdate);
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -169,6 +220,98 @@ export default function SettingsPage() {
             <option value="fr">French</option>
             <option value="es">Spanish</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Minimum advance booking time (hours)
+          </label>
+          <input
+            type="number"
+            min={0.5}
+            step={0.5}
+            max={72}
+            value={generalSettings.minAdvanceBookingHours}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                minAdvanceBookingHours: parseFloat(e.target.value) || 0.5,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Bundle
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.aiQuotaBundle}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaBundle: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Default Platform Commission Rate
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={1}
+            step={0.01}
+            value={generalSettings.defaultPlatformCommission}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                defaultPlatformCommission: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Free AI Quota (Per Patient)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={generalSettings.freeAiQuota}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                freeAiQuota: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Price (VND per Bundle)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.aiQuotaPrice}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaPrice: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
         </div>
       </div>
 

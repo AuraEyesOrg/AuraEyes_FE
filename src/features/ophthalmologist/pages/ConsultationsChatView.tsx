@@ -69,6 +69,7 @@ import {
 } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -87,34 +88,46 @@ type MeetingAccessState = {
   helperText: string;
 };
 
-const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
+const getPhaseUIConfig = (
+  t: (key: string, fallback: string) => string
+): Record<ConsultationPhase, PhaseUIEntry> => ({
   PRE_VISIT: {
-    label: 'Pre-visit',
+    label: t('Ophthalmologist.consultations.chat.phase.preVisit', 'Pre-visit'),
     icon: FileText,
     color: 'text-amber-500',
     badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
     bannerBg: 'bg-amber-50',
-    description:
-      'Patient can leave notes before the consultation starts. Chat opens at appointment time.',
+    description: t(
+      'Ophthalmologist.consultations.chat.phase.preVisitDescription',
+      'Patient can leave notes before the consultation starts. Chat opens at appointment time.'
+    ),
   },
   IN_PROGRESS: {
-    label: 'In Progress',
+    label: t(
+      'Ophthalmologist.consultations.chat.phase.inProgress',
+      'In Progress'
+    ),
     icon: Activity,
     color: 'text-emerald-500',
     badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     bannerBg: 'bg-emerald-50',
-    description:
-      'Consultation is active. You can chat and join the video call.',
+    description: t(
+      'Ophthalmologist.consultations.chat.phase.inProgressDescription',
+      'Consultation is active. You can chat and join the video call.'
+    ),
   },
   COMPLETED: {
-    label: 'Completed',
+    label: t('Ophthalmologist.consultations.chat.phase.completed', 'Completed'),
     icon: Archive,
     color: 'text-slate-500',
     badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
     bannerBg: 'bg-slate-100',
-    description: 'Consultation has been completed. Chat is now read-only.',
+    description: t(
+      'Ophthalmologist.consultations.chat.phase.completedDescription',
+      'Consultation has been completed. Chat is now read-only.'
+    ),
   },
-};
+});
 
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 60;
@@ -122,13 +135,20 @@ const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
-  nowMs: number
+  nowMs: number,
+  t: (key: string, fallback: string) => string
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
       canJoin: true,
-      buttonLabel: 'Join Meeting',
-      helperText: 'Meeting link is ready.',
+      buttonLabel: t(
+        'Ophthalmologist.consultations.chat.joinMeeting',
+        'Join Meeting'
+      ),
+      helperText: t(
+        'Ophthalmologist.consultations.chat.meetingLinkReady',
+        'Meeting link is ready.'
+      ),
     };
   }
 
@@ -140,23 +160,44 @@ const getMeetingAccessState = (
   if (minutesUntilStart > PREJOIN_OPEN_MINUTES) {
     return {
       canJoin: false,
-      buttonLabel: 'Join Locked',
-      helperText: `Join mở sau ${formatCountdown(secondsUntilUnlock)}`,
+      buttonLabel: t(
+        'Ophthalmologist.consultations.chat.joinLocked',
+        'Join Locked'
+      ),
+      helperText: `${t(
+        'Ophthalmologist.consultations.chat.joinAvailableAfter',
+        'Join available after'
+      )} ${formatCountdown(secondsUntilUnlock)}`,
     };
   }
 
   if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
     return {
       canJoin: true,
-      buttonLabel: 'Join Meeting',
-      helperText: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
+      buttonLabel: t(
+        'Ophthalmologist.consultations.chat.joinMeeting',
+        'Join Meeting'
+      ),
+      helperText: `${t(
+        'Ophthalmologist.consultations.chat.canJoinBeforePrefix',
+        'Can join before'
+      )} ${PREJOIN_OPEN_MINUTES} ${t(
+        'Ophthalmologist.consultations.chat.minutes',
+        'minutes'
+      )}`,
     };
   }
 
   return {
     canJoin: false,
-    buttonLabel: 'Meeting Ended',
-    helperText: 'Cuộc hẹn đã qua thời gian tham gia',
+    buttonLabel: t(
+      'Ophthalmologist.consultations.chat.meetingEnded',
+      'Meeting Ended'
+    ),
+    helperText: t(
+      'Ophthalmologist.consultations.chat.meetingWindowClosed',
+      'Appointment has passed the meeting window'
+    ),
   };
 };
 
@@ -214,8 +255,16 @@ const extractScanAttachment = (message: string) => {
 const stripScanAttachment = (message: string) =>
   message.replace(/\n\n\[Scan Attached: .+? - .+?\]$/, '').trim();
 
-const formatAppointmentSlotOrPending = (value: string | null) =>
-  value ? formatAppointmentSlot(value) : 'Schedule pending';
+const formatAppointmentSlotOrPending = (
+  value: string | null,
+  t: (key: string, fallback: string) => string
+) =>
+  value
+    ? formatAppointmentSlot(value)
+    : t(
+        'Ophthalmologist.consultations.chat.schedulePending',
+        'Schedule pending'
+      );
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', {
@@ -265,16 +314,28 @@ const getStatusAccentClass = (chatStatus: ChatStatus) => {
   }
 };
 
-const getListItemPhaseLabel = (session: {
-  chatStatus: ChatStatus;
-  appointmentTime: string | null;
-}) => {
-  if (session.chatStatus === ChatStatus.MemoOnly) return 'Pre-visit';
-  if (session.chatStatus === ChatStatus.Archived) return 'Completed';
-  if (session.chatStatus === ChatStatus.Locked) return 'Locked';
-  if (!session.appointmentTime) return 'In Progress';
+const getListItemPhaseLabel = (
+  session: {
+    chatStatus: ChatStatus;
+    appointmentTime: string | null;
+  },
+  t: (key: string, fallback: string) => string
+) => {
+  if (session.chatStatus === ChatStatus.MemoOnly)
+    return t('Ophthalmologist.consultations.chat.phase.preVisit', 'Pre-visit');
+  if (session.chatStatus === ChatStatus.Archived)
+    return t('Ophthalmologist.consultations.chat.phase.completed', 'Completed');
+  if (session.chatStatus === ChatStatus.Locked)
+    return t('Ophthalmologist.consultations.chat.phase.locked', 'Locked');
+  if (!session.appointmentTime)
+    return t(
+      'Ophthalmologist.consultations.chat.phase.inProgress',
+      'In Progress'
+    );
   const slotEnd = new Date(session.appointmentTime).getTime() + 60 * 60 * 1000;
-  return Date.now() >= slotEnd ? 'Post-visit' : 'In Progress';
+  return Date.now() >= slotEnd
+    ? t('Ophthalmologist.consultations.chat.phase.postVisit', 'Post-visit')
+    : t('Ophthalmologist.consultations.chat.phase.inProgress', 'In Progress');
 };
 
 const getPhase = (session: {
@@ -323,6 +384,7 @@ export default function ConsultationsChatView({
   sessions,
   sessionsLoading,
 }: ConsultationsChatViewProps) {
+  const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
@@ -371,6 +433,7 @@ export default function ConsultationsChatView({
   const endSessionMutation = useEndSession();
 
   const phase = currentSession ? getPhase(currentSession) : 'PRE_VISIT';
+  const phaseUIConfig = getPhaseUIConfig(t);
   const phaseUI = phaseUIConfig[phase];
 
   const messageList = selectedSession?.messages ?? [];
@@ -475,7 +538,10 @@ export default function ConsultationsChatView({
     if (!currentDoctorId) return;
     if (
       !confirm(
-        'Cancel this session? The slot will be burned and the patient will be refunded.'
+        t(
+          'Ophthalmologist.consultations.chat.confirmCancelSession',
+          'Cancel this session? The slot will be burned and the patient will be refunded.'
+        )
       )
     ) {
       return;
@@ -483,7 +549,10 @@ export default function ConsultationsChatView({
     cancelSessionMutation.mutate({
       sessionId,
       cancelledByUserId: currentDoctorId,
-      reason: 'Cancelled by doctor',
+      reason: t(
+        'Ophthalmologist.consultations.chat.cancelReason',
+        'Cancelled by doctor'
+      ),
     });
   };
 
@@ -491,7 +560,10 @@ export default function ConsultationsChatView({
     if (!currentDoctorId) return;
     if (
       !confirm(
-        'Complete this consultation? The patient will be charged and the chat will be locked.'
+        t(
+          'Ophthalmologist.consultations.chat.confirmCompleteSession',
+          'Complete this consultation? The patient will be charged and the chat will be locked.'
+        )
       )
     ) {
       return;
@@ -515,7 +587,10 @@ export default function ConsultationsChatView({
         onError: (error) => {
           const raw = extractApiErrorMessage(
             error,
-            'Failed to send message. Please try again.'
+            t(
+              'Ophthalmologist.consultations.chat.sendError',
+              'Failed to send message. Please try again.'
+            )
           );
           if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
             toast.warning(raw);
@@ -535,13 +610,18 @@ export default function ConsultationsChatView({
     }
   };
 
-  const patientName = currentSession?.patientName?.trim() || 'Patient';
-  const doctorName = user?.fullName?.trim() || 'Doctor';
+  const patientName =
+    currentSession?.patientName?.trim() ||
+    t('Ophthalmologist.consultations.chat.patient', 'Patient');
+  const doctorName =
+    user?.fullName?.trim() ||
+    t('Ophthalmologist.consultations.chat.doctor', 'Doctor');
   const patientAvatarUrl =
     selectedSession?.patientAvatarUrl ?? currentSession?.patientAvatarUrl;
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
-    currentTimeMs
+    currentTimeMs,
+    t
   );
 
   if (sessionsLoading) {
@@ -549,7 +629,12 @@ export default function ConsultationsChatView({
       <div className="flex items-center justify-center h-[calc(100vh-180px)]">
         <div className="text-center">
           <Spinner size={40} className="mx-auto mb-4" />
-          <p className="text-(--text-secondary)">Loading conversations...</p>
+          <p className="text-(--text-secondary)">
+            {t(
+              'Ophthalmologist.consultations.chat.loading',
+              'Loading conversations...'
+            )}
+          </p>
         </div>
       </div>
     );
@@ -565,7 +650,10 @@ export default function ConsultationsChatView({
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by patient, status, or session type"
+              placeholder={t(
+                'Ophthalmologist.consultations.chat.searchPlaceholder',
+                'Search by patient, status, or session type'
+              )}
               value={searchQuery}
               onChange={(event) => {
                 const nextValue = event.target.value;
@@ -587,19 +675,28 @@ export default function ConsultationsChatView({
             <p className="text-slate-900 dark:text-white">
               {chatSessions.length}
             </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">All</p>
+            <p className="mt-1 uppercase tracking-[0.16em]">
+              {t('Ophthalmologist.consultations.chat.stats.all', 'All')}
+            </p>
           </div>
           <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
             <p className="text-emerald-900 dark:text-emerald-200">
               {totalOpenSessions}
             </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">Open</p>
+            <p className="mt-1 uppercase tracking-[0.16em]">
+              {t('Ophthalmologist.consultations.chat.stats.open', 'Open')}
+            </p>
           </div>
           <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
             <p className="text-amber-900 dark:text-amber-200">
               {upcomingSessions}
             </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">Upcoming</p>
+            <p className="mt-1 uppercase tracking-[0.16em]">
+              {t(
+                'Ophthalmologist.consultations.chat.stats.upcoming',
+                'Upcoming'
+              )}
+            </p>
           </div>
         </div>
 
@@ -610,19 +707,28 @@ export default function ConsultationsChatView({
                 <Search className="h-6 w-6" />
               </div>
               <p className="text-sm font-medium text-slate-900 dark:text-white">
-                No sessions match your search
+                {t(
+                  'Ophthalmologist.consultations.chat.emptySearchTitle',
+                  'No sessions match your search'
+                )}
               </p>
               <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
-                Try a patient name, chat status, or consultation type.
+                {t(
+                  'Ophthalmologist.consultations.chat.emptySearchSubtitle',
+                  'Try a patient name, chat status, or consultation type.'
+                )}
               </p>
             </div>
           ) : (
             filteredSessions.map((session) => {
-              const itemPhaseLabel = getListItemPhaseLabel(session);
-              const displayPatientName = session.patientName ?? 'Patient';
+              const itemPhaseLabel = getListItemPhaseLabel(session, t);
+              const displayPatientName =
+                session.patientName ??
+                t('Ophthalmologist.consultations.chat.patient', 'Patient');
               const displayType = SESSION_TYPE_LABELS[session.type];
               const appointmentTime = formatAppointmentSlotOrPending(
-                session.appointmentTime
+                session.appointmentTime,
+                t
               );
 
               return (
@@ -755,7 +861,8 @@ export default function ConsultationsChatView({
                     <span className="text-slate-300 dark:text-gray-600">/</span>
                     <span>
                       {formatAppointmentSlotOrPending(
-                        currentSession.appointmentTime
+                        currentSession.appointmentTime,
+                        t
                       )}
                     </span>
                   </div>
@@ -780,7 +887,7 @@ export default function ConsultationsChatView({
                         ) : (
                           <XCircle className="h-4 w-4" />
                         )}
-                        Cancel
+                        {t('Ophthalmologist.common.cancel', 'Cancel')}
                       </button>
                     )}
 
@@ -795,7 +902,10 @@ export default function ConsultationsChatView({
                         ) : (
                           <CheckCircle2 className="h-4 w-4" />
                         )}
-                        Complete
+                        {t(
+                          'Ophthalmologist.consultations.chat.complete',
+                          'Complete'
+                        )}
                       </button>
                     )}
 
@@ -808,7 +918,10 @@ export default function ConsultationsChatView({
                           className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
                         >
                           <Video className="h-4 w-4" />
-                          Join Meeting
+                          {t(
+                            'Ophthalmologist.consultations.chat.joinMeeting',
+                            'Join Meeting'
+                          )}
                         </a>
                       ) : (
                         <button
@@ -817,7 +930,10 @@ export default function ConsultationsChatView({
                         >
                           <Video className="h-4 w-4" />
                           {phase === 'COMPLETED'
-                            ? 'Meeting Ended'
+                            ? t(
+                                'Ophthalmologist.consultations.chat.meetingEnded',
+                                'Meeting Ended'
+                              )
                             : meetingAccessState.buttonLabel}
                         </button>
                       )
@@ -827,7 +943,10 @@ export default function ConsultationsChatView({
                         className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                       >
                         <Video className="h-4 w-4" />
-                        Link Pending
+                        {t(
+                          'Ophthalmologist.consultations.chat.linkPending',
+                          'Link Pending'
+                        )}
                       </button>
                     )}
                   </div>
@@ -845,8 +964,14 @@ export default function ConsultationsChatView({
                   }
                   aria-label={
                     isSessionOverviewOpen
-                      ? 'Hide session overview'
-                      : 'Show session overview'
+                      ? t(
+                          'Ophthalmologist.consultations.chat.hideSessionOverview',
+                          'Hide session overview'
+                        )
+                      : t(
+                          'Ophthalmologist.consultations.chat.showSessionOverview',
+                          'Show session overview'
+                        )
                   }
                   className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                 >
@@ -889,14 +1014,19 @@ export default function ConsultationsChatView({
                       ) {
                         return (
                           <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
-                            Chat will automatically open at the scheduled
-                            appointment time
+                            {t(
+                              'Ophthalmologist.consultations.chat.autoOpenAtSchedule',
+                              'Chat will automatically open at the scheduled appointment time'
+                            )}
                           </p>
                         );
                       }
                       return (
                         <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
-                          Chat opens in{' '}
+                          {t(
+                            'Ophthalmologist.consultations.chat.opensIn',
+                            'Chat opens in'
+                          )}{' '}
                           {formatCountdown(Math.ceil(msUntilStart / 1000))}
                         </p>
                       );
@@ -967,7 +1097,12 @@ export default function ConsultationsChatView({
                                     : 'text-slate-500 dark:text-gray-300'
                                 }
                               >
-                                {isDoctorMessage ? 'You' : patientName}
+                                {isDoctorMessage
+                                  ? t(
+                                      'Ophthalmologist.consultations.chat.you',
+                                      'You'
+                                    )
+                                  : patientName}
                               </span>
                               <span
                                 className={
@@ -1045,11 +1180,23 @@ export default function ConsultationsChatView({
                             <span>
                               {isDoctorMessage
                                 ? phase === 'PRE_VISIT'
-                                  ? 'Saved as doctor note'
-                                  : 'Delivered to patient'
+                                  ? t(
+                                      'Ophthalmologist.consultations.chat.savedAsDoctorNote',
+                                      'Saved as doctor note'
+                                    )
+                                  : t(
+                                      'Ophthalmologist.consultations.chat.deliveredToPatient',
+                                      'Delivered to patient'
+                                    )
                                 : phase === 'PRE_VISIT'
-                                  ? 'Patient pre-visit note'
-                                  : 'Patient message'}
+                                  ? t(
+                                      'Ophthalmologist.consultations.chat.patientPreVisitNote',
+                                      'Patient pre-visit note'
+                                    )
+                                  : t(
+                                      'Ophthalmologist.consultations.chat.patientMessage',
+                                      'Patient message'
+                                    )}
                             </span>
                           </div>
                         </div>
@@ -1075,17 +1222,35 @@ export default function ConsultationsChatView({
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                     {phase === 'PRE_VISIT'
-                      ? 'Review patient notes'
+                      ? t(
+                          'Ophthalmologist.consultations.chat.reviewPatientNotes',
+                          'Review patient notes'
+                        )
                       : phase === 'COMPLETED'
-                        ? 'No messages in this session'
-                        : 'No messages yet'}
+                        ? t(
+                            'Ophthalmologist.consultations.chat.noMessagesInSession',
+                            'No messages in this session'
+                          )
+                        : t(
+                            'Ophthalmologist.consultations.chat.noMessagesYet',
+                            'No messages yet'
+                          )}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-gray-400">
                     {phase === 'PRE_VISIT'
-                      ? 'Patient can leave notes before the consultation begins. Chat opens at appointment time.'
+                      ? t(
+                          'Ophthalmologist.consultations.chat.preVisitEmptyDescription',
+                          'Patient can leave notes before the consultation begins. Chat opens at appointment time.'
+                        )
                       : phase === 'IN_PROGRESS'
-                        ? 'The consultation is active. Start the conversation when you are ready.'
-                        : 'This consultation has been completed.'}
+                        ? t(
+                            'Ophthalmologist.consultations.chat.inProgressEmptyDescription',
+                            'The consultation is active. Start the conversation when you are ready.'
+                          )
+                        : t(
+                            'Ophthalmologist.consultations.chat.completedEmptyDescription',
+                            'This consultation has been completed.'
+                          )}
                   </p>
                 </div>
               </div>
@@ -1107,17 +1272,28 @@ export default function ConsultationsChatView({
                       value={newMessage}
                       onChange={(event) => setNewMessage(event.target.value)}
                       onKeyDown={handleKeyPress}
-                      placeholder="Type a message..."
+                      placeholder={t(
+                        'Ophthalmologist.consultations.chat.typeMessage',
+                        'Type a message...'
+                      )}
                       className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
                       rows={2}
                     />
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="h-3.5 w-3.5" />
-                        Messages are encrypted and visible only to your care
-                        team.
+                        {t(
+                          'Ophthalmologist.consultations.chat.encryptionNotice',
+                          'Messages are encrypted and visible only to your care team.'
+                        )}
                       </div>
-                      <div>{newMessage.trim().length} characters</div>
+                      <div>
+                        {newMessage.trim().length}{' '}
+                        {t(
+                          'Ophthalmologist.consultations.chat.characters',
+                          'characters'
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button
@@ -1140,8 +1316,14 @@ export default function ConsultationsChatView({
                 <phaseUI.icon className="h-4 w-4" />
                 <span>
                   {phase === 'COMPLETED'
-                    ? 'Consultation has been completed. Chat is now read-only.'
-                    : 'Pre-visit mode — patient notes only. Chat opens at appointment time.'}
+                    ? t(
+                        'Ophthalmologist.consultations.chat.completedReadOnly',
+                        'Consultation has been completed. Chat is now read-only.'
+                      )
+                    : t(
+                        'Ophthalmologist.consultations.chat.preVisitReadOnly',
+                        'Pre-visit mode — patient notes only. Chat opens at appointment time.'
+                      )}
                 </span>
               </div>
             )}
@@ -1149,7 +1331,12 @@ export default function ConsultationsChatView({
             {sendMessageMutation.isError && (
               <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
                 <AlertCircle className="h-4 w-4" />
-                <span>Failed to send message. Please try again.</span>
+                <span>
+                  {t(
+                    'Ophthalmologist.consultations.chat.sendError',
+                    'Failed to send message. Please try again.'
+                  )}
+                </span>
               </div>
             )}
           </div>
@@ -1161,11 +1348,16 @@ export default function ConsultationsChatView({
               <MessageCircle className="h-9 w-9" />
             </div>
             <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
-              Select a session
+              {t(
+                'Ophthalmologist.consultations.chat.selectSession',
+                'Select a session'
+              )}
             </h3>
             <p className="mt-2 text-slate-500 dark:text-gray-400">
-              Choose a consultation from the left panel to review the full
-              conversation.
+              {t(
+                'Ophthalmologist.consultations.chat.selectSessionDescription',
+                'Choose a consultation from the left panel to review the full conversation.'
+              )}
             </p>
           </div>
         </div>
@@ -1194,18 +1386,25 @@ export default function ConsultationsChatView({
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
             <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                Session Overview
+                {t(
+                  'Ophthalmologist.consultations.chat.sessionOverview',
+                  'Session Overview'
+                )}
               </p>
               <div className="mt-4 space-y-4">
                 <div className="flex items-start gap-3">
                   <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      Appointment
+                      {t(
+                        'Ophthalmologist.consultations.chat.appointment',
+                        'Appointment'
+                      )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {formatAppointmentSlotOrPending(
-                        currentSession.appointmentTime
+                        currentSession.appointmentTime,
+                        t
                       )}
                     </p>
                   </div>
@@ -1214,7 +1413,10 @@ export default function ConsultationsChatView({
                   <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      Last activity
+                      {t(
+                        'Ophthalmologist.consultations.chat.lastActivity',
+                        'Last activity'
+                      )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {formatRelativeTime(currentSession.lastActivityAt)}
@@ -1225,7 +1427,10 @@ export default function ConsultationsChatView({
                   <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      Consultation fee
+                      {t(
+                        'Ophthalmologist.consultations.chat.consultationFee',
+                        'Consultation fee'
+                      )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {formatCurrency(currentSession.price)}
@@ -1236,7 +1441,10 @@ export default function ConsultationsChatView({
                   <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      Phase
+                      {t(
+                        'Ophthalmologist.consultations.chat.phaseLabel',
+                        'Phase'
+                      )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {phaseUI.label}
@@ -1246,15 +1454,91 @@ export default function ConsultationsChatView({
               </div>
             </div>
 
+            {selectedSession?.caseSnapshot && (
+              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                  AI Case Snapshot
+                </p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                  Screening #
+                  {selectedSession.caseSnapshot.screeningId.slice(0, 8)}
+                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                    {selectedSession.caseSnapshot.originalImageUrls[0] ? (
+                      <img
+                        src={selectedSession.caseSnapshot.originalImageUrls[0]}
+                        alt="Original retinal image"
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
+                        No original image
+                      </div>
+                    )}
+                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                      Original
+                    </p>
+                  </div>
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                    {selectedSession.caseSnapshot.annotatedImageUrl ? (
+                      <img
+                        src={selectedSession.caseSnapshot.annotatedImageUrl}
+                        alt="AI annotated retinal image"
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
+                        No AI image
+                      </div>
+                    )}
+                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                      AI Annotated
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Risk: {selectedSession.caseSnapshot.riskLevel ?? 'Unknown'}{' '}
+                    | Confidence:{' '}
+                    {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
+                  </p>
+                  {selectedSession.caseSnapshot.summary && (
+                    <p className="text-sm text-slate-700 dark:text-gray-300">
+                      {selectedSession.caseSnapshot.summary}
+                    </p>
+                  )}
+                  {selectedSession.caseSnapshot.symptoms.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedSession.caseSnapshot.symptoms.map((symptom) => (
+                        <span
+                          key={symptom}
+                          className="rounded-full bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 px-2 py-1 text-[11px] font-medium border border-cyan-200 dark:border-cyan-800"
+                        >
+                          {symptom}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
                 <Stethoscope className="h-4 w-4" />
-                Conversation Guidance
+                {t(
+                  'Ophthalmologist.consultations.chat.conversationGuidance',
+                  'Conversation Guidance'
+                )}
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-200">
-                Be specific about symptom timing, changes in vision, pain, and
-                recent scan results. Short, structured notes make it easier to
-                triage quickly.
+                {t(
+                  'Ophthalmologist.consultations.chat.guidanceDescription',
+                  'Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier to triage quickly.'
+                )}
               </p>
               <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
                 <div className="flex items-center gap-2">

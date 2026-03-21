@@ -212,6 +212,12 @@ export interface OphthalmologistSearchItem {
   isVerified: boolean;
   certificateCount: number;
   createdAt: string;
+  licenseUrl?: string | null;
+  degreeUrl?: string | null;
+  ratingAverage?: number;
+  ratingCount?: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
 }
 
 export interface OphthalmologistDetailItem {
@@ -224,6 +230,12 @@ export interface OphthalmologistDetailItem {
   isVerified: boolean;
   createdAt: string;
   updatedAt?: string | null;
+  licenseUrl?: string | null;
+  degreeUrl?: string | null;
+  ratingAverage?: number;
+  ratingCount?: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
 }
 
 export interface AvailableSlotItem {

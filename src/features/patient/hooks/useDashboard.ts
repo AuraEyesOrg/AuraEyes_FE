@@ -1,19 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   getProfile,
-  getAppointments,
   getReports,
   getAnalysisList,
   getWallets,
 } from '../api/patient.api';
+import { getPatientClinicAppointments } from '../api/clinic-booking.api';
 import { profileKeys } from './useProfile';
 import type {
   PatientProfile,
   Wallet,
-  Appointment,
   ScreeningReport,
   AnalysisResult,
 } from '../types';
+import type { ClinicAppointmentDto } from '../types/clinic-booking.types';
 
 // ============ QUERY KEYS ============
 
@@ -38,9 +38,13 @@ export const useDashboard = () => {
     queryFn: getWallets,
   });
 
-  const appointmentsQuery = useQuery<Appointment[], Error>({
+  const appointmentsQuery = useQuery<ClinicAppointmentDto[], Error>({
     queryKey: dashboardKeys.appointments(),
-    queryFn: getAppointments,
+    queryFn: async () => {
+      if (!profileQuery.data?.id) return [];
+      return getPatientClinicAppointments(profileQuery.data.id);
+    },
+    enabled: Boolean(profileQuery.data?.id),
   });
 
   const reportsQuery = useQuery<ScreeningReport[], Error>({
@@ -81,7 +85,7 @@ export const useDashboard = () => {
   const nextAppointment = appointmentsQuery.data
     ?.filter(
       (a) =>
-        (a.status === 'pending' || a.status === 'confirmed') &&
+        (a.status === 'Pending' || a.status === 'Confirmed') &&
         new Date(a.date) >= new Date()
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];

@@ -57,7 +57,7 @@ export const useAppointmentSlots = (
   useQuery({
     queryKey: bookingKeys.list(params),
     queryFn: () => getAppointmentSlots(params),
-    staleTime: 15_000, // 15s - slots change frequently
+    staleTime: 30_000, // 30s – batch-loaded monthly data, reduce refetching
     placeholderData: keepPreviousData,
     ...options,
   });

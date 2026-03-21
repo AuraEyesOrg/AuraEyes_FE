@@ -1,12 +1,13 @@
+import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
+import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
   CalendarCheck,
   FileDown,
-  Send,
   ImagePlus,
   ExternalLink,
   Sparkles,
@@ -15,15 +16,21 @@ import {
   ChevronRight,
   Stethoscope,
   Bot,
-  MessageCircle,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
+import {
+  loadScreeningConsultationContext,
+  saveScreeningConsultationContext,
+  type ScreeningConsultationContext,
+} from '../types/consultation-context';
 
 interface LocationState {
+  screeningId?: string;
   images?: RetinalImage[];
   anomalies?: Anomaly[];
   riskLevel?: 'low' | 'moderate' | 'high';
   riskScore?: number;
+  rawJsonOutput?: string;
 }
 
 const RISK_CONFIG = {
@@ -90,35 +97,62 @@ export default function ReviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
+  const storedConsultationContext = useMemo(
+    () => loadScreeningConsultationContext(),
+    []
+  );
 
-  const images = state?.images ?? [];
-  const anomalies = state?.anomalies ?? [];
-  const riskLevel = state?.riskLevel ?? 'low';
+  const activeState = state ?? null;
+
+  const images = activeState?.images ?? storedConsultationContext?.images ?? [];
+  const anomalies =
+    activeState?.anomalies ?? storedConsultationContext?.anomalies ?? [];
+  const riskLevel =
+    activeState?.riskLevel ?? storedConsultationContext?.riskLevel ?? 'low';
   const risk = RISK_CONFIG[riskLevel];
+  const screeningId =
+    activeState?.screeningId ?? storedConsultationContext?.screeningId;
+
+  const consultationContext =
+    useMemo<ScreeningConsultationContext | null>(() => {
+      if (!screeningId) return null;
+      return {
+        screeningId,
+        images,
+        anomalies,
+        riskLevel,
+        riskScore:
+          activeState?.riskScore ??
+          storedConsultationContext?.riskScore ??
+          undefined,
+        rawJsonOutput:
+          activeState?.rawJsonOutput ??
+          storedConsultationContext?.rawJsonOutput,
+        createdAt: new Date().toISOString(),
+      };
+    }, [
+      screeningId,
+      images,
+      anomalies,
+      riskLevel,
+      activeState?.riskScore,
+      activeState?.rawJsonOutput,
+      storedConsultationContext?.riskScore,
+      storedConsultationContext?.rawJsonOutput,
+    ]);
+
+  useEffect(() => {
+    if (!consultationContext) return;
+    saveScreeningConsultationContext(consultationContext);
+  }, [consultationContext]);
 
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
   const remainingMoney = 200000;
   const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-  const handleShareToChat = () => {
-    navigate('/patient/chat', {
-      state: {
-        sharedScan: {
-          imageUrl: thumbnail,
-          eyeLabel,
-          riskLevel,
-          riskLabel: risk.label,
-          anomalies: anomalies.map((a) => a.friendlyName || a.name),
-          summary: risk.summary,
-          scanId,
-        },
-      },
-    });
-  };
-
   /* guard: no route state */
-  if (!state) {
+  if (!activeState && !storedConsultationContext) {
     return (
       <FocusModeLayout
         currentStep="review"
@@ -305,25 +339,24 @@ export default function ReviewPage() {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <button
-                      onClick={() => navigate('/patient/appointments')}
+                      onClick={() =>
+                        navigate('/patient/doctors', {
+                          state: {
+                            consultationContext,
+                          },
+                        })
+                      }
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
                       <CalendarCheck className="w-5 h-5" />
                       Find a Specialist
                     </button>
                     <button
-                      onClick={() => navigate('/patient/chat')}
+                      onClick={openN8nChat}
                       className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
                     >
                       <Bot className="w-5 h-5" />
                       Ask AURA AI Assistant
-                    </button>
-                    <button
-                      onClick={handleShareToChat}
-                      className="flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-md shadow-violet-500/20 hover:shadow-violet-500/30 transform hover:-translate-y-0.5"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      Send Results to Doctor
                     </button>
                   </div>
                 </div>
@@ -338,14 +371,7 @@ export default function ReviewPage() {
                   subtitle="PDF Format"
                   actionIcon={<FileDown className="w-4 h-4" />}
                 />
-                <SecondaryActionCard
-                  icon={<Send className="w-5 h-5" />}
-                  iconBg="bg-violet-50 text-violet-600"
-                  title="Share with Doctor"
-                  subtitle="Send scan to chat"
-                  actionIcon={<MessageCircle className="w-4 h-4" />}
-                  onClick={handleShareToChat}
-                />
+
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
                   iconBg="bg-emerald-50 text-emerald-600"
@@ -415,6 +441,7 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
+      <N8nChatWidget />
     </FocusModeLayout>
   );
 }

@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
+import { fileURLToPath, URL } from 'node:url';
 import { PWAConfig } from './src/lib/config';
 
 // https://vitejs.dev/config/
@@ -12,6 +13,12 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
 
   return {
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+
     // 1. Build Optimizations
     build: {
       target: 'esnext', // Modern browsers (use 'es2015' if you need older support)
