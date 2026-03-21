@@ -7,6 +7,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
+  ConsultationCaseSnapshotDto,
   ChatMessageDto,
   ChatStatus,
   ConsultationSessionDto,
@@ -84,7 +85,21 @@ interface RawConsultationSessionDto {
   closingReason: string | null;
   createdAt: string;
   updatedAt: string | null;
+  isRetinalImagesShared?: boolean;
+  isAIResultShared?: boolean;
+  caseSnapshot?: RawConsultationCaseSnapshotDto | null;
   messages?: RawChatMessageDto[];
+}
+
+interface RawConsultationCaseSnapshotDto {
+  screeningId: string;
+  riskLevel?: string | null;
+  confidenceScore?: number | null;
+  summary?: string | null;
+  findings?: string | null;
+  annotatedImageUrl?: string | null;
+  originalImageUrls?: string[] | null;
+  symptoms?: string[] | null;
 }
 
 interface RawConsultationSessionListDto {
@@ -160,6 +175,22 @@ const mapMessage = (message: RawChatMessageDto): ChatMessageDto => ({
   sentAt: message.sentAt,
 });
 
+const mapCaseSnapshot = (
+  snapshot?: RawConsultationCaseSnapshotDto | null
+): ConsultationCaseSnapshotDto | null => {
+  if (!snapshot) return null;
+  return {
+    screeningId: snapshot.screeningId,
+    riskLevel: snapshot.riskLevel ?? null,
+    confidenceScore: snapshot.confidenceScore ?? null,
+    summary: snapshot.summary ?? null,
+    findings: snapshot.findings ?? null,
+    annotatedImageUrl: snapshot.annotatedImageUrl ?? null,
+    originalImageUrls: snapshot.originalImageUrls ?? [],
+    symptoms: snapshot.symptoms ?? [],
+  };
+};
+
 const mapConsultationSession = (
   session: RawConsultationSessionDto
 ): ConsultationSessionDto => {
@@ -205,6 +236,9 @@ const mapConsultationSession = (
     closingReason: session.closingReason,
     createdAt: session.createdAt,
     updatedAt: session.updatedAt,
+    isRetinalImagesShared: Boolean(session.isRetinalImagesShared),
+    isAIResultShared: Boolean(session.isAIResultShared),
+    caseSnapshot: mapCaseSnapshot(session.caseSnapshot),
     messages: (session.messages ?? []).map(mapMessage),
   };
 };

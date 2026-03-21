@@ -58,6 +58,19 @@ export function formatSlotTimeShort(hhmm: string): string {
   return hhmm.slice(0, 5);
 }
 
+/**
+ * Parses slot `date` + `startTime` returned by booking APIs as a UTC datetime.
+ *
+ * Contract:
+ * - Backend returns `date` (`YYYY-MM-DD`) and `startTime` (`HH:mm[:ss]`)
+ *   representing UTC clock time.
+ * - This helper normalizes parsing so all pages interpret slot expiry/disable
+ *   status consistently.
+ */
+export function parseSlotDateTimeUtc(date: string, startTime: string): Date {
+  return new Date(`${date}T${startTime}Z`);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. DATE DISPLAY  (date-only string "YYYY-MM-DD" → locale string)
 // ─────────────────────────────────────────────────────────────────────────────

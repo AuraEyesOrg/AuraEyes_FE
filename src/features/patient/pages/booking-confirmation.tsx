@@ -27,11 +27,17 @@ import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
+import {
+  loadScreeningConsultationContext,
+  saveScreeningConsultationContext,
+  type ScreeningConsultationContext,
+} from '../types/consultation-context';
 
 // ============ HELPERS ============
 
 export interface BookingConfirmationProps {
   embeddedSlotId?: string;
+  embeddedConsultationContext?: ScreeningConsultationContext;
   onClose?: () => void;
   onSuccess?: () => void;
 }
@@ -61,6 +67,33 @@ export default function BookingConfirmationPage(
 
   const slotId =
     props.embeddedSlotId ?? state.slotId ?? storedSlotId ?? querySlotId;
+  const consultationContext = (() => {
+    if (props.embeddedConsultationContext?.screeningId) {
+      return props.embeddedConsultationContext;
+    }
+    return loadScreeningConsultationContext();
+  })();
+  const primaryOriginalImage = consultationContext?.images?.[0]?.url;
+  const parsedAnnotatedImage = (() => {
+    const raw = consultationContext?.rawJsonOutput;
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof parsed.annotatedImageUrl === 'string') {
+        return parsed.annotatedImageUrl;
+      }
+      if (typeof parsed.image_url === 'string') {
+        return parsed.image_url;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  })();
+  const symptomNames =
+    consultationContext?.anomalies?.map(
+      (item) => item.friendlyName || item.name
+    ) ?? [];
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
@@ -97,6 +130,11 @@ export default function BookingConfirmationPage(
       JSON.stringify({ slotId })
     );
   }, [slotId]);
+
+  useEffect(() => {
+    if (!consultationContext?.screeningId) return;
+    saveScreeningConsultationContext(consultationContext);
+  }, [consultationContext]);
 
   useEffect(() => {
     if (props.embeddedSlotId || !querySlotId || state.slotId) return;
@@ -155,6 +193,7 @@ export default function BookingConfirmationPage(
         slotId,
         request: {
           patientId,
+          aiScreeningId: consultationContext?.screeningId,
           shareRetinalImages,
           shareAiResults,
         },
@@ -166,7 +205,14 @@ export default function BookingConfirmationPage(
     } catch (error) {
       setErrorMessage(mapOnlineConsultationErrorMessage(error));
     }
-  }, [slotId, patientId, shareRetinalImages, shareAiResults, confirmMutation]);
+  }, [
+    slotId,
+    patientId,
+    shareRetinalImages,
+    shareAiResults,
+    consultationContext?.screeningId,
+    confirmMutation,
+  ]);
 
   const handleCancel = useCallback(async () => {
     if (!slotId || !patientId) return;
@@ -201,11 +247,11 @@ export default function BookingConfirmationPage(
   const wrapperProps = isEmbedded
     ? {
         className:
-          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-center',
+          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-start',
       }
     : {};
   const innerClass = isEmbedded
-    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8'
+    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8 mt-auto mb-auto'
     : 'p-6 max-w-2xl mx-auto';
 
   // Loading state
@@ -473,6 +519,73 @@ export default function BookingConfirmationPage(
             </label>
           </div>
         </div>
+
+        {consultationContext?.screeningId && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              AI Case Attached
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Case ID:{' '}
+              <span className="font-semibold">
+                {consultationContext.screeningId}
+              </span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+                {primaryOriginalImage ? (
+                  <img
+                    src={primaryOriginalImage}
+                    alt="Original retinal image"
+                    className="h-40 w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
+                    No original image
+                  </div>
+                )}
+                <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                  Original retinal image
+                </p>
+              </div>
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+                {parsedAnnotatedImage ? (
+                  <img
+                    src={parsedAnnotatedImage}
+                    alt="AI annotated retinal image"
+                    className="h-40 w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
+                    AI annotated image unavailable
+                  </div>
+                )}
+                <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                  AI annotated image
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Symptoms/findings ({symptomNames.length}):
+            </p>
+            {symptomNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {symptomNames.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No symptom tags extracted from AI result.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-4">
