@@ -637,6 +637,7 @@ const RegisterDoctorPage = () => {
                         }}
                         className="p-1 text-red-500 hover:bg-red-100 rounded-full disabled:opacity-40"
                         disabled={degreeFields.length === 1}
+                        aria-label="Remove degree"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -741,6 +742,7 @@ const RegisterDoctorPage = () => {
                             handleCredentialFileChange('degrees', index)
                           }
                           className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                          aria-label="Remove uploaded degree file"
                         >
                           <X className="h-4 w-4 text-red-500" />
                         </button>
@@ -784,6 +786,7 @@ const RegisterDoctorPage = () => {
                         }}
                         className="p-1 text-red-500 hover:bg-red-100 rounded-full disabled:opacity-40"
                         disabled={certificateFields.length === 1}
+                        aria-label="Remove certificate"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -888,6 +891,7 @@ const RegisterDoctorPage = () => {
                             handleCredentialFileChange('certificates', index)
                           }
                           className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                          aria-label="Remove uploaded certificate file"
                         >
                           <X className="h-4 w-4 text-red-500" />
                         </button>
