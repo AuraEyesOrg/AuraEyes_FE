@@ -98,6 +98,7 @@ interface RawConsultationCaseSnapshotDto {
   summary?: string | null;
   findings?: string | null;
   annotatedImageUrl?: string | null;
+  rawJsonOutput?: string | null;
   originalImageUrls?: string[] | null;
   symptoms?: string[] | null;
 }
@@ -186,6 +187,7 @@ const mapCaseSnapshot = (
     summary: snapshot.summary ?? null,
     findings: snapshot.findings ?? null,
     annotatedImageUrl: snapshot.annotatedImageUrl ?? null,
+    rawJsonOutput: snapshot.rawJsonOutput ?? null,
     originalImageUrls: snapshot.originalImageUrls ?? [],
     symptoms: snapshot.symptoms ?? [],
   };
