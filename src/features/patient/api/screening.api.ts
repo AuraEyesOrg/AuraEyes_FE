@@ -28,6 +28,8 @@ export interface SaveAiScreeningResultsPayload {
 export interface SaveAiScreeningResultsResponse {
   screeningId: string;
   screeningResultId: string;
+  /** Retinal images linked to this screening (matches GET /screenings/{id} images.length) */
+  imagesCount: number;
   savedAt: string;
   riskLevel: string;
 }

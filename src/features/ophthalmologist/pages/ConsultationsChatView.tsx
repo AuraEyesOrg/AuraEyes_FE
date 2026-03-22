@@ -37,6 +37,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { CaseSnapshotAiThumbnail, ScreeningReviewLink } from '../components';
 import {
   useCancelSession,
   useConsultationSession,
@@ -96,7 +97,7 @@ const getPhaseUIConfig = (
     icon: FileText,
     color: 'text-amber-500',
     badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
-    bannerBg: 'bg-amber-50',
+    bannerBg: 'bg-amber-50 dark:bg-amber-950/55',
     description: t(
       'Ophthalmologist.consultations.chat.phase.preVisitDescription',
       'Patient can leave notes before the consultation starts. Chat opens at appointment time.'
@@ -110,7 +111,7 @@ const getPhaseUIConfig = (
     icon: Activity,
     color: 'text-emerald-500',
     badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-    bannerBg: 'bg-emerald-50',
+    bannerBg: 'bg-emerald-50 dark:bg-emerald-950/50',
     description: t(
       'Ophthalmologist.consultations.chat.phase.inProgressDescription',
       'Consultation is active. You can chat and join the video call.'
@@ -121,7 +122,7 @@ const getPhaseUIConfig = (
     icon: Archive,
     color: 'text-slate-500',
     badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
-    bannerBg: 'bg-slate-100',
+    bannerBg: 'bg-slate-100 dark:bg-slate-900/90',
     description: t(
       'Ophthalmologist.consultations.chat.phase.completedDescription',
       'Consultation has been completed. Chat is now read-only.'
@@ -991,7 +992,7 @@ export default function ConsultationsChatView({
             >
               <div className="flex items-start gap-2.5">
                 <phaseUI.icon
-                  className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color}`}
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color} ${phase === 'PRE_VISIT' ? 'dark:text-amber-300' : ''} ${phase === 'COMPLETED' ? 'dark:text-slate-300' : ''}`}
                 />
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">
@@ -1482,22 +1483,18 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                   <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
-                    {selectedSession.caseSnapshot.annotatedImageUrl ? (
-                      <img
-                        src={selectedSession.caseSnapshot.annotatedImageUrl}
-                        alt="AI annotated retinal image"
-                        className="h-24 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
-                        No AI image
-                      </div>
-                    )}
+                    <CaseSnapshotAiThumbnail
+                      snapshot={selectedSession.caseSnapshot}
+                    />
                     <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
                       AI Annotated
                     </p>
                   </div>
                 </div>
+
+                <ScreeningReviewLink
+                  screeningId={selectedSession.caseSnapshot.screeningId}
+                />
 
                 <div className="mt-4 space-y-2">
                   <p className="text-xs text-slate-500 dark:text-gray-400">
