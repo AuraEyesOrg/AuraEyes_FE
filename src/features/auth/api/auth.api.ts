@@ -226,7 +226,7 @@ export const registerPatient = async (
 
 /**
  * Register a new ophthalmologist account
- * Uses FormData to support file uploads (licenseImage, degreeImage)
+ * Uses FormData to support dynamic credential arrays with file uploads
  */
 export const registerOphthalmologist = async (
   data: RegisterOphthalmologistRequest
@@ -251,8 +251,36 @@ export const registerOphthalmologist = async (
   }
   if (data.organizationId)
     formData.append('organizationId', data.organizationId);
-  if (data.licenseImage) formData.append('licenseImage', data.licenseImage);
-  if (data.degreeImage) formData.append('degreeImage', data.degreeImage);
+
+  data.degrees.forEach((item, index) => {
+    formData.append(`degrees[${index}].name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `degrees[${index}].issuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`degrees[${index}].issuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`degrees[${index}].expiryDate`, item.expiryDate);
+    }
+    formData.append(`degrees[${index}].file`, item.file);
+  });
+
+  data.certificates.forEach((item, index) => {
+    formData.append(`certificates[${index}].name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `certificates[${index}].issuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`certificates[${index}].issuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`certificates[${index}].expiryDate`, item.expiryDate);
+    }
+    formData.append(`certificates[${index}].file`, item.file);
+  });
 
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,

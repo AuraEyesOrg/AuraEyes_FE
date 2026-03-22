@@ -24,8 +24,16 @@ async function slowType(locator: Locator, value: string, delay = 110): Promise<v
   await locator.type(value, { delay });
 }
 
-async function setFakeLicenseUpload(page: Page): Promise<void> {
-  await page.locator('#licenseUpload').setInputFiles({
+async function setFakeCredentialUploads(page: Page): Promise<void> {
+  await page.getByTestId('degree-file-0').setInputFiles({
+    name: 'degree.jpg',
+    mimeType: 'image/jpeg',
+    // Zero-byte file: satisfies required client-side selection but skips
+    // backend storage upload path (Length > 0 check) in test env.
+    buffer: Buffer.alloc(0),
+  });
+
+  await page.getByTestId('certificate-file-0').setInputFiles({
     name: 'license.jpg',
     mimeType: 'image/jpeg',
     // Zero-byte file: satisfies required client-side selection but skips
@@ -33,6 +41,7 @@ async function setFakeLicenseUpload(page: Page): Promise<void> {
     buffer: Buffer.alloc(0),
   });
 
+  await expect(page.getByText('degree.jpg')).toBeVisible();
   await expect(page.getByText('license.jpg')).toBeVisible();
 }
 
@@ -104,7 +113,18 @@ test.describe('Flow 01 - Doctor Registration Full Flow', () => {
       'Toi la bac si test tu dong cho e2e flow.',
     );
 
-    await setFakeLicenseUpload(page);
+    await slowType(page.locator('input[name="degrees.0.name"]'), 'Bac si da khoa');
+    await slowType(page.locator('input[name="degrees.0.issuingAuthority"]'), 'Dai hoc Y Duoc');
+    await page.locator('input[name="degrees.0.issuedDate"]').fill('2016-06-01');
+
+    await slowType(page.locator('input[name="certificates.0.name"]'), 'Giay phep hanh nghe');
+    await slowType(
+      page.locator('input[name="certificates.0.issuingAuthority"]'),
+      'So Y te TP.HCM',
+    );
+    await page.locator('input[name="certificates.0.issuedDate"]').fill('2018-08-01');
+
+    await setFakeCredentialUploads(page);
 
     await page.getByRole('button', { name: 'Submit Application' }).click();
     await expect(page.getByText('Application Submitted!')).toBeVisible();
