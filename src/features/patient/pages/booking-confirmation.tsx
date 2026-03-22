@@ -3,7 +3,7 @@
  * Patient confirms their reservation and completes the booking.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -32,6 +32,9 @@ import {
   saveScreeningConsultationContext,
   type ScreeningConsultationContext,
 } from '../types/consultation-context';
+import PatientImageViewer from '../components/ImageViewer';
+import type { Anomaly, RetinalImage, ToggleState } from '../types/type';
+import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
 
 // ============ HELPERS ============
 
@@ -67,29 +70,14 @@ export default function BookingConfirmationPage(
 
   const slotId =
     props.embeddedSlotId ?? state.slotId ?? storedSlotId ?? querySlotId;
-  const consultationContext = (() => {
-    if (props.embeddedConsultationContext?.screeningId) {
-      return props.embeddedConsultationContext;
-    }
-    return loadScreeningConsultationContext();
-  })();
+  const consultationContext =
+    useMemo((): ScreeningConsultationContext | null => {
+      if (props.embeddedConsultationContext?.screeningId) {
+        return props.embeddedConsultationContext;
+      }
+      return loadScreeningConsultationContext();
+    }, [props.embeddedConsultationContext]);
   const primaryOriginalImage = consultationContext?.images?.[0]?.url;
-  const parsedAnnotatedImage = (() => {
-    const raw = consultationContext?.rawJsonOutput;
-    if (!raw) return null;
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      if (typeof parsed.annotatedImageUrl === 'string') {
-        return parsed.annotatedImageUrl;
-      }
-      if (typeof parsed.image_url === 'string') {
-        return parsed.image_url;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  })();
   const symptomNames =
     consultationContext?.anomalies?.map(
       (item) => item.friendlyName || item.name
@@ -100,6 +88,63 @@ export default function BookingConfirmationPage(
 
   const [shareRetinalImages, setShareRetinalImages] = useState(true);
   const [shareAiResults, setShareAiResults] = useState(true);
+
+  const previewToggles = useMemo<ToggleState>(
+    () => ({
+      vesselSegmentation: false,
+      hemorrhages: false,
+      exudates: false,
+      opticDisc: false,
+    }),
+    []
+  );
+
+  const [previewAnomalies, setPreviewAnomalies] = useState<Anomaly[]>(
+    () => consultationContext?.anomalies ?? []
+  );
+
+  useEffect(() => {
+    const base = consultationContext?.anomalies ?? [];
+    const img = consultationContext?.images?.[0]?.url;
+    const raw = consultationContext?.rawJsonOutput;
+    if (!img) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    if (base.length > 0 && base.some((a) => a.location)) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    if (!raw) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    let cancelled = false;
+    hydrateConsultationPreviewAnomalies(raw, img).then((mapped) => {
+      if (!cancelled) setPreviewAnomalies(mapped.length > 0 ? mapped : base);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    consultationContext?.anomalies,
+    consultationContext?.rawJsonOutput,
+    consultationContext?.images,
+  ]);
+
+  const previewRetinalImage: RetinalImage | null = useMemo(() => {
+    const img = consultationContext?.images?.[0];
+    if (!img?.url) return null;
+    return {
+      id: img.id,
+      url: img.url,
+      name: img.name,
+      eye: img.eye,
+      uploadedAt: img.uploadedAt,
+      analyzed: true,
+      anomalies: previewAnomalies,
+    };
+  }, [consultationContext?.images, previewAnomalies]);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -549,19 +594,29 @@ export default function BookingConfirmationPage(
                 </p>
               </div>
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
-                {parsedAnnotatedImage ? (
-                  <img
-                    src={parsedAnnotatedImage}
-                    alt="AI annotated retinal image"
-                    className="h-40 w-full object-cover"
-                  />
-                ) : (
+                {!shareAiResults ? (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500 px-3 text-center">
+                    Turn on &quot;AI Analysis Results&quot; to preview how the
+                    doctor will see AI highlights.
+                  </div>
+                ) : !previewRetinalImage ? (
                   <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
-                    AI annotated image unavailable
+                    Add a retinal image in screening to preview AI overlays.
+                  </div>
+                ) : (
+                  <div className="h-40 w-full relative overflow-hidden">
+                    <PatientImageViewer
+                      toggles={previewToggles}
+                      zoomLevel={1}
+                      anomalies={previewAnomalies}
+                      isAnalyzing={false}
+                      currentImage={previewRetinalImage}
+                      showHighlights={previewAnomalies.some((a) => a.location)}
+                    />
                   </div>
                 )}
                 <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
-                  AI annotated image
+                  AI annotated preview
                 </p>
               </div>
             </div>
