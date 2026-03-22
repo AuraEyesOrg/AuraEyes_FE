@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -11,100 +11,50 @@ import {
   XCircle,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
+import {
+  listOphthalmologistScreenings,
+  type OphthalmologistScreeningListItemDto,
+} from '../api/ophthalmologist-screenings.api';
+import Spinner from '@/components/ui/spinner';
 
-// Mock screening data
-const mockScreenings = [
-  {
-    id: 'SCR-001',
-    patientName: 'Elena Miller',
-    patientId: '#48291',
-    patientInitials: 'EM',
-    avatarColor: '#14b8a6',
-    date: 'Oct 24, 2023',
-    time: '09:30 AM',
-    type: 'Full Retinal Scan',
-    aiPrediction: 'Macular Degeneration',
-    confidence: 78,
-    status: 'pending-review',
-    images: 4,
-    notes: 'Patient reported blurred vision in right eye',
-  },
-  {
-    id: 'SCR-002',
-    patientName: 'David Kim',
-    patientId: '#48290',
-    patientInitials: 'DK',
-    avatarColor: '#f59e0b',
-    date: 'Oct 24, 2023',
-    time: '10:15 AM',
-    type: 'Routine Screening',
-    aiPrediction: 'Healthy',
-    confidence: 95,
-    status: 'approved',
-    images: 2,
-    notes: 'Annual check-up, no concerns',
-  },
-  {
-    id: 'SCR-003',
-    patientName: 'Sarah Jenkins',
-    patientId: '#48301',
-    patientInitials: 'SJ',
-    avatarColor: '#8b5cf6',
-    date: 'Oct 23, 2023',
-    time: '04:45 PM',
-    type: 'Follow-up Scan',
-    aiPrediction: 'Microaneurysms',
-    confidence: 65,
-    status: 'flagged',
-    images: 6,
-    notes: 'Follow-up from previous diabetic screening',
-  },
-  {
-    id: 'SCR-004',
-    patientName: 'Marcus Wright',
-    patientId: '#48312',
-    patientInitials: 'MW',
-    avatarColor: '#ec4899',
-    date: 'Oct 23, 2023',
-    time: '03:20 PM',
-    type: 'Full Retinal Scan',
-    aiPrediction: 'Hypertensive Retinopathy',
-    confidence: 88,
-    status: 'pending-review',
-    images: 4,
-    notes: 'Patient has history of high blood pressure',
-  },
-  {
-    id: 'SCR-005',
-    patientName: 'Linda Chen',
-    patientId: '#48320',
-    patientInitials: 'LC',
-    avatarColor: '#06b6d4',
-    date: 'Oct 22, 2023',
-    time: '11:00 AM',
-    type: 'Urgent Screening',
-    aiPrediction: 'Diabetic Retinopathy',
-    confidence: 92,
-    status: 'reviewed',
-    images: 8,
-    notes: 'Urgent referral from primary care',
-  },
-  {
-    id: 'SCR-006',
-    patientName: 'James Rodriguez',
-    patientId: '#48325',
-    patientInitials: 'JR',
-    avatarColor: '#10b981',
-    date: 'Oct 21, 2023',
-    time: '02:30 PM',
-    type: 'Glaucoma Assessment',
-    aiPrediction: 'Glaucoma Suspect',
-    confidence: 71,
-    status: 'pending-review',
-    images: 5,
-    notes: 'Elevated intraocular pressure noted',
-  },
+const AVATAR_PALETTE = [
+  '#14b8a6',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#10b981',
+  '#6366f1',
+  '#f43f5e',
 ];
+
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
+function avatarColorForKey(key: string): string {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
+function formatScreeningRef(screeningId: string): string {
+  return `SCR-${screeningId.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
+
+function formatPatientRef(patientId: string): string {
+  return `#${patientId.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
+
+function toConfidencePercent(score: number | null | undefined): number {
+  if (score == null || !Number.isFinite(Number(score))) return 0;
+  const n = Number(score);
+  if (n > 0 && n <= 1) return Math.round(n * 100);
+  return Math.round(Math.min(100, Math.max(0, n)));
+}
 
 function getStatusIcon(status: string) {
   switch (status) {
@@ -142,29 +92,77 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-500';
 }
 
+function aiLabelForRow(row: OphthalmologistScreeningListItemDto): string {
+  if (row.aiPrimaryLabel?.trim()) return row.aiPrimaryLabel.trim();
+  if (row.latestRiskLevel?.trim()) return row.latestRiskLevel.trim();
+  return 'Pending analysis';
+}
+
 export default function ScreeningsPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [items, setItems] = useState<OphthalmologistScreeningListItemDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const filteredScreenings = mockScreenings.filter((screening) => {
-    const matchesSearch =
-      screening.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      screening.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      selectedStatus === 'all' || screening.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await listOphthalmologistScreenings();
+      setItems(data);
+    } catch {
+      setLoadError('Could not load screenings. Please try again.');
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const filteredScreenings = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return items.filter((row) => {
+      const ref = formatScreeningRef(row.screeningId).toLowerCase();
+      const matchesSearch =
+        !q ||
+        row.patientName.toLowerCase().includes(q) ||
+        row.screeningId.toLowerCase().includes(q) ||
+        ref.includes(q);
+      const matchesStatus =
+        selectedStatus === 'all' || row.reviewStatus === selectedStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [items, searchQuery, selectedStatus]);
+
+  const stats = useMemo(() => {
+    const pending = items.filter(
+      (s) => s.reviewStatus === 'pending-review'
+    ).length;
+    const reviewed = items.filter((s) => s.reviewStatus === 'reviewed').length;
+    const approved = items.filter((s) => s.reviewStatus === 'approved').length;
+    const flagged = items.filter((s) => s.reviewStatus === 'flagged').length;
+    return {
+      total: items.length,
+      pending,
+      reviewed,
+      approved,
+      flagged,
+    };
+  }, [items]);
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={12} />
+      <DoctorSidebar pendingCount={stats.pending} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader pageName="Screenings" />
 
         <main className="p-6">
-          {/* Page Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -176,14 +174,26 @@ export default function ScreeningsPage() {
             </div>
           </div>
 
-          {/* Stats */}
+          {loadError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              {loadError}
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="ml-3 font-medium text-red-900 underline dark:text-red-100"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-5 gap-4 mb-6">
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 Total Screenings
               </p>
               <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                {mockScreenings.length}
+                {stats.total}
               </p>
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
@@ -191,10 +201,7 @@ export default function ScreeningsPage() {
                 Pending Review
               </p>
               <p className="text-2xl font-bold text-gray-600 dark:text-gray-300">
-                {
-                  mockScreenings.filter((s) => s.status === 'pending-review')
-                    .length
-                }
+                {stats.pending}
               </p>
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
@@ -202,7 +209,7 @@ export default function ScreeningsPage() {
                 Reviewed
               </p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {mockScreenings.filter((s) => s.status === 'reviewed').length}
+                {stats.reviewed}
               </p>
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
@@ -210,7 +217,7 @@ export default function ScreeningsPage() {
                 Approved
               </p>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {mockScreenings.filter((s) => s.status === 'approved').length}
+                {stats.approved}
               </p>
             </div>
             <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
@@ -218,12 +225,11 @@ export default function ScreeningsPage() {
                 Flagged
               </p>
               <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {mockScreenings.filter((s) => s.status === 'flagged').length}
+                {stats.flagged}
               </p>
             </div>
           </div>
 
-          {/* Filters */}
           <div className="flex items-center gap-4 mb-6">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -248,124 +254,158 @@ export default function ScreeningsPage() {
               <option value="flagged">Flagged</option>
             </select>
 
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
+            <button
+              type="button"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors"
+            >
               <Filter size={16} />
               More Filters
             </button>
           </div>
 
-          {/* Screenings List */}
           <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
-            <div className="divide-y divide-gray-100 dark:divide-[#1e3a5f]">
-              {filteredScreenings.map((screening) => {
-                const statusLabel = getStatusLabel(screening.status);
-                const confidenceColor = getConfidenceColor(
-                  screening.confidence
-                );
-
-                return (
-                  <div
-                    key={screening.id}
-                    className="p-5 hover:bg-gray-50/50 dark:hover:bg-[#1e3a5f]/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Patient Avatar */}
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold shrink-0"
-                        style={{ backgroundColor: screening.avatarColor }}
-                      >
-                        {screening.patientInitials}
-                      </div>
-
-                      {/* Main Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="font-semibold text-gray-800 dark:text-white">
-                              {screening.patientName}
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {screening.patientId} • {screening.type}
-                            </p>
-                          </div>
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusLabel.color}`}
-                          >
-                            {statusLabel.text}
-                          </span>
-                        </div>
-
-                        {/* AI Prediction */}
-                        <div className="flex items-center gap-4 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              AI Prediction:
-                            </span>
-                            <span className="text-sm font-medium text-gray-800 dark:text-white">
-                              {screening.aiPrediction}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${confidenceColor} rounded-full`}
-                                style={{ width: `${screening.confidence}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {screening.confidence}%
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Meta Info */}
-                        <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar size={12} />
-                            {screening.date}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={12} />
-                            {screening.time}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Eye size={12} />
-                            {screening.images} images
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {getStatusIcon(screening.status)}
-                            <span className="text-gray-600 dark:text-gray-400">
-                              {screening.id}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Notes */}
-                        {screening.notes && (
-                          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
-                            {screening.notes}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Action */}
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/ophthalmologist/screenings/${screening.id}/review`
-                          )
-                        }
-                        className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors shrink-0"
-                      >
-                        {screening.status === 'pending-review'
-                          ? 'Review'
-                          : 'View Details'}
-                      </button>
-                    </div>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Spinner size={36} />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Loading screenings…
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100 dark:divide-[#1e3a5f]">
+                {filteredScreenings.length === 0 ? (
+                  <div className="p-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No screenings match your filters. Screenings appear here
+                    when a patient books a consultation that includes an AI
+                    screening linked to you.
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  filteredScreenings.map((screening) => {
+                    const statusLabel = getStatusLabel(screening.reviewStatus);
+                    const confidence = toConfidencePercent(
+                      screening.confidenceScore
+                    );
+                    const confidenceColor = getConfidenceColor(confidence);
+                    const created = new Date(screening.createdAt);
+                    const dateStr = created.toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    });
+                    const timeStr = created.toLocaleTimeString(undefined, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                    const typeLabel =
+                      screening.modelVersion?.trim() || 'Retinal screening';
+
+                    return (
+                      <div
+                        key={screening.screeningId}
+                        className="p-5 hover:bg-gray-50/50 dark:hover:bg-[#1e3a5f]/50 transition-colors"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold shrink-0"
+                            style={{
+                              backgroundColor: avatarColorForKey(
+                                screening.patientId
+                              ),
+                            }}
+                          >
+                            {initialsFromName(screening.patientName)}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h3 className="font-semibold text-gray-800 dark:text-white">
+                                  {screening.patientName}
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {formatPatientRef(screening.patientId)} •{' '}
+                                  {typeLabel}
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusLabel.color}`}
+                              >
+                                {statusLabel.text}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-4 mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  AI Prediction:
+                                </span>
+                                <span className="text-sm font-medium text-gray-800 dark:text-white">
+                                  {aiLabelForRow(screening)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full ${confidenceColor} rounded-full`}
+                                    style={{
+                                      width: `${confidence}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {confidence}%
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                {dateStr}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock size={12} />
+                                {timeStr}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Eye size={12} />
+                                {screening.imagesCount} images
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {getStatusIcon(screening.reviewStatus)}
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  {formatScreeningRef(screening.screeningId)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {screening.summarySnippet?.trim() ? (
+                              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
+                                {screening.summarySnippet}
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/ophthalmologist/screenings/${screening.screeningId}/review`
+                              )
+                            }
+                            className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors shrink-0"
+                          >
+                            {screening.reviewStatus === 'pending-review'
+                              ? 'Review'
+                              : 'View Details'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
