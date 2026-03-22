@@ -25,6 +25,14 @@ export interface RegisterPatientRequest {
   gender?: number;
 }
 
+export interface CredentialItemRequest {
+  name: string;
+  issuingAuthority?: string;
+  issuedDate: string;
+  expiryDate?: string;
+  file: File;
+}
+
 export interface RegisterOphthalmologistRequest {
   email: string;
   password: string;
@@ -37,8 +45,8 @@ export interface RegisterOphthalmologistRequest {
   workingHoursPerWeek?: number;
   expectedMonthlySalary?: number;
   organizationId?: string;
-  licenseImage?: File;
-  degreeImage?: File;
+  degrees: CredentialItemRequest[];
+  certificates: CredentialItemRequest[];
 }
 
 export interface RegisterOrganisationRequest {

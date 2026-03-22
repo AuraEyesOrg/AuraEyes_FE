@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import {
   Mail,
   User,
@@ -15,10 +15,20 @@ import {
   Activity,
   Zap,
   Lock,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { registerOphthalmologist } from '../api/auth.api';
 import '@/styles/auth-animations.css';
+
+interface CredentialFormItem {
+  name: string;
+  issuingAuthority: string;
+  issuedDate: string;
+  expiryDate: string;
+  file: File | null;
+}
 
 interface DoctorFormData {
   fullName: string;
@@ -31,16 +41,26 @@ interface DoctorFormData {
   workingHoursPerWeek: string;
   expectedMonthlySalary: string;
   bio: string;
+  degrees: CredentialFormItem[];
+  certificates: CredentialFormItem[];
 }
 
+const createDefaultCredential = (): CredentialFormItem => ({
+  name: '',
+  issuingAuthority: '',
+  issuedDate: '',
+  expiryDate: '',
+  file: null,
+});
+
 const RegisterDoctorPage = () => {
-  const [licenseFile, setLicenseFile] = useState<File | null>(null);
-  const [degreeFile, setDegreeFile] = useState<File | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
+
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -52,7 +72,27 @@ const RegisterDoctorPage = () => {
       employmentType: 'FullTime',
       workingHoursPerWeek: '40',
       expectedMonthlySalary: '',
+      degrees: [createDefaultCredential()],
+      certificates: [createDefaultCredential()],
     },
+  });
+
+  const {
+    fields: degreeFields,
+    append: appendDegree,
+    remove: removeDegree,
+  } = useFieldArray({
+    control,
+    name: 'degrees',
+  });
+
+  const {
+    fields: certificateFields,
+    append: appendCertificate,
+    remove: removeCertificate,
+  } = useFieldArray({
+    control,
+    name: 'certificates',
   });
 
   const selectedEmploymentType = watch('employmentType');
@@ -65,6 +105,9 @@ const RegisterDoctorPage = () => {
       ? 12000000 + Math.max(yearsOfExperienceValue, 0) * 500000
       : 25000000 + Math.max(yearsOfExperienceValue, 0) * 1000000;
 
+  const degrees = watch('degrees') || [];
+  const certificates = watch('certificates') || [];
+
   useEffect(() => {
     const currentHours = getValues('workingHoursPerWeek');
     if (!currentHours) {
@@ -75,14 +118,40 @@ const RegisterDoctorPage = () => {
     }
   }, [selectedEmploymentType, getValues, setValue]);
 
+  const handleCredentialFileChange = (
+    group: 'degrees' | 'certificates',
+    index: number,
+    file?: File
+  ) => {
+    setValue(`${group}.${index}.file`, file || null, { shouldValidate: true });
+  };
+
   const onSubmit = async (data: DoctorFormData) => {
-    if (!licenseFile) {
-      setSubmitError('Contract/License file is required before submitting.');
+    if (!data.degrees.length) {
+      setSubmitError('At least one degree is required before submitting.');
+      return;
+    }
+
+    if (!data.certificates.length) {
+      setSubmitError(
+        'At least one certificate/license is required before submitting.'
+      );
+      return;
+    }
+
+    if (data.degrees.some((item) => !item.file)) {
+      setSubmitError('Every degree item must include a file.');
+      return;
+    }
+
+    if (data.certificates.some((item) => !item.file)) {
+      setSubmitError('Every certificate item must include a file.');
       return;
     }
 
     setIsSubmitting(true);
     setSubmitError('');
+
     try {
       await registerOphthalmologist({
         email: data.email,
@@ -97,9 +166,22 @@ const RegisterDoctorPage = () => {
           parseInt(data.workingHoursPerWeek, 10) || undefined,
         expectedMonthlySalary:
           parseFloat(data.expectedMonthlySalary) || undefined,
-        licenseImage: licenseFile ?? undefined,
-        degreeImage: degreeFile ?? undefined,
+        degrees: data.degrees.map((item) => ({
+          name: item.name,
+          issuingAuthority: item.issuingAuthority || undefined,
+          issuedDate: item.issuedDate,
+          expiryDate: item.expiryDate || undefined,
+          file: item.file as File,
+        })),
+        certificates: data.certificates.map((item) => ({
+          name: item.name,
+          issuingAuthority: item.issuingAuthority || undefined,
+          issuedDate: item.issuedDate,
+          expiryDate: item.expiryDate || undefined,
+          file: item.file as File,
+        })),
       });
+
       setSubmittedEmail(data.email);
       setIsSubmitted(true);
     } catch (err: unknown) {
@@ -113,22 +195,10 @@ const RegisterDoctorPage = () => {
     }
   };
 
-  const handleLicenseUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) setLicenseFile(e.target.files[0]);
-  };
-  const handleDegreeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) setDegreeFile(e.target.files[0]);
-  };
-  const removeLicense = () => setLicenseFile(null);
-  const removeDegree = () => setDegreeFile(null);
-
-  // Success State View
   if (isSubmitted) {
     return (
       <div className="min-h-screen w-full flex flex-col lg:flex-row">
-        {/* Left Panel: Brand Identity */}
         <div className="lg:w-[40%] bg-gradient-to-br from-[#1A202C] to-[#2D3748] w-full flex flex-col justify-between p-8 lg:p-12 text-white relative overflow-hidden">
-          {/* Background Decorative Elements */}
           <div className="absolute right-[-20%] top-[10%] opacity-5 pointer-events-none">
             <Activity className="w-[400px] h-[400px]" strokeWidth={0.5} />
           </div>
@@ -136,7 +206,6 @@ const RegisterDoctorPage = () => {
             <Zap className="w-[300px] h-[300px]" strokeWidth={0.5} />
           </div>
 
-          {/* Header */}
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
               <Eye className="text-[#00d1c0] w-10 h-10" />
@@ -144,7 +213,6 @@ const RegisterDoctorPage = () => {
             </div>
           </div>
 
-          {/* Center Content */}
           <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
             <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
@@ -157,7 +225,6 @@ const RegisterDoctorPage = () => {
             </p>
           </div>
 
-          {/* Footer */}
           <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
             <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
             <a className="hover:text-[#00d1c0] transition-colors" href="#">
@@ -166,7 +233,6 @@ const RegisterDoctorPage = () => {
           </div>
         </div>
 
-        {/* Right Panel: Success Message */}
         <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24">
           <div className="w-full max-w-[480px] animate-slide-in-right">
             <div className="text-center py-8">
@@ -202,12 +268,9 @@ const RegisterDoctorPage = () => {
     );
   }
 
-  // Registration Form View
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
-      {/* Left Panel: Brand Identity */}
       <div className="lg:w-[40%] bg-gradient-to-br from-[#1A202C] to-[#2D3748] w-full flex flex-col justify-between p-8 lg:p-12 text-white relative overflow-hidden">
-        {/* Background Decorative Elements */}
         <div className="absolute right-[-20%] top-[10%] opacity-5 pointer-events-none">
           <Activity className="w-[400px] h-[400px]" strokeWidth={0.5} />
         </div>
@@ -215,7 +278,6 @@ const RegisterDoctorPage = () => {
           <Zap className="w-[300px] h-[300px]" strokeWidth={0.5} />
         </div>
 
-        {/* Header */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <Eye className="text-[#00d1c0] w-10 h-10" />
@@ -223,7 +285,6 @@ const RegisterDoctorPage = () => {
           </div>
         </div>
 
-        {/* Center Content */}
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
@@ -234,52 +295,8 @@ const RegisterDoctorPage = () => {
             Become part of our elite team of healthcare professionals leveraging
             AI-powered diagnostics.
           </p>
-
-          {/* Features */}
-          <div className="space-y-4 mt-8">
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-[#00d1c0]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">
-                  AI-Powered Analysis
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Access cutting-edge retinal screening technology
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-[#00d1c0]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">
-                  Secure Platform
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  HIPAA-compliant data protection standards
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-[#00d1c0]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <CheckCircle className="h-4 w-4 text-[#00d1c0]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">
-                  Collaborative Care
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Connect with specialists and share insights
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Footer */}
         <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
           <p>© 2026 Aura Medical Systems.</p>
           <a className="hover:text-[#00d1c0] transition-colors" href="#">
@@ -288,11 +305,9 @@ const RegisterDoctorPage = () => {
         </div>
       </div>
 
-      {/* Right Panel: Registration Form */}
       <div className="lg:w-[60%] w-full bg-white flex flex-col overflow-y-auto">
         <div className="flex-1 p-6 sm:p-12 lg:p-16">
-          <div className="w-full max-w-[520px] mx-auto animate-slide-in-right">
-            {/* Header */}
+          <div className="w-full max-w-[640px] mx-auto animate-slide-in-right">
             <div className="mb-8 text-center">
               <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-[#1F85F5] to-[#00d1c0] text-white mb-4">
                 <Stethoscope className="h-6 w-6" />
@@ -305,9 +320,7 @@ const RegisterDoctorPage = () => {
               </p>
             </div>
 
-            {/* Registration Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              {/* Full Name */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Full Name <span className="text-red-500">*</span>
@@ -336,7 +349,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Email */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Medical Email <span className="text-red-500">*</span>
@@ -365,7 +377,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Phone */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Phone Number
@@ -393,7 +404,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Password */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Password <span className="text-red-500">*</span>
@@ -422,7 +432,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Confirm Password <span className="text-red-500">*</span>
@@ -447,7 +456,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Years of Experience */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Experience (years) <span className="text-red-500">*</span>
@@ -473,7 +481,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Employment Type */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Working Mode <span className="text-red-500">*</span>
@@ -526,7 +533,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Working Hours */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Working Hours / Week <span className="text-red-500">*</span>
@@ -555,7 +561,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Expected Salary */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Expected Monthly Salary (VND){' '}
@@ -588,7 +593,6 @@ const RegisterDoctorPage = () => {
                 )}
               </div>
 
-              {/* Bio / Description */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
                   Brief Bio (Optional)
@@ -601,110 +605,298 @@ const RegisterDoctorPage = () => {
                 />
               </div>
 
-              {/* License Upload */}
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Contract / License <span className="text-red-500">*</span>
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Upload your contract or medical license (PDF, JPG, PNG - Max
-                  10MB)
-                </p>
-                {!licenseFile ? (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
-                    <input
-                      type="file"
-                      id="licenseUpload"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleLicenseUpload}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="licenseUpload"
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      <Upload className="h-6 w-6 text-[#00d1c0] mb-1" />
-                      <p className="text-sm font-medium text-gray-700">
-                        Click to upload contract / license
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Degrees <span className="text-red-500">*</span>
+                  </h3>
+                  <button
+                    type="button"
+                    data-testid="add-degree"
+                    onClick={() => appendDegree(createDefaultCredential())}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
+                  >
+                    <Plus className="h-4 w-4" /> Add Degree
+                  </button>
+                </div>
+
+                {degreeFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    data-testid={`degree-item-${index}`}
+                    className="p-4 rounded-lg border border-gray-200 bg-gray-50/40 space-y-3"
+                  >
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs font-semibold text-gray-600">
+                        Degree #{index + 1}
                       </p>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-700 truncate">
-                          {licenseFile.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(licenseFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (degreeFields.length > 1) removeDegree(index);
+                        }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded-full disabled:opacity-40"
+                        disabled={degreeFields.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      {...register(`degrees.${index}.name`, {
+                        required: 'Degree name is required',
+                      })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Degree name"
+                    />
+                    {errors.degrees?.[index]?.name && (
+                      <p className="text-xs text-red-500">
+                        {errors.degrees[index]?.name?.message}
+                      </p>
+                    )}
+
+                    <input
+                      type="text"
+                      {...register(`degrees.${index}.issuingAuthority`)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Issuing authority (optional)"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-600">
+                          Issued date
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`degrees.${index}.issuedDate`, {
+                            required: 'Issued date is required',
+                          })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                        {errors.degrees?.[index]?.issuedDate && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {errors.degrees[index]?.issuedDate?.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600">
+                          Expiry date
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`degrees.${index}.expiryDate`)}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={removeLicense}
-                      className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
-                    >
-                      <X className="h-4 w-4 text-red-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
 
-              {/* Degree Upload */}
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Medical Degree
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Upload medical degree certificate (PDF, JPG, PNG - Max 10MB)
-                </p>
-                {!degreeFile ? (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
-                    <input
-                      type="file"
-                      id="degreeUpload"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleDegreeUpload}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="degreeUpload"
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      <Upload className="h-6 w-6 text-[#00d1c0] mb-1" />
-                      <p className="text-sm font-medium text-gray-700">
-                        Click to upload degree
-                      </p>
-                    </label>
+                    {!degrees[index]?.file ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
+                        <input
+                          type="file"
+                          id={`degree-upload-${field.id}`}
+                          data-testid={`degree-file-${index}`}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) =>
+                            handleCredentialFileChange(
+                              'degrees',
+                              index,
+                              e.target.files?.[0]
+                            )
+                          }
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor={`degree-upload-${field.id}`}
+                          className="cursor-pointer flex flex-col items-center"
+                        >
+                          <Upload className="h-5 w-5 text-[#00d1c0] mb-1" />
+                          <p className="text-xs font-medium text-gray-700">
+                            Upload degree file
+                          </p>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-700 truncate">
+                              {degrees[index]?.file?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {degrees[index]?.file
+                                ? `${(degrees[index].file!.size / 1024 / 1024).toFixed(2)} MB`
+                                : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCredentialFileChange('degrees', index)
+                          }
+                          className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                        >
+                          <X className="h-4 w-4 text-red-500" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-700 truncate">
-                          {degreeFile.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(degreeFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                ))}
+              </section>
+
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Licenses / Certificates{' '}
+                    <span className="text-red-500">*</span>
+                  </h3>
+                  <button
+                    type="button"
+                    data-testid="add-certificate"
+                    onClick={() => appendCertificate(createDefaultCredential())}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
+                  >
+                    <Plus className="h-4 w-4" /> Add Certificate
+                  </button>
+                </div>
+
+                {certificateFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    data-testid={`certificate-item-${index}`}
+                    className="p-4 rounded-lg border border-gray-200 bg-gray-50/40 space-y-3"
+                  >
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs font-semibold text-gray-600">
+                        Certificate #{index + 1}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (certificateFields.length > 1)
+                            removeCertificate(index);
+                        }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded-full disabled:opacity-40"
+                        disabled={certificateFields.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      {...register(`certificates.${index}.name`, {
+                        required: 'Certificate name is required',
+                      })}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Certificate/license name"
+                    />
+                    {errors.certificates?.[index]?.name && (
+                      <p className="text-xs text-red-500">
+                        {errors.certificates[index]?.name?.message}
+                      </p>
+                    )}
+
+                    <input
+                      type="text"
+                      {...register(`certificates.${index}.issuingAuthority`)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Issuing authority (optional)"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-600">
+                          Issued date
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`certificates.${index}.issuedDate`, {
+                            required: 'Issued date is required',
+                          })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                        {errors.certificates?.[index]?.issuedDate && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {errors.certificates[index]?.issuedDate?.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-xs text-gray-600">
+                          Expiry date
+                        </label>
+                        <input
+                          type="date"
+                          {...register(`certificates.${index}.expiryDate`)}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={removeDegree}
-                      className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
-                    >
-                      <X className="h-4 w-4 text-red-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
 
-              {/* Info Banner */}
+                    {!certificates[index]?.file ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-[#1F85F5] hover:bg-blue-50/30 transition-all">
+                        <input
+                          type="file"
+                          id={`certificate-upload-${field.id}`}
+                          data-testid={`certificate-file-${index}`}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) =>
+                            handleCredentialFileChange(
+                              'certificates',
+                              index,
+                              e.target.files?.[0]
+                            )
+                          }
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor={`certificate-upload-${field.id}`}
+                          className="cursor-pointer flex flex-col items-center"
+                        >
+                          <Upload className="h-5 w-5 text-[#00d1c0] mb-1" />
+                          <p className="text-xs font-medium text-gray-700">
+                            Upload certificate/license file
+                          </p>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <FileText className="h-5 w-5 text-[#00d1c0] flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-700 truncate">
+                              {certificates[index]?.file?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {certificates[index]?.file
+                                ? `${(certificates[index].file!.size / 1024 / 1024).toFixed(2)} MB`
+                                : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCredentialFileChange('certificates', index)
+                          }
+                          className="ml-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                        >
+                          <X className="h-4 w-4 text-red-500" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </section>
+
               <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                 <div className="flex items-start gap-3">
                   <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
@@ -715,14 +907,13 @@ const RegisterDoctorPage = () => {
                     <p className="text-xs text-gray-600 leading-relaxed">
                       After submitting your application, our verification team
                       will first verify your email, then review your submitted
-                      documents and selected working mode before assigning the
+                      credentials and selected working mode before assigning the
                       matching full-time/part-time contract template.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="pt-4">
                 {submitError && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -739,7 +930,6 @@ const RegisterDoctorPage = () => {
               </div>
             </form>
 
-            {/* Back Link */}
             <div className="pt-6 border-t border-gray-100 mt-6">
               <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}

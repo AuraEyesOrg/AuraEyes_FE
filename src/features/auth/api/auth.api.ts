@@ -226,33 +226,61 @@ export const registerPatient = async (
 
 /**
  * Register a new ophthalmologist account
- * Uses FormData to support file uploads (licenseImage, degreeImage)
+ * Uses FormData to support dynamic credential arrays with file uploads
  */
 export const registerOphthalmologist = async (
   data: RegisterOphthalmologistRequest
 ): Promise<{ userId: string }> => {
   const formData = new FormData();
-  formData.append('email', data.email);
-  formData.append('password', data.password);
-  formData.append('confirmPassword', data.confirmPassword);
-  formData.append('fullName', data.fullName);
-  if (data.phone) formData.append('phone', data.phone);
-  if (data.bio) formData.append('bio', data.bio);
-  formData.append('yearsOfExperience', String(data.yearsOfExperience));
-  formData.append('employmentType', data.employmentType);
+  formData.append('Email', data.email);
+  formData.append('Password', data.password);
+  formData.append('ConfirmPassword', data.confirmPassword);
+  formData.append('FullName', data.fullName);
+  if (data.phone) formData.append('Phone', data.phone);
+  if (data.bio) formData.append('Bio', data.bio);
+  formData.append('YearsOfExperience', String(data.yearsOfExperience));
+  formData.append('EmploymentType', data.employmentType);
   if (data.workingHoursPerWeek !== undefined) {
-    formData.append('workingHoursPerWeek', String(data.workingHoursPerWeek));
+    formData.append('WorkingHoursPerWeek', String(data.workingHoursPerWeek));
   }
   if (data.expectedMonthlySalary !== undefined) {
     formData.append(
-      'expectedMonthlySalary',
+      'ExpectedMonthlySalary',
       String(data.expectedMonthlySalary)
     );
   }
   if (data.organizationId)
-    formData.append('organizationId', data.organizationId);
-  if (data.licenseImage) formData.append('licenseImage', data.licenseImage);
-  if (data.degreeImage) formData.append('degreeImage', data.degreeImage);
+    formData.append('OrganizationId', data.organizationId);
+
+  data.degrees.forEach((item, index) => {
+    formData.append(`Degrees[${index}].Name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `Degrees[${index}].IssuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`Degrees[${index}].IssuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`Degrees[${index}].ExpiryDate`, item.expiryDate);
+    }
+    formData.append(`Degrees[${index}].File`, item.file);
+  });
+
+  data.certificates.forEach((item, index) => {
+    formData.append(`Certificates[${index}].Name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `Certificates[${index}].IssuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`Certificates[${index}].IssuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`Certificates[${index}].ExpiryDate`, item.expiryDate);
+    }
+    formData.append(`Certificates[${index}].File`, item.file);
+  });
 
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,
