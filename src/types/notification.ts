@@ -319,6 +319,27 @@ export function getNotificationRoute(
 
     case NotificationType.NewAppointmentBooked:
     case NotificationType.ScheduleChanged: {
+      const aiScreeningId = readString(
+        payload,
+        'aiScreeningId',
+        'AiScreeningId'
+      );
+      const sharedMedicalData =
+        payload['sharedMedicalData'] === true ||
+        payload['SharedMedicalData'] === true;
+
+      if (isDoctor && aiScreeningId && sharedMedicalData) {
+        return `/ophthalmologist/screenings/${aiScreeningId}/review`;
+      }
+
+      const sessionOrSlotId = readString(
+        payload,
+        'consultationSessionId',
+        'ConsultationSessionId',
+        'appointmentId',
+        'AppointmentSlotId',
+        'slotId'
+      );
       const base = isDoctor
         ? '/ophthalmologist/appointments'
         : isOrgAdmin
@@ -326,7 +347,13 @@ export function getNotificationRoute(
           : isPatient
             ? '/patient/appointments'
             : '/system-admin/dashboard';
-      return appendIdQuery(base, 'appointmentId', appointmentId);
+      return appendIdQuery(
+        base,
+        notification.type === NotificationType.NewAppointmentBooked
+          ? 'sessionId'
+          : 'appointmentId',
+        sessionOrSlotId || appointmentId
+      );
     }
 
     case NotificationType.WalletDepositSuccess:
