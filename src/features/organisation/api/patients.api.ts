@@ -1,11 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface OrganisationRecentPatientDto {
   id: string;
@@ -26,5 +22,5 @@ export const getOrganisationRecentPatients = async (): Promise<
     API_ENDPOINTS.ORGANISATION.PATIENTS
   );
 
-  return response.data.data;
+  return unwrapApiData<OrganisationRecentPatientDto[]>(response.data);
 };
