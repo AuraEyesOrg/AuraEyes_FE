@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
@@ -205,6 +205,10 @@ const mapCertificateType = (
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
+  const toLocalizedPath = (pathname: string): string =>
+    withLocalePathname(locale, pathname);
   const { theme, toggleTheme } = useTheme();
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
