@@ -36,6 +36,7 @@ import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
 import { getCurrentUser } from '@/features/auth/api/auth.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { formatCurrency } from '@/lib/helper';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -452,13 +453,6 @@ export default function SettingsPage() {
         })) ?? [],
     };
   }, [walletQuery.data, walletTransactionsQuery.data]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  };
 
   const getTransactionIcon = (type: TransactionType) => {
     switch (type) {

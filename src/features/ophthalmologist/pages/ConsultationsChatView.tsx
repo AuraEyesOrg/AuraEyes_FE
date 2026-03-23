@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { CaseSnapshotAiThumbnail, ScreeningReviewLink } from '../components';
+import AvatarBadge from '../components/AvatarBadge';
 import {
   useCancelSession,
   useConsultationSession,
@@ -62,12 +63,12 @@ import {
 } from '@/types/chat-realtime';
 import {
   formatAppointmentSlot,
-  formatCompactDate,
   formatCountdown,
   formatFullDate,
   formatMessageTime,
   formatRelativeTime,
 } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -202,51 +203,6 @@ const getMeetingAccessState = (
   };
 };
 
-const getInitials = (value: string) =>
-  value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('') || 'AU';
-
-const AvatarBadge = ({
-  name,
-  avatarUrl,
-  size = 'md',
-}: {
-  name: string;
-  avatarUrl?: string | null;
-  size?: 'sm' | 'md' | 'lg';
-}) => {
-  const sizeClass =
-    size === 'sm'
-      ? 'h-9 w-9 text-xs'
-      : size === 'lg'
-        ? 'h-16 w-16 text-lg'
-        : 'h-11 w-11 text-sm';
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
-      />
-    );
-  }
-
-  return (
-    <div
-      className={`${sizeClass} flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-cyan-500 to-sky-500 font-semibold text-white shadow-sm`}
-      aria-label={name}
-      title={name}
-    >
-      {getInitials(name)}
-    </div>
-  );
-};
-
 const extractScanAttachment = (message: string) => {
   const match = message.match(/\n\n\[Scan Attached: (.+?) - (.+?)\]$/);
   if (!match) return null;
@@ -266,13 +222,6 @@ const formatAppointmentSlotOrPending = (
         'Ophthalmologist.consultations.chat.schedulePending',
         'Schedule pending'
       );
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 const getSessionTypeColor = (type: ConsultationSessionType) => {
   switch (type) {
@@ -368,7 +317,6 @@ interface ConsultationsChatViewProps {
     organisationName?: string | null;
     appointmentTime: string | null;
     lastActivityAt: string;
-    createdAt: string;
     price: number;
     status: SessionStatus;
     chatStatus: ChatStatus;
@@ -771,7 +719,6 @@ export default function ConsultationsChatView({
                           </p>
                         </div>
                         <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
-                          <p>{formatCompactDate(session.createdAt)}</p>
                           <p className="mt-1">
                             {formatRelativeTime(session.lastActivityAt)}
                           </p>
@@ -1434,7 +1381,11 @@ export default function ConsultationsChatView({
                       )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatCurrency(currentSession.price)}
+                      {formatCurrency(currentSession.price, {
+                        locale: 'vi-VN',
+                        currency: 'VND',
+                        maximumFractionDigits: 0,
+                      })}
                     </p>
                   </div>
                 </div>

@@ -68,6 +68,7 @@ import {
   formatRelativeTime,
   formatCountdown,
 } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 
@@ -131,13 +132,6 @@ const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
 
 const formatAppointmentSlotOrPending = (value: string | null) =>
   value ? formatAppointmentSlot(value) : 'Schedule pending';
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 60;

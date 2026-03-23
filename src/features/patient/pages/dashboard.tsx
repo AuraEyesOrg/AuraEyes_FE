@@ -17,12 +17,10 @@ import { useQuery } from '@tanstack/react-query';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -167,7 +165,13 @@ export default function PatientDashboard() {
     {
       icon: Wallet,
       label: 'Wallet Balance',
-      value: wallet ? formatCurrency(wallet.balance) : '—',
+      value: wallet
+        ? formatCurrency(wallet.balance, {
+            locale: 'vi-VN',
+            useCurrencyStyle: false,
+            suffix: ' VNĐ',
+          })
+        : '—',
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-orange',
       iconColor: 'text-orange-500',
