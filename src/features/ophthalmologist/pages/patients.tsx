@@ -7,7 +7,7 @@ import {
   Clock,
   MoreVertical,
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import Spinner from '@/components/ui/spinner';
 import { useConsultationSessions } from '@/features/consultation/hooks';
@@ -106,6 +106,7 @@ const getStatusStyle = (
 export default function PatientsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
   const [searchQuery, setSearchQuery] = useState('');
@@ -328,7 +329,18 @@ export default function PatientsPage() {
                 </option>
               </select>
 
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedStatus('all');
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors"
+                title={t(
+                  'Ophthalmologist.patients.moreFilters.clearTitle',
+                  'Clear search and filter'
+                )}
+              >
                 <Filter size={16} />
                 {t('Ophthalmologist.patients.moreFilters', 'More Filters')}
               </button>
@@ -411,7 +423,21 @@ export default function PatientsPage() {
                           </p>
                         </div>
                       </div>
-                      <button className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            `/ophthalmologist/consultations?patientId=${encodeURIComponent(
+                              patient.id
+                            )}`
+                          )
+                        }
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        title={t(
+                          'Ophthalmologist.patients.moreActions',
+                          'Open consultations'
+                        )}
+                      >
                         <MoreVertical size={16} />
                       </button>
                     </div>
@@ -466,7 +492,17 @@ export default function PatientsPage() {
                       </div>
                     </div>
 
-                    <button className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/ophthalmologist/consultations?patientId=${encodeURIComponent(
+                            patient.id
+                          )}`
+                        )
+                      }
+                      className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors"
+                    >
                       {t(
                         'Ophthalmologist.patients.viewDetails',
                         'View Details'

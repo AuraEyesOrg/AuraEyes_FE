@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  Filter,
   Calendar,
   Clock,
   Eye,
@@ -57,7 +56,8 @@ function toConfidencePercent(score: number | null | undefined): number {
 }
 
 function getStatusIcon(status: string) {
-  switch (status) {
+  const normalized = (status ?? '').trim().toLowerCase();
+  switch (normalized) {
     case 'approved':
       return <CheckCircle size={16} className="text-emerald-500" />;
     case 'reviewed':
@@ -72,7 +72,8 @@ function getStatusIcon(status: string) {
 }
 
 function getStatusLabel(status: string): { text: string; color: string } {
-  switch (status) {
+  const normalized = (status ?? '').trim().toLowerCase();
+  switch (normalized) {
     case 'approved':
       return { text: 'Approved', color: 'text-emerald-600 bg-emerald-50' };
     case 'reviewed':
@@ -133,8 +134,11 @@ export default function ScreeningsPage() {
         row.patientName.toLowerCase().includes(q) ||
         row.screeningId.toLowerCase().includes(q) ||
         ref.includes(q);
+      const rowStatus = (row.reviewStatus ?? '').trim().toLowerCase();
+      const selectedNormalized =
+        selectedStatus === 'all' ? 'all' : selectedStatus.trim().toLowerCase();
       const matchesStatus =
-        selectedStatus === 'all' || row.reviewStatus === selectedStatus;
+        selectedNormalized === 'all' || rowStatus === selectedNormalized;
       return matchesSearch && matchesStatus;
     });
   }, [items, searchQuery, selectedStatus]);
@@ -256,10 +260,16 @@ export default function ScreeningsPage() {
 
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedStatus('all');
+              }}
+              disabled={searchQuery.trim() === '' && selectedStatus === 'all'}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-[#2d4a6f]"
+              title="Clear search and status filter"
             >
-              <Filter size={16} />
-              More Filters
+              <XCircle size={16} />
+              Clear
             </button>
           </div>
 
