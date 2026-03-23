@@ -1,11 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface OphthalmologistScreeningListItemDto {
   screeningId: string;
@@ -59,7 +55,7 @@ export async function listOphthalmologistScreenings(): Promise<
   const response = await api.get<
     ApiResponse<OphthalmologistScreeningListItemDto[]>
   >(API_ENDPOINTS.OPHTHALMOLOGIST.SCREENINGS);
-  return response.data.data;
+  return unwrapApiData<OphthalmologistScreeningListItemDto[]>(response.data);
 }
 
 export async function getOphthalmologistScreeningDetail(
@@ -68,5 +64,5 @@ export async function getOphthalmologistScreeningDetail(
   const response = await api.get<
     ApiResponse<OphthalmologistScreeningDetailDto>
   >(`${API_ENDPOINTS.OPHTHALMOLOGIST.SCREENINGS}/${screeningId}`);
-  return response.data.data;
+  return unwrapApiData<OphthalmologistScreeningDetailDto>(response.data);
 }
