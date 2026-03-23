@@ -606,12 +606,6 @@ const AppointmentsPage = () => {
             <h2 className="text-2xl font-bold text-[var(--text-primary)]">
               Doctor Slots
             </h2>
-            <Link
-              to="/patient/doctors"
-              className="text-sm font-semibold text-primary hover:text-primary/80"
-            >
-              Book More Slot
-            </Link>
           </div>
 
           {filteredSessions.length === 0 ? (

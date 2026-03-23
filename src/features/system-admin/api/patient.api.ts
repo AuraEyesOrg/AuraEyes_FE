@@ -5,6 +5,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface PatientListItem {
   id: string;
@@ -29,13 +31,6 @@ interface PagedResult<T> {
   hasNext: boolean;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
-
 export const patientApi = {
   /**
    * Fetch patients with pagination and filtering
@@ -57,7 +52,7 @@ export const patientApi = {
         },
       }
     );
-    return response.data.data;
+    return unwrapApiData<PagedResult<PatientListItem>>(response.data);
   },
 
   /**

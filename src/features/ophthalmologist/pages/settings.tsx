@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
@@ -36,6 +36,7 @@ import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
 import { getCurrentUser } from '@/features/auth/api/auth.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { formatCurrency } from '@/lib/helper';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -205,6 +206,10 @@ const mapCertificateType = (
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
+  const toLocalizedPath = (pathname: string): string =>
+    withLocalePathname(locale, pathname);
   const { theme, toggleTheme } = useTheme();
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
@@ -448,13 +453,6 @@ export default function SettingsPage() {
         })) ?? [],
     };
   }, [walletQuery.data, walletTransactionsQuery.data]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  };
 
   const getTransactionIcon = (type: TransactionType) => {
     switch (type) {

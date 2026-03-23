@@ -5,6 +5,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   AppointmentSlotListDto,
   AppointmentSlotDto,
@@ -21,14 +23,6 @@ import type {
   UnblockSlotRequest,
 } from '@/types/schedule';
 import type { PagedResult } from '@/features/patient/types';
-
-interface ApiResponseEnvelope<T> {
-  success?: boolean;
-  succeeded?: boolean;
-  data?: T;
-  message?: string;
-  errors?: string[];
-}
 
 type BackendScheduleTemplateDto = {
   id: string;
@@ -82,14 +76,6 @@ const normalizeScheduleTemplate = (
   createdAt: template.createdAt,
 });
 
-const unwrapApiData = <T>(payload: T | ApiResponseEnvelope<T>): T => {
-  if (typeof payload === 'object' && payload !== null && 'data' in payload) {
-    return (payload as ApiResponseEnvelope<T>).data as T;
-  }
-
-  return payload as T;
-};
-
 // ============ APPOINTMENT SLOTS API ============
 
 /** Get available appointment slots with filters */
@@ -115,9 +101,7 @@ export const getAppointmentSlots = async (
     : API_ENDPOINTS.APPOINTMENT_SLOTS.LIST;
 
   const response =
-    await api.get<ApiResponseEnvelope<PagedResult<AppointmentSlotListDto>>>(
-      url
-    );
+    await api.get<ApiResponse<PagedResult<AppointmentSlotListDto>>>(url);
   return unwrapApiData<PagedResult<AppointmentSlotListDto>>(response.data);
 };
 
@@ -125,7 +109,7 @@ export const getAppointmentSlots = async (
 export const getAppointmentSlot = async (
   slotId: string
 ): Promise<AppointmentSlotDto> => {
-  const response = await api.get<ApiResponseEnvelope<AppointmentSlotDto>>(
+  const response = await api.get<ApiResponse<AppointmentSlotDto>>(
     API_ENDPOINTS.APPOINTMENT_SLOTS.DETAIL(slotId)
   );
   return unwrapApiData<AppointmentSlotDto>(response.data);
@@ -136,7 +120,7 @@ export const reserveSlot = async (
   slotId: string,
   request: ReserveSlotRequest
 ): Promise<SlotReservationResult> => {
-  const response = await api.post<ApiResponseEnvelope<SlotReservationResult>>(
+  const response = await api.post<ApiResponse<SlotReservationResult>>(
     API_ENDPOINTS.APPOINTMENT_SLOTS.RESERVE(slotId),
     request
   );
@@ -148,9 +132,10 @@ export const confirmReservation = async (
   slotId: string,
   request: ConfirmReservationRequest
 ): Promise<BookingConfirmationResult> => {
-  const response = await api.post<
-    ApiResponseEnvelope<BookingConfirmationResult>
-  >(API_ENDPOINTS.APPOINTMENT_SLOTS.CONFIRM(slotId), request);
+  const response = await api.post<ApiResponse<BookingConfirmationResult>>(
+    API_ENDPOINTS.APPOINTMENT_SLOTS.CONFIRM(slotId),
+    request
+  );
   return unwrapApiData<BookingConfirmationResult>(response.data);
 };
 
@@ -168,7 +153,7 @@ export const releaseReservation = async (
 export const generateSlots = async (
   request: GenerateSlotsRequest
 ): Promise<number> => {
-  const response = await api.post<ApiResponseEnvelope<number>>(
+  const response = await api.post<ApiResponse<number>>(
     API_ENDPOINTS.APPOINTMENT_SLOTS.GENERATE,
     request
   );
@@ -202,7 +187,7 @@ export const getScheduleTemplates = async (
     : API_ENDPOINTS.SCHEDULE_TEMPLATES.LIST;
   const response =
     await api.get<
-      ApiResponseEnvelope<
+      ApiResponse<
         | BackendScheduleTemplateDto[]
         | { items?: BackendScheduleTemplateDto[] | null }
         | null
@@ -243,7 +228,7 @@ export const createScheduleTemplate = async (
     cost: request.cost,
   };
 
-  const response = await api.post<ApiResponseEnvelope<ScheduleTemplateDto>>(
+  const response = await api.post<ApiResponse<ScheduleTemplateDto>>(
     API_ENDPOINTS.SCHEDULE_TEMPLATES.CREATE,
     payload
   );

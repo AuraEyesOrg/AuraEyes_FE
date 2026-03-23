@@ -37,6 +37,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { CaseSnapshotAiThumbnail, ScreeningReviewLink } from '../components';
+import AvatarBadge from '../components/AvatarBadge';
 import {
   useCancelSession,
   useConsultationSession,
@@ -61,12 +63,12 @@ import {
 } from '@/types/chat-realtime';
 import {
   formatAppointmentSlot,
-  formatCompactDate,
   formatCountdown,
   formatFullDate,
   formatMessageTime,
   formatRelativeTime,
 } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -96,7 +98,7 @@ const getPhaseUIConfig = (
     icon: FileText,
     color: 'text-amber-500',
     badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
-    bannerBg: 'bg-amber-50',
+    bannerBg: 'bg-amber-50 dark:bg-amber-950/55',
     description: t(
       'Ophthalmologist.consultations.chat.phase.preVisitDescription',
       'Patient can leave notes before the consultation starts. Chat opens at appointment time.'
@@ -110,7 +112,7 @@ const getPhaseUIConfig = (
     icon: Activity,
     color: 'text-emerald-500',
     badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-    bannerBg: 'bg-emerald-50',
+    bannerBg: 'bg-emerald-50 dark:bg-emerald-950/50',
     description: t(
       'Ophthalmologist.consultations.chat.phase.inProgressDescription',
       'Consultation is active. You can chat and join the video call.'
@@ -121,7 +123,7 @@ const getPhaseUIConfig = (
     icon: Archive,
     color: 'text-slate-500',
     badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
-    bannerBg: 'bg-slate-100',
+    bannerBg: 'bg-slate-100 dark:bg-slate-900/90',
     description: t(
       'Ophthalmologist.consultations.chat.phase.completedDescription',
       'Consultation has been completed. Chat is now read-only.'
@@ -201,51 +203,6 @@ const getMeetingAccessState = (
   };
 };
 
-const getInitials = (value: string) =>
-  value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('') || 'AU';
-
-const AvatarBadge = ({
-  name,
-  avatarUrl,
-  size = 'md',
-}: {
-  name: string;
-  avatarUrl?: string | null;
-  size?: 'sm' | 'md' | 'lg';
-}) => {
-  const sizeClass =
-    size === 'sm'
-      ? 'h-9 w-9 text-xs'
-      : size === 'lg'
-        ? 'h-16 w-16 text-lg'
-        : 'h-11 w-11 text-sm';
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
-      />
-    );
-  }
-
-  return (
-    <div
-      className={`${sizeClass} flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-cyan-500 to-sky-500 font-semibold text-white shadow-sm`}
-      aria-label={name}
-      title={name}
-    >
-      {getInitials(name)}
-    </div>
-  );
-};
-
 const extractScanAttachment = (message: string) => {
   const match = message.match(/\n\n\[Scan Attached: (.+?) - (.+?)\]$/);
   if (!match) return null;
@@ -265,13 +222,6 @@ const formatAppointmentSlotOrPending = (
         'Ophthalmologist.consultations.chat.schedulePending',
         'Schedule pending'
       );
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 const getSessionTypeColor = (type: ConsultationSessionType) => {
   switch (type) {
@@ -367,7 +317,6 @@ interface ConsultationsChatViewProps {
     organisationName?: string | null;
     appointmentTime: string | null;
     lastActivityAt: string;
-    createdAt: string;
     price: number;
     status: SessionStatus;
     chatStatus: ChatStatus;
@@ -770,7 +719,6 @@ export default function ConsultationsChatView({
                           </p>
                         </div>
                         <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
-                          <p>{formatCompactDate(session.createdAt)}</p>
                           <p className="mt-1">
                             {formatRelativeTime(session.lastActivityAt)}
                           </p>
@@ -991,7 +939,7 @@ export default function ConsultationsChatView({
             >
               <div className="flex items-start gap-2.5">
                 <phaseUI.icon
-                  className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color}`}
+                  className={`mt-0.5 h-4 w-4 shrink-0 ${phaseUI.color} ${phase === 'PRE_VISIT' ? 'dark:text-amber-300' : ''} ${phase === 'COMPLETED' ? 'dark:text-slate-300' : ''}`}
                 />
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">
@@ -1433,7 +1381,11 @@ export default function ConsultationsChatView({
                       )}
                     </p>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      {formatCurrency(currentSession.price)}
+                      {formatCurrency(currentSession.price, {
+                        locale: 'vi-VN',
+                        currency: 'VND',
+                        maximumFractionDigits: 0,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -1482,22 +1434,18 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                   <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
-                    {selectedSession.caseSnapshot.annotatedImageUrl ? (
-                      <img
-                        src={selectedSession.caseSnapshot.annotatedImageUrl}
-                        alt="AI annotated retinal image"
-                        className="h-24 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
-                        No AI image
-                      </div>
-                    )}
+                    <CaseSnapshotAiThumbnail
+                      snapshot={selectedSession.caseSnapshot}
+                    />
                     <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
                       AI Annotated
                     </p>
                   </div>
                 </div>
+
+                <ScreeningReviewLink
+                  screeningId={selectedSession.caseSnapshot.screeningId}
+                />
 
                 <div className="mt-4 space-y-2">
                   <p className="text-xs text-slate-500 dark:text-gray-400">

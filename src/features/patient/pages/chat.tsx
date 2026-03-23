@@ -68,6 +68,7 @@ import {
   formatRelativeTime,
   formatCountdown,
 } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 
@@ -106,7 +107,7 @@ const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
     icon: FileText,
     color: 'text-amber-500',
     badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
-    bannerBg: 'bg-amber-50',
+    bannerBg: 'bg-amber-50 dark:bg-amber-950/55',
     description:
       'Share symptoms, scan notes, or questions before the consultation starts. The doctor will review them at appointment time.',
   },
@@ -115,7 +116,7 @@ const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
     icon: Activity,
     color: 'text-emerald-500',
     badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-    bannerBg: 'bg-emerald-50',
+    bannerBg: 'bg-emerald-50 dark:bg-emerald-950/50',
     description:
       'Consultation is active. You can chat and join the video call.',
   },
@@ -124,20 +125,13 @@ const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
     icon: Archive,
     color: 'text-slate-500',
     badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
-    bannerBg: 'bg-slate-100',
+    bannerBg: 'bg-slate-100 dark:bg-slate-900/90',
     description: 'Consultation has been completed. Chat is now read-only.',
   },
 };
 
 const formatAppointmentSlotOrPending = (value: string | null) =>
   value ? formatAppointmentSlot(value) : 'Schedule pending';
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 60;
@@ -235,7 +229,7 @@ const AvatarBadge = ({
       <img
         src={avatarUrl}
         alt={name}
-        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
+        className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70 dark:ring-[#1e3a5f]`}
       />
     );
   }
@@ -490,20 +484,20 @@ export default function ChatPage() {
       case SessionStatus.Cancelled:
         return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
       default:
-        return 'bg-slate-100 text-slate-700';
+        return 'bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300';
     }
   };
 
   const getStatusAccentClass = (chatStatus: ChatStatus) => {
     switch (chatStatus) {
       case ChatStatus.Open:
-        return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+        return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/25 dark:text-emerald-200 dark:ring-emerald-800/50';
       case ChatStatus.MemoOnly:
-        return 'bg-amber-50 text-amber-700 ring-amber-200';
+        return 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/25 dark:text-amber-200 dark:ring-amber-800/50';
       case ChatStatus.Archived:
-        return 'bg-slate-100 text-slate-600 ring-slate-200';
+        return 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:ring-slate-600/50';
       default:
-        return 'bg-rose-50 text-rose-700 ring-rose-200';
+        return 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/25 dark:text-rose-200 dark:ring-rose-800/50';
     }
   };
 
@@ -561,11 +555,11 @@ export default function ChatPage() {
     <PatientLayout>
       <div className="flex h-[calc(100vh-210px)] min-h-[640px] flex-col md:flex-row">
         <aside
-          className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r`}
+          className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-b border-slate-200/80 bg-slate-50/80 md:w-[360px] md:border-b-0 md:border-r dark:bg-[#0a1929]/50 dark:border-[#1e3a5f]`}
         >
-          <div className="border-b border-slate-200/80 px-5 pb-4 pt-5">
+          <div className="border-b border-slate-200/80 px-5 pb-4 pt-5 dark:border-[#1e3a5f]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Search by doctor, status, or session type"
@@ -576,7 +570,7 @@ export default function ChatPage() {
                     setSearchQuery(nextValue);
                   });
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-4 focus:ring-cyan-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-4 focus:ring-cyan-100 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-white dark:placeholder-gray-500 dark:focus:ring-cyan-500/20"
               />
               {isSearchPending && (
                 <Spinner
@@ -587,17 +581,23 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500">
-            <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200">
-              <p className="text-slate-900">{chatSessions.length}</p>
+          <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500 dark:border-[#1e3a5f]">
+            <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+              <p className="text-slate-900 dark:text-white">
+                {chatSessions.length}
+              </p>
               <p className="mt-1 uppercase tracking-[0.16em]">All</p>
             </div>
-            <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200">
-              <p className="text-emerald-900">{totalOpenSessions}</p>
+            <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
+              <p className="text-emerald-900 dark:text-emerald-200">
+                {totalOpenSessions}
+              </p>
               <p className="mt-1 uppercase tracking-[0.16em]">Open</p>
             </div>
-            <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200">
-              <p className="text-amber-900">{upcomingSessions}</p>
+            <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
+              <p className="text-amber-900 dark:text-amber-200">
+                {upcomingSessions}
+              </p>
               <p className="mt-1 uppercase tracking-[0.16em]">Upcoming</p>
             </div>
           </div>
@@ -605,13 +605,13 @@ export default function ChatPage() {
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 [content-visibility:auto]">
             {filteredSessions.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
                   <Search className="h-6 w-6" />
                 </div>
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
                   No sessions match your search
                 </p>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
                   Try a doctor name, chat status, or consultation type.
                 </p>
               </div>
@@ -631,8 +631,8 @@ export default function ChatPage() {
                     onClick={() => setSelectedSessionId(session.id)}
                     className={`w-full rounded-[24px] border p-4 text-left transition-all ${
                       selectedSessionId === session.id
-                        ? 'border-cyan-300 bg-white shadow-lg shadow-cyan-100/60'
-                        : 'border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm'
+                        ? 'border-cyan-300 bg-white shadow-lg shadow-cyan-100/60 dark:bg-[#0a1f44] dark:shadow-cyan-900/10'
+                        : 'border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-[#0a1f44]/70 dark:hover:bg-[#0a1f44] dark:hover:border-[#1e3a5f]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -656,14 +656,14 @@ export default function ChatPage() {
                       <div className="flex-1 min-w-0">
                         <div className="mb-2 flex items-start justify-between gap-3">
                           <div>
-                            <p className="truncate text-sm font-semibold text-slate-900">
+                            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
                               {displayDoctorName}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
                               {displayType}
                             </p>
                           </div>
-                          <div className="text-right text-[11px] text-slate-400">
+                          <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
                             <p>{formatCompactDate(session.createdAt)}</p>
                             <p className="mt-1">
                               {formatRelativeTime(session.lastActivityAt)}
@@ -684,15 +684,15 @@ export default function ChatPage() {
                           </span>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-[#0a1929]/40 dark:text-gray-300">
                           <div className="flex items-center gap-2">
-                            <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+                            <CalendarDays className="h-3.5 w-3.5 text-slate-400 dark:text-gray-500" />
                             <span>{appointmentTime}</span>
                           </div>
                         </div>
                       </div>
 
-                      <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300" />
+                      <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300 dark:text-gray-600" />
                     </div>
                   </button>
                 );
@@ -703,14 +703,14 @@ export default function ChatPage() {
 
         {selectedSessionId && currentSession ? (
           <main
-            className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)]`}
+            className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#0a1f44_0%,_#0a1929_55%,_#0a1f44_100%)]`}
           >
-            <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6">
+            <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => setSelectedSessionId(null)}
-                    className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden"
+                    className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </button>
@@ -735,7 +735,7 @@ export default function ChatPage() {
 
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-xl font-semibold text-slate-900">
+                      <h2 className="truncate text-xl font-semibold text-slate-900 dark:text-white">
                         {doctorName}
                       </h2>
                       <span
@@ -748,13 +748,17 @@ export default function ChatPage() {
                       </span>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-gray-300">
                       <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
-                      <span className="text-slate-300">/</span>
+                      <span className="text-slate-300 dark:text-gray-600">
+                        /
+                      </span>
                       <span>
                         {SESSION_STATUS_LABELS[currentSession.status]}
                       </span>
-                      <span className="text-slate-300">/</span>
+                      <span className="text-slate-300 dark:text-gray-600">
+                        /
+                      </span>
                       <span>
                         {formatAppointmentSlotOrPending(
                           currentSession.appointmentTime
@@ -762,7 +766,7 @@ export default function ChatPage() {
                       </span>
                     </div>
 
-                    <p className="mt-3 max-w-2xl text-sm text-slate-500">
+                    <p className="mt-3 max-w-2xl text-sm text-slate-500 dark:text-gray-400">
                       {currentPhaseUI.description}
                     </p>
                   </div>
@@ -784,7 +788,7 @@ export default function ChatPage() {
                       ) : (
                         <button
                           disabled
-                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                         >
                           <Video className="h-4 w-4" />
                           {phaseInfo.phase === 'COMPLETED'
@@ -795,14 +799,14 @@ export default function ChatPage() {
                     ) : (
                       <button
                         disabled
-                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                       >
                         <Video className="h-4 w-4" />
                         Link Pending
                       </button>
                     )}
                     {currentSession.meetingLink && (
-                      <p className="text-xs font-medium text-slate-500">
+                      <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
                         {phaseInfo.phase === 'PRE_VISIT'
                           ? meetingAccessState.helperText
                           : phaseInfo.phase === 'COMPLETED'
@@ -820,7 +824,7 @@ export default function ChatPage() {
                         ? 'Hide session overview'
                         : 'Show session overview'
                     }
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600"
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                   >
                     {isSessionOverviewOpen ? (
                       <X className="h-4 w-4" />
@@ -834,23 +838,23 @@ export default function ChatPage() {
 
             {phaseInfo.phase !== 'IN_PROGRESS' && (
               <div
-                className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 ${currentPhaseUI.bannerBg}`}
+                className={`border-b border-slate-200/80 px-4 py-3 text-sm md:px-6 dark:border-[#1e3a5f] ${currentPhaseUI.bannerBg}`}
               >
                 <div className="flex items-start gap-2.5">
                   <currentPhaseUI.icon
-                    className={`mt-0.5 h-4 w-4 shrink-0 ${currentPhaseUI.color}`}
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${currentPhaseUI.color} ${phaseInfo.phase === 'PRE_VISIT' ? 'dark:text-amber-300' : ''} ${phaseInfo.phase === 'COMPLETED' ? 'dark:text-slate-300' : ''}`}
                   />
                   <div>
-                    <p className="font-medium text-slate-900">
+                    <p className="font-medium text-slate-900 dark:text-white">
                       {currentPhaseUI.label}
                     </p>
-                    <p className="mt-1 text-slate-600">
+                    <p className="mt-1 text-slate-600 dark:text-gray-300">
                       {currentPhaseUI.description}
                     </p>
                     {phaseInfo.phase === 'PRE_VISIT' &&
                       phaseInfo.msUntilNextTransition !== null &&
                       phaseInfo.msUntilNextTransition > 0 && (
-                        <p className="mt-2 font-medium text-amber-700">
+                        <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
                           {/* Chỉ hiện đếm ngược mở chat nếu còn dưới 60 phút, ngược lại hiện text tĩnh */}
                           {phaseInfo.msUntilNextTransition <=
                           COUNTDOWN_VISIBILITY_MINUTES * 60 * 1000 ? (
@@ -895,7 +899,7 @@ export default function ChatPage() {
                       <Fragment key={message.id}>
                         {showDateDivider && (
                           <div className="flex justify-center py-2">
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200">
+                            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
                               {formatFullDate(message.sentAt)}
                             </span>
                           </div>
@@ -921,7 +925,7 @@ export default function ChatPage() {
                               className={`rounded-[24px] px-4 py-3 shadow-sm ${
                                 isPatientMessage
                                   ? 'rounded-br-md bg-gradient-to-br from-emerald-500 to-cyan-500 text-white'
-                                  : 'rounded-bl-md border border-slate-200 bg-white text-slate-900'
+                                  : 'rounded-bl-md border border-slate-200 bg-white text-slate-900 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-white'
                               }`}
                             >
                               <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
@@ -929,7 +933,7 @@ export default function ChatPage() {
                                   className={
                                     isPatientMessage
                                       ? 'text-white/80'
-                                      : 'text-slate-500'
+                                      : 'text-slate-500 dark:text-gray-300'
                                   }
                                 >
                                   {isPatientMessage ? 'You' : doctorName}
@@ -938,7 +942,7 @@ export default function ChatPage() {
                                   className={
                                     isPatientMessage
                                       ? 'text-white/50'
-                                      : 'text-slate-300'
+                                      : 'text-slate-300 dark:text-gray-600'
                                   }
                                 >
                                   /
@@ -947,7 +951,7 @@ export default function ChatPage() {
                                   className={
                                     isPatientMessage
                                       ? 'text-white/80'
-                                      : 'text-slate-500'
+                                      : 'text-slate-500 dark:text-gray-300'
                                   }
                                 >
                                   {formatMessageTime(message.sentAt)}
@@ -965,7 +969,7 @@ export default function ChatPage() {
                                   className={`mt-3 rounded-2xl border px-3 py-3 ${
                                     isPatientMessage
                                       ? 'border-white/20 bg-white/10'
-                                      : 'border-cyan-100 bg-cyan-50'
+                                      : 'border-cyan-100 bg-cyan-50 dark:border-cyan-800/40 dark:bg-cyan-950/20'
                                   }`}
                                 >
                                   <div className="flex items-start gap-3">
@@ -973,7 +977,7 @@ export default function ChatPage() {
                                       className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
                                         isPatientMessage
                                           ? 'bg-white/15 text-white'
-                                          : 'bg-white text-cyan-600'
+                                          : 'bg-white text-cyan-600 dark:bg-[#0a1f44] dark:text-cyan-300'
                                       }`}
                                     >
                                       <FileText className="h-5 w-5" />
@@ -986,7 +990,7 @@ export default function ChatPage() {
                                         className={`mt-1 text-xs ${
                                           isPatientMessage
                                             ? 'text-white/80'
-                                            : 'text-cyan-700'
+                                            : 'text-cyan-700 dark:text-cyan-200'
                                         }`}
                                       >
                                         {attachmentMeta.riskLabel}
@@ -1000,8 +1004,8 @@ export default function ChatPage() {
                             <div
                               className={`flex items-center gap-1 px-1 text-[11px] ${
                                 isPatientMessage
-                                  ? 'text-slate-400'
-                                  : 'text-slate-500'
+                                  ? 'text-slate-400 dark:text-gray-500'
+                                  : 'text-slate-500 dark:text-gray-400'
                               }`}
                             >
                               {isPatientMessage &&
@@ -1033,18 +1037,18 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600">
+                  <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm dark:bg-[#0a1f44]/60 dark:border-[#1e3a5f]">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-200">
                       <currentPhaseUI.icon className="h-7 w-7" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                       {phaseInfo.phase === 'PRE_VISIT'
                         ? 'Leave a note for your doctor'
                         : phaseInfo.phase === 'COMPLETED'
                           ? 'No messages in this session'
                           : 'No messages yet'}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                    <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-gray-400">
                       {phaseInfo.phase === 'PRE_VISIT'
                         ? 'Start by sharing symptoms, concerns, or a brief note before your consultation begins.'
                         : phaseInfo.phase === 'IN_PROGRESS'
@@ -1056,25 +1060,25 @@ export default function ChatPage() {
               )}
             </div>
 
-            <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6">
+            <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
               {pendingScan && (
-                <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-cyan-200 bg-cyan-50 px-4 py-3">
+                <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-cyan-200 bg-cyan-50 px-4 py-3 dark:border-cyan-800/40 dark:bg-cyan-950/25">
                   {pendingScan.imageUrl ? (
                     <img
                       src={pendingScan.imageUrl}
                       alt="Scan preview"
-                      className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-200"
+                      className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-200 dark:ring-cyan-800/50"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200 dark:bg-[#0a1f44] dark:text-cyan-300 dark:ring-cyan-800/50">
                       <Eye className="h-6 w-6" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-cyan-900">
+                    <p className="truncate text-sm font-semibold text-cyan-900 dark:text-cyan-100">
                       Ready to share: {pendingScan.eyeLabel ?? 'Retinal Scan'}
                     </p>
-                    <p className="mt-1 truncate text-xs text-cyan-700">
+                    <p className="mt-1 truncate text-xs text-cyan-700 dark:text-cyan-200">
                       {pendingScan.riskLabel ?? 'Risk label unavailable'}
                       {pendingScan.anomalies?.length
                         ? ` / ${pendingScan.anomalies.length} finding(s)`
@@ -1083,7 +1087,7 @@ export default function ChatPage() {
                   </div>
                   <button
                     onClick={() => setPendingScan(null)}
-                    className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200 transition hover:bg-cyan-100"
+                    className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-cyan-600 ring-1 ring-cyan-200 transition hover:bg-cyan-100 dark:bg-[#0a1f44] dark:text-cyan-300 dark:ring-cyan-800/50 dark:hover:bg-cyan-950/40"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -1091,24 +1095,24 @@ export default function ChatPage() {
               )}
 
               {canSendMessage ? (
-                <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm">
+                <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
                   <div className="flex items-end gap-3">
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600">
+                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
                       <Paperclip className="h-4 w-4" />
                     </button>
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600">
+                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
                       <ImageIcon className="h-4 w-4" />
                     </button>
-                    <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70">
+                    <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70 dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
                       <textarea
                         value={newMessage}
                         onChange={(event) => setNewMessage(event.target.value)}
                         onKeyDown={handleKeyPress}
                         placeholder={getComposerPlaceholder()}
-                        className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                        className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
                         rows={2}
                       />
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 dark:text-gray-500">
                         <div className="flex items-center gap-2">
                           <ShieldCheck className="h-3.5 w-3.5" />
                           Messages are encrypted and visible only to your care
@@ -1134,7 +1138,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                <div className="flex items-center justify-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-[#1e3a5f] dark:bg-[#0a1929]/30 dark:text-gray-300">
                   <currentPhaseUI.icon className="h-4 w-4" />
                   <span>
                     {phaseInfo.phase === 'COMPLETED'
@@ -1145,7 +1149,7 @@ export default function ChatPage() {
               )}
 
               {sendMessageMutation.isError && (
-                <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100">
+                <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
                   <AlertCircle className="h-4 w-4" />
                   <span>Failed to send message. Please try again.</span>
                 </div>
@@ -1155,13 +1159,13 @@ export default function ChatPage() {
         ) : (
           <div className="hidden flex-1 items-center justify-center md:flex">
             <div className="max-w-md text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-400">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-slate-400 dark:bg-[#0a1929]/40 dark:text-gray-400">
                 <MessageCircle className="h-9 w-9" />
               </div>
-              <h3 className="text-2xl font-semibold text-slate-900">
+              <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
                 Select a session
               </h3>
-              <p className="mt-2 text-slate-500">
+              <p className="mt-2 text-slate-500 dark:text-gray-400">
                 Choose a consultation from the left panel to review the full
                 conversation.
               </p>
@@ -1170,8 +1174,8 @@ export default function ChatPage() {
         )}
 
         {currentSession && isSessionOverviewOpen && (
-          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col">
-            <div className="border-b border-slate-200/80 px-6 py-6">
+          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+            <div className="border-b border-slate-200/80 px-6 py-6 dark:border-[#1e3a5f]">
               <div className="flex items-center gap-4">
                 <AvatarBadge
                   name={doctorName}
@@ -1179,10 +1183,10 @@ export default function ChatPage() {
                   size="lg"
                 />
                 <div>
-                  <p className="text-lg font-semibold text-slate-900">
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
                     {doctorName}
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
                     {SESSION_TYPE_LABELS[currentSession.type]}
                   </p>
                 </div>
@@ -1190,16 +1194,18 @@ export default function ChatPage() {
             </div>
 
             <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                   Session Overview
                 </p>
                 <div className="mt-4 space-y-4">
                   <div className="flex items-start gap-3">
                     <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
-                      <p className="text-xs text-slate-500">Appointment</p>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        Appointment
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatAppointmentSlotOrPending(
                           currentSession.appointmentTime
                         )}
@@ -1209,8 +1215,10 @@ export default function ChatPage() {
                   <div className="flex items-start gap-3">
                     <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
-                      <p className="text-xs text-slate-500">Last activity</p>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        Last activity
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatRelativeTime(currentSession.lastActivityAt)}
                       </p>
                     </div>
@@ -1218,8 +1226,10 @@ export default function ChatPage() {
                   <div className="flex items-start gap-3">
                     <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
-                      <p className="text-xs text-slate-500">Consultation fee</p>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        Consultation fee
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatCurrency(currentSession.price)}
                       </p>
                     </div>
@@ -1227,8 +1237,10 @@ export default function ChatPage() {
                   <div className="flex items-start gap-3">
                     <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
-                      <p className="text-xs text-slate-500">Phase</p>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        Phase
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {currentPhaseUI.label}
                       </p>
                     </div>
@@ -1237,8 +1249,8 @@ export default function ChatPage() {
               </div>
 
               {pendingScan && (
-                <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300">
                     <Sparkles className="h-4 w-4" />
                     Pending Scan Share
                   </div>
@@ -1247,14 +1259,14 @@ export default function ChatPage() {
                       <img
                         src={pendingScan.imageUrl}
                         alt="Pending scan"
-                        className="h-40 w-full rounded-[24px] object-cover ring-1 ring-slate-200"
+                        className="h-40 w-full rounded-[24px] object-cover ring-1 ring-slate-200 dark:ring-[#1e3a5f]"
                       />
                     ) : null}
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
                         {pendingScan.eyeLabel ?? 'Retinal Scan'}
                       </p>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
                         {pendingScan.summary ??
                           pendingScan.riskLabel ??
                           'No summary available'}
@@ -1265,7 +1277,7 @@ export default function ChatPage() {
                         {pendingScan.anomalies.map((anomaly) => (
                           <span
                             key={anomaly}
-                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800/60 dark:text-slate-300"
                           >
                             {anomaly}
                           </span>
@@ -1276,7 +1288,7 @@ export default function ChatPage() {
                 </div>
               )}
 
-              <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm">
+              <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
                   <Stethoscope className="h-4 w-4" />
                   Conversation Guidance

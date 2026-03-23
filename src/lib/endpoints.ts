@@ -262,7 +262,7 @@ export const API_ENDPOINTS = {
       UPLOAD: '/organisations/my-contract/upload',
     },
     DASHBOARD_METRICS: '/organisations/dashboard-metrics',
-    PATIENTS: '/organisation/patients',
+    PATIENTS: '/organisations/patients',
     CALENDAR: '/organisation/calendar',
     ANALYTICS: '/organisation/analytics',
     SETTINGS: '/organisation/settings',

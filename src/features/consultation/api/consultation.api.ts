@@ -6,6 +6,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   ConsultationCaseSnapshotDto,
   ChatMessageDto,
@@ -29,15 +31,6 @@ import {
   ConsultationSessionType as ConsultationSessionTypeEnum,
   SessionStatus as SessionStatusEnum,
 } from '@/types/consultation';
-
-// Re-use the ApiResponse wrapper that the BE sends
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors: string[] | null;
-  timestamp: string;
-}
 
 interface PagedResult<T> {
   items: T[];
@@ -98,6 +91,7 @@ interface RawConsultationCaseSnapshotDto {
   summary?: string | null;
   findings?: string | null;
   annotatedImageUrl?: string | null;
+  rawJsonOutput?: string | null;
   originalImageUrls?: string[] | null;
   symptoms?: string[] | null;
 }
@@ -186,6 +180,7 @@ const mapCaseSnapshot = (
     summary: snapshot.summary ?? null,
     findings: snapshot.findings ?? null,
     annotatedImageUrl: snapshot.annotatedImageUrl ?? null,
+    rawJsonOutput: snapshot.rawJsonOutput ?? null,
     originalImageUrls: snapshot.originalImageUrls ?? [],
     symptoms: snapshot.symptoms ?? [],
   };
@@ -301,7 +296,9 @@ export const getConsultationSessions = async (
   const response = await api.get<
     ApiResponse<PagedResult<RawConsultationSessionListDto>>
   >(API_ENDPOINTS.CONSULTATION_SESSIONS.LIST, { params });
-  return mapPagedSessions(response.data.data);
+  return mapPagedSessions(
+    unwrapApiData<PagedResult<RawConsultationSessionListDto>>(response.data)
+  );
 };
 
 /** GET /api/consultation-sessions/:sessionId */
@@ -311,7 +308,9 @@ export const getConsultationSession = async (
   const response = await api.get<ApiResponse<RawConsultationSessionDto>>(
     API_ENDPOINTS.CONSULTATION_SESSIONS.DETAIL(sessionId)
   );
-  return mapConsultationSession(response.data.data);
+  return mapConsultationSession(
+    unwrapApiData<RawConsultationSessionDto>(response.data)
+  );
 };
 
 // ============ MUTATIONS ============
@@ -324,7 +323,7 @@ export const createVerificationSession = async (
     API_ENDPOINTS.CONSULTATION_SESSIONS.CREATE_VERIFICATION,
     data
   );
-  return response.data.data;
+  return unwrapApiData<string>(response.data);
 };
 
 /** POST /api/consultation-sessions/video-call */
@@ -335,7 +334,7 @@ export const createVideoCallSession = async (
     API_ENDPOINTS.CONSULTATION_SESSIONS.CREATE_VIDEO_CALL,
     data
   );
-  return response.data.data;
+  return unwrapApiData<string>(response.data);
 };
 
 /** POST /api/consultation-sessions/:sessionId/verification-report */
