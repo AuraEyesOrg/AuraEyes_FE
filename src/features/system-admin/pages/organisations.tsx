@@ -35,6 +35,7 @@ import type {
   OrganisationOnboardingRequestDto,
 } from '../types/system-admin.types';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { formatCurrency } from '@/lib/helper';
 
 type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
 type TabType = 'organisations' | 'billing' | 'contracts';
@@ -178,13 +179,11 @@ export default function OrganisationsPage() {
   // Server-side filtering is already applied, use all results
   const filteredOrganisations = organisations;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  const usdCurrencyOptions = {
+    locale: 'en-US',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  } as const;
 
   const organisationColumns: TableColumn<Organisation>[] = [
     { header: 'ID', accessor: 'id', width: '100px' },
@@ -320,7 +319,7 @@ export default function OrganisationsPage() {
       accessor: 'monthlyBilling',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-          {formatCurrency(value as number)}
+          {formatCurrency(value as number, usdCurrencyOptions)}
         </span>
       ),
     },
@@ -331,7 +330,7 @@ export default function OrganisationsPage() {
         <span
           className={`text-sm font-semibold ${(value as number) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'}`}
         >
-          {formatCurrency(value as number)}
+          {formatCurrency(value as number, usdCurrencyOptions)}
         </span>
       ),
     },
@@ -511,7 +510,7 @@ export default function OrganisationsPage() {
               />
               <StatsCard
                 title="Monthly Revenue"
-                value={formatCurrency(totalMonthlyRevenue)}
+                value={formatCurrency(totalMonthlyRevenue, usdCurrencyOptions)}
                 icon={DollarSign}
                 change={15}
                 trend="up"
@@ -520,7 +519,7 @@ export default function OrganisationsPage() {
               />
               <StatsCard
                 title="Pending Payments"
-                value={formatCurrency(totalPendingPayments)}
+                value={formatCurrency(totalPendingPayments, usdCurrencyOptions)}
                 icon={CreditCard}
                 description="Awaiting collection"
                 variant="warning"
@@ -554,7 +553,7 @@ export default function OrganisationsPage() {
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(totalMonthlyRevenue)}
+                    {formatCurrency(totalMonthlyRevenue, usdCurrencyOptions)}
                   </span>
                   <span className="text-sm text-emerald-500">+12%</span>
                 </div>
@@ -617,7 +616,8 @@ export default function OrganisationsPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  {formatCurrency(totalPendingPayments)} pending collection
+                  {formatCurrency(totalPendingPayments, usdCurrencyOptions)}{' '}
+                  pending collection
                 </p>
               </div>
             </div>
