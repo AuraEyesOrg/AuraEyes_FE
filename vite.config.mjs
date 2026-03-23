@@ -25,6 +25,22 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction, // Disable sourcemaps in prod for security/size
       cssCodeSplit: true,
       reportCompressedSize: false, // Speeds up build slightly
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
+    },
+
+    esbuild: {
+      drop: isProduction ? ['console', 'debugger'] : [],
     },
 
     // 3. CSS Configuration
@@ -55,6 +71,14 @@ export default defineConfig(({ mode }) => {
 
       // 5. Compression (Gzip) - Production only
       // Reduces deployment size significantly
+      isProduction &&
+        viteCompression({
+          algorithm: 'brotliCompress',
+          ext: '.br',
+          threshold: 10240,
+          deleteOriginFile: false,
+        }),
+      
       isProduction &&
         viteCompression({
           algorithm: 'gzip',
