@@ -1,12 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-
-interface ApiResponse<T> {
-  succeeded: boolean;
-  data?: T;
-  message?: string;
-  errors?: string[];
-}
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface OrganisationClinicAppointmentDto {
   id: string;
@@ -39,7 +34,11 @@ export const getOrganisationAppointments = async (
     params: { date },
   });
 
-  return response.data.data ?? [];
+  return (
+    unwrapApiData<OrganisationClinicAppointmentDto[] | undefined>(
+      response.data
+    ) ?? []
+  );
 };
 
 export const checkInClinicAppointment = async (

@@ -5,6 +5,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface OrganisationContractDetailDto {
   id: string;
@@ -25,13 +27,6 @@ export interface OrganisationContractDetailDto {
   updatedAt?: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
-
 const EP = API_ENDPOINTS.ORGANISATION.CONTRACT;
 
 export const organisationContractApi = {
@@ -39,7 +34,7 @@ export const organisationContractApi = {
     const response = await api.get<ApiResponse<OrganisationContractDetailDto>>(
       EP.MY_CONTRACT
     );
-    return response.data.data;
+    return unwrapApiData<OrganisationContractDetailDto>(response.data);
   },
 
   async uploadSignedContract(file: File) {
