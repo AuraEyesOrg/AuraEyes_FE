@@ -366,7 +366,7 @@ export default function PatientDashboard() {
                 ) : (
                   <Link
                     to="/patient/screening/new"
-                    className="btn-primary inline-flex items-center gap-2"
+                    className="btn-primary inline-flex items-center gap-2 self-center lg:self-end w-fit"
                   >
                     <Upload className="w-4 h-4" />
                     Upload Your First Scan

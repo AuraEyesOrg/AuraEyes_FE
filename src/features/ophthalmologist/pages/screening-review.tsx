@@ -15,8 +15,6 @@ import {
   Stethoscope,
   Search as SearchIcon,
   Flag,
-  Layers,
-  Circle,
   Info,
   Settings2,
   Pencil,
@@ -55,30 +53,7 @@ interface DetectedFinding {
   severity: 'low' | 'moderate' | 'high';
 }
 
-interface AnnotationLayer {
-  id: string;
-  name: string;
-  color: string;
-  enabled: boolean;
-}
-
-const defaultAnnotationLayers: AnnotationLayer[] = [
-  { id: 'hemorrhages', name: 'Hemorrhages', color: '#ef4444', enabled: true },
-  { id: 'exudates', name: 'Exudates', color: '#f97316', enabled: true },
-  {
-    id: 'vessel-tortuosity',
-    name: 'Vessel Tortuosity',
-    color: '#3b82f6',
-    enabled: false,
-  },
-  {
-    id: 'vessel-segmentation',
-    name: 'Vessel Segmentation',
-    color: '#22c55e',
-    enabled: false,
-  },
-  { id: 'optic-disc', name: 'Optic Disc', color: '#a855f7', enabled: false },
-];
+type BoxRect = { x: number; y: number; width: number; height: number };
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -124,23 +99,6 @@ function toConfidencePercent(score: number | null | undefined): number {
   const n = Number(score);
   if (n > 0 && n <= 1) return Math.round(n * 100);
   return Math.round(Math.min(100, Math.max(0, n)));
-}
-
-function backendRiskToScore(
-  risk: string | undefined,
-  confidencePct: number
-): number {
-  const level = (risk ?? '').toLowerCase();
-  let base = 4;
-  if (level.includes('critical')) base = 9.5;
-  else if (level.includes('high')) base = 8;
-  else if (level.includes('moderate') || level.includes('medium')) base = 5.5;
-  else if (level.includes('low')) base = 3;
-  if (confidencePct > 0) {
-    const blended = base * 0.65 + (confidencePct / 100) * 3.5;
-    return Math.min(10, Math.round(blended * 10) / 10);
-  }
-  return Math.min(10, base);
 }
 
 function anomalyToFinding(a: Anomaly): DetectedFinding {
@@ -190,10 +148,8 @@ export default function ScreeningReviewPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('exam');
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [findings, setFindings] = useState<DetectedFinding[]>([]);
-  const [annotationLayers, setAnnotationLayers] = useState(
-    defaultAnnotationLayers
-  );
-  const [overlayOpacity, setOverlayOpacity] = useState(70);
+  const [overlayEditMode, setOverlayEditMode] = useState(false);
+  const [boxOverrides, setBoxOverrides] = useState<Record<string, BoxRect>>({});
   const [showOverlay, setShowOverlay] = useState(true);
   const [zoom, setZoom] = useState(1);
   const [focusedFinding, setFocusedFinding] = useState<string | null>(null);
@@ -204,6 +160,16 @@ export default function ScreeningReviewPage() {
   const [followUpDate, setFollowUpDate] = useState('');
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const imgOverlayRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    kind: 'move' | 'resize-se';
+    id: string;
+    startClientX: number;
+    startClientY: number;
+    rect: BoxRect;
+    cw: number;
+    ch: number;
+  } | null>(null);
 
   const retinalImages = useMemo(
     () => detail?.images.map(mapApiImage) ?? [],
@@ -222,10 +188,14 @@ export default function ScreeningReviewPage() {
   const confidencePct = toConfidencePercent(
     detail?.latestResult?.confidenceScore
   );
-  const riskScore = backendRiskToScore(
-    detail?.latestResult?.riskLevel,
-    confidencePct
-  );
+  const aiConfidencePct = useMemo(() => {
+    // Derived from the same `Detected Findings` that we show in the right panel
+    // (based on `rawJsonOutput`) so it matches the Patient view.
+    if (findings.length === 0) return confidencePct;
+    const max = Math.max(...findings.map((f) => f.confidence ?? 0));
+    if (!Number.isFinite(max)) return confidencePct;
+    return Math.min(100, Math.max(0, Math.round(max)));
+  }, [findings, confidencePct]);
   const showAttentionBadge =
     riskLevelUi === 'High' ||
     riskLevelUi === 'Critical' ||
@@ -294,12 +264,76 @@ export default function ScreeningReviewPage() {
     };
   }, [detail?.rawJsonOutput, selectedImage?.imageUrl]);
 
-  const toggleLayer = (layerId: string) => {
-    setAnnotationLayers((prev) =>
-      prev.map((layer) =>
-        layer.id === layerId ? { ...layer, enabled: !layer.enabled } : layer
-      )
-    );
+  useEffect(() => {
+    setBoxOverrides({});
+  }, [detail?.rawJsonOutput, selectedImage?.imageUrl]);
+
+  const getEffectiveBox = (findingId: string): BoxRect | undefined => {
+    const o = boxOverrides[findingId];
+    if (o) return o;
+    return findings.find((f) => f.id === findingId)?.location;
+  };
+
+  const beginOverlayDrag = (
+    e: React.PointerEvent,
+    findingId: string,
+    kind: 'move' | 'resize-se'
+  ) => {
+    if (!overlayEditMode || !imgOverlayRef.current) return;
+    const wrap = imgOverlayRef.current;
+    const cr = wrap.getBoundingClientRect();
+    const base = getEffectiveBox(findingId);
+    if (!base) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = {
+      kind,
+      id: findingId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      rect: { ...base },
+      cw: cr.width,
+      ch: cr.height,
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const dxPct = ((ev.clientX - d.startClientX) / d.cw) * 100;
+      const dyPct = ((ev.clientY - d.startClientY) / d.ch) * 100;
+      if (d.kind === 'move') {
+        let nx = d.rect.x + dxPct;
+        let ny = d.rect.y + dyPct;
+        nx = Math.max(0, Math.min(100 - d.rect.width, nx));
+        ny = Math.max(0, Math.min(100 - d.rect.height, ny));
+        setBoxOverrides((prev) => ({
+          ...prev,
+          [d.id]: { ...d.rect, x: nx, y: ny },
+        }));
+      } else {
+        let nw = d.rect.width + dxPct;
+        let nh = d.rect.height + dyPct;
+        nw = Math.max(2, Math.min(100 - d.rect.x, nw));
+        nh = Math.max(2, Math.min(100 - d.rect.y, nh));
+        setBoxOverrides((prev) => ({
+          ...prev,
+          [d.id]: { ...d.rect, width: nw, height: nh },
+        }));
+      }
+    };
+
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const resetOverlayBoxes = () => {
+    setBoxOverrides({});
   };
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
@@ -320,13 +354,6 @@ export default function ScreeningReviewPage() {
       default:
         return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
     }
-  };
-
-  const getRiskScoreColor = (score: number) => {
-    if (score >= 8) return 'from-red-500 to-red-600';
-    if (score >= 6) return 'from-orange-500 to-orange-600';
-    if (score >= 4) return 'from-yellow-500 to-yellow-600';
-    return 'from-green-500 to-green-600';
   };
 
   const sidebarTabs = [
@@ -701,11 +728,31 @@ export default function ScreeningReviewPage() {
                       </button>
                       <div className="w-px h-6 bg-gray-700 mx-1" />
                       <button
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Annotate"
+                        type="button"
+                        onClick={() => setOverlayEditMode((v) => !v)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          overlayEditMode
+                            ? 'bg-cyan-600 text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                        }`}
+                        title={
+                          overlayEditMode
+                            ? 'Exit overlay edit (drag / resize handles)'
+                            : 'Edit AI boxes: drag to move, drag corner to resize'
+                        }
                       >
                         <Pencil className="w-5 h-5" />
                       </button>
+                      {findings.some((f) => f.location) ? (
+                        <button
+                          type="button"
+                          onClick={resetOverlayBoxes}
+                          className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                          title="Reset boxes to AI positions (this image)"
+                        >
+                          <RotateCcw className="w-5 h-5" />
+                        </button>
+                      ) : null}
                       <button
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                         title="Measure"
@@ -731,41 +778,79 @@ export default function ScreeningReviewPage() {
                       style={{ transform: `scale(${zoom})` }}
                     >
                       {selectedImage ? (
-                        <div className="relative inline-block max-w-full max-h-[min(70vh,calc(100vh-280px))]">
+                        <div
+                          ref={imgOverlayRef}
+                          className="relative inline-block max-w-full max-h-[min(70vh,calc(100vh-280px))] touch-none"
+                        >
                           <img
                             src={selectedImage.imageUrl}
                             alt={`${selectedImage.eyeSide} eye fundus`}
-                            className="max-w-full max-h-[min(70vh,calc(100vh-280px))] object-contain block rounded-lg"
+                            className="max-w-full max-h-[min(70vh,calc(100vh-280px))] object-contain block rounded-lg select-none pointer-events-none"
+                            draggable={false}
                           />
+                          {overlayEditMode ? (
+                            <p className="absolute bottom-1 left-1 right-1 z-20 mx-auto max-w-md rounded bg-black/75 px-2 py-1 text-center text-[11px] text-white/90">
+                              Kéo khung để di chuyển · Kéo ô vuông góc phải dưới
+                              để phóng to/thu nhỏ. Chỉnh sửa chỉ lưu trên trình
+                              duyệt (chưa gửi server).
+                            </p>
+                          ) : null}
                           {showOverlay &&
                             findings.map((finding) => {
                               const isHighlighted =
                                 focusedFinding === finding.id;
-                              if (!finding.location) return null;
+                              const loc = getEffectiveBox(finding.id);
+                              if (!loc) return null;
                               return (
                                 <div
                                   key={finding.id}
-                                  className={`absolute border-2 transition-all duration-300 ${
+                                  role="presentation"
+                                  onPointerDown={(e) => {
+                                    if (!overlayEditMode) return;
+                                    beginOverlayDrag(e, finding.id, 'move');
+                                  }}
+                                  className={`absolute border-2 transition-colors duration-200 ${
+                                    overlayEditMode
+                                      ? 'cursor-grab active:cursor-grabbing'
+                                      : 'pointer-events-none'
+                                  } ${
                                     isHighlighted
                                       ? 'border-cyan-400 bg-cyan-400/20 shadow-lg shadow-cyan-400/50'
                                       : finding.severity === 'high'
-                                        ? 'border-red-400/70 bg-red-400/10'
+                                        ? 'border-red-400/70 bg-red-400/25'
                                         : finding.severity === 'moderate'
-                                          ? 'border-orange-400/70 bg-orange-400/10'
-                                          : 'border-yellow-400/70 bg-yellow-400/10'
+                                          ? 'border-orange-400/70 bg-orange-400/25'
+                                          : 'border-yellow-400/70 bg-yellow-400/25'
                                   }`}
                                   style={{
-                                    left: `${finding.location.x}%`,
-                                    top: `${finding.location.y}%`,
-                                    width: `${finding.location.width}%`,
-                                    height: `${finding.location.height}%`,
-                                    opacity: overlayOpacity / 100,
+                                    left: `${loc.x}%`,
+                                    top: `${loc.y}%`,
+                                    width: `${loc.width}%`,
+                                    height: `${loc.height}%`,
                                   }}
                                 >
-                                  <span className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-current" />
-                                  <span className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-current" />
-                                  <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-current" />
-                                  <span className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-current" />
+                                  {!overlayEditMode ? (
+                                    <>
+                                      <span className="pointer-events-none absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-current" />
+                                      <span className="pointer-events-none absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-current" />
+                                      <span className="pointer-events-none absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-current" />
+                                      <span className="pointer-events-none absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-current" />
+                                    </>
+                                  ) : null}
+                                  {overlayEditMode ? (
+                                    <div
+                                      role="presentation"
+                                      onPointerDown={(e) => {
+                                        e.stopPropagation();
+                                        beginOverlayDrag(
+                                          e,
+                                          finding.id,
+                                          'resize-se'
+                                        );
+                                      }}
+                                      className="absolute -bottom-1 -right-1 z-10 h-3.5 w-3.5 cursor-nwse-resize rounded-sm border-2 border-cyan-400 bg-white shadow"
+                                    />
+                                  ) : null}
                                 </div>
                               );
                             })}
@@ -857,122 +942,52 @@ export default function ScreeningReviewPage() {
                   </div>
                 </div>
 
-                {/* Right Panel - AI Analysis */}
+                {/* Right Panel - AI screening */}
                 <div className="col-span-3 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
-                  {/* Header */}
                   <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-cyan-500" />
-                        AI Analysis Layers
-                      </h3>
-                      <span className="px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded text-xs font-medium">
-                        BETA
-                      </span>
-                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Kết quả đã lưu (AI)
+                    </h3>
 
-                    {/* Risk Score */}
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
+                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                          AURA Risk Score
-                        </span>
-                        <Info className="w-4 h-4 text-gray-400" />
-                      </div>
-                      <div className="flex items-baseline gap-2 mb-3">
-                        <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                          {detail.latestResult ? riskScore : '—'}
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400">
-                          / 10
+                          Mức rủi ro & độ tin cậy lấy từ bản ghi screening khi
+                          phân tích xong — không phải “điểm AURA” riêng từ trang
+                          này.
                         </span>
                         <span
-                          className={`ml-auto px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            riskLevelConfig[riskLevelUi].bg
-                          } ${riskLevelConfig[riskLevelUi].color}`}
+                          className="shrink-0 text-gray-400"
+                          title="Risk level và confidence là trường đã lưu trong ScreeningResult trên server. Trước đây số /10 là công thức ước lượng gây hiểu nhầm nên đã bỏ."
                         >
-                          {referralPillLabel}
+                          <Info className="w-4 h-4" />
                         </span>
                       </div>
-                      <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full bg-linear-to-r ${getRiskScoreColor(detail.latestResult ? riskScore : 0)} rounded-full transition-all`}
-                          style={{
-                            width: `${
-                              detail.latestResult
-                                ? Math.min(100, riskScore * 10)
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Layer Visibility */}
-                  <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Layer Visibility
-                      </span>
-                      <button className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
-                        Reset
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {annotationLayers.map((layer) => (
-                        <div
-                          key={layer.id}
-                          className="flex items-center justify-between py-1"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Circle
-                              className="w-3 h-3"
-                              fill={layer.color}
-                              stroke={layer.color}
-                            />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {layer.name}
+                      {detail.latestResult ? (
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${riskLevelConfig[riskLevelUi].bg} ${riskLevelConfig[riskLevelUi].color}`}
+                            >
+                              {detail.latestResult.riskLevel}
+                            </span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                              Độ tin cậy mô hình:{' '}
+                              <strong className="text-gray-900 dark:text-white">
+                                {aiConfidencePct}%
+                              </strong>
                             </span>
                           </div>
-                          <button
-                            onClick={() => toggleLayer(layer.id)}
-                            className={`w-10 h-5 rounded-full transition-colors relative ${
-                              layer.enabled
-                                ? 'bg-cyan-500'
-                                : 'bg-gray-300 dark:bg-gray-600'
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                                layer.enabled ? 'left-5' : 'left-0.5'
-                              }`}
-                            />
-                          </button>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {referralPillLabel}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Opacity Slider */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Overlay Opacity
-                        </span>
-                        <span className="text-sm text-gray-900 dark:text-white font-medium">
-                          {overlayOpacity}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={overlayOpacity}
-                        onChange={(e) =>
-                          setOverlayOpacity(Number(e.target.value))
-                        }
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-cyan-500"
-                      />
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Chưa có kết quả screening đã lưu cho ca này.
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -1101,7 +1116,7 @@ export default function ScreeningReviewPage() {
                     </strong>
                   </span>
                   <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                    Confidence: <strong>{confidencePct}%</strong>
+                    Confidence: <strong>{aiConfidencePct}%</strong>
                   </span>
                 </div>
               </div>
