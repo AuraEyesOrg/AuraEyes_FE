@@ -8,10 +8,13 @@ import {
   XCircle,
   AlertCircle,
   Eye,
-  ChevronRight,
-  Filter,
   Search,
   MessageSquare,
+  Timer,
+  Zap,
+  CalendarCheck,
+  CalendarX,
+  ArrowRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -37,7 +40,9 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 
-type StatusFilter = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
+type TabKey = 'today' | 'upcoming' | 'past' | 'cancelled';
+
+/* ────────────────────── helpers ────────────────────── */
 
 const formatDateTime = (
   value: string | null,
@@ -53,65 +58,108 @@ const formatDateTime = (
   };
 };
 
-const getStatusBadge = (
+function getCountdownText(appointmentTime: string | null): string | null {
+  if (!appointmentTime) return null;
+  const diff = new Date(appointmentTime).getTime() - Date.now();
+  if (diff <= 0 || Number.isNaN(diff)) return null;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `Starts in ${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  if (hrs < 24) return `Starts in ${hrs}h ${remMins}m`;
+  const days = Math.floor(hrs / 24);
+  return `In ${days}d ${hrs % 24}h`;
+}
+
+function getTypeMeta(type: ConsultationSessionType) {
+  switch (type) {
+    case ConsultationSessionType.VideoCall:
+      return {
+        icon: <Video className="w-4 h-4" />,
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-900/20',
+        ring: 'ring-blue-200 dark:ring-blue-800',
+        badgeBg: 'bg-blue-100 dark:bg-blue-900/30',
+      };
+    case ConsultationSessionType.ClinicBooking:
+      return {
+        icon: <MessageSquare className="w-4 h-4" />,
+        color: 'text-emerald-600 dark:text-emerald-400',
+        bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+        ring: 'ring-emerald-200 dark:ring-emerald-800',
+        badgeBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      };
+    default:
+      return {
+        icon: <Eye className="w-4 h-4" />,
+        color: 'text-violet-600 dark:text-violet-400',
+        bg: 'bg-violet-50 dark:bg-violet-900/20',
+        ring: 'ring-violet-200 dark:ring-violet-800',
+        badgeBg: 'bg-violet-100 dark:bg-violet-900/30',
+      };
+  }
+}
+
+function getStatusConfig(
   status: SessionStatus,
   t: (key: string, fallback: string) => string
-) => {
+) {
   switch (status) {
     case SessionStatus.Pending:
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-          <Clock className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.pending', 'Pending')}
-        </span>
-      );
+      return {
+        label: t('Ophthalmologist.appointments.status.pending', 'Pending'),
+        icon: <Clock className="w-3 h-3" />,
+        cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+      };
     case SessionStatus.Confirmed:
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-full text-xs font-medium">
-          <CheckCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.confirmed', 'Confirmed')}
-        </span>
-      );
+      return {
+        label: t('Ophthalmologist.appointments.status.confirmed', 'Confirmed'),
+        icon: <CheckCircle className="w-3 h-3" />,
+        cls: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
+      };
     case SessionStatus.Completed:
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-          <CheckCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.completed', 'Completed')}
-        </span>
-      );
+      return {
+        label: t('Ophthalmologist.appointments.status.completed', 'Completed'),
+        icon: <CheckCircle className="w-3 h-3" />,
+        cls: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+      };
     case SessionStatus.Cancelled:
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">
-          <XCircle className="w-3 h-3" />{' '}
-          {t('Ophthalmologist.appointments.status.cancelled', 'Cancelled')}
-        </span>
-      );
+      return {
+        label: t('Ophthalmologist.appointments.status.cancelled', 'Cancelled'),
+        icon: <XCircle className="w-3 h-3" />,
+        cls: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+      };
     default:
-      return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
-          <AlertCircle className="w-3 h-3" /> {SESSION_STATUS_LABELS[status]}
-        </span>
-      );
+      return {
+        label: SESSION_STATUS_LABELS[status],
+        icon: <AlertCircle className="w-3 h-3" />,
+        cls: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+      };
   }
-};
+}
 
-const sessionMatchesFilter = (
-  session: ConsultationSessionListDto,
-  filter: StatusFilter
-) => {
-  if (filter === 'all') return true;
-  if (filter === 'pending') return session.status === SessionStatus.Pending;
-  if (filter === 'confirmed') return session.status === SessionStatus.Confirmed;
-  if (filter === 'completed') return session.status === SessionStatus.Completed;
-  if (filter === 'cancelled') return session.status === SessionStatus.Cancelled;
-  return true;
-};
+function isFutureSession(s: ConsultationSessionListDto) {
+  if (
+    s.status === SessionStatus.Cancelled ||
+    s.status === SessionStatus.Completed
+  )
+    return false;
+  if (!s.appointmentTime) return true;
+  const d = new Date(s.appointmentTime);
+  return !Number.isNaN(d.getTime()) && d.getTime() > Date.now() && !isToday(d);
+}
+
+function isPastSession(s: ConsultationSessionListDto) {
+  return s.status === SessionStatus.Completed;
+}
+
+/* ────────────────────── component ────────────────────── */
 
 export default function AppointmentsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const [filter, setFilter] = useState<StatusFilter>('all');
+  const [activeTab, setActiveTab] = useState<TabKey>('today');
   const [searchQuery, setSearchQuery] = useState('');
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
@@ -133,42 +181,121 @@ export default function AppointmentsPage() {
   const cancelMutation = useCancelSession();
   const sessions = sessionsData?.items ?? [];
 
-  const filteredAppointments = useMemo(() => {
-    return sessions.filter((session) => {
-      if (!sessionMatchesFilter(session, filter)) {
-        return false;
+  /* ── categorize ── */
+  const { todaySessions, upcomingSessions, pastSessions, cancelledSessions } =
+    useMemo(() => {
+      const today: ConsultationSessionListDto[] = [];
+      const upcoming: ConsultationSessionListDto[] = [];
+      const past: ConsultationSessionListDto[] = [];
+      const cancelled: ConsultationSessionListDto[] = [];
+
+      for (const s of sessions) {
+        if (s.status === SessionStatus.Cancelled) {
+          cancelled.push(s);
+        } else if (
+          s.appointmentTime &&
+          !Number.isNaN(new Date(s.appointmentTime).getTime()) &&
+          isToday(new Date(s.appointmentTime))
+        ) {
+          today.push(s);
+        } else if (isFutureSession(s)) {
+          upcoming.push(s);
+        } else if (isPastSession(s)) {
+          past.push(s);
+        } else {
+          // pending with no date or past date but not completed
+          upcoming.push(s);
+        }
       }
 
-      const needle = searchQuery.trim().toLowerCase();
-      if (!needle) return true;
-
-      return (
-        (session.patientName ?? '').toLowerCase().includes(needle) ||
-        (session.id ?? '').toLowerCase().includes(needle) ||
-        SESSION_TYPE_LABELS[session.type].toLowerCase().includes(needle)
+      // Sort today by time ascending
+      today.sort(
+        (a, b) =>
+          new Date(a.appointmentTime ?? 0).getTime() -
+          new Date(b.appointmentTime ?? 0).getTime()
       );
-    });
-  }, [sessions, filter, searchQuery]);
+      // Sort upcoming by soonest first
+      upcoming.sort(
+        (a, b) =>
+          new Date(a.appointmentTime ?? '9999').getTime() -
+          new Date(b.appointmentTime ?? '9999').getTime()
+      );
+      // Sort past by most recent first
+      past.sort(
+        (a, b) =>
+          new Date(b.appointmentTime ?? b.createdAt).getTime() -
+          new Date(a.appointmentTime ?? a.createdAt).getTime()
+      );
 
-  const todayCount = sessions.filter((session) => {
-    if (!session.appointmentTime) return false;
-    const date = new Date(session.appointmentTime);
-    return !Number.isNaN(date.getTime()) && isToday(date);
-  }).length;
+      return {
+        todaySessions: today,
+        upcomingSessions: upcoming,
+        pastSessions: past,
+        cancelledSessions: cancelled,
+      };
+    }, [sessions]);
 
-  const upcomingCount = sessions.filter(
-    (session) =>
-      session.status === SessionStatus.Pending ||
-      session.status === SessionStatus.Confirmed
-  ).length;
+  /* ── filter by search ── */
+  const filterBySearch = (list: ConsultationSessionListDto[]) => {
+    const needle = searchQuery.trim().toLowerCase();
+    if (!needle) return list;
+    return list.filter(
+      (s) =>
+        (s.patientName ?? '').toLowerCase().includes(needle) ||
+        s.id.toLowerCase().includes(needle) ||
+        SESSION_TYPE_LABELS[s.type].toLowerCase().includes(needle)
+    );
+  };
 
-  const completedCount = sessions.filter(
-    (session) => session.status === SessionStatus.Completed
-  ).length;
+  const activeList = filterBySearch(
+    activeTab === 'today'
+      ? todaySessions
+      : activeTab === 'upcoming'
+        ? upcomingSessions
+        : activeTab === 'past'
+          ? pastSessions
+          : cancelledSessions
+  );
 
-  const cancelledCount = sessions.filter(
-    (session) => session.status === SessionStatus.Cancelled
-  ).length;
+  const tabs: {
+    key: TabKey;
+    label: string;
+    count: number;
+    icon: React.ReactNode;
+  }[] = [
+    {
+      key: 'today',
+      label: t('Ophthalmologist.appointments.tab.today', 'Today'),
+      count: todaySessions.length,
+      icon: <Zap className="w-4 h-4" />,
+    },
+    {
+      key: 'upcoming',
+      label: t('Ophthalmologist.appointments.tab.upcoming', 'Upcoming'),
+      count: upcomingSessions.length,
+      icon: <CalendarCheck className="w-4 h-4" />,
+    },
+    {
+      key: 'past',
+      label: t('Ophthalmologist.appointments.tab.past', 'Past'),
+      count: pastSessions.length,
+      icon: <CheckCircle className="w-4 h-4" />,
+    },
+    {
+      key: 'cancelled',
+      label: t('Ophthalmologist.appointments.tab.cancelled', 'Cancelled'),
+      count: cancelledSessions.length,
+      icon: <CalendarX className="w-4 h-4" />,
+    },
+  ];
+
+  const pendingCount =
+    todaySessions.length +
+    upcomingSessions.filter(
+      (s) =>
+        s.status === SessionStatus.Pending ||
+        s.status === SessionStatus.Confirmed
+    ).length;
 
   const handleCancelSession = (sessionId: string) => {
     if (!currentUserId) {
@@ -209,6 +336,7 @@ export default function AppointmentsPage() {
     );
   };
 
+  /* ── Loading ── */
   if (isLoading) {
     return (
       <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -237,20 +365,21 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={upcomingCount} />
+      <DoctorSidebar pendingCount={pendingCount} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
           pageName={t('Ophthalmologist.appointments.title', 'Appointments')}
         />
 
-        <main className="p-6">
-          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <main className="p-6 max-w-[1400px] mx-auto">
+          {/* ── Header ── */}
+          <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 {t('Ophthalmologist.appointments.title', 'Appointments')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {t(
                   'Ophthalmologist.appointments.subtitle',
                   'Manage your real-time consultation appointments'
@@ -260,89 +389,58 @@ export default function AppointmentsPage() {
 
             <Link
               to={toLocalizedPath('/ophthalmologist/slot-management')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors w-fit"
+              className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-cyan-500/25 w-fit"
             >
               <Plus size={18} />
               {t('Ophthalmologist.appointments.manageSlots', 'Manage Slots')}
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl p-4 border border-gray-200 dark:border-[#1e3a5f]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {todayCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.appointments.stats.today', 'Today')}
-                  </p>
-                </div>
-              </div>
+          {/* ── Quick Stats Pills ── */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {todaySessions.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.appointments.stats.today', 'Today')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl p-4 border border-gray-200 dark:border-[#1e3a5f]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {upcomingCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.upcoming',
-                      'Upcoming'
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Clock className="w-3.5 h-3.5 text-blue-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {upcomingSessions.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.appointments.stats.upcoming', 'Upcoming')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl p-4 border border-gray-200 dark:border-[#1e3a5f]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {completedCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.completed',
-                      'Completed'
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {pastSessions.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.appointments.stats.completed', 'Completed')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl p-4 border border-gray-200 dark:border-[#1e3a5f]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
-                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {cancelledCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.appointments.stats.cancelled',
-                      'Cancelled'
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <XCircle className="w-3.5 h-3.5 text-red-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {cancelledSessions.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.appointments.stats.cancelled', 'Cancelled')}
+              </span>
             </div>
           </div>
 
+          {/* ── Search + Tabs ── */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-sm">
               <Search
-                size={18}
+                size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
@@ -353,46 +451,139 @@ export default function AppointmentsPage() {
                 )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-xl pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
               />
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-600 dark:text-gray-400 rounded-lg text-sm">
-                <Filter className="w-4 h-4" />
-                {t('Ophthalmologist.appointments.filterLabel', 'Filter')}
-              </button>
-              {(
-                [
-                  'all',
-                  'pending',
-                  'confirmed',
-                  'completed',
-                  'cancelled',
-                ] as const
-              ).map((status) => (
+            <div className="flex items-center bg-gray-100 dark:bg-[#0a1929] rounded-xl p-1 gap-0.5">
+              {tabs.map((tab) => (
                 <button
-                  key={status}
-                  onClick={() => setFilter(status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                    filter === status
-                      ? 'bg-cyan-500 text-white'
-                      : 'bg-white dark:bg-[#1e3a5f] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2d4a6f] border border-gray-300 dark:border-[#2d4a6f]'
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    activeTab === tab.key
+                      ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                 >
-                  {status === 'all'
-                    ? t('Ophthalmologist.appointments.filter.all', 'All')
-                    : t(
-                        `Ophthalmologist.appointments.filter.${status}`,
-                        status.charAt(0).toUpperCase() + status.slice(1)
-                      )}
+                  {tab.icon}
+                  {tab.label}
+                  <span
+                    className={`ml-1 px-1.5 py-0.5 rounded-md text-xs font-semibold ${
+                      activeTab === tab.key
+                        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-4">
-            {filteredAppointments.map((session) => {
+          {/* ── Today's Timeline (only on today tab) ── */}
+          {activeTab === 'today' && todaySessions.length > 0 && (
+            <div className="mb-6 bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
+                  <Timer className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                  {t(
+                    'Ophthalmologist.appointments.todayTimeline',
+                    "Today's Timeline"
+                  )}
+                </h2>
+              </div>
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-[18px] top-2 bottom-2 w-0.5 bg-gray-200 dark:bg-gray-700" />
+                <div className="space-y-1">
+                  {todaySessions.map((session, idx) => {
+                    const time = session.appointmentTime
+                      ? formatShortTime(session.appointmentTime)
+                      : '--:--';
+                    const isPast =
+                      session.appointmentTime &&
+                      new Date(session.appointmentTime).getTime() < Date.now();
+                    const isNext =
+                      !isPast &&
+                      (idx === 0 ||
+                        (todaySessions[idx - 1].appointmentTime &&
+                          new Date(
+                            todaySessions[idx - 1].appointmentTime!
+                          ).getTime() < Date.now()));
+                    const typeMeta = getTypeMeta(session.type);
+
+                    return (
+                      <div
+                        key={session.id}
+                        className={`flex items-center gap-3 py-2 px-1 rounded-lg transition-colors ${
+                          isNext ? 'bg-cyan-50/50 dark:bg-cyan-900/10' : ''
+                        }`}
+                      >
+                        {/* Dot */}
+                        <div
+                          className={`relative z-10 w-[9px] h-[9px] rounded-full ring-2 shrink-0 ${
+                            session.status === SessionStatus.Completed
+                              ? 'bg-green-500 ring-green-200 dark:ring-green-800'
+                              : session.status === SessionStatus.Cancelled
+                                ? 'bg-red-400 ring-red-200 dark:ring-red-800'
+                                : isNext
+                                  ? 'bg-cyan-500 ring-cyan-200 dark:ring-cyan-700 animate-pulse'
+                                  : isPast
+                                    ? 'bg-gray-400 ring-gray-200 dark:ring-gray-600'
+                                    : 'bg-blue-400 ring-blue-200 dark:ring-blue-700'
+                          }`}
+                        />
+                        {/* Time */}
+                        <span
+                          className={`text-sm font-mono w-14 shrink-0 ${
+                            isPast
+                              ? 'text-gray-400 dark:text-gray-500'
+                              : 'text-gray-700 dark:text-gray-300 font-medium'
+                          }`}
+                        >
+                          {time}
+                        </span>
+                        {/* Info */}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span
+                            className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-md ${typeMeta.badgeBg} ${typeMeta.color}`}
+                          >
+                            {typeMeta.icon}
+                          </span>
+                          <span
+                            className={`text-sm truncate ${
+                              isPast
+                                ? 'text-gray-400 dark:text-gray-500'
+                                : 'text-gray-800 dark:text-white font-medium'
+                            }`}
+                          >
+                            {session.patientName ??
+                              t(
+                                'Ophthalmologist.appointments.unknownPatient',
+                                'Unknown Patient'
+                              )}
+                          </span>
+                        </div>
+                        {isNext && (
+                          <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
+                            {getCountdownText(session.appointmentTime) ?? 'Now'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Appointment Cards ── */}
+          <div className="space-y-3">
+            {activeList.map((session) => {
               const { dateLabel, timeLabel } = formatDateTime(
                 session.appointmentTime,
                 {
@@ -406,118 +597,135 @@ export default function AppointmentsPage() {
                   ),
                 }
               );
-              const isOnline =
-                session.type === ConsultationSessionType.VideoCall ||
-                session.type === ConsultationSessionType.Verification;
+              const typeMeta = getTypeMeta(session.type);
+              const statusCfg = getStatusConfig(session.status, t);
+              const countdown = getCountdownText(session.appointmentTime);
+              const isActive =
+                session.status === SessionStatus.Pending ||
+                session.status === SessionStatus.Confirmed;
 
               return (
                 <div
                   key={session.id}
-                  className={`bg-white dark:bg-[#0a1f44] rounded-xl p-6 border border-gray-200 dark:border-[#1e3a5f] hover:border-cyan-500/30 dark:hover:border-cyan-500/30 transition-colors ${
+                  className={`group bg-white dark:bg-[#0a1f44] rounded-2xl border transition-all duration-200 ${
                     session.status === SessionStatus.Cancelled
-                      ? 'opacity-60'
-                      : ''
+                      ? 'opacity-50 border-gray-200 dark:border-[#1e3a5f]'
+                      : 'border-gray-100 dark:border-[#1e3a5f] hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50'
                   }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-700 dark:text-cyan-300 font-semibold text-sm shrink-0">
-                        {(session.patientName ?? 'PT')
-                          .split(' ')
-                          .map((part) => part[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </div>
+                  <div className="flex items-stretch">
+                    <div className="flex-1 p-5">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        {/* Left content */}
+                        <div className="flex items-start gap-4 flex-1 min-w-0">
+                          {/* Avatar */}
+                          <div
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${typeMeta.bg}`}
+                          >
+                            <span className={typeMeta.color}>
+                              {typeMeta.icon}
+                            </span>
+                          </div>
 
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-3 mb-2">
-                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                            {session.patientName ??
-                              t(
-                                'Ophthalmologist.appointments.unknownPatient',
-                                'Unknown Patient'
+                          <div className="flex-1 min-w-0">
+                            {/* Row 1: Name + Status */}
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                                {session.patientName ??
+                                  t(
+                                    'Ophthalmologist.appointments.unknownPatient',
+                                    'Unknown Patient'
+                                  )}
+                              </h3>
+                              <span
+                                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCfg.cls}`}
+                              >
+                                {statusCfg.icon} {statusCfg.label}
+                              </span>
+                              {countdown && isActive && (
+                                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400">
+                                  <Timer className="w-3 h-3" />
+                                  {countdown}
+                                </span>
                               )}
-                          </h3>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {session.id.slice(0, 8)}...
-                          </span>
-                          {getStatusBadge(session.status, t)}
+                            </div>
+
+                            {/* Row 2: Meta info */}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                              <span
+                                className={`inline-flex items-center gap-1 ${typeMeta.color}`}
+                              >
+                                {typeMeta.icon}
+                                {SESSION_TYPE_LABELS[session.type]}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {dateLabel}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                {timeLabel}
+                              </span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                {session.id.slice(0, 8)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="px-2 py-0.5 rounded text-xs font-medium text-white bg-cyan-500">
-                            {SESSION_TYPE_LABELS[session.type]}
-                          </span>
-                        </div>
+                        {/* Right actions */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isActive && (
+                            <Link
+                              to={toLocalizedPath(
+                                '/ophthalmologist/consultations'
+                              )}
+                              className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-sm font-medium transition-all hover:shadow-md hover:shadow-cyan-500/25"
+                            >
+                              {session.type ===
+                              ConsultationSessionType.VideoCall ? (
+                                <>
+                                  <Video className="w-4 h-4" />
+                                  {t(
+                                    'Ophthalmologist.appointments.joinCall',
+                                    'Join Call'
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="w-4 h-4" />
+                                  {t(
+                                    'Ophthalmologist.appointments.open',
+                                    'Open'
+                                  )}
+                                </>
+                              )}
+                            </Link>
+                          )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            <Calendar className="w-4 h-4" />
-                            <span>{dateLabel}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span>{timeLabel}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {isOnline ? (
-                              <>
-                                <Video className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                <span className="text-blue-600 dark:text-blue-400">
-                                  {t(
-                                    'Ophthalmologist.appointments.onlineConsultation',
-                                    'Online Consultation'
-                                  )}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                <span className="text-gray-600 dark:text-gray-400">
-                                  {t(
-                                    'Ophthalmologist.appointments.inPersonConsultation',
-                                    'In-person Clinic Booking'
-                                  )}
-                                </span>
-                              </>
-                            )}
-                          </div>
+                          {session.status === SessionStatus.Pending && (
+                            <button
+                              onClick={() => handleCancelSession(session.id)}
+                              disabled={cancelMutation.isPending}
+                              className="px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors disabled:opacity-60"
+                            >
+                              {t('Ophthalmologist.common.cancel', 'Cancel')}
+                            </button>
+                          )}
+
+                          {session.status === SessionStatus.Completed && (
+                            <Link
+                              to={toLocalizedPath(
+                                '/ophthalmologist/consultations'
+                              )}
+                              className="flex items-center gap-1.5 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1e3a5f] rounded-xl text-sm font-medium transition-colors"
+                            >
+                              {t('Ophthalmologist.appointments.view', 'View')}
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          )}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                      {(session.status === SessionStatus.Pending ||
-                        session.status === SessionStatus.Confirmed) && (
-                        <Link
-                          to={toLocalizedPath('/ophthalmologist/consultations')}
-                          className="flex-1 lg:flex-none px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          {t('Ophthalmologist.appointments.open', 'Open')}
-                        </Link>
-                      )}
-
-                      {session.status === SessionStatus.Pending && (
-                        <button
-                          onClick={() => handleCancelSession(session.id)}
-                          disabled={cancelMutation.isPending}
-                          className="flex-1 lg:flex-none px-4 py-2 bg-transparent border border-red-500/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
-                        >
-                          {t('Ophthalmologist.common.cancel', 'Cancel')}
-                        </button>
-                      )}
-
-                      {session.status === SessionStatus.Completed && (
-                        <Link
-                          to={toLocalizedPath('/ophthalmologist/consultations')}
-                          className="px-4 py-2 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2d4a6f] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                        >
-                          {t('Ophthalmologist.appointments.view', 'View')}
-                          <ChevronRight className="w-4 h-4" />
-                        </Link>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -525,28 +733,34 @@ export default function AppointmentsPage() {
             })}
           </div>
 
-          {filteredAppointments.length === 0 && (
-            <div className="text-center py-16 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f]">
-              <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          {/* ── Empty state ── */}
+          {activeList.length === 0 && (
+            <div className="text-center py-16 bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f]">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 {t(
                   'Ophthalmologist.appointments.emptyTitle',
                   'No Appointments Found'
                 )}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {filter === 'all'
+              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm max-w-md mx-auto">
+                {searchQuery
                   ? t(
-                      'Ophthalmologist.appointments.emptyAll',
-                      'No real appointment data matched your search.'
+                      'Ophthalmologist.appointments.emptySearch',
+                      'No results match your search. Try different keywords.'
                     )
-                  : `${t('Ophthalmologist.appointments.emptyPrefix', 'No')} ${t(`Ophthalmologist.appointments.filter.${filter}`, filter)} ${t('Ophthalmologist.appointments.emptySuffix', 'appointments found.')}`}
+                  : t(
+                      'Ophthalmologist.appointments.emptyTab',
+                      'No appointments in this category yet.'
+                    )}
               </p>
               <Link
                 to={toLocalizedPath('/ophthalmologist/slot-management')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-cyan-500/25"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 {t('Ophthalmologist.appointments.manageSlots', 'Manage Slots')}
               </Link>
             </div>
