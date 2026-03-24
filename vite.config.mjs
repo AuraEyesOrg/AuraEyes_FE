@@ -28,11 +28,21 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-              return 'react-vendor';
+            // 1. Nhóm các thư viện cốt lõi của React vào 1 file
+            if (id.includes('node_modules/react') || 
+                id.includes('node_modules/react-dom') || 
+                id.includes('node_modules/react-router')) {
+              return 'react-core';
             }
-            if (id.includes('node_modules')) {
-              return 'vendor';
+
+            // 2. Nhóm riêng các thư viện UI hoặc Icon nặng (ví dụ: lucide-react, framer-motion)
+            if (id.includes('node_modules/lucide-react')) {
+              return 'ui-icons';
+            }
+
+            // 3. Nhóm riêng N8N widget
+            if (id.includes('node_modules/@n8n')) {
+              return 'n8n-widget';
             }
           }
         }

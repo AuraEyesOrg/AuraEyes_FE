@@ -63,7 +63,6 @@ import useAuthStore from '@/store/auth-store';
 import {
   formatFullDate,
   formatMessageTime,
-  formatCompactDate,
   formatAppointmentSlot,
   formatRelativeTime,
   formatCountdown,
@@ -664,7 +663,6 @@ export default function ChatPage() {
                             </p>
                           </div>
                           <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
-                            <p>{formatCompactDate(session.createdAt)}</p>
                             <p className="mt-1">
                               {formatRelativeTime(session.lastActivityAt)}
                             </p>
