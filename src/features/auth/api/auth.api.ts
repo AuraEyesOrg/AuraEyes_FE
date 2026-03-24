@@ -5,6 +5,8 @@
 
 import { api } from '@/lib/api';
 import { setItem, getItem } from '@/lib/local-storage';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   LoginRequest,
   GoogleLoginRequest,
@@ -19,13 +21,6 @@ import type {
   TwoFactorRequiredResponse,
   UserInfoResponse,
 } from '../types';
-
-interface ApiResponse<T> {
-  succeeded: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
 
 // ==================== Type Guards ====================
 
@@ -120,7 +115,9 @@ export const login = async (
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse | TwoFactorRequiredResponse>(
+    response.data
+  );
 
   // If login successful (not 2FA required), save tokens
   if (
@@ -156,7 +153,9 @@ export const googleLogin = async (
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse | TwoFactorRequiredResponse>(
+    response.data
+  );
 
   // If login successful (not 2FA required), save tokens
   if (
@@ -193,7 +192,7 @@ export const verifyTwoFactorLogin = async (
     }
   );
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse>(response.data);
 
   // Save tokens on successful 2FA verification
   if (result.succeeded && result.accessToken && result.refreshToken) {
@@ -221,7 +220,7 @@ export const registerPatient = async (
     `${AUTH_BASE_URL}/register/patient`,
     data
   );
-  return response.data.data;
+  return unwrapApiData<{ userId: string }>(response.data);
 };
 
 /**
@@ -287,7 +286,7 @@ export const registerOphthalmologist = async (
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
-  return response.data.data;
+  return unwrapApiData<{ userId: string }>(response.data);
 };
 
 export const registerOrganisation = async (
@@ -296,7 +295,9 @@ export const registerOrganisation = async (
   const response = await api.post<
     ApiResponse<{ requestId: string; email: string; message: string }>
   >(`${AUTH_BASE_URL}/register/organisation`, data);
-  return response.data.data;
+  return unwrapApiData<{ requestId: string; email: string; message: string }>(
+    response.data
+  );
 };
 
 /**
@@ -318,7 +319,7 @@ export const refreshToken = async (): Promise<AuthResponse> => {
     }
   );
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse>(response.data);
 
   // Update stored tokens
   if (result.succeeded && result.accessToken && result.refreshToken) {
@@ -390,5 +391,5 @@ export const getCurrentUser = async (): Promise<UserInfoResponse> => {
   const response = await api.get<ApiResponse<UserInfoResponse>>(
     `${AUTH_BASE_URL}/me`
   );
-  return response.data.data;
+  return unwrapApiData<UserInfoResponse>(response.data);
 };

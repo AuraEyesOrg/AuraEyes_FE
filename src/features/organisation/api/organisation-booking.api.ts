@@ -1,13 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors: string[] | null;
-  timestamp: string;
-}
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface PagedResult<T> {
   items: T[];
@@ -93,7 +87,9 @@ export const getOrganisationTemplates = async (
     },
   });
 
-  return response.data.data.items;
+  return unwrapApiData<PagedResult<OrganisationScheduleTemplateDto>>(
+    response.data
+  ).items;
 };
 
 export const createOrganisationTemplate = async (
@@ -112,7 +108,7 @@ export const createOrganisationTemplate = async (
     }
   );
 
-  return response.data.data;
+  return unwrapApiData<string>(response.data);
 };
 
 export const updateOrganisationTemplate = async (
@@ -150,7 +146,9 @@ export const getOrganisationSlots = async (
     },
   });
 
-  return response.data.data;
+  return unwrapApiData<PagedResult<OrganisationAppointmentSlotDto>>(
+    response.data
+  );
 };
 
 export const generateOrganisationSlots = async (
@@ -166,7 +164,7 @@ export const generateOrganisationSlots = async (
     }
   );
 
-  return response.data.data;
+  return unwrapApiData<number>(response.data);
 };
 
 export const updateOrganisationSlotStatus = async (

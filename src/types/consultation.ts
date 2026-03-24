@@ -75,6 +75,7 @@ export interface ConsultationCaseSnapshotDto {
   summary: string | null;
   findings: string | null;
   annotatedImageUrl: string | null;
+  rawJsonOutput: string | null;
   originalImageUrls: string[];
   symptoms: string[];
 }

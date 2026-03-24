@@ -7,16 +7,20 @@ import {
   type ConsultationSessionListDto,
 } from '@/types/consultation';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { useSearchParams } from 'react-router-dom';
 
 export default function ConsultationsPage() {
   const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
+  const [searchParams] = useSearchParams();
+  const patientIdFilter = searchParams.get('patientId') ?? undefined;
   const { data: sessionsData, isLoading: sessionsLoading } =
     useConsultationSessions(
       {
         ophthalmologistId: currentDoctorId || undefined,
         pageSize: 50,
+        patientId: patientIdFilter || undefined,
       },
       { enabled: !!currentDoctorId }
     );

@@ -13,6 +13,7 @@ import { useWallet } from '../hooks/use-wallet';
 import { walletApi } from '../api/patient.api';
 import type { VerifyPaymentResponse } from '../types';
 import { toast } from 'react-toastify';
+import { formatCurrency } from '@/lib/helper';
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
 
@@ -70,12 +71,6 @@ export default function PaymentCallbackPage() {
       }
     );
   }, [orderCode, cancelled]);
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
 
   return (
     <PatientLayout>

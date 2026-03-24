@@ -5,6 +5,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface ContractDetailDto {
   id: string;
@@ -25,13 +27,6 @@ export interface ContractDetailDto {
   updatedAt?: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
-
 const EP = API_ENDPOINTS.OPHTHALMOLOGIST.CONTRACT;
 
 export const contractApi = {
@@ -40,7 +35,7 @@ export const contractApi = {
     const response = await api.get<ApiResponse<ContractDetailDto>>(
       EP.MY_CONTRACT
     );
-    return response.data.data;
+    return unwrapApiData<ContractDetailDto>(response.data);
   },
 
   /** Upload a signed contract image (scanned/photo). */

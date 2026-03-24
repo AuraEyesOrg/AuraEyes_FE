@@ -31,6 +31,7 @@ interface LocationState {
   riskLevel?: 'low' | 'moderate' | 'high';
   riskScore?: number;
   rawJsonOutput?: string;
+  resultsPersisted?: boolean;
 }
 
 const RISK_CONFIG = {
@@ -112,6 +113,17 @@ export default function ReviewPage() {
   const risk = RISK_CONFIG[riskLevel];
   const screeningId =
     activeState?.screeningId ?? storedConsultationContext?.screeningId;
+  const rawJsonForAnalysis =
+    activeState?.rawJsonOutput ?? storedConsultationContext?.rawJsonOutput;
+  const resultsPersisted =
+    activeState?.resultsPersisted ?? Boolean(rawJsonForAnalysis);
+
+  const primaryAiConfidence = useMemo(() => {
+    if (anomalies.length === 0) return null;
+    const primary = anomalies.find((a) => a.isHighest);
+    if (primary != null) return primary.confidence;
+    return Math.max(...anomalies.map((a) => a.confidence));
+  }, [anomalies]);
 
   const consultationContext =
     useMemo<ScreeningConsultationContext | null>(() => {
@@ -148,8 +160,7 @@ export default function ReviewPage() {
 
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
-  const remainingMoney = 200000;
-  const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const scanId = screeningId?.slice(0, 8);
 
   /* guard: no route state */
   if (!activeState && !storedConsultationContext) {
@@ -196,24 +207,6 @@ export default function ReviewPage() {
                 Analysis complete. Please review your results and recommended
                 next steps.
               </p>
-            </div>
-
-            {/* Credit widget */}
-            <div className="flex items-center gap-3 surface-primary surface-border px-4 py-2.5 rounded-xl shadow-sm">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-bold text-caption uppercase tracking-wider">
-                  Available Balance
-                </span>
-                <span className="text-sm font-bold text-(--text-primary)">
-                  {remainingMoney.toLocaleString()}đ Left
-                </span>
-              </div>
-              <button
-                onClick={() => navigate('/patient/wallet')}
-                className="text-primary hover:text-primary/80 font-bold text-sm bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                Top-up
-              </button>
             </div>
           </div>
 
@@ -289,22 +282,34 @@ export default function ReviewPage() {
 
               <div className="flex items-center gap-3 pt-4 border-t border-(--border-color)">
                 <button
-                  onClick={() => navigate(-1)}
+                  onClick={() => {
+                    if (!screeningId && images.length === 0) {
+                      navigate('/patient/analysis');
+                      return;
+                    }
+                    navigate('/patient/analysis', {
+                      state: {
+                        screeningId,
+                        rawJsonOutput: rawJsonForAnalysis,
+                        resultsPersisted,
+                        images: images.map((img) => ({
+                          id: img.id,
+                          name: img.name,
+                          preview: img.url,
+                        })),
+                      },
+                    });
+                  }}
                   className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   View Full Analysis Details
                 </button>
-                {anomalies.length > 0 && (
+                {primaryAiConfidence != null && (
                   <>
                     <span className="text-(--border-color)">|</span>
                     <span className="text-xs text-(--text-muted)">
-                      AI Confidence:{' '}
-                      {Math.round(
-                        anomalies.reduce((s, a) => s + a.confidence, 0) /
-                          anomalies.length
-                      )}
-                      %
+                      AI Confidence: {primaryAiConfidence}%
                     </span>
                   </>
                 )}

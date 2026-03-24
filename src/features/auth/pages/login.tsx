@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -24,6 +25,7 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
+  isSupportedLocale,
   withLocalePathname,
 } from '@/i18n/locales';
 import {
@@ -69,8 +71,16 @@ const LoginPage = () => {
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { i18n } = useTranslation();
   const { login: authLogin } = useAuthStore();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const resolvedLanguage = (i18n.resolvedLanguage ?? i18n.language ?? '').split(
+    '-'
+  )[0];
+  const languageLocale = isSupportedLocale(resolvedLanguage)
+    ? resolvedLanguage
+    : DEFAULT_LOCALE;
+  const locale = getLocaleFromPathname(location.pathname) ?? languageLocale;
+  const uiLocale = locale === 'vi' ? 'vi' : 'en';
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
@@ -554,8 +564,10 @@ const LoginPage = () => {
                 {/* reCAPTCHA */}
                 <div className="flex justify-center">
                   <ReCAPTCHA
+                    key={`recaptcha-${uiLocale}`}
                     ref={recaptchaRef}
                     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                    hl={uiLocale}
                     onChange={(token) => setRecaptchaToken(token)}
                     onExpired={() => setRecaptchaToken(null)}
                     onErrored={() => setRecaptchaToken(null)}
@@ -590,6 +602,7 @@ const LoginPage = () => {
 
                   <div className="w-full flex justify-center">
                     <GoogleLogin
+                      key={`google-login-${uiLocale}`}
                       onSuccess={handleGoogleLoginSuccess}
                       onError={() =>
                         setError(t('AuthPages.login.messages.googleFailed'))
