@@ -9,8 +9,8 @@ import {
 
 export const networkKeys = {
   all: ['network'] as const,
-  feed: (page: number, pageSize: number) =>
-    [...networkKeys.all, 'feed', { page, pageSize }] as const,
+  feed: (page: number, pageSize: number, hiddenOnly = false) =>
+    [...networkKeys.all, 'feed', { page, pageSize, hiddenOnly }] as const,
   post: (id: string) => [...networkKeys.all, 'post', id] as const,
   trending: () => [...networkKeys.all, 'trending'] as const,
   profile: (userId: string) => [...networkKeys.all, 'profile', userId] as const,
@@ -37,10 +37,10 @@ export const networkKeys = {
     ] as const,
 };
 
-export function useFeedPosts(page = 1, pageSize = 10) {
+export function useFeedPosts(page = 1, pageSize = 10, hiddenOnly = false) {
   return useQuery({
-    queryKey: networkKeys.feed(page, pageSize),
-    queryFn: () => postsApi.getFeed(page, pageSize),
+    queryKey: networkKeys.feed(page, pageSize, hiddenOnly),
+    queryFn: () => postsApi.getFeed(page, pageSize, undefined, hiddenOnly),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

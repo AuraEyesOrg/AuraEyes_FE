@@ -100,6 +100,8 @@ export interface ProfessionalPost {
   attachments: PostAttachment[];
   currentUserReaction?: ReactionType;
   isBookmarked: boolean;
+  isHidden: boolean;
+  hideReason?: string;
   createdAt: string;
 }
 
@@ -110,6 +112,8 @@ export interface OriginalPost {
   content: string;
   category: PostCategory;
   attachments: PostAttachment[];
+  isHidden: boolean;
+  hideReason?: string;
   createdAt: string;
 }
 
@@ -141,6 +145,17 @@ export interface UserProfileDto {
   postCount: number;
   yearsOfExperience: number;
   isVerified: boolean;
+  certificates: UserProfileCertificate[];
+}
+
+export interface UserProfileCertificate {
+  id: string;
+  type: 'Degree' | 'License' | string;
+  name: string;
+  issuingAuthority?: string;
+  issuedDate: string;
+  expiryDate?: string;
+  certificateUrl?: string;
 }
 
 export interface PostReaction {

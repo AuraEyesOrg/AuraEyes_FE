@@ -1226,7 +1226,22 @@ const Router = () => (
         />
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
-        <Route path="/network" element={<NetworkLayout />}>
+        <Route
+          path="/network"
+          element={
+            <PrivateRoute
+              allowedRoles={[
+                'SystemAdmin',
+                'Admin',
+                'OrgAdmin',
+                'Organization',
+                'Ophthalmologist',
+              ]}
+            >
+              <NetworkLayout />
+            </PrivateRoute>
+          }
+        >
           <Route index element={<NetworkFeedPage />} />
           <Route path="feed" element={<NetworkFeedPage />} />
           <Route path="discover" element={<NetworkDiscoverPage />} />
