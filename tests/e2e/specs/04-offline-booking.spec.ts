@@ -6,8 +6,8 @@ import { query } from '../helpers/postgres';
 const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
-test.describe('Flow 04 - Organisation Slots & Offline Booking', () => {
-  test('patient opens appointments sidebar, checks Organisation Slots, then books from /patient/clinics', async ({ browser }) => {
+test.describe('Flow 04 - Organisation Slot Booking and Offline Appointment', () => {
+  test('patient reviews organisation slots and completes offline appointment booking from clinics page', async ({ browser }) => {
     test.setTimeout(240_000);
 
     const orgRows = await query<{ OrgId: string; OrgName: string }>(

@@ -1,17 +1,18 @@
-# AURA - Tele Consultation (Online) Flow
+# AURA - AI Screening, Appointment Booking, and Consultation Session Flow
 
 ## 1. Objective
 
-- Verify full tele-consultation journey from dashboard upload to consultation chat + Google Meet handoff.
-- Validate the exact UI path: upload fundus image, AI analysis, review, find specialist, slot booking, wallet payment, consultation opening.
+- Verify full patient screening service journey from default dashboard to analysis and review.
+- Verify that after review navigation (including roadmap access), patient can request consultation session, complete appointment booking, open chat, and use Google Meet handoff.
 
 ## 2. Source of Truth
 
 - FE routes:
   - `/patient/dashboard`
   - `/patient/screening/new`
-  - `/patient/screening/analyze`
+  - `/patient/analysis`
   - `/patient/screening/review`
+  - `/patient/roadmap`
   - `/patient/doctors`
   - `/patient/book`
   - `/patient/book/confirm`
@@ -49,13 +50,15 @@
 2. Click `Upload New Scan` -> route `/patient/screening/new`.
 3. Upload into fundus dropzone (`Drag & Drop fundus images here`) and wait validation queue.
 4. If image shows `Blur Detected`, click retry/reload until status is `Ready`.
-5. Click `Start AI Analysis` -> route `/patient/screening/analyze`.
+5. Click `Start AI Analysis` -> route `/patient/analysis`.
 6. Click `Start Screening`, wait AI result, then click `Continue to Review` -> `/patient/screening/review`.
-7. Click `Find a Specialist`, then open `/patient/doctors` and click `View Slots`.
-8. Choose slot in `/patient/book` -> `Confirm Booking` -> `/patient/book/confirm`.
-9. At confirmation page, review terms and click `Confirm & Pay` (wallet debit, no external gateway bypass).
-10. At appointment time, patient opens `/patient/chat`; doctor opens `/ophthalmologist/consultations`.
-11. Doctor side provides/opens Google Meet link (`meet.google.com`) and consultation chat is `Open`.
+7. Validate review content and educational disease resources.
+8. Open `/patient/roadmap` and validate roadmap page, then return to review flow.
+9. Click `Find a Specialist`, open `/patient/doctors`, and click `View Slots`.
+10. Choose slot in `/patient/book` -> `Confirm Booking` -> `/patient/book/confirm`.
+11. At confirmation page, click `Confirm & Pay`.
+12. At appointment time, patient opens `/patient/chat`; ophthalmologist opens `/ophthalmologist/consultations`.
+13. Ophthalmologist side provides or opens Google Meet link (`meet.google.com`) and consultation chat is `Open`.
 
 ## 5. Allowed Setup / Bypass
 
@@ -67,7 +70,8 @@
 
 ## 6. Assertions
 
-- Flow reaches `/patient/screening/analyze` and `/patient/screening/review` in order.
+- Flow reaches `/patient/analysis` and `/patient/screening/review` in order.
+- Patient can open `/patient/roadmap` after review stage.
 - Booking reaches `/patient/book/confirm` and `Confirm & Pay` succeeds.
 - A `ConsultationSessions` row exists for booked slot/patient.
 - Patient chat page shows consultation status context.

@@ -5,8 +5,8 @@ const SYSTEM_ADMIN_EMAIL = process.env.E2E_ROLE_EMAIL_SYSTEM_ADMIN ?? 'systemadm
 const ORG_ADMIN_EMAIL_FALLBACK = process.env.E2E_ROLE_EMAIL_ORG_ADMIN ?? 'orgadmin@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
-test.describe('Flow 02 - Organization Onboarding & Contract Approval', () => {
-  test('admin approves pending org request, org uploads contract, admin verifies, org reaches dashboard', async ({
+test.describe('Flow 02 - Organisation Onboarding and Contract Activation', () => {
+  test('system admin approves onboarding, organisation uploads contract, and contract is activated', async ({
     browser,
   }) => {
     test.setTimeout(300_000);
