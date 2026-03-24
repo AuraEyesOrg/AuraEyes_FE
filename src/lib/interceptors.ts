@@ -6,7 +6,7 @@ import {
 } from 'axios';
 import axios from 'axios';
 import useAuthStore from '@/store/auth-store';
-import { getItem, removeItem } from './local-storage';
+import { getItem } from './local-storage';
 import { router } from './router';
 
 export interface ConsoleError {
@@ -45,9 +45,6 @@ const processQueue = (error: unknown, token: string | null) => {
 };
 
 const logoutAndRedirect = () => {
-  removeItem(TOKEN_KEY);
-  removeItem(REFRESH_TOKEN_KEY);
-  removeItem(USER_KEY);
   useAuthStore.getState().logout();
   router.navigate('/login', { replace: true });
 };

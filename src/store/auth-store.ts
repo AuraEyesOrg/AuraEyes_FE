@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { logger } from './logger';
 import { getItem, setItem } from '@/lib/local-storage';
+import { queryClient } from '@/lib/react-query';
+import useNotificationStore from './useNotificationStore';
 
 export interface AuthUser {
   id: string;
@@ -53,6 +55,8 @@ const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        useNotificationStore.getState().clearNotifications();
+        queryClient.clear();
         window.localStorage.removeItem(AUTH_USER_KEY);
         window.localStorage.removeItem('token');
         window.localStorage.removeItem('refreshToken');
