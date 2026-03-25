@@ -397,12 +397,19 @@ export const searchAvailableSlotsForPatient = async (params: {
 };
 
 export const getEyeHealthResourcesForPatient = async (params?: {
-  query?: string;
+  /** Disease/condition names from the AI result (e.g. friendlyName of anomalies). */
+  diseases?: string[];
   limit?: number;
 }): Promise<PatientEducationalResourceItem[]> => {
+  const queryParams: Record<string, string | number> = {};
+  if (params?.limit !== undefined) queryParams['limit'] = params.limit;
+  if (params?.diseases && params.diseases.length > 0) {
+    queryParams['diseases'] = params.diseases.join(',');
+  }
+
   const response = await api.get<ApiResponse<PatientEducationalResourceItem[]>>(
     PATIENT_ENDPOINTS.RESOURCES.EYE_HEALTH,
-    { params }
+    { params: queryParams }
   );
   return response.data.data ?? [];
 };
