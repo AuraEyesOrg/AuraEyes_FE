@@ -541,19 +541,6 @@ export default function SettingsPage() {
         />
 
         <main className="p-6">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              {t('Ophthalmologist.settings.pageTitle', 'Settings')}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {t(
-                'Ophthalmologist.settings.pageSubtitle',
-                'Manage your profile, credentials, and preferences'
-              )}
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Profile & Credentials */}
             <div className="lg:col-span-2 space-y-6">
@@ -574,15 +561,6 @@ export default function SettingsPage() {
                     {t('Ophthalmologist.settings.profile.edit', 'Edit Profile')}
                   </button>
                 </div>
-
-                {(currentUserQuery.isLoading || profileQuery.isLoading) && (
-                  <div className="px-6 pt-4 text-sm text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.settings.profile.loading',
-                      'Loading profile information...'
-                    )}
-                  </div>
-                )}
 
                 <div className="p-6">
                   {/* Avatar & Verification Status */}
