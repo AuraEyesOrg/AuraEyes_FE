@@ -84,15 +84,26 @@ export default function ReviewPage() {
   );
 
   const activeState = state ?? null;
+  const screeningIdFromRoute = activeState?.screeningId;
+
+  const storedMatchesCurrent =
+    storedConsultationContext?.screeningId != null &&
+    storedConsultationContext.screeningId ===
+      (screeningIdFromRoute ?? storedConsultationContext.screeningId);
+
+  const relevantStoredContext = storedMatchesCurrent
+    ? storedConsultationContext
+    : null;
+
   const screeningIdFromRouteOrStore =
-    activeState?.screeningId ?? storedConsultationContext?.screeningId;
+    screeningIdFromRoute ?? storedConsultationContext?.screeningId;
 
   const shouldHydrateFromApi =
     Boolean(screeningIdFromRouteOrStore) &&
     (activeState?.images?.length ?? 0) === 0 &&
     (activeState?.anomalies?.length ?? 0) === 0 &&
-    (storedConsultationContext?.images?.length ?? 0) === 0 &&
-    (storedConsultationContext?.anomalies?.length ?? 0) === 0;
+    (relevantStoredContext?.images?.length ?? 0) === 0 &&
+    (relevantStoredContext?.anomalies?.length ?? 0) === 0;
 
   const { data: hydratedSession } = useQuery({
     queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
@@ -148,37 +159,54 @@ export default function ReviewPage() {
       };
     },
   });
-  const { data: educationalResources = [] } = useQuery<
-    PatientEducationalResourceItem[]
-  >({
-    queryKey: ['patient-eye-health-resources'],
-    queryFn: () => getEyeHealthResourcesForPatient({ limit: 3 }),
-    staleTime: 5 * 60 * 1000,
-  });
-
   const images =
     activeState?.images ??
-    storedConsultationContext?.images ??
+    relevantStoredContext?.images ??
     hydratedSession?.images ??
     [];
   const anomalies =
     activeState?.anomalies ??
-    storedConsultationContext?.anomalies ??
+    relevantStoredContext?.anomalies ??
     hydratedSession?.anomalies ??
     [];
+
+  // Derive disease keywords from anomaly data for SerpApi search.
+  // Prefer friendlyName (e.g. "Bệnh võng mạc tiểu đường") over the raw ML label.
+  const diseaseKeywords = useMemo(
+    () =>
+      anomalies
+        .slice()
+        .sort((a, b) => b.confidence - a.confidence)
+        .map((a) => a.friendlyName?.trim() || a.name.trim())
+        .filter(Boolean),
+    [anomalies]
+  );
+
+  const { data: educationalResources = [] } = useQuery<
+    PatientEducationalResourceItem[]
+  >({
+    queryKey: ['patient-eye-health-resources', diseaseKeywords],
+    queryFn: () =>
+      getEyeHealthResourcesForPatient({
+        diseases: diseaseKeywords.length > 0 ? diseaseKeywords : undefined,
+        limit: 3,
+      }),
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  });
   const riskLevel =
     activeState?.riskLevel ??
-    storedConsultationContext?.riskLevel ??
+    relevantStoredContext?.riskLevel ??
     hydratedSession?.riskLevel ??
     'low';
   const risk = RISK_CONFIG[riskLevel];
   const screeningId =
     activeState?.screeningId ??
-    storedConsultationContext?.screeningId ??
+    relevantStoredContext?.screeningId ??
     hydratedSession?.screeningId;
   const rawJsonForAnalysis =
     activeState?.rawJsonOutput ??
-    storedConsultationContext?.rawJsonOutput ??
+    relevantStoredContext?.rawJsonOutput ??
     hydratedSession?.rawJsonOutput;
   const resultsPersisted =
     activeState?.resultsPersisted ??
@@ -202,12 +230,12 @@ export default function ReviewPage() {
         riskLevel,
         riskScore:
           activeState?.riskScore ??
-          storedConsultationContext?.riskScore ??
+          relevantStoredContext?.riskScore ??
           hydratedSession?.riskScore ??
           undefined,
         rawJsonOutput:
           activeState?.rawJsonOutput ??
-          storedConsultationContext?.rawJsonOutput ??
+          relevantStoredContext?.rawJsonOutput ??
           hydratedSession?.rawJsonOutput,
         createdAt: new Date().toISOString(),
       };
@@ -218,8 +246,8 @@ export default function ReviewPage() {
       riskLevel,
       activeState?.riskScore,
       activeState?.rawJsonOutput,
-      storedConsultationContext?.riskScore,
-      storedConsultationContext?.rawJsonOutput,
+      relevantStoredContext?.riskScore,
+      relevantStoredContext?.rawJsonOutput,
       hydratedSession?.riskScore,
       hydratedSession?.rawJsonOutput,
     ]);
