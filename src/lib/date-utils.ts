@@ -331,9 +331,14 @@ export function formatWeekRange(startOfWeek: Date, endOfWeek: Date): string {
 
 /**
  * Returns a short weekday label for column headers: `"Mon"`, `"Tue"`, etc.
+ * Supports locale parameter for localized output (e.g., 'vi-VN' for T2, T3, etc.)
  */
-export function formatWeekDayLabel(date: Date): string {
-  return date.toLocaleDateString(EN_US, { weekday: 'short' });
+export function formatWeekDayLabel(date: Date, locale: string = EN_US): string {
+  if (locale === VI_VN) {
+    const weekdaysVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    return weekdaysVi[date.getDay()];
+  }
+  return date.toLocaleDateString(locale, { weekday: 'short' });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
