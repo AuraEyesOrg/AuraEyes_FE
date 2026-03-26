@@ -6,19 +6,12 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   NotificationsResponse,
   UnreadCountResponse,
 } from '@/types/notification';
-
-// Re-use the ApiResponse wrapper that the BE sends
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors: string[] | null;
-  timestamp: string;
-}
 
 // ============ REQUEST PARAMS ============
 
@@ -41,7 +34,7 @@ export const getNotifications = async (
     API_ENDPOINTS.NOTIFICATIONS.LIST,
     { params }
   );
-  return response.data.data;
+  return unwrapApiData<NotificationsResponse>(response.data);
 };
 
 /**
@@ -52,7 +45,7 @@ export const getUnreadCount = async (): Promise<UnreadCountResponse> => {
   const response = await api.get<ApiResponse<UnreadCountResponse>>(
     API_ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT
   );
-  return response.data.data;
+  return unwrapApiData<UnreadCountResponse>(response.data);
 };
 
 // ============ MUTATIONS ============

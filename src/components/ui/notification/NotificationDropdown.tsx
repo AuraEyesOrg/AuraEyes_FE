@@ -159,7 +159,7 @@ export default function NotificationDropdown({
               </h3>
               {connectionStatus === 'connected' && (
                 <p className="text-xs text-green-600 dark:text-green-400">
-                  ● Real-time enabled
+                  ● Online
                 </p>
               )}
             </div>

@@ -33,6 +33,7 @@ import {
   ophthalmologistApi,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
+import { formatCurrency } from '@/lib/helper';
 
 type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
 
@@ -252,13 +253,11 @@ export default function OphthalmologistsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  const usdCurrencyOptions = {
+    locale: 'en-US',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  } as const;
 
   const ophthalmologistColumns: TableColumn<Ophthalmologist>[] = [
     { header: 'ID', accessor: 'id', width: '100px' },
@@ -346,7 +345,7 @@ export default function OphthalmologistsPage() {
       accessor: 'monthlyEarnings',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-          {formatCurrency(value as number)}
+          {formatCurrency(value as number, usdCurrencyOptions)}
         </span>
       ),
     },
@@ -464,7 +463,7 @@ export default function OphthalmologistsPage() {
               />
               <StatsCard
                 title="Monthly Revenue"
-                value={formatCurrency(totalMonthlyEarnings)}
+                value={formatCurrency(totalMonthlyEarnings, usdCurrencyOptions)}
                 icon={DollarSign}
                 change={12}
                 trend="up"
@@ -533,7 +532,8 @@ export default function OphthalmologistsPage() {
                       ophthalmologists.reduce(
                         (sum, o) => sum + o.pendingPayouts,
                         0
-                      )
+                      ),
+                      usdCurrencyOptions
                     )}
                   </span>
                 </div>
@@ -894,7 +894,10 @@ export default function OphthalmologistsPage() {
                     Monthly Earnings
                   </p>
                   <p className="text-xl font-bold text-emerald-600">
-                    {formatCurrency(selectedDoctor.monthlyEarnings)}
+                    {formatCurrency(
+                      selectedDoctor.monthlyEarnings,
+                      usdCurrencyOptions
+                    )}
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
@@ -975,13 +978,19 @@ export default function OphthalmologistsPage() {
                       Total Earnings
                     </p>
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
-                      {formatCurrency(selectedDoctor.totalEarnings)}
+                      {formatCurrency(
+                        selectedDoctor.totalEarnings,
+                        usdCurrencyOptions
+                      )}
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">This Month</p>
                     <p className="text-lg font-bold text-emerald-600">
-                      {formatCurrency(selectedDoctor.monthlyEarnings)}
+                      {formatCurrency(
+                        selectedDoctor.monthlyEarnings,
+                        usdCurrencyOptions
+                      )}
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -989,7 +998,10 @@ export default function OphthalmologistsPage() {
                       Pending Payout
                     </p>
                     <p className="text-lg font-bold text-amber-600">
-                      {formatCurrency(selectedDoctor.pendingPayouts)}
+                      {formatCurrency(
+                        selectedDoctor.pendingPayouts,
+                        usdCurrencyOptions
+                      )}
                     </p>
                   </div>
                 </div>

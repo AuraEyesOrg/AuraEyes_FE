@@ -1,11 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 
 export interface OrganisationDashboardMetrics {
   totalAppointments: number;
@@ -20,5 +16,5 @@ export const getOrganisationDashboardMetrics =
       API_ENDPOINTS.ORGANISATION.DASHBOARD_METRICS
     );
 
-    return response.data.data;
+    return unwrapApiData<OrganisationDashboardMetrics>(response.data);
   };

@@ -3,7 +3,7 @@
  * Manage system-wide settings and configurations
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Settings as SettingsIcon,
   Bell,
@@ -14,9 +14,16 @@ import {
   Lock,
   Save,
   RefreshCw,
+  Plus,
+  X,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import {
+  useSystemSettings,
+  useUpdateSystemSettings,
+} from '../api/system-settings.api';
 
 interface SettingSection {
   id: string;
@@ -52,9 +59,23 @@ const settingSections: SettingSection[] = [
   },
 ];
 
+const DEFAULT_TRUSTED_DOMAINS = [
+  'vinmec.com',
+  'vnio.vn',
+  'benhvienmat.com',
+  'matsaigon.com',
+  'matquocte.vn',
+  'medlatec.vn',
+  'hellobacsi.com',
+];
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
+  const domainInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: systemSettings } = useSystemSettings();
+  const updateSettingsMutation = useUpdateSystemSettings();
 
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
@@ -63,7 +84,49 @@ export default function SettingsPage() {
     timezone: 'UTC',
     language: 'en',
     maintenanceMode: false,
+    minAdvanceBookingHours: 0.5,
+    aiQuotaBundle: 100,
+    defaultPlatformCommission: 0.05,
+    freeAiQuota: 3,
+    aiQuotaPrice: 50000,
   });
+
+  // Trusted medical domains for AI resource search
+  const [trustedDomains, setTrustedDomains] = useState<string[]>(
+    DEFAULT_TRUSTED_DOMAINS
+  );
+  const [domainInput, setDomainInput] = useState('');
+
+  useEffect(() => {
+    if (systemSettings) {
+      setGeneralSettings((prev) => ({
+        ...prev,
+        minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
+          ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
+          : 0.5,
+        aiQuotaBundle: systemSettings['AI_QUOTA_BUNDLE']
+          ? parseInt(systemSettings['AI_QUOTA_BUNDLE'], 10)
+          : 100,
+        defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
+          ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
+          : 0.05,
+        freeAiQuota: systemSettings['FREE_AI_QUOTA']
+          ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
+          : 3,
+        aiQuotaPrice: systemSettings['AI_QUOTA_PRICE']
+          ? parseFloat(systemSettings['AI_QUOTA_PRICE'])
+          : 50000,
+      }));
+
+      if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
+        const parsed = systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']
+          .split(',')
+          .map((d) => d.trim())
+          .filter(Boolean);
+        if (parsed.length > 0) setTrustedDomains(parsed);
+      }
+    }
+  }, [systemSettings]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -86,13 +149,47 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: Implement API call to save settings
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Settings saved');
+      const settingsToUpdate = {
+        MIN_ADVANCE_BOOKING_HOURS: Math.max(
+          0.5,
+          generalSettings.minAdvanceBookingHours
+        ).toString(),
+        AI_QUOTA_BUNDLE: Math.max(0, generalSettings.aiQuotaBundle).toString(),
+        DEFAULT_PLATFORM_COMMISSION: Math.max(
+          0,
+          generalSettings.defaultPlatformCommission
+        ).toString(),
+        FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
+        AI_QUOTA_PRICE: Math.max(0, generalSettings.aiQuotaPrice).toString(),
+        TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
+      };
+      await updateSettingsMutation.mutateAsync(settingsToUpdate);
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
   };
+
+  const addDomain = () => {
+    const raw = domainInput
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/.*$/, '');
+    if (!raw || trustedDomains.includes(raw)) {
+      setDomainInput('');
+      return;
+    }
+    setTrustedDomains((prev) => [...prev, raw]);
+    setDomainInput('');
+    domainInputRef.current?.focus();
+  };
+
+  const removeDomain = (domain: string) =>
+    setTrustedDomains((prev) => prev.filter((d) => d !== domain));
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
@@ -169,6 +266,166 @@ export default function SettingsPage() {
             <option value="fr">French</option>
             <option value="es">Spanish</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Minimum advance booking time (hours)
+          </label>
+          <input
+            type="number"
+            min={0.5}
+            step={0.5}
+            max={72}
+            value={generalSettings.minAdvanceBookingHours}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                minAdvanceBookingHours: parseFloat(e.target.value) || 0.5,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Bundle
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.aiQuotaBundle}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaBundle: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Default Platform Commission Rate
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={1}
+            step={0.01}
+            value={generalSettings.defaultPlatformCommission}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                defaultPlatformCommission: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Free AI Quota (Per Patient)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={generalSettings.freeAiQuota}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                freeAiQuota: parseInt(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            AI Quota Price (VND per Bundle)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.aiQuotaPrice}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                aiQuotaPrice: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Trusted Medical Domains */}
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Trusted Medical Domains for AI Resources
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Google search results will be restricted to these domains (e.g.{' '}
+            <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">
+              vinmec.com
+            </code>
+            ).
+          </p>
+        </div>
+
+        {/* Domain tags */}
+        <div className="flex flex-wrap gap-2 min-h-[40px] p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          {trustedDomains.length === 0 && (
+            <span className="text-xs text-slate-400 italic">
+              No domains configured — using built-in defaults.
+            </span>
+          )}
+          {trustedDomains.map((domain) => (
+            <span
+              key={domain}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+            >
+              <Globe className="w-3 h-3" />
+              {domain}
+              <button
+                type="button"
+                onClick={() => removeDomain(domain)}
+                className="hover:text-red-500 transition-colors ml-0.5"
+                aria-label={`Remove ${domain}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+
+        {/* Add domain input */}
+        <div className="flex gap-2">
+          <input
+            ref={domainInputRef}
+            type="text"
+            value={domainInput}
+            onChange={(e) => setDomainInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addDomain();
+              }
+            }}
+            placeholder="e.g. benhvienmathanoi.vn"
+            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <button
+            type="button"
+            onClick={addDomain}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-medium text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </button>
         </div>
       </div>
 

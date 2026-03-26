@@ -1,12 +1,14 @@
+import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
+import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
 import {
   ShieldCheck,
   AlertTriangle,
   CalendarCheck,
   FileDown,
-  Send,
   ImagePlus,
   ExternalLink,
   Sparkles,
@@ -15,15 +17,28 @@ import {
   ChevronRight,
   Stethoscope,
   Bot,
-  MessageCircle,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
+import {
+  loadScreeningConsultationContext,
+  saveScreeningConsultationContext,
+  type ScreeningConsultationContext,
+} from '../types/consultation-context';
+import { screeningApi } from '../api/screening.api';
+import {
+  getEyeHealthResourcesForPatient,
+  type PatientEducationalResourceItem,
+} from '../api/patient.api';
+import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
 
 interface LocationState {
+  screeningId?: string;
   images?: RetinalImage[];
   anomalies?: Anomaly[];
   riskLevel?: 'low' | 'moderate' | 'high';
   riskScore?: number;
+  rawJsonOutput?: string;
+  resultsPersisted?: boolean;
 }
 
 const RISK_CONFIG = {
@@ -56,69 +71,198 @@ const RISK_CONFIG = {
   },
 };
 
-const EDUCATIONAL_RESOURCES = [
-  {
-    id: 'dr',
-    title: 'Understanding Diabetic Retinopathy',
-    description:
-      'Learn about the stages, symptoms, and how early detection can save your vision.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAFxR93NOalryhGlOgqi9T2v42o3TU2nUkxD2awyslYXzeIeL7QpKDbRbu3KpR5_C491ji76qlH-rcoR5o39Owmw0wF5aYE42CvhbMPXXXIRMn-i_LGybNNTBGYtUjsN3OlkiRDkAvPmT3bRDp8DFAbos8cibPcXaqaD4gOpl6hBIN1nPVbGU1Js2qfBYJHMsPXsn7C6cBOCDdqTL4dySyTmsThxuIHYoO4R1jSwfadoavpJv0-dGPU8K8xA_FT75lZScHxFHCt_UWm',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/diabetic-retinopathy',
-  },
-  {
-    id: 'exam',
-    title: 'What to Expect During an Exam',
-    description:
-      'A guide to what happens during a comprehensive dilated eye exam.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBKEOtY08TxayEZx3M249ftjERzcDDIrwgAQQPMHSgWFrMOD2ObVFHPOs3Z9ztyP0VC7UB2heF46McYllL2JWZyE-_zoWhyjrHy9pJhV8T-IE0sjrnKV5GiqK_FdNhDr7RCJKzxa8KC2rQny59GGaI9cHxw4FK3kFFOxSbwyHLjwhCfoSMjNHqERFO5FNHI68tmdirVXOYodVHchrso_xU2EtlWZzUCNadijthqdFyrf4Tb7WZ5yVGU0ZRc7y-3kEf9FbTSLbZHpoxf',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases',
-  },
-  {
-    id: 'nutrition',
-    title: 'Nutrition for Healthy Vision',
-    description:
-      'Discover which foods are best for maintaining long-term retinal health.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBkX4UhnrdBtgxk5oxAyPZsIWw03yBNx4oQeyWqJvuz-5gyd6Z2BsW_s2NDyjSvhV0S-h_zirpX6u6Jg2C_9SaW6YuRKeQpu8PY1JfMEwToqQnnAY-IBrQgSxJHngUpwpm4B4mtFymYYWFJvy4h9SN_TQsGXMiMO6ThX2Pbtd6jAguXDF-pF4x81HaWevRq5LiqUTWWztKfWXYsUYRVRKg9gAsK64yp1xXpaaz3LXLx0qClurKEGeBvR0N6bXeUnhuUj_JBx-_Rh8fL',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/healthy-vision/keep-your-eyes-healthy',
-  },
-];
+const FALLBACK_RESOURCE_IMAGE =
+  'https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=900&q=80';
 
 export default function ReviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
+  const storedConsultationContext = useMemo(
+    () => loadScreeningConsultationContext(),
+    []
+  );
 
-  const images = state?.images ?? [];
-  const anomalies = state?.anomalies ?? [];
-  const riskLevel = state?.riskLevel ?? 'low';
+  const activeState = state ?? null;
+  const screeningIdFromRoute = activeState?.screeningId;
+
+  const storedMatchesCurrent =
+    storedConsultationContext?.screeningId != null &&
+    storedConsultationContext.screeningId ===
+      (screeningIdFromRoute ?? storedConsultationContext.screeningId);
+
+  const relevantStoredContext = storedMatchesCurrent
+    ? storedConsultationContext
+    : null;
+
+  const screeningIdFromRouteOrStore =
+    screeningIdFromRoute ?? storedConsultationContext?.screeningId;
+
+  const shouldHydrateFromApi =
+    Boolean(screeningIdFromRouteOrStore) &&
+    (activeState?.images?.length ?? 0) === 0 &&
+    (activeState?.anomalies?.length ?? 0) === 0 &&
+    (relevantStoredContext?.images?.length ?? 0) === 0 &&
+    (relevantStoredContext?.anomalies?.length ?? 0) === 0;
+
+  const { data: hydratedSession } = useQuery({
+    queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
+    enabled: shouldHydrateFromApi,
+    queryFn: async () => {
+      if (!screeningIdFromRouteOrStore) return null;
+      const response = await screeningApi.getSessionById(
+        screeningIdFromRouteOrStore
+      );
+      const session = response.data;
+      if (!session) return null;
+
+      const mappedImages: RetinalImage[] = (session.images ?? []).map(
+        (img) => ({
+          id: img.id,
+          url: img.imageUrl,
+          name: img.imageUrl.split('/').pop() ?? 'Retinal image',
+          eye:
+            img.eyeSide?.toLowerCase() === 'right'
+              ? 'Right Eye (OD)'
+              : img.eyeSide?.toLowerCase() === 'left'
+                ? 'Left Eye (OS)'
+                : 'Both Eyes',
+          uploadedAt: img.capturedAt,
+          analyzed: false,
+          anomalies: [],
+        })
+      );
+
+      const firstImageUrl = mappedImages[0]?.url;
+      const anomalies = await hydrateConsultationPreviewAnomalies(
+        session.rawJsonOutput,
+        firstImageUrl
+      );
+
+      const normalizedRiskLevel =
+        session.latestResult?.riskLevel?.toLowerCase();
+      const riskLevel: 'low' | 'moderate' | 'high' =
+        normalizedRiskLevel === 'moderate'
+          ? 'moderate'
+          : normalizedRiskLevel === 'high'
+            ? 'high'
+            : 'low';
+
+      return {
+        screeningId: session.screeningId,
+        images: mappedImages,
+        anomalies,
+        riskLevel,
+        riskScore: session.latestResult?.confidenceScore,
+        rawJsonOutput: session.rawJsonOutput,
+        resultsPersisted: Boolean(session.latestResult),
+      };
+    },
+  });
+  const images =
+    activeState?.images ??
+    relevantStoredContext?.images ??
+    hydratedSession?.images ??
+    [];
+  const anomalies =
+    activeState?.anomalies ??
+    relevantStoredContext?.anomalies ??
+    hydratedSession?.anomalies ??
+    [];
+
+  // Derive disease keywords from anomaly data for SerpApi search.
+  // Prefer friendlyName (e.g. "Bệnh võng mạc tiểu đường") over the raw ML label.
+  const diseaseKeywords = useMemo(
+    () =>
+      anomalies
+        .slice()
+        .sort((a, b) => b.confidence - a.confidence)
+        .map((a) => a.friendlyName?.trim() || a.name.trim())
+        .filter(Boolean),
+    [anomalies]
+  );
+
+  const { data: educationalResources = [] } = useQuery<
+    PatientEducationalResourceItem[]
+  >({
+    queryKey: ['patient-eye-health-resources', diseaseKeywords],
+    queryFn: () =>
+      getEyeHealthResourcesForPatient({
+        diseases: diseaseKeywords.length > 0 ? diseaseKeywords : undefined,
+        limit: 3,
+      }),
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  });
+  const riskLevel =
+    activeState?.riskLevel ??
+    relevantStoredContext?.riskLevel ??
+    hydratedSession?.riskLevel ??
+    'low';
   const risk = RISK_CONFIG[riskLevel];
+  const screeningId =
+    activeState?.screeningId ??
+    relevantStoredContext?.screeningId ??
+    hydratedSession?.screeningId;
+  const rawJsonForAnalysis =
+    activeState?.rawJsonOutput ??
+    relevantStoredContext?.rawJsonOutput ??
+    hydratedSession?.rawJsonOutput;
+  const resultsPersisted =
+    activeState?.resultsPersisted ??
+    hydratedSession?.resultsPersisted ??
+    Boolean(rawJsonForAnalysis);
+
+  const primaryAiConfidence = useMemo(() => {
+    if (anomalies.length === 0) return null;
+    const primary = anomalies.find((a) => a.isHighest);
+    if (primary != null) return primary.confidence;
+    return Math.max(...anomalies.map((a) => a.confidence));
+  }, [anomalies]);
+
+  const consultationContext =
+    useMemo<ScreeningConsultationContext | null>(() => {
+      if (!screeningId) return null;
+      return {
+        screeningId,
+        images,
+        anomalies,
+        riskLevel,
+        riskScore:
+          activeState?.riskScore ??
+          relevantStoredContext?.riskScore ??
+          hydratedSession?.riskScore ??
+          undefined,
+        rawJsonOutput:
+          activeState?.rawJsonOutput ??
+          relevantStoredContext?.rawJsonOutput ??
+          hydratedSession?.rawJsonOutput,
+        createdAt: new Date().toISOString(),
+      };
+    }, [
+      screeningId,
+      images,
+      anomalies,
+      riskLevel,
+      activeState?.riskScore,
+      activeState?.rawJsonOutput,
+      relevantStoredContext?.riskScore,
+      relevantStoredContext?.rawJsonOutput,
+      hydratedSession?.riskScore,
+      hydratedSession?.rawJsonOutput,
+    ]);
+
+  useEffect(() => {
+    if (!consultationContext) return;
+    saveScreeningConsultationContext(consultationContext);
+  }, [consultationContext]);
 
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
-  const remainingMoney = 200000;
-  const scanId = `#AUR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-  const handleShareToChat = () => {
-    navigate('/patient/chat', {
-      state: {
-        sharedScan: {
-          imageUrl: thumbnail,
-          eyeLabel,
-          riskLevel,
-          riskLabel: risk.label,
-          anomalies: anomalies.map((a) => a.friendlyName || a.name),
-          summary: risk.summary,
-          scanId,
-        },
-      },
-    });
-  };
+  const scanId = screeningId?.slice(0, 8);
 
   /* guard: no route state */
-  if (!state) {
+  if (!activeState && !storedConsultationContext && !hydratedSession) {
     return (
       <FocusModeLayout
         currentStep="review"
@@ -162,24 +306,6 @@ export default function ReviewPage() {
                 Analysis complete. Please review your results and recommended
                 next steps.
               </p>
-            </div>
-
-            {/* Credit widget */}
-            <div className="flex items-center gap-3 surface-primary surface-border px-4 py-2.5 rounded-xl shadow-sm">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-bold text-caption uppercase tracking-wider">
-                  Available Balance
-                </span>
-                <span className="text-sm font-bold text-(--text-primary)">
-                  {remainingMoney.toLocaleString()}đ Left
-                </span>
-              </div>
-              <button
-                onClick={() => navigate('/patient/wallet')}
-                className="text-primary hover:text-primary/80 font-bold text-sm bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                Top-up
-              </button>
             </div>
           </div>
 
@@ -255,22 +381,34 @@ export default function ReviewPage() {
 
               <div className="flex items-center gap-3 pt-4 border-t border-(--border-color)">
                 <button
-                  onClick={() => navigate(-1)}
+                  onClick={() => {
+                    if (!screeningId && images.length === 0) {
+                      navigate('/patient/analysis');
+                      return;
+                    }
+                    navigate('/patient/analysis', {
+                      state: {
+                        screeningId,
+                        rawJsonOutput: rawJsonForAnalysis,
+                        resultsPersisted,
+                        images: images.map((img) => ({
+                          id: img.id,
+                          name: img.name,
+                          preview: img.url,
+                        })),
+                      },
+                    });
+                  }}
                   className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   View Full Analysis Details
                 </button>
-                {anomalies.length > 0 && (
+                {primaryAiConfidence != null && (
                   <>
                     <span className="text-(--border-color)">|</span>
                     <span className="text-xs text-(--text-muted)">
-                      AI Confidence:{' '}
-                      {Math.round(
-                        anomalies.reduce((s, a) => s + a.confidence, 0) /
-                          anomalies.length
-                      )}
-                      %
+                      AI Confidence: {primaryAiConfidence}%
                     </span>
                   </>
                 )}
@@ -305,25 +443,24 @@ export default function ReviewPage() {
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <button
-                      onClick={() => navigate('/patient/appointments')}
+                      onClick={() =>
+                        navigate('/patient/doctors', {
+                          state: {
+                            consultationContext,
+                          },
+                        })
+                      }
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
                       <CalendarCheck className="w-5 h-5" />
                       Find a Specialist
                     </button>
                     <button
-                      onClick={() => navigate('/patient/chat')}
+                      onClick={openN8nChat}
                       className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
                     >
                       <Bot className="w-5 h-5" />
                       Ask AURA AI Assistant
-                    </button>
-                    <button
-                      onClick={handleShareToChat}
-                      className="flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-md shadow-violet-500/20 hover:shadow-violet-500/30 transform hover:-translate-y-0.5"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      Send Results to Doctor
                     </button>
                   </div>
                 </div>
@@ -338,14 +475,7 @@ export default function ReviewPage() {
                   subtitle="PDF Format"
                   actionIcon={<FileDown className="w-4 h-4" />}
                 />
-                <SecondaryActionCard
-                  icon={<Send className="w-5 h-5" />}
-                  iconBg="bg-violet-50 text-violet-600"
-                  title="Share with Doctor"
-                  subtitle="Send scan to chat"
-                  actionIcon={<MessageCircle className="w-4 h-4" />}
-                  onClick={handleShareToChat}
-                />
+
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
                   iconBg="bg-emerald-50 text-emerald-600"
@@ -374,7 +504,7 @@ export default function ReviewPage() {
               </a>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {EDUCATIONAL_RESOURCES.map((resource) => (
+              {educationalResources.map((resource) => (
                 <a
                   key={resource.id}
                   href={resource.link}
@@ -384,7 +514,7 @@ export default function ReviewPage() {
                 >
                   <div className="h-40 rounded-xl bg-gray-200 dark:bg-slate-700 overflow-hidden mb-3">
                     <img
-                      src={resource.image}
+                      src={resource.image || FALLBACK_RESOURCE_IMAGE}
                       alt={resource.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -415,6 +545,7 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
+      <N8nChatWidget />
     </FocusModeLayout>
   );
 }

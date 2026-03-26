@@ -20,6 +20,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
+import { formatCurrency } from '@/lib/helper';
 import {
   useWallet,
   useWalletTransactions,
@@ -81,12 +82,6 @@ export default function WalletPage() {
   }, [wallet]);
 
   // ── Helpers ──
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(Math.abs(amount));
-
   const formatDate = formatDateTimeWithYear;
 
   const getTransactionIcon = (txType: TransactionType) => {
@@ -229,7 +224,7 @@ export default function WalletPage() {
                   Available Balance
                 </p>
                 <p className="text-3xl font-bold mt-1 text-(--text-primary)">
-                  {formatCurrency(wallet?.balance ?? 0)}
+                  {formatCurrency(wallet?.balance ?? 0, { absolute: true })}
                 </p>
               </div>
             </div>
@@ -261,7 +256,10 @@ export default function WalletPage() {
                   </span>
                 </div>
                 <span className="text-green-600 dark:text-green-400 font-semibold">
-                  +{formatCurrency(monthlyStats.totalDeposits)}
+                  +
+                  {formatCurrency(monthlyStats.totalDeposits, {
+                    absolute: true,
+                  })}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
@@ -274,7 +272,10 @@ export default function WalletPage() {
                   </span>
                 </div>
                 <span className="text-red-500 dark:text-red-400 font-semibold">
-                  -{formatCurrency(monthlyStats.totalSpent)}
+                  -
+                  {formatCurrency(monthlyStats.totalSpent, {
+                    absolute: true,
+                  })}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-(--bg-secondary) rounded-xl">
@@ -422,7 +423,9 @@ export default function WalletPage() {
                           {isPositiveAmount(transaction.transactionType)
                             ? '+'
                             : '-'}
-                          {formatCurrency(transaction.amount)}
+                          {formatCurrency(transaction.amount, {
+                            absolute: true,
+                          })}
                         </p>
                         <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
                           <CheckCircle className="w-3 h-3" /> Completed
@@ -510,7 +513,7 @@ export default function WalletPage() {
                         : 'bg-(--bg-secondary) text-(--text-secondary) hover:bg-(--bg-tertiary) border border-(--border-color) hover:border-brand/30'
                     }`}
                   >
-                    {formatCurrency(amount)}
+                    {formatCurrency(amount, { absolute: true })}
                   </button>
                 ))}
               </div>

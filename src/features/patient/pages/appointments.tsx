@@ -291,7 +291,7 @@ const AppointmentsPage = () => {
         '1'
       );
       setSessionFeedbackTarget(null);
-      toast.success('Consultation feedback submitted.');
+      toast.success('Feedback submitted');
     } catch (error) {
       const status = (error as { response?: { status?: number } }).response
         ?.status;
@@ -325,7 +325,7 @@ const AppointmentsPage = () => {
       });
 
       setClinicFeedbackTarget(null);
-      toast.success('Clinic feedback submitted.');
+      toast.success('Feedback submitted');
     } catch (error) {
       const status = (error as { response?: { status?: number } }).response
         ?.status;
@@ -582,7 +582,7 @@ const AppointmentsPage = () => {
                     <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:justify-end lg:self-stretch">
                       {appointment.status === 'Completed' &&
                         (submittedClinicFeedbackIds[appointment.id] ? (
-                          <FeedbackSubmittedBadge label="Clinic feedback submitted" />
+                          <FeedbackSubmittedBadge label="Feedback submitted" />
                         ) : (
                           <button
                             type="button"
@@ -606,12 +606,6 @@ const AppointmentsPage = () => {
             <h2 className="text-2xl font-bold text-[var(--text-primary)]">
               Doctor Slots
             </h2>
-            <Link
-              to="/patient/doctors"
-              className="text-sm font-semibold text-primary hover:text-primary/80"
-            >
-              Book More Slot
-            </Link>
           </div>
 
           {filteredSessions.length === 0 ? (
@@ -724,7 +718,7 @@ const AppointmentsPage = () => {
                         <>
                           {session.ophthalmologistId &&
                             (submittedSessionFeedbackIds[session.id] ? (
-                              <FeedbackSubmittedBadge label="Consultation feedback submitted" />
+                              <FeedbackSubmittedBadge label="Feedback submitted" />
                             ) : (
                               <button
                                 type="button"

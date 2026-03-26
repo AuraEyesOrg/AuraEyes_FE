@@ -62,7 +62,22 @@ export interface ConsultationSessionDto {
   closingReason: string | null;
   createdAt: string;
   updatedAt: string | null;
+  isRetinalImagesShared: boolean;
+  isAIResultShared: boolean;
+  caseSnapshot: ConsultationCaseSnapshotDto | null;
   messages: ChatMessageDto[];
+}
+
+export interface ConsultationCaseSnapshotDto {
+  screeningId: string;
+  riskLevel: string | null;
+  confidenceScore: number | null;
+  summary: string | null;
+  findings: string | null;
+  annotatedImageUrl: string | null;
+  rawJsonOutput: string | null;
+  originalImageUrls: string[];
+  symptoms: string[];
 }
 
 /** List item - maps to ConsultationSessionListDto */
@@ -87,6 +102,11 @@ export interface ConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
+
+  // Consent flags + lightweight AI snapshot (for list displays).
+  isRetinalImagesShared?: boolean;
+  isAIResultShared?: boolean;
+  caseSnapshot?: ConsultationCaseSnapshotDto | null;
 }
 
 // ============ REQUEST MODELS (match BE Controller request records) ============

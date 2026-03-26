@@ -3,7 +3,7 @@
  * Patient confirms their reservation and completes the booking.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
@@ -14,6 +14,7 @@ import {
   Timer,
   Eye,
   Brain,
+  X,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
@@ -26,10 +27,27 @@ import useAuthStore from '@/store/auth-store';
 import { mapOnlineConsultationErrorMessage } from '@/lib/api-error';
 import { formatSlotTime, formatDate, formatCountdown } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
+import {
+  loadScreeningConsultationContext,
+  saveScreeningConsultationContext,
+  type ScreeningConsultationContext,
+} from '../types/consultation-context';
+import PatientImageViewer from '../components/ImageViewer';
+import type { Anomaly, RetinalImage, ToggleState } from '../types/type';
+import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
 
 // ============ HELPERS ============
 
-export default function BookingConfirmationPage() {
+export interface BookingConfirmationProps {
+  embeddedSlotId?: string;
+  embeddedConsultationContext?: ScreeningConsultationContext;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
+
+export default function BookingConfirmationPage(
+  props: BookingConfirmationProps
+) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -50,13 +68,83 @@ export default function BookingConfirmationPage() {
     }
   }
 
-  const slotId = state.slotId ?? storedSlotId ?? querySlotId;
+  const slotId =
+    props.embeddedSlotId ?? state.slotId ?? storedSlotId ?? querySlotId;
+  const consultationContext =
+    useMemo((): ScreeningConsultationContext | null => {
+      if (props.embeddedConsultationContext?.screeningId) {
+        return props.embeddedConsultationContext;
+      }
+      return loadScreeningConsultationContext();
+    }, [props.embeddedConsultationContext]);
+  const primaryOriginalImage = consultationContext?.images?.[0]?.url;
+  const symptomNames =
+    consultationContext?.anomalies?.map(
+      (item) => item.friendlyName || item.name
+    ) ?? [];
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
 
   const [shareRetinalImages, setShareRetinalImages] = useState(true);
   const [shareAiResults, setShareAiResults] = useState(true);
+
+  const previewToggles = useMemo<ToggleState>(
+    () => ({
+      vesselSegmentation: false,
+      hemorrhages: false,
+      exudates: false,
+      opticDisc: false,
+    }),
+    []
+  );
+
+  const [previewAnomalies, setPreviewAnomalies] = useState<Anomaly[]>(
+    () => consultationContext?.anomalies ?? []
+  );
+
+  useEffect(() => {
+    const base = consultationContext?.anomalies ?? [];
+    const img = consultationContext?.images?.[0]?.url;
+    const raw = consultationContext?.rawJsonOutput;
+    if (!img) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    if (base.length > 0 && base.some((a) => a.location)) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    if (!raw) {
+      setPreviewAnomalies(base);
+      return;
+    }
+    let cancelled = false;
+    hydrateConsultationPreviewAnomalies(raw, img).then((mapped) => {
+      if (!cancelled) setPreviewAnomalies(mapped.length > 0 ? mapped : base);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    consultationContext?.anomalies,
+    consultationContext?.rawJsonOutput,
+    consultationContext?.images,
+  ]);
+
+  const previewRetinalImage: RetinalImage | null = useMemo(() => {
+    const img = consultationContext?.images?.[0];
+    if (!img?.url) return null;
+    return {
+      id: img.id,
+      url: img.url,
+      name: img.name,
+      eye: img.eye,
+      uploadedAt: img.uploadedAt,
+      analyzed: true,
+      anomalies: previewAnomalies,
+    };
+  }, [consultationContext?.images, previewAnomalies]);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -89,13 +177,18 @@ export default function BookingConfirmationPage() {
   }, [slotId]);
 
   useEffect(() => {
-    if (!querySlotId || state.slotId) return;
+    if (!consultationContext?.screeningId) return;
+    saveScreeningConsultationContext(consultationContext);
+  }, [consultationContext]);
+
+  useEffect(() => {
+    if (props.embeddedSlotId || !querySlotId || state.slotId) return;
 
     navigate('/patient/book/confirm', {
       replace: true,
       state: { slotId: querySlotId },
     });
-  }, [querySlotId, state.slotId, navigate]);
+  }, [props.embeddedSlotId, querySlotId, state.slotId, navigate]);
 
   useEffect(() => {
     if (!displayErrorMessage) {
@@ -123,14 +216,18 @@ export default function BookingConfirmationPage() {
 
       if (diff <= 0) {
         // Reservation expired, redirect back
-        navigate('/patient/book', { replace: true });
+        if (props.onClose) {
+          props.onClose();
+        } else {
+          navigate('/patient/book', { replace: true });
+        }
       }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [slot?.reservationExpireAt, navigate]);
+  }, [slot?.reservationExpireAt, navigate, props]);
 
   const handleConfirm = useCallback(async () => {
     if (!slotId || !patientId) return;
@@ -141,17 +238,26 @@ export default function BookingConfirmationPage() {
         slotId,
         request: {
           patientId,
+          aiScreeningId: consultationContext?.screeningId,
           shareRetinalImages,
           shareAiResults,
         },
       });
+      toast.success('Bạn đã đặt lịch thành công!');
       sessionStorage.removeItem('patient-booking-confirm-context');
       setIsSuccess(true);
       setSessionId(result.consultationSessionId);
     } catch (error) {
       setErrorMessage(mapOnlineConsultationErrorMessage(error));
     }
-  }, [slotId, patientId, shareRetinalImages, shareAiResults, confirmMutation]);
+  }, [
+    slotId,
+    patientId,
+    shareRetinalImages,
+    shareAiResults,
+    consultationContext?.screeningId,
+    confirmMutation,
+  ]);
 
   const handleCancel = useCallback(async () => {
     if (!slotId || !patientId) return;
@@ -167,18 +273,37 @@ export default function BookingConfirmationPage() {
       return;
     }
     sessionStorage.removeItem('patient-booking-confirm-context');
-    navigate('/patient/book', { replace: true });
-  }, [slotId, patientId, releaseMutation, navigate]);
+    if (props.onClose) {
+      props.onClose();
+    } else {
+      navigate('/patient/book', { replace: true });
+    }
+  }, [slotId, patientId, releaseMutation, navigate, props]);
 
   const handleGoToAppointments = useCallback(() => {
+    if (props.onSuccess) {
+      props.onSuccess();
+    }
     navigate('/patient/appointments');
-  }, [navigate]);
+  }, [navigate, props]);
+
+  const isEmbedded = !!props.onClose;
+  const Wrapper = isEmbedded ? 'div' : PatientLayout;
+  const wrapperProps = isEmbedded
+    ? {
+        className:
+          'fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10 flex justify-center items-start',
+      }
+    : {};
+  const innerClass = isEmbedded
+    ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8 mt-auto mb-auto'
+    : 'p-6 max-w-2xl mx-auto';
 
   // Loading state
   if (slotLoading) {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
             <Spinner />
             <span className="ml-3 text-gray-600 dark:text-gray-400">
@@ -186,16 +311,24 @@ export default function BookingConfirmationPage() {
             </span>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
   // Slot not found or not reserved
   if (!slot || slot.status !== 'Reserved') {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
+            {isEmbedded && (
+              <button
+                onClick={props.onClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Reservation Not Found
@@ -205,23 +338,37 @@ export default function BookingConfirmationPage() {
               booking again.
             </p>
             <button
-              onClick={() => navigate('/patient/book')}
+              onClick={() => {
+                if (props.onClose) props.onClose();
+                else navigate('/patient/book');
+              }}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
               Book an Appointment
             </button>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
   // Success state
   if (isSuccess && sessionId) {
     return (
-      <PatientLayout>
-        <div className="p-6 max-w-2xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <Wrapper {...wrapperProps}>
+        <div className={innerClass}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
+            {isEmbedded && (
+              <button
+                onClick={() => {
+                  if (props.onSuccess) props.onSuccess();
+                  else navigate('/patient/appointments');
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
             <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -279,7 +426,7 @@ export default function BookingConfirmationPage() {
             </button>
           </div>
         </div>
-      </PatientLayout>
+      </Wrapper>
     );
   }
 
@@ -292,8 +439,8 @@ export default function BookingConfirmationPage() {
         : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
 
   return (
-    <PatientLayout>
-      <div className="p-6 max-w-2xl mx-auto">
+    <Wrapper {...wrapperProps}>
+      <div className={innerClass}>
         {/* Back Button */}
         <button
           onClick={handleCancel}
@@ -418,6 +565,83 @@ export default function BookingConfirmationPage() {
           </div>
         </div>
 
+        {consultationContext?.screeningId && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              AI Case Attached
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Case ID:{' '}
+              <span className="font-semibold">
+                {consultationContext.screeningId}
+              </span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+                {primaryOriginalImage ? (
+                  <img
+                    src={primaryOriginalImage}
+                    alt="Original retinal image"
+                    className="h-40 w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
+                    No original image
+                  </div>
+                )}
+                <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                  Original retinal image
+                </p>
+              </div>
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900/40">
+                {!shareAiResults ? (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500 px-3 text-center">
+                    Turn on &quot;AI Analysis Results&quot; to preview how the
+                    doctor will see AI highlights.
+                  </div>
+                ) : !previewRetinalImage ? (
+                  <div className="h-40 w-full flex items-center justify-center text-sm text-gray-500">
+                    Add a retinal image in screening to preview AI overlays.
+                  </div>
+                ) : (
+                  <div className="h-40 w-full relative overflow-hidden">
+                    <PatientImageViewer
+                      toggles={previewToggles}
+                      zoomLevel={1}
+                      anomalies={previewAnomalies}
+                      isAnalyzing={false}
+                      currentImage={previewRetinalImage}
+                      showHighlights={previewAnomalies.some((a) => a.location)}
+                    />
+                  </div>
+                )}
+                <p className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                  AI annotated preview
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Symptoms/findings ({symptomNames.length}):
+            </p>
+            {symptomNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {symptomNames.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 border border-cyan-200 dark:border-cyan-800"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No symptom tags extracted from AI result.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-4">
           <button
@@ -454,6 +678,6 @@ export default function BookingConfirmationPage() {
           deducted from your wallet.
         </p>
       </div>
-    </PatientLayout>
+    </Wrapper>
   );
 }

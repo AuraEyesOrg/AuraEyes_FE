@@ -8,17 +8,17 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Calendar,
   Clock,
-  Search,
   ChevronLeft,
   ChevronRight,
   Timer,
   X,
   CheckCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
+import { useSystemSettings } from '../../system-admin/api/system-settings.api';
 import {
   useAppointmentSlots,
   useReserveSlot,
@@ -38,9 +38,8 @@ import {
   formatSlotTime,
   formatDate,
   toLocalDateKey,
-  formatWeekRange,
-  formatWeekDayLabel,
   formatCountdown,
+  parseSlotDateTimeUtc,
 } from '@/lib/date-utils';
 
 // ============ HELPERS ============
@@ -54,81 +53,29 @@ const getStartOfWeekMonday = (input: Date): Date => {
   return date;
 };
 
-const getInitialWeekOffset = (dateString?: string): number => {
-  if (!dateString) return 0;
-
-  const targetDate = new Date(`${dateString}T00:00:00`);
-  if (Number.isNaN(targetDate.getTime())) return 0;
-
-  const currentWeekStart = getStartOfWeekMonday(new Date());
-  const targetWeekStart = getStartOfWeekMonday(targetDate);
-  const msInWeek = 7 * 24 * 60 * 60 * 1000;
-
-  return Math.round(
-    (targetWeekStart.getTime() - currentWeekStart.getTime()) / msInWeek
+const getNextAvailableDate = (candidates: AppointmentSlotListDto[]) => {
+  if (!candidates.length) return null;
+  const sortedCandidates = candidates.toSorted(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
+  return sortedCandidates[0]?.date ?? null;
 };
 
-const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
-
-const getAvatarUrl = (doctor: {
-  userAvatarUrl?: string | null;
-  userFullName?: string | null;
-}) => {
-  if (doctor.userAvatarUrl) return doctor.userAvatarUrl;
-  const name = doctor.userFullName ?? 'Dr';
-  return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
-};
-
-const findNearestAvailableDate = (
-  slots: AppointmentSlotListDto[],
-  referenceDate?: string
-): string | null => {
-  if (!slots.length) return null;
-
-  const base = new Date(
-    `${referenceDate ?? toLocalDateKey(new Date())}T00:00:00`
-  );
-  if (Number.isNaN(base.getTime())) return null;
-
-  const candidates = slots
-    .map((slot) => slot.date)
-    .filter((value, index, arr) => value && arr.indexOf(value) === index)
-    .map((date) => ({
-      date,
-      diff: Math.abs(new Date(`${date}T00:00:00`).getTime() - base.getTime()),
-    }))
-    .sort((a, b) => a.diff - b.diff || a.date.localeCompare(b.date));
-
-  return candidates[0]?.date ?? null;
-};
-
-const isExpiredAppointmentSlot = (slot: AppointmentSlotListDto): boolean => {
+const isExpiredAppointmentSlot = (
+  slot: AppointmentSlotListDto,
+  advanceBookingMs: number
+): boolean => {
   if (slot.status === 'Expired') {
     return true;
   }
 
-  const startAt = new Date(`${slot.date}T${slot.startTime}Z`).getTime();
+  const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
   if (!Number.isNaN(startAt)) {
-    return startAt < Date.now();
+    // Disable if the slot is in the past OR less than the advance notice time away
+    return startAt < Date.now() + advanceBookingMs;
   }
 
   return false;
-};
-
-const getSlotStatusColor = (status: string) => {
-  switch (status) {
-    case 'Available':
-      return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 cursor-pointer';
-    case 'Reserved':
-      return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700';
-    case 'Booked':
-      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700';
-    case 'Blocked':
-      return 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-700';
-    default:
-      return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700';
-  }
 };
 
 // ============ RESERVATION MODAL ============
@@ -178,7 +125,7 @@ const ReservationModal = ({
         : 'text-emerald-600 dark:text-emerald-400';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -200,7 +147,7 @@ const ReservationModal = ({
               Time remaining to complete booking
             </span>
           </div>
-          <div className={`text-4xl font-bold ${urgencyClass}`}>
+          <div className="text-4xl font-bold ${urgencyClass}">
             {formatCountdown(remainingSeconds)}
           </div>
         </div>
@@ -268,7 +215,18 @@ const ReservationModal = ({
 
 // ============ MAIN PAGE ============
 
-export default function BookAppointmentPage() {
+export interface BookAppointmentProps {
+  embeddedDoctorId?: string;
+  embeddedPreselectedDate?: string;
+  embeddedDoctorSnapshot?: Partial<OphthalmologistSearchItem>;
+  viewMode?: 'today' | 'week';
+  onClose?: () => void;
+  onProceedToConfirm?: (slotId: string) => void;
+}
+
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export default function BookAppointmentPage(props: BookAppointmentProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -281,46 +239,71 @@ export default function BookAppointmentPage() {
 
   if (storedContextRaw) {
     try {
-      storedContext = JSON.parse(storedContextRaw) as {
-        doctorId?: string;
-        doctorSnapshot?: Partial<OphthalmologistSearchItem>;
-      };
+      storedContext = JSON.parse(storedContextRaw);
     } catch {
       storedContext = null;
     }
   }
 
-  const state =
-    (location.state as {
-      doctorId?: string;
-      preselectedSlotId?: string;
-      preselectedDate?: string;
-      doctorSnapshot?: Partial<OphthalmologistSearchItem>;
-    } | null) ?? {};
+  const state = (location.state as any) ?? {};
   const doctorId =
-    state.doctorId ?? storedContext?.doctorId ?? doctorIdFromQuery ?? '';
+    props.embeddedDoctorId ??
+    state.doctorId ??
+    storedContext?.doctorId ??
+    doctorIdFromQuery ??
+    '';
   const preselectedSlotId = state.preselectedSlotId ?? '';
-  const preselectedDate = state.preselectedDate;
+  const preselectedDate =
+    props.embeddedPreselectedDate ?? state.preselectedDate;
   const doctorSnapshot =
-    state.doctorSnapshot ?? storedContext?.doctorSnapshot ?? null;
+    props.embeddedDoctorSnapshot ??
+    state.doctorSnapshot ??
+    storedContext?.doctorSnapshot ??
+    null;
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
 
   const selectedDoctorId = doctorId;
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(() =>
-    getInitialWeekOffset(preselectedDate)
+
+  // Calendar State
+  const [currentMonthDate, setCurrentMonthDate] = useState(() => {
+    let d = new Date();
+    if (preselectedDate) {
+      const pd = new Date(`${preselectedDate}T00:00:00`);
+      if (!Number.isNaN(pd.getTime())) d = pd;
+    }
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    preselectedDate ?? toLocalDateKey(new Date())
   );
   const [selectedSlot, setSelectedSlot] =
     useState<AppointmentSlotListDto | null>(null);
+
+  const { data: systemSettings, isLoading: isLoadingSettings } =
+    useSystemSettings();
+  const advanceBookingSetting = systemSettings?.['MIN_ADVANCE_BOOKING_HOURS'];
+
+  let advanceBookingHours = advanceBookingSetting
+    ? parseFloat(advanceBookingSetting)
+    : 0;
+  if (advanceBookingHours < 0.5) advanceBookingHours = 0.5; // Enforce minimum 30 minutes
+
+  const minAdvanceBookingMs = advanceBookingHours * 60 * 60 * 1000;
+  const warningText =
+    advanceBookingHours < 1
+      ? `${Math.round(advanceBookingHours * 60)} minutes`
+      : `${advanceBookingHours} hours`;
+
   const [reservation, setReservation] = useState<SlotReservationResult | null>(
     null
   );
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [highlightedDate, setHighlightedDate] = useState<string | null>(
-    preselectedDate ?? null
-  );
   const autoSelectedRef = useRef(false);
 
   const { data: doctorDetail, isLoading: doctorLoading } = useQuery({
@@ -334,7 +317,6 @@ export default function BookAppointmentPage() {
 
   useEffect(() => {
     if (!selectedDoctorId) return;
-
     sessionStorage.setItem(
       'patient-booking-context',
       JSON.stringify({
@@ -344,21 +326,25 @@ export default function BookAppointmentPage() {
     );
   }, [selectedDoctorId, doctorSnapshot]);
 
-  // Calculate week range
-  const weekRange = useMemo(() => {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(
-      now.getDate() - now.getDay() + 1 + currentWeekOffset * 7
-    );
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
+  // Fetch slots
+  const monthRange = useMemo(() => {
+    const start = new Date(currentMonthDate);
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+
+    // If viewMode === 'today', we only want today's data anyway
+    if (props.viewMode === 'today') {
+      const todayStr = toLocalDateKey(new Date());
+      return { from: todayStr, to: todayStr };
+    }
+
+    // We fetch a bit of buffer
+    start.setDate(start.getDate() - 7);
+    end.setDate(end.getDate() + 7);
     return {
-      from: toLocalDateKey(startOfWeek),
-      to: toLocalDateKey(endOfWeek),
-      label: formatWeekRange(startOfWeek, endOfWeek),
+      from: toLocalDateKey(start),
+      to: toLocalDateKey(end),
     };
-  }, [currentWeekOffset]);
+  }, [currentMonthDate, props.viewMode]);
 
   const {
     data: slotsData,
@@ -368,9 +354,10 @@ export default function BookAppointmentPage() {
     {
       ophthalId: selectedDoctorId || undefined,
       status: 1, // Available status
-      fromDate: weekRange.from,
-      toDate: weekRange.to,
-      pageSize: 100,
+      fromDate: monthRange.from,
+      toDate: monthRange.to,
+      excludePastSlots: true,
+      pageSize: 500,
     },
     { enabled: !!selectedDoctorId }
   );
@@ -378,51 +365,40 @@ export default function BookAppointmentPage() {
   const reserveMutation = useReserveSlot();
   const releaseMutation = useReleaseReservation();
 
-  const slots = useMemo(
-    () =>
-      (slotsData?.items ?? []).filter(
-        (slot) => !isExpiredAppointmentSlot(slot)
-      ),
-    [slotsData?.items]
-  );
+  const slots = useMemo(() => slotsData?.items ?? [], [slotsData?.items]);
 
-  // Group slots by date
   const slotsByDate = useMemo(() => {
     const grouped: Record<string, AppointmentSlotListDto[]> = {};
     slots.forEach((slot) => {
       if (!grouped[slot.date]) grouped[slot.date] = [];
       grouped[slot.date].push(slot);
     });
-    // Sort slots by start time
     Object.values(grouped).forEach((daySlots) =>
       daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime))
     );
     return grouped;
   }, [slots]);
 
-  // Get all days of the current week
-  const weekDays = useMemo(() => {
-    const days: {
-      date: string;
-      dayName: string;
-      dayNum: number;
-      isToday: boolean;
-    }[] = [];
-    const startDate = new Date(weekRange.from + 'T00:00:00');
-    const today = toLocalDateKey(new Date());
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
-      const dateStr = toLocalDateKey(d);
-      days.push({
-        date: dateStr,
-        dayName: formatWeekDayLabel(d),
-        dayNum: d.getDate(),
-        isToday: dateStr === today,
-      });
+  // Calendar Days Calculation
+  const calendarDays = useMemo(() => {
+    const year = currentMonthDate.getFullYear();
+    const month = currentMonthDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const result: Date[] = [];
+    for (let i = 0; i < firstDay; i++) {
+      result.push(new Date(year, month, 0 - (firstDay - 1 - i)));
     }
-    return days;
-  }, [weekRange.from]);
+    for (let i = 1; i <= daysInMonth; i++) {
+      result.push(new Date(year, month, i));
+    }
+    const remaining = 42 - result.length;
+    for (let i = 1; i <= remaining; i++) {
+      result.push(new Date(year, month + 1, i));
+    }
+    return result;
+  }, [currentMonthDate]);
 
   const handleSlotClick = useCallback(
     async (slot: AppointmentSlotListDto) => {
@@ -431,40 +407,44 @@ export default function BookAppointmentPage() {
         setErrorMessage('Vui lòng đăng nhập để đặt lịch tư vấn.');
         return;
       }
-
       setErrorMessage('');
-      setHighlightedDate(slot.date);
-      try {
-        const result = await reserveMutation.mutateAsync({
-          slotId: slot.id,
-          request: {
-            patientId,
-            reservationMinutes: 5,
-          },
-        });
-        setSelectedSlot(slot);
-        setReservation(result);
-        setShowModal(true);
-      } catch (error) {
-        setErrorMessage(mapOnlineConsultationErrorMessage(error));
-      }
+      setSelectedSlot(slot);
     },
-    [patientId, reserveMutation]
+    [patientId]
   );
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirmAction = useCallback(async () => {
+    if (!selectedSlot || !patientId) return;
+    try {
+      const result = await reserveMutation.mutateAsync({
+        slotId: selectedSlot.id,
+        request: {
+          patientId,
+          reservationMinutes: 5,
+        },
+      });
+      setReservation(result);
+      setShowModal(true);
+    } catch (error) {
+      setErrorMessage(mapOnlineConsultationErrorMessage(error));
+    }
+  }, [selectedSlot, patientId, reserveMutation]);
+
+  const handleConfirmReservation = useCallback(() => {
     if (!selectedSlot) return;
     sessionStorage.setItem(
       'patient-booking-confirm-context',
       JSON.stringify({ slotId: selectedSlot.id })
     );
 
-    navigate('/patient/book/confirm', {
-      state: {
-        slotId: selectedSlot.id,
-      },
-    });
-  }, [selectedSlot, navigate]);
+    if (props.onProceedToConfirm) {
+      props.onProceedToConfirm(selectedSlot.id);
+    } else {
+      navigate('/patient/book/confirm', {
+        state: { slotId: selectedSlot.id },
+      });
+    }
+  }, [selectedSlot, navigate, props]);
 
   const handleCancelReservation = useCallback(async () => {
     if (!selectedSlot || !patientId) return;
@@ -487,267 +467,315 @@ export default function BookAppointmentPage() {
 
     const matchedSlot = slots.find((slot) => slot.id === preselectedSlotId);
     if (!matchedSlot) {
-      const nearestDate = findNearestAvailableDate(slots, preselectedDate);
-      if (nearestDate) setHighlightedDate(nearestDate);
+      const nearestDate = getNextAvailableDate(slots);
+      if (nearestDate) setSelectedDate(nearestDate);
       return;
     }
 
     autoSelectedRef.current = true;
-    setHighlightedDate(matchedSlot.date);
+    setSelectedDate(matchedSlot.date);
+    setSelectedSlot(matchedSlot); // Pre-select the slot visually
 
-    void (async () => {
-      if (!patientId) {
-        setErrorMessage('Vui lòng đăng nhập để đặt lịch tư vấn.');
-        return;
+    // No auto-reservation on load, user must click confirm
+  }, [preselectedSlotId, preselectedDate, slots, isLoading, patientId]);
+
+  const isEmbedded = !!props.onClose;
+  const Wrapper = isEmbedded ? 'div' : PatientLayout;
+  const wrapperProps = isEmbedded
+    ? {
+        className: `fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-start py-8 px-4 ${
+          showModal ? 'overflow-hidden' : 'overflow-y-auto'
+        }`,
       }
+    : {};
 
-      setErrorMessage('');
-      try {
-        const result = await reserveMutation.mutateAsync({
-          slotId: matchedSlot.id,
-          request: {
-            patientId,
-            reservationMinutes: 5,
-          },
-        });
+  const todayStr = toLocalDateKey(new Date());
 
-        setSelectedSlot(matchedSlot);
-        setReservation(result);
-        setShowModal(true);
-      } catch (error) {
-        const message = mapOnlineConsultationErrorMessage(error);
-        toast.warn(
-          `${message}. Slot này vừa được giữ bởi người khác. Vui lòng chọn slot còn trống gần nhất.`
-        );
-
-        const nearestDate = findNearestAvailableDate(slots, matchedSlot.date);
-        if (nearestDate) {
-          setHighlightedDate(nearestDate);
-        }
-      }
-    })();
-  }, [
-    preselectedSlotId,
-    preselectedDate,
-    slots,
-    isLoading,
-    patientId,
-    reserveMutation,
-  ]);
+  // Times split
+  const selectedDaySlots = selectedDate
+    ? (slotsByDate[selectedDate] ?? [])
+    : [];
+  const morningSlots = selectedDaySlots.filter(
+    (s) => parseInt(s.startTime.split(':')[0]) < 12
+  );
+  const afternoonSlots = selectedDaySlots.filter(
+    (s) => parseInt(s.startTime.split(':')[0]) >= 12
+  );
 
   return (
-    <PatientLayout>
-      <div className="p-6 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Book an Appointment
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Select a doctor and choose an available time slot for your
-            consultation.
-          </p>
-        </div>
-
-        {(errorMessage || slotsError) && (
-          <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-            {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
-          </div>
-        )}
-
-        {/* Doctor Information */}
-        <div className="mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
-              Selected Doctor
-            </p>
-
-            {!selectedDoctorId ? (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                Missing doctorId in URL. Please choose a doctor first.
-              </p>
-            ) : (
-              <div className="flex items-center gap-4">
-                <img
-                  src={getAvatarUrl({
-                    userAvatarUrl: doctorSnapshot?.userAvatarUrl ?? null,
-                    userFullName: doctorInfo?.userFullName ?? null,
-                  })}
-                  alt={doctorInfo?.userFullName ?? 'Doctor'}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 dark:text-white truncate">
-                    {doctorInfo?.userFullName ?? 'Ophthalmologist'}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                    {doctorInfo?.userEmail ?? 'No email available'}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {doctorInfo?.yearsOfExperience ?? 0} years experience
-                  </p>
-                  {doctorLoading && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Loading doctor profile...
-                    </p>
-                  )}
-                </div>
-              </div>
+    <>
+      <Wrapper {...wrapperProps}>
+        <div
+          className={
+            isEmbedded
+              ? 'bg-white dark:bg-gray-900 border border-gray-200 w-full max-w-5xl rounded-3xl shadow-2xl relative overflow-hidden flex flex-col font-sans'
+              : 'p-6 max-w-5xl mx-auto font-sans'
+          }
+        >
+          {/* Header Section */}
+          <div className="relative p-6 border-b border-gray-100 flex flex-col items-center justify-center text-center bg-white dark:bg-gray-900 border-t-4 border-t-cyan-600">
+            {isEmbedded && (
+              <button
+                onClick={props.onClose}
+                className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
             )}
-          </div>
-          {!!preselectedSlotId && (
-            <p className="mt-2 text-xs text-cyan-700 dark:text-cyan-300">
-              A slot from the doctors page has been pre-selected for you.
+            <h1 className="text-xl font-bold tracking-widest text-gray-800 dark:text-gray-100 uppercase mb-4">
+              Aura
+            </h1>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+              {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+              Ophthalmologist
             </p>
-          )}
-        </div>
+            <div className="mt-3 inline-flex bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+              Booking for:{' '}
+              {props.viewMode === 'today'
+                ? 'Video Consultation'
+                : 'In-clinic / Video Consultation'}
+            </div>
+          </div>
 
-        {/* Week Navigation */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-cyan-600" />
-              <span className="font-medium text-gray-900 dark:text-white">
-                {weekRange.label}
+          {(errorMessage || slotsError) && (
+            <div className="mx-6 mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage || mapOnlineConsultationErrorMessage(slotsError)}
+            </div>
+          )}
+
+          {!isLoadingSettings && (
+            <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2 shadow-sm">
+              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>
+                Please note: Appointments must be booked at least{' '}
+                <strong>{warningText}</strong> in advance.
               </span>
             </div>
-            <button
-              onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+          )}
 
-        {/* Calendar Grid */}
-        {!selectedDoctorId ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">
-              Please pick a doctor from the doctors page to view available
-              appointment slots.
-            </p>
-          </div>
-        ) : isLoading ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 flex items-center justify-center">
-            <Spinner />
-            <span className="ml-3 text-gray-600 dark:text-gray-400">
-              Loading available slots...
-            </span>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-              {weekDays.map((day) => (
-                <div
-                  key={day.date}
-                  className={`p-4 text-center border-r last:border-r-0 border-gray-200 dark:border-gray-700 ${
-                    day.isToday
-                      ? 'bg-cyan-50 dark:bg-cyan-900/20'
-                      : 'bg-gray-50 dark:bg-gray-800/50'
-                  } ${
-                    highlightedDate === day.date
-                      ? 'ring-2 ring-cyan-400 ring-inset'
-                      : ''
-                  }`}
-                >
-                  <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">
-                    {day.dayName}
-                  </div>
-                  <div
-                    className={`text-lg font-semibold mt-1 ${
-                      day.isToday
-                        ? 'text-cyan-600 dark:text-cyan-400'
-                        : 'text-gray-900 dark:text-white'
-                    }`}
+          {/* Main Content Split Pane */}
+          <div className="flex flex-col md:flex-row p-6 gap-8 bg-gray-50/50 dark:bg-gray-800/30">
+            {/* LEFT: Calendar */}
+            <div className="w-full md:w-[40%] md:flex-none md:border-r border-gray-200 dark:border-gray-700 md:pr-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {currentMonthDate.toLocaleString('default', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const d = new Date(currentMonthDate);
+                      d.setMonth(d.getMonth() - 1);
+                      setCurrentMonthDate(d);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                    disabled={props.viewMode === 'today'}
                   >
-                    {day.dayNum}
-                  </div>
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const d = new Date(currentMonthDate);
+                      d.setMonth(d.getMonth() + 1);
+                      setCurrentMonthDate(d);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                    disabled={props.viewMode === 'today'}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-y-4 gap-x-1 text-center">
+                {WEEK_DAYS.map((day) => (
+                  <div
+                    key={day}
+                    className="text-xs font-semibold text-gray-400"
+                  >
+                    {day}
+                  </div>
+                ))}
+
+                {calendarDays.map((date, i) => {
+                  const dateStr = toLocalDateKey(date);
+                  const isCurrentMonth =
+                    date.getMonth() === currentMonthDate.getMonth();
+                  const isSelected = selectedDate === dateStr;
+                  const isPast = dateStr < todayStr;
+                  const hasSlots = (slotsByDate[dateStr]?.length ?? 0) > 0;
+
+                  // If today mode, only today is selectable
+                  const isDisabled =
+                    props.viewMode === 'today' ? dateStr !== todayStr : isPast;
+
+                  return (
+                    <button
+                      key={`${dateStr}-${i}`}
+                      onClick={() => {
+                        if (!isDisabled) setSelectedDate(dateStr);
+                      }}
+                      disabled={isDisabled}
+                      className={`
+                      w-10 h-10 mx-auto flex items-center justify-center rounded-full text-sm font-medium transition-all
+                      ${!isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'}
+                      ${isSelected ? 'bg-cyan-600 text-white shadow-md' : ''}
+                      ${!isSelected && !isDisabled ? 'hover:bg-cyan-50 dark:hover:bg-cyan-900/40' : ''}
+                      ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+                      ${hasSlots && !isSelected ? 'bg-cyan-100/50 dark:bg-cyan-900/30 font-bold text-cyan-800 dark:text-cyan-400' : ''}
+                    `}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Slots Grid */}
-            <div className="grid grid-cols-7 min-h-75">
-              {weekDays.map((day) => (
-                <div
-                  key={day.date}
-                  className="p-2 border-r last:border-r-0 border-gray-200 dark:border-gray-700"
-                >
-                  {slotsByDate[day.date]?.length ? (
-                    <div className="space-y-2">
-                      {slotsByDate[day.date].map((slot) => (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleSlotClick(slot)}
-                          disabled={
-                            slot.status !== 'Available' ||
-                            reserveMutation.isPending
-                          }
-                          className={`w-full px-2 py-2 rounded-lg border text-xs font-medium transition ${getSlotStatusColor(slot.status)} disabled:cursor-not-allowed`}
-                        >
-                          <div className="flex items-center justify-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatSlotTime(slot.startTime)}
-                          </div>
-                          {slot.maxCapacity > 1 && (
-                            <div className="text-[10px] mt-1 opacity-75">
-                              {slot.availableCapacity}/{slot.maxCapacity} slots
-                            </div>
-                          )}
-                        </button>
-                      ))}
+            {/* RIGHT: Time Slots */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+                Select a Time
+              </h3>
+
+              {isLoading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Spinner />
+                </div>
+              ) : selectedDaySlots.length === 0 ? (
+                <div className="text-gray-500 text-sm py-8 text-center italic">
+                  No available times for{' '}
+                  {selectedDate
+                    ? new Date(selectedDate).toLocaleDateString()
+                    : 'this date'}
+                  .
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {morningSlots.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                        Morning
+                      </h4>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {morningSlots.map((slot) => {
+                          const isExpired = isExpiredAppointmentSlot(
+                            slot,
+                            minAdvanceBookingMs
+                          );
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() =>
+                                !isExpired && handleSlotClick(slot)
+                              }
+                              disabled={isExpired}
+                              className={`
+                              px-3 py-2 rounded-xl border text-sm font-medium transition-colors text-center w-full
+                              ${
+                                isExpired
+                                  ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed cursor-not-allowed opacity-60'
+                                  : selectedSlot?.id === slot.id
+                                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm cursor-pointer'
+                                    : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40 cursor-pointer'
+                              }
+                            `}
+                            >
+                              {formatSlotTime(slot.startTime)}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <span className="text-xs text-gray-400">No slots</span>
+                  )}
+
+                  {afternoonSlots.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                        Afternoon
+                      </h4>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {afternoonSlots.map((slot) => {
+                          const isExpired = isExpiredAppointmentSlot(
+                            slot,
+                            minAdvanceBookingMs
+                          );
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() =>
+                                !isExpired && handleSlotClick(slot)
+                              }
+                              disabled={isExpired}
+                              className={`
+                              px-3 py-2 rounded-xl border text-sm font-medium transition-colors text-center w-full
+                              ${
+                                isExpired
+                                  ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-60'
+                                  : selectedSlot?.id === slot.id
+                                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm cursor-pointer'
+                                    : 'bg-white dark:bg-gray-800 border-teal-500 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/40 cursor-pointer'
+                              }
+                            `}
+                            >
+                              {formatSlotTime(slot.startTime)}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
-              ))}
+              )}
             </div>
           </div>
-        )}
 
-        {/* Legend */}
-        <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300" />
-            <span className="text-gray-600 dark:text-gray-400">Available</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-300" />
-            <span className="text-gray-600 dark:text-gray-400">Reserved</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 border border-blue-300" />
-            <span className="text-gray-600 dark:text-gray-400">Booked</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-800 border border-gray-300" />
-            <span className="text-gray-600 dark:text-gray-400">Blocked</span>
+          {/* Footer Area */}
+          <div className="p-6 border-t border-gray-100 bg-white dark:bg-gray-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              {selectedSlot ? (
+                <span>
+                  Selected: {new Date(selectedSlot.date).toLocaleDateString()}{' '}
+                  at {formatSlotTime(selectedSlot.startTime)} |{' '}
+                  {formatVnd(selectedSlot.cost)}
+                </span>
+              ) : (
+                <span>Please select a date and an available time.</span>
+              )}
+            </div>
+            <button
+              onClick={handleConfirmAction}
+              disabled={!selectedSlot || reserveMutation.isPending}
+              className="w-full sm:w-auto px-8 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-full shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              {reserveMutation.isPending ? <Spinner size={16} /> : null}
+              Confirm Booking
+            </button>
           </div>
         </div>
-      </div>
+      </Wrapper>
 
-      {/* Reservation Modal */}
+      {/* Reservation Modal layer on top of this one */}
       {showModal && selectedSlot && reservation && (
         <ReservationModal
           slot={selectedSlot}
           reservation={reservation}
-          onConfirm={handleConfirm}
+          onConfirm={handleConfirmReservation}
           onCancel={handleCancelReservation}
           isLoading={false}
         />
       )}
-    </PatientLayout>
+    </>
   );
+}
+
+// Format currency
+function formatVnd(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '--';
+  return `${value.toLocaleString('vi-VN')}đ`;
 }

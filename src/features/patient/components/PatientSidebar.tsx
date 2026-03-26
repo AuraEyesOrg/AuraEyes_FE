@@ -9,7 +9,6 @@ import {
   MapPin,
   MessageCircle,
   Milestone,
-  Stethoscope,
   MessageSquareHeart,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -21,7 +20,6 @@ const navItems = [
   { icon: Eye, label: 'My Scans', path: '/patient/screening' },
   { icon: FileText, label: 'Reports', path: '/patient/reports' },
   { icon: Calendar, label: 'Appointments', path: '/patient/appointments' },
-  { icon: Stethoscope, label: 'Find Doctors', path: '/patient/doctors' },
   { icon: MapPin, label: 'Find Clinics', path: '/patient/clinics' },
   { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
   { icon: MessageCircle, label: 'Chat', path: '/patient/chat', badge: true },
@@ -94,7 +92,7 @@ export default function PatientSidebar() {
             >
               <div className="relative shrink-0">
                 <div
-                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
+                  className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
                   style={{
                     backgroundImage: userAvatar
                       ? `url("${userAvatar}")`

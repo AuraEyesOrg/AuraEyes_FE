@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { X } from 'lucide-react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
@@ -11,14 +11,18 @@ import StarRatingInput from './StarRatingInput';
 
 type ModalFormValues = {
   rating: number;
-  comment: string;
+  comment?: string;
   category: WebsiteFeedbackCategory;
 };
 
 const feedbackSchema: yup.ObjectSchema<ModalFormValues> = yup
   .object({
     rating: yup.number().required().min(1).max(5),
-    comment: yup.string().max(2000).required(),
+    comment: yup
+      .string()
+      .trim()
+      .max(2000, 'Comment must be at most 2000 characters')
+      .optional(),
     category: yup
       .mixed<WebsiteFeedbackCategory>()
       .oneOf(['BUG', 'UX', 'SUGGESTION', 'OTHER'])
@@ -62,6 +66,8 @@ export const FeedbackModal = ({
   onClose,
   onSubmit,
 }: FeedbackModalProps) => {
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
   const defaults = useMemo(
     () => ({
       rating: initialValues?.rating ?? 0,
@@ -75,14 +81,43 @@ export const FeedbackModal = ({
     handleSubmit,
     control,
     register,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
     watch,
   } = useForm<ModalFormValues>({
     resolver: yupResolver(feedbackSchema) as Resolver<ModalFormValues>,
     defaultValues: defaults,
   });
 
+  useEffect(() => {
+    if (open) {
+      reset(defaults);
+    }
+  }, [defaults, open, reset]);
+
   const commentLength = watch('comment')?.length ?? 0;
+
+  const handleAttemptClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+
+    onClose();
+  };
+
+  const handleKeepEditing = () => {
+    setShowDiscardConfirm(false);
+  };
+
+  const handleDiscardDraft = () => {
+    setShowDiscardConfirm(false);
+    onClose();
+  };
 
   if (!open) {
     return null;
@@ -105,7 +140,7 @@ export const FeedbackModal = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleAttemptClose}
             className="rounded-lg p-2 text-(--text-muted) transition-colors hover:bg-(--bg-secondary)"
           >
             <X className="h-4 w-4" />
@@ -188,7 +223,7 @@ export const FeedbackModal = ({
             />
             <div className="mt-1 flex items-center justify-between">
               {errors.comment?.message ? (
-                <p className="text-xs text-red-500">Comment is too long.</p>
+                <p className="text-xs text-red-500">{errors.comment.message}</p>
               ) : (
                 <span />
               )}
@@ -201,7 +236,7 @@ export const FeedbackModal = ({
           <div className="flex items-center justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleAttemptClose}
               disabled={isSubmitting}
               className="rounded-lg border border-(--border-color) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary) disabled:opacity-60"
             >
@@ -216,6 +251,37 @@ export const FeedbackModal = ({
             </button>
           </div>
         </form>
+
+        {showDiscardConfirm && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/45 p-4">
+            <div className="w-full max-w-sm rounded-xl border border-(--border-color) bg-(--bg-primary) p-5 shadow-xl">
+              <h4 className="text-base font-semibold text-(--text-primary)">
+                Discard draft?
+              </h4>
+              <p className="mt-2 text-sm text-(--text-secondary)">
+                Your current feedback has not been submitted yet. If you leave
+                now, the draft will be lost.
+              </p>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleKeepEditing}
+                  className="rounded-lg border border-(--border-color) px-3 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary)"
+                >
+                  Keep editing
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDiscardDraft}
+                  className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+                >
+                  Discard draft
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

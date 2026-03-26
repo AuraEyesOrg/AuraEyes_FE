@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Eye,
   Plus,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
+import { screeningApi } from '../api/screening.api';
 
 interface Scan {
   id: string;
@@ -29,54 +31,38 @@ interface Scan {
   thumbnailUrl?: string;
   findings?: number;
 }
-
-// Mock data - replace with API call
-const MOCK_SCANS: Scan[] = [
-  {
-    id: '1',
-    name: 'Fundus_OS_001.jpg',
-    eye: 'Left Eye (OS)',
-    date: '2026-01-28',
-    status: 'completed',
-    riskLevel: 'low',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4',
-    findings: 0,
-  },
-  {
-    id: '2',
-    name: 'Fundus_OD_002.jpg',
-    eye: 'Right Eye (OD)',
-    date: '2026-01-25',
-    status: 'completed',
-    riskLevel: 'medium',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4',
-    findings: 2,
-  },
-  {
-    id: '3',
-    name: 'Scan_04_Macula.dicom',
-    eye: 'Both Eyes',
-    date: '2026-01-20',
-    status: 'completed',
-    riskLevel: 'high',
-    findings: 5,
-  },
-  {
-    id: '4',
-    name: 'Latest_Scan.jpg',
-    eye: 'Left Eye (OS)',
-    date: '2026-01-30',
-    status: 'processing',
-  },
-];
-
 export default function ScreeningPage() {
   const navigate = useNavigate();
-  const [scans] = useState<Scan[]>(MOCK_SCANS);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const sessionsQuery = useQuery({
+    queryKey: ['screening', 'recent', 'history'],
+    queryFn: async () => {
+      const response = await screeningApi.getRecentSessions(20);
+      return response.data ?? [];
+    },
+  });
+
+  const scans: Scan[] = (sessionsQuery.data ?? []).map((session) => ({
+    id: session.screeningId,
+    name: `Session ${session.screeningId.slice(0, 8)}`,
+    eye: 'Both Eyes',
+    date: session.createdAt,
+    status: session.processedAt ? 'completed' : 'processing',
+    riskLevel:
+      session.latestRiskLevel?.toLowerCase() === 'moderate'
+        ? 'medium'
+        : (session.latestRiskLevel?.toLowerCase() as
+            | 'low'
+            | 'medium'
+            | 'high'
+            | 'critical'
+            | undefined),
+    thumbnailUrl: session.thumbnailUrl,
+    findings: undefined,
+  }));
 
   const filteredScans = scans.filter(
     (scan) =>
@@ -268,9 +254,9 @@ export default function ScreeningPage() {
                   key={scan.id}
                   className="flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)]/50 transition-colors cursor-pointer group"
                   onClick={() => {
-                    if (scan.status === 'completed') {
-                      navigate('/patient/analysis');
-                    }
+                    navigate('/patient/screening/review', {
+                      state: { screeningId: scan.id },
+                    });
                   }}
                 >
                   {/* Thumbnail */}
@@ -336,12 +322,14 @@ export default function ScreeningPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate('/patient/analysis');
+                            navigate('/patient/screening/review', {
+                              state: { screeningId: scan.id },
+                            });
                           }}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
                           <Eye className="w-4 h-4" />
-                          View Analysis
+                          View Review
                         </button>
                         <button
                           onClick={(e) => e.stopPropagation()}
