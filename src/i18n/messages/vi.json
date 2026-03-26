@@ -242,6 +242,8 @@
         "unknownDoctor": "Bác sĩ chưa xác định",
         "noBio": "Chưa có thông tin giới thiệu hồ sơ."
       },
+      "pageTitle": "Cài đặt",
+      "pageSubtitle": "Quản lý hồ sơ, chứng chỉ và tùy chọn cá nhân",
       "profile": {
         "title": "Thông tin hồ sơ",
         "edit": "Chỉnh sửa hồ sơ",

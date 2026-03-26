@@ -26,6 +26,33 @@ import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
 type PatientCardStatus = 'active' | 'urgent' | 'past';
 type ViewMode = 'grid' | 'table';
 
+/* ────────────────────── mock data ────────────────────── */
+const MOCK_DIAGNOSES = [
+  'Diabetic Retinopathy — Mild NPDR',
+  'Glaucoma Suspect — Elevated IOP',
+  'Age-related Macular Degeneration',
+  'Normal — No significant findings',
+  'Retinal Vein Occlusion',
+  'Cataract — Early onset',
+  'Myopic Degeneration',
+  'Hypertensive Retinopathy',
+];
+
+function getMockDiagnosis(patientId: string): string {
+  let hash = 0;
+  for (let i = 0; i < patientId.length; i++)
+    hash = (hash * 31 + patientId.charCodeAt(i)) >>> 0;
+  return MOCK_DIAGNOSES[hash % MOCK_DIAGNOSES.length];
+}
+
+// Mock monthly visit data (last 3 months)
+function getMockVisitHistory(patientId: string): [number, number, number] {
+  let hash = 0;
+  for (let i = 0; i < patientId.length; i++)
+    hash = (hash * 37 + patientId.charCodeAt(i)) >>> 0;
+  return [(hash % 3) + 0, ((hash >> 4) % 4) + 0, ((hash >> 8) % 3) + 1];
+}
+
 /* ────────────────────── helpers ────────────────────── */
 
 interface PatientCardItem {
@@ -99,54 +126,6 @@ const isUpcomingSession = (session: ConsultationSessionListDto) => {
   const appointmentTime = new Date(session.appointmentTime);
   if (Number.isNaN(appointmentTime.getTime())) return true;
   return appointmentTime.getTime() >= Date.now();
-};
-
-const getSessionTimestamp = (session: ConsultationSessionListDto) => {
-  const base = session.appointmentTime ?? session.createdAt;
-  const date = new Date(base);
-  const time = date.getTime();
-  if (!Number.isNaN(time)) return time;
-  return new Date(session.createdAt).getTime();
-};
-
-const monthIndex = (d: Date) => d.getFullYear() * 12 + d.getMonth();
-
-const getVisitHistoryFromSessions = (
-  patientSessions: ConsultationSessionListDto[]
-): [number, number, number] => {
-  const now = new Date();
-  const current = monthIndex(now);
-  const buckets: [number, number, number] = [0, 0, 0]; // 2 mo ago, 1 mo ago, this
-
-  for (const s of patientSessions) {
-    const ts = getSessionTimestamp(s);
-    if (Number.isNaN(ts)) continue;
-    const d = new Date(ts);
-    const diff = current - monthIndex(d);
-    if (diff === 0) buckets[2] += 1;
-    else if (diff === 1) buckets[1] += 1;
-    else if (diff === 2) buckets[0] += 1;
-  }
-
-  return buckets;
-};
-
-const getLastDiagnosisFromSessions = (
-  patientSessions: ConsultationSessionListDto[],
-  fallback: string
-) => {
-  const sorted = [...patientSessions].sort(
-    (a, b) => getSessionTimestamp(b) - getSessionTimestamp(a)
-  );
-
-  for (const s of sorted) {
-    const findings = s.caseSnapshot?.findings?.trim();
-    if (findings) return findings;
-    const summary = s.caseSnapshot?.summary?.trim();
-    if (summary) return summary;
-  }
-
-  return fallback;
 };
 
 const getStatusMeta = (status: PatientCardStatus) => {
@@ -237,16 +216,16 @@ export default function PatientsPage() {
 
     grouped.forEach((patientSessions, patientId) => {
       const sortedByTimeDesc = [...patientSessions].sort((a, b) => {
-        const aValue = getSessionTimestamp(a);
-        const bValue = getSessionTimestamp(b);
+        const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
+        const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
         return bValue - aValue;
       });
 
       const upcomingSessions = patientSessions
         .filter((session) => isUpcomingSession(session))
         .sort((a, b) => {
-          const aValue = getSessionTimestamp(a);
-          const bValue = getSessionTimestamp(b);
+          const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
+          const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
           return aValue - bValue;
         });
 
@@ -256,8 +235,8 @@ export default function PatientsPage() {
 
       const nextUpcoming = upcomingSessions[0]?.appointmentTime ?? null;
       const latestCompleted = [...completedSessions].sort((a, b) => {
-        const aValue = getSessionTimestamp(a);
-        const bValue = getSessionTimestamp(b);
+        const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
+        const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
         return bValue - aValue;
       })[0]?.appointmentTime;
 
@@ -275,11 +254,6 @@ export default function PatientsPage() {
       const displayName =
         sortedByTimeDesc[0]?.patientName?.trim() ||
         `${t('Ophthalmologist.patients.patientPrefix', 'Patient')} ${patientId.slice(0, 8)}`;
-
-      const lastDiagnosis = getLastDiagnosisFromSessions(
-        patientSessions,
-        t('Ophthalmologist.patients.notAvailable', 'N/A')
-      );
 
       result.push({
         id: patientId,
@@ -306,8 +280,8 @@ export default function PatientsPage() {
           dateLocale,
           t('Ophthalmologist.patients.notAvailable', 'N/A')
         ),
-        lastDiagnosis,
-        visitHistory: getVisitHistoryFromSessions(patientSessions),
+        lastDiagnosis: getMockDiagnosis(patientId),
+        visitHistory: getMockVisitHistory(patientId),
       });
     });
 

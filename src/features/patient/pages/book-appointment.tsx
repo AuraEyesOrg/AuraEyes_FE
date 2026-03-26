@@ -53,6 +53,32 @@ const getStartOfWeekMonday = (input: Date): Date => {
   return date;
 };
 
+const getInitialWeekOffset = (dateString?: string): number => {
+  if (!dateString) return 0;
+
+  const targetDate = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(targetDate.getTime())) return 0;
+
+  const currentWeekStart = getStartOfWeekMonday(new Date());
+  const targetWeekStart = getStartOfWeekMonday(targetDate);
+  const msInWeek = 7 * 24 * 60 * 60 * 1000;
+
+  return Math.round(
+    (targetWeekStart.getTime() - currentWeekStart.getTime()) / msInWeek
+  );
+};
+
+const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
+
+const getAvatarUrl = (doctor: {
+  userAvatarUrl?: string | null;
+  userFullName?: string | null;
+}) => {
+  if (doctor.userAvatarUrl) return doctor.userAvatarUrl;
+  const name = doctor.userFullName ?? 'Dr';
+  return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
+};
+
 const getNextAvailableDate = (candidates: AppointmentSlotListDto[]) => {
   if (!candidates.length) return null;
   const sortedCandidates = candidates.toSorted(
@@ -76,6 +102,21 @@ const isExpiredAppointmentSlot = (
   }
 
   return false;
+};
+
+const getSlotStatusColor = (status: string) => {
+  switch (status) {
+    case 'Available':
+      return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 cursor-pointer';
+    case 'Reserved':
+      return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700';
+    case 'Booked':
+      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700';
+    case 'Blocked':
+      return 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500 border-gray-300 dark:border-gray-700';
+    default:
+      return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700';
+  }
 };
 
 // ============ RESERVATION MODAL ============
@@ -356,7 +397,6 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
       status: 1, // Available status
       fromDate: monthRange.from,
       toDate: monthRange.to,
-      excludePastSlots: true,
       pageSize: 500,
     },
     { enabled: !!selectedDoctorId }

@@ -411,7 +411,7 @@ export default function PatientDashboard() {
                   Screening History
                 </h3>
                 <Link
-                  to="/patient/screening"
+                  to="/patient/reports"
                   className="text-sm font-medium text-brand hover:underline"
                 >
                   View All
@@ -496,7 +496,7 @@ export default function PatientDashboard() {
                               </span>
                             )}
                             <Link
-                              to="/patient/reports"
+                              to="/patient/analysis"
                               state={{ screeningId: session.screeningId }}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >

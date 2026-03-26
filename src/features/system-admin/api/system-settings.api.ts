@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { ApiResponse } from '@/features/patient/types';
 
 export const SYSTEM_SETTINGS_KEYS = {
   all: ['system-settings'] as const,
@@ -12,8 +11,8 @@ export const useSystemSettings = () => {
     queryKey: SYSTEM_SETTINGS_KEYS.all,
     queryFn: async () => {
       const response =
-        await api.get<ApiResponse<Record<string, string>>>('/system-settings');
-      return response.data.data ?? {};
+        await api.get<Record<string, string>>('/system-settings');
+      return response.data;
     },
   });
 };
@@ -24,11 +23,8 @@ export const useUpdateSystemSettings = () => {
 
   return useMutation({
     mutationFn: async (settings: Record<string, string>) => {
-      const response = await api.put<ApiResponse<Record<string, string>>>(
-        '/system-settings',
-        settings
-      );
-      return response.data.data ?? {};
+      const response = await api.put('/system-settings', settings);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SYSTEM_SETTINGS_KEYS.all });

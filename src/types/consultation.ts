@@ -102,11 +102,6 @@ export interface ConsultationSessionListDto {
   meetingLink?: string | null;
   lastActivityAt: string;
   createdAt: string;
-
-  // Consent flags + lightweight AI snapshot (for list displays).
-  isRetinalImagesShared?: boolean;
-  isAIResultShared?: boolean;
-  caseSnapshot?: ConsultationCaseSnapshotDto | null;
 }
 
 // ============ REQUEST MODELS (match BE Controller request records) ============

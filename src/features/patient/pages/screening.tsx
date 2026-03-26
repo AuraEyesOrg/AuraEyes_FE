@@ -254,7 +254,7 @@ export default function ScreeningPage() {
                   key={scan.id}
                   className="flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)]/50 transition-colors cursor-pointer group"
                   onClick={() => {
-                    navigate('/patient/screening/review', {
+                    navigate('/patient/analysis', {
                       state: { screeningId: scan.id },
                     });
                   }}
@@ -322,14 +322,14 @@ export default function ScreeningPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate('/patient/screening/review', {
+                            navigate('/patient/analysis', {
                               state: { screeningId: scan.id },
                             });
                           }}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
                           <Eye className="w-4 h-4" />
-                          View Review
+                          View Analysis
                         </button>
                         <button
                           onClick={(e) => e.stopPropagation()}

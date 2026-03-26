@@ -62,12 +62,13 @@ export function formatSlotTimeShort(hhmm: string): string {
  * Parses slot `date` + `startTime` returned by booking APIs as a UTC datetime.
  *
  * Contract:
- * - Backend persists slot date/time in Vietnam local clock time.
- * - Frontend must parse it as local time (without forcing UTC) so expiry checks
- *   align with what users see in the calendar.
+ * - Backend returns `date` (`YYYY-MM-DD`) and `startTime` (`HH:mm[:ss]`)
+ *   representing UTC clock time.
+ * - This helper normalizes parsing so all pages interpret slot expiry/disable
+ *   status consistently.
  */
 export function parseSlotDateTimeUtc(date: string, startTime: string): Date {
-  return new Date(`${date}T${startTime}`);
+  return new Date(`${date}T${startTime}Z`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -91,8 +91,6 @@ export const getAppointmentSlots = async (
     searchParams.set('slotType', params.slotType.toString());
   if (params.fromDate) searchParams.set('fromDate', params.fromDate);
   if (params.toDate) searchParams.set('toDate', params.toDate);
-  if (params.excludePastSlots !== undefined)
-    searchParams.set('excludePastSlots', String(params.excludePastSlots));
   if (params.pageNumber)
     searchParams.set('pageNumber', params.pageNumber.toString());
   if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());

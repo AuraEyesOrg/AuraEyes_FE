@@ -324,7 +324,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center text-center">
             {/* Avatar */}
             <div className="relative mb-6">
-              <div className="w-32 h-32 rounded-full flex items-center justify-center overflow-hidden shadow-brand">
+              <div className="w-32 h-32 rounded-full bg-brand flex items-center justify-center overflow-hidden shadow-brand">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}

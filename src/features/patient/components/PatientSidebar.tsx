@@ -92,7 +92,7 @@ export default function PatientSidebar() {
             >
               <div className="relative shrink-0">
                 <div
-                  className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
+                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
                   style={{
                     backgroundImage: userAvatar
                       ? `url("${userAvatar}")`

@@ -48,9 +48,6 @@ export const PATIENT_ENDPOINTS = {
     AVAILABLE_SLOT_DETAIL: (id: string) =>
       `/patient/search/available-slots/${id}`,
   },
-  RESOURCES: {
-    EYE_HEALTH: '/patient/resources/eye-health',
-  },
 
   // Retinal Images & Screening
   IMAGES: {
@@ -330,14 +327,6 @@ export interface OrganisationSearchItem {
   createdAt: string;
 }
 
-export interface PatientEducationalResourceItem {
-  id: string;
-  title: string;
-  description: string;
-  link: string;
-  image?: string | null;
-}
-
 export const searchOphthalmologistsForPatient = async (params: {
   searchTerm?: string;
   pageNumber?: number;
@@ -394,24 +383,6 @@ export const searchAvailableSlotsForPatient = async (params: {
     ...page,
     items: (page.items ?? []).map(normalizeAvailableSlot),
   };
-};
-
-export const getEyeHealthResourcesForPatient = async (params?: {
-  /** Disease/condition names from the AI result (e.g. friendlyName of anomalies). */
-  diseases?: string[];
-  limit?: number;
-}): Promise<PatientEducationalResourceItem[]> => {
-  const queryParams: Record<string, string | number> = {};
-  if (params?.limit !== undefined) queryParams['limit'] = params.limit;
-  if (params?.diseases && params.diseases.length > 0) {
-    queryParams['diseases'] = params.diseases.join(',');
-  }
-
-  const response = await api.get<ApiResponse<PatientEducationalResourceItem[]>>(
-    PATIENT_ENDPOINTS.RESOURCES.EYE_HEALTH,
-    { params: queryParams }
-  );
-  return response.data.data ?? [];
 };
 
 // ============ IMAGES API ============

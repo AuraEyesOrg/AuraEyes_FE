@@ -171,7 +171,6 @@ export default function DoctorsPage() {
         slotType: SlotType.Consultation,
         fromDate: timeFrom || undefined,
         toDate: timeTo || undefined,
-        excludePastSlots: true,
         pageNumber: 1,
         pageSize: 200,
       },
