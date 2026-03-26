@@ -232,6 +232,7 @@ export interface GetAppointmentSlotsParams {
   slotType?: SlotType;
   fromDate?: string;
   toDate?: string;
+  excludePastSlots?: boolean;
   pageNumber?: number;
   pageSize?: number;
 }

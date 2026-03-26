@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { Anomaly, RetinalImage } from '../types/type';
 import N8nChatWidget, { openN8nChat } from '../components/N8nChatWidget';
@@ -23,6 +24,12 @@ import {
   saveScreeningConsultationContext,
   type ScreeningConsultationContext,
 } from '../types/consultation-context';
+import { screeningApi } from '../api/screening.api';
+import {
+  getEyeHealthResourcesForPatient,
+  type PatientEducationalResourceItem,
+} from '../api/patient.api';
+import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
 
 interface LocationState {
   screeningId?: string;
@@ -64,35 +71,8 @@ const RISK_CONFIG = {
   },
 };
 
-const EDUCATIONAL_RESOURCES = [
-  {
-    id: 'dr',
-    title: 'Understanding Diabetic Retinopathy',
-    description:
-      'Learn about the stages, symptoms, and how early detection can save your vision.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAFxR93NOalryhGlOgqi9T2v42o3TU2nUkxD2awyslYXzeIeL7QpKDbRbu3KpR5_C491ji76qlH-rcoR5o39Owmw0wF5aYE42CvhbMPXXXIRMn-i_LGybNNTBGYtUjsN3OlkiRDkAvPmT3bRDp8DFAbos8cibPcXaqaD4gOpl6hBIN1nPVbGU1Js2qfBYJHMsPXsn7C6cBOCDdqTL4dySyTmsThxuIHYoO4R1jSwfadoavpJv0-dGPU8K8xA_FT75lZScHxFHCt_UWm',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/diabetic-retinopathy',
-  },
-  {
-    id: 'exam',
-    title: 'What to Expect During an Exam',
-    description:
-      'A guide to what happens during a comprehensive dilated eye exam.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBKEOtY08TxayEZx3M249ftjERzcDDIrwgAQQPMHSgWFrMOD2ObVFHPOs3Z9ztyP0VC7UB2heF46McYllL2JWZyE-_zoWhyjrHy9pJhV8T-IE0sjrnKV5GiqK_FdNhDr7RCJKzxa8KC2rQny59GGaI9cHxw4FK3kFFOxSbwyHLjwhCfoSMjNHqERFO5FNHI68tmdirVXOYodVHchrso_xU2EtlWZzUCNadijthqdFyrf4Tb7WZ5yVGU0ZRc7y-3kEf9FbTSLbZHpoxf',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases',
-  },
-  {
-    id: 'nutrition',
-    title: 'Nutrition for Healthy Vision',
-    description:
-      'Discover which foods are best for maintaining long-term retinal health.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBkX4UhnrdBtgxk5oxAyPZsIWw03yBNx4oQeyWqJvuz-5gyd6Z2BsW_s2NDyjSvhV0S-h_zirpX6u6Jg2C_9SaW6YuRKeQpu8PY1JfMEwToqQnnAY-IBrQgSxJHngUpwpm4B4mtFymYYWFJvy4h9SN_TQsGXMiMO6ThX2Pbtd6jAguXDF-pF4x81HaWevRq5LiqUTWWztKfWXYsUYRVRKg9gAsK64yp1xXpaaz3LXLx0qClurKEGeBvR0N6bXeUnhuUj_JBx-_Rh8fL',
-    link: 'https://www.nei.nih.gov/learn-about-eye-health/healthy-vision/keep-your-eyes-healthy',
-  },
-];
+const FALLBACK_RESOURCE_IMAGE =
+  'https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=900&q=80';
 
 export default function ReviewPage() {
   const location = useLocation();
@@ -104,19 +84,134 @@ export default function ReviewPage() {
   );
 
   const activeState = state ?? null;
+  const screeningIdFromRoute = activeState?.screeningId;
 
-  const images = activeState?.images ?? storedConsultationContext?.images ?? [];
+  const storedMatchesCurrent =
+    storedConsultationContext?.screeningId != null &&
+    storedConsultationContext.screeningId ===
+      (screeningIdFromRoute ?? storedConsultationContext.screeningId);
+
+  const relevantStoredContext = storedMatchesCurrent
+    ? storedConsultationContext
+    : null;
+
+  const screeningIdFromRouteOrStore =
+    screeningIdFromRoute ?? storedConsultationContext?.screeningId;
+
+  const shouldHydrateFromApi =
+    Boolean(screeningIdFromRouteOrStore) &&
+    (activeState?.images?.length ?? 0) === 0 &&
+    (activeState?.anomalies?.length ?? 0) === 0 &&
+    (relevantStoredContext?.images?.length ?? 0) === 0 &&
+    (relevantStoredContext?.anomalies?.length ?? 0) === 0;
+
+  const { data: hydratedSession } = useQuery({
+    queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
+    enabled: shouldHydrateFromApi,
+    queryFn: async () => {
+      if (!screeningIdFromRouteOrStore) return null;
+      const response = await screeningApi.getSessionById(
+        screeningIdFromRouteOrStore
+      );
+      const session = response.data;
+      if (!session) return null;
+
+      const mappedImages: RetinalImage[] = (session.images ?? []).map(
+        (img) => ({
+          id: img.id,
+          url: img.imageUrl,
+          name: img.imageUrl.split('/').pop() ?? 'Retinal image',
+          eye:
+            img.eyeSide?.toLowerCase() === 'right'
+              ? 'Right Eye (OD)'
+              : img.eyeSide?.toLowerCase() === 'left'
+                ? 'Left Eye (OS)'
+                : 'Both Eyes',
+          uploadedAt: img.capturedAt,
+          analyzed: false,
+          anomalies: [],
+        })
+      );
+
+      const firstImageUrl = mappedImages[0]?.url;
+      const anomalies = await hydrateConsultationPreviewAnomalies(
+        session.rawJsonOutput,
+        firstImageUrl
+      );
+
+      const normalizedRiskLevel =
+        session.latestResult?.riskLevel?.toLowerCase();
+      const riskLevel: 'low' | 'moderate' | 'high' =
+        normalizedRiskLevel === 'moderate'
+          ? 'moderate'
+          : normalizedRiskLevel === 'high'
+            ? 'high'
+            : 'low';
+
+      return {
+        screeningId: session.screeningId,
+        images: mappedImages,
+        anomalies,
+        riskLevel,
+        riskScore: session.latestResult?.confidenceScore,
+        rawJsonOutput: session.rawJsonOutput,
+        resultsPersisted: Boolean(session.latestResult),
+      };
+    },
+  });
+  const images =
+    activeState?.images ??
+    relevantStoredContext?.images ??
+    hydratedSession?.images ??
+    [];
   const anomalies =
-    activeState?.anomalies ?? storedConsultationContext?.anomalies ?? [];
+    activeState?.anomalies ??
+    relevantStoredContext?.anomalies ??
+    hydratedSession?.anomalies ??
+    [];
+
+  // Derive disease keywords from anomaly data for SerpApi search.
+  // Prefer friendlyName (e.g. "Bệnh võng mạc tiểu đường") over the raw ML label.
+  const diseaseKeywords = useMemo(
+    () =>
+      anomalies
+        .slice()
+        .sort((a, b) => b.confidence - a.confidence)
+        .map((a) => a.friendlyName?.trim() || a.name.trim())
+        .filter(Boolean),
+    [anomalies]
+  );
+
+  const { data: educationalResources = [] } = useQuery<
+    PatientEducationalResourceItem[]
+  >({
+    queryKey: ['patient-eye-health-resources', diseaseKeywords],
+    queryFn: () =>
+      getEyeHealthResourcesForPatient({
+        diseases: diseaseKeywords.length > 0 ? diseaseKeywords : undefined,
+        limit: 3,
+      }),
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  });
   const riskLevel =
-    activeState?.riskLevel ?? storedConsultationContext?.riskLevel ?? 'low';
+    activeState?.riskLevel ??
+    relevantStoredContext?.riskLevel ??
+    hydratedSession?.riskLevel ??
+    'low';
   const risk = RISK_CONFIG[riskLevel];
   const screeningId =
-    activeState?.screeningId ?? storedConsultationContext?.screeningId;
+    activeState?.screeningId ??
+    relevantStoredContext?.screeningId ??
+    hydratedSession?.screeningId;
   const rawJsonForAnalysis =
-    activeState?.rawJsonOutput ?? storedConsultationContext?.rawJsonOutput;
+    activeState?.rawJsonOutput ??
+    relevantStoredContext?.rawJsonOutput ??
+    hydratedSession?.rawJsonOutput;
   const resultsPersisted =
-    activeState?.resultsPersisted ?? Boolean(rawJsonForAnalysis);
+    activeState?.resultsPersisted ??
+    hydratedSession?.resultsPersisted ??
+    Boolean(rawJsonForAnalysis);
 
   const primaryAiConfidence = useMemo(() => {
     if (anomalies.length === 0) return null;
@@ -135,11 +230,13 @@ export default function ReviewPage() {
         riskLevel,
         riskScore:
           activeState?.riskScore ??
-          storedConsultationContext?.riskScore ??
+          relevantStoredContext?.riskScore ??
+          hydratedSession?.riskScore ??
           undefined,
         rawJsonOutput:
           activeState?.rawJsonOutput ??
-          storedConsultationContext?.rawJsonOutput,
+          relevantStoredContext?.rawJsonOutput ??
+          hydratedSession?.rawJsonOutput,
         createdAt: new Date().toISOString(),
       };
     }, [
@@ -149,8 +246,10 @@ export default function ReviewPage() {
       riskLevel,
       activeState?.riskScore,
       activeState?.rawJsonOutput,
-      storedConsultationContext?.riskScore,
-      storedConsultationContext?.rawJsonOutput,
+      relevantStoredContext?.riskScore,
+      relevantStoredContext?.rawJsonOutput,
+      hydratedSession?.riskScore,
+      hydratedSession?.rawJsonOutput,
     ]);
 
   useEffect(() => {
@@ -163,7 +262,7 @@ export default function ReviewPage() {
   const scanId = screeningId?.slice(0, 8);
 
   /* guard: no route state */
-  if (!activeState && !storedConsultationContext) {
+  if (!activeState && !storedConsultationContext && !hydratedSession) {
     return (
       <FocusModeLayout
         currentStep="review"
@@ -405,7 +504,7 @@ export default function ReviewPage() {
               </a>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {EDUCATIONAL_RESOURCES.map((resource) => (
+              {educationalResources.map((resource) => (
                 <a
                   key={resource.id}
                   href={resource.link}
@@ -415,7 +514,7 @@ export default function ReviewPage() {
                 >
                   <div className="h-40 rounded-xl bg-gray-200 dark:bg-slate-700 overflow-hidden mb-3">
                     <img
-                      src={resource.image}
+                      src={resource.image || FALLBACK_RESOURCE_IMAGE}
                       alt={resource.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
