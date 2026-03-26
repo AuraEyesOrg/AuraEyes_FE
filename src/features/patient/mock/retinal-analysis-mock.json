@@ -1,0 +1,472 @@
+{
+  "mockResponses": [
+    {
+      "caseId": "mock-normal-001",
+      "description": "Healthy retina - Normal case",
+      "image_id": "IMG-NORMAL-001",
+      "filename": "healthy_eye.jpg",
+      "lesions": [],
+      "summary": {
+        "total_lesions": 0,
+        "primary_diagnosis": "Normal",
+        "confidence": 98,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-dr1-001",
+      "description": "Mild Diabetic Retinopathy with microaneurysms",
+      "image_id": "IMG-DR1-001",
+      "filename": "dr1_mild.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Microaneurysm",
+          "confidence": 91,
+          "description": "Microaneurysm detected in superior temporal quadrant.",
+          "color": "bg-yellow-500",
+          "type": "info",
+          "location": {
+            "x": 45,
+            "y": 35,
+            "width": 15,
+            "height": 15
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Microaneurysm",
+          "confidence": 87,
+          "description": "Microaneurysm detected in inferior nasal quadrant.",
+          "color": "bg-yellow-500",
+          "type": "info",
+          "location": {
+            "x": 25,
+            "y": 65,
+            "width": 12,
+            "height": 12
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 2,
+        "primary_diagnosis": "DR1 (Mild Diabetic Retinopathy)",
+        "confidence": 91,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-dr2-001",
+      "description": "Moderate Diabetic Retinopathy with hemorrhages and exudates",
+      "image_id": "IMG-DR2-001",
+      "filename": "dr2_moderate.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Retinal Hemorrhage",
+          "confidence": 92,
+          "description": "Retinal hemorrhage detected in the superior temporal region.",
+          "color": "bg-red-600",
+          "type": "warning",
+          "location": {
+            "x": 40,
+            "y": 30,
+            "width": 35,
+            "height": 25
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Hard Exudate",
+          "confidence": 89,
+          "description": "Hard exudate collection detected near the macula.",
+          "color": "bg-orange-500",
+          "type": "caution",
+          "location": {
+            "x": 48,
+            "y": 48,
+            "width": 20,
+            "height": 18
+          }
+        },
+        {
+          "id": "lesion_3",
+          "name": "Cotton-Wool Spot",
+          "confidence": 81,
+          "description": "Cotton-wool spot detected in the superior nasal region.",
+          "color": "bg-yellow-500",
+          "type": "info",
+          "location": {
+            "x": 20,
+            "y": 25,
+            "width": 18,
+            "height": 18
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 3,
+        "primary_diagnosis": "DR2 (Moderate Diabetic Retinopathy)",
+        "confidence": 92,
+        "multi_disease": true
+      }
+    },
+    {
+      "caseId": "mock-crvo-001",
+      "description": "Central Retinal Vein Occlusion - CRITICAL",
+      "image_id": "IMG-CRVO-001",
+      "filename": "crvo_critical.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Central Vein Occlusion",
+          "confidence": 93,
+          "description": "Central retinal vein occlusion detected with extensive hemorrhaging.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 40,
+            "y": 40,
+            "width": 60,
+            "height": 55
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Extensive Hemorrhage",
+          "confidence": 91,
+          "description": "Diffuse retinal hemorrhages throughout the fundus.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 20,
+            "y": 20,
+            "width": 80,
+            "height": 75
+          }
+        },
+        {
+          "id": "lesion_3",
+          "name": "Optic Disc Swelling",
+          "confidence": 87,
+          "description": "Optic disc swelling and edema detected.",
+          "color": "bg-red-500",
+          "type": "warning",
+          "location": {
+            "x": 45,
+            "y": 45,
+            "width": 25,
+            "height": 25
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 3,
+        "primary_diagnosis": "CRVO (Central Retinal Vein Occlusion)",
+        "confidence": 93,
+        "multi_disease": true
+      }
+    },
+    {
+      "caseId": "mock-glaucoma-001",
+      "description": "Possible Glaucoma - Optic Cup Enlargement",
+      "image_id": "IMG-GLAUCOMA-001",
+      "filename": "glaucoma_suspect.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Large Optic Cup",
+          "confidence": 87,
+          "description": "Enlarged optic cup detected with cup-to-disc ratio > 0.6.",
+          "color": "bg-red-500",
+          "type": "warning",
+          "location": {
+            "x": 42,
+            "y": 42,
+            "width": 30,
+            "height": 30
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 1,
+        "primary_diagnosis": "Possible Glaucoma",
+        "confidence": 87,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-rd-001",
+      "description": "Rhegmatogenous Retinal Detachment - EMERGENCY",
+      "image_id": "IMG-RD-001",
+      "filename": "retinal_detachment.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Retinal Detachment",
+          "confidence": 95,
+          "description": "Elevated retinal detachment with subretinal fluid visible.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 30,
+            "y": 35,
+            "width": 70,
+            "height": 65
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Retinal Break/Hole",
+          "confidence": 93,
+          "description": "Retinal break detected at the apex of elevation.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 48,
+            "y": 42,
+            "width": 12,
+            "height": 12
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 2,
+        "primary_diagnosis": "Rhegmatogenous RD (Retinal Detachment)",
+        "confidence": 95,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-rp-001",
+      "description": "Retinitis Pigmentosa - Progressive Dystrophy",
+      "image_id": "IMG-RP-001",
+      "filename": "retinitis_pigmentosa.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Bone Spicule Pigmentation",
+          "confidence": 90,
+          "description": "Bone spicule-like pigmentation in peripheral retina indicating retinitis pigmentosa.",
+          "color": "bg-red-500",
+          "type": "warning",
+          "location": {
+            "x": 15,
+            "y": 30,
+            "width": 70,
+            "height": 60
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 1,
+        "primary_diagnosis": "Retinitis Pigmentosa",
+        "confidence": 90,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-hypertensive-001",
+      "description": "Severe Hypertensive Retinopathy - EMERGENCY",
+      "image_id": "IMG-HYPERTENSIVE-001",
+      "filename": "hypertensive_retinopathy.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Retinal Hemorrhages",
+          "confidence": 91,
+          "description": "Multiple retinal hemorrhages throughout fundus from severe hypertension.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 25,
+            "y": 30,
+            "width": 75,
+            "height": 70
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Cotton-Wool Spots",
+          "confidence": 88,
+          "description": "Multiple cotton-wool spots indicating retinal nerve fiber layer infarcts.",
+          "color": "bg-red-500",
+          "type": "warning",
+          "location": {
+            "x": 20,
+            "y": 25,
+            "width": 80,
+            "height": 75
+          }
+        },
+        {
+          "id": "lesion_3",
+          "name": "Optic Disc Swelling",
+          "confidence": 87,
+          "description": "Optic disc edema and swelling from severe hypertension.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 42,
+            "y": 42,
+            "width": 28,
+            "height": 28
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 3,
+        "primary_diagnosis": "Severe Hypertensive Retinopathy",
+        "confidence": 91,
+        "multi_disease": true
+      }
+    },
+    {
+      "caseId": "mock-cscr-001",
+      "description": "Central Serous Chorioretinopathy - Serous Detachment",
+      "image_id": "IMG-CSCR-001",
+      "filename": "cscr_fluid.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Serous Retinal Detachment",
+          "confidence": 87,
+          "description": "Serous retinal detachment at macula with subretinal fluid accumulation.",
+          "color": "bg-orange-500",
+          "type": "caution",
+          "location": {
+            "x": 40,
+            "y": 40,
+            "width": 40,
+            "height": 35
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 1,
+        "primary_diagnosis": "CSCR (Central Serous Chorioretinopathy)",
+        "confidence": 87,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-maculopathy-001",
+      "description": "Maculopathy with Edema",
+      "image_id": "IMG-MACULOPATHY-001",
+      "filename": "maculopathy.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Macular Edema",
+          "confidence": 88,
+          "description": "Macular region edema and thickening detected.",
+          "color": "bg-orange-500",
+          "type": "caution",
+          "location": {
+            "x": 45,
+            "y": 45,
+            "width": 35,
+            "height": 32
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Hard Exudate Ring",
+          "confidence": 85,
+          "description": "Hard exudate collection forming ring pattern around macula.",
+          "color": "bg-orange-500",
+          "type": "caution",
+          "location": {
+            "x": 40,
+            "y": 40,
+            "width": 45,
+            "height": 45
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 2,
+        "primary_diagnosis": "Maculopathy",
+        "confidence": 88,
+        "multi_disease": false
+      }
+    },
+    {
+      "caseId": "mock-dr3-001",
+      "description": "Severe Diabetic Retinopathy - High Risk",
+      "image_id": "IMG-DR3-001",
+      "filename": "dr3_severe.jpg",
+      "lesions": [
+        {
+          "id": "lesion_1",
+          "name": "Extensive Hemorrhages",
+          "confidence": 94,
+          "description": "Extensive flame-shaped and dot-blot hemorrhages indicating severe DR.",
+          "color": "bg-red-600",
+          "type": "critical",
+          "location": {
+            "x": 20,
+            "y": 25,
+            "width": 80,
+            "height": 75
+          }
+        },
+        {
+          "id": "lesion_2",
+          "name": "Hard Exudate Accumulation",
+          "confidence": 92,
+          "description": "Large accumulation of hard exudates near macula.",
+          "color": "bg-red-500",
+          "type": "warning",
+          "location": {
+            "x": 42,
+            "y": 48,
+            "width": 25,
+            "height": 22
+          }
+        },
+        {
+          "id": "lesion_3",
+          "name": "Venous Beading",
+          "confidence": 88,
+          "description": "Venous beading and vessel wall changes from severe DR.",
+          "color": "bg-orange-500",
+          "type": "caution",
+          "location": {
+            "x": 30,
+            "y": 35,
+            "width": 60,
+            "height": 55
+          }
+        }
+      ],
+      "summary": {
+        "total_lesions": 3,
+        "primary_diagnosis": "DR3 (Severe Diabetic Retinopathy)",
+        "confidence": 94,
+        "multi_disease": true
+      }
+    }
+  ],
+  "diseaseColorMap": {
+    "critical": "bg-red-600",
+    "warning": "bg-red-500",
+    "caution": "bg-orange-500",
+    "info": "bg-yellow-500",
+    "normal": "bg-green-500"
+  },
+  "diseaseToLesionType": {
+    "Normal": "normal",
+    "DR1 (Mild Diabetic Retinopathy)": "info",
+    "DR2 (Moderate Diabetic Retinopathy)": "warning",
+    "DR3 (Severe Diabetic Retinopathy)": "critical",
+    "CRVO (Central Retinal Vein Occlusion)": "critical",
+    "BRVO (Branch Retinal Vein Occlusion)": "warning",
+    "Possible Glaucoma": "warning",
+    "Rhegmatogenous RD (Retinal Detachment)": "critical",
+    "Retinitis Pigmentosa": "warning",
+    "Severe Hypertensive Retinopathy": "critical",
+    "CSCR (Central Serous Chorioretinopathy)": "caution",
+    "Maculopathy": "caution"
+  }
+}
