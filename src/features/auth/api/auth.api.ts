@@ -5,6 +5,7 @@
 
 import { api } from '@/lib/api';
 import { setItem, getItem } from '@/lib/local-storage';
+import useAuthStore from '@/store/auth-store';
 import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 import type {
@@ -344,7 +345,7 @@ export const logout = async (): Promise<void> => {
   try {
     await api.post(`${AUTH_BASE_URL}/logout`);
   } finally {
-    clearAuthData();
+    useAuthStore.getState().logout();
   }
 };
 

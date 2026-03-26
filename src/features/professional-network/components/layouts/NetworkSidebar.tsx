@@ -4,12 +4,13 @@
  * Same width (w-64), bg, padding, and user profile at bottom
  */
 
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Compass,
   Bookmark,
   User,
+  Shield,
   Eye,
   LogOut,
   ArrowLeft,
@@ -23,22 +24,31 @@ import useAuthStore from '@/store/auth-store';
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const { setIsAuthenticated, user } = useAuthStore();
+  const location = useLocation();
+  const { user, logout } = useAuthStore();
 
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
 
-  const dashboardRoute = user?.roles?.includes('Patient')
-    ? '/patient/dashboard'
-    : user?.roles?.includes('Ophthalmologist')
-      ? '/ophthalmologist/dashboard'
-      : user?.roles?.includes('OrgAdmin')
-        ? '/organisation/dashboard'
-        : '/system-admin/dashboard';
+  const stateDashboardRoute = (location.state as { dashboardRoute?: string })
+    ?.dashboardRoute;
+
+  const dashboardRoute = stateDashboardRoute
+    ? stateDashboardRoute
+    : user?.roles?.includes('OrgAdmin')
+      ? '/organisation/dashboard'
+      : user?.roles?.includes('Ophthalmologist')
+        ? '/ophthalmologist/dashboard'
+        : user?.roles?.includes('SystemAdmin')
+          ? '/system-admin/dashboard'
+          : '/';
 
   const navItems = [
     { to: '/network', icon: Home, label: 'Feed', end: true },
     { to: '/network/discover', icon: Compass, label: 'Discover' },
     { to: '/network/saved', icon: Bookmark, label: 'Saved' },
+    ...(user?.roles?.includes('SystemAdmin')
+      ? [{ to: '/network?tab=manage', icon: Shield, label: 'Manage Posts' }]
+      : []),
     {
       to: `/network/profile/${user?.id || 'me'}`,
       icon: User,
@@ -47,7 +57,7 @@ export function NetworkSidebar() {
   ];
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 
@@ -75,7 +85,11 @@ export function NetworkSidebar() {
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Dashboard</span>
+          <span className="text-sm font-medium">
+            {user?.roles?.includes('OrgAdmin')
+              ? 'Back to Organisation Dashboard'
+              : 'Back to Dashboard'}
+          </span>
         </Link>
 
         {/* Navigation */}

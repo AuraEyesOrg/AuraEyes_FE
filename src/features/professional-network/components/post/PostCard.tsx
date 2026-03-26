@@ -24,6 +24,7 @@ import {
   BookmarkCheck,
   Repeat2,
   X,
+  ShieldAlert,
 } from 'lucide-react';
 import type { ProfessionalPost, ReactionType } from '../../types';
 import { InitialsAvatar } from '../professional/InitialsAvatar';
@@ -36,6 +37,9 @@ interface Props {
   currentUserId?: string;
   onReaction?: (postId: string, type: ReactionType) => void;
   onSave?: (postId: string) => void;
+  onHidePost?: (postId: string, hideReason?: string) => void;
+  canModerate?: boolean;
+  isHidingPost?: boolean;
 }
 
 const postTypeConfig = {
@@ -84,11 +88,21 @@ const reactionConfig: Record<
   },
 };
 
-export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
+export function PostCard({
+  post,
+  currentUserId,
+  onReaction,
+  onSave,
+  onHidePost,
+  canModerate = false,
+  isHidingPost = false,
+}: Props) {
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showHideDialog, setShowHideDialog] = useState(false);
   const [repostComment, setRepostComment] = useState('');
+  const [hideReason, setHideReason] = useState('');
   // Refs for timeout handling
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const moreMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -174,15 +188,38 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
     );
   };
 
+  const handleOpenHideDialog = () => {
+    setShowMoreMenu(false);
+    setHideReason('');
+    setShowHideDialog(true);
+  };
+
+  const handleSubmitHidePost = () => {
+    onHidePost?.(post.id, hideReason.trim() || undefined);
+    setShowHideDialog(false);
+    setHideReason('');
+  };
+
   return (
     <>
-      <article className="accent-tab hover-card relative flex flex-col gap-y-4 px-4 py-3 outline-none hover-animation border-b border-light-border">
+      <article className="relative flex flex-col gap-y-4 px-4 py-3 outline-none border-b border-slate-200 dark:border-slate-700">
+        {post.isHidden && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold">Hidden by moderation</p>
+              {post.hideReason && (
+                <p className="text-xs opacity-90 mt-0.5">{post.hideReason}</p>
+              )}
+            </div>
+          </div>
+        )}
         {/* ── Phase 3: Repost header banner ── */}
         {post.isRepost && (
-          <div className="flex items-center gap-1.5 text-[13px] text-text-muted -mb-2">
+          <div className="flex items-center gap-1.5 text-[13px] text-slate-500 dark:text-slate-400 -mb-2">
             <Repeat2 className="w-3.5 h-3.5 flex-shrink-0" />
             <span>
-              <span className="font-semibold text-text-main">
+              <span className="font-semibold text-(--text-primary)">
                 {post.author.fullName}
               </span>{' '}
               đã chia sẻ
@@ -208,16 +245,16 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
               <div className="flex items-center gap-1 min-w-0 text-[15px]">
                 <Link
                   to={`/network/profile/${post.author.id}`}
-                  className="font-bold text-text-main hover:underline truncate"
+                  className="font-bold text-(--text-primary) hover:underline truncate"
                 >
                   {post.author.fullName}
                 </Link>
                 {post.author.organisationName && (
-                  <span className="text-text-muted truncate">
+                  <span className="text-slate-500 dark:text-slate-400 truncate">
                     · {post.author.organisationName}
                   </span>
                 )}
-                <span className="text-text-muted flex-shrink-0 whitespace-nowrap">
+                <span className="text-slate-500 dark:text-slate-400 flex-shrink-0 whitespace-nowrap">
                   · {formatViCompactDate(post.createdAt)}
                 </span>
               </div>
@@ -229,7 +266,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                 onMouseLeave={handleMoreMouseLeave}
               >
                 <button
-                  className="p-2 text-text-muted hover:text-brand-primary hover:bg-brand-soft/50 rounded-full transition-all"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all"
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
                 >
                   <MoreHorizontal className="w-[18px] h-[18px]" />
@@ -242,16 +279,16 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -10 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-light-border py-2 z-20"
+                      className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-20"
                     >
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all">
+                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-(--text-primary) hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                         <Copy className="w-4 h-4" />
                         Copy link
                       </button>
                       {!isOwnPost && (
                         <button
                           onClick={handleSave}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-(--text-primary) hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                         >
                           {isSaved ? (
                             <BookmarkCheck className="w-4 h-4 text-brand-primary" />
@@ -261,7 +298,16 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                           {isSaved ? 'Saved' : 'Save post'}
                         </button>
                       )}
-                      <div className="my-1 border-t border-light-border" />
+                      {canModerate && !post.isHidden && (
+                        <button
+                          onClick={handleOpenHideDialog}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-amber-700 hover:bg-amber-50 transition-all"
+                        >
+                          <ShieldAlert className="w-4 h-4" />
+                          Hide post
+                        </button>
+                      )}
+                      <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
                       <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                         <Flag className="w-4 h-4" />
                         Report post
@@ -282,7 +328,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
 
             {/* ── Phase 3: Repost comment (quote text) ── */}
             {post.isRepost && post.repostComment && (
-              <div className="mt-2 text-[15px] text-text-main whitespace-pre-wrap leading-normal">
+              <div className="mt-2 text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
                 {post.repostComment}
               </div>
             )}
@@ -301,43 +347,55 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                     <div className="flex items-center gap-1 min-w-0 text-[13px]">
                       <Link
                         to={`/network/profile/${post.originalPost.author.id}`}
-                        className="font-semibold text-text-main hover:underline truncate"
+                        className="font-semibold text-(--text-primary) hover:underline truncate"
                       >
                         {post.originalPost.author.fullName}
                       </Link>
-                      <span className="text-text-muted flex-shrink-0">
+                      <span className="text-slate-500 dark:text-slate-400 flex-shrink-0">
                         · {formatViCompactDate(post.originalPost.createdAt)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Original content — truncated to 3 lines */}
-                  <Link to={`/network/post/${post.originalPost.id}`}>
-                    <p className="text-[14px] text-text-main leading-snug line-clamp-3">
-                      {post.originalPost.content}
-                    </p>
-                  </Link>
+                  {post.originalPost.isHidden ? (
+                    <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-xs">
+                      <p className="font-semibold">Original post hidden</p>
+                      {post.originalPost.hideReason && (
+                        <p className="mt-0.5 opacity-90">
+                          {post.originalPost.hideReason}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <Link to={`/network/post/${post.originalPost.id}`}>
+                      <p className="text-[14px] text-(--text-primary) leading-snug line-clamp-3">
+                        {post.originalPost.content}
+                      </p>
+                    </Link>
+                  )}
                 </div>
 
                 {/* Original post images (if any) */}
-                {post.originalPost.attachments.filter((a) => a.type === 'Image')
-                  .length > 0 && (
-                  <div
-                    className={`grid gap-0.5 ${post.originalPost.attachments.filter((a) => a.type === 'Image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
-                  >
-                    {post.originalPost.attachments
-                      .filter((a) => a.type === 'Image')
-                      .slice(0, 2)
-                      .map((attachment) => (
-                        <img
-                          key={attachment.id}
-                          src={attachment.fileUrl}
-                          alt={attachment.fileName}
-                          className="w-full h-40 object-cover"
-                        />
-                      ))}
-                  </div>
-                )}
+                {!post.originalPost.isHidden &&
+                  post.originalPost.attachments.filter(
+                    (a) => a.type === 'Image'
+                  ).length > 0 && (
+                    <div
+                      className={`grid gap-0.5 ${post.originalPost.attachments.filter((a) => a.type === 'Image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
+                    >
+                      {post.originalPost.attachments
+                        .filter((a) => a.type === 'Image')
+                        .slice(0, 2)
+                        .map((attachment) => (
+                          <img
+                            key={attachment.id}
+                            src={attachment.fileUrl}
+                            alt={attachment.fileName}
+                            className="w-full h-40 object-cover"
+                          />
+                        ))}
+                    </div>
+                  )}
               </div>
             )}
 
@@ -346,7 +404,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
               <>
                 {/* Content */}
                 <Link to={`/network/post/${post.id}`} className="block mt-2">
-                  <div className="text-[15px] text-text-main whitespace-pre-wrap leading-normal">
+                  <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
                     {post.content.split('\n').map((line, i) => {
                       const boldRegex = /\*\*(.*?)\*\*/g;
                       const parts = line.split(boldRegex);
@@ -371,7 +429,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                 {post.attachments.filter((a) => a.type === 'Image').length >
                   0 && (
                   <div
-                    className={`mt-3 grid gap-0.5 rounded-2xl overflow-hidden border border-light-border ${post.attachments.filter((a) => a.type === 'Image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
+                    className={`mt-3 grid gap-0.5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 ${post.attachments.filter((a) => a.type === 'Image').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
                   >
                     {post.attachments
                       .filter((a) => a.type === 'Image')
@@ -396,13 +454,13 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                         <a
                           key={attachment.id}
                           href={attachment.fileUrl}
-                          className="flex items-center gap-3 p-3 bg-main-search-background border border-light-border rounded-xl hover:bg-brand-soft transition-all"
+                          className="flex items-center gap-3 p-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                         >
                           <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
                             <FileText className="w-5 h-5 text-brand-primary" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-[14px] text-text-main">
+                            <p className="font-medium text-[14px] text-(--text-primary)">
                               {attachment.fileName}
                             </p>
                           </div>
@@ -415,7 +473,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
 
             {/* Reaction Summary Row — Facebook-style */}
             {reactionCount > 0 && (
-              <div className="flex items-center gap-1 mt-3 text-[13px] text-text-muted">
+              <div className="flex items-center gap-1 mt-3 text-[13px] text-slate-500 dark:text-slate-400">
                 {Object.entries(reactionConfig)
                   .map(([type, config]) => {
                     const Icon = config.icon;
@@ -430,7 +488,9 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                     );
                   })
                   .slice(0, 3)}
-                <span className="ml-1 text-text-muted">{reactionCount}</span>
+                <span className="ml-1 text-slate-500 dark:text-slate-400">
+                  {reactionCount}
+                </span>
               </div>
             )}
 
@@ -448,7 +508,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                   className={`group flex items-center gap-1 p-2 rounded-full transition-all ${
                     CurrentReaction
                       ? `${CurrentReaction.color}`
-                      : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {CurrentReaction ? (
@@ -486,7 +546,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                       }}
                       className="absolute bottom-full left-0 pb-2 z-30"
                     >
-                      <div className="flex items-center gap-1 p-1.5 bg-white rounded-full shadow-xl border border-light-border">
+                      <div className="flex items-center gap-1 p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-xl border border-slate-200 dark:border-slate-700">
                         {Object.entries(reactionConfig).map(
                           ([type, config]) => {
                             const Icon = config.icon;
@@ -502,8 +562,8 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                                 }}
                                 className={`p-2 rounded-full transition-colors ${
                                   isSelected
-                                    ? `${config.color} bg-main-search-background`
-                                    : 'text-text-muted hover:bg-main-search-background'
+                                    ? `${config.color} bg-slate-100 dark:bg-slate-800`
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
                                 title={config.label}
                               >
@@ -523,7 +583,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
               {/* Comment */}
               <Link
                 to={`/network/post/${post.id}`}
-                className="group flex items-center gap-1 p-2 text-text-muted hover:text-green-600 hover:bg-green-50 rounded-full transition-all"
+                className="group flex items-center gap-1 p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-all"
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="text-[13px]">
@@ -539,7 +599,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                   className={`flex items-center gap-1 p-2 rounded-full transition-all ${
                     post.repostCount > 0
                       ? 'text-emerald-600'
-                      : 'text-text-muted hover:text-emerald-600 hover:bg-emerald-50'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
                   title="Chia sẻ bài viết"
                 >
@@ -558,7 +618,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                   className={`group flex items-center p-2 rounded-full transition-all ${
                     isSaved
                       ? 'text-brand-primary'
-                      : 'text-text-muted hover:text-brand-primary hover:bg-brand-soft/50'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {isSaved ? (
@@ -572,6 +632,76 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
           </div>
         </div>
       </article>
+
+      <AnimatePresence>
+        {showHideDialog && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHideDialog(false)}
+              className="fixed inset-0 bg-black/50 z-40"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                  <h2 className="text-[17px] font-bold text-(--text-primary)">
+                    Hide this post
+                  </h2>
+                  <button
+                    onClick={() => setShowHideDialog(false)}
+                    className="p-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Hidden posts are visible only to their author and System
+                    Admin.
+                  </p>
+                  <textarea
+                    value={hideReason}
+                    onChange={(e) => setHideReason(e.target.value)}
+                    placeholder="Reason for hiding (optional)"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[15px] text-(--text-primary) placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
+                  <button
+                    onClick={() => setShowHideDialog(false)}
+                    className="px-4 py-2 rounded-full text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <LoadingButton
+                    onClick={handleSubmitHidePost}
+                    isPending={isHidingPost}
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-amber-600 text-white text-[14px] font-semibold hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    Hide Post
+                  </LoadingButton>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Phase 2: Share / Repost Dialog ── */}
       <AnimatePresence>
@@ -599,13 +729,13 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Dialog header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-light-border">
-                  <h2 className="text-[17px] font-bold text-text-main">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                  <h2 className="text-[17px] font-bold text-(--text-primary)">
                     Chia sẻ bài viết này
                   </h2>
                   <button
                     onClick={handleCloseShareDialog}
-                    className="p-1.5 rounded-full text-text-muted hover:bg-main-search-background transition-all"
+                    className="p-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -619,7 +749,7 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                     onChange={(e) => setRepostComment(e.target.value)}
                     placeholder="Thêm lời bình luận của bạn... (tuỳ chọn)"
                     rows={3}
-                    className="w-full resize-none rounded-xl border border-light-border bg-main-search-background px-4 py-3 text-[15px] text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-all"
+                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[15px] text-(--text-primary) placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                   />
 
                   {/* Original post preview */}
@@ -632,17 +762,17 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                           size="xs"
                         />
                         <div className="flex items-center gap-1 min-w-0">
-                          <span className="font-semibold text-[13px] text-text-main truncate">
+                          <span className="font-semibold text-[13px] text-(--text-primary) truncate">
                             {post.author.fullName}
                           </span>
                           {post.author.organisationName && (
-                            <span className="text-text-muted text-[12px] truncate">
+                            <span className="text-slate-500 dark:text-slate-400 text-[12px] truncate">
                               · {post.author.organisationName}
                             </span>
                           )}
                         </div>
                       </div>
-                      <p className="text-[14px] text-text-main line-clamp-3 leading-snug">
+                      <p className="text-[14px] text-(--text-primary) line-clamp-3 leading-snug">
                         {post.content}
                       </p>
                     </div>
@@ -663,10 +793,10 @@ export function PostCard({ post, currentUserId, onReaction, onSave }: Props) {
                 </div>
 
                 {/* Dialog footer */}
-                <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-light-border">
+                <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
                   <button
                     onClick={handleCloseShareDialog}
-                    className="px-4 py-2 rounded-full text-[14px] font-medium text-text-muted hover:bg-main-search-background transition-all"
+                    className="px-4 py-2 rounded-full text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                   >
                     Hủy
                   </button>

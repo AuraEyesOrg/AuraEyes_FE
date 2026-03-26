@@ -1,4 +1,4 @@
-# AURA - Offline Clinic Booking Flow
+# AURA - Organisation Slot Booking and Offline Appointment Flow
 
 ## 1. Objective
 

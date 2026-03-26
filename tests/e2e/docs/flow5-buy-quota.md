@@ -1,8 +1,8 @@
-# AURA - Buy AI Quota Flow
+# AURA - AI Quota Purchase for Screening Service Flow
 
 ## 1. Objective
 
-- Verify patient buys AI screening quota from UI and system updates quota + wallet transaction.
+- Verify patient purchases AI screening quota from UI and system updates quota and wallet transaction.
 
 ## 2. Source of Truth
 

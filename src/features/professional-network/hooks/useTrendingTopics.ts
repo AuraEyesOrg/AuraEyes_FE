@@ -7,5 +7,7 @@ export function useTrendingTopics() {
     queryKey: networkKeys.trending(),
     queryFn: () => trendingApi.getTrending(),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 }
