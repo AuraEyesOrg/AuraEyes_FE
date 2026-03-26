@@ -1,5 +1,8 @@
 # React Query, Zustand, TypeScript & Vite Boilerplate
 
+[![FE Quality & Security](https://github.com/AuraEyesOrg/AuraEyes_FE/actions/workflows/fe-quality-security.yml/badge.svg?branch=develop)](https://github.com/AuraEyesOrg/AuraEyes_FE/actions/workflows/fe-quality-security.yml)
+[![Vercel CD](https://github.com/AuraEyesOrg/AuraEyes_FE/actions/workflows/fe-cd.yml/badge.svg?branch=develop)](https://github.com/AuraEyesOrg/AuraEyes_FE/actions/workflows/fe-cd.yml)
+
 This is a template repository to set up a project using React, React Query, Zustand, TypeScript, and Vite, aiming to provide a scalable structure and essential configurations to kick-start your next application.
 
 ## Stack
