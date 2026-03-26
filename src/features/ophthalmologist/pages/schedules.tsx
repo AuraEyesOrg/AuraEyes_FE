@@ -33,6 +33,7 @@ import {
   SLOT_TYPE_LABELS,
 } from '@/types/schedule';
 import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
+import { useTranslation } from 'react-i18next';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 // Fallback value for local development if auth user does not include profile id.
@@ -72,6 +73,7 @@ const statusColors: Record<ScheduleStatus, string> = {
 
 export default function SchedulesPage() {
   const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
   const { user } = useAuthStore();
   const [filter, setFilter] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -162,7 +164,6 @@ export default function SchedulesPage() {
     return grouped;
   }, [filteredSchedules]);
 
-  // Get all days of the current week
   const weekDays = useMemo(() => {
     const days: {
       date: string;
@@ -172,19 +173,21 @@ export default function SchedulesPage() {
     }[] = [];
     const startDate = new Date(weekRange.from + 'T00:00:00');
     const today = toLocalDateKey(new Date());
+    const localeMap: Record<string, string> = { vi: 'vi-VN', en: 'en-US' };
+    const dateLocale = localeMap[i18n.language] || 'en-US';
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
       d.setDate(startDate.getDate() + i);
       const dateStr = toLocalDateKey(d);
       days.push({
         date: dateStr,
-        dayName: formatWeekDayLabel(d),
+        dayName: formatWeekDayLabel(d, dateLocale),
         dayNum: d.getDate(),
         isToday: dateStr === today,
       });
     }
     return days;
-  }, [weekRange]);
+  }, [weekRange, i18n.language]);
 
   const availableCount = schedules.filter(
     (s: ScheduleListDto) => s.status === ScheduleStatus.Available

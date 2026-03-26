@@ -1,4 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -10,15 +11,18 @@ import {
   Settings,
   MessagesSquare,
   FileText,
+  Globe,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   DEFAULT_LOCALE,
+  type AppLocale,
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
 
 interface DoctorSidebarProps {
   pendingCount?: number;
@@ -97,6 +101,15 @@ export default function DoctorSidebar({
   const handleLogout = () => {
     logout();
     navigate(toLocalizedPath('/login'));
+  };
+
+  const { i18n } = useTranslation();
+  const handleToggleLanguage = () => {
+    const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
+    persistLocale(newLocale);
+    i18n.changeLanguage(newLocale);
+    const newPath = withLocalePathname(newLocale, location.pathname);
+    navigate(newPath);
   };
 
   return (
@@ -178,6 +191,13 @@ export default function DoctorSidebar({
                 </p>
               </div>
             </div>
+            <button
+              onClick={handleToggleLanguage}
+              className="text-gray-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
+              title={t('Common.language', 'Language')}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
