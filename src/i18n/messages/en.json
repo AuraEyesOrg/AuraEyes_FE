@@ -242,6 +242,7 @@
         "unknownDoctor": "Unknown doctor",
         "noBio": "No profile bio available."
       },
+      "pageTitle": "Settings",
       "profile": {
         "title": "Profile Information",
         "edit": "Edit Profile",

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { ApiResponse } from '@/features/patient/types';
+import { ApiResponse } from '@/types/api-response';
 
 export const SYSTEM_SETTINGS_KEYS = {
   all: ['system-settings'] as const,
