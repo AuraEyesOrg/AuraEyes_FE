@@ -3,7 +3,7 @@
  * Manage system-wide settings and configurations
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Settings as SettingsIcon,
   Bell,
@@ -14,6 +14,8 @@ import {
   Lock,
   Save,
   RefreshCw,
+  Plus,
+  X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
@@ -57,9 +59,20 @@ const settingSections: SettingSection[] = [
   },
 ];
 
+const DEFAULT_TRUSTED_DOMAINS = [
+  'vinmec.com',
+  'vnio.vn',
+  'benhvienmat.com',
+  'matsaigon.com',
+  'matquocte.vn',
+  'medlatec.vn',
+  'hellobacsi.com',
+];
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
+  const domainInputRef = useRef<HTMLInputElement>(null);
 
   const { data: systemSettings } = useSystemSettings();
   const updateSettingsMutation = useUpdateSystemSettings();
@@ -77,6 +90,12 @@ export default function SettingsPage() {
     freeAiQuota: 3,
     aiQuotaPrice: 50000,
   });
+
+  // Trusted medical domains for AI resource search
+  const [trustedDomains, setTrustedDomains] = useState<string[]>(
+    DEFAULT_TRUSTED_DOMAINS
+  );
+  const [domainInput, setDomainInput] = useState('');
 
   useEffect(() => {
     if (systemSettings) {
@@ -98,6 +117,14 @@ export default function SettingsPage() {
           ? parseFloat(systemSettings['AI_QUOTA_PRICE'])
           : 50000,
       }));
+
+      if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
+        const parsed = systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']
+          .split(',')
+          .map((d) => d.trim())
+          .filter(Boolean);
+        if (parsed.length > 0) setTrustedDomains(parsed);
+      }
     }
   }, [systemSettings]);
 
@@ -134,6 +161,7 @@ export default function SettingsPage() {
         ).toString(),
         FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
         AI_QUOTA_PRICE: Math.max(0, generalSettings.aiQuotaPrice).toString(),
+        TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
       toast.success('Settings saved successfully');
@@ -144,6 +172,24 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
+
+  const addDomain = () => {
+    const raw = domainInput
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/.*$/, '');
+    if (!raw || trustedDomains.includes(raw)) {
+      setDomainInput('');
+      return;
+    }
+    setTrustedDomains((prev) => [...prev, raw]);
+    setDomainInput('');
+    domainInputRef.current?.focus();
+  };
+
+  const removeDomain = (domain: string) =>
+    setTrustedDomains((prev) => prev.filter((d) => d !== domain));
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
@@ -312,6 +358,74 @@ export default function SettingsPage() {
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
           />
+        </div>
+      </div>
+
+      {/* Trusted Medical Domains */}
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Trusted Medical Domains for AI Resources
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Google search results will be restricted to these domains (e.g.{' '}
+            <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">
+              vinmec.com
+            </code>
+            ).
+          </p>
+        </div>
+
+        {/* Domain tags */}
+        <div className="flex flex-wrap gap-2 min-h-[40px] p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          {trustedDomains.length === 0 && (
+            <span className="text-xs text-slate-400 italic">
+              No domains configured — using built-in defaults.
+            </span>
+          )}
+          {trustedDomains.map((domain) => (
+            <span
+              key={domain}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+            >
+              <Globe className="w-3 h-3" />
+              {domain}
+              <button
+                type="button"
+                onClick={() => removeDomain(domain)}
+                className="hover:text-red-500 transition-colors ml-0.5"
+                aria-label={`Remove ${domain}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+
+        {/* Add domain input */}
+        <div className="flex gap-2">
+          <input
+            ref={domainInputRef}
+            type="text"
+            value={domainInput}
+            onChange={(e) => setDomainInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addDomain();
+              }
+            }}
+            placeholder="e.g. benhvienmathanoi.vn"
+            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <button
+            type="button"
+            onClick={addDomain}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-medium text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </button>
         </div>
       </div>
 
