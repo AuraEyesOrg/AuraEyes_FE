@@ -7,6 +7,7 @@ import {
   BarChart3,
   FileText,
   Users,
+  Network,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -26,6 +27,7 @@ const navItems = [
     hasBadge: true,
   },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
+  { icon: Network, label: 'Aura Network', path: '/network' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
   { icon: CalendarCog, label: 'Slots', path: '/organisation/slots' },
   { icon: Settings, label: 'Settings', path: '/organisation/settings' },

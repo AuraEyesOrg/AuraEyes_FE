@@ -5,8 +5,8 @@ import { query } from '../helpers/postgres';
 const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
-test.describe('Flow 05 - Purchase Quota on Screening New', () => {
-  test('patient purchases quota from /patient/screening/new and can use AI again', async ({ browser }) => {
+test.describe('Flow 05 - AI Quota Purchase for Screening Service', () => {
+  test('patient purchases additional ai quota from screening service and quota is updated', async ({ browser }) => {
     test.setTimeout(180_000);
 
     const patientRows = await query<{ PatientUserId: string; PatientId: string }>(

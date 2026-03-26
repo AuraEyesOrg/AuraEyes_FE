@@ -62,13 +62,12 @@ export function formatSlotTimeShort(hhmm: string): string {
  * Parses slot `date` + `startTime` returned by booking APIs as a UTC datetime.
  *
  * Contract:
- * - Backend returns `date` (`YYYY-MM-DD`) and `startTime` (`HH:mm[:ss]`)
- *   representing UTC clock time.
- * - This helper normalizes parsing so all pages interpret slot expiry/disable
- *   status consistently.
+ * - Backend persists slot date/time in Vietnam local clock time.
+ * - Frontend must parse it as local time (without forcing UTC) so expiry checks
+ *   align with what users see in the calendar.
  */
 export function parseSlotDateTimeUtc(date: string, startTime: string): Date {
-  return new Date(`${date}T${startTime}Z`);
+  return new Date(`${date}T${startTime}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -344,9 +343,14 @@ export function formatWeekRange(startOfWeek: Date, endOfWeek: Date): string {
 
 /**
  * Returns a short weekday label for column headers: `"Mon"`, `"Tue"`, etc.
+ * Supports locale parameter for localized output (e.g., 'vi-VN' for T2, T3, etc.)
  */
-export function formatWeekDayLabel(date: Date): string {
-  return date.toLocaleDateString(EN_US, { weekday: 'short' });
+export function formatWeekDayLabel(date: Date, locale: string = EN_US): string {
+  if (locale === VI_VN) {
+    const weekdaysVi = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    return weekdaysVi[date.getDay()];
+  }
+  return date.toLocaleDateString(locale, { weekday: 'short' });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

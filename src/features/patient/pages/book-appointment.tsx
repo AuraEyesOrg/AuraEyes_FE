@@ -347,6 +347,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
       status: 1, // Available status
       fromDate: monthRange.from,
       toDate: monthRange.to,
+      excludePastSlots: true,
       pageSize: 500,
     },
     { enabled: !!selectedDoctorId }

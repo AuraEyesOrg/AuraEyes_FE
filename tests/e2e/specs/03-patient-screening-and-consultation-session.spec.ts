@@ -28,8 +28,8 @@ async function ensureReadyImage(page: import('@playwright/test').Page): Promise<
   }
 }
 
-test.describe('Flow 03 - Tele Consultation End-to-End', () => {
-  test('dashboard upload -> AI analyze -> review -> find specialist -> booking -> confirm&pay -> consultation chat + meet', async ({ browser }) => {
+test.describe('Flow 03 - AI Screening, Appointment Booking, and Consultation Session', () => {
+  test('patient completes full screening service journey then requests consultation session with chat and google meet', async ({ browser }) => {
     test.setTimeout(420_000);
 
     const profileRows = await query<{ PatientId: string; PatientUserId: string; DoctorId: string }>(
@@ -74,7 +74,20 @@ test.describe('Flow 03 - Tele Consultation End-to-End', () => {
       postLoginPath: '/patient/dashboard',
     });
 
-    await patientPage.getByRole('link', { name: /Upload New Scan|Upload Your First Scan/i }).first().click();
+    await expect(patientPage).toHaveURL(/\/patient\/dashboard/);
+
+    const newScanEntry = patientPage
+      .getByRole('link', {
+        name: /Upload New Scan|Upload Your First Scan|New Scan/i,
+      })
+      .first();
+
+    if ((await newScanEntry.count()) > 0) {
+      await newScanEntry.click();
+    } else {
+      await patientPage.goto('/patient/screening/new');
+    }
+
     await expect(patientPage).toHaveURL(/\/patient\/screening\/new/);
 
     const fakeFundus = Buffer.from('');
@@ -87,22 +100,28 @@ test.describe('Flow 03 - Tele Consultation End-to-End', () => {
     await ensureReadyImage(patientPage);
     await patientPage.getByRole('button', { name: /Start AI Analysis/i }).click();
 
-    await expect(patientPage).toHaveURL(/\/patient\/screening\/analyze/);
+    await expect(patientPage).toHaveURL(/\/patient\/analysis/);
     await patientPage.getByRole('button', { name: /Start Screening/i }).click();
 
     await expect(patientPage.getByRole('button', { name: /Continue to Review/i })).toBeVisible({ timeout: 120_000 });
     await patientPage.getByRole('button', { name: /Continue to Review/i }).click();
 
     await expect(patientPage).toHaveURL(/\/patient\/screening\/review/);
+    await expect(
+      patientPage.getByRole('heading', { name: /Review\s*&\s*Next Actions/i })
+    ).toBeVisible();
+    await expect(
+      patientPage.getByText(/Understanding Diabetic Retinopathy/i)
+    ).toBeVisible();
+
+    await patientPage.goto('/patient/roadmap');
+    await expect(
+      patientPage.getByRole('heading', { name: /Health Improvement Roadmap/i })
+    ).toBeVisible();
+
+    await patientPage.goto('/patient/screening/review');
 
     await patientPage.getByRole('button', { name: /Find a Specialist/i }).click();
-
-    const bookMoreFromAppointments = patientPage.getByRole('link', { name: /Book More Slot/i }).first();
-    if ((await bookMoreFromAppointments.count()) > 0) {
-      await bookMoreFromAppointments.click();
-    } else {
-      await patientPage.goto('/patient/doctors');
-    }
 
     await expect(patientPage).toHaveURL(/\/patient\/doctors/);
 

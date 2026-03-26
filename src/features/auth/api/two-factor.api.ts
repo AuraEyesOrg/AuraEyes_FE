@@ -4,6 +4,8 @@
  */
 
 import { api } from '@/lib/api';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   TwoFactorStatusResponse,
   TwoFactorSetupResponse,
@@ -13,13 +15,6 @@ import type {
   GenerateRecoveryCodesRequest,
   RecoveryCodesResponse,
 } from '../types';
-
-interface ApiResponse<T> {
-  succeeded: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
 
 const TWO_FACTOR_BASE_URL = '/two-factor';
 
@@ -31,7 +26,7 @@ export const getTwoFactorStatus =
     const response = await api.get<ApiResponse<TwoFactorStatusResponse>>(
       `${TWO_FACTOR_BASE_URL}/status`
     );
-    return response.data.data;
+    return unwrapApiData<TwoFactorStatusResponse>(response.data);
   };
 
 /**
@@ -41,7 +36,7 @@ export const setupTwoFactor = async (): Promise<TwoFactorSetupResponse> => {
   const response = await api.post<ApiResponse<TwoFactorSetupResponse>>(
     `${TWO_FACTOR_BASE_URL}/setup`
   );
-  return response.data.data;
+  return unwrapApiData<TwoFactorSetupResponse>(response.data);
 };
 
 /**
@@ -54,7 +49,7 @@ export const enableTwoFactor = async (
     `${TWO_FACTOR_BASE_URL}/enable`,
     data
   );
-  return response.data.data;
+  return unwrapApiData<EnableTwoFactorResponse>(response.data);
 };
 
 /**
@@ -76,5 +71,5 @@ export const generateRecoveryCodes = async (
     `${TWO_FACTOR_BASE_URL}/recovery-codes`,
     data
   );
-  return response.data.data;
+  return unwrapApiData<RecoveryCodesResponse>(response.data);
 };

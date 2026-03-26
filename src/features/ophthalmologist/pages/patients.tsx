@@ -1,13 +1,19 @@
 import { useMemo, useState } from 'react';
 import {
   Search,
-  Filter,
   Eye,
   Calendar,
   Clock,
-  MoreVertical,
+  MessageSquare,
+  Users,
+  UserCheck,
+  AlertTriangle,
+  UserX,
+  LayoutGrid,
+  List,
+  ArrowRight,
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import Spinner from '@/components/ui/spinner';
 import { useConsultationSessions } from '@/features/consultation/hooks';
@@ -18,6 +24,9 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
 
 type PatientCardStatus = 'active' | 'urgent' | 'past';
+type ViewMode = 'grid' | 'table';
+
+/* ────────────────────── helpers ────────────────────── */
 
 interface PatientCardItem {
   id: string;
@@ -31,6 +40,8 @@ interface PatientCardItem {
   completedCount: number;
   nextAppointment: string;
   lastVisit: string;
+  lastDiagnosis: string;
+  visitHistory: [number, number, number];
 }
 
 const AVATAR_COLORS = [
@@ -90,26 +101,112 @@ const isUpcomingSession = (session: ConsultationSessionListDto) => {
   return appointmentTime.getTime() >= Date.now();
 };
 
-const getStatusStyle = (
-  status: PatientCardStatus
-): { bg: string; text: string } => {
+const getSessionTimestamp = (session: ConsultationSessionListDto) => {
+  const base = session.appointmentTime ?? session.createdAt;
+  const date = new Date(base);
+  const time = date.getTime();
+  if (!Number.isNaN(time)) return time;
+  return new Date(session.createdAt).getTime();
+};
+
+const monthIndex = (d: Date) => d.getFullYear() * 12 + d.getMonth();
+
+const getVisitHistoryFromSessions = (
+  patientSessions: ConsultationSessionListDto[]
+): [number, number, number] => {
+  const now = new Date();
+  const current = monthIndex(now);
+  const buckets: [number, number, number] = [0, 0, 0]; // 2 mo ago, 1 mo ago, this
+
+  for (const s of patientSessions) {
+    const ts = getSessionTimestamp(s);
+    if (Number.isNaN(ts)) continue;
+    const d = new Date(ts);
+    const diff = current - monthIndex(d);
+    if (diff === 0) buckets[2] += 1;
+    else if (diff === 1) buckets[1] += 1;
+    else if (diff === 2) buckets[0] += 1;
+  }
+
+  return buckets;
+};
+
+const getLastDiagnosisFromSessions = (
+  patientSessions: ConsultationSessionListDto[],
+  fallback: string
+) => {
+  const sorted = [...patientSessions].sort(
+    (a, b) => getSessionTimestamp(b) - getSessionTimestamp(a)
+  );
+
+  for (const s of sorted) {
+    const findings = s.caseSnapshot?.findings?.trim();
+    if (findings) return findings;
+    const summary = s.caseSnapshot?.summary?.trim();
+    if (summary) return summary;
+  }
+
+  return fallback;
+};
+
+const getStatusMeta = (status: PatientCardStatus) => {
   switch (status) {
     case 'urgent':
-      return { bg: 'bg-amber-100', text: 'text-amber-700' };
+      return {
+        bg: 'bg-amber-100 dark:bg-amber-900/30',
+        text: 'text-amber-700 dark:text-amber-400',
+        dot: 'bg-amber-500',
+        pulse: true,
+      };
+    case 'active':
+      return {
+        bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+        text: 'text-emerald-700 dark:text-emerald-400',
+        dot: 'bg-emerald-500',
+        pulse: false,
+      };
     case 'past':
-      return { bg: 'bg-slate-100', text: 'text-slate-700' };
-    default:
-      return { bg: 'bg-emerald-100', text: 'text-emerald-700' };
+      return {
+        bg: 'bg-slate-100 dark:bg-slate-800',
+        text: 'text-slate-600 dark:text-slate-400',
+        dot: 'bg-slate-400',
+        pulse: false,
+      };
   }
 };
+
+/* ────────────────────── Mini bar chart component ────────────────────── */
+function MiniBarChart({ data }: { data: [number, number, number] }) {
+  const max = Math.max(...data, 1);
+  const labels = ['2 mo', '1 mo', 'This'];
+  return (
+    <div className="flex items-end gap-1 h-8">
+      {data.map((val, i) => (
+        <div key={i} className="flex flex-col items-center gap-0.5">
+          <div
+            className={`w-4 rounded-sm transition-all ${
+              i === 2 ? 'bg-cyan-500' : 'bg-gray-200 dark:bg-gray-700'
+            }`}
+            style={{ height: `${Math.max((val / max) * 24, 2)}px` }}
+          />
+          <span className="text-[9px] text-gray-400">{labels[i]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ────────────────────── component ────────────────────── */
 
 export default function PatientsPage() {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const { user } = useAuthStore();
   const ophthalmologistId = user?.roleId;
@@ -140,16 +237,16 @@ export default function PatientsPage() {
 
     grouped.forEach((patientSessions, patientId) => {
       const sortedByTimeDesc = [...patientSessions].sort((a, b) => {
-        const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
-        const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
+        const aValue = getSessionTimestamp(a);
+        const bValue = getSessionTimestamp(b);
         return bValue - aValue;
       });
 
       const upcomingSessions = patientSessions
         .filter((session) => isUpcomingSession(session))
         .sort((a, b) => {
-          const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
-          const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
+          const aValue = getSessionTimestamp(a);
+          const bValue = getSessionTimestamp(b);
           return aValue - bValue;
         });
 
@@ -159,8 +256,8 @@ export default function PatientsPage() {
 
       const nextUpcoming = upcomingSessions[0]?.appointmentTime ?? null;
       const latestCompleted = [...completedSessions].sort((a, b) => {
-        const aValue = new Date(a.appointmentTime ?? a.createdAt).getTime();
-        const bValue = new Date(b.appointmentTime ?? b.createdAt).getTime();
+        const aValue = getSessionTimestamp(a);
+        const bValue = getSessionTimestamp(b);
         return bValue - aValue;
       })[0]?.appointmentTime;
 
@@ -179,6 +276,11 @@ export default function PatientsPage() {
         sortedByTimeDesc[0]?.patientName?.trim() ||
         `${t('Ophthalmologist.patients.patientPrefix', 'Patient')} ${patientId.slice(0, 8)}`;
 
+      const lastDiagnosis = getLastDiagnosisFromSessions(
+        patientSessions,
+        t('Ophthalmologist.patients.notAvailable', 'N/A')
+      );
+
       result.push({
         id: patientId,
         name: displayName,
@@ -189,14 +291,8 @@ export default function PatientsPage() {
           status === 'urgent'
             ? t('Ophthalmologist.patients.statusLabel.urgent', 'Upcoming < 24h')
             : status === 'active'
-              ? t(
-                  'Ophthalmologist.patients.statusLabel.active',
-                  'Has upcoming appointment'
-                )
-              : t(
-                  'Ophthalmologist.patients.statusLabel.past',
-                  'Past consultations only'
-                ),
+              ? t('Ophthalmologist.patients.statusLabel.active', 'Has upcoming')
+              : t('Ophthalmologist.patients.statusLabel.past', 'Past only'),
         totalVisits: patientSessions.length,
         upcomingCount: upcomingSessions.length,
         completedCount: completedSessions.length,
@@ -210,6 +306,8 @@ export default function PatientsPage() {
           dateLocale,
           t('Ophthalmologist.patients.notAvailable', 'N/A')
         ),
+        lastDiagnosis,
+        visitHistory: getVisitHistoryFromSessions(patientSessions),
       });
     });
 
@@ -232,7 +330,8 @@ export default function PatientsPage() {
     const matchesSearch =
       !needle ||
       patient.name.toLowerCase().includes(needle) ||
-      patient.id.toLowerCase().includes(needle);
+      patient.id.toLowerCase().includes(needle) ||
+      patient.lastDiagnosis.toLowerCase().includes(needle);
     const matchesStatus =
       selectedStatus === 'all' || patient.status === selectedStatus;
     return matchesSearch && matchesStatus;
@@ -242,6 +341,38 @@ export default function PatientsPage() {
   const activePatients = patients.filter((p) => p.status === 'active').length;
   const urgentPatients = patients.filter((p) => p.status === 'urgent').length;
   const pastPatients = patients.filter((p) => p.status === 'past').length;
+
+  const statusTabs = [
+    {
+      key: 'all',
+      label: t('Ophthalmologist.patients.filter.allStatus', 'All'),
+      count: totalPatients,
+      icon: <Users className="w-4 h-4" />,
+    },
+    {
+      key: 'urgent',
+      label: t('Ophthalmologist.patients.filter.urgent', 'Urgent'),
+      count: urgentPatients,
+      icon: <AlertTriangle className="w-4 h-4" />,
+    },
+    {
+      key: 'active',
+      label: t('Ophthalmologist.patients.filter.active', 'Active'),
+      count: activePatients,
+      icon: <UserCheck className="w-4 h-4" />,
+    },
+    {
+      key: 'past',
+      label: t('Ophthalmologist.patients.filter.pastOnly', 'Past'),
+      count: pastPatients,
+      icon: <UserX className="w-4 h-4" />,
+    },
+  ];
+
+  const goToPatient = (patientId: string) =>
+    navigate(
+      `/ophthalmologist/consultations?patientId=${encodeURIComponent(patientId)}`
+    );
 
   if (isLoading) {
     return (
@@ -278,8 +409,9 @@ export default function PatientsPage() {
           pageName={t('Ophthalmologist.patients.title', 'Patients')}
         />
 
-        <main className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        <main className="p-6 max-w-[1400px] mx-auto">
+          {/* ── Header ── */}
+          <div className="flex items-end justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
                 {t('Ophthalmologist.patients.title', 'Patients')}
@@ -293,188 +425,364 @@ export default function PatientsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
+          {/* ── Compact Stats ── */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Users className="w-3.5 h-3.5 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {totalPatients}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.patients.stats.totalPatients', 'Total')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {urgentPatients}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.patients.stats.urgent', 'Urgent')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {activePatients}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.patients.stats.active', 'Active')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <UserX className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {pastPatients}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.patients.stats.pastOnly', 'Past')}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Search + Tabs + View Toggle ── */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+            <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder={t(
                   'Ophthalmologist.patients.searchPlaceholder',
-                  'Search patients by name or profile ID...'
+                  'Search patients by name, ID, or diagnosis...'
                 )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
-              >
-                <option value="all">
-                  {t('Ophthalmologist.patients.filter.allStatus', 'All Status')}
-                </option>
-                <option value="active">
-                  {t('Ophthalmologist.patients.filter.active', 'Active')}
-                </option>
-                <option value="urgent">
-                  {t('Ophthalmologist.patients.filter.urgent', 'Urgent')}
-                </option>
-                <option value="past">
-                  {t('Ophthalmologist.patients.filter.pastOnly', 'Past Only')}
-                </option>
-              </select>
+            <div className="flex items-center bg-gray-100 dark:bg-[#0a1929] rounded-xl p-1 gap-0.5">
+              {statusTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setSelectedStatus(tab.key)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    selectedStatus === tab.key
+                      ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                  <span
+                    className={`ml-1 px-1.5 py-0.5 rounded-md text-xs font-semibold ${
+                      selectedStatus === tab.key
+                        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
 
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e3a5f] border border-gray-200 dark:border-[#2d4a6f] hover:bg-gray-50 dark:hover:bg-[#2d4a6f] rounded-xl text-sm text-gray-700 dark:text-white transition-colors">
-                <Filter size={16} />
-                {t('Ophthalmologist.patients.moreFilters', 'More Filters')}
+            {/* View toggle */}
+            <div className="flex items-center bg-gray-100 dark:bg-[#0a1929] rounded-xl p-1 gap-0.5">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                title="Grid view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                title="Table view"
+              >
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t(
-                  'Ophthalmologist.patients.stats.totalPatients',
-                  'Total Patients'
-                )}
-              </p>
-              <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                {totalPatients}
-              </p>
-            </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t('Ophthalmologist.patients.stats.active', 'Active')}
-              </p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {activePatients}
-              </p>
-            </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t('Ophthalmologist.patients.stats.urgent', 'Urgent')}
-              </p>
-              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {urgentPatients}
-              </p>
-            </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f] p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t('Ophthalmologist.patients.stats.pastOnly', 'Past Only')}
-              </p>
-              <p className="text-2xl font-bold text-slate-600 dark:text-slate-300">
-                {pastPatients}
-              </p>
-            </div>
-          </div>
-
+          {/* ── Empty state ── */}
           {filteredPatients.length === 0 ? (
-            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-10 text-center text-gray-500 dark:text-gray-400">
-              {t(
-                'Ophthalmologist.patients.empty',
-                'No patients found for this doctor.'
-              )}
+            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {t('Ophthalmologist.patients.emptyTitle', 'No Patients Found')}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                {searchQuery
+                  ? t(
+                      'Ophthalmologist.patients.emptySearch',
+                      'No patients match your search. Try different keywords.'
+                    )
+                  : t(
+                      'Ophthalmologist.patients.empty',
+                      'No patients found for this doctor.'
+                    )}
+              </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ) : viewMode === 'grid' ? (
+            /* ── Grid View ── */
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredPatients.map((patient) => {
-                const statusStyle = getStatusStyle(patient.status);
+                const meta = getStatusMeta(patient.status);
 
                 return (
                   <div
                     key={patient.id}
-                    className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-5 hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50 transition-all duration-300 group"
+                    className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50 transition-all duration-300 group"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold"
-                          style={{ backgroundColor: patient.avatarColor }}
+                    <div className="p-5">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-sm"
+                            style={{ backgroundColor: patient.avatarColor }}
+                          >
+                            {patient.initials}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-800 dark:text-white text-sm">
+                              {patient.name}
+                            </h3>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {patient.id.slice(0, 8)} • {patient.totalVisits}{' '}
+                              {t(
+                                'Ophthalmologist.patients.sessionsSuffix',
+                                'sessions'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.text}`}
                         >
-                          {patient.initials}
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${meta.dot} ${
+                              meta.pulse ? 'animate-pulse' : ''
+                            }`}
+                          />
+                          {patient.statusLabel}
+                        </span>
+                      </div>
+
+                      {/* Last Diagnosis */}
+                      <div className="mb-3 px-3 py-2 bg-gray-50 dark:bg-[#0a1929] rounded-lg">
+                        <span className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                          Last Diagnosis
+                        </span>
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                          {patient.lastDiagnosis}
+                        </p>
+                      </div>
+
+                      {/* Dates + Visit Chart */}
+                      <div className="flex items-end justify-between mb-4">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <Calendar size={12} className="text-gray-400" />
+                            <span>
+                              {t(
+                                'Ophthalmologist.patients.nextAppointment',
+                                'Next'
+                              )}
+                              :{' '}
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {patient.nextAppointment}
+                              </span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <Clock size={12} className="text-gray-400" />
+                            <span>
+                              {t(
+                                'Ophthalmologist.patients.lastCompletedVisit',
+                                'Last visit'
+                              )}
+                              :{' '}
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {patient.lastVisit}
+                              </span>
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-800 dark:text-white">
-                            {patient.name}
-                          </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {patient.id.slice(0, 8)}... • {patient.totalVisits}{' '}
-                            {t(
-                              'Ophthalmologist.patients.sessionsSuffix',
-                              'session(s)'
-                            )}
-                          </p>
+                        <div className="shrink-0 ml-3">
+                          <MiniBarChart data={patient.visitHistory} />
                         </div>
                       </div>
-                      <button className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                        <MoreVertical size={16} />
-                      </button>
-                    </div>
 
-                    <div className="mb-4">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}
-                      >
-                        {patient.statusLabel}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar
-                          size={14}
-                          className="text-gray-400 dark:text-gray-500"
-                        />
-                        {t(
-                          'Ophthalmologist.patients.nextAppointment',
-                          'Next appointment'
-                        )}
-                        : {patient.nextAppointment}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Clock
-                          size={14}
-                          className="text-gray-400 dark:text-gray-500"
-                        />
-                        {t(
-                          'Ophthalmologist.patients.lastCompletedVisit',
-                          'Last completed visit'
-                        )}
-                        : {patient.lastVisit}
+                      {/* Footer actions */}
+                      <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-[#1e3a5f]">
+                        <button
+                          type="button"
+                          onClick={() => goToPatient(patient.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
+                        >
+                          <Eye size={14} />
+                          {t(
+                            'Ophthalmologist.patients.viewRecords',
+                            'View Records'
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => goToPatient(patient.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
+                        >
+                          <MessageSquare size={14} />
+                          {t('Ophthalmologist.patients.message', 'Message')}
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#1e3a5f]">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <Calendar size={12} />
-                        {t(
-                          'Ophthalmologist.patients.upcoming',
-                          'Upcoming'
-                        )}: {patient.upcomingCount}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <Eye size={12} />
-                        {t(
-                          'Ophthalmologist.patients.completed',
-                          'Completed'
-                        )}: {patient.completedCount}
-                      </div>
-                    </div>
-
-                    <button className="w-full mt-4 py-2.5 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-xl transition-colors">
-                      {t(
-                        'Ophthalmologist.patients.viewDetails',
-                        'View Details'
-                      )}
-                    </button>
                   </div>
                 );
               })}
+            </div>
+          ) : (
+            /* ── Table View ── */
+            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-[#1e3a5f]">
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Patient
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Last Diagnosis
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Next Appt
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Last Visit
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Visits
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Activity
+                      </th>
+                      <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-[#1e3a5f]/50">
+                    {filteredPatients.map((patient) => {
+                      const meta = getStatusMeta(patient.status);
+                      return (
+                        <tr
+                          key={patient.id}
+                          className="hover:bg-gray-50/50 dark:hover:bg-[#0a1929]/30 transition-colors"
+                        >
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-semibold shrink-0"
+                                style={{
+                                  backgroundColor: patient.avatarColor,
+                                }}
+                              >
+                                {patient.initials}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-800 dark:text-white text-sm">
+                                  {patient.name}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {patient.id.slice(0, 8)}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.text}`}
+                            >
+                              <div
+                                className={`w-1.5 h-1.5 rounded-full ${meta.dot} ${
+                                  meta.pulse ? 'animate-pulse' : ''
+                                }`}
+                              />
+                              {patient.statusLabel}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-xs text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
+                              {patient.lastDiagnosis}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
+                            {patient.nextAppointment}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
+                            {patient.lastVisit}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                              {patient.totalVisits}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-center">
+                              <MiniBarChart data={patient.visitHistory} />
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => goToPatient(patient.id)}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                            >
+                              View
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </main>

@@ -1,5 +1,7 @@
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   CreateOphthalmologistFeedbackRequest,
   CreateOrganisationFeedbackRequest,
@@ -9,20 +11,6 @@ import type {
   OrganisationFeedbackItem,
   PagedResult,
 } from '../types/feedback.types';
-
-interface ApiResponse<T> {
-  data: T;
-  success?: boolean;
-  succeeded?: boolean;
-  message?: string;
-}
-
-const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {
-  if (payload && typeof payload === 'object' && 'data' in (payload as object)) {
-    return (payload as ApiResponse<T>).data;
-  }
-  return payload as T;
-};
 
 export const createWebsiteFeedback = async (
   request: CreateWebsiteFeedbackRequest

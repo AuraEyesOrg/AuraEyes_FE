@@ -20,6 +20,7 @@ import {
   Flag,
   Share2,
   Copy,
+  ExternalLink,
 } from 'lucide-react';
 import { PostCard } from '../components/post/PostCard';
 import { PostSkeleton } from '../components/post/PostSkeleton';
@@ -72,6 +73,12 @@ function ProfilePage() {
   const userPosts = postsData?.items ?? [];
 
   const isOwnProfile = id === currentUserId && !isPreviewMode;
+  const degreeCertificates = (profile?.certificates ?? []).filter(
+    (item) => item.type === 'Degree'
+  );
+  const licenseCertificates = (profile?.certificates ?? []).filter(
+    (item) => item.type === 'License'
+  );
 
   const availableTabs: TabType[] = ['posts', 'about'];
 
@@ -366,6 +373,98 @@ function ProfilePage() {
                 </div>
               </div>
             )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                  Degrees
+                </h3>
+                {degreeCertificates.length === 0 ? (
+                  <p className="text-[14px] text-slate-500 dark:text-slate-400">
+                    No degree records.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {degreeCertificates.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+                      >
+                        <p className="font-semibold text-sm text-(--text-primary)">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {item.issuingAuthority || 'Unknown authority'}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Issued:{' '}
+                          {new Date(item.issuedDate).toLocaleDateString()}
+                        </p>
+                        {item.certificateUrl && (
+                          <a
+                            href={item.certificateUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                          >
+                            View file
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                  Licenses & Certifications
+                </h3>
+                {licenseCertificates.length === 0 ? (
+                  <p className="text-[14px] text-slate-500 dark:text-slate-400">
+                    No license records.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {licenseCertificates.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+                      >
+                        <p className="font-semibold text-sm text-(--text-primary)">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {item.issuingAuthority || 'Unknown authority'}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Issued:{' '}
+                          {new Date(item.issuedDate).toLocaleDateString()}
+                        </p>
+                        {item.expiryDate && (
+                          <p className="text-xs text-slate-400 mt-1">
+                            Expires:{' '}
+                            {new Date(item.expiryDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        {item.certificateUrl && (
+                          <a
+                            href={item.certificateUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                          >
+                            View file
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

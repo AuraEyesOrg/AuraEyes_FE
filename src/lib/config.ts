@@ -67,7 +67,8 @@ export const PWAConfig: Partial<VitePWAOptions> = {
     ],
   },
   devOptions: {
-    enabled: true,
+    // Disable PWA in development to avoid cross-project cache collisions on localhost.
+    enabled: false,
   },
   workbox: {
     sourcemap: true,

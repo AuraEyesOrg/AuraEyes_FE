@@ -171,6 +171,7 @@ export default function DoctorsPage() {
         slotType: SlotType.Consultation,
         fromDate: timeFrom || undefined,
         toDate: timeTo || undefined,
+        excludePastSlots: true,
         pageNumber: 1,
         pageSize: 200,
       },
@@ -288,11 +289,6 @@ export default function DoctorsPage() {
       <div className="w-full bg-brand/5 dark:bg-brand/10 pt-10 pb-28 px-6 relative border-b border-(--border-color)">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
-            {consultationContext?.screeningId && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300 text-xs font-semibold">
-                Case linked: {consultationContext.screeningId.slice(0, 8)}...
-              </div>
-            )}
             <h2 className="text-3xl md:text-5xl font-black text-brand uppercase tracking-tight">
               GỌI VIDEO VỚI BÁC SĨ
             </h2>

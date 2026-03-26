@@ -10,7 +10,12 @@ import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
 import PatientImageStrip from '../components/ReadOnlyImageGallery';
-import { ToggleState, Anomaly, RetinalImage } from '../types/type';
+import {
+  ToggleState,
+  Anomaly,
+  RetinalImage,
+  Location as AnomalyBox,
+} from '../types/type';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -289,17 +294,41 @@ function inferEyeSideFromName(
   return index % 2 === 0 ? 'Right' : 'Left';
 }
 
-function mapSavedAnomaliesFromRaw(rawJsonOutput?: string): {
-  anomalies: Anomaly[];
-  rawJsonOutput?: string;
-} {
+/**
+ * Restore anomalies from persisted raw JSON. When the payload matches the
+ * standard /diagnosis/analyze shape and we have an image URL, bbox locations
+ * are recomputed with the same mapping as live analysis.
+ */
+async function mapSavedAnomaliesFromRaw(
+  rawJsonOutput?: string,
+  imageUrl?: string
+): Promise<{ anomalies: Anomaly[]; rawJsonOutput?: string }> {
   if (!rawJsonOutput) return { anomalies: [] };
 
   try {
-    const parsed = JSON.parse(rawJsonOutput) as any;
+    const parsed = JSON.parse(rawJsonOutput) as unknown;
 
-    if (parsed?.prediction?.top_k) {
-      const mapped = parsed.prediction.top_k.map((pred: any, idx: number) => ({
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'prediction' in parsed &&
+      (parsed as AIStandardResponse).prediction?.top_k
+    ) {
+      const standard = parsed as AIStandardResponse;
+      let w = 0;
+      let h = 0;
+      if (imageUrl) {
+        const size = await getImageNaturalSize(imageUrl);
+        w = size.w;
+        h = size.h;
+      }
+      if (w > 0 && h > 0 && standard.localization?.all_lesions?.length) {
+        return {
+          anomalies: mapStandardResponseToAnomalies(standard, w, h),
+          rawJsonOutput,
+        };
+      }
+      const mapped = standard.prediction.top_k.map((pred, idx) => ({
         id: String(pred.rank ?? idx + 1),
         name: pred.class_name,
         confidence: Math.round((pred.confidence ?? 0) * 100),
@@ -316,8 +345,19 @@ function mapSavedAnomaliesFromRaw(rawJsonOutput?: string): {
       return { anomalies: mapped, rawJsonOutput };
     }
 
-    if (Array.isArray(parsed?.anomalies)) {
-      const mapped = parsed.anomalies.map((a: any, idx: number) => ({
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      Array.isArray((parsed as { anomalies?: unknown }).anomalies)
+    ) {
+      const withAnomalies = parsed as {
+        anomalies: Array<{
+          name: string;
+          confidence?: number;
+          location?: AnomalyBox;
+        }>;
+      };
+      const mapped = withAnomalies.anomalies.map((a, idx) => ({
         id: String(idx + 1),
         name: a.name,
         confidence: Number(a.confidence ?? 0),
@@ -343,6 +383,15 @@ function mapSavedAnomaliesFromRaw(rawJsonOutput?: string): {
   }
 
   return { anomalies: [] };
+}
+
+export async function hydrateConsultationPreviewAnomalies(
+  rawJsonOutput: string | undefined,
+  imageUrl: string | undefined
+): Promise<Anomaly[]> {
+  if (!rawJsonOutput || !imageUrl) return [];
+  const { anomalies } = await mapSavedAnomaliesFromRaw(rawJsonOutput, imageUrl);
+  return anomalies;
 }
 
 // --- Helpers: use AI-generated friendly fields, fallback to raw name/description ---
@@ -426,7 +475,6 @@ export default function RetinalAnalysis() {
         setSelectedImageId(routeImages[0].id);
         setAnalyzed(false);
         setAnomalies([]);
-        window.history.replaceState({}, document.title);
         return;
       }
 
@@ -462,16 +510,22 @@ export default function RetinalAnalysis() {
         const sessionImages =
           mappedPersisted.length > 0 ? mappedPersisted : fallbackFromRoute;
 
-        const restored = mapSavedAnomaliesFromRaw(response.data?.rawJsonOutput);
-        const restoredAnomalies = restored.anomalies;
-
-        setRawJsonOutput(response.data?.rawJsonOutput);
+        const mergedRawJson =
+          response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
+        setRawJsonOutput(mergedRawJson);
         setResultsPersisted(Boolean(response.data?.latestResult));
 
         if (sessionImages.length === 0) {
           setErrorMessage('No images found in this screening session.');
           return;
         }
+
+        const restoreUrl = sessionImages[0]?.url;
+        const restored = await mapSavedAnomaliesFromRaw(
+          mergedRawJson,
+          restoreUrl
+        );
+        const restoredAnomalies = restored.anomalies;
 
         const hydratedImages = sessionImages.map((img, idx) =>
           idx === 0 && restoredAnomalies.length > 0
@@ -484,7 +538,6 @@ export default function RetinalAnalysis() {
         setAnalyzed(restoredAnomalies.length > 0);
         setAnomalies(restoredAnomalies);
         setShowHighlights(restoredAnomalies.length > 0);
-        window.history.replaceState({}, document.title);
       } catch (error) {
         console.error('Failed to load screening session:', error);
         setErrorMessage('Unable to load screening images. Please try again.');

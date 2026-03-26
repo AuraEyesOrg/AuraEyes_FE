@@ -34,6 +34,7 @@ export const NETWORK_ENDPOINTS = {
     COMMENTS: (id: string) => `/network/posts/${id}/comments`,
     SAVE: (id: string) => `/network/posts/${id}/save`,
     REPOST: (id: string) => `/network/posts/${id}/repost`,
+    HIDE: (id: string) => `/network/posts/${id}/hide`,
   },
 
   // Professionals (Ophthalmologists)
@@ -124,10 +125,22 @@ export const postsApi = {
   /**
    * Get feed posts with pagination and optional authorId filter
    */
-  async getFeed(pageNumber = 1, pageSize = 10, authorId?: string) {
+  async getFeed(
+    pageNumber = 1,
+    pageSize = 10,
+    authorId?: string,
+    hiddenOnly = false
+  ) {
     const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
       NETWORK_ENDPOINTS.POSTS.FEED,
-      { params: { pageNumber, pageSize, ...(authorId ? { authorId } : {}) } }
+      {
+        params: {
+          pageNumber,
+          pageSize,
+          ...(authorId ? { authorId } : {}),
+          ...(hiddenOnly ? { hiddenOnly: true } : {}),
+        },
+      }
     );
     return response.data.data;
   },
@@ -190,6 +203,17 @@ export const postsApi = {
     const response = await api.post<ApiResponse<string>>(
       NETWORK_ENDPOINTS.POSTS.REPOST(postId),
       data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Hide a post by moderation (SystemAdmin only)
+   */
+  async hidePost(postId: string, hideReason?: string) {
+    const response = await api.post<ApiResponse<object>>(
+      NETWORK_ENDPOINTS.POSTS.HIDE(postId),
+      { hideReason }
     );
     return response.data.data;
   },

@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PostComposer } from '../components/post/PostComposer';
 import { PostCard } from '../components/post/PostCard';
 import { FeedSkeleton } from '../components/post/PostSkeleton';
@@ -12,19 +12,50 @@ import { useFeedPosts } from '../hooks/useNetworkPosts';
 import { useTrendingTopics } from '../hooks/useTrendingTopics';
 import { useToggleReaction } from '../hooks/useToggleReaction';
 import { useToggleSavePost } from '../hooks/useToggleSavePost';
+import { useHidePost } from '../hooks/useHidePost';
 import useAuthStore from '@/store/auth-store';
 import type { ReactionType } from '../types';
 
 function FeedPage() {
+  const [activeTab, setActiveTab] = useState<'feed' | 'manage'>('feed');
   const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthStore();
-  const { data: feedData, isLoading, isError, error } = useFeedPosts(page);
+  const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
+  const isManageQuery = searchParams.get('tab') === 'manage';
+  const effectiveTab: 'feed' | 'manage' =
+    isManageQuery || activeTab === 'manage' ? 'manage' : 'feed';
+  const isManageMode = isSystemAdmin && effectiveTab === 'manage';
+
+  const {
+    data: feedData,
+    isLoading,
+    isError,
+    error,
+  } = useFeedPosts(page, 10, isManageMode);
   const { data: trendingData } = useTrendingTopics();
   const toggleReaction = useToggleReaction();
   const toggleSave = useToggleSavePost();
+  const hidePost = useHidePost();
 
   const posts = feedData?.items ?? [];
-  const trendingTopics = trendingData ?? [];
+  const trendingTopicsFromApi = trendingData ?? [];
+
+  const fallbackTrending = Object.entries(
+    posts.reduce<Record<string, number>>((acc, post) => {
+      acc[post.category] = (acc[post.category] ?? 0) + 1;
+      return acc;
+    }, {})
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([category, postCount]) => ({
+      topicName: category,
+      postCount,
+    }));
+
+  const trendingTopics =
+    trendingTopicsFromApi.length > 0 ? trendingTopicsFromApi : fallbackTrending;
 
   const handleReaction = (postId: string, type: ReactionType) => {
     const post = posts.find((p) => p.id === postId);
@@ -39,15 +70,54 @@ function FeedPage() {
     toggleSave.mutate(postId);
   };
 
+  const handleHidePost = (postId: string, hideReason?: string) => {
+    hidePost.mutate({ postId, hideReason });
+  };
+
   return (
     <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
       {/* Page Header */}
       <div>
         <h2 className="text-2xl font-bold text-(--text-primary)">Feed</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Latest posts from your professional network
+          {isManageMode
+            ? 'Moderation view for hidden and flagged content'
+            : 'Latest posts from your professional network'}
         </p>
       </div>
+
+      {isSystemAdmin && (
+        <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 p-1 bg-(--bg-secondary)">
+          <button
+            onClick={() => {
+              setActiveTab('feed');
+              setPage(1);
+              setSearchParams({});
+            }}
+            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+              effectiveTab === 'feed'
+                ? 'bg-primary/10 text-primary font-semibold'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            Feed
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('manage');
+              setPage(1);
+              setSearchParams({ tab: 'manage' });
+            }}
+            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+              effectiveTab === 'manage'
+                ? 'bg-primary/10 text-primary font-semibold'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            Manage Posts
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Feed Column */}
@@ -88,6 +158,9 @@ function FeedPage() {
                   post={post}
                   onReaction={handleReaction}
                   onSave={handleSave}
+                  onHidePost={handleHidePost}
+                  canModerate={isSystemAdmin}
+                  isHidingPost={hidePost.isPending}
                   currentUserId={user?.id}
                 />
               </div>
@@ -108,17 +181,17 @@ function FeedPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={!feedData.hasPrevious}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-main-search-background text-text-main hover:bg-brand-soft disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-(--text-primary) hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 Previous
               </button>
-              <span className="text-sm text-text-muted">
+              <span className="text-sm text-slate-500 dark:text-slate-400">
                 Page {feedData.pageNumber} of {feedData.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!feedData.hasNext}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-main-search-background text-text-main hover:bg-brand-soft disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-(--text-primary) hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </button>

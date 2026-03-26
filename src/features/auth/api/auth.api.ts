@@ -5,6 +5,9 @@
 
 import { api } from '@/lib/api';
 import { setItem, getItem } from '@/lib/local-storage';
+import useAuthStore from '@/store/auth-store';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   LoginRequest,
   GoogleLoginRequest,
@@ -19,13 +22,6 @@ import type {
   TwoFactorRequiredResponse,
   UserInfoResponse,
 } from '../types';
-
-interface ApiResponse<T> {
-  succeeded: boolean;
-  message: string;
-  data: T;
-  errors?: string[];
-}
 
 // ==================== Type Guards ====================
 
@@ -120,7 +116,9 @@ export const login = async (
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse | TwoFactorRequiredResponse>(
+    response.data
+  );
 
   // If login successful (not 2FA required), save tokens
   if (
@@ -156,7 +154,9 @@ export const googleLogin = async (
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse | TwoFactorRequiredResponse>(
+    response.data
+  );
 
   // If login successful (not 2FA required), save tokens
   if (
@@ -193,7 +193,7 @@ export const verifyTwoFactorLogin = async (
     }
   );
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse>(response.data);
 
   // Save tokens on successful 2FA verification
   if (result.succeeded && result.accessToken && result.refreshToken) {
@@ -221,12 +221,12 @@ export const registerPatient = async (
     `${AUTH_BASE_URL}/register/patient`,
     data
   );
-  return response.data.data;
+  return unwrapApiData<{ userId: string }>(response.data);
 };
 
 /**
  * Register a new ophthalmologist account
- * Uses FormData to support file uploads (licenseImage, degreeImage)
+ * Uses FormData to support dynamic credential arrays with file uploads
  */
 export const registerOphthalmologist = async (
   data: RegisterOphthalmologistRequest
@@ -251,15 +251,43 @@ export const registerOphthalmologist = async (
   }
   if (data.organizationId)
     formData.append('organizationId', data.organizationId);
-  if (data.licenseImage) formData.append('licenseImage', data.licenseImage);
-  if (data.degreeImage) formData.append('degreeImage', data.degreeImage);
+
+  data.degrees.forEach((item, index) => {
+    formData.append(`degrees[${index}].name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `degrees[${index}].issuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`degrees[${index}].issuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`degrees[${index}].expiryDate`, item.expiryDate);
+    }
+    formData.append(`degrees[${index}].file`, item.file);
+  });
+
+  data.certificates.forEach((item, index) => {
+    formData.append(`certificates[${index}].name`, item.name);
+    if (item.issuingAuthority) {
+      formData.append(
+        `certificates[${index}].issuingAuthority`,
+        item.issuingAuthority
+      );
+    }
+    formData.append(`certificates[${index}].issuedDate`, item.issuedDate);
+    if (item.expiryDate) {
+      formData.append(`certificates[${index}].expiryDate`, item.expiryDate);
+    }
+    formData.append(`certificates[${index}].file`, item.file);
+  });
 
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
-  return response.data.data;
+  return unwrapApiData<{ userId: string }>(response.data);
 };
 
 export const registerOrganisation = async (
@@ -268,7 +296,9 @@ export const registerOrganisation = async (
   const response = await api.post<
     ApiResponse<{ requestId: string; email: string; message: string }>
   >(`${AUTH_BASE_URL}/register/organisation`, data);
-  return response.data.data;
+  return unwrapApiData<{ requestId: string; email: string; message: string }>(
+    response.data
+  );
 };
 
 /**
@@ -290,7 +320,7 @@ export const refreshToken = async (): Promise<AuthResponse> => {
     }
   );
 
-  const result = response.data.data;
+  const result = unwrapApiData<AuthResponse>(response.data);
 
   // Update stored tokens
   if (result.succeeded && result.accessToken && result.refreshToken) {
@@ -315,7 +345,7 @@ export const logout = async (): Promise<void> => {
   try {
     await api.post(`${AUTH_BASE_URL}/logout`);
   } finally {
-    clearAuthData();
+    useAuthStore.getState().logout();
   }
 };
 
@@ -362,5 +392,5 @@ export const getCurrentUser = async (): Promise<UserInfoResponse> => {
   const response = await api.get<ApiResponse<UserInfoResponse>>(
     `${AUTH_BASE_URL}/me`
   );
-  return response.data.data;
+  return unwrapApiData<UserInfoResponse>(response.data);
 };

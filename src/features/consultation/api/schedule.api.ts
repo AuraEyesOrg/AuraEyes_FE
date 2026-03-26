@@ -6,6 +6,8 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
+import type { ApiResponse } from '@/types/api-response';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   ScheduleDto,
   ScheduleListDto,
@@ -13,14 +15,6 @@ import type {
   UpdateScheduleStatusRequest,
   GetSchedulesParams,
 } from '@/types/schedule';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  errors: string[] | null;
-  timestamp: string;
-}
 
 interface PagedResult<T> {
   items: T[];
@@ -147,7 +141,7 @@ const mapSlotToScheduleDetail = (slot: AppointmentSlotDto): ScheduleDto => ({
 export const getSchedules = async (
   params: GetSchedulesParams
 ): Promise<PagedResult<ScheduleListDto>> => {
-  const { ophthalmologistId, slotType, ...queryParams } = params;
+  const { ophthalmologistId, ...queryParams } = params;
   const response = await api.get<
     ApiResponse<PagedResult<AppointmentSlotListDto>>
   >(API_ENDPOINTS.APPOINTMENT_SLOTS.LIST, {
@@ -157,9 +151,12 @@ export const getSchedules = async (
     },
   });
 
+  const data = unwrapApiData<PagedResult<AppointmentSlotListDto>>(
+    response.data
+  );
   return {
-    ...response.data.data,
-    items: response.data.data.items.map(mapSlotToScheduleList),
+    ...data,
+    items: data.items.map(mapSlotToScheduleList),
   };
 };
 
@@ -172,7 +169,9 @@ export const getSchedule = async (
     API_ENDPOINTS.APPOINTMENT_SLOTS.DETAIL(scheduleId)
   );
 
-  return mapSlotToScheduleDetail(response.data.data);
+  return mapSlotToScheduleDetail(
+    unwrapApiData<AppointmentSlotDto>(response.data)
+  );
 };
 
 // ============ MUTATIONS ============
@@ -193,7 +192,10 @@ export const createSchedule = async (
     },
   });
 
-  let template = templateResponse.data.data.items[0];
+  const templateData = unwrapApiData<PagedResult<ScheduleTemplateListDto>>(
+    templateResponse.data
+  );
+  let template = templateData.items[0];
 
   // If no template exists, create a minimal one from the requested slot info.
   if (!template) {
@@ -208,10 +210,13 @@ export const createSchedule = async (
       maxCapacity: 1,
     });
 
+    const createTemplateData = unwrapApiData<
+      CreateScheduleTemplateResponse | string
+    >(createTemplateResponse.data);
     const templateId =
-      typeof createTemplateResponse.data.data === 'string'
-        ? createTemplateResponse.data.data
-        : createTemplateResponse.data.data.id;
+      typeof createTemplateData === 'string'
+        ? createTemplateData
+        : createTemplateData.id;
 
     if (!templateId) {
       throw new Error('Failed to create schedule template automatically.');
@@ -230,7 +235,7 @@ export const createSchedule = async (
       cost: data.cost,
     }
   );
-  return response.data.data;
+  return unwrapApiData<string>(response.data);
 };
 
 /** PATCH /api/appointment-slots/:slotId/status */
@@ -243,5 +248,5 @@ export const updateScheduleStatus = async (
     API_ENDPOINTS.APPOINTMENT_SLOTS.UPDATE_STATUS(scheduleId),
     data
   );
-  return response.data.data;
+  return unwrapApiData<boolean>(response.data);
 };

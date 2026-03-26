@@ -26,8 +26,13 @@ Notes:
 - No explicit consent checkbox is present in current /patient/screening/new or /patient/screening/analyze UI.
 - The analysis page deducts quota before calling AI endpoint. For E2E determinism, AI processing can be mocked via DB/backdoor arrangement.
 
-## Flow 3: Patient Books Tele-Consultation (Online)
+## Flow 3: Patient Appointment Booking and Consultation Session
 
+- Default route after patient login: /patient/dashboard
+- New scan route: /patient/screening/new
+- Analysis route: /patient/analysis
+- Review route: /patient/screening/review
+- Personal roadmap route: /patient/roadmap
 - Doctors list route: /patient/doctors
 - Booking route: /patient/book?doctorId=<id>
 - Booking confirmation route: /patient/book/confirm
@@ -36,6 +41,12 @@ Notes:
 
 Key selectors:
 
+- Dashboard new scan entry: role=link, name="Upload New Scan" or "Upload Your First Scan"
+- Start analysis action: role=button, name="Start AI Analysis"
+- AI execution action: role=button, name="Start Screening"
+- Continue review action: role=button, name="Continue to Review"
+- Review page specialist action: role=button, name="Find a Specialist"
+- Roadmap heading: role=heading, name="Health Improvement Roadmap"
 - Search doctor input: placeholder="Search by doctor name, email or bio..."
 - View slots action: role=button, name="View Slots" (doctor card)
 - Slot button: role=button with time text (e.g. 09:00 / 10:30) in booking week grid
@@ -46,6 +57,7 @@ Key selectors:
 
 Notes:
 
+- Screening new page uses local image quality simulation; test should retry when warning state "Blur Detected" appears.
 - External gateway (VNPay/PayOS) can be bypassed by DB status updates for consultation/payment entities.
 
 ## Flow 4: Organization Registration -> Admin Approval -> Org Slot Management
@@ -85,4 +97,4 @@ Notes:
 
 - Offline booking does not require online payment; only slot availability and appointment creation are required.
 
-npx playwright test tests/e2e/specs/01-doctor-registration-full-flow.spec.ts --debug
+npx playwright test tests/e2e/specs/03-patient-screening-and-consultation-session.spec.ts --debug

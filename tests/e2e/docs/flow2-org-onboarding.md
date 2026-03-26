@@ -1,8 +1,8 @@
-# AURA - Organisation Onboarding & Contract Activation Flow
+# AURA - Organisation Onboarding and Contract Activation Flow
 
 ## 1. Objective
 
-- Verify onboarding lifecycle from pending request approval to contract activation.
+- Verify organisation onboarding lifecycle from pending request approval to contract activation.
 - Confirm two-level approval chain:
   - Step 1: System admin approves onboarding request.
   - Step 2: Organisation uploads signed contract and system admin verifies contract.
