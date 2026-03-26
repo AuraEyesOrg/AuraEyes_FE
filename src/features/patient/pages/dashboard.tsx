@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
+import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
 
@@ -34,6 +36,25 @@ const getRiskLabel = (risk?: string) => {
   return risk.charAt(0).toUpperCase() + risk.slice(1) + ' Risk';
 };
 
+const getDetectedSummary = (risk?: string) => {
+  switch (risk) {
+    case 'low':
+      return 'The AI analysis detected no significant anomalies in this latest scan. Continue regular monitoring to maintain stable retinal health.';
+    case 'medium':
+      return 'The AI analysis detected moderate retinal risk patterns. Please review this session and consider booking a follow-up with a specialist.';
+    case 'high':
+    case 'critical':
+      return 'The AI analysis detected high-risk retinal patterns that may need urgent specialist review. Please open this session for detailed findings.';
+    default:
+      return 'The AI analysis detected findings from your latest scan. Open this session to review details and recommended next steps.';
+  }
+};
+
+const normalizeRiskLevel = (risk?: string) => {
+  if (!risk) return undefined;
+  return risk.toLowerCase();
+};
+
 export default function PatientDashboard() {
   const {
     profile,
@@ -46,6 +67,18 @@ export default function PatientDashboard() {
   } = useDashboard();
 
   const firstName = profile?.fullName?.split(' ')[0] ?? 'there';
+
+  const recentSessionsQuery = useQuery({
+    queryKey: ['screening', 'recent', 'dashboard'],
+    queryFn: async () => {
+      const response = await screeningApi.getRecentSessions(5);
+      return response.data ?? [];
+    },
+  });
+
+  const recentSessions = recentSessionsQuery.data ?? [];
+  const latestSession = recentSessions[0];
+  const latestSessionRisk = normalizeRiskLevel(latestSession?.latestRiskLevel);
 
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
@@ -90,14 +123,30 @@ export default function PatientDashboard() {
   };
 
   const currentDate = formatShortDate(new Date().toISOString());
+  const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
+  const effectiveLatestRisk = latestReportRisk ?? latestSessionRisk;
+  const hasLatestSession = Boolean(latestSession);
+  const hasHeroResult = Boolean(latestReport || latestSession);
+  const heroImageUrl = latestReport?.heatmapUrl ?? latestSession?.thumbnailUrl;
+  const heroTitle =
+    latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
+      ? 'Specialist Verified'
+      : 'AI Screening';
+  const heroRiskLabel = effectiveLatestRisk
+    ? getRiskLabel(effectiveLatestRisk)
+    : 'Awaiting Analysis';
+  const heroSummary =
+    latestReport?.summary || getDetectedSummary(effectiveLatestRisk);
+  const heroDate = latestReport?.createdAt ?? latestSession?.createdAt;
+  const heroScanId = latestReport?.id ?? latestSession?.screeningId;
 
   // Build stats cards from real data
   const statsCards = [
     {
       icon: Eye,
       label: 'Latest AI Risk Status',
-      value: latestAnalysis
-        ? getRiskLabel(latestAnalysis.riskLevel)
+      value: effectiveLatestRisk
+        ? getRiskLabel(effectiveLatestRisk)
         : 'No Scans',
       valueColor: 'text-brand',
       bgColor: 'icon-bg-blue',
@@ -122,11 +171,6 @@ export default function PatientDashboard() {
       iconColor: 'text-orange-500',
     },
   ];
-
-  // Summary text for latest report
-  const latestReportSummary =
-    latestReport?.summary ?? 'No analysis results yet.';
-  const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
 
   if (isLoading) {
     return (
@@ -159,23 +203,23 @@ export default function PatientDashboard() {
               className="btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Upload New Scan
+              New Screening
             </Link>
           </div>
         </header>
 
         {/* Latest Analysis Result Section */}
-        {latestReport ? (
+        {hasHeroResult ? (
           <section className="medical-card p-1 overflow-hidden">
             <div className="flex flex-col lg:flex-row">
               {/* Scan Image */}
               <div className="lg:w-1/3 relative h-64 lg:h-auto min-h-[250px] bg-black rounded-lg overflow-hidden m-1 group">
-                {latestReport.heatmapUrl ? (
+                {heroImageUrl ? (
                   <>
                     <div
                       className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                       style={{
-                        backgroundImage: `url("${latestReport.heatmapUrl}")`,
+                        backgroundImage: `url("${heroImageUrl}")`,
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -185,11 +229,13 @@ export default function PatientDashboard() {
                     <Eye className="w-16 h-16 text-slate-600" />
                   </div>
                 )}
-                <div className="absolute bottom-4 left-4">
-                  <span className="bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded border border-white/20">
-                    Report ID: {latestReport.id.slice(0, 8)}
-                  </span>
-                </div>
+                {heroScanId && (
+                  <div className="absolute bottom-4 left-4">
+                    <span className="bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded border border-white/20">
+                      Scan ID: #{heroScanId.slice(0, 8)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Scan Details */}
@@ -200,36 +246,38 @@ export default function PatientDashboard() {
                       Latest Analysis Result
                     </p>
                     <h3 className="text-2xl font-bold text-(--text-primary)">
-                      {latestReport.type === 'OPHTHALMOLOGIST_VERIFIED'
-                        ? 'Specialist Verified'
-                        : 'AI Screening'}
+                      {heroTitle}
                       {' — '}
-                      {getRiskLabel(latestReport.riskLevel)}
+                      {heroRiskLabel}
                     </h3>
                   </div>
-                  <div
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full border ${getRiskBadgeColors(latestReport.riskLevel)}`}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span className="font-bold capitalize">
-                      {latestReport.riskLevel} Risk
-                    </span>
-                  </div>
+                  {effectiveLatestRisk && (
+                    <div
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full border ${getRiskBadgeColors(effectiveLatestRisk)}`}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="font-bold capitalize">
+                        {effectiveLatestRisk} Risk
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-(--text-secondary) leading-relaxed mb-6">
-                  {latestReportSummary}
+                  {heroSummary}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-(--border-color)">
-                  <div>
-                    <p className="text-xs text-(--text-muted) mb-1">
-                      Date Scanned
-                    </p>
-                    <p className="font-medium text-(--text-primary)">
-                      {formatShortDate(latestReport.createdAt)}
-                    </p>
-                  </div>
+                  {heroDate && (
+                    <div>
+                      <p className="text-xs text-(--text-muted) mb-1">
+                        Date Scanned
+                      </p>
+                      <p className="font-medium text-(--text-primary)">
+                        {formatShortDate(heroDate)}
+                      </p>
+                    </div>
+                  )}
                   {nextAppointment && (
                     <div>
                       <p className="text-xs text-[var(--text-muted)] mb-1">
@@ -242,10 +290,19 @@ export default function PatientDashboard() {
                   )}
                   <div className="ml-auto">
                     <Link
-                      to={`/patient/reports`}
+                      to={
+                        latestSession ? '/patient/analysis' : '/patient/reports'
+                      }
+                      state={
+                        latestSession
+                          ? { screeningId: latestSession.screeningId }
+                          : undefined
+                      }
                       className="btn-primary flex items-center gap-2"
                     >
-                      View Full Report
+                      {latestReport
+                        ? 'View Full Report'
+                        : 'Open Latest Session'}
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
@@ -254,22 +311,67 @@ export default function PatientDashboard() {
             </div>
           </section>
         ) : (
-          <section className="medical-card p-8 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-(--text-muted)" />
-            <h3 className="text-xl font-bold text-(--text-primary) mb-2">
-              No Screening Results Yet
-            </h3>
-            <p className="text-(--text-secondary) mb-6">
-              Upload your first retinal scan to get started with AI-powered
-              analysis.
-            </p>
-            <Link
-              to="/patient/screening/new"
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Your First Scan
-            </Link>
+          <section className="medical-card p-1 overflow-hidden">
+            <div className="flex flex-col lg:flex-row">
+              <div className="lg:w-1/3 relative h-64 lg:h-auto min-h-[250px] bg-slate-950 rounded-lg overflow-hidden m-1 group">
+                {latestSession?.thumbnailUrl ? (
+                  <>
+                    <div
+                      className="absolute inset-0 bg-cover bg-center opacity-85 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{
+                        backgroundImage: `url("${latestSession.thumbnailUrl}")`,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <AlertCircle className="w-16 h-16 text-slate-500" />
+                  </div>
+                )}
+              </div>
+
+              <div className="lg:w-2/3 p-8 text-center lg:text-left flex flex-col justify-center">
+                <AlertCircle className="w-12 h-12 mx-auto lg:mx-0 mb-4 text-(--text-muted)" />
+                <h3 className="text-xl font-bold text-(--text-primary) mb-2">
+                  {hasLatestSession
+                    ? 'Latest Session Is Processing'
+                    : 'No Screening Results Yet'}
+                </h3>
+                <p className="text-(--text-secondary) mb-6">
+                  {hasLatestSession
+                    ? 'Your latest screening session is available. Open it to continue analysis and review results.'
+                    : 'Upload your first retinal scan to get started with AI-powered analysis.'}
+                </p>
+                {hasLatestSession ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center lg:justify-start gap-4">
+                    {latestSessionRisk && (
+                      <span
+                        className={`inline-flex items-center justify-center px-4 py-2 rounded-full border font-semibold capitalize ${getRiskBadgeColors(latestSessionRisk)}`}
+                      >
+                        {latestSessionRisk} risk
+                      </span>
+                    )}
+                    <Link
+                      to="/patient/analysis"
+                      state={{ screeningId: latestSession?.screeningId }}
+                      className="btn-primary inline-flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Open Latest Session
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    to="/patient/screening/new"
+                    className="btn-primary inline-flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Your First Scan
+                  </Link>
+                )}
+              </div>
+            </div>
           </section>
         )}
 
@@ -347,6 +449,57 @@ export default function PatientDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : recentSessions.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentSessions.map((session) => {
+                      const risk = normalizeRiskLevel(session.latestRiskLevel);
+                      return (
+                        <div
+                          key={session.screeningId}
+                          className="flex items-center gap-4 p-4 rounded-xl border border-(--border-color) bg-[var(--bg-primary)]"
+                        >
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-900 shrink-0">
+                            {session.thumbnailUrl ? (
+                              <img
+                                src={session.thumbnailUrl}
+                                alt="Recent screening"
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Eye className="w-6 h-6 text-slate-500" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-(--text-primary)">
+                              Screening Session
+                            </p>
+                            <p className="text-sm text-(--text-secondary)">
+                              {formatShortDate(session.createdAt)} •{' '}
+                              {session.imagesCount} image
+                              {session.imagesCount !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {risk && (
+                              <span className={getRiskBadgeStyle(risk)}>
+                                {risk} Risk
+                              </span>
+                            )}
+                            <Link
+                              to="/patient/analysis"
+                              state={{ screeningId: session.screeningId }}
+                              className="text-[var(--text-muted)] hover:text-brand transition-colors"
+                            >
+                              <FileText className="w-5 h-5" />
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-(--text-muted)">

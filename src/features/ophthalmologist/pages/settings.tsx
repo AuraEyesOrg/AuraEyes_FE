@@ -209,6 +209,12 @@ export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
   const avatarFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [appointmentReminders, setAppointmentReminders] = useState(true);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
     null
   );
@@ -220,12 +226,6 @@ export default function SettingsPage() {
       bio: '',
       yearsOfExperience: 0,
     });
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [appointmentReminders, setAppointmentReminders] = useState(true);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);

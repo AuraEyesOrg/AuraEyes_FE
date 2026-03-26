@@ -62,7 +62,21 @@ export interface ConsultationSessionDto {
   closingReason: string | null;
   createdAt: string;
   updatedAt: string | null;
+  isRetinalImagesShared: boolean;
+  isAIResultShared: boolean;
+  caseSnapshot: ConsultationCaseSnapshotDto | null;
   messages: ChatMessageDto[];
+}
+
+export interface ConsultationCaseSnapshotDto {
+  screeningId: string;
+  riskLevel: string | null;
+  confidenceScore: number | null;
+  summary: string | null;
+  findings: string | null;
+  annotatedImageUrl: string | null;
+  originalImageUrls: string[];
+  symptoms: string[];
 }
 
 /** List item - maps to ConsultationSessionListDto */
