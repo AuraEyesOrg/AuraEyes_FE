@@ -62,6 +62,32 @@ export interface DashboardData {
   systemHealth: SystemHealth;
 }
 
+export interface SystemAdminUserGrowthMetric {
+  total: number;
+  currentMonth: number;
+  previousMonth: number;
+  growthPercentage: number;
+}
+
+export interface SystemAdminPaymentMethodPoint {
+  name: string;
+  value: number;
+}
+
+export interface SystemAdminRevenuePoint {
+  label: string;
+  value: number;
+}
+
+export interface SystemAdminDashboardMetrics {
+  doctors: SystemAdminUserGrowthMetric;
+  organisations: SystemAdminUserGrowthMetric;
+  patients: SystemAdminUserGrowthMetric;
+  paymentMethods: SystemAdminPaymentMethodPoint[];
+  monthlyRevenue: SystemAdminRevenuePoint[];
+  dailyRevenue: SystemAdminRevenuePoint[];
+}
+
 // ============ ORGANISATIONS & DEVICES ============
 export interface Organisation {
   id: string;
