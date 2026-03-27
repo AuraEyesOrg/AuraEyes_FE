@@ -1,0 +1,985 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "totalDiseases": 39,
+    "lastUpdated": "2025-03-26",
+    "note": "Disease information only. Lesion locations come from API response."
+  },
+  "diseases": [
+    {
+      "id": 0,
+      "code": "0.0",
+      "name": "Normal",
+      "category": "Normal",
+      "description": "Normal retinal condition without any pathological findings",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Clear vision", "No visual symptoms"],
+      "findings": [
+        "Clear optic disc",
+        "Normal macula",
+        "Normal vessels",
+        "Regular cup-to-disc ratio"
+      ],
+      "recommendations": [
+        "Regular eye checkups annually",
+        "Maintain healthy lifestyle",
+        "Protect eyes from UV radiation"
+      ]
+    },
+    {
+      "id": 1,
+      "code": "0.1",
+      "name": "Tessellated Fundus",
+      "category": "Retinal Dystrophy",
+      "description": "Visible choroidal pattern due to thinning of retinal pigment epithelium",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Usually asymptomatic", "May have mild visual symptoms"],
+      "findings": [
+        "Visible choroidal pattern",
+        "Thin retinal pigment epithelium",
+        "Normal vision in most cases"
+      ],
+      "recommendations": [
+        "Regular monitoring",
+        "Fundus photography follow-up",
+        "Protect from UV exposure"
+      ]
+    },
+    {
+      "id": 2,
+      "code": "0.2",
+      "name": "Large Optic Cup",
+      "category": "Optic Nerve",
+      "description": "Enlarged optic cup suggesting glaucomatous changes",
+      "severity": "Medium",
+      "riskLevel": "Medium",
+      "symptoms": [
+        "Possible vision loss",
+        "Peripheral visual field defects",
+        "Usually asymptomatic in early stages"
+      ],
+      "findings": [
+        "Cup-to-disc ratio > 0.6",
+        "Vertical elongation of cup",
+        "Neuroretinal rim thinning"
+      ],
+      "recommendations": [
+        "Visual field testing",
+        "Monitor intraocular pressure",
+        "Ophthalmology referral",
+        "Regular glaucoma screening"
+      ]
+    },
+    {
+      "id": 3,
+      "code": "0.3",
+      "name": "DR1 (Mild Diabetic Retinopathy)",
+      "category": "Diabetic Retinopathy",
+      "description": "Mild nonproliferative diabetic retinopathy with microaneurysms only",
+      "severity": "Low",
+      "riskLevel": "Medium",
+      "symptoms": ["Usually asymptomatic", "Possible blurred vision"],
+      "findings": [
+        "Microaneurysms",
+        "Dot-blot hemorrhages",
+        "No macular edema",
+        "No neovascularization"
+      ],
+      "recommendations": [
+        "Strict glucose control",
+        "Blood pressure management",
+        "Regular fundus examination every 6 months",
+        "Lifestyle modifications"
+      ]
+    },
+    {
+      "id": 4,
+      "code": "1.0",
+      "name": "DR2 (Moderate Diabetic Retinopathy)",
+      "category": "Diabetic Retinopathy",
+      "description": "Moderate nonproliferative diabetic retinopathy with hemorrhages and exudates",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": ["Blurred vision", "Floaters", "Visual field loss"],
+      "findings": [
+        "Multiple microaneurysms",
+        "Retinal hemorrhages",
+        "Hard exudates",
+        "Cotton-wool spots",
+        "Macular edema may be present"
+      ],
+      "recommendations": [
+        "Aggressive glycemic control",
+        "OCT for macular edema assessment",
+        "Quarterly eye examinations",
+        "Anti-VEGF or laser treatment may be needed"
+      ]
+    },
+    {
+      "id": 5,
+      "code": "1.1",
+      "name": "DR3 (Severe Diabetic Retinopathy)",
+      "category": "Diabetic Retinopathy",
+      "description": "Severe nonproliferative diabetic retinopathy with significant hemorrhages and exudates",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Significant vision loss",
+        "Floaters and flashing lights",
+        "Visual field defects"
+      ],
+      "findings": [
+        "Extensive retinal hemorrhages",
+        "Widespread hard exudates",
+        "Cotton-wool spots",
+        "Venous beading",
+        "Significant macular edema likely"
+      ],
+      "recommendations": [
+        "Urgent ophthalmology referral",
+        "OCT imaging and angiography",
+        "Anti-VEGF injections",
+        "Laser photocoagulation may be needed",
+        "Monthly follow-ups"
+      ]
+    },
+    {
+      "id": 6,
+      "code": "2.0",
+      "name": "BRVO (Branch Retinal Vein Occlusion)",
+      "category": "Retinal Vascular Occlusion",
+      "description": "Occlusion of a branch of the central retinal vein",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": ["Sudden vision loss", "Visual field defect", "Floaters"],
+      "findings": [
+        "Flame hemorrhages in affected area",
+        "Retinal edema and exudates",
+        "Dilated tortuous veins",
+        "Cotton-wool spots"
+      ],
+      "recommendations": [
+        "OCT for macular involvement assessment",
+        "Fluorescein angiography",
+        "Anti-VEGF if macular edema present",
+        "Laser treatment if needed",
+        "Monitor for neovascularization"
+      ]
+    },
+    {
+      "id": 7,
+      "code": "2.1",
+      "name": "CRVO (Central Retinal Vein Occlusion)",
+      "category": "Retinal Vascular Occlusion",
+      "description": "Complete occlusion of the central retinal vein",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Sudden painless vision loss",
+        "Extensive visual field defect",
+        "Floaters and visual phenomena"
+      ],
+      "findings": [
+        "Diffuse retinal hemorrhages",
+        "Extensive cotton-wool spots",
+        "Retinal edema",
+        "Dilated tortuous veins",
+        "Optic disc swelling"
+      ],
+      "recommendations": [
+        "Emergency ophthalmology consultation",
+        "OCT angiography",
+        "Fluorescein angiography",
+        "Anti-VEGF injections",
+        "Systemic evaluation for risk factors",
+        "Monthly monitoring"
+      ]
+    },
+    {
+      "id": 8,
+      "code": "3",
+      "name": "RAO (Retinal Artery Occlusion)",
+      "category": "Retinal Vascular Occlusion",
+      "description": "Occlusion of the central or branch retinal artery",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Sudden painless vision loss",
+        "Visual field defect",
+        "Possible amaurosis fugax history"
+      ],
+      "findings": [
+        "Cotton-wool spots",
+        "Retinal whitening/edema",
+        "Cherry-red spot at macula (if CRAO)",
+        "Attenuated vessels"
+      ],
+      "recommendations": [
+        "Immediate emergency evaluation",
+        "Carotid imaging",
+        "Cardiac assessment",
+        "Urgent OCT angiography",
+        "Systemic workup for embolic source",
+        "Antiplatelet or anticoagulation therapy"
+      ]
+    },
+    {
+      "id": 9,
+      "code": "4",
+      "name": "Rhegmatogenous RD (Rhegmatogenous Retinal Detachment)",
+      "category": "Retinal Detachment",
+      "description": "Retinal detachment due to a break or hole in the retina",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Floaters increasing",
+        "Light flashes (photopsia)",
+        "Visual field defect or shadow",
+        "Sudden vision loss if macula involved"
+      ],
+      "findings": [
+        "Retinal break or hole",
+        "Elevated detached retina",
+        "Subretinal fluid",
+        "Proliferative vitreoretinopathy may be present"
+      ],
+      "recommendations": [
+        "Urgent retinal surgery consultation",
+        "Pneumatic retinopexy or vitrectomy",
+        "Avoid eye movements",
+        "Head positioning if pneumatic retinopexy planned",
+        "Post-operative follow-up critical"
+      ]
+    },
+    {
+      "id": 10,
+      "code": "5.0",
+      "name": "CSCR (Central Serous Chorioretinopathy)",
+      "category": "Macular Disorders",
+      "description": "Accumulation of subretinal fluid beneath the neurosensory retina at the macula",
+      "severity": "Medium",
+      "riskLevel": "Medium",
+      "symptoms": [
+        "Blurred or distorted central vision",
+        "Micropsia (objects appear smaller)",
+        "Metamorphopsia (wavy vision)",
+        "Central scotoma"
+      ],
+      "findings": [
+        "Serous retinal detachment at macula",
+        "Pinpoint leakage on fluorescein angiography",
+        "Choroidal abnormality",
+        "Drusen-like changes"
+      ],
+      "recommendations": [
+        "OCT imaging for monitoring",
+        "Fluorescein angiography for leakage site",
+        "Observation in acute cases",
+        "Photodynamic therapy if recurrent",
+        "Anti-VEGF if choroidal abnormality present"
+      ]
+    },
+    {
+      "id": 11,
+      "code": "5.1",
+      "name": "VKH Disease (Vogt-Koyanagi-Harada)",
+      "category": "Inflammatory",
+      "description": "Systemic autoimmune inflammatory disease affecting eyes, skin, and CNS",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Sudden vision loss",
+        "Photopsia",
+        "Floaters",
+        "Headache and meningeal symptoms",
+        "Auditory symptoms"
+      ],
+      "findings": [
+        "Bilateral granulomatous anterior uveitis",
+        "Serous retinal detachment",
+        "Optic disc swelling",
+        "Choroidal thickening",
+        "Sunset-glow optic disc in late stage"
+      ],
+      "recommendations": [
+        "Systemic corticosteroids",
+        "Immunosuppressive agents",
+        "Careful monitoring for recurrence",
+        "OCT monitoring",
+        "Neuropsychiatric evaluation"
+      ]
+    },
+    {
+      "id": 12,
+      "code": "6",
+      "name": "Maculopathy",
+      "category": "Macular Disorders",
+      "description": "Any disease affecting the macula region of the retina",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Central vision loss",
+        "Metamorphopsia",
+        "Scotoma",
+        "Color vision defects"
+      ],
+      "findings": [
+        "Macular edema",
+        "Drusen",
+        "Pigment changes",
+        "Exudates near macula"
+      ],
+      "recommendations": [
+        "OCT for structural assessment",
+        "Fluorescein angiography",
+        "Treatment based on underlying cause",
+        "Regular monitoring",
+        "Visual field testing"
+      ]
+    },
+    {
+      "id": 13,
+      "code": "7",
+      "name": "ERM (Epiretinal Membrane)",
+      "category": "Vitreoretinal",
+      "description": "Thin scar tissue on the surface of the retina causing macular distortion",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": [
+        "Metamorphopsia (wavy vision)",
+        "Blurred vision",
+        "Floaters",
+        "Monocular diplopia"
+      ],
+      "findings": [
+        "Gliotic membrane over macula",
+        "Macular folds or foveolar hypoplasia",
+        "Macular edema",
+        "Retinal puckering"
+      ],
+      "recommendations": [
+        "Observation if asymptomatic",
+        "OCT for macular involvement assessment",
+        "Vitrectomy with membrane peeling if vision worsening",
+        "Regular monitoring"
+      ]
+    },
+    {
+      "id": 14,
+      "code": "8",
+      "name": "MH (Macular Hole)",
+      "category": "Macular Disorders",
+      "description": "Full-thickness defect in the neurosensory retina at the macula",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Central vision loss",
+        "Central scotoma",
+        "Metamorphopsia",
+        "Micropsia"
+      ],
+      "findings": [
+        "Full-thickness macular defect",
+        "Epiretinal membrane may be present",
+        "Posterior vitreous detachment",
+        "Thickened margin"
+      ],
+      "recommendations": [
+        "Vitrectomy surgery recommended",
+        "OCT for staging and size assessment",
+        "Head positioning post-op",
+        "IOP monitoring if gas tamponade used"
+      ]
+    },
+    {
+      "id": 15,
+      "code": "9",
+      "name": "Pathological Myopia",
+      "category": "Myopic Changes",
+      "description": "High myopia with degenerative fundus changes",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Progressive myopic shift",
+        "Floaters",
+        "Photopsia",
+        "Central vision loss if macula involved"
+      ],
+      "findings": [
+        "Myopic crescent",
+        "Optic disc tilt",
+        "Posterior staphyloma",
+        "Myopic choroidal neovascularization",
+        "Macular atrophy"
+      ],
+      "recommendations": [
+        "High myopia correction",
+        "Anti-VEGF for myopic CNV",
+        "OCT monitoring for structural changes",
+        "Screening for retinal breaks and detachment",
+        "Annual comprehensive examination"
+      ]
+    },
+    {
+      "id": 16,
+      "code": "10.0",
+      "name": "Possible Glaucoma",
+      "category": "Optic Nerve",
+      "description": "Suggests suspicious optic nerve changes consistent with glaucoma",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Usually asymptomatic in early stages",
+        "Possible peripheral vision loss in advanced disease"
+      ],
+      "findings": [
+        "Increased cup-to-disc ratio",
+        "Neuroretinal rim loss",
+        "Optic disc hemorrhage may be present",
+        "Nerve fiber layer defects"
+      ],
+      "recommendations": [
+        "Tonometry for IOP measurement",
+        "Visual field testing",
+        "OCT nerve imaging",
+        "Gonioscopy",
+        "Regular monitoring every 3-6 months",
+        "Consider starting anti-glaucoma therapy"
+      ]
+    },
+    {
+      "id": 17,
+      "code": "10.1",
+      "name": "Optic Atrophy",
+      "category": "Optic Nerve",
+      "description": "Degeneration of the optic nerve with pallor and loss of nerve fibers",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Vision loss varies by severity",
+        "Color vision defects",
+        "Visual field defects",
+        "Poor light reflex"
+      ],
+      "findings": [
+        "Optic disc pallor",
+        "Reduced optic nerve diameter",
+        "Clear disc margins",
+        "Possible altitudinal defects"
+      ],
+      "recommendations": [
+        "Identify underlying cause",
+        "OCT for nerve fiber layer evaluation",
+        "Visual field testing",
+        "Neuroimaging if indicated",
+        "Address underlying etiology",
+        "Rehabilitation for vision loss"
+      ]
+    },
+    {
+      "id": 18,
+      "code": "11",
+      "name": "Severe Hypertensive Retinopathy",
+      "category": "Hypertensive Changes",
+      "description": "Severe retinal and optic nerve changes from malignant hypertension",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Blurred vision",
+        "Possible visual loss",
+        "Headache and neurological symptoms"
+      ],
+      "findings": [
+        "Multiple retinal hemorrhages",
+        "Cotton-wool spots",
+        "Macular star exudates",
+        "Optic disc swelling",
+        "Arteriovenous nicking",
+        "Retinal arteriolar narrowing"
+      ],
+      "recommendations": [
+        "Urgent blood pressure control",
+        "Emergency department evaluation",
+        "OCT imaging",
+        "Neuroimaging if CNS involvement",
+        "Cardiology and nephrology consultation",
+        "Frequent monitoring"
+      ]
+    },
+    {
+      "id": 19,
+      "code": "12",
+      "name": "Disc Swelling and Elevation",
+      "category": "Optic Nerve",
+      "description": "Swelling and elevation of optic disc from various etiologies",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Usually asymptomatic initially",
+        "Possible transient visual obscurations",
+        "Peripheral visual field effects"
+      ],
+      "findings": [
+        "Elevated optic disc",
+        "Blurred disc margins",
+        "Obscured vessels at disc",
+        "Possible hemorrhages around disc"
+      ],
+      "recommendations": [
+        "OCT of optic nerve",
+        "Visual field testing",
+        "MRI if papilledema suspected",
+        "Identify underlying cause",
+        "Possible lumbar puncture if increased ICP suspected"
+      ]
+    },
+    {
+      "id": 20,
+      "code": "13",
+      "name": "Dragged Disc",
+      "category": "Congenital/Developmental",
+      "description": "Optic disc stretched by tractional force from epiretinal tissue",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Usually asymptomatic", "Possible visual field effects"],
+      "findings": [
+        "Disc displaced from normal position",
+        "Epiretinal membrane pulling disc",
+        "Distorted disc margins"
+      ],
+      "recommendations": [
+        "Documentation with photography",
+        "OCT imaging",
+        "Monitor for progression",
+        "Surgery rarely needed unless vision threatened"
+      ]
+    },
+    {
+      "id": 21,
+      "code": "14",
+      "name": "Congenital Disc Abnormality",
+      "category": "Congenital/Developmental",
+      "description": "Congenital anatomical abnormalities of the optic disc",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": [
+        "Variable visual acuity depending on severity",
+        "Possible refractive error"
+      ],
+      "findings": [
+        "Hypoplastic disc",
+        "Tilted disc",
+        "Double-ring sign",
+        "Coloboma of disc"
+      ],
+      "recommendations": [
+        "Documentation for comparison",
+        "Visual field testing if indicated",
+        "Refraction",
+        "Monitor for development"
+      ]
+    },
+    {
+      "id": 22,
+      "code": "15.0",
+      "name": "Retinitis Pigmentosa",
+      "category": "Retinal Dystrophy",
+      "description": "Progressive inherited retinal dystrophy affecting photoreceptors",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Night blindness earliest symptom",
+        "Progressive peripheral vision loss",
+        "Photopsia",
+        "Reduced color vision"
+      ],
+      "findings": [
+        "Bone spicule pigmentation in periphery",
+        "Optically empty arterioles",
+        "Waxy optic disc pallor",
+        "Macular degeneration in late stages"
+      ],
+      "recommendations": [
+        "Vitamin A supplementation",
+        "Genetic counseling",
+        "Low vision aids",
+        "OCT monitoring for macular changes",
+        "Research trial eligibility assessment"
+      ]
+    },
+    {
+      "id": 23,
+      "code": "15.1",
+      "name": "Bietti Crystalline Dystrophy",
+      "category": "Retinal Dystrophy",
+      "description": "Progressive retinal dystrophy with crystalline deposits and choroidal atrophy",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Progressive vision loss",
+        "Photopsia",
+        "Nyctalopia (night blindness)",
+        "Color vision loss"
+      ],
+      "findings": [
+        "Crystalline deposits at macula and periphery",
+        "Choroidal patchy atrophy",
+        "Retinal pigment changes",
+        "Posterior subcapsular cataract"
+      ],
+      "recommendations": [
+        "Genetic testing",
+        "High-dose vitamin A with lubricants",
+        "Systemic fat-soluble vitamin supplementation",
+        "OCT monitoring",
+        "Low vision rehabilitation"
+      ]
+    },
+    {
+      "id": 24,
+      "code": "16",
+      "name": "Peripheral Retinal Degeneration and Break",
+      "category": "Retinal Breaks",
+      "description": "Thinning and breaks in peripheral retina with risk of detachment",
+      "severity": "Medium",
+      "riskLevel": "High",
+      "symptoms": [
+        "Usually asymptomatic",
+        "Floaters increase if progression occurs"
+      ],
+      "findings": [
+        "Retinal thinning",
+        "Lattice degeneration",
+        "Retinal hole or tear",
+        "Vitreous base changes"
+      ],
+      "recommendations": [
+        "Dilated retinal examination",
+        "Peripheral retinal photography",
+        "Vitreous observation",
+        "Prophylactic laser for certain high-risk cases",
+        "Discuss retinal detachment warning signs"
+      ]
+    },
+    {
+      "id": 25,
+      "code": "17",
+      "name": "Myelinated Nerve Fiber",
+      "category": "Congenital/Developmental",
+      "description": "Myelination of retinal nerve fiber layer extending anterior to lamina cribrosa",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": [
+        "Usually asymptomatic",
+        "Possible superior altitudinal visual field defect"
+      ],
+      "findings": [
+        "White striated appearance following nerve fiber pattern",
+        "Feathered edges",
+        "Obscures underlying vessels"
+      ],
+      "recommendations": [
+        "Documentation and observation",
+        "Visual field testing if defect suspected",
+        "Usually benign, no treatment needed"
+      ]
+    },
+    {
+      "id": 26,
+      "code": "18",
+      "name": "Vitreous Particles",
+      "category": "Vitreous Opacity",
+      "description": "Opacities within the vitreous humor",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Floaters", "Possible glare", "Photopsia if sudden"],
+      "findings": [
+        "Vitreous opacities",
+        "Vitreous haze",
+        "Vitreous inflammation if uveitis"
+      ],
+      "recommendations": [
+        "Monitor for changes",
+        "B-scan if posterior vitreous view obscured",
+        "OCT if macular involvement",
+        "Treat underlying cause if uveitis"
+      ]
+    },
+    {
+      "id": 27,
+      "code": "19",
+      "name": "Fundus Neoplasm",
+      "category": "Neoplasm",
+      "description": "Malignant or benign tumor of the retina or choroid",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Vision loss if macula involved",
+        "Visual field defect",
+        "Floaters or shadows"
+      ],
+      "findings": [
+        "Retinal or choroidal lesion",
+        "Color variegation possible",
+        "Surrounding retinal detachment possible",
+        "Orange pigmentation if melanoma"
+      ],
+      "recommendations": [
+        "Oncology referral urgent",
+        "B-scan and ultrasography",
+        "OCT imaging",
+        "Possible MRI for staging",
+        "Treatment options discussion: chemotherapy, radiation, cryotherapy, brachytherapy, or enucleation"
+      ]
+    },
+    {
+      "id": 28,
+      "code": "20",
+      "name": "Massive Hard Exudates",
+      "category": "Exudates",
+      "description": "Large accumulation of lipid-rich exudates on retina",
+      "severity": "Medium",
+      "riskLevel": "Medium",
+      "symptoms": ["Vision loss if macula involved", "Possible light glare"],
+      "findings": [
+        "Lipid star configuration around macula",
+        "Yellow-white appearance",
+        "Associated with leaking microaneurysms or vessel wall break"
+      ],
+      "recommendations": [
+        "Address underlying cause",
+        "OCT for macular exudate measurement",
+        "Consider anti-VEGF for diabetic maculopathy",
+        "Laser photocoagulation if indicated",
+        "Monitor for macular edema"
+      ]
+    },
+    {
+      "id": 29,
+      "code": "21",
+      "name": "Yellow-White Spots-Flecks",
+      "category": "Retinal Findings",
+      "description": "Yellow or white spots and flecks on retina of various etiologies",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Usually asymptomatic", "May indicate systemic disease"],
+      "findings": [
+        "Multiple yellow-white spots",
+        "Deep or superficial location",
+        "Associated with drusen or inflammation"
+      ],
+      "recommendations": [
+        "Identify underlying cause",
+        "Systemic evaluation if indicated",
+        "OCT for characterization",
+        "Monitor for progression"
+      ]
+    },
+    {
+      "id": 30,
+      "code": "22",
+      "name": "Cotton-Wool Spots",
+      "category": "Retinal Findings",
+      "description": "Superficial retinal nerve fiber layer infarcts causing white fuzzy spots",
+      "severity": "Low",
+      "riskLevel": "Medium",
+      "symptoms": [
+        "Usually asymptomatic",
+        "Possible indicator of systemic disease"
+      ],
+      "findings": [
+        "White fluffy spots in nerve fiber layer",
+        "Soft, indistinct borders",
+        "No retinal breaks",
+        "Associated with microvascular disease"
+      ],
+      "recommendations": [
+        "Systemic evaluation for diabetes, hypertension, hyperlipidemia",
+        "Routine monitoring",
+        "Address underlying conditions",
+        "Observation as spots typically resolve"
+      ]
+    },
+    {
+      "id": 31,
+      "code": "23",
+      "name": "Vessel Tortuosity",
+      "category": "Vascular",
+      "description": "Increased winding and twisting of retinal blood vessels",
+      "severity": "Low",
+      "riskLevel": "Medium",
+      "symptoms": ["Usually asymptomatic"],
+      "findings": [
+        "Tortuous arteries and/or veins",
+        "Increased vessel density apparent",
+        "Associated with hyperlipidemia, anemia, or hyperviscosity"
+      ],
+      "recommendations": [
+        "Systemic evaluation for anemia and blood abnormalities",
+        "Lipid panel assessment",
+        "Blood viscosity evaluation if needed",
+        "Monitor for complications"
+      ]
+    },
+    {
+      "id": 32,
+      "code": "24",
+      "name": "Chorioretinal Atrophy-Coloboma",
+      "category": "Retinal Atrophy",
+      "description": "Thinning and loss of choroid and retina leaving sclera visible",
+      "severity": "Medium",
+      "riskLevel": "Medium",
+      "symptoms": [
+        "Vision loss extent varies",
+        "Visual field defect if macula involved"
+      ],
+      "findings": [
+        "Well-demarcated areas of whiteness",
+        "Exposed sclera",
+        "Vessels may be visible through atrophic areas"
+      ],
+      "recommendations": [
+        "Identify underlying etiology",
+        "OCT imaging",
+        "Monitor for progression",
+        "Address underlying cause"
+      ]
+    },
+    {
+      "id": 33,
+      "code": "25",
+      "name": "Preretinal Hemorrhage",
+      "category": "Hemorrhage",
+      "description": "Bleeding between vitreous and retina",
+      "severity": "Medium",
+      "riskLevel": "Medium",
+      "symptoms": ["Floaters", "Vision loss if large", "Photopsia"],
+      "findings": [
+        "Dark red blood in preretinal space",
+        "Horizontal level margin possible",
+        "May obscure underlying lesions"
+      ],
+      "recommendations": [
+        "Address underlying cause",
+        "Monitor for absorption",
+        "Vitrectomy if vision-threatening and non-resolving",
+        "Fundus examination after hemorrhage clears"
+      ]
+    },
+    {
+      "id": 34,
+      "code": "26",
+      "name": "Fibrosis",
+      "category": "Scar Tissue",
+      "description": "Gliotic scar tissue on or beneath retina",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Usually asymptomatic unless macula involved"],
+      "findings": [
+        "White or pale tissue",
+        "Retinal contraction possible",
+        "May follow previous hemorrhage or inflammation"
+      ],
+      "recommendations": [
+        "Documentation and monitoring",
+        "Assess for epiretinal membrane formation",
+        "Surgery only if vision threatened"
+      ]
+    },
+    {
+      "id": 35,
+      "code": "27",
+      "name": "Laser Spots",
+      "category": "Post-Surgical",
+      "description": "Retinal scars from previous laser photocoagulation treatment",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": ["Usually none", "Depends on location of spots"],
+      "findings": [
+        "Regular pattern of treatment burns",
+        "White or darker scars depending on age",
+        "Associated with treatment of retinopathy or breaks"
+      ],
+      "recommendations": [
+        "Document for comparison",
+        "Monitor for complications",
+        "Assess treatment effectiveness",
+        "No additional treatment usually needed"
+      ]
+    },
+    {
+      "id": 36,
+      "code": "28",
+      "name": "Silicon Oil in Eye",
+      "category": "Post-Surgical",
+      "description": "Silicone oil tamponade remaining in eye after vitrectomy",
+      "severity": "Low",
+      "riskLevel": "Low",
+      "symptoms": [
+        "Vision reduction",
+        "Foreign body sensation",
+        "Oil-related visual effects"
+      ],
+      "findings": [
+        "Oil droplets and superficial sheen",
+        "Cataract formation possible",
+        "Glaucoma risk"
+      ],
+      "recommendations": [
+        "Plan for oil removal when retina stable",
+        "Monitor for complications",
+        "Monitor for cataract progression",
+        "Tonometry for IOP monitoring"
+      ]
+    },
+    {
+      "id": 37,
+      "code": "29.0",
+      "name": "Blur Fundus Without PDR",
+      "category": "Media Opacities",
+      "description": "Loss of fundus clarity without proliferative diabetic retinopathy",
+      "severity": "Low",
+      "riskLevel": "Medium",
+      "symptoms": ["Blurred fundus view", "Vision may or may not be affected"],
+      "findings": [
+        "Hazy or cloudy media",
+        "Reduced view of retinal details",
+        "Anterior segment findings: cataract, corneal scarring, or floaters"
+      ],
+      "recommendations": [
+        "Identify cause of media opacity",
+        "OCT if possible for retinal assessment",
+        "Cataract evaluation if indicated",
+        "B-scan if posterior vitreous view limited"
+      ]
+    },
+    {
+      "id": 38,
+      "code": "29.1",
+      "name": "Blur Fundus With Suspected PDR",
+      "category": "Media Opacities",
+      "description": "Loss of fundus clarity with concern for proliferative diabetic retinopathy",
+      "severity": "High",
+      "riskLevel": "High",
+      "symptoms": [
+        "Blurred central or peripheral vision",
+        "Possible floaters from vitreous hemorrhage",
+        "Vision loss if hemorrhage present"
+      ],
+      "findings": [
+        "Hazy media",
+        "Possible vitreous hemorrhage",
+        "Neovascularization suspected under opacity"
+      ],
+      "recommendations": [
+        "Urgent B-scan ultrasound",
+        "OCT if media allows retinal assessment",
+        "Prepare for possible vitrectomy",
+        "Anti-VEGF injections if accessible",
+        "Close monitoring for retinal detachment"
+      ]
+    }
+  ]
+}
