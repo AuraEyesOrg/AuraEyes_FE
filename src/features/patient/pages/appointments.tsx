@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
@@ -25,13 +25,9 @@ import {
 import { usePatientClinicAppointments } from '@/features/patient/hooks/use-clinic-booking';
 import {
   feedbackKeys,
-  useCreateOphthalmologistFeedback,
   useCreateOrganisationFeedback,
 } from '@/features/patient/hooks/use-feedback';
-import {
-  listOrganisationFeedback,
-  listOphthalmologistFeedback,
-} from '@/features/patient/api/feedback.api';
+import { listOrganisationFeedback } from '@/features/patient/api/feedback.api';
 import {
   FeedbackModal,
   FeedbackSubmittedBadge,
@@ -77,8 +73,6 @@ const CANCELLED_CLINIC_STATUSES = ['Cancelled', 'NoShow'];
 
 const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
-  const [sessionFeedbackTarget, setSessionFeedbackTarget] =
-    useState<ConsultationSessionListDto | null>(null);
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
 
@@ -103,8 +97,6 @@ const AppointmentsPage = () => {
 
   const cancelMutation = useCancelSession();
   const createOrganisationFeedbackMutation = useCreateOrganisationFeedback();
-  const createOphthalmologistFeedbackMutation =
-    useCreateOphthalmologistFeedback();
 
   const sessions = sessionsData?.items ?? [];
   const clinicAppointments = clinicAppointmentsData ?? [];
@@ -159,36 +151,11 @@ const AppointmentsPage = () => {
     [completedClinicAppointments]
   );
 
-  const uniqueOphthalmologistIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          sessions
-            .filter(
-              (session) =>
-                session.status === SessionStatus.Completed &&
-                !!session.ophthalmologistId
-            )
-            .map((session) => session.ophthalmologistId as string)
-        )
-      ),
-    [sessions]
-  );
-
   const organisationFeedbackQueries = useQueries({
     queries: uniqueOrganisationIds.map((organisationId) => ({
       queryKey: feedbackKeys.organisationItems(organisationId, 1, 100),
       queryFn: () => listOrganisationFeedback(organisationId, 1, 100),
       enabled: !!organisationId,
-      staleTime: 30_000,
-    })),
-  });
-
-  const ophthalmologistFeedbackQueries = useQueries({
-    queries: uniqueOphthalmologistIds.map((ophthalmologistId) => ({
-      queryKey: feedbackKeys.ophthalmologistItems(ophthalmologistId, 1, 100),
-      queryFn: () => listOphthalmologistFeedback(ophthalmologistId, 1, 100),
-      enabled: !!ophthalmologistId,
       staleTime: 30_000,
     })),
   });
@@ -204,39 +171,6 @@ const AppointmentsPage = () => {
 
     return synced;
   }, [organisationFeedbackQueries]);
-
-  const submittedSessionFeedbackIds = useMemo(() => {
-    const synced: Record<string, boolean> = {};
-
-    ophthalmologistFeedbackQueries.forEach((query) => {
-      query.data?.items.forEach((item) => {
-        synced[item.consultationSessionId] = true;
-      });
-    });
-
-    return synced;
-  }, [ophthalmologistFeedbackQueries]);
-
-  useEffect(() => {
-    const firstPendingCompletedSession = sessions.find((session) => {
-      if (
-        session.status !== SessionStatus.Completed ||
-        !session.ophthalmologistId
-      ) {
-        return false;
-      }
-
-      if (submittedSessionFeedbackIds[session.id]) {
-        return false;
-      }
-
-      return !window.sessionStorage.getItem(`feedback-dismissed-${session.id}`);
-    });
-
-    if (firstPendingCompletedSession && !sessionFeedbackTarget) {
-      setSessionFeedbackTarget(firstPendingCompletedSession);
-    }
-  }, [sessions, sessionFeedbackTarget, submittedSessionFeedbackIds]);
 
   const handleCancel = (sessionId: string) => {
     if (
@@ -259,54 +193,6 @@ const AppointmentsPage = () => {
       new Date(session.appointmentTime).getTime() - Date.now();
     const threeHoursMs = 3 * 60 * 60 * 1000;
     return msUntilStart > threeHoursMs;
-  };
-
-  const dismissSessionFeedbackModal = () => {
-    if (sessionFeedbackTarget) {
-      window.sessionStorage.setItem(
-        `feedback-dismissed-${sessionFeedbackTarget.id}`,
-        '1'
-      );
-    }
-    setSessionFeedbackTarget(null);
-  };
-
-  const submitSessionFeedback = async (rating: number, comment?: string) => {
-    if (!sessionFeedbackTarget?.ophthalmologistId) {
-      return;
-    }
-
-    try {
-      await createOphthalmologistFeedbackMutation.mutateAsync({
-        ophthalmologistId: sessionFeedbackTarget.ophthalmologistId,
-        request: {
-          consultationSessionId: sessionFeedbackTarget.id,
-          rating,
-          comment,
-        },
-      });
-
-      window.sessionStorage.setItem(
-        `feedback-dismissed-${sessionFeedbackTarget.id}`,
-        '1'
-      );
-      setSessionFeedbackTarget(null);
-      toast.success('Feedback submitted');
-    } catch (error) {
-      const status = (error as { response?: { status?: number } }).response
-        ?.status;
-      if (status === 409) {
-        window.sessionStorage.setItem(
-          `feedback-dismissed-${sessionFeedbackTarget.id}`,
-          '1'
-        );
-        setSessionFeedbackTarget(null);
-        toast.info('Feedback already exists for this consultation.');
-        return;
-      }
-
-      toast.error('Unable to submit feedback right now. Please try again.');
-    }
   };
 
   const submitClinicFeedback = async (rating: number, comment?: string) => {
@@ -716,21 +602,6 @@ const AppointmentsPage = () => {
                       )}
                       {session.status === SessionStatus.Completed && (
                         <>
-                          {session.ophthalmologistId &&
-                            (submittedSessionFeedbackIds[session.id] ? (
-                              <FeedbackSubmittedBadge label="Feedback submitted" />
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setSessionFeedbackTarget(session)
-                                }
-                                className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                              >
-                                <MessageSquareHeart className="w-4 h-4" />
-                                Rate Consultation
-                              </button>
-                            ))}
                           <Link
                             to="/patient/chat"
                             className="px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
@@ -770,23 +641,6 @@ const AppointmentsPage = () => {
             </Link>
           </div>
         )}
-
-      <FeedbackModal
-        open={!!sessionFeedbackTarget}
-        title="Consultation feedback"
-        subtitle="Your review helps improve consultation quality."
-        contextLabel={
-          sessionFeedbackTarget
-            ? `${SESSION_TYPE_LABELS[sessionFeedbackTarget.type]} session`
-            : undefined
-        }
-        isSubmitting={createOphthalmologistFeedbackMutation.isPending}
-        submitLabel="Submit consultation feedback"
-        onClose={dismissSessionFeedbackModal}
-        onSubmit={async (values) => {
-          await submitSessionFeedback(values.rating, values.comment);
-        }}
-      />
 
       <FeedbackModal
         open={!!clinicFeedbackTarget}
