@@ -350,7 +350,12 @@ const Router = () => (
         />
         <Route
           path="/:locale/pending-approval"
-          element={<LocalizedPublicRoute element={<PendingApprovalPage />} />}
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<PendingApprovalPage />}
+            />
+          }
         />
 
         <Route
@@ -787,9 +792,9 @@ const Router = () => (
         <Route
           path="/pending-approval"
           element={
-            <PublicRoute>
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <PendingApprovalPage />
-            </PublicRoute>
+            </PrivateRoute>
           }
         />
 
