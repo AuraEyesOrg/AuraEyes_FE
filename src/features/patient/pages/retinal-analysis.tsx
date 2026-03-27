@@ -25,6 +25,7 @@ import {
   Info,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { getDiseaseUrgency } from '../mock';
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -434,6 +435,23 @@ function friendlyDescription(anomaly: Anomaly): string {
   );
 }
 
+function toRiskLevelFromUrgency(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal',
+  confidence: number
+): 'low' | 'moderate' | 'high' {
+  if (urgency === 'critical') return 'high';
+
+  if (urgency === 'warning') {
+    return confidence >= 70 ? 'high' : 'moderate';
+  }
+
+  if (urgency === 'caution') {
+    return confidence >= 70 ? 'moderate' : 'low';
+  }
+
+  return 'low';
+}
+
 export default function RetinalAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -659,18 +677,20 @@ export default function RetinalAnalysis() {
     }
   };
 
-  // --- Risk score computation ---
-  const riskScore =
-    anomalies.length > 0
-      ? Math.round(
-          anomalies.reduce((acc, curr) => acc + curr.confidence, 0) /
-            anomalies.length /
-            10
-        )
-      : 0;
+  // --- Risk score computation (primary finding + disease urgency) ---
+  const primaryAnomaly =
+    anomalies.find((a) => a.isHighest) ??
+    (anomalies.length > 0
+      ? [...anomalies].sort((a, b) => b.confidence - a.confidence)[0]
+      : null);
+  const primaryConfidence = primaryAnomaly?.confidence ?? 0;
+  const primaryUrgency = getDiseaseUrgency(primaryAnomaly?.name ?? 'Normal');
 
-  const riskLevel: 'low' | 'moderate' | 'high' =
-    riskScore >= 7 ? 'high' : riskScore >= 4 ? 'moderate' : 'low';
+  const riskScore = Math.round(primaryConfidence / 10);
+  const riskLevel: 'low' | 'moderate' | 'high' = toRiskLevelFromUrgency(
+    primaryUrgency,
+    primaryConfidence
+  );
 
   const riskConfig = {
     low: {
@@ -772,28 +792,38 @@ export default function RetinalAnalysis() {
         throw new Error('Screening session not available to save AI results');
       }
 
-      const avgConfidence =
-        mapped.length > 0
-          ? Math.round(
-              mapped.reduce((acc, item) => acc + item.confidence, 0) /
-                mapped.length
-            )
-          : 0;
-
+      const primaryMapped =
+        mapped.find((a) => a.isHighest) ??
+        (mapped.length > 0
+          ? [...mapped].sort((a, b) => b.confidence - a.confidence)[0]
+          : null);
+      const persistedConfidence = primaryMapped?.confidence ?? 0;
+      const persistedUrgency = getDiseaseUrgency(
+        primaryMapped?.name ?? 'Normal'
+      );
       const mappedRiskLevel: 'Low' | 'Moderate' | 'High' =
-        avgConfidence >= 70 ? 'High' : avgConfidence >= 40 ? 'Moderate' : 'Low';
+        toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) === 'high'
+          ? 'High'
+          : toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) ===
+              'moderate'
+            ? 'Moderate'
+            : 'Low';
+
+      const significantFindings = mapped
+        .filter((a, idx) => idx === 0 || a.confidence >= 15)
+        .slice(0, 3);
 
       await screeningApi.saveAiResults(ensuredScreeningId, {
         rawJsonOutput: rawOutput,
         riskLevel: mappedRiskLevel,
-        confidenceScore: avgConfidence,
+        confidenceScore: persistedConfidence,
         summary:
           mappedRiskLevel === 'High'
             ? 'Findings need attention from an ophthalmologist.'
             : mappedRiskLevel === 'Moderate'
               ? 'Some findings may need specialist review.'
               : 'No major risk findings detected.',
-        findings: mapped
+        findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),
       });

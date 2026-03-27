@@ -31,6 +31,20 @@ interface Scan {
   thumbnailUrl?: string;
   findings?: number;
 }
+
+function extractPrimaryFinding(findings?: string): string | undefined {
+  if (!findings) return undefined;
+
+  const first = findings
+    .split(',')
+    .map((item) => item.trim())
+    .find(Boolean);
+
+  if (!first) return undefined;
+
+  return first.replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
+
 export default function ScreeningPage() {
   const navigate = useNavigate();
 
@@ -45,9 +59,45 @@ export default function ScreeningPage() {
     },
   });
 
+  const sessionDetailsQuery = useQuery({
+    queryKey: [
+      'screening',
+      'recent',
+      'details',
+      (sessionsQuery.data ?? []).map((s) => s.screeningId).join(','),
+    ],
+    enabled: (sessionsQuery.data?.length ?? 0) > 0,
+    queryFn: async () => {
+      const sessions = sessionsQuery.data ?? [];
+      const entries = await Promise.all(
+        sessions.map(async (s) => {
+          try {
+            const detail = await screeningApi.getSessionById(s.screeningId);
+            return [
+              s.screeningId,
+              detail.data?.latestResult?.findings,
+            ] as const;
+          } catch {
+            return [s.screeningId, undefined] as const;
+          }
+        })
+      );
+
+      return Object.fromEntries(entries) as Record<string, string | undefined>;
+    },
+    staleTime: 60_000,
+  });
+
   const scans: Scan[] = (sessionsQuery.data ?? []).map((session) => ({
     id: session.screeningId,
-    name: `Session ${session.screeningId.slice(0, 8)}`,
+    name: (() => {
+      const finding = extractPrimaryFinding(
+        sessionDetailsQuery.data?.[session.screeningId]
+      );
+      return finding
+        ? `Session - ${finding}`
+        : `Session - ${formatShortDate(session.createdAt)}`;
+    })(),
     eye: 'Both Eyes',
     date: session.createdAt,
     status: session.processedAt ? 'completed' : 'processing',
