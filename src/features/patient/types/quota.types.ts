@@ -8,7 +8,7 @@ export interface QuotaBalance {
 }
 
 export interface BuyQuotaRequest {
-  numberOfBundles: number;
+  quotaAmount: number;
 }
 
 export interface BuyQuotaResponse {

@@ -84,6 +84,15 @@ const LoginPage = () => {
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
+  const isPendingVerification = (user?: {
+    isVerified?: boolean | null;
+    verificationStatus?: string | null;
+  }) =>
+    user?.verificationStatus === 'PendingVerification' ||
+    (user?.isVerified === false &&
+      (!user?.verificationStatus ||
+        user?.verificationStatus === 'PendingVerification'));
+
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
@@ -141,7 +150,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (response.user?.isVerified === false) {
+          if (isPendingVerification(response.user)) {
             navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
@@ -278,7 +287,7 @@ const LoginPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (response.user?.isVerified === false) {
+          if (isPendingVerification(response.user)) {
             navigate(toLocalizedAuthPath('/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));

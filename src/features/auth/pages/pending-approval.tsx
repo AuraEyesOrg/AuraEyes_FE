@@ -1,17 +1,21 @@
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { AuraLogo } from '@/components/ui/aura-logo';
 import useAuthStore from '@/store/auth-store';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 const PendingApprovalPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const logout = useAuthStore((state) => state.logout);
 
   const handleGoHome = () => {
-    navigate('/');
+    navigate(resolvePathWithLocale('/'));
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(resolvePathWithLocale('/login'));
   };
 
   return (
@@ -19,12 +23,14 @@ const PendingApprovalPage = () => {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-2xl font-bold text-white shadow-lg">
-            A
+          <div className="mb-4 inline-flex rounded-2xl bg-white p-2 shadow-lg border border-gray-100">
+            <AuraLogo
+              size="md"
+              subtitle={t('AuthPages.pendingApproval.brandSubtitle')}
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">AURA</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Retinal Health Screening System
+            {t('AuthPages.pendingApproval.brandDescription')}
           </p>
         </div>
 
@@ -53,24 +59,23 @@ const PendingApprovalPage = () => {
           <div className="mb-4 flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
               <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-              Đang xác minh
+              {t('AuthPages.pendingApproval.statusBadge')}
             </span>
           </div>
 
           {/* Title */}
           <h2 className="mb-4 text-center text-xl font-bold text-gray-900">
-            Chào mừng bạn đã tham gia AURA!
+            {t('AuthPages.pendingApproval.title')}
           </h2>
 
           {/* Message */}
           <p className="mb-6 text-center leading-relaxed text-gray-600">
-            Hệ thống đang tiến hành xác minh chứng chỉ hành nghề của bạn để đảm
-            bảo tiêu chuẩn y tế và kích hoạt tính năng nhận phí tư vấn. Quá
-            trình này thường mất{' '}
+            {t('AuthPages.pendingApproval.primaryMessage')}{' '}
+            {t('AuthPages.pendingApproval.secondaryMessage')}{' '}
             <span className="font-semibold text-gray-800">
-              24-48 giờ làm việc
+              {t('AuthPages.pendingApproval.processingTime')}
             </span>
-            . Vui lòng chờ nhé!
+            . {t('AuthPages.pendingApproval.closing')}
           </p>
 
           {/* Info Box */}
@@ -90,8 +95,7 @@ const PendingApprovalPage = () => {
                 />
               </svg>
               <p className="text-sm text-blue-700">
-                Bạn sẽ nhận được email thông báo ngay khi hồ sơ được phê duyệt.
-                Sau đó, hãy đăng nhập lại để bắt đầu nhận ca bệnh và tư vấn.
+                {t('AuthPages.pendingApproval.infoBox')}
               </p>
             </div>
           </div>
@@ -102,20 +106,20 @@ const PendingApprovalPage = () => {
               onClick={handleGoHome}
               className="w-full rounded-xl bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:brightness-105"
             >
-              Quay về trang chủ giới thiệu
+              {t('AuthPages.pendingApproval.goHome')}
             </button>
             <button
               onClick={handleLogout}
               className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
             >
-              Đăng xuất
+              {t('AuthPages.pendingApproval.logout')}
             </button>
           </div>
         </div>
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs text-gray-500">
-          © 2026 AURA. All rights reserved.
+          {t('AuthPages.pendingApproval.footer')}
         </p>
       </div>
     </div>

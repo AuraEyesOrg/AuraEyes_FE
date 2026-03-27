@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import {
-  Shield,
-  ArrowLeft,
-  AlertCircle,
-  Key,
-  Smartphone,
-  Eye,
-} from 'lucide-react';
+import { Shield, ArrowLeft, AlertCircle, Key, Smartphone } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
@@ -32,6 +25,15 @@ const TwoFactorVerifyPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+
+  const isPendingVerification = (user?: {
+    isVerified?: boolean | null;
+    verificationStatus?: string | null;
+  }) =>
+    user?.verificationStatus === 'PendingVerification' ||
+    (user?.isVerified === false &&
+      (!user?.verificationStatus ||
+        user?.verificationStatus === 'PendingVerification'));
 
   const {
     register,
@@ -89,7 +91,7 @@ const TwoFactorVerifyPage = () => {
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (response.user?.isVerified === false) {
+          if (isPendingVerification(response.user)) {
             navigate('/pending-approval');
           } else if (response.user?.contractStatus !== 'Active') {
             navigate('/ophthalmologist/contract');
@@ -148,7 +150,11 @@ const TwoFactorVerifyPage = () => {
         {/* Header */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <Eye className="text-[#00d1c0] w-10 h-10" />
+            <img
+              src="/logo.png"
+              alt="AURA"
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-2xl font-bold tracking-tight">AURA</span>
           </div>
         </div>
@@ -176,7 +182,7 @@ const TwoFactorVerifyPage = () => {
       <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative">
         {/* Mobile Brand Header */}
         <div className="lg:hidden absolute top-6 left-6 flex items-center gap-2 text-[#1A202C]">
-          <Eye className="text-[#00d1c0] w-6 h-6" />
+          <img src="/logo.png" alt="AURA" className="w-6 h-6 object-contain" />
           <span className="font-bold">AURA</span>
         </div>
 

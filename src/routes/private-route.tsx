@@ -14,6 +14,12 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
   const location = useLocation();
   const normalizedPath = stripLocaleFromPathname(location.pathname);
 
+  const isPendingVerification =
+    user?.verificationStatus === 'PendingVerification' ||
+    (user?.isVerified === false &&
+      (!user?.verificationStatus ||
+        user?.verificationStatus === 'PendingVerification'));
+
   if (!isAuthenticated) {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
@@ -28,7 +34,7 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
 
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
-  const isPendingApproval = isOphthalmologist && user?.isVerified === false;
+  const isPendingApproval = isOphthalmologist && isPendingVerification;
 
   if (isPendingApproval && normalizedPath !== '/pending-approval') {
     return <Navigate to={resolvePathWithLocale('/pending-approval')} replace />;
