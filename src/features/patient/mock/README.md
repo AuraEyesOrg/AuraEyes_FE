@@ -1,253 +1,204 @@
-# Retinal Analysis Mock Data Guide
+# Disease Reference Database
 
 ## 📋 Overview
 
-This mock data module provides **11 representative cases** from the **39-disease classification system** for testing the retinal analysis feature without requiring the actual AI inference API.
+This module provides a **39-disease reference database** for retinal analysis feature development.
+
+**Key Point:** This database contains disease **metadata only** (name, description, severity, findings, recommendations). **Lesion locations come from API responses**, not mocked.
 
 ## 📁 Files
 
-- **`retinal-analysis-mock.json`** - Mock API responses matching the actual API format
-- **`retinal-analysis-mock.service.ts`** - Service class with helper methods for accessing mock data
-- **`index.ts`** - Exports for easy importing
+| File                    | Purpose                                                  |
+| ----------------------- | -------------------------------------------------------- |
+| `disease-database.json` | Complete 39-disease reference with metadata              |
+| `disease-mapping.ts`    | Utility functions for disease lookups and urgency levels |
+| `index.ts`              | Public exports                                           |
 
-## 🎯 Mock Cases Included
+## 🎯 39 Diseases Covered
 
-| Case ID               | Diagnosis            | Type         | Lesions | Note                   |
-| --------------------- | -------------------- | ------------ | ------- | ---------------------- |
-| mock-normal-001       | Normal               | normal       | 0       | Healthy retina         |
-| mock-dr1-001          | DR1 (Mild)           | info         | 2       | Microaneurysms         |
-| mock-dr2-001          | DR2 (Moderate)       | warning      | 3       | Hemorrhages + exudates |
-| mock-dr3-001          | DR3 (Severe)         | critical     | 3       | Extensive changes      |
-| mock-crvo-001         | CRVO                 | **critical** | 3       | **EMERGENCY**          |
-| mock-glaucoma-001     | Possible Glaucoma    | warning      | 1       | Optic cup enlargement  |
-| mock-rd-001           | Rhegmatogenous RD    | **critical** | 2       | **EMERGENCY**          |
-| mock-rp-001           | Retinitis Pigmentosa | warning      | 1       | Progressive dystrophy  |
-| mock-hypertensive-001 | Severe Hypertensive  | **critical** | 3       | **EMERGENCY**          |
-| mock-cscr-001         | CSCR                 | caution      | 1       | Serous detachment      |
-| mock-maculopathy-001  | Maculopathy          | caution      | 2       | Macular edema          |
+All diseases organized by clinical category:
 
-## 🔗 API Response Format
+| Category                   | Count | Examples                                                                          |
+| -------------------------- | ----- | --------------------------------------------------------------------------------- |
+| Normal                     | 1     | Normal                                                                            |
+| Diabetic Retinopathy       | 3     | DR1, DR2, DR3                                                                     |
+| Retinal Vascular Occlusion | 3     | BRVO, CRVO, RAO                                                                   |
+| Retinal Detachment         | 1     | Rhegmatogenous RD                                                                 |
+| Macular Disorders          | 4     | Maculopathy, CSCR, ERM, MH                                                        |
+| Optic Nerve                | 4     | Possible Glaucoma, Large Optic Cup, Optic Atrophy, Disc Swelling                  |
+| Retinal Dystrophy          | 4     | Retinitis Pigmentosa, Tessellated Fundus, Bietti Crystalline, Pathological Myopia |
+| And more...                | 19    | Retinal Breaks, Findings, Hemorrhage, Inflammatory, Neoplasm, Post-Surgical, etc. |
 
-All mock responses match the actual `/api/v1/diagnosis/analyze/frontend` response structure:
+## 📊 Database Entry Structure
 
 ```json
 {
-  "image_id": "IMG-XXX",
-  "filename": "image.jpg",
-  "lesions": [
-    {
-      "id": "lesion_1",
-      "name": "Disease Name",
-      "confidence": 91,
-      "description": "Human-readable description",
-      "color": "bg-red-600",
-      "type": "critical|warning|caution|info|normal",
-      "location": {
-        "x": 45,
-        "y": 35,
-        "width": 15,
-        "height": 15
-      }
-    }
-  ],
-  "summary": {
-    "total_lesions": 2,
-    "primary_diagnosis": "Disease Name",
-    "confidence": 91,
-    "multi_disease": false
-  }
+  "id": 0,
+  "code": "0.0",
+  "name": "Normal",
+  "category": "Normal",
+  "description": "Normal retinal condition without any pathological findings",
+  "severity": "Low|Medium|High",
+  "riskLevel": "Low|Medium|High",
+  "symptoms": ["Clear vision", "No visual symptoms"],
+  "findings": ["Clear optic disc", "Normal macula", "Normal vessels"],
+  "recommendations": [
+    "Annual checkups",
+    "Maintain lifestyle",
+    "Protect from UV"
+  ]
 }
+```
+
+## 🔗 Integration Pattern
+
+```
+┌─────────────────────────────────────────┐
+│  API Response (Real Backend Service)    │
+│  /api/v1/diagnosis/analyze/frontend     │
+├─────────────────────────────────────────┤
+│ lesions[]                               │
+│  ├─ id: string                          │
+│  ├─ name: "DR2"                         │
+│  ├─ confidence: 92                      │
+│  └─ location: {x, y, width, height}     │
+│                                         │
+│ summary                                 │
+│  └─ primary_diagnosis: "DR2"            │
+└─────────────────────────────────────────┘
+                  ↓
+        Component fetches:
+                  ↓
+┌─────────────────────────────────────────┐
+│  Disease Database (This Mock)           │
+│  disease-database.json                  │
+├─────────────────────────────────────────┤
+│ getDiseaseInfo("DR2")                   │
+│  ├─ description: "Moderate changes..."  │
+│  ├─ findings: [...]                     │
+│  ├─ recommendations: [...]              │
+│  └─ severity: "Medium"                  │
+└─────────────────────────────────────────┘
 ```
 
 ## 💻 Usage Examples
 
-### Import the service:
+### Import functions:
 
 ```typescript
-import { RetinalAnalysisMockService } from '@/features/patient/mock';
+import {
+  getDiseaseInfo,
+  getDiseaseUrgency,
+  getDiseaseDescription,
+  getAllDiseases,
+  getCriticalDiseases,
+} from '@/features/patient/mock';
 ```
 
-### Get a specific mock case:
+### Get disease metadata:
 
 ```typescript
-const mockResponse = RetinalAnalysisMockService.getCaseById('mock-crvo-001');
-setAnalysisResult(mockResponse);
+// Single disease info
+const drInfo = getDiseaseInfo('DR2 (Moderate Diabetic Retinopathy)');
+console.log(drInfo.severity); // "Medium"
+console.log(drInfo.findings); // ["Multiple microaneurysms", ...]
+
+// All diseases
+const allDiseases = getAllDiseases(); // Array of 39 diseases
+
+// Get urgency level
+const urgency = getDiseaseUrgency('CRVO (Central Retinal Vein Occlusion)');
+// Returns: 'critical'
 ```
 
-### Get a random case for testing:
+### In retinal-analysis component:
 
 ```typescript
-const randomCase = RetinalAnalysisMockService.getRandomCase();
-setAnalysisResult(randomCase);
-```
-
-### Get critical cases (for emergency testing):
-
-```typescript
-const criticalCases = RetinalAnalysisMockService.getCriticalCases();
-// Use for testing urgent intervention flows
-```
-
-### Get cases by diagnosis:
-
-```typescript
-const diabeticCases = RetinalAnalysisMockService.getCasesByDiagnosis('DR');
-```
-
-### Get cases by urgency type:
-
-```typescript
-const warningCases = RetinalAnalysisMockService.getCasesByUrgency('warning');
-const criticalCases = RetinalAnalysisMockService.getCasesByUrgency('critical');
-```
-
-### Get simple vs complex cases:
-
-```typescript
-// For basic UI testing
-const simpleCase = RetinalAnalysisMockService.getSimpleCase();
-
-// For complex rendering testing
-const complexCase = RetinalAnalysisMockService.getComplexCase();
-```
-
-### Get all available diagnoses:
-
-```typescript
-const diagnoses = RetinalAnalysisMockService.getDiagnoses();
-// Returns: ["Normal", "DR1 (Mild...)", "DR2 (Moderate...)", ...]
-```
-
-## 🔄 Integration with retinal-analysis.tsx
-
-### Before (using real API):
-
-```typescript
-// In retinal-analysis.tsx
-const { data: analysisResult, isLoading } = useQuery({
-  queryKey: ['diagnosis', imageId],
-  queryFn: async () => {
-    const response = await aiCoreClient.post(
-      '/api/v1/diagnosis/analyze/frontend',
-      {
-        image: imageData,
-      }
-    );
-    return response.data;
-  },
+const { data: analysisResult } = useQuery({
+  queryKey: ['retinal-analysis'],
+  queryFn: () => api.analyzeRetina(imageFile),
 });
-```
 
-### After (using mock data for testing):
+if (analysisResult?.lesions) {
+  analysisResult.lesions.forEach((lesion) => {
+    // Get metadata from database
+    const diseaseInfo = getDiseaseInfo(lesion.name);
+    const urgency = getDiseaseUrgency(lesion.name);
 
-```typescript
-import { RetinalAnalysisMockService } from '../mock';
+    // Use location from API response
+    const { location, confidence } = lesion;
 
-// For development/testing
-const [analysisResult, setAnalysisResult] = useState(null);
-const [isLoading, setIsLoading] = useState(false);
-
-// Simulate API call delay
-const loadMockAnalysis = async () => {
-  setIsLoading(true);
-  await new Promise((resolve) => setTimeout(resolve, 800)); // 800ms delay
-
-  // Get mock case
-  const mockCase = RetinalAnalysisMockService.getRandomCase();
-  setAnalysisResult(RetinalAnalysisMockService.formatResponse(mockCase));
-  setIsLoading(false);
-};
-
-// Or use specific mock for testing
-const loadSpecificMock = async (caseId: string) => {
-  setIsLoading(true);
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  const mockCase = RetinalAnalysisMockService.getCaseById(caseId);
-  if (mockCase) {
-    setAnalysisResult(RetinalAnalysisMockService.formatResponse(mockCase));
-  }
-  setIsLoading(false);
-};
-```
-
-## 🎨 Color Mapping
-
-Mock data uses Tailwind CSS color classes:
-
-- **`bg-red-600`** - Critical severity (EMERGENCY)
-- **`bg-red-500`** - Warning severity (HIGH priority)
-- **`bg-orange-500`** - Caution severity (MEDIUM priority)
-- **`bg-yellow-500`** - Info severity (LOW priority)
-- **`bg-green-500`** - Normal (OK)
-
-## 🗺️ Disease Type Mapping
-
-All 39 diseases are mapped to one of 5 urgency types:
-
-```json
-{
-  "critical": "Requires immediate intervention (RD, severe DR, CRVO, etc.)",
-  "warning": "Requires urgent evaluation (moderate DR, glaucoma, etc.)",
-  "caution": "Requires monitoring (CSCR, maculopathy, etc.)",
-  "info": "Borderline findings (microaneurysms, etc.)",
-  "normal": "No pathology detected"
+    // Combine for display
+    displayFinding({
+      name: lesion.name,
+      location, // FROM: API response
+      confidence, // FROM: API response
+      severity: diseaseInfo.severity, // FROM: database
+      recommendations: diseaseInfo.recommendations, // FROM: database
+      urgencyLevel: urgency,
+    });
+  });
 }
 ```
 
-## 📊 Statistics
-
-- **Total mock cases**: 11
-- **Critical cases**: 3 (CRVO, RD, Hypertensive)
-- **Warning cases**: 4 (DR1/2, Glaucoma, RP)
-- **Caution cases**: 2 (CSCR, Maculopathy)
-- **Info cases**: 1 (DR1)
-- **Normal cases**: 1
-
-## 🧪 Testing Tips
-
-### Testing UI rendering:
+### Query functions:
 
 ```typescript
-// Simple case with no lesions
-const simple = RetinalAnalysisMockService.getSimpleCase();
+// Get all critical diseases (for emergency routing)
+const critical = getCriticalDiseases();
+// Returns 7 diseases
 
-// Complex case with multiple lesions
-const complex = RetinalAnalysisMockService.getComplexCase();
+// Get diseases by warning level
+const warnings = getWarningDiseases();
+// Returns 12 diseases
+
+// Check if emergency
+const isEmergency = isEmergency('CRVO (Central Retinal Vein Occlusion)');
+// Returns: true
+
+// Count by urgency
+const counts = countDiseasesByUrgency();
+// {critical: 7, warning: 12, caution: 11, info: 2, normal: 1}
 ```
 
-### Testing urgency flows:
+## 🎨 Urgency Levels
 
-```typescript
-// Emergency cases
-const emergencies = RetinalAnalysisMockService.getCriticalCases();
+| Level             | Count | Meaning                                   |
+| ----------------- | ----- | ----------------------------------------- |
+| **critical** (🔴) | 7     | Emergency - immediate intervention needed |
+| **warning** (🟠)  | 12    | Urgent - specialist evaluation required   |
+| **caution** (🟡)  | 11    | Monitor - regular evaluation needed       |
+| **info** (🔵)     | 2     | Information only                          |
+| **normal** (⚪)   | 7     | Normal findings                           |
 
-// Routine cases
-const routine = RetinalAnalysisMockService.getSimpleCase();
-```
+### Critical Diseases (Emergency):
 
-### Testing disease-specific handling:
+- CRVO (Central Retinal Vein Occlusion)
+- Rhegmatogenous RD (Retinal Detachment)
+- Severe Hypertensive Retinopathy
+- DR3 (Severe Diabetic Retinopathy)
+- RAO (Retinal Artery Occlusion)
+- VKH Disease (Inflammatory)
+- Blur Fundus With Suspected PDR
 
-```typescript
-// Get all diabetic cases
-const drCases = RetinalAnalysisMockService.getCasesByDiagnosis('DR');
+## ⚠️ Important Principles
 
-// Get all vascular occlusion cases
-const occlusions =
-  RetinalAnalysisMockService.getCasesByDiagnosis('CRVO|BRVO|RAO');
-```
+1. **No Location Data**: Lesion coordinates come ONLY from API responses
+2. **Metadata Only**: Database provides disease context, not synthetic test cases
+3. **Real Backend**: Lesion detection and location performed by AURA AI service
+4. **Classification System**: Supports all 39 disease codes from AURA_AI backend
+5. **Integration Focus**: Database supplements real API data, doesn't replace it
 
-## 🔄 Switching to Real API
+## 🛠️ Development Notes
 
-When ready to switch from mock to real API:
+- Database is **static JSON** - no network calls needed
+- All 39 diseases included with complete information
+- Urgency levels pre-mapped for quick UI decisions
+- Recommendations based on clinical guidelines
+- Ready for i18n (internationalization) integration
 
-1. Remove the mock data loading logic
-2. Keep the same response format (service will format it identically)
-3. Real API will return the same structure, so components need no changes
+## 📞 Related Files
 
-## 📝 Notes
-
-- Mock data uses **percentage-based coordinates** (0-100) for lesion locations
-- Confidence scores are **0-100** (not decimal 0-1)
-- All responses include `multi_disease` flag for handling co-occurring conditions
-- Lesion types used: `critical`, `warning`, `caution`, `info`, `normal`
+- [Retinal Analysis Component](../pages/retinal-analysis.tsx)
+- [Screening API](../api/screening.api.ts)
+- [Disease Types from Backend](https://github.com/your-repo/AURA_AI/src/core/config.py)

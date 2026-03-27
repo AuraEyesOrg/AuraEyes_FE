@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
@@ -261,6 +261,24 @@ interface LocationState {
   resultsPersisted?: boolean;
 }
 
+const LAST_SCREENING_ID_KEY = 'patient:lastScreeningId';
+
+function loadLastScreeningId(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveLastScreeningId(id: string) {
+  try {
+    window.localStorage.setItem(LAST_SCREENING_ID_KEY, id);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function mapEyeSideLabel(
   eyeSide?: string
 ): 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes' {
@@ -411,6 +429,7 @@ function friendlyDescription(anomaly: Anomaly): string {
 export default function RetinalAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const routeState = location.state as LocationState | null;
   const { data: quotaBalance } = useQuotaBalance();
@@ -441,10 +460,21 @@ export default function RetinalAnalysis() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   useEffect(() => {
-    const incomingScreeningId = routeState?.screeningId;
+    const queryScreeningId = searchParams.get('screeningId') ?? undefined;
+    const storedScreeningId = loadLastScreeningId() ?? undefined;
+    const incomingScreeningId =
+      routeState?.screeningId ?? queryScreeningId ?? storedScreeningId;
 
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
+      saveLastScreeningId(incomingScreeningId);
+
+      if (queryScreeningId !== incomingScreeningId) {
+        setSearchParams(
+          { screeningId: incomingScreeningId },
+          { replace: true }
+        );
+      }
     }
 
     const loadSession = async () => {
@@ -493,23 +523,7 @@ export default function RetinalAnalysis() {
           anomalies: [],
         }));
 
-        const fallbackFromRoute: RetinalImage[] =
-          routeState?.images?.map((img) => ({
-            id: img.id,
-            url: img.preview,
-            name: img.name,
-            eye:
-              img.name.toLowerCase().includes('right') ||
-              img.name.toLowerCase().includes('(od)')
-                ? 'Right Eye (OD)'
-                : 'Left Eye (OS)',
-            uploadedAt: new Date().toISOString(),
-            analyzed: false,
-            anomalies: [],
-          })) ?? [];
-
-        const sessionImages =
-          mappedPersisted.length > 0 ? mappedPersisted : fallbackFromRoute;
+        const sessionImages = mappedPersisted;
 
         const mergedRawJson =
           response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
@@ -546,7 +560,7 @@ export default function RetinalAnalysis() {
     };
 
     loadSession();
-  }, [navigate, routeState]);
+  }, [navigate, routeState, searchParams, setSearchParams]);
 
   const currentImage =
     images.find((img) => img.id === selectedImageId) || images[0] || null;
@@ -707,6 +721,11 @@ export default function RetinalAnalysis() {
         if (sessionResp.data?.screeningId) {
           ensuredScreeningId = sessionResp.data.screeningId;
           setScreeningId(sessionResp.data.screeningId);
+          saveLastScreeningId(sessionResp.data.screeningId);
+          setSearchParams(
+            { screeningId: sessionResp.data.screeningId },
+            { replace: true }
+          );
         }
       }
 

@@ -1,24 +1,24 @@
 /**
- * Retinal Analysis Mock Data
+ * Disease Reference Database
  *
- * Contains 11 mock cases representing different retinal diseases
- * and conditions from the 39-disease classification system
+ * Provides metadata for all 39 retinal diseases. Lesion locations
+ * come from API responses, not from this database.
  */
 
-export { default as retinalAnalysisMockData } from './retinal-analysis-mock.json';
+// Export disease mapping utilities and urgency levels
 export {
-  RetinalAnalysisMockService,
-  type MockAnalysisResponse,
-} from './retinal-analysis-mock.service';
-export {
-  DISEASE_TO_MOCK_CASE_MAP,
   DISEASE_URGENCY_LEVELS,
   DISEASE_DESCRIPTIONS,
-  getMockCaseForDisease,
   getDiseaseUrgency,
   getDiseaseDescription,
   getCriticalDiseases,
   getWarningDiseases,
   isEmergency,
   countDiseasesByUrgency,
+  getDiseaseInfo,
+  getAllDiseases,
+  getDiseaseCount,
 } from './disease-mapping';
+
+// Export disease database
+export { default as diseaseDatabase } from './disease-database.json';

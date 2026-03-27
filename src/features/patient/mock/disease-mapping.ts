@@ -1,79 +1,13 @@
 /**
- * Mapping of 39 Disease Classes to Mock Data Cases
+ * Disease Mapping and Metadata
  *
- * This file maps all 39 retinal diseases from the classification system
- * to their corresponding mock API response cases for testing and development.
+ * This file provides urgency levels, descriptions, and utility functions
+ * for all 39 retinal diseases. Disease database is in disease-database.json.
+ * Lesion locations come from API responses.
  */
 
-export const DISEASE_TO_MOCK_CASE_MAP: Record<string, string> = {
-  // 0. Normal
-  Normal: 'mock-normal-001',
-
-  // Diabetic Retinopathy (3 stages)
-  'DR1 (Mild Diabetic Retinopathy)': 'mock-dr1-001',
-  'DR2 (Moderate Diabetic Retinopathy)': 'mock-dr2-001',
-  'DR3 (Severe Diabetic Retinopathy)': 'mock-dr3-001',
-
-  // Retinal Vascular Occlusion
-  'BRVO (Branch Retinal Vein Occlusion)': 'mock-dr2-001', // Similar lesion pattern
-  'CRVO (Central Retinal Vein Occlusion)': 'mock-crvo-001',
-  'RAO (Retinal Artery Occlusion)': 'mock-dr2-001', // Similar pattern
-
-  // Retinal Detachment
-  'Rhegmatogenous RD (Rhegmatogenous Retinal Detachment)': 'mock-rd-001',
-
-  // Macular Disorders
-  Maculopathy: 'mock-maculopathy-001',
-  'CSCR (Central Serous Chorioretinopathy)': 'mock-cscr-001',
-  'ERM (Epiretinal Membrane)': 'mock-maculopathy-001', // Similar location
-  'MH (Macular Hole)': 'mock-maculopathy-001', // Macula-involved
-
-  // Optic Nerve
-  'Possible Glaucoma': 'mock-glaucoma-001',
-  'Large Optic Cup': 'mock-glaucoma-001',
-  'Optic Atrophy': 'mock-glaucoma-001', // Similar optic appearance
-  'Disc Swelling and Elevation': 'mock-hypertensive-001', // Uses disc findings
-
-  // Retinal Dystrophies
-  'Retinitis Pigmentosa': 'mock-rp-001',
-  'Tessellated Fundus': 'mock-normal-001', // Usually benign
-  'Bietti Crystalline Dystrophy': 'mock-rp-001', // Similar progressive pattern
-  'Pathological Myopia': 'mock-rd-001', // Risk factor for RD
-
-  // Retinal Breaks & Degeneration
-  'Peripheral Retinal Degeneration and Break': 'mock-rd-001',
-
-  // Findings/Symptoms
-  'Cotton-Wool Spots': 'mock-dr2-001',
-  'Preretinal Hemorrhage': 'mock-dr2-001',
-  'Yellow-White Spots-Flecks': 'mock-dr2-001',
-  'Massive Hard Exudates': 'mock-dr2-001',
-  'Vessel Tortuosity': 'mock-dr1-001',
-  'Vitreous Particles': 'mock-normal-001', // Often benign
-
-  // Congenital/Developmental
-  'Myelinated Nerve Fiber': 'mock-normal-001', // Usually benign
-  'Congenital Disc Abnormality': 'mock-normal-001', // Stable finding
-  'Dragged Disc': 'mock-normal-001', // Structural finding
-  'Chorioretinal Atrophy-Coloboma': 'mock-rp-001', // Atrophic changes
-
-  // Hypertensive
-  'Severe Hypertensive Retinopathy': 'mock-hypertensive-001',
-
-  // Inflammatory
-  'VKH Disease (Vogt-Koyanagi-Harada)': 'mock-cscr-001', // Serous detachment
-
-  // Neoplasm
-  'Fundus Neoplasm': 'mock-rd-001', // Large lesion-like
-
-  // Post-Surgical
-  'Laser Spots': 'mock-normal-001', // Treatment artifact
-  'Silicon Oil in Eye': 'mock-normal-001', // Post-surgical finding
-
-  // Media Opacities
-  'Blur Fundus Without PDR': 'mock-normal-001', // Clear lesions when visible
-  'Blur Fundus With Suspected PDR': 'mock-dr3-001', // Suggest serious pathology
-};
+// Import disease database
+import diseaseDatabase from './disease-database.json';
 
 export const DISEASE_URGENCY_LEVELS: Record<
   string,
@@ -121,6 +55,7 @@ export const DISEASE_URGENCY_LEVELS: Record<
 
   // Normal - No pathology
   Normal: 'normal',
+  Fibrosis: 'normal',
   'Congenital Disc Abnormality': 'normal',
   'Dragged Disc': 'normal',
   'Vitreous Particles': 'normal',
@@ -179,6 +114,8 @@ export const DISEASE_DESCRIPTIONS: Record<string, string> = {
     'Nerve fiber infarcts detected. Evaluate for systemic disease.',
   'Preretinal Hemorrhage':
     'Bleeding on retinal surface. Address underlying cause.',
+  Fibrosis:
+    'Scar tissue detected. Monitor and manage underlying retinal condition.',
   'Yellow-White Spots-Flecks':
     'White spots detected. Identify underlying etiology.',
   'Massive Hard Exudates':
@@ -211,13 +148,6 @@ export const DISEASE_DESCRIPTIONS: Record<string, string> = {
   'Blur Fundus With Suspected PDR':
     'Media opacity with concern for proliferative DR. Urgent B-scan and evaluation needed.',
 };
-
-/**
- * Get the most appropriate mock case for a given disease
- */
-export function getMockCaseForDisease(diseaseName: string): string {
-  return DISEASE_TO_MOCK_CASE_MAP[diseaseName] || 'mock-normal-001';
-}
 
 /**
  * Get urgency level for a disease
@@ -282,15 +212,39 @@ export function countDiseasesByUrgency(): Record<string, number> {
   return counts;
 }
 
+/**
+ * Get disease info from database
+ */
+export function getDiseaseInfo(diseaseName: string) {
+  return diseaseDatabase.diseases.find(
+    (d) => d.name === diseaseName || d.code === diseaseName
+  );
+}
+
+/**
+ * Get all diseases from database
+ */
+export function getAllDiseases() {
+  return diseaseDatabase.diseases;
+}
+
+/**
+ * Get disease count
+ */
+export function getDiseaseCount(): number {
+  return diseaseDatabase.diseases.length;
+}
+
 export default {
-  DISEASE_TO_MOCK_CASE_MAP,
   DISEASE_URGENCY_LEVELS,
   DISEASE_DESCRIPTIONS,
-  getMockCaseForDisease,
   getDiseaseUrgency,
   getDiseaseDescription,
   getCriticalDiseases,
   getWarningDiseases,
   isEmergency,
   countDiseasesByUrgency,
+  getDiseaseInfo,
+  getAllDiseases,
+  getDiseaseCount,
 };

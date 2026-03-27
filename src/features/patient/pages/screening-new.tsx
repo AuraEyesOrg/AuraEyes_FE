@@ -18,6 +18,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { toast } from 'react-toastify';
+import { screeningApi } from '../api/screening.api';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -52,6 +53,7 @@ export default function ScreeningNewPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [showPolicyPopup, setShowPolicyPopup] = useState(false);
+  const [isStartingAnalysis, setIsStartingAnalysis] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -245,18 +247,65 @@ export default function ScreeningNewPage() {
   const readyImages = images.filter((img) => img.status === 'ready');
   const canProceed = readyImages.length > 0;
 
-  const startAnalysis = () => {
-    navigate('/patient/analysis', {
-      state: {
-        images: readyImages.map((img) => ({
-          id: img.id,
-          name: img.file.name,
-          preview: img.preview,
-          quality: img.quality,
-        })),
-        source: 'new-screening',
-      },
-    });
+  const inferEyeSideFromName = (
+    name: string,
+    index: number,
+    total: number
+  ): 'Left' | 'Right' | 'Both' => {
+    const n = name.toLowerCase();
+    if (total === 1) return 'Both';
+    if (n.includes('left') || n.includes('_os') || n.includes('(os)'))
+      return 'Left';
+    if (n.includes('right') || n.includes('_od') || n.includes('(od)'))
+      return 'Right';
+    return index % 2 === 0 ? 'Right' : 'Left';
+  };
+
+  const startAnalysis = async () => {
+    if (!canProceed || isStartingAnalysis) return;
+
+    setIsStartingAnalysis(true);
+    try {
+      const files = readyImages.map((img) => img.file);
+      const uploadResp = await screeningApi.uploadRetinalImages(files);
+      const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+      if (uploadedUrls.length === 0) {
+        throw new Error('No uploaded URLs returned');
+      }
+
+      const retinalImages = uploadedUrls.map((url, idx) => ({
+        imageUrl: url,
+        eyeSide: inferEyeSideFromName(
+          readyImages[idx]?.file?.name ?? '',
+          idx,
+          uploadedUrls.length
+        ),
+        deviceName: 'Retinal Camera',
+      }));
+
+      const sessionResp = await screeningApi.createSession({
+        modelVersion: '1.0',
+        retinalImages,
+      });
+
+      const newScreeningId = sessionResp.data?.screeningId;
+      if (!newScreeningId) {
+        throw new Error('Missing screeningId from createSession response');
+      }
+
+      navigate(`/patient/analysis?screeningId=${newScreeningId}`, {
+        state: {
+          screeningId: newScreeningId,
+          source: 'new-screening',
+        },
+      });
+    } catch (error) {
+      console.error('Failed to start analysis session:', error);
+      toast.error('Unable to start analysis. Please try again.');
+    } finally {
+      setIsStartingAnalysis(false);
+    }
   };
 
   const getStatusBadge = (img: UploadedImage) => {
@@ -587,14 +636,21 @@ export default function ScreeningNewPage() {
                     {readyImages.length !== 1 ? 's' : ''} ready to submit
                   </span>
                   <button
-                    disabled={!canProceed}
+                    disabled={!canProceed || isStartingAnalysis}
                     onClick={() => setShowPolicyPopup(true)}
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
-                    <>
-                      Start AI Analysis
-                      <ArrowRight className="w-4 h-4" />
-                    </>
+                    {isStartingAnalysis ? (
+                      <>
+                        <Spinner size={14} />
+                        Preparing Session...
+                      </>
+                    ) : (
+                      <>
+                        Start AI Analysis
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -632,13 +688,14 @@ export default function ScreeningNewPage() {
                 </button>
                 <button
                   type="button"
+                  disabled={isStartingAnalysis}
                   onClick={() => {
                     setShowPolicyPopup(false);
                     startAnalysis();
                   }}
-                  className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
+                  className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  I Agree, Continue
+                  {isStartingAnalysis ? 'Preparing...' : 'I Agree, Continue'}
                 </button>
               </div>
             </div>
