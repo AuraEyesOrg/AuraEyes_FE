@@ -22,7 +22,14 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { exportApi } from '../api';
 import { patientApi, type PatientListItem } from '../api/patient.api';
+import {
+  buildTimestampedFileName,
+  convertToCsv,
+  downloadCsvFile,
+} from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 interface Patient extends PatientListItem {
   name: string;
@@ -53,6 +60,7 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -106,6 +114,50 @@ export default function PatientsPage() {
       loadData();
     } catch (error) {
       console.error('Failed to toggle patient lock status:', error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const patientsForExport = await exportApi.getPatients({
+        searchTerm: searchQuery || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+      });
+
+      if (patientsForExport.length === 0) {
+        toast.info('No patients available for export.');
+        return;
+      }
+
+      const csv = convertToCsv(patientsForExport, [
+        { header: 'Patient ID', value: (row) => row.id },
+        { header: 'User ID', value: (row) => row.userId },
+        { header: 'Full Name', value: (row) => row.fullName },
+        { header: 'Email', value: (row) => row.email },
+        { header: 'Phone', value: (row) => row.phone ?? '' },
+        {
+          header: 'Status',
+          value: (row) => (row.isActive ? 'Active' : 'Locked'),
+        },
+        {
+          header: 'Email Confirmed',
+          value: (row) => (row.emailConfirmed ? 'Yes' : 'No'),
+        },
+        { header: 'Created At', value: (row) => row.createdAt },
+        { header: 'Last Login', value: (row) => row.lastLoginAt ?? '' },
+      ]);
+
+      downloadCsvFile(
+        csv,
+        buildTimestampedFileName('system-admin-patients', 'csv')
+      );
+      toast.success(`Exported ${patientsForExport.length} patients.`);
+    } catch (error) {
+      console.error('Failed to export patients:', error);
+      toast.error('Failed to export patients. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -219,9 +271,13 @@ export default function PatientsPage() {
           description="Manage patient accounts, view screening history, and monitor patient activity"
           actions={
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <Download className="w-4 h-4" />
-                Export
+                {isExporting ? 'Exporting...' : 'Export'}
               </button>
             </div>
           }

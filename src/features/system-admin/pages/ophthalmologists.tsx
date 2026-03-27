@@ -29,11 +29,18 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { exportApi } from '../api';
 import {
   ophthalmologistApi,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
 import { formatCurrency } from '@/lib/helper';
+import {
+  buildTimestampedFileName,
+  convertToCsv,
+  downloadCsvFile,
+} from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
 
@@ -127,6 +134,7 @@ export default function OphthalmologistsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [rejectError, setRejectError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -250,6 +258,68 @@ export default function OphthalmologistsPage() {
       setRejectError('Từ chối thất bại. Vui lòng thử lại.');
     } finally {
       setRejectSubmitting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const doctorsForExport = await exportApi.getOphthalmologists({
+        searchTerm: searchQuery || undefined,
+        verificationStatus:
+          verificationFilter === 'all' ? undefined : verificationFilter,
+      });
+
+      const mappedDoctors = doctorsForExport
+        .map(mapToUiModel)
+        .filter((doctor) =>
+          statusFilter === 'all' ? true : doctor.status === statusFilter
+        );
+
+      if (mappedDoctors.length === 0) {
+        toast.info('No ophthalmologists available for export.');
+        return;
+      }
+
+      const csv = convertToCsv(mappedDoctors, [
+        { header: 'Ophthalmologist ID', value: (row) => row.id },
+        { header: 'User ID', value: (row) => row.userId },
+        { header: 'Full Name', value: (row) => row.fullName },
+        { header: 'Email', value: (row) => row.email },
+        { header: 'Phone', value: (row) => row.phone ?? '' },
+        {
+          header: 'Verification Status',
+          value: (row) => row.verificationStatus,
+        },
+        {
+          header: 'Is Verified',
+          value: (row) => (row.isVerified ? 'Yes' : 'No'),
+        },
+        {
+          header: 'Active Status',
+          value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+        },
+        {
+          header: 'Years of Experience',
+          value: (row) => row.yearsOfExperience,
+        },
+        {
+          header: 'Organisation',
+          value: (row) => row.organisationName ?? '',
+        },
+        { header: 'Created At', value: (row) => row.createdAt },
+      ]);
+
+      downloadCsvFile(
+        csv,
+        buildTimestampedFileName('system-admin-ophthalmologists', 'csv')
+      );
+      toast.success(`Exported ${mappedDoctors.length} ophthalmologists.`);
+    } catch (error) {
+      console.error('Failed to export ophthalmologists:', error);
+      toast.error('Failed to export ophthalmologists. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -421,9 +491,13 @@ export default function OphthalmologistsPage() {
           description="Manage doctors, monitor consultation requests, earnings, and feedback"
           actions={
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <Download className="w-4 h-4" />
-                Export
+                {isExporting ? 'Exporting...' : 'Export'}
               </button>
             </div>
           }
