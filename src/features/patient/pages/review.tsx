@@ -30,6 +30,12 @@ import {
   type PatientEducationalResourceItem,
 } from '../api/patient.api';
 import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import i18n from '@/i18n/i18n';
+import {
+  isNormalDisease,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
 
 interface LocationState {
   screeningId?: string;
@@ -41,33 +47,24 @@ interface LocationState {
   resultsPersisted?: boolean;
 }
 
-const RISK_CONFIG = {
+const RISK_STYLE_CONFIG = {
   low: {
-    label: 'Looks Healthy',
     color: 'text-emerald-700',
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
     icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />,
-    summary:
-      'Your scan looks healthy. No significant concerns were found — keep up with regular eye check-ups.',
   },
   moderate: {
-    label: 'Moderate Risk',
     color: 'text-amber-700',
     bg: 'bg-amber-50',
     border: 'border-amber-200',
     icon: <AlertTriangle className="w-4 h-4 text-amber-500" />,
-    summary:
-      'Signs consistent with moderate changes were detected. It is recommended to consult a specialist for a comprehensive dilated eye exam.',
   },
   high: {
-    label: 'Needs Attention',
     color: 'text-orange-700',
     bg: 'bg-orange-50',
     border: 'border-orange-200',
     icon: <AlertTriangle className="w-4 h-4 text-orange-500" />,
-    summary:
-      'We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision.',
   },
 };
 
@@ -77,6 +74,8 @@ const FALLBACK_RESOURCE_IMAGE =
 export default function ReviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
   const state = location.state as LocationState | null;
   const storedConsultationContext = useMemo(
     () => loadScreeningConsultationContext(),
@@ -199,7 +198,45 @@ export default function ReviewPage() {
     relevantStoredContext?.riskLevel ??
     hydratedSession?.riskLevel ??
     'low';
-  const risk = RISK_CONFIG[riskLevel];
+  const primaryAnomaly =
+    anomalies.find((a) => a.isHighest) ??
+    (anomalies.length > 0
+      ? [...anomalies].sort((a, b) => b.confidence - a.confidence)[0]
+      : null);
+  const isPrimaryNormal =
+    primaryAnomaly != null
+      ? isNormalDisease(primaryAnomaly.name)
+      : anomalies.length === 0;
+  const showHealthyStatus = isPrimaryNormal && riskLevel === 'low';
+  const effectiveRiskLevel: 'low' | 'moderate' | 'high' =
+    !isPrimaryNormal && riskLevel === 'low' ? 'moderate' : riskLevel;
+  const riskStyle = RISK_STYLE_CONFIG[effectiveRiskLevel];
+  const riskLabel = showHealthyStatus
+    ? t('PatientReview.status.healthy', 'Looks Healthy')
+    : effectiveRiskLevel === 'high'
+      ? t('PatientReview.status.high', 'Needs Attention')
+      : effectiveRiskLevel === 'moderate'
+        ? t('PatientReview.status.moderate', 'Needs Review')
+        : t('PatientReview.status.low', 'Low Risk');
+  const riskSummary = showHealthyStatus
+    ? t(
+        'PatientReview.summary.healthy',
+        'Your scan looks healthy. No significant concerns were found - keep up with regular eye check-ups.'
+      )
+    : effectiveRiskLevel === 'high'
+      ? t(
+          'PatientReview.summary.high',
+          'We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision.'
+        )
+      : effectiveRiskLevel === 'moderate'
+        ? t(
+            'PatientReview.summary.moderate',
+            'Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.'
+          )
+        : t(
+            'PatientReview.summary.low',
+            'Low-risk findings were detected. Keep regular follow-up with your eye specialist.'
+          );
   const screeningId =
     activeState?.screeningId ??
     relevantStoredContext?.screeningId ??
@@ -227,7 +264,7 @@ export default function ReviewPage() {
         screeningId,
         images,
         anomalies,
-        riskLevel,
+        riskLevel: effectiveRiskLevel,
         riskScore:
           activeState?.riskScore ??
           relevantStoredContext?.riskScore ??
@@ -243,7 +280,7 @@ export default function ReviewPage() {
       screeningId,
       images,
       anomalies,
-      riskLevel,
+      effectiveRiskLevel,
       activeState?.riskScore,
       activeState?.rawJsonOutput,
       relevantStoredContext?.riskScore,
@@ -307,6 +344,13 @@ export default function ReviewPage() {
                 next steps.
               </p>
             </div>
+            <button
+              onClick={() => navigate('/patient/dashboard')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-(--border-color) bg-white hover:bg-slate-50 text-(--text-primary) font-semibold transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('PatientReview.backToDashboard', 'Back to Dashboard')}
+            </button>
           </div>
 
           <div className="w-full surface-primary rounded-2xl shadow-sm surface-border overflow-hidden flex flex-col md:flex-row">
@@ -352,10 +396,10 @@ export default function ReviewPage() {
                     </p>
                   </div>
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${risk.color} ${risk.bg} border ${risk.border}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${riskStyle.color} ${riskStyle.bg} border ${riskStyle.border}`}
                   >
-                    {risk.icon}
-                    {risk.label}
+                    {riskStyle.icon}
+                    {riskLabel}
                   </span>
                 </div>
 
@@ -363,14 +407,19 @@ export default function ReviewPage() {
                   AI Assessment
                 </h3>
                 <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
-                  {risk.summary}
+                  {riskSummary}
                   {anomalies.length > 0 && (
                     <>
                       {' '}
-                      Detected findings include:{' '}
+                      {t(
+                        'PatientReview.findingsDetected',
+                        'Detected findings include:'
+                      )}{' '}
                       <strong className="text-(--text-primary)">
                         {anomalies
-                          .map((a) => a.friendlyName || a.name)
+                          .map((a) =>
+                            toDisplayDiseaseName(a.name, currentLanguage)
+                          )
                           .join(', ')}
                       </strong>
                       .

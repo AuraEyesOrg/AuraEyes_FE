@@ -1078,5 +1078,22 @@
       "primary": "Contact Security Team",
       "secondary": "View Privacy Policy"
     }
+  },
+  "PatientReview": {
+    "status": {
+      "healthy": "Looks Healthy",
+      "low": "Low Risk",
+      "moderate": "Needs Review",
+      "high": "Needs Attention"
+    },
+    "summary": {
+      "healthy": "Your scan looks healthy. No significant concerns were found - keep up with regular eye check-ups.",
+      "low": "Low-risk findings were detected. Keep regular follow-up with your eye specialist.",
+      "moderate": "Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.",
+      "high": "We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision."
+    },
+    "findingsDetected": "Detected findings include:",
+    "backToDashboard": "Back to Dashboard",
+    "sessionLabel": "Session"
   }
 }

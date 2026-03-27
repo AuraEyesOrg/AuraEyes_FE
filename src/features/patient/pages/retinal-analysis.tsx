@@ -26,6 +26,11 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { getDiseaseUrgency } from '../mock';
+import i18n from '@/i18n/i18n';
+import {
+  isNormalDisease,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -188,6 +193,8 @@ function mapStandardResponseToAnomalies(
   imgWidth: number,
   imgHeight: number
 ): Anomaly[] {
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const preferVietnamese = currentLanguage.toLowerCase().startsWith('vi');
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
   const bestLesion = lesions.length > 0 ? lesions[0] : null;
@@ -197,6 +204,10 @@ function mapStandardResponseToAnomalies(
   for (const pred of data.prediction.top_k) {
     const isPrimary = pred.rank === 1;
     const friendly = FRIENDLY_NAMES[pred.class_name];
+    const localizedDiseaseName = toDisplayDiseaseName(
+      pred.class_name,
+      currentLanguage
+    );
 
     // Primary gets the best lesion bbox, others get no location
     const location =
@@ -214,7 +225,9 @@ function mapStandardResponseToAnomalies(
       color: getColorClass(pred.confidence),
       type: mapDiagnosisType(pred.confidence),
       location,
-      friendlyName: friendly?.name ?? pred.class_name,
+      friendlyName: preferVietnamese
+        ? localizedDiseaseName
+        : (friendly?.name ?? pred.class_name),
       friendlyDescription:
         friendly?.description ??
         `${pred.class_name} was detected by our AI screening. Your specialist can evaluate this further.`,
@@ -685,6 +698,10 @@ export default function RetinalAnalysis() {
       : null);
   const primaryConfidence = primaryAnomaly?.confidence ?? 0;
   const primaryUrgency = getDiseaseUrgency(primaryAnomaly?.name ?? 'Normal');
+  const isPrimaryNormal =
+    primaryAnomaly != null
+      ? isNormalDisease(primaryAnomaly.name)
+      : anomalies.length === 0;
 
   const riskScore = Math.round(primaryConfidence / 10);
   const riskLevel: 'low' | 'moderate' | 'high' = toRiskLevelFromUrgency(
@@ -694,13 +711,13 @@ export default function RetinalAnalysis() {
 
   const riskConfig = {
     low: {
-      label: 'Looks Healthy',
+      label: 'Low Risk',
       color: 'text-emerald-700',
       bg: 'bg-emerald-50',
       border: 'border-emerald-200',
       icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
       summary:
-        'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+        'Your scan shows low-risk findings. Keep regular follow-up to monitor your retinal health.',
     },
     moderate: {
       label: 'Worth Reviewing',
@@ -722,7 +739,17 @@ export default function RetinalAnalysis() {
     },
   };
 
-  const risk = riskConfig[riskLevel];
+  const healthyRisk = {
+    label: 'Looks Healthy',
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+    summary:
+      'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+  };
+
+  const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
 
   // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {
@@ -822,7 +849,9 @@ export default function RetinalAnalysis() {
             ? 'Findings need attention from an ophthalmologist.'
             : mappedRiskLevel === 'Moderate'
               ? 'Some findings may need specialist review.'
-              : 'No major risk findings detected.',
+              : persistedUrgency === 'normal'
+                ? 'No major risk findings detected.'
+                : 'Low-risk findings detected. Routine specialist follow-up is recommended.',
         findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),

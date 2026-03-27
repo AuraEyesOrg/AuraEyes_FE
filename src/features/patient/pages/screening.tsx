@@ -20,6 +20,9 @@ import {
 import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import i18n from '@/i18n/i18n';
+import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 
 interface Scan {
   id: string;
@@ -32,10 +35,13 @@ interface Scan {
   findings?: number;
 }
 
-function extractPrimaryFinding(findings?: string): string | undefined {
+function extractPrimaryFinding(
+  findings: string | undefined,
+  language: string
+): string | undefined {
   if (!findings) return undefined;
 
-  const first = findings
+  const first = localizeFindingsText(findings, language)
     .split(',')
     .map((item) => item.trim())
     .find(Boolean);
@@ -47,6 +53,8 @@ function extractPrimaryFinding(findings?: string): string | undefined {
 
 export default function ScreeningPage() {
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -92,11 +100,12 @@ export default function ScreeningPage() {
     id: session.screeningId,
     name: (() => {
       const finding = extractPrimaryFinding(
-        sessionDetailsQuery.data?.[session.screeningId]
+        sessionDetailsQuery.data?.[session.screeningId],
+        currentLanguage
       );
       return finding
-        ? `Session - ${finding}`
-        : `Session - ${formatShortDate(session.createdAt)}`;
+        ? `${t('PatientReview.sessionLabel', 'Session')} - ${finding}`
+        : `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt)}`;
     })(),
     eye: 'Both Eyes',
     date: session.createdAt,
