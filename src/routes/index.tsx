@@ -169,9 +169,6 @@ const SystemAdminVerificationRequests = lazy(
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
-const SystemAdminAIModels = lazy(
-  () => import('@/features/system-admin/pages/ai-models')
-);
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
@@ -1174,14 +1171,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminUsers />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/system-admin/ai-models"
-          element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
-              <SystemAdminAIModels />
             </PrivateRoute>
           }
         />
