@@ -1,5 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, AlertCircle, Brain, ShieldCheck } from 'lucide-react';
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  HandCoins,
+  Landmark,
+} from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -9,7 +14,6 @@ import DataTable, { type TableColumn } from '../components/DataTable';
 import { dashboardApi } from '../api';
 import type {
   DashboardStats,
-  ScreeningVolumeTrend,
   RecentScreening,
   RiskDistribution,
 } from '../types/system-admin.types';
@@ -25,11 +29,6 @@ export default function SystemAdminDashboard() {
     queryFn: () => dashboardApi.getRecentScreenings(5),
   });
 
-  const trendsQuery = useQuery<ScreeningVolumeTrend[]>({
-    queryKey: ['system-admin-dashboard', 'trends'],
-    queryFn: dashboardApi.getScreeningVolume,
-  });
-
   const riskQuery = useQuery<RiskDistribution[]>({
     queryKey: ['system-admin-dashboard', 'risks'],
     queryFn: dashboardApi.getRiskDistribution,
@@ -42,12 +41,10 @@ export default function SystemAdminDashboard() {
 
   const stats = statsQuery.data;
   const recentScreenings = recentScreeningsQuery.data ?? [];
-  const volumeTrends = trendsQuery.data ?? [];
   const riskDistribution = riskQuery.data ?? [];
   const isLoading =
     statsQuery.isLoading ||
     recentScreeningsQuery.isLoading ||
-    trendsQuery.isLoading ||
     riskQuery.isLoading;
 
   const recentScreeningColumns: TableColumn<RecentScreening>[] = [
@@ -117,7 +114,7 @@ export default function SystemAdminDashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
           title="Dashboard Overview"
-          description="Real-time insights on screening throughput and platform health"
+          description="Global cashflow metrics, payment methods, and platform health"
           badge={
             <StatusBadge
               status={healthQuery.data?.uptime === 100 ? 'success' : 'warning'}
@@ -145,41 +142,53 @@ export default function SystemAdminDashboard() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <StatsCard
-                    title="Total Screenings Today"
-                    value={stats.totalScreeningsToday.value || 0}
-                    icon={Activity}
-                    change={stats.totalScreeningsToday.change}
-                    trend={stats.totalScreeningsToday.trend}
-                    description={stats.totalScreeningsToday.description}
+                    title="Total Inflow"
+                    value={`${Number(stats.totalInflow.value || 0).toLocaleString('vi-VN')} VND`}
+                    icon={ArrowUpCircle}
+                    change={stats.totalInflow.change}
+                    trend={stats.totalInflow.trend}
+                    description={stats.totalInflow.description}
                     variant="primary"
                   />
                   <StatsCard
-                    title="AI Accuracy Rate"
-                    value={`${stats.aiAccuracyRate.value}%`}
-                    icon={Brain}
-                    change={stats.aiAccuracyRate.change}
-                    trend={stats.aiAccuracyRate.trend}
-                    description={stats.aiAccuracyRate.description}
-                    variant="success"
-                  />
-                  <StatsCard
-                    title="Pending Reviews"
-                    value={stats.pendingReviews.value || 0}
-                    icon={AlertCircle}
-                    change={stats.pendingReviews.change}
-                    trend={stats.pendingReviews.trend}
-                    description={stats.pendingReviews.description}
+                    title="Total Outflow"
+                    value={`${Number(stats.totalOutflow.value || 0).toLocaleString('vi-VN')} VND`}
+                    icon={ArrowDownCircle}
+                    change={stats.totalOutflow.change}
+                    trend={stats.totalOutflow.trend}
+                    description={stats.totalOutflow.description}
                     variant="warning"
                   />
                   <StatsCard
-                    title="Critical Risk Cases"
-                    value={stats.criticalRisks.value || 0}
-                    icon={ShieldCheck}
-                    change={stats.criticalRisks.change}
-                    trend={stats.criticalRisks.trend}
-                    description={stats.criticalRisks.description}
-                    variant="danger"
+                    title="Net Cashflow"
+                    value={`${Number(stats.netCashflow.value || 0).toLocaleString('vi-VN')} VND`}
+                    icon={Landmark}
+                    change={stats.netCashflow.change}
+                    trend={stats.netCashflow.trend}
+                    description={stats.netCashflow.description}
+                    variant="success"
                   />
+                  <StatsCard
+                    title="Estimated Commission"
+                    value={`${Number(stats.estimatedCommission.value || 0).toLocaleString('vi-VN')} VND`}
+                    icon={HandCoins}
+                    change={stats.estimatedCommission.change}
+                    trend={stats.estimatedCommission.trend}
+                    description={stats.estimatedCommission.description}
+                    variant="primary"
+                  />
+                </div>
+
+                <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Refund Outflow
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-rose-600 dark:text-rose-400">
+                    {Number(stats.refundOutflow.value || 0).toLocaleString(
+                      'vi-VN'
+                    )}{' '}
+                    VND
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -188,48 +197,50 @@ export default function SystemAdminDashboard() {
                       <div className="flex justify-between items-start mb-6">
                         <div>
                           <h3 className="text-slate-900 dark:text-white text-base font-bold">
-                            Screening Volume Trends
+                            Inflow by Payment Method
                           </h3>
                           <p className="text-slate-500 dark:text-slate-400 text-sm">
-                            Monthly throughput based on live screening records
+                            Completed top-up cashflow grouped by payment
+                            provider
                           </p>
                         </div>
                         <StatusBadge status="info" label="Live Data" />
                       </div>
 
-                      <div className="w-full h-48 flex items-end gap-4 justify-between px-4">
-                        {volumeTrends.length > 0 ? (
-                          volumeTrends.map((trend, idx) => {
-                            const maxValue = Math.max(
-                              ...volumeTrends.map((item) => item.screenings)
-                            );
-                            const height =
-                              maxValue === 0
-                                ? 0
-                                : (trend.screenings / maxValue) * 100;
-
-                            return (
-                              <div
-                                key={`${trend.week}-${idx}`}
-                                className="flex flex-col items-center flex-1 gap-2"
-                              >
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                                  {trend.screenings.toLocaleString()}
+                      <div className="space-y-4">
+                        {stats.paymentMethodBreakdown.length > 0 ? (
+                          stats.paymentMethodBreakdown.map((method) => (
+                            <div
+                              key={method.paymentMethod}
+                              className="space-y-2"
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                  {method.paymentMethod}
                                 </span>
-                                <div
-                                  className="w-full bg-gradient-to-t from-primary to-primary/70 rounded-t-lg transition-all hover:opacity-80 min-h-[20px]"
-                                  style={{ height: `${height}%` }}
-                                />
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center">
-                                  {trend.week}
-                                </span>
+                                <div className="text-right">
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                    {method.amount.toLocaleString('vi-VN')} VND
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    {method.percentage.toFixed(1)}%
+                                  </p>
+                                </div>
                               </div>
-                            );
-                          })
+                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div
+                                  className="h-2.5 rounded-full bg-gradient-to-r from-primary to-teal-500"
+                                  style={{
+                                    width: `${Math.min(100, method.percentage)}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))
                         ) : (
-                          <div className="w-full text-center text-slate-500 py-10">
-                            No screening activity yet.
-                          </div>
+                          <p className="text-slate-500 text-sm py-6 text-center">
+                            No completed inflow records yet.
+                          </p>
                         )}
                       </div>
                     </div>

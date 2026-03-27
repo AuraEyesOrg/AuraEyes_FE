@@ -13,10 +13,16 @@ export interface DashboardStat {
 }
 
 export interface DashboardStats {
-  totalScreeningsToday: DashboardStat;
-  aiAccuracyRate: DashboardStat;
-  pendingReviews: DashboardStat;
-  criticalRisks: DashboardStat;
+  totalInflow: DashboardStat;
+  totalOutflow: DashboardStat;
+  netCashflow: DashboardStat;
+  estimatedCommission: DashboardStat;
+  refundOutflow: DashboardStat;
+  paymentMethodBreakdown: Array<{
+    paymentMethod: string;
+    amount: number;
+    percentage: number;
+  }>;
 }
 
 export interface ScreeningVolumeTrend {

@@ -8,13 +8,16 @@ import { API_ENDPOINTS } from '@/lib/endpoints';
 import type { ApiResponse, DashboardData } from '../types/system-admin.types';
 
 interface AdminMetricsDto {
-  totalScreeningsToday: number;
-  totalScreeningsYesterday: number;
-  screeningsChangePercentage: number;
-  aiAccuracy: number;
-  aiAccuracyChangePercentage: number;
-  pendingReviews: number;
-  criticalCases: number;
+  totalInflow: number;
+  totalOutflow: number;
+  refundOutflow: number;
+  netCashflow: number;
+  estimatedCommission: number;
+  paymentMethodBreakdown: Array<{
+    paymentMethod: string;
+    amount: number;
+    percentage: number;
+  }>;
 }
 
 interface AdminTrendPointDto {
@@ -77,26 +80,27 @@ export const dashboardApi = {
       }
 
       return {
-        totalScreeningsToday: {
-          value: data.totalScreeningsToday,
-          change: data.screeningsChangePercentage,
-          trend: data.screeningsChangePercentage >= 0 ? 'up' : 'down',
-          description: `vs yesterday ${data.totalScreeningsYesterday}`,
+        totalInflow: {
+          value: data.totalInflow,
+          description: 'Completed wallet top-up inflow',
         },
-        aiAccuracyRate: {
-          value: data.aiAccuracy,
-          change: data.aiAccuracyChangePercentage,
-          trend: data.aiAccuracyChangePercentage >= 0 ? 'up' : 'down',
-          description: 'Average confidence across completed screenings',
+        totalOutflow: {
+          value: data.totalOutflow,
+          description: 'Refund + withdrawal outflow',
         },
-        pendingReviews: {
-          value: data.pendingReviews,
-          description: 'Waiting for ophthalmologist review',
+        netCashflow: {
+          value: data.netCashflow,
+          description: 'Net inflow after outflow',
         },
-        criticalRisks: {
-          value: data.criticalCases,
-          description: 'High and critical risk cases',
+        estimatedCommission: {
+          value: data.estimatedCommission,
+          description: 'Estimated from completed sessions and active contracts',
         },
+        refundOutflow: {
+          value: data.refundOutflow,
+          description: 'Outflow from refunds only',
+        },
+        paymentMethodBreakdown: data.paymentMethodBreakdown,
       } satisfies DashboardData['stats'];
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
