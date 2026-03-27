@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
@@ -279,6 +279,14 @@ function saveLastScreeningId(id: string) {
   }
 }
 
+function clearLastScreeningId() {
+  try {
+    window.localStorage.removeItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function mapEyeSideLabel(
   eyeSide?: string
 ): 'Left Eye (OS)' | 'Right Eye (OD)' | 'Both Eyes' {
@@ -454,16 +462,91 @@ export default function RetinalAnalysis() {
   const [resultsPersisted, setResultsPersisted] = useState<boolean>(
     Boolean(routeState?.resultsPersisted)
   );
+  const [isPreparingSession, setIsPreparingSession] = useState(false);
+  const sessionCreationPromiseRef = useRef<Promise<string> | null>(null);
 
   // Image management
   const [images, setImages] = useState<RetinalImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
+  const ensureScreeningSession = async (): Promise<string> => {
+    if (screeningId) return screeningId;
+    if (sessionCreationPromiseRef.current) {
+      return sessionCreationPromiseRef.current;
+    }
+
+    const createPromise = (async () => {
+      if (images.length === 0) {
+        throw new Error('No images available to create screening session');
+      }
+
+      setIsPreparingSession(true);
+      const files = await Promise.all(
+        images.map(async (img, idx) => {
+          const resp = await fetch(img.url);
+          const imgBlob = await resp.blob();
+          const fileType = imgBlob.type || 'image/jpeg';
+          const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+          return new File([imgBlob], fileNameForUpload, { type: fileType });
+        })
+      );
+
+      const uploadResp = await screeningApi.uploadRetinalImages(files);
+      const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+      if (uploadedUrls.length === 0) {
+        throw new Error('Failed to upload retinal images');
+      }
+
+      const retinalImages = uploadedUrls.map((url, idx) => ({
+        imageUrl: url,
+        eyeSide: inferEyeSideFromName(
+          images[idx]?.name || '',
+          idx,
+          uploadedUrls.length
+        ),
+        deviceName: 'Retinal Camera',
+      }));
+
+      const sessionResp = await screeningApi.createSession({
+        modelVersion: '1.0',
+        retinalImages,
+      });
+
+      const createdId = sessionResp.data?.screeningId;
+      if (!createdId) {
+        throw new Error('Missing screening ID from createSession response');
+      }
+
+      setScreeningId(createdId);
+      saveLastScreeningId(createdId);
+      setSearchParams({ screeningId: createdId }, { replace: true });
+      return createdId;
+    })().finally(() => {
+      setIsPreparingSession(false);
+      sessionCreationPromiseRef.current = null;
+    });
+
+    sessionCreationPromiseRef.current = createPromise;
+    return createPromise;
+  };
+
   useEffect(() => {
     const queryScreeningId = searchParams.get('screeningId') ?? undefined;
     const storedScreeningId = loadLastScreeningId() ?? undefined;
-    const incomingScreeningId =
-      routeState?.screeningId ?? queryScreeningId ?? storedScreeningId;
+    const hasFreshRouteImages =
+      Boolean(routeState?.images?.length) && !routeState?.screeningId;
+    const incomingScreeningId = hasFreshRouteImages
+      ? undefined
+      : (routeState?.screeningId ?? queryScreeningId ?? storedScreeningId);
+
+    if (hasFreshRouteImages) {
+      setScreeningId(null);
+      clearLastScreeningId();
+      if (queryScreeningId) {
+        setSearchParams({}, { replace: true });
+      }
+    }
 
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
@@ -683,51 +766,7 @@ export default function RetinalAnalysis() {
       const rawOutput = JSON.stringify(data);
       setRawJsonOutput(rawOutput);
 
-      let ensuredScreeningId = screeningId;
-
-      if (!screeningId) {
-        const files = await Promise.all(
-          images.map(async (img, idx) => {
-            const resp = await fetch(img.url);
-            const imgBlob = await resp.blob();
-            const fileType = imgBlob.type || 'image/jpeg';
-            const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
-            return new File([imgBlob], fileNameForUpload, { type: fileType });
-          })
-        );
-
-        const uploadResp = await screeningApi.uploadRetinalImages(files);
-        const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
-
-        if (uploadedUrls.length === 0) {
-          throw new Error('Failed to upload retinal images');
-        }
-
-        const retinalImages = uploadedUrls.map((url, idx) => ({
-          imageUrl: url,
-          eyeSide: inferEyeSideFromName(
-            images[idx]?.name || '',
-            idx,
-            uploadedUrls.length
-          ),
-          deviceName: 'Retinal Camera',
-        }));
-
-        const sessionResp = await screeningApi.createSession({
-          modelVersion: '1.0',
-          retinalImages,
-        });
-
-        if (sessionResp.data?.screeningId) {
-          ensuredScreeningId = sessionResp.data.screeningId;
-          setScreeningId(sessionResp.data.screeningId);
-          saveLastScreeningId(sessionResp.data.screeningId);
-          setSearchParams(
-            { screeningId: sessionResp.data.screeningId },
-            { replace: true }
-          );
-        }
-      }
+      const ensuredScreeningId = await ensureScreeningSession();
 
       if (!ensuredScreeningId) {
         throw new Error('Screening session not available to save AI results');
@@ -896,9 +935,11 @@ export default function RetinalAnalysis() {
                         className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
                       >
                         <Sparkles className="w-5 h-5" />
-                        {(quotaBalance?.remainingQuota ?? 0) <= 0
-                          ? 'Out of quota'
-                          : 'Start Screening'}
+                        {isPreparingSession
+                          ? 'Preparing session...'
+                          : (quotaBalance?.remainingQuota ?? 0) <= 0
+                            ? 'Out of quota'
+                            : 'Start Screening'}
                       </button>
                       {(quotaBalance?.remainingQuota ?? 0) <= 0 && (
                         <p className="text-sm text-amber-600">
