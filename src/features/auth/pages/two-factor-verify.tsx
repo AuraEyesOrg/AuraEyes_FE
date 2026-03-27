@@ -92,7 +92,7 @@ const TwoFactorVerifyPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
-            navigate('/pending-approval');
+            navigate('/ophthalmologist/pending-approval');
           } else if (response.user?.contractStatus !== 'Active') {
             navigate('/ophthalmologist/contract');
           } else {

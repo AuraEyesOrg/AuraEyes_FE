@@ -349,12 +349,18 @@ const Router = () => (
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
         <Route
-          path="/:locale/pending-approval"
+          path="/:locale/ophthalmologist/pending-approval"
           element={
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<PendingApprovalPage />}
             />
+          }
+        />
+        <Route
+          path="/:locale/pending-approval"
+          element={
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
 
@@ -790,11 +796,17 @@ const Router = () => (
           }
         />
         <Route
-          path="/pending-approval"
+          path="/ophthalmologist/pending-approval"
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <PendingApprovalPage />
             </PrivateRoute>
+          }
+        />
+        <Route
+          path="/pending-approval"
+          element={
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
 

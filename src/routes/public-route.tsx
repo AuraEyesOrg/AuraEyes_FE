@@ -25,11 +25,16 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
         user?.verificationStatus === 'PendingVerification'));
 
   if (isOphthalmologist && isPendingVerification) {
-    if (normalizedPath === '/pending-approval') {
+    if (normalizedPath === '/ophthalmologist/pending-approval') {
       return children;
     }
 
-    return <Navigate to={resolvePathWithLocale('/pending-approval')} replace />;
+    return (
+      <Navigate
+        to={resolvePathWithLocale('/ophthalmologist/pending-approval')}
+        replace
+      />
+    );
   }
 
   const roles = user?.roles ?? [];

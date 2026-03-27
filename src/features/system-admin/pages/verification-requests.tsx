@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import {
   ClipboardList,
   CheckCircle,
@@ -495,6 +496,10 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setApprovingDoctor(null);
+      toast.success('Đã phê duyệt hồ sơ bác sĩ thành công.');
+    },
+    onError: () => {
+      toast.error('Phê duyệt thất bại. Vui lòng thử lại.');
     },
   });
 
@@ -504,6 +509,10 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setRejectingDoctor(null);
+      toast.success('Đã từ chối hồ sơ bác sĩ thành công.');
+    },
+    onError: () => {
+      toast.error('Từ chối hồ sơ thất bại. Vui lòng thử lại.');
     },
   });
 

@@ -151,7 +151,7 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
-            navigate(toLocalizedAuthPath('/pending-approval'));
+            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
@@ -288,7 +288,7 @@ const LoginPage = () => {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
-            navigate(toLocalizedAuthPath('/pending-approval'));
+            navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
           } else if (response.user?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {

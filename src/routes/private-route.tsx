@@ -36,8 +36,16 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
   const isPendingApproval = isOphthalmologist && isPendingVerification;
 
-  if (isPendingApproval && normalizedPath !== '/pending-approval') {
-    return <Navigate to={resolvePathWithLocale('/pending-approval')} replace />;
+  if (
+    isPendingApproval &&
+    normalizedPath !== '/ophthalmologist/pending-approval'
+  ) {
+    return (
+      <Navigate
+        to={resolvePathWithLocale('/ophthalmologist/pending-approval')}
+        replace
+      />
+    );
   }
 
   // Redirect ophthalmologists with unsigned contract to the contract page.
