@@ -6,6 +6,7 @@ import {
   Routes,
   useLocation,
   useNavigate,
+  useParams,
 } from 'react-router-dom';
 import PrivateRoute from './private-route';
 import PublicRoute from './public-route';
@@ -14,6 +15,7 @@ import { setRouterNavigator } from '@/lib/router';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { LocaleSync } from '@/i18n/LocaleSync';
 import GuestLayout from '@/features/guest/layout';
+import useAuthStore from '@/store/auth-store';
 
 // Guest/Landing pages (public - no auth required)
 const HomePage = lazy(() => import('@/features/guest/pages/Home'));
@@ -25,6 +27,10 @@ const EthicsPrivacyPage = lazy(
 );
 const StatusPage = lazy(() => import('@/features/guest/pages/Status'));
 const CompliancePage = lazy(() => import('@/features/guest/pages/Compliance'));
+const MaintenancePage = lazy(
+  () => import('@/features/guest/pages/Maintenance')
+);
+const NotFoundPage = lazy(() => import('@/features/guest/pages/NotFound'));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -253,6 +259,22 @@ const LocalizedRedirect = ({ target }: LocalizedRedirectProps) => {
   );
 };
 
+const LogoutRoute = () => {
+  const navigate = useNavigate();
+  const { locale } = useParams();
+
+  useEffect(() => {
+    useAuthStore.getState().logout();
+
+    const loginPath = locale
+      ? `/${locale}/login`
+      : resolvePathWithLocale('/login');
+    navigate(loginPath, { replace: true });
+  }, [locale, navigate]);
+
+  return <PageLoader />;
+};
+
 interface LocalizedAuthRouteProps {
   element: ReactElement;
 }
@@ -310,6 +332,13 @@ const Router = () => (
           path="/compliance"
           element={<LocalizedRedirect target="/compliance" />}
         />
+        <Route
+          path="/maintenance"
+          element={<LocalizedRedirect target="/maintenance" />}
+        />
+        <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route path="/logout" element={<LogoutRoute />} />
+        <Route path="/:locale/logout" element={<LogoutRoute />} />
 
         <Route
           path="/:locale/login"
@@ -724,7 +753,9 @@ const Router = () => (
           <Route path="ethics" element={<EthicsPrivacyPage />} />
           <Route path="status" element={<StatusPage />} />
           <Route path="compliance" element={<CompliancePage />} />
-          <Route path="*" element={<Navigate to="." replace />} />
+          <Route path="maintenance" element={<MaintenancePage />} />
+          <Route path="404" element={<NotFoundPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* ============ AUTH ROUTES ============ */}
@@ -1261,7 +1292,7 @@ const Router = () => (
           />
         </Route>
 
-        <Route path="*" element={<LocalizedRedirect target="/" />} />
+        <Route path="*" element={<LocalizedRedirect target="/404" />} />
       </Routes>
     </Suspense>
   </BrowserRouter>

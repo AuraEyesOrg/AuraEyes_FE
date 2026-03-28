@@ -1096,6 +1096,23 @@ declare module 'i18next' {
         secondary: string;
       };
     };
+    PatientReview: {
+      status: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      summary: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      findingsDetected: string;
+      backToDashboard: string;
+      sessionLabel: string;
+    };
   }
 
   interface CustomTypeOptions {

@@ -251,8 +251,11 @@ export default function DoctorsPage() {
 
   const credentialLinks = useMemo(() => {
     const links: Array<{ label: string; url: string }> = [];
+    const certificateItems = Array.isArray(selectedDoctorDetail?.certificates)
+      ? selectedDoctorDetail.certificates
+      : [];
 
-    for (const certificate of selectedDoctorDetail?.certificates ?? []) {
+    for (const certificate of certificateItems) {
       if (!certificate.certificateUrl) continue;
       links.push({
         label: certificate.name,
