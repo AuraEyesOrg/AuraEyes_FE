@@ -246,7 +246,6 @@ declare module 'i18next' {
           noBio: string;
         };
         pageTitle: string;
-        pageSubtitle: string;
         profile: {
           title: string;
           edit: string;
@@ -1082,6 +1081,23 @@ declare module 'i18next' {
         primary: string;
         secondary: string;
       };
+    };
+    PatientReview: {
+      status: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      summary: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      findingsDetected: string;
+      backToDashboard: string;
+      sessionLabel: string;
     };
   }
 
