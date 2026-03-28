@@ -239,6 +239,15 @@ export interface OphthalmologistDetailItem {
   ratingCount?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
+  certificates?: {
+    id: string;
+    name: string;
+    issuingAuthority?: string | null;
+    issuedDate: string;
+    expiryDate?: string | null;
+    certificateUrl?: string | null;
+    isExpired?: boolean;
+  }[];
 }
 
 export interface AvailableSlotItem {

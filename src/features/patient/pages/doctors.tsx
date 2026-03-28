@@ -22,7 +22,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   searchOphthalmologistsForPatient,
+  getOphthalmologistDetailForPatient,
   type OphthalmologistSearchItem,
+  type OphthalmologistDetailItem,
 } from '../api/patient.api';
 import { listOphthalmologistFeedback } from '../api/feedback.api';
 import Spinner from '@/components/ui/spinner';
@@ -58,17 +60,6 @@ function parseNullableNumber(value: string): number | null {
   if (!trimmed) return null;
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
-}
-
-function getDemoTitleBadges(doctorId: string, fallbackIndex: number) {
-  // Mock titles for UI preview. Keep deterministic so UI doesn't jump.
-  const pool = ['BSCKII', 'Th.S', 'BS', 'ThS', 'PGS.TS'];
-  const seed = doctorId.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  const start = (seed + fallbackIndex) % pool.length;
-  const result = [pool[start]];
-  const second = pool[(start + 2) % pool.length];
-  if (fallbackIndex % 2 === 0) result.push(second);
-  return result;
 }
 
 export default function DoctorsPage() {
@@ -251,6 +242,45 @@ export default function DoctorsPage() {
     enabled: !!selectedDoctor,
   });
   const feedbacks = feedbackData?.items ?? [];
+
+  const { data: selectedDoctorDetail } = useQuery<OphthalmologistDetailItem>({
+    queryKey: ['patient-ophthalmologist-detail', selectedDoctor?.id],
+    queryFn: () => getOphthalmologistDetailForPatient(selectedDoctor!.id),
+    enabled: !!selectedDoctor?.id,
+  });
+
+  const credentialLinks = useMemo(() => {
+    const links: Array<{ label: string; url: string }> = [];
+
+    for (const certificate of selectedDoctorDetail?.certificates ?? []) {
+      if (!certificate.certificateUrl) continue;
+      links.push({
+        label: certificate.name,
+        url: certificate.certificateUrl,
+      });
+    }
+
+    if (selectedDoctorDetail?.licenseUrl) {
+      links.push({
+        label: 'License Document',
+        url: selectedDoctorDetail.licenseUrl,
+      });
+    }
+
+    if (selectedDoctorDetail?.degreeUrl) {
+      links.push({
+        label: 'Degree Document',
+        url: selectedDoctorDetail.degreeUrl,
+      });
+    }
+
+    const seen = new Set<string>();
+    return links.filter((item) => {
+      if (seen.has(item.url)) return false;
+      seen.add(item.url);
+      return true;
+    });
+  }, [selectedDoctorDetail]);
 
   return (
     <div className="min-h-screen bg-(--bg-primary) flex flex-col w-full relative">
@@ -539,7 +569,7 @@ export default function DoctorsPage() {
 
         {/* Results */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredDoctors.map((doctor, index) => {
+          {filteredDoctors.map((doctor) => {
             const ratingText =
               doctor.ratingAverage !== undefined &&
               doctor.ratingAverage !== null &&
@@ -547,8 +577,6 @@ export default function DoctorsPage() {
                 ? `${doctor.ratingAverage.toFixed(1)}`
                 : '—';
             const reviewCount = doctor.ratingCount ?? 0;
-            const titleBadges = getDemoTitleBadges(doctor.id, index);
-            const titleString = titleBadges.join(', ');
 
             return (
               <div
@@ -564,7 +592,9 @@ export default function DoctorsPage() {
                     className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-(--bg-primary) shadow-sm bg-(--bg-secondary)"
                   />
                   <span className="mt-4 px-3 py-1 bg-white dark:bg-(--bg-primary) border border-brand/20 text-brand rounded-full text-[11px] font-bold text-center">
-                    {titleString || 'Bác sĩ'}
+                    {doctor.certificateCount > 0
+                      ? `${doctor.certificateCount} verified credentials`
+                      : 'Verified ophthalmologist'}
                   </span>
                   <div className="mt-3 flex items-center gap-1.5 p-1.5 px-3 bg-white dark:bg-black/20 rounded-lg shadow-sm">
                     <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
@@ -749,34 +779,24 @@ export default function DoctorsPage() {
                   </div>
 
                   {/* Links Box */}
-                  {(selectedDoctor.licenseUrl || selectedDoctor.degreeUrl) && (
+                  {credentialLinks.length > 0 && (
                     <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-bold text-(--text-primary)">
                         Credentials
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedDoctor.licenseUrl && (
+                        {credentialLinks.map((credential) => (
                           <a
-                            href={selectedDoctor.licenseUrl}
+                            key={credential.url}
+                            href={credential.url}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" /> License
-                            Document
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            {credential.label}
                           </a>
-                        )}
-                        {selectedDoctor.degreeUrl && (
-                          <a
-                            href={selectedDoctor.degreeUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" /> Degree
-                            Document
-                          </a>
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}

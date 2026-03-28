@@ -46,7 +46,7 @@ import {
   useSendMessage,
   consultationKeys,
 } from '@/features/consultation/hooks';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import {
   ChatStatus,
@@ -72,6 +72,7 @@ import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { postsApi } from '@/features/professional-network/api/network.api';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -380,6 +381,19 @@ export default function ConsultationsChatView({
   const sendMessageMutation = useSendMessage();
   const cancelSessionMutation = useCancelSession();
   const endSessionMutation = useEndSession();
+  const shareConsultationMutation = useMutation({
+    mutationFn: (consultationSessionId: string) =>
+      postsApi.shareConsultationCase(consultationSessionId),
+    onSuccess: () => {
+      toast.success('Case shared to professional network');
+      queryClient.invalidateQueries({ queryKey: ['network'] });
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(error, 'Failed to share consultation case')
+      );
+    },
+  });
 
   const phase = currentSession ? getPhase(currentSession) : 'PRE_VISIT';
   const phaseUIConfig = getPhaseUIConfig(t);
@@ -1446,6 +1460,19 @@ export default function ConsultationsChatView({
                 <ScreeningReviewLink
                   screeningId={selectedSession.caseSnapshot.screeningId}
                 />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    shareConsultationMutation.mutate(currentSession.id)
+                  }
+                  disabled={shareConsultationMutation.isPending}
+                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {shareConsultationMutation.isPending
+                    ? 'Sharing case...'
+                    : 'Share Internal Case To Network'}
+                </button>
 
                 <div className="mt-4 space-y-2">
                   <p className="text-xs text-slate-500 dark:text-gray-400">

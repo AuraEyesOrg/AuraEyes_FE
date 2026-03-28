@@ -32,6 +32,10 @@ export function PostComposer() {
   const [content, setContent] = useState('');
   const [selectedType, setSelectedType] =
     useState<PostCategory>('KnowledgeShare');
+  const [patientAge, setPatientAge] = useState('');
+  const [patientGender, setPatientGender] = useState('');
+  const [isCaseDisclaimerAccepted, setIsCaseDisclaimerAccepted] =
+    useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -42,11 +46,19 @@ export function PostComposer() {
   const { user } = useAuthStore();
 
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+  const isCasePresentation = selectedType === 'CasePresentation';
   const hasFiles = files.length > 0;
+  const hasRequiredCaseMetadata =
+    !isCasePresentation ||
+    (patientAge.trim() !== '' &&
+      patientGender.trim() !== '' &&
+      hasFiles &&
+      isCaseDisclaimerAccepted);
   const isPostDisabled =
     !content.trim() ||
     createPost.isPending ||
-    (hasFiles && !isAnonymizationConfirmed);
+    (hasFiles && !isAnonymizationConfirmed) ||
+    !hasRequiredCaseMetadata;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -89,10 +101,16 @@ export function PostComposer() {
     formData.append('category', selectedType);
     formData.append('visibility', 'Public');
     formData.append('allowComments', 'true');
+    formData.append('isInternalCase', 'false');
     formData.append(
       'isAnonymizationConfirmed',
       String(isAnonymizationConfirmed)
     );
+
+    if (isCasePresentation) {
+      formData.append('patientAge', patientAge.trim());
+      formData.append('patientGender', patientGender.trim());
+    }
 
     files.forEach((file) => {
       formData.append('attachments', file);
@@ -103,6 +121,9 @@ export function PostComposer() {
         setContent('');
         setFiles([]);
         setPreviews([]);
+        setPatientAge('');
+        setPatientGender('');
+        setIsCaseDisclaimerAccepted(false);
         setIsAnonymizationConfirmed(false);
         setIsExpanded(false);
       },
@@ -187,6 +208,49 @@ export function PostComposer() {
                 ))}
               </div>
             </div>
+
+            {isCasePresentation && (
+              <div className="mt-3 space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
+                <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
+                  External Case Presentation Fields
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={patientAge}
+                    onChange={(e) => setPatientAge(e.target.value)}
+                    placeholder="Patient age"
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  />
+                  <select
+                    value={patientGender}
+                    onChange={(e) => setPatientGender(e.target.value)}
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  >
+                    <option value="">Patient gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isCaseDisclaimerAccepted}
+                    onChange={(e) =>
+                      setIsCaseDisclaimerAccepted(e.target.checked)
+                    }
+                    className="mt-0.5 w-4 h-4 rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="text-[12px] leading-snug text-cyan-800 dark:text-cyan-200">
+                    I confirm this case is anonymized and shared for
+                    professional educational discussion only.
+                  </span>
+                </label>
+              </div>
+            )}
 
             {/* Anonymization Consent Checkbox */}
             {hasFiles && (
