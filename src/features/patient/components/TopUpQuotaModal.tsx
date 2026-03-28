@@ -12,9 +12,9 @@ interface TopUpQuotaModalProps {
 }
 
 /**
- * TopUpQuotaModal — Modal to purchase AI screening quota bundles.
+ * TopUpQuotaModal — Modal to purchase AI screening quota credits.
  *
- * Shows bundle info (e.g. "5 lượt — 50.000đ") and confirms purchase.
+ * Shows configured unit price info and confirms purchase.
  * Uses LoadingButton with mutation pending state.
  * Auto-closes on success after brief confirmation message.
  */
@@ -23,27 +23,77 @@ export function TopUpQuotaModal({
   onClose,
   currentQuota,
 }: TopUpQuotaModalProps) {
+  const DEFAULT_UNIT_PRICE = 10000;
+  const MAX_QUOTA_AMOUNT = 9999;
   const backdropRef = useRef<HTMLDivElement>(null);
   const buyMutation = useBuyQuota();
   const [successMessage, setSuccessMessage] = useState('');
 
-  const bundleSize = currentQuota.bundleSize ?? 5;
-  const bundlePrice = currentQuota.bundlePrice ?? 50000;
+  const unitPrice =
+    currentQuota.unitPrice && currentQuota.unitPrice > 0
+      ? currentQuota.unitPrice
+      : DEFAULT_UNIT_PRICE;
+  const defaultQuotaAmount = 1;
+  const [quotaAmount, setQuotaAmount] = useState(defaultQuotaAmount);
+  const [quotaAmountInput, setQuotaAmountInput] = useState(
+    defaultQuotaAmount.toString()
+  );
+
+  const normalizeAmount = (value: number) => {
+    if (!Number.isFinite(value) || value < 1) return 1;
+    return Math.min(Math.floor(value), MAX_QUOTA_AMOUNT);
+  };
+
+  const syncQuotaAmount = (value: number) => {
+    const normalized = normalizeAmount(value);
+    setQuotaAmount(normalized);
+    setQuotaAmountInput(normalized.toString());
+    return normalized;
+  };
+
+  const totalPrice = unitPrice * quotaAmount;
 
   useEffect(() => {
     if (!isOpen) {
       setSuccessMessage('');
       buyMutation.reset();
+      return;
     }
-  }, [isOpen]);
+    syncQuotaAmount(defaultQuotaAmount);
+  }, [isOpen, defaultQuotaAmount]);
+
+  const handleDecrease = () => {
+    syncQuotaAmount(quotaAmount - 1);
+  };
+
+  const handleIncrease = () => {
+    syncQuotaAmount(quotaAmount + 1);
+  };
+
+  const handleInputChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setQuotaAmountInput(digitsOnly);
+
+    if (!digitsOnly) return;
+
+    const parsed = parseInt(digitsOnly, 10);
+    if (Number.isFinite(parsed)) {
+      setQuotaAmount(normalizeAmount(parsed));
+    }
+  };
+
+  const handleInputBlur = () => {
+    const parsed = parseInt(quotaAmountInput, 10);
+    syncQuotaAmount(Number.isFinite(parsed) ? parsed : quotaAmount);
+  };
 
   const handleBuy = () => {
     buyMutation.mutate(
-      { numberOfBundles: 1 },
+      { quotaAmount },
       {
         onSuccess: (data) => {
           setSuccessMessage(
-            `Mua thành công ${bundleSize} lượt! Số dư ví: ${data.walletBalance.toLocaleString('vi-VN')}đ`
+            `Mua thành công ${quotaAmount} lượt! Số dư ví: ${data.walletBalance.toLocaleString('vi-VN')}đ`
           );
           setTimeout(() => {
             onClose();
@@ -102,20 +152,62 @@ export function TopUpQuotaModal({
             </span>
           </div>
 
-          {/* Bundle package */}
+          {/* Unit price */}
           <div className="p-4 rounded-xl border-2 border-[var(--color-brand-primary)] bg-[var(--color-brand-soft)]">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-base font-semibold text-[var(--text-primary)]">
-                  Gói {bundleSize} lượt
+                  Đơn giá theo lượt
                 </p>
                 <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                  {(bundlePrice / bundleSize).toLocaleString('vi-VN')}đ / lượt
+                  {unitPrice.toLocaleString('vi-VN')}đ / lượt
                 </p>
               </div>
               <span className="text-xl font-bold text-[var(--color-brand-primary)]">
-                {bundlePrice.toLocaleString('vi-VN')}đ
+                {totalPrice.toLocaleString('vi-VN')}đ
               </span>
+            </div>
+            <div className="mt-4">
+              <label
+                htmlFor="quotaAmount"
+                className="block text-sm font-medium text-[var(--text-secondary)] mb-2"
+              >
+                Số lượt muốn mua
+              </label>
+              <div className="flex items-center rounded-xl border border-[var(--border-color)] bg-white overflow-hidden">
+                <button
+                  type="button"
+                  onClick={handleDecrease}
+                  disabled={buyMutation.isPending || quotaAmount <= 1}
+                  className="h-11 w-11 text-lg font-bold text-[var(--text-primary)] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Giảm số lượt"
+                >
+                  -
+                </button>
+                <input
+                  id="quotaAmount"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={quotaAmountInput}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  onBlur={handleInputBlur}
+                  disabled={buyMutation.isPending}
+                  className="h-11 flex-1 text-center text-base font-semibold text-[var(--text-primary)] outline-none"
+                  aria-label="Số lượt AI muốn mua"
+                />
+                <button
+                  type="button"
+                  onClick={handleIncrease}
+                  disabled={
+                    buyMutation.isPending || quotaAmount >= MAX_QUOTA_AMOUNT
+                  }
+                  className="h-11 w-11 text-lg font-bold text-[var(--text-primary)] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Tăng số lượt"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -155,7 +247,7 @@ export function TopUpQuotaModal({
             disabled={!!successMessage}
             className="btn-primary flex-1"
           >
-            Mua {bundleSize} lượt ({bundlePrice.toLocaleString('vi-VN')}đ)
+            Mua {quotaAmount} lượt ({totalPrice.toLocaleString('vi-VN')}đ)
           </LoadingButton>
         </div>
       </div>

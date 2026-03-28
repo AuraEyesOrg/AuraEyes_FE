@@ -31,7 +31,7 @@ export const useQuotaBalance = (options?: { enabled?: boolean }) => {
 
 // ============ MUTATIONS ============
 
-/** Buy AI quota bundles - deducts from wallet, invalidates quota + wallet cache */
+/** Buy AI quota amount - deducts from wallet, invalidates quota + wallet cache */
 export const useBuyQuota = () => {
   const queryClient = useQueryClient();
 

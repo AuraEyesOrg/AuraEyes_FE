@@ -21,68 +21,10 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { userApi } from '../api';
+import { exportApi, userApi } from '../api';
 import type { User, UserRole } from '../types/system-admin.types';
-
-// Mock data for demonstration
-const getMockUsers = (): User[] => [
-  {
-    id: '#USR001',
-    name: 'Dr. Alex Chen',
-    email: 'alex.chen@aura.med',
-    role: 'system_admin',
-    status: 'active',
-    lastLogin: '2024-01-23 10:30 AM',
-    createdAt: 'Oct 12, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#USR002',
-    name: 'Dr. Sarah Johnson',
-    email: 'sarah.johnson@metro.clinic',
-    role: 'organisation_admin',
-    organisationId: '#CL042',
-    organisationName: 'Metro Vascular Center',
-    status: 'active',
-    lastLogin: '2024-01-22 03:15 PM',
-    createdAt: 'Nov 15, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#USR003',
-    name: 'Dr. Michael Lee',
-    email: 'michael.lee@bayside.health',
-    role: 'doctor',
-    organisationId: '#CL043',
-    organisationName: 'Bayside Eye Institute',
-    status: 'active',
-    lastLogin: '2024-01-21 09:45 AM',
-    createdAt: 'Dec 02, 2023',
-    emailVerified: true,
-  },
-  {
-    id: '#USR004',
-    name: 'Emily Davis',
-    email: 'emily.davis@oakwood.med',
-    role: 'operator',
-    organisationId: '#CL044',
-    organisationName: 'Oakwood Medical',
-    status: 'inactive',
-    lastLogin: '2024-01-10 02:30 PM',
-    createdAt: 'Jan 05, 2024',
-    emailVerified: true,
-  },
-  {
-    id: '#USR005',
-    name: 'James Wilson',
-    email: 'james.wilson@aura.med',
-    role: 'analyst',
-    status: 'locked',
-    lastLogin: '2023-12-20 11:00 AM',
-    createdAt: 'Sep 20, 2023',
-    emailVerified: false,
-  },
-];
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 const roleLabels: Record<UserRole, string> = {
   system_admin: 'System Admin',
@@ -109,12 +51,13 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Load data
   const loadData = useCallback(async () => {
     try {
       const usersData = await userApi.getUsers().catch(() => null);
-      setUsers(usersData?.data || getMockUsers());
+      setUsers(usersData?.items ?? usersData?.data ?? []);
     } finally {
       setLoading(false);
     }
@@ -152,6 +95,50 @@ export default function UsersPage() {
       loadData(); // Refresh data
     } catch (error) {
       console.error('Failed to toggle user lock status:', error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const usersForExport = await exportApi.getUsers({
+        searchTerm: searchQuery || undefined,
+        role: roleFilter === 'all' ? undefined : roleFilter,
+      });
+
+      if (usersForExport.length === 0) {
+        toast.info('No users available for export.');
+        return;
+      }
+
+      await downloadXlsxFile(
+        usersForExport,
+        [
+          { header: 'User ID', value: (row) => row.id },
+          { header: 'Name', value: (row) => row.name },
+          { header: 'Email', value: (row) => row.email },
+          { header: 'Role', value: (row) => roleLabels[row.role] ?? row.role },
+          { header: 'Status', value: (row) => row.status },
+          {
+            header: 'Organisation',
+            value: (row) => row.organisationName ?? '',
+          },
+          { header: 'Last Login', value: (row) => row.lastLogin ?? '' },
+          { header: 'Created At', value: (row) => row.createdAt },
+          {
+            header: 'Email Verified',
+            value: (row) => (row.emailVerified ? 'Yes' : 'No'),
+          },
+        ],
+        buildTimestampedFileName('system-admin-users', 'xlsx'),
+        'Users'
+      );
+      toast.success(`Exported ${usersForExport.length} users.`);
+    } catch (error) {
+      console.error('Failed to export users:', error);
+      toast.error('Failed to export users. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -255,9 +242,13 @@ export default function UsersPage() {
           description="Manage platform users, assign roles, and control access permissions"
           actions={
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <Download className="w-4 h-4" />
-                Export
+                {isExporting ? 'Exporting...' : 'Export'}
               </button>
               <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4" />

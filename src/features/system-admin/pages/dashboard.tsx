@@ -1,114 +1,158 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, AlertCircle, Brain, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Building2, Download, Stethoscope, Users } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
-import StatusBadge, { RiskBadge } from '../components/StatusBadge';
-import DataTable, { type TableColumn } from '../components/DataTable';
 import { dashboardApi } from '../api';
-import type {
-  DashboardStats,
-  ScreeningVolumeTrend,
-  RecentScreening,
-  RiskDistribution,
-} from '../types/system-admin.types';
+import type { SystemAdminDashboardMetrics } from '../types/system-admin.types';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
+
+const DONUT_COLORS = ['#06b6d4', '#14b8a6', '#22c55e', '#f59e0b', '#8b5cf6'];
+
+const formatCurrency = (value: number) =>
+  `${Math.round(value).toLocaleString('en-US')} VND`;
+
+const resolveTrend = (growthPercentage: number): 'up' | 'down' | 'stable' => {
+  if (growthPercentage > 0) return 'up';
+  if (growthPercentage < 0) return 'down';
+  return 'stable';
+};
 
 export default function SystemAdminDashboard() {
-  const statsQuery = useQuery<DashboardStats>({
-    queryKey: ['system-admin-dashboard', 'stats'],
-    queryFn: dashboardApi.getStats,
+  const metricsQuery = useQuery<SystemAdminDashboardMetrics>({
+    queryKey: ['system-admin-dashboard', 'metrics'],
+    queryFn: dashboardApi.getMetrics,
   });
 
-  const recentScreeningsQuery = useQuery<RecentScreening[]>({
-    queryKey: ['system-admin-dashboard', 'recent-screenings'],
-    queryFn: () => dashboardApi.getRecentScreenings(5),
-  });
+  const metrics = metricsQuery.data;
+  const isLoading = metricsQuery.isLoading;
+  const [isExporting, setIsExporting] = useState(false);
 
-  const trendsQuery = useQuery<ScreeningVolumeTrend[]>({
-    queryKey: ['system-admin-dashboard', 'trends'],
-    queryFn: dashboardApi.getScreeningVolume,
-  });
+  const topCards = metrics
+    ? [
+        {
+          title: 'Doctors',
+          value: metrics.doctors.total,
+          change: metrics.doctors.growthPercentage,
+          trend: resolveTrend(metrics.doctors.growthPercentage),
+          description: `This month: ${metrics.doctors.currentMonth} | Previous month: ${metrics.doctors.previousMonth}`,
+          icon: Stethoscope,
+          variant: 'primary' as const,
+        },
+        {
+          title: 'Organizations',
+          value: metrics.organisations.total,
+          change: metrics.organisations.growthPercentage,
+          trend: resolveTrend(metrics.organisations.growthPercentage),
+          description: `This month: ${metrics.organisations.currentMonth} | Previous month: ${metrics.organisations.previousMonth}`,
+          icon: Building2,
+          variant: 'success' as const,
+        },
+        {
+          title: 'Patients',
+          value: metrics.patients.total,
+          change: metrics.patients.growthPercentage,
+          trend: resolveTrend(metrics.patients.growthPercentage),
+          description: `This month: ${metrics.patients.currentMonth} | Previous month: ${metrics.patients.previousMonth}`,
+          icon: Users,
+          variant: 'warning' as const,
+        },
+      ]
+    : [];
 
-  const riskQuery = useQuery<RiskDistribution[]>({
-    queryKey: ['system-admin-dashboard', 'risks'],
-    queryFn: dashboardApi.getRiskDistribution,
-  });
+  const handleExportDashboard = async () => {
+    if (!metrics) {
+      toast.info('No dashboard data available for export.');
+      return;
+    }
 
-  const healthQuery = useQuery({
-    queryKey: ['system-admin-dashboard', 'health'],
-    queryFn: dashboardApi.getSystemHealth,
-  });
+    try {
+      setIsExporting(true);
 
-  const stats = statsQuery.data;
-  const recentScreenings = recentScreeningsQuery.data ?? [];
-  const volumeTrends = trendsQuery.data ?? [];
-  const riskDistribution = riskQuery.data ?? [];
-  const isLoading =
-    statsQuery.isLoading ||
-    recentScreeningsQuery.isLoading ||
-    trendsQuery.isLoading ||
-    riskQuery.isLoading;
+      const rows = [
+        {
+          section: 'Users',
+          metric: 'Doctors - Total',
+          value: metrics.doctors.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Doctors - Growth %',
+          value: metrics.doctors.growthPercentage,
+        },
+        {
+          section: 'Users',
+          metric: 'Organisations - Total',
+          value: metrics.organisations.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Organisations - Growth %',
+          value: metrics.organisations.growthPercentage,
+        },
+        {
+          section: 'Users',
+          metric: 'Patients - Total',
+          value: metrics.patients.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Patients - Growth %',
+          value: metrics.patients.growthPercentage,
+        },
+        ...metrics.paymentMethods.map((item) => ({
+          section: 'Payment Methods',
+          metric: item.name,
+          value: item.value,
+        })),
+        ...metrics.monthlyRevenue.map((item) => ({
+          section: 'Monthly Revenue',
+          metric: item.label,
+          value: item.value,
+        })),
+        ...metrics.dailyRevenue.map((item) => ({
+          section: 'Daily Revenue',
+          metric: item.label,
+          value: item.value,
+        })),
+      ];
 
-  const recentScreeningColumns: TableColumn<RecentScreening>[] = [
-    { header: 'ID', accessor: 'id', width: '140px' },
-    { header: 'Clinic', accessor: 'clinic' },
-    {
-      header: 'Date & Time',
-      accessor: 'date',
-      render: (_, row) => `${row.date}, ${row.time}`,
-    },
-    {
-      header: 'AI Result',
-      accessor: 'aiResult',
-      render: (value) => {
-        const riskMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> =
-          {
-            low_risk: 'low',
-            medium_risk: 'medium',
-            high_risk: 'high',
-            processing: 'critical',
-          };
-        const labelMap: Record<string, string> = {
-          low_risk: 'Low Risk',
-          medium_risk: 'Medium Risk',
-          high_risk: 'High Risk',
-          processing: 'Processing',
-        };
-
-        return (
-          <RiskBadge
-            risk={riskMap[value as string] || 'low'}
-            label={labelMap[value as string]}
-          />
-        );
-      },
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (value) => {
-        const statusMap: Record<string, 'success' | 'warning' | 'processing'> =
-          {
-            completed: 'success',
-            flagged: 'warning',
-            analyzing: 'processing',
-          };
-        const labelMap: Record<string, string> = {
-          completed: 'Completed',
-          flagged: 'Flagged',
-          analyzing: 'Analyzing',
-        };
-
-        return (
-          <StatusBadge
-            status={statusMap[value as string] || 'info'}
-            label={labelMap[value as string] || String(value)}
-          />
-        );
-      },
-    },
-  ];
+      await downloadXlsxFile(
+        rows,
+        [
+          { header: 'Section', value: (row) => row.section },
+          { header: 'Metric', value: (row) => row.metric },
+          { header: 'Value', value: (row) => row.value },
+        ],
+        buildTimestampedFileName('system-admin-dashboard', 'xlsx'),
+        'Dashboard'
+      );
+      toast.success('Dashboard data exported successfully.');
+    } catch (error) {
+      console.error('Failed to export dashboard data:', error);
+      toast.error('Failed to export dashboard data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -116,17 +160,17 @@ export default function SystemAdminDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Dashboard Overview"
-          description="Real-time insights on screening throughput and platform health"
-          badge={
-            <StatusBadge
-              status={healthQuery.data?.uptime === 100 ? 'success' : 'warning'}
-              label={
-                healthQuery.data?.uptime === 100
-                  ? 'System Healthy'
-                  : 'Attention Needed'
-              }
-            />
+          title="System Admin Dashboard"
+          description="Overview of user growth and real revenue"
+          actions={
+            <button
+              onClick={handleExportDashboard}
+              disabled={isExporting || !metrics}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting...' : 'Export Excel'}
+            </button>
           }
           showNotifications={true}
         />
@@ -137,232 +181,162 @@ export default function SystemAdminDashboard() {
               <div className="flex items-center justify-center py-16">
                 <Spinner size={36} />
               </div>
-            ) : !stats ? (
+            ) : !metrics ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
                 Unable to load live dashboard metrics.
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatsCard
-                    title="Total Screenings Today"
-                    value={stats.totalScreeningsToday.value || 0}
-                    icon={Activity}
-                    change={stats.totalScreeningsToday.change}
-                    trend={stats.totalScreeningsToday.trend}
-                    description={stats.totalScreeningsToday.description}
-                    variant="primary"
-                  />
-                  <StatsCard
-                    title="AI Accuracy Rate"
-                    value={`${stats.aiAccuracyRate.value}%`}
-                    icon={Brain}
-                    change={stats.aiAccuracyRate.change}
-                    trend={stats.aiAccuracyRate.trend}
-                    description={stats.aiAccuracyRate.description}
-                    variant="success"
-                  />
-                  <StatsCard
-                    title="Pending Reviews"
-                    value={stats.pendingReviews.value || 0}
-                    icon={AlertCircle}
-                    change={stats.pendingReviews.change}
-                    trend={stats.pendingReviews.trend}
-                    description={stats.pendingReviews.description}
-                    variant="warning"
-                  />
-                  <StatsCard
-                    title="Critical Risk Cases"
-                    value={stats.criticalRisks.value || 0}
-                    icon={ShieldCheck}
-                    change={stats.criticalRisks.change}
-                    trend={stats.criticalRisks.trend}
-                    description={stats.criticalRisks.description}
-                    variant="danger"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {topCards.map((card) => (
+                    <StatsCard
+                      key={card.title}
+                      title={card.title}
+                      value={card.value.toLocaleString('en-US')}
+                      icon={card.icon}
+                      change={card.change}
+                      trend={card.trend}
+                      description={card.description}
+                      variant={card.variant}
+                    />
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <div className="flex justify-between items-start mb-6">
-                        <div>
-                          <h3 className="text-slate-900 dark:text-white text-base font-bold">
-                            Screening Volume Trends
-                          </h3>
-                          <p className="text-slate-500 dark:text-slate-400 text-sm">
-                            Monthly throughput based on live screening records
-                          </p>
-                        </div>
-                        <StatusBadge status="info" label="Live Data" />
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  <section className="xl:col-span-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-base font-bold mb-1">
+                      Monthly Revenue
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                      Real revenue data for the current year
+                    </p>
+
+                    {metrics.monthlyRevenue.length === 0 ? (
+                      <div className="h-80 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                        No data
                       </div>
+                    ) : (
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={metrics.monthlyRevenue}>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="#cbd5e1"
+                            />
+                            <XAxis dataKey="label" />
+                            <YAxis
+                              tickFormatter={(value) =>
+                                `${Math.round(value / 1_000_000)}M`
+                              }
+                            />
+                            <Tooltip
+                              formatter={(value) =>
+                                formatCurrency(Number(value))
+                              }
+                            />
+                            <Legend />
+                            <Bar
+                              dataKey="value"
+                              name="Revenue"
+                              fill="#0ea5e9"
+                              radius={[6, 6, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </section>
 
-                      <div className="w-full h-48 flex items-end gap-4 justify-between px-4">
-                        {volumeTrends.length > 0 ? (
-                          volumeTrends.map((trend, idx) => {
-                            const maxValue = Math.max(
-                              ...volumeTrends.map((item) => item.screenings)
-                            );
-                            const height =
-                              maxValue === 0
-                                ? 0
-                                : (trend.screenings / maxValue) * 100;
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-base font-bold mb-1">
+                      Payment Method Breakdown
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                      Total amount grouped by payment method
+                    </p>
 
-                            return (
-                              <div
-                                key={`${trend.week}-${idx}`}
-                                className="flex flex-col items-center flex-1 gap-2"
-                              >
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                                  {trend.screenings.toLocaleString()}
-                                </span>
-                                <div
-                                  className="w-full bg-gradient-to-t from-primary to-primary/70 rounded-t-lg transition-all hover:opacity-80 min-h-[20px]"
-                                  style={{ height: `${height}%` }}
+                    {metrics.paymentMethods.length === 0 ? (
+                      <div className="h-80 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                        No data
+                      </div>
+                    ) : (
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={metrics.paymentMethods}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={70}
+                              outerRadius={110}
+                              paddingAngle={2}
+                            >
+                              {metrics.paymentMethods.map((item, index) => (
+                                <Cell
+                                  key={`${item.name}-${index}`}
+                                  fill={
+                                    DONUT_COLORS[index % DONUT_COLORS.length]
+                                  }
                                 />
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center">
-                                  {trend.week}
-                                </span>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="w-full text-center text-slate-500 py-10">
-                            No screening activity yet.
-                          </div>
-                        )}
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) =>
+                                formatCurrency(Number(value))
+                              }
+                            />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                    </div>
-
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                      <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                        <h3 className="text-slate-900 dark:text-white text-base font-bold">
-                          Recent Screenings
-                        </h3>
-                        <StatusBadge status="info" label="Live Feed" />
-                      </div>
-                      <DataTable<RecentScreening>
-                        columns={recentScreeningColumns}
-                        data={recentScreenings}
-                        keyExtractor={(row) => row.id}
-                        isLoading={recentScreeningsQuery.isLoading}
-                        emptyMessage="No recent screenings"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <h3 className="text-slate-900 dark:text-white text-base font-bold mb-4">
-                        Risk Distribution
-                      </h3>
-
-                      <div className="space-y-4">
-                        {riskDistribution.length > 0 ? (
-                          riskDistribution.map((risk) => (
-                            <div key={risk.riskLevel} className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <RiskBadge risk={risk.riskLevel} />
-                                <span className="text-slate-900 dark:text-white font-bold">
-                                  {risk.count.toLocaleString()}
-                                </span>
-                              </div>
-                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                                <div
-                                  className={`h-2 rounded-full transition-all ${
-                                    risk.riskLevel === 'low'
-                                      ? 'bg-green-500'
-                                      : risk.riskLevel === 'medium'
-                                        ? 'bg-amber-500'
-                                        : risk.riskLevel === 'high'
-                                          ? 'bg-orange-500'
-                                          : 'bg-red-500'
-                                  }`}
-                                  style={{ width: `${risk.percentage}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {risk.percentage.toFixed(1)}% of screenings
-                              </p>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-slate-500 text-sm py-4">
-                            No risk distribution available.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <h3 className="text-slate-900 dark:text-white text-base font-bold mb-4">
-                        System Health
-                      </h3>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Uptime
-                          </span>
-                          <span className="text-green-600 dark:text-green-400 font-semibold">
-                            {healthQuery.data?.uptime ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Response Time
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.responseTime ?? 0}ms
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            CPU Usage
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.cpuUsage ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Memory
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.memoryUsage ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Storage
-                          </span>
-                          <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                            {healthQuery.data?.storageUsage ?? 0}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl bg-gradient-to-br from-primary to-teal-600 p-6 shadow-lg text-slate-900">
-                      <h3 className="text-base font-bold mb-2">
-                        Quick Actions
-                      </h3>
-                      <p className="text-sm opacity-80 mb-4">
-                        Operational shortcuts
-                      </p>
-                      <div className="space-y-2">
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          Generate Report
-                        </button>
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          View Audit Logs
-                        </button>
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          Manage Users
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </section>
                 </div>
+
+                <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                  <h3 className="text-slate-900 dark:text-white text-base font-bold mb-1">
+                    Last 7 Days Revenue Trend
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                    Daily revenue movement over the most recent 7 days
+                  </p>
+
+                  {metrics.dailyRevenue.length === 0 ? (
+                    <div className="h-80 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                      No data
+                    </div>
+                  ) : (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={metrics.dailyRevenue}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#cbd5e1"
+                          />
+                          <XAxis dataKey="label" />
+                          <YAxis
+                            tickFormatter={(value) =>
+                              `${Math.round(value / 1_000_000)}M`
+                            }
+                          />
+                          <Tooltip
+                            formatter={(value) => formatCurrency(Number(value))}
+                          />
+                          <Legend />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            name="Revenue"
+                            stroke="#14b8a6"
+                            strokeWidth={3}
+                            dot={{ r: 5 }}
+                            activeDot={{ r: 7 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </section>
               </>
             )}
           </div>

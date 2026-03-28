@@ -8,7 +8,6 @@ import {
   BarChart3,
   Settings,
   Users,
-  Shield,
   Building2,
   FileText,
   LogOut,
@@ -40,7 +39,6 @@ const navItems = [
     path: '/system-admin/verifications',
   },
   { label: 'Patients', icon: Users, path: '/system-admin/patients' },
-  { label: 'AI Performance', icon: Shield, path: '/system-admin/ai-models' },
   { label: 'Permissions', icon: KeyRound, path: '/system-admin/permissions' },
   {
     label: 'Contract Templates',

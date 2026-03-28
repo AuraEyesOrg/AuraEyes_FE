@@ -11,18 +11,18 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import {
   ClipboardList,
   CheckCircle,
   XCircle,
-  ExternalLink,
-  FileText,
-  GraduationCap,
   Clock,
   Search,
   RefreshCw,
   X,
   AlertTriangle,
+  Eye,
+  ZoomIn,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -39,39 +39,24 @@ import AvatarFallback from '@/components/ui/avatar-fallback';
 // ─────────────────────────────────────────────
 const QUERY_KEY = ['admin', 'verification-requests'] as const;
 
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-// ─────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────
+const formatDate = (value: string | undefined) => {
+  if (!value) return 'N/A';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'N/A';
+  return parsed.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
 
-interface DocLinkProps {
-  href?: string;
-  icon: React.ReactNode;
-  label: string;
-}
-const DocLink = ({ href, icon, label }: DocLinkProps) => {
-  if (!href) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-slate-400 italic">
-        {icon}
-        {label} — N/A
-      </span>
-    );
-  }
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors group"
-    >
-      {icon}
-      {label}
-      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-    </a>
-  );
+const isImageUrl = (url: string) =>
+  /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
+
+const getCredentialCounts = (doctor: OphthalmologistListItem) => {
+  const licenseCount = doctor.licenses?.length ?? (doctor.licenseUrl ? 1 : 0);
+  const degreeCount = doctor.degrees?.length ?? (doctor.degreeUrl ? 1 : 0);
+  return { licenseCount, degreeCount };
 };
 
 // ─────────────────────────────────────────────
@@ -247,29 +232,6 @@ function RejectModal({
             </div>
           </div>
 
-          {/* Quick-access docs */}
-          {(doctor.licenseUrl || doctor.degreeUrl) && (
-            <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              <span className="text-xs font-medium text-slate-500 w-full">
-                Tài liệu đính kèm:
-              </span>
-              {doctor.licenseUrl && (
-                <DocLink
-                  href={doctor.licenseUrl}
-                  icon={<FileText className="w-3.5 h-3.5" />}
-                  label="Giấy phép"
-                />
-              )}
-              {doctor.degreeUrl && (
-                <DocLink
-                  href={doctor.degreeUrl}
-                  icon={<GraduationCap className="w-3.5 h-3.5" />}
-                  label="Bằng cấp"
-                />
-              )}
-            </div>
-          )}
-
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Lý do từ chối <span className="text-red-500">*</span>
@@ -325,6 +287,175 @@ function RejectModal({
   );
 }
 
+interface ImagePreviewModalProps {
+  imageUrl: string;
+  onClose: () => void;
+}
+
+function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewModalProps) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/80" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-5xl rounded-xl bg-white dark:bg-slate-900 p-3 shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full bg-black/70 p-2 text-white hover:bg-black"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <img
+          src={imageUrl}
+          alt="Credential preview"
+          className="max-h-[80vh] w-full rounded-lg object-contain"
+        />
+      </div>
+    </div>
+  );
+}
+
+interface VerificationDetailModalProps {
+  doctor: OphthalmologistListItem;
+  onClose: () => void;
+  onZoomImage: (imageUrl: string) => void;
+}
+
+function VerificationDetailModal({
+  doctor,
+  onClose,
+  onZoomImage,
+}: VerificationDetailModalProps) {
+  const licenses = doctor.licenses ?? [];
+  const degrees = doctor.degrees ?? [];
+
+  const renderCredentialCards = (
+    credentials: NonNullable<OphthalmologistListItem['licenses']>,
+    emptyMessage: string
+  ) => {
+    if (!credentials.length) {
+      return (
+        <p className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 p-3 text-sm text-slate-500 dark:text-slate-400">
+          {emptyMessage}
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {credentials.map((credential) => (
+          <article
+            key={credential.id}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/50 p-4"
+          >
+            <h5 className="font-semibold text-slate-900 dark:text-white">
+              {credential.name}
+            </h5>
+            <dl className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex justify-between gap-3">
+                <dt>Cơ quan cấp</dt>
+                <dd className="text-right">
+                  {credential.issuingAuthority || 'N/A'}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Ngày cấp</dt>
+                <dd className="text-right">
+                  {formatDate(credential.issuedDate)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Ngày hết hạn</dt>
+                <dd className="text-right">
+                  {formatDate(credential.expiryDate)}
+                </dd>
+              </div>
+            </dl>
+
+            {credential.certificateUrl && (
+              <div className="mt-3 space-y-2">
+                {isImageUrl(credential.certificateUrl) ? (
+                  <button
+                    type="button"
+                    onClick={() => onZoomImage(credential.certificateUrl!)}
+                    className="group block w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+                  >
+                    <img
+                      src={credential.certificateUrl}
+                      alt={credential.name}
+                      className="h-40 w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+                    />
+                    <div className="flex items-center justify-center gap-1.5 bg-slate-100 py-1.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                      Zoom ảnh
+                    </div>
+                  </button>
+                ) : (
+                  <a
+                    href={credential.certificateUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-primary hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Mở tài liệu
+                  </a>
+                )}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative z-10 w-full max-w-6xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              Verification Details
+            </h3>
+            <p className="text-sm text-slate-500">
+              {doctor.fullName} • {doctor.email}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-6 overflow-y-auto p-6">
+          <section>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              Licenses / Certificates ({licenses.length})
+            </h4>
+            {renderCredentialCards(
+              licenses,
+              'Bác sĩ chưa cung cấp giấy phép hoặc chứng chỉ hợp lệ.'
+            )}
+          </section>
+
+          <section>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              Degrees ({degrees.length})
+            </h4>
+            {renderCredentialCards(
+              degrees,
+              'Bác sĩ chưa cung cấp thông tin bằng cấp.'
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────
@@ -336,6 +467,9 @@ export default function VerificationRequestsPage() {
     useState<OphthalmologistListItem | null>(null);
   const [rejectingDoctor, setRejectingDoctor] =
     useState<OphthalmologistListItem | null>(null);
+  const [detailDoctor, setDetailDoctor] =
+    useState<OphthalmologistListItem | null>(null);
+  const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
 
   // ── Fetch pending list ──────────────────────────────────────────────────
   const { data, isLoading, isFetching } = useQuery({
@@ -362,6 +496,10 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setApprovingDoctor(null);
+      toast.success('Đã phê duyệt hồ sơ bác sĩ thành công.');
+    },
+    onError: () => {
+      toast.error('Phê duyệt thất bại. Vui lòng thử lại.');
     },
   });
 
@@ -371,6 +509,10 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setRejectingDoctor(null);
+      toast.success('Đã từ chối hồ sơ bác sĩ thành công.');
+    },
+    onError: () => {
+      toast.error('Từ chối hồ sơ thất bại. Vui lòng thử lại.');
     },
   });
 
@@ -449,7 +591,7 @@ export default function VerificationRequestsPage() {
                       Bác sĩ
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Tài liệu đính kèm
+                      Credentials Summary
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
                       Thời gian nộp
@@ -525,17 +667,22 @@ export default function VerificationRequestsPage() {
 
                         {/* Documents */}
                         <td className="px-5 py-4">
-                          <div className="flex flex-col gap-1.5">
-                            <DocLink
-                              href={doctor.licenseUrl}
-                              icon={<FileText className="w-3.5 h-3.5" />}
-                              label="Giấy phép"
-                            />
-                            <DocLink
-                              href={doctor.degreeUrl}
-                              icon={<GraduationCap className="w-3.5 h-3.5" />}
-                              label="Bằng cấp"
-                            />
+                          <div className="space-y-1">
+                            {(() => {
+                              const { licenseCount, degreeCount } =
+                                getCredentialCounts(doctor);
+                              return (
+                                <>
+                                  <p className="font-medium text-slate-700 dark:text-slate-200">
+                                    Có {licenseCount} giấy phép, {degreeCount}{' '}
+                                    bằng cấp
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Nhấn "View Details" để xem hồ sơ chi tiết
+                                  </p>
+                                </>
+                              );
+                            })()}
                           </div>
                         </td>
 
@@ -560,7 +707,16 @@ export default function VerificationRequestsPage() {
 
                         {/* Actions */}
                         <td className="px-5 py-4">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            <button
+                              onClick={() => setDetailDoctor(doctor)}
+                              title="View details"
+                              className="group relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Details
+                            </button>
+
                             {/* Approve */}
                             <button
                               onClick={() => setApprovingDoctor(doctor)}
@@ -635,6 +791,21 @@ export default function VerificationRequestsPage() {
           onConfirm={handleRejectConfirm}
           onCancel={() => setRejectingDoctor(null)}
           isLoading={rejectMutation.isPending}
+        />
+      )}
+
+      {detailDoctor && (
+        <VerificationDetailModal
+          doctor={detailDoctor}
+          onClose={() => setDetailDoctor(null)}
+          onZoomImage={(imageUrl) => setZoomedImageUrl(imageUrl)}
+        />
+      )}
+
+      {zoomedImageUrl && (
+        <ImagePreviewModal
+          imageUrl={zoomedImageUrl}
+          onClose={() => setZoomedImageUrl(null)}
         />
       )}
     </div>

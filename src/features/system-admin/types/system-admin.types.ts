@@ -13,10 +13,16 @@ export interface DashboardStat {
 }
 
 export interface DashboardStats {
-  totalScreeningsToday: DashboardStat;
-  aiAccuracyRate: DashboardStat;
-  pendingReviews: DashboardStat;
-  criticalRisks: DashboardStat;
+  totalInflow: DashboardStat;
+  totalOutflow: DashboardStat;
+  netCashflow: DashboardStat;
+  estimatedCommission: DashboardStat;
+  refundOutflow: DashboardStat;
+  paymentMethodBreakdown: Array<{
+    paymentMethod: string;
+    amount: number;
+    percentage: number;
+  }>;
 }
 
 export interface ScreeningVolumeTrend {
@@ -54,6 +60,32 @@ export interface DashboardData {
   recentScreenings: RecentScreening[];
   riskDistribution: RiskDistribution[];
   systemHealth: SystemHealth;
+}
+
+export interface SystemAdminUserGrowthMetric {
+  total: number;
+  currentMonth: number;
+  previousMonth: number;
+  growthPercentage: number;
+}
+
+export interface SystemAdminPaymentMethodPoint {
+  name: string;
+  value: number;
+}
+
+export interface SystemAdminRevenuePoint {
+  label: string;
+  value: number;
+}
+
+export interface SystemAdminDashboardMetrics {
+  doctors: SystemAdminUserGrowthMetric;
+  organisations: SystemAdminUserGrowthMetric;
+  patients: SystemAdminUserGrowthMetric;
+  paymentMethods: SystemAdminPaymentMethodPoint[];
+  monthlyRevenue: SystemAdminRevenuePoint[];
+  dailyRevenue: SystemAdminRevenuePoint[];
 }
 
 // ============ ORGANISATIONS & DEVICES ============

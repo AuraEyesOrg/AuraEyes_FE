@@ -184,6 +184,20 @@
         "successTitle": "Email xác nhận đã được gửi lại!",
         "successDescription": "Vui lòng kiểm tra hộp thư của bạn."
       }
+    },
+    "pendingApproval": {
+      "brandSubtitle": "Sàng lọc sức khỏe võng mạc",
+      "brandDescription": "Hệ thống sàng lọc sức khỏe võng mạc",
+      "statusBadge": "Đang xác minh",
+      "title": "Chào mừng bạn đến với AURA!",
+      "primaryMessage": "Vui lòng đợi admin xác minh thông tin bạn cung cấp.",
+      "secondaryMessage": "Hệ thống đang xem xét các chứng chỉ hành nghề của bạn để đảm bảo tiêu chuẩn y tế và mở tính năng tư vấn.",
+      "processingTime": "24-48 giờ làm việc",
+      "closing": "Cảm ơn bạn đã kiên nhẫn",
+      "infoBox": "Bạn sẽ nhận được email thông báo ngay khi hồ sơ được phê duyệt. Sau đó, hãy đăng nhập lại để bắt đầu nhận ca bệnh và tư vấn.",
+      "goHome": "Quay về trang chủ giới thiệu",
+      "logout": "Đăng xuất",
+      "footer": "© 2026 AURA. All rights reserved."
     }
   },
   "Ophthalmologist": {

@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   Sun,
   Moon,
-  PenSquare,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
@@ -111,15 +110,6 @@ export function NetworkSidebar() {
               <span className="text-sm font-medium">{item.label}</span>
             </NavLink>
           ))}
-
-          {/* New Post Button */}
-          <Link
-            to="/network"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand text-white font-semibold hover:brightness-90 transition-all mt-4"
-          >
-            <PenSquare className="w-5 h-5" />
-            <span className="text-sm">New Post</span>
-          </Link>
 
           {/* Theme Toggle */}
           <button

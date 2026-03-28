@@ -169,9 +169,6 @@ const SystemAdminVerificationRequests = lazy(
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
 );
-const SystemAdminAIModels = lazy(
-  () => import('@/features/system-admin/pages/ai-models')
-);
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
 );
@@ -349,8 +346,19 @@ const Router = () => (
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
         <Route
+          path="/:locale/ophthalmologist/pending-approval"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<PendingApprovalPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/pending-approval"
-          element={<LocalizedPublicRoute element={<PendingApprovalPage />} />}
+          element={
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
+          }
         />
 
         <Route
@@ -785,11 +793,17 @@ const Router = () => (
           }
         />
         <Route
+          path="/ophthalmologist/pending-approval"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <PendingApprovalPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/pending-approval"
           element={
-            <PublicRoute>
-              <PendingApprovalPage />
-            </PublicRoute>
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
 
@@ -1157,14 +1171,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminUsers />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/system-admin/ai-models"
-          element={
-            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
-              <SystemAdminAIModels />
             </PrivateRoute>
           }
         />

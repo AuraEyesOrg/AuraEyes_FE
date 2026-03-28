@@ -10,6 +10,7 @@ import {
   Search,
   Filter,
   Activity,
+  Download,
   Eye,
   Plus,
   Edit,
@@ -20,9 +21,12 @@ import {
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import AuditLogDetailModal from '../components/AuditLogDetailModal';
+import { exportApi } from '../api';
 import { useAuditLogs } from '../hooks/useAuditLogs';
 import useDebounce from '@/hooks/use-debounce';
 import type { AuditLogDto } from '../types/system-admin.types';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 // ============ Action Badge Config ============
 const actionConfig: Record<
@@ -110,6 +114,7 @@ export default function AuditLogsPage() {
 
   // Debounced search — simple approach: send on current value
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Modal state
   const [selectedLog, setSelectedLog] = useState<AuditLogDto | null>(null);
@@ -143,6 +148,55 @@ export default function AuditLogsPage() {
     setPageNumber(1);
   }, [debouncedEntityNameFilter]);
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const logsForExport = await exportApi.getAuditLogs({
+        searchTerm: debouncedSearch || undefined,
+        action: actionFilter || undefined,
+        entityName: debouncedEntityNameFilter || undefined,
+      });
+
+      if (logsForExport.length === 0) {
+        toast.info('No audit logs available for export.');
+        return;
+      }
+
+      await downloadXlsxFile(
+        logsForExport,
+        [
+          { header: 'Timestamp', value: (row: AuditLogDto) => row.createdAt },
+          {
+            header: 'User Name',
+            value: (row: AuditLogDto) => row.userName ?? 'System',
+          },
+          { header: 'User ID', value: (row: AuditLogDto) => row.userId ?? '' },
+          { header: 'Action', value: (row: AuditLogDto) => row.action },
+          {
+            header: 'Entity Name',
+            value: (row: AuditLogDto) => row.entityName,
+          },
+          {
+            header: 'Entity ID',
+            value: (row: AuditLogDto) => row.entityId ?? '',
+          },
+          {
+            header: 'IP Address',
+            value: (row: AuditLogDto) => row.ipAddress ?? '',
+          },
+        ],
+        buildTimestampedFileName('system-admin-audit-logs', 'xlsx'),
+        'Audit Logs'
+      );
+      toast.success(`Exported ${logsForExport.length} audit logs.`);
+    } catch (error) {
+      console.error('Failed to export audit logs:', error);
+      toast.error('Failed to export audit logs. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
       <Sidebar />
@@ -153,6 +207,14 @@ export default function AuditLogsPage() {
           description="Track all system changes — Insert, Update, Delete operations"
           actions={
             <div className="flex items-center gap-3">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                {isExporting ? 'Exporting...' : 'Export Excel'}
+              </button>
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <FileText className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">
