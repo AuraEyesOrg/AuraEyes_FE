@@ -56,6 +56,24 @@ interface Ophthalmologist extends OphthalmologistListItem {
   joinedAt: string;
 }
 
+const calculateCommissionAmount = (
+  actualMonthlySalary: number | null | undefined,
+  commissionRate: number | null | undefined
+): number | null => {
+  if (actualMonthlySalary == null || actualMonthlySalary <= 0) {
+    return null;
+  }
+
+  if (commissionRate == null || commissionRate <= 0) {
+    return null;
+  }
+
+  // Accept both 5 (percent) and 0.05 (fraction) representations.
+  const normalizedRate =
+    commissionRate > 1 ? commissionRate / 100 : commissionRate;
+  return actualMonthlySalary * normalizedRate;
+};
+
 /** Map API item to UI Ophthalmologist model */
 const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
   ...item,
@@ -131,6 +149,7 @@ export default function OphthalmologistsPage() {
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [rejectError, setRejectError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [payingSalary, setPayingSalary] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -217,6 +236,29 @@ export default function OphthalmologistsPage() {
       loadData();
     } catch (error) {
       console.error('Failed to verify doctor:', error);
+    }
+  };
+
+  const handlePaySalary = async (doctor: Ophthalmologist) => {
+    if (doctor.actualMonthlySalary == null || doctor.actualMonthlySalary <= 0) {
+      toast.error('Doctor has no valid actual salary to payout.');
+      return;
+    }
+
+    setPayingSalary(true);
+    try {
+      await ophthalmologistApi.paySalary(
+        doctor.id,
+        doctor.actualMonthlySalary,
+        `Salary payout (${new Date().toISOString().slice(0, 7)})`
+      );
+      toast.success('Salary paid to doctor wallet successfully.');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to pay salary:', error);
+      toast.error('Failed to pay salary. Please try again.');
+    } finally {
+      setPayingSalary(false);
     }
   };
 
@@ -319,9 +361,9 @@ export default function OphthalmologistsPage() {
     }
   };
 
-  const usdCurrencyOptions = {
-    locale: 'en-US',
-    currency: 'USD',
+  const vndCurrencyOptions = {
+    locale: 'vi-VN',
+    currency: 'VND',
     minimumFractionDigits: 0,
   } as const;
 
@@ -411,27 +453,32 @@ export default function OphthalmologistsPage() {
       accessor: 'monthlyEarnings',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-          {formatCurrency(value as number, usdCurrencyOptions)}
+          {formatCurrency(value as number, vndCurrencyOptions)}
         </span>
       ),
     },
     {
       header: 'Deal Terms',
       accessor: 'commissionRate',
-      render: (_, row) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-900 dark:text-white">
-            {row.commissionRate !== undefined
-              ? `${row.commissionRate}%`
-              : 'N/A'}
-          </span>
-          <span className="text-xs text-slate-500">
-            {row.actualMonthlySalary !== undefined
-              ? formatCurrency(row.actualMonthlySalary, usdCurrencyOptions)
-              : 'Salary pending'}
-          </span>
-        </div>
-      ),
+      render: (_, row) => {
+        const commissionAmount = calculateCommissionAmount(
+          row.actualMonthlySalary,
+          row.commissionRate
+        );
+
+        return (
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+              {row.commissionRate != null ? `${row.commissionRate}%` : 'N/A'}
+            </span>
+            <span className="text-xs text-slate-500">
+              {commissionAmount != null
+                ? formatCurrency(commissionAmount, vndCurrencyOptions)
+                : 'Commission pending'}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: 'Rating',
@@ -551,7 +598,7 @@ export default function OphthalmologistsPage() {
               />
               <StatsCard
                 title="Monthly Revenue"
-                value={formatCurrency(totalMonthlyEarnings, usdCurrencyOptions)}
+                value={formatCurrency(totalMonthlyEarnings, vndCurrencyOptions)}
                 icon={DollarSign}
                 change={12}
                 trend="up"
@@ -621,7 +668,7 @@ export default function OphthalmologistsPage() {
                         (sum, o) => sum + o.pendingPayouts,
                         0
                       ),
-                      usdCurrencyOptions
+                      vndCurrencyOptions
                     )}
                   </span>
                 </div>
@@ -984,7 +1031,7 @@ export default function OphthalmologistsPage() {
                   <p className="text-xl font-bold text-emerald-600">
                     {formatCurrency(
                       selectedDoctor.monthlyEarnings,
-                      usdCurrencyOptions
+                      vndCurrencyOptions
                     )}
                   </p>
                 </div>
@@ -1068,7 +1115,7 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
                       {formatCurrency(
                         selectedDoctor.totalEarnings,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
                   </div>
@@ -1077,7 +1124,7 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-emerald-600">
                       {formatCurrency(
                         selectedDoctor.monthlyEarnings,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
                   </div>
@@ -1088,7 +1135,7 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-amber-600">
                       {formatCurrency(
                         selectedDoctor.pendingPayouts,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
                   </div>
@@ -1114,7 +1161,7 @@ export default function OphthalmologistsPage() {
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">Commission</p>
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedDoctor.commissionRate !== undefined
+                      {selectedDoctor.commissionRate != null
                         ? `${selectedDoctor.commissionRate}%`
                         : 'Pending'}
                     </p>
@@ -1127,7 +1174,7 @@ export default function OphthalmologistsPage() {
                       {selectedDoctor.expectedMonthlySalary !== undefined
                         ? formatCurrency(
                             selectedDoctor.expectedMonthlySalary,
-                            usdCurrencyOptions
+                            vndCurrencyOptions
                           )
                         : 'N/A'}
                     </p>
@@ -1135,13 +1182,23 @@ export default function OphthalmologistsPage() {
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">Actual Salary</p>
                     <p className="text-lg font-bold text-emerald-600">
-                      {selectedDoctor.actualMonthlySalary !== undefined
+                      {selectedDoctor.actualMonthlySalary != null
                         ? formatCurrency(
                             selectedDoctor.actualMonthlySalary,
-                            usdCurrencyOptions
+                            vndCurrencyOptions
                           )
                         : 'Pending'}
                     </p>
+                    {selectedDoctor.actualMonthlySalary != null &&
+                      selectedDoctor.actualMonthlySalary > 0 && (
+                        <button
+                          onClick={() => handlePaySalary(selectedDoctor)}
+                          disabled={payingSalary}
+                          className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {payingSalary ? 'Paying...' : 'Pay salary to wallet'}
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>
