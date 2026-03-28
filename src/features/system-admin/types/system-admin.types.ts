@@ -469,6 +469,8 @@ export interface ContractDto {
   userEmail: string;
   aiQuotaLimit: number;
   platformCommissionRate: number;
+  commissionRate?: number | null;
+  actualMonthlySalary?: number | null;
   signedDate?: string;
   scannedDocumentUrl?: string;
   createdAt: string;
@@ -494,6 +496,8 @@ export interface UpdateContractPayload {
 }
 
 export interface SignContractPayload {
+  commissionRate: number;
+  actualMonthlySalary: number;
   signedContent?: string;
   scannedDocumentUrl?: string;
 }
