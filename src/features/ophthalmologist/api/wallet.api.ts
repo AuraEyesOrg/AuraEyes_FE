@@ -11,6 +11,29 @@ export enum TransactionType {
   Bonus = 6,
 }
 
+/** Backend uses JsonStringEnumConverter — API may return numeric or string names. */
+export function parseWalletTransactionType(
+  raw: TransactionType | string | undefined | null
+): TransactionType {
+  if (raw === undefined || raw === null) {
+    return TransactionType.Payment;
+  }
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return raw as TransactionType;
+  }
+  if (typeof raw === 'string') {
+    const byName = TransactionType[raw as keyof typeof TransactionType];
+    if (typeof byName === 'number') {
+      return byName;
+    }
+    const asNum = Number(raw);
+    if (Number.isFinite(asNum)) {
+      return asNum as TransactionType;
+    }
+  }
+  return TransactionType.Payment;
+}
+
 export interface WalletDto {
   id: string;
   userId: string;
@@ -26,7 +49,7 @@ export interface WalletTransactionDto {
   id: string;
   walletId: string;
   amount: number;
-  transactionType: TransactionType;
+  transactionType: TransactionType | string;
   description: string | null;
   createdAt: string;
   referenceId?: string | null;
