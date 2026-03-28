@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   Star,
@@ -41,18 +42,24 @@ import {
 } from '../types/consultation-context';
 import type { Anomaly, RetinalImage } from '../types/type';
 
-const FALLBACK_AVATAR = import.meta.env.VITE_AVATAR_FALLBACK_URL;
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
 
-function getAvatarUrl(doctor: OphthalmologistSearchItem): string {
-  if (doctor.userAvatarUrl) return doctor.userAvatarUrl;
-  const name = doctor.userFullName ?? 'Dr';
-  return `${FALLBACK_AVATAR}${encodeURIComponent(name)}`;
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function formatVnd(value: number | null | undefined): string {
+function formatVnd(value: number | null | undefined): string | null {
   if (value === null || value === undefined || !Number.isFinite(value))
-    return '--';
-  return `${value.toLocaleString('vi-VN')}đ`;
+    return null;
+
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function parseNullableNumber(value: string): number | null {
@@ -65,6 +72,9 @@ function parseNullableNumber(value: string): number | null {
 export default function DoctorsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
   const [searchTerm, setSearchTerm] = useState('');
   const routeState = location.state as
     | {
@@ -249,51 +259,92 @@ export default function DoctorsPage() {
     enabled: !!selectedDoctor?.id,
   });
 
-  const credentialLinks = useMemo(() => {
-    const links: Array<{ label: string; url: string }> = [];
-    const certificateItems = Array.isArray(selectedDoctorDetail?.certificates)
-      ? selectedDoctorDetail.certificates
-      : [];
+  const detailDegrees = useMemo(
+    () =>
+      Array.isArray(selectedDoctorDetail?.degrees)
+        ? selectedDoctorDetail.degrees
+        : [],
+    [selectedDoctorDetail?.degrees]
+  );
 
-    for (const certificate of certificateItems) {
-      if (!certificate.certificateUrl) continue;
-      links.push({
-        label: certificate.name,
-        url: certificate.certificateUrl,
-      });
+  const detailCertificates = useMemo(
+    () =>
+      Array.isArray(selectedDoctorDetail?.certificates)
+        ? selectedDoctorDetail.certificates
+        : [],
+    [selectedDoctorDetail?.certificates]
+  );
+
+  const renderDoctorAvatar = (
+    doctor: Pick<OphthalmologistSearchItem, 'userAvatarUrl' | 'userFullName'>,
+    sizeClass: string,
+    textSizeClass: string
+  ) => {
+    const fullName = (doctor.userFullName ?? '').trim();
+    const avatarUrl = (doctor.userAvatarUrl ?? '').trim();
+    const initials =
+      getInitials(fullName) || t('PatientDoctors.avatar.fallbackInitials');
+
+    if (avatarUrl) {
+      return (
+        <img
+          src={avatarUrl}
+          alt={fullName || t('PatientDoctors.card.unnamed')}
+          className={`${sizeClass} rounded-full object-cover border-4 border-white dark:border-(--bg-primary) shadow-sm bg-(--bg-secondary)`}
+        />
+      );
     }
 
-    if (selectedDoctorDetail?.licenseUrl) {
-      links.push({
-        label: 'License Document',
-        url: selectedDoctorDetail.licenseUrl,
-      });
-    }
+    return (
+      <div
+        aria-label={fullName || t('PatientDoctors.card.unnamed')}
+        className={`${sizeClass} flex items-center justify-center rounded-full bg-brand/10 text-brand font-bold ${textSizeClass} uppercase`}
+      >
+        {initials}
+      </div>
+    );
+  };
 
-    if (selectedDoctorDetail?.degreeUrl) {
-      links.push({
-        label: 'Degree Document',
-        url: selectedDoctorDetail.degreeUrl,
-      });
-    }
+  const getDegreeLabel = (degree: {
+    name?: string | null;
+    title?: string | null;
+    abbreviation?: string | null;
+  }) => {
+    return (
+      degree.abbreviation?.trim() ||
+      degree.name?.trim() ||
+      degree.title?.trim() ||
+      t('PatientDoctors.credentials.defaultDegree')
+    );
+  };
 
-    const seen = new Set<string>();
-    return links.filter((item) => {
-      if (seen.has(item.url)) return false;
-      seen.add(item.url);
-      return true;
-    });
-  }, [selectedDoctorDetail]);
+  const getDegreeUrl = (degree: {
+    degreeUrl?: string | null;
+    url?: string | null;
+  }) => {
+    return degree.degreeUrl?.trim() || degree.url?.trim() || '';
+  };
+
+  const getCertificateLabel = (certificate: {
+    name?: string | null;
+    issuingAuthority?: string | null;
+  }) => {
+    return (
+      certificate.name?.trim() ||
+      certificate.issuingAuthority?.trim() ||
+      t('PatientDoctors.credentials.defaultCertificate')
+    );
+  };
 
   return (
     <div className="min-h-screen bg-(--bg-primary) flex flex-col w-full relative">
       <header className="sticky top-0 z-40 border-b border-(--border-color) bg-(--bg-primary)/95 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-(--text-primary) leading-none">
-            Find Ophthalmologists
+            {t('PatientDoctors.header.title')}
           </h1>
           <p className="text-sm text-(--text-secondary)">
-            Search and select a verified eye specialist for your consultation
+            {t('PatientDoctors.header.subtitle')}
           </p>
         </div>
         <button
@@ -314,7 +365,7 @@ export default function DoctorsPage() {
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-(--text-secondary) hover:text-(--text-primary) bg-(--bg-secondary) hover:bg-[var(--border-color)] rounded-xl transition-all border border-(--border-color) shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Review
+          {t('PatientDoctors.header.backToReview')}
         </button>
       </header>
 
@@ -323,34 +374,34 @@ export default function DoctorsPage() {
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 space-y-4">
             <h2 className="text-3xl md:text-5xl font-black text-brand uppercase tracking-tight">
-              GỌI VIDEO VỚI BÁC SĨ
+              {t('PatientDoctors.hero.title')}
             </h2>
             <ul className="space-y-3 mt-6">
               <li className="flex items-center gap-3 text-(--text-primary) font-medium text-lg">
-                <CheckCircle className="w-6 h-6 text-emerald-500" /> Khám/tư vấn
-                sức khỏe từ xa với bác sĩ chuyên khoa
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                {t('PatientDoctors.hero.feature1')}
               </li>
               <li className="flex items-center gap-3 text-(--text-primary) font-medium text-lg">
-                <CheckCircle className="w-6 h-6 text-emerald-500" /> Được nhắn
-                tin với bác sĩ trước, trong và sau buổi khám
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                {t('PatientDoctors.hero.feature2')}
               </li>
               <li className="flex items-center gap-3 text-(--text-primary) font-medium text-lg">
-                <CheckCircle className="w-6 h-6 text-emerald-500" /> Thanh toán
-                tiện lợi, nhanh chóng
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                {t('PatientDoctors.hero.feature3')}
               </li>
               <li className="flex items-center gap-3 text-(--text-primary) font-medium text-lg">
-                <CheckCircle className="w-6 h-6 text-emerald-500" /> Bảo mật
-                thông tin cuộc gọi an toàn
+                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                {t('PatientDoctors.hero.feature4')}
               </li>
             </ul>
             <div className="mt-8 p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-brand/20 backdrop-blur-sm inline-block shadow-sm">
               <p className="text-sm font-semibold text-(--text-secondary)">
-                Liên hệ chuyên gia để tư vấn thêm:{' '}
+                {t('PatientDoctors.hero.hotlineLabel')}{' '}
                 <a
                   href="tel:19002115"
                   className="text-brand text-xl font-bold ml-1"
                 >
-                  1900 2115 Này chắc cần xem lại
+                  {t('PatientDoctors.hero.hotline')}
                 </a>
               </p>
             </div>
@@ -371,7 +422,7 @@ export default function DoctorsPage() {
               <Search className="absolute left-4 w-6 h-6 text-(--text-muted)" />
               <input
                 type="text"
-                placeholder="Tìm kiếm bác sĩ, chuyên khoa..."
+                placeholder={t('PatientDoctors.search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-14 pr-4 py-4 md:py-3 bg-transparent border-none text-(--text-primary) placeholder-(--text-muted) focus:outline-none text-lg md:text-base font-medium"
@@ -383,7 +434,11 @@ export default function DoctorsPage() {
               onClick={() => setShowFilters(!showFilters)}
               className="w-full md:w-auto px-6 py-4 md:py-3 flex items-center justify-between gap-3 text-(--text-primary) font-semibold hover:bg-(--bg-secondary) rounded-xl transition-colors shrink-0"
             >
-              <span>{showFilters ? 'Ẩn tùy chọn' : 'Tùy chọn hiển thị'}</span>
+              <span>
+                {showFilters
+                  ? t('PatientDoctors.filters.hideOptions')
+                  : t('PatientDoctors.filters.showOptions')}
+              </span>
               <span className="text-xs">▼</span>
             </button>
           </div>
@@ -400,12 +455,10 @@ export default function DoctorsPage() {
               }`}
               onClick={() => {
                 setConsultMode('now');
-                toast.info(
-                  'Bạn đang chọn dịch vụ Khám qua video, để chuyển sang khám bệnh tại CSYT vui lòng chọn chức năng tương ứng!'
-                );
+                toast.info(t('PatientDoctors.consultMode.nowNotice'));
               }}
             >
-              Tư vấn ngay
+              {t('PatientDoctors.consultMode.now')}
             </button>
             <button
               className={`px-8 py-3 rounded-full text-base font-bold transition-all ${
@@ -415,13 +468,13 @@ export default function DoctorsPage() {
               }`}
               onClick={() => setConsultMode('schedule')}
             >
-              Đặt lịch hẹn
+              {t('PatientDoctors.consultMode.schedule')}
             </button>
             <button
               className={`px-8 py-3 rounded-full text-base font-bold transition-all text-(--text-secondary) hover:text-(--text-primary) hover:bg-white/50 dark:hover:bg-black/20`}
               onClick={() => navigate('/patient/clinics')}
             >
-              Cơ sở y tế
+              {t('PatientDoctors.consultMode.clinics')}
             </button>
           </div>
         </div>
@@ -435,7 +488,7 @@ export default function DoctorsPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-(--text-primary)">
-                  Filters
+                  {t('PatientDoctors.filters.title')}
                 </h2>
               </div>
               <button
@@ -449,14 +502,14 @@ export default function DoctorsPage() {
                 }}
                 className="text-sm font-semibold text-(--text-secondary) hover:text-(--text-primary) transition-colors"
               >
-                Clear
+                {t('PatientDoctors.filters.clear')}
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-bold text-(--text-muted) mb-2">
-                  Time From
+                  {t('PatientDoctors.filters.timeFrom')}
                 </label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
@@ -471,7 +524,7 @@ export default function DoctorsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-(--text-muted) mb-2">
-                  Time To
+                  {t('PatientDoctors.filters.timeTo')}
                 </label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
@@ -486,7 +539,7 @@ export default function DoctorsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-(--text-muted) mb-2">
-                  Min Rating
+                  {t('PatientDoctors.filters.minRating')}
                 </label>
                 <select
                   value={minRating ?? ''}
@@ -496,7 +549,7 @@ export default function DoctorsPage() {
                   }}
                   className="w-full px-4 py-3 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-brand/50"
                 >
-                  <option value="">Any</option>
+                  <option value="">{t('PatientDoctors.filters.any')}</option>
                   <option value="4.8">4.8+</option>
                   <option value="4.5">4.5+</option>
                   <option value="4.0">4.0+</option>
@@ -506,13 +559,13 @@ export default function DoctorsPage() {
 
               <div>
                 <label className="block text-xs font-bold text-(--text-muted) mb-2">
-                  Price (VND)
+                  {t('PatientDoctors.filters.price')}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     inputMode="numeric"
-                    placeholder="Min"
+                    placeholder={t('PatientDoctors.filters.min')}
                     value={priceMin ?? ''}
                     onChange={(e) =>
                       setPriceMin(parseNullableNumber(e.target.value))
@@ -523,7 +576,7 @@ export default function DoctorsPage() {
                   <input
                     type="number"
                     inputMode="numeric"
-                    placeholder="Max"
+                    placeholder={t('PatientDoctors.filters.max')}
                     value={priceMax ?? ''}
                     onChange={(e) =>
                       setPriceMax(parseNullableNumber(e.target.value))
@@ -537,8 +590,9 @@ export default function DoctorsPage() {
 
             {timeFilterEnabled && selectedRangeDays > maxPriceRangeDays && (
               <p className="text-sm text-amber-700 mt-2">
-                Thời gian lọc đang quá rộng. Hãy chọn tối đa {maxPriceRangeDays}{' '}
-                ngày.
+                {t('PatientDoctors.filters.maxRangeWarning', {
+                  maxDays: maxPriceRangeDays,
+                })}
               </p>
             )}
 
@@ -547,8 +601,7 @@ export default function DoctorsPage() {
               selectedRangeDays > 0 &&
               selectedRangeDays <= maxPriceRangeDays && (
                 <p className="text-sm text-amber-700 mt-2">
-                  Đang áp dụng bộ lọc theo giá. Nếu danh sách rỗng, thử giảm
-                  khoảng giá hoặc thay đổi thời gian.
+                  {t('PatientDoctors.filters.priceHint')}
                 </p>
               )}
           </div>
@@ -558,7 +611,7 @@ export default function DoctorsPage() {
           <div className="medical-card p-8 mb-6 text-center">
             <Spinner size={32} className="mx-auto mb-3" />
             <p className="text-(--text-secondary)">
-              Loading ophthalmologists...
+              {t('PatientDoctors.loading.doctors')}
             </p>
           </div>
         )}
@@ -566,7 +619,7 @@ export default function DoctorsPage() {
         {slotsLoading && timeFilterEnabled && (
           <div className="text-sm text-(--text-secondary) mb-4 flex items-center gap-2">
             <Spinner size={16} />
-            Loading price availability...
+            {t('PatientDoctors.loading.prices')}
           </div>
         )}
 
@@ -578,8 +631,13 @@ export default function DoctorsPage() {
               doctor.ratingAverage !== null &&
               Number.isFinite(doctor.ratingAverage)
                 ? `${doctor.ratingAverage.toFixed(1)}`
-                : '—';
+                : t('PatientDoctors.common.noData');
             const reviewCount = doctor.ratingCount ?? 0;
+            const doctorName =
+              doctor.userFullName?.trim() || t('PatientDoctors.card.unnamed');
+            const doctorDegrees = Array.isArray(doctor.degrees)
+              ? doctor.degrees
+              : [];
 
             return (
               <div
@@ -589,15 +647,13 @@ export default function DoctorsPage() {
               >
                 {/* Left side: Avatar and Rating */}
                 <div className="w-full sm:w-[180px] p-6 flex flex-col items-center bg-brand/5 dark:bg-brand/10 border-b sm:border-b-0 sm:border-r border-(--border-color) shrink-0">
-                  <img
-                    src={getAvatarUrl(doctor)}
-                    alt={doctor.userFullName ?? 'Doctor'}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-(--bg-primary) shadow-sm bg-(--bg-secondary)"
-                  />
+                  {renderDoctorAvatar(doctor, 'w-24 h-24', 'text-3xl')}
                   <span className="mt-4 px-3 py-1 bg-white dark:bg-(--bg-primary) border border-brand/20 text-brand rounded-full text-[11px] font-bold text-center">
                     {doctor.certificateCount > 0
-                      ? `${doctor.certificateCount} verified credentials`
-                      : 'Verified ophthalmologist'}
+                      ? t('PatientDoctors.card.verifiedCredentials', {
+                          count: doctor.certificateCount,
+                        })
+                      : t('PatientDoctors.card.verifiedOphthalmologist')}
                   </span>
                   <div className="mt-3 flex items-center gap-1.5 p-1.5 px-3 bg-white dark:bg-black/20 rounded-lg shadow-sm">
                     <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
@@ -615,22 +671,33 @@ export default function DoctorsPage() {
                   {/* Name */}
                   <div className="flex flex-col mb-4">
                     <h3 className="text-xl font-bold text-brand group-hover:text-brand/80 transition-colors">
-                      {doctor.userFullName ?? 'Unnamed Ophthalmologist'}
+                      {doctorName}
                     </h3>
+                    {doctorDegrees.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {doctorDegrees.map((degree, index) => {
+                          const label = getDegreeLabel(degree);
+                          return (
+                            <span
+                              key={`${degree.id ?? label}-${index}`}
+                              className="inline-flex items-center rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand"
+                            >
+                              {label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3 flex-1 flex flex-col justify-center">
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <MapPin className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
                       <span className="leading-snug">
-                        Chuyên khoa:{' '}
-                        <span className="font-semibold">
-                          Nhãn khoa tổng quát
-                        </span>
-                        <br />
                         <span className="text-(--text-muted)">
-                          Phòng khám AuraEyes, {doctor.yearsOfExperience} năm
-                          kinh nghiệm
+                          {t('PatientDoctors.card.experience', {
+                            years: doctor.yearsOfExperience,
+                          })}
                         </span>
                       </span>
                     </p>
@@ -638,25 +705,25 @@ export default function DoctorsPage() {
                       <p className="text-sm text-(--text-primary) flex items-start gap-3">
                         <Stethoscope className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
                         <span className="line-clamp-2 leading-relaxed">
-                          Chuyên môn: {doctor.bio}
+                          {t('PatientDoctors.card.bioPrefix')}: {doctor.bio}
                         </span>
                       </p>
                     )}
                     {/* Time / Dates available */}
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <Calendar className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                      <span>Lịch khám: Tùy chọn</span>
+                      <span>{t('PatientDoctors.card.scheduleFlexible')}</span>
                     </p>
                     {/* Price */}
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <Banknote className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        Giá khám:{' '}
+                        {t('PatientDoctors.card.priceLabel')}:{' '}
                         {doctor.minPrice != null && doctor.maxPrice != null
                           ? doctor.minPrice === doctor.maxPrice
                             ? formatVnd(doctor.minPrice)
                             : `${formatVnd(doctor.minPrice)} - ${formatVnd(doctor.maxPrice)}`
-                          : 'Theo lịch đặt'}
+                          : t('PatientDoctors.card.priceBySchedule')}
                       </span>
                     </p>
                   </div>
@@ -672,7 +739,9 @@ export default function DoctorsPage() {
                       }}
                       className="inline-flex items-center justify-center gap-2 px-8 py-2.5 bg-brand hover:bg-brand/90 text-white font-bold rounded-full shadow-md transition-transform transform active:scale-95 z-10 w-full sm:w-auto"
                     >
-                      {consultMode === 'now' ? 'Đặt ngay' : 'Đặt khám ngay'}
+                      {consultMode === 'now'
+                        ? t('PatientDoctors.card.bookNow')
+                        : t('PatientDoctors.card.bookAppointment')}
                     </button>
                   </div>
                 </div>
@@ -684,12 +753,12 @@ export default function DoctorsPage() {
         {!isLoading && filteredDoctors.length === 0 && (
           <div className="medical-card p-12 text-center mt-6">
             <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
-              Chưa có bác sĩ nào
+              {t('PatientDoctors.empty.title')}
             </h3>
             <p className="text-(--text-secondary)">
               {timeFilterEnabled
-                ? 'Try adjusting your time/rating/price filters.'
-                : 'Try adjusting your search term.'}
+                ? t('PatientDoctors.empty.adjustFilters')
+                : t('PatientDoctors.empty.adjustSearch')}
             </p>
           </div>
         )}
@@ -701,11 +770,10 @@ export default function DoctorsPage() {
               <Sparkles className="w-5 h-5 text-brand mt-0.5" />
               <div>
                 <h3 className="font-bold text-(--text-primary)">
-                  Need Help choosing?
+                  {t('PatientDoctors.assistant.title')}
                 </h3>
                 <p className="text-sm text-(--text-secondary) mt-1">
-                  Bạn không chắc chọn bác sĩ nào? Hãy hỏi AURA để được gợi ý
-                  theo tình trạng và thời gian phù hợp.
+                  {t('PatientDoctors.assistant.description')}
                 </p>
               </div>
             </div>
@@ -714,7 +782,7 @@ export default function DoctorsPage() {
               className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-5 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
             >
               <Sparkles className="w-4 h-4" />
-              Ask AURA AI Assistant
+              {t('PatientDoctors.assistant.cta')}
             </button>
           </div>
         </div>
@@ -732,18 +800,17 @@ export default function DoctorsPage() {
             <div className="relative w-full max-w-md bg-(--bg-primary) shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 border-l border-(--border-color)">
               {/* Clean flat header */}
               <div className="flex items-center gap-4 px-5 py-4 border-b border-(--border-color) shrink-0">
-                <img
-                  src={getAvatarUrl(selectedDoctor)}
-                  alt={selectedDoctor.userFullName ?? 'Doctor'}
-                  className="w-12 h-12 rounded-full object-cover border border-(--border-color) shrink-0"
-                />
+                {renderDoctorAvatar(selectedDoctor, 'w-12 h-12', 'text-lg')}
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-semibold text-(--text-primary) truncate">
-                    {selectedDoctor.userFullName ?? 'Unnamed'}
+                    {selectedDoctor.userFullName?.trim() ||
+                      t('PatientDoctors.card.unnamed')}
                   </h2>
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle className="w-3 h-3" />
-                    Verified · {selectedDoctor.yearsOfExperience} yrs exp
+                    {t('PatientDoctors.modal.verifiedExperience', {
+                      years: selectedDoctor.yearsOfExperience,
+                    })}
                   </span>
                 </div>
                 <button
@@ -764,51 +831,131 @@ export default function DoctorsPage() {
                         <Star className="w-4 h-4 fill-amber-500" />
                         {selectedDoctor.ratingAverage
                           ? selectedDoctor.ratingAverage.toFixed(1)
-                          : 'No rating'}
+                          : t('PatientDoctors.modal.noRating')}
                       </span>
                       <span className="text-xs text-(--text-muted) font-medium mt-1">
-                        {selectedDoctor.ratingCount || 0} Reviews
+                        {t('PatientDoctors.modal.reviewCount', {
+                          count: selectedDoctor.ratingCount || 0,
+                        })}
                       </span>
                     </div>
                     <div className="bg-(--bg-secondary) p-3 rounded-xl border border-(--border-color) flex flex-col items-center justify-center text-center">
                       <span className="flex items-center gap-1 text-brand font-bold text-lg">
                         <Award className="w-4 h-4 text-brand" />
-                        {selectedDoctor.certificateCount || 0}
+                        {detailDegrees.length + detailCertificates.length}
                       </span>
                       <span className="text-xs text-(--text-muted) font-medium mt-1">
-                        Certificates
+                        {t('PatientDoctors.modal.totalCredentials')}
                       </span>
                     </div>
                   </div>
 
-                  {/* Links Box */}
-                  {credentialLinks.length > 0 && (
+                  {/* Credentials Box */}
+                  {(detailDegrees.length > 0 ||
+                    detailCertificates.length > 0) && (
                     <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-bold text-(--text-primary)">
-                        Credentials
+                        {t('PatientDoctors.credentials.title')}
                       </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {credentialLinks.map((credential) => (
-                          <a
-                            key={credential.url}
-                            href={credential.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            {credential.label}
-                          </a>
-                        ))}
-                      </div>
+
+                      {detailDegrees.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold text-(--text-secondary)">
+                            {t('PatientDoctors.credentials.degrees')} (
+                            {detailDegrees.length})
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {detailDegrees.map((degree, index) => {
+                              const label = getDegreeLabel(degree);
+                              const url = getDegreeUrl(degree);
+                              const key = `${degree.id ?? label}-${index}`;
+
+                              if (url) {
+                                return (
+                                  <a
+                                    key={key}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    {label}
+                                  </a>
+                                );
+                              }
+
+                              return (
+                                <span
+                                  key={key}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-lg text-xs font-semibold"
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {detailCertificates.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold text-(--text-secondary)">
+                            {t('PatientDoctors.credentials.certificates')} (
+                            {detailCertificates.length})
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {detailCertificates.map((certificate, index) => {
+                              const label = getCertificateLabel(certificate);
+                              const url =
+                                certificate.certificateUrl?.trim() || '';
+                              const key = `${certificate.id ?? label}-${index}`;
+
+                              if (url) {
+                                return (
+                                  <a
+                                    key={key}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    {label}
+                                  </a>
+                                );
+                              }
+
+                              return (
+                                <span
+                                  key={key}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 rounded-lg text-xs font-semibold"
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {detailDegrees.length === 0 &&
+                    detailCertificates.length === 0 && (
+                      <div className="text-center py-6 border border-(--border-color) border-dashed rounded-xl">
+                        <p className="text-xs text-(--text-muted)">
+                          {t('PatientDoctors.credentials.empty')}
+                        </p>
+                      </div>
+                    )}
 
                   {/* Bio block */}
                   {selectedDoctor.bio && (
                     <div className="bg-(--bg-secondary) p-4 rounded-xl border border-(--border-color)">
                       <h3 className="text-sm font-bold text-(--text-primary) mb-2 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-brand" /> About Doctor
+                        <FileText className="w-4 h-4 text-brand" />{' '}
+                        {t('PatientDoctors.modal.aboutDoctor')}
                       </h3>
                       <p className="text-sm text-(--text-secondary) leading-relaxed">
                         {selectedDoctor.bio}
@@ -819,8 +966,8 @@ export default function DoctorsPage() {
                   {/* Feedback block */}
                   <div>
                     <h3 className="text-sm font-bold text-(--text-primary) mb-3 flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-brand" /> Patient
-                      Feedback
+                      <MessageSquare className="w-4 h-4 text-brand" />{' '}
+                      {t('PatientDoctors.modal.patientFeedback')}
                     </h3>
                     {feedbackLoading ? (
                       <div className="py-6 flex justify-center">
@@ -835,7 +982,8 @@ export default function DoctorsPage() {
                           >
                             <div className="flex justify-between items-start mb-1">
                               <span className="text-xs font-bold text-(--text-primary)">
-                                {fb.patientFullName ?? 'Anonymous Patient'}
+                                {fb.patientFullName ??
+                                  t('PatientDoctors.modal.anonymousPatient')}
                               </span>
                               <div className="flex">
                                 {Array.from({ length: 5 }).map((_, i) => (
@@ -847,7 +995,8 @@ export default function DoctorsPage() {
                               </div>
                             </div>
                             <p className="text-xs text-(--text-secondary) break-words whitespace-pre-wrap">
-                              {fb.comment || 'No comment provided.'}
+                              {fb.comment ||
+                                t('PatientDoctors.modal.noCommentProvided')}
                             </p>
                           </div>
                         ))}
@@ -855,7 +1004,7 @@ export default function DoctorsPage() {
                     ) : (
                       <div className="text-center py-6 border border-(--border-color) border-dashed rounded-xl">
                         <p className="text-xs text-(--text-muted)">
-                          There are no reviews yet.
+                          {t('PatientDoctors.modal.noReviewsYet')}
                         </p>
                       </div>
                     )}
@@ -866,7 +1015,7 @@ export default function DoctorsPage() {
                     onClick={() => setBookingMode('select')}
                     className="w-full mt-4 py-3 bg-brand hover:bg-brand/90 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Book Appointment
+                    {t('PatientDoctors.modal.bookAppointment')}
                   </button>
                 </div>
               </div>

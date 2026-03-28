@@ -221,6 +221,14 @@ export interface OphthalmologistSearchItem {
   ratingCount?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
+  degrees?: {
+    id?: string;
+    name?: string | null;
+    title?: string | null;
+    abbreviation?: string | null;
+    degreeUrl?: string | null;
+    url?: string | null;
+  }[];
 }
 
 export interface OphthalmologistDetailItem {
@@ -239,6 +247,14 @@ export interface OphthalmologistDetailItem {
   ratingCount?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
+  degrees?: {
+    id?: string;
+    name?: string | null;
+    title?: string | null;
+    abbreviation?: string | null;
+    degreeUrl?: string | null;
+    url?: string | null;
+  }[];
   certificates?: {
     id: string;
     name: string;
