@@ -195,22 +195,22 @@ const NetworkLayout = lazy(() =>
   )
 );
 const NetworkFeedPage = lazy(
-  () => import('@/features/professional-network/pages/FeedPage')
+  () => import('@/features/professional-network/pages/feed')
 );
 const NetworkDiscoverPage = lazy(
-  () => import('@/features/professional-network/pages/DiscoverPage')
+  () => import('@/features/professional-network/pages/discover')
 );
 const NetworkSavedPage = lazy(
-  () => import('@/features/professional-network/pages/SavedPage')
+  () => import('@/features/professional-network/pages/saved')
 );
 const NetworkPostDetailPage = lazy(
-  () => import('@/features/professional-network/pages/PostDetailPage')
+  () => import('@/features/professional-network/pages/post-detail')
 );
 const NetworkProfilePage = lazy(
-  () => import('@/features/professional-network/pages/ProfilePage')
+  () => import('@/features/professional-network/pages/profile')
 );
 const NetworkOrganisationPage = lazy(
-  () => import('@/features/professional-network/pages/OrganisationPage')
+  () => import('@/features/professional-network/pages/organisation')
 );
 
 /**

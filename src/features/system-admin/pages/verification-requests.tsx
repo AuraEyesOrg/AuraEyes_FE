@@ -430,7 +430,7 @@ function VerificationDetailModal({
           </button>
         </div>
 
-        <div className="space-y-6 overflow-y-auto p-6">
+        <div className="max-h-[85vh] space-y-6 overflow-y-auto p-6">
           <section>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               Licenses / Certificates ({licenses.length})
