@@ -16,6 +16,11 @@ export interface OphthalmologistListItem {
   phone?: string;
   bio?: string;
   yearsOfExperience: number;
+  employmentType: 'FullTime' | 'PartTime';
+  workingHoursPerWeek?: number;
+  expectedMonthlySalary?: number;
+  commissionRate?: number;
+  actualMonthlySalary?: number;
   verificationStatus: 'PendingVerification' | 'Approved' | 'Rejected';
   isVerified: boolean;
   licenseUrl?: string;

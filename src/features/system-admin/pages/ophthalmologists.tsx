@@ -61,7 +61,7 @@ const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
   totalRequests: 0,
   pendingRequests: 0,
   completedRequests: 0,
-  monthlyEarnings: 0,
+  monthlyEarnings: item.actualMonthlySalary ?? 0,
   totalEarnings: 0,
   pendingPayouts: 0,
   averageRating: 0,
@@ -347,6 +347,24 @@ export default function OphthalmologistsPage() {
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
           {formatCurrency(value as number, usdCurrencyOptions)}
         </span>
+      ),
+    },
+    {
+      header: 'Deal Terms',
+      accessor: 'commissionRate',
+      render: (_, row) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {row.commissionRate !== undefined
+              ? `${row.commissionRate}%`
+              : 'N/A'}
+          </span>
+          <span className="text-xs text-slate-500">
+            {row.actualMonthlySalary !== undefined
+              ? formatCurrency(row.actualMonthlySalary, usdCurrencyOptions)
+              : 'Salary pending'}
+          </span>
+        </div>
       ),
     },
     {
@@ -1002,6 +1020,57 @@ export default function OphthalmologistsPage() {
                         selectedDoctor.pendingPayouts,
                         usdCurrencyOptions
                       )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
+                  Contract Deal Terms
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Employment</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.employmentType}
+                    </p>
+                    {selectedDoctor.workingHoursPerWeek !== undefined && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        {selectedDoctor.workingHoursPerWeek}h/week
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Commission</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.commissionRate !== undefined
+                        ? `${selectedDoctor.commissionRate}%`
+                        : 'Pending'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">
+                      Expected Salary
+                    </p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.expectedMonthlySalary !== undefined
+                        ? formatCurrency(
+                            selectedDoctor.expectedMonthlySalary,
+                            usdCurrencyOptions
+                          )
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Actual Salary</p>
+                    <p className="text-lg font-bold text-emerald-600">
+                      {selectedDoctor.actualMonthlySalary !== undefined
+                        ? formatCurrency(
+                            selectedDoctor.actualMonthlySalary,
+                            usdCurrencyOptions
+                          )
+                        : 'Pending'}
                     </p>
                   </div>
                 </div>
