@@ -20,8 +20,8 @@ export interface OrganisationContractDetailDto {
   userEmail: string;
   aiQuotaLimit: number;
   platformCommissionRate: number;
-  commissionRate?: number;
-  actualMonthlySalary?: number;
+  commissionRate?: number | null;
+  actualMonthlySalary?: number | null;
   signedDate?: string;
   scannedDocumentUrl?: string;
   signedContent?: string;

@@ -201,21 +201,13 @@ function ContractDetailDialog({
                 />
                 <InfoRow
                   label="Hoa hồng"
-                  value={`${contract.platformCommissionRate}%`}
-                />
-                <InfoRow
-                  label="Commission deal"
-                  value={
-                    contract.commissionRate !== undefined
-                      ? `${contract.commissionRate}%`
-                      : 'Chưa chốt'
-                  }
+                  value={`${(contract.commissionRate ?? contract.platformCommissionRate).toString()}%`}
                 />
                 <InfoRow
                   label="Lương deal"
                   value={
-                    contract.actualMonthlySalary !== undefined
-                      ? `${contract.actualMonthlySalary.toLocaleString('en-US')} USD`
+                    contract.actualMonthlySalary != null
+                      ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
                       : 'Chưa chốt'
                   }
                 />
@@ -229,7 +221,7 @@ function ContractDetailDialog({
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className="text-sm text-slate-600 dark:text-slate-300">
-                        Commission rate (%)
+                        Hoa hồng (%)
                         <input
                           type="number"
                           min={0}
@@ -241,7 +233,7 @@ function ContractDetailDialog({
                         />
                       </label>
                       <label className="text-sm text-slate-600 dark:text-slate-300">
-                        Actual monthly salary (USD)
+                        Actual monthly salary (VND)
                         <input
                           type="number"
                           min={0}
