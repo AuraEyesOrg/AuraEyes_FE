@@ -109,14 +109,11 @@ const RegisterDoctorPage = () => {
   const certificates = watch('certificates') || [];
 
   useEffect(() => {
-    const currentHours = getValues('workingHoursPerWeek');
-    if (!currentHours) {
-      setValue(
-        'workingHoursPerWeek',
-        selectedEmploymentType === 'PartTime' ? '20' : '40'
-      );
-    }
-  }, [selectedEmploymentType, getValues, setValue]);
+    setValue(
+      'workingHoursPerWeek',
+      selectedEmploymentType === 'PartTime' ? '28' : '48'
+    );
+  }, [selectedEmploymentType, setValue]);
 
   const handleCredentialFileChange = (
     group: 'degrees' | 'certificates',
@@ -545,12 +542,11 @@ const RegisterDoctorPage = () => {
                     type="number"
                     {...register('workingHoursPerWeek', {
                       required: 'Working hours is required',
-                      min: { value: 1, message: 'Minimum is 1 hour/week' },
-                      max: { value: 112, message: 'Maximum is 112 hours/week' },
                     })}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    disabled
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                     placeholder={
-                      selectedEmploymentType === 'PartTime' ? '20' : '40'
+                      selectedEmploymentType === 'PartTime' ? '28' : '48'
                     }
                   />
                 </div>

@@ -20,6 +20,8 @@ export interface ContractDetailDto {
   userEmail: string;
   aiQuotaLimit: number;
   platformCommissionRate: number;
+  commissionRate?: number;
+  actualMonthlySalary?: number;
   signedDate?: string;
   scannedDocumentUrl?: string;
   signedContent?: string;
