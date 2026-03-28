@@ -275,6 +275,20 @@ export default function DoctorsPage() {
     [selectedDoctorDetail?.certificates]
   );
 
+  const modalDegrees =
+    detailDegrees.length > 0
+      ? detailDegrees
+      : Array.isArray(selectedDoctor?.degrees)
+        ? selectedDoctor.degrees
+        : [];
+
+  const modalCertificates =
+    detailCertificates.length > 0
+      ? detailCertificates
+      : Array.isArray(selectedDoctor?.certificates)
+        ? selectedDoctor.certificates
+        : [];
+
   const renderDoctorAvatar = (
     doctor: Pick<OphthalmologistSearchItem, 'userAvatarUrl' | 'userFullName'>,
     sizeClass: string,
@@ -334,6 +348,20 @@ export default function DoctorsPage() {
       certificate.issuingAuthority?.trim() ||
       t('PatientDoctors.credentials.defaultCertificate')
     );
+  };
+
+  const buildExpertiseText = (
+    certificates: Array<{ name?: string | null }>
+  ) => {
+    const names = certificates
+      .map((certificate) => certificate.name?.trim() ?? '')
+      .filter(Boolean);
+
+    if (names.length === 0) {
+      return t('PatientDoctors.card.generalOphthalmology');
+    }
+
+    return names.join(', ');
   };
 
   return (
@@ -638,6 +666,10 @@ export default function DoctorsPage() {
             const doctorDegrees = Array.isArray(doctor.degrees)
               ? doctor.degrees
               : [];
+            const doctorCertificates = Array.isArray(doctor.certificates)
+              ? doctor.certificates
+              : [];
+            const expertiseText = buildExpertiseText(doctorCertificates);
 
             return (
               <div
@@ -669,43 +701,51 @@ export default function DoctorsPage() {
                 {/* Right side: Details */}
                 <div className="flex-1 p-5 sm:p-6 flex flex-col">
                   {/* Name */}
-                  <div className="flex flex-col mb-4">
-                    <h3 className="text-xl font-bold text-brand group-hover:text-brand/80 transition-colors">
-                      {doctorName}
-                    </h3>
-                    {doctorDegrees.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {doctorDegrees.map((degree, index) => {
-                          const label = getDegreeLabel(degree);
-                          return (
-                            <span
-                              key={`${degree.id ?? label}-${index}`}
-                              className="inline-flex items-center rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand"
-                            >
-                              {label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
+                  <div className="mb-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {doctorDegrees.map((degree, index) => {
+                        const label = getDegreeLabel(degree);
+                        return (
+                          <span
+                            key={`${degree.id ?? label}-${index}`}
+                            className="inline-flex items-center rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand"
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
+                      <h3 className="text-xl font-bold text-brand group-hover:text-brand/80 transition-colors">
+                        {doctorName}
+                      </h3>
+                    </div>
                   </div>
 
                   <div className="space-y-3 flex-1 flex flex-col justify-center">
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <MapPin className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                      <span className="leading-snug">
-                        <span className="text-(--text-muted)">
-                          {t('PatientDoctors.card.experience', {
-                            years: doctor.yearsOfExperience,
-                          })}
-                        </span>
+                      <span className="leading-snug text-(--text-muted)">
+                        {t('PatientDoctors.card.experience', {
+                          years: doctor.yearsOfExperience,
+                        })}
+                      </span>
+                    </p>
+                    <p className="text-sm text-(--text-primary) flex items-start gap-3">
+                      <Stethoscope className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
+                      <span className="leading-relaxed">
+                        <span className="font-semibold">
+                          {t('PatientDoctors.card.expertiseLabel')}:
+                        </span>{' '}
+                        {expertiseText}
                       </span>
                     </p>
                     {doctor.bio && (
                       <p className="text-sm text-(--text-primary) flex items-start gap-3">
-                        <Stethoscope className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                        <span className="line-clamp-2 leading-relaxed">
-                          {t('PatientDoctors.card.bioPrefix')}: {doctor.bio}
+                        <FileText className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
+                        <span className="line-clamp-2 text-sm italic text-(--text-muted) leading-relaxed">
+                          <span className="font-semibold not-italic text-(--text-secondary)">
+                            {t('PatientDoctors.card.aboutLabel')}:
+                          </span>{' '}
+                          {doctor.bio}
                         </span>
                       </p>
                     )}
@@ -802,10 +842,25 @@ export default function DoctorsPage() {
               <div className="flex items-center gap-4 px-5 py-4 border-b border-(--border-color) shrink-0">
                 {renderDoctorAvatar(selectedDoctor, 'w-12 h-12', 'text-lg')}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-semibold text-(--text-primary) truncate">
+                  <h2 className="text-base font-semibold text-(--text-primary)">
                     {selectedDoctor.userFullName?.trim() ||
                       t('PatientDoctors.card.unnamed')}
                   </h2>
+                  {modalDegrees.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {modalDegrees.map((degree, index) => {
+                        const label = getDegreeLabel(degree);
+                        return (
+                          <span
+                            key={`${degree.id ?? label}-${index}`}
+                            className="inline-flex items-center rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold text-brand"
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle className="w-3 h-3" />
                     {t('PatientDoctors.modal.verifiedExperience', {
@@ -842,7 +897,7 @@ export default function DoctorsPage() {
                     <div className="bg-(--bg-secondary) p-3 rounded-xl border border-(--border-color) flex flex-col items-center justify-center text-center">
                       <span className="flex items-center gap-1 text-brand font-bold text-lg">
                         <Award className="w-4 h-4 text-brand" />
-                        {detailDegrees.length + detailCertificates.length}
+                        {modalDegrees.length + modalCertificates.length}
                       </span>
                       <span className="text-xs text-(--text-muted) font-medium mt-1">
                         {t('PatientDoctors.modal.totalCredentials')}
@@ -850,22 +905,31 @@ export default function DoctorsPage() {
                     </div>
                   </div>
 
+                  <div className="bg-(--bg-secondary) p-3 rounded-xl border border-(--border-color)">
+                    <p className="text-xs font-semibold text-(--text-secondary)">
+                      {t('PatientDoctors.modal.expertiseLabel')}
+                    </p>
+                    <p className="mt-1 text-sm text-(--text-primary)">
+                      {buildExpertiseText(modalCertificates)}
+                    </p>
+                  </div>
+
                   {/* Credentials Box */}
-                  {(detailDegrees.length > 0 ||
-                    detailCertificates.length > 0) && (
+                  {(modalDegrees.length > 0 ||
+                    modalCertificates.length > 0) && (
                     <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-bold text-(--text-primary)">
                         {t('PatientDoctors.credentials.title')}
                       </h3>
 
-                      {detailDegrees.length > 0 && (
+                      {modalDegrees.length > 0 && (
                         <div className="flex flex-col gap-2">
                           <p className="text-xs font-semibold text-(--text-secondary)">
                             {t('PatientDoctors.credentials.degrees')} (
-                            {detailDegrees.length})
+                            {modalDegrees.length})
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {detailDegrees.map((degree, index) => {
+                            {modalDegrees.map((degree, index) => {
                               const label = getDegreeLabel(degree);
                               const url = getDegreeUrl(degree);
                               const key = `${degree.id ?? label}-${index}`;
@@ -898,14 +962,14 @@ export default function DoctorsPage() {
                         </div>
                       )}
 
-                      {detailCertificates.length > 0 && (
+                      {modalCertificates.length > 0 && (
                         <div className="flex flex-col gap-2">
                           <p className="text-xs font-semibold text-(--text-secondary)">
                             {t('PatientDoctors.credentials.certificates')} (
-                            {detailCertificates.length})
+                            {modalCertificates.length})
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {detailCertificates.map((certificate, index) => {
+                            {modalCertificates.map((certificate, index) => {
                               const label = getCertificateLabel(certificate);
                               const url =
                                 certificate.certificateUrl?.trim() || '';
@@ -941,8 +1005,8 @@ export default function DoctorsPage() {
                     </div>
                   )}
 
-                  {detailDegrees.length === 0 &&
-                    detailCertificates.length === 0 && (
+                  {modalDegrees.length === 0 &&
+                    modalCertificates.length === 0 && (
                       <div className="text-center py-6 border border-(--border-color) border-dashed rounded-xl">
                         <p className="text-xs text-(--text-muted)">
                           {t('PatientDoctors.credentials.empty')}
@@ -957,7 +1021,7 @@ export default function DoctorsPage() {
                         <FileText className="w-4 h-4 text-brand" />{' '}
                         {t('PatientDoctors.modal.aboutDoctor')}
                       </h3>
-                      <p className="text-sm text-(--text-secondary) leading-relaxed">
+                      <p className="text-sm italic text-(--text-muted) leading-relaxed">
                         {selectedDoctor.bio}
                       </p>
                     </div>
