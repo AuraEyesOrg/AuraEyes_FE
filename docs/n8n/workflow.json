@@ -66,6 +66,8 @@
       "position": [2240, 832],
       "id": "8ff299a0-3877-4a7b-bc8d-ec51331456a8",
       "name": "Google Gemini Chat Model1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
       "credentials": {
         "googlePalmApi": {
           "id": "mcIr3wxbreEJ74JM",
@@ -76,7 +78,7 @@
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are a helpful medical appointment assistant for an ophthalmology clinic.\n\nINPUT CONTRACT (from Webhook):\n- message/chatInput/text: the patient's request.\n- sessionId: stable session identifier.\n- metadata: { userId, userEmail, token, screeningId, riskLevel }\n- context.consultationContext: screening context (optional)\n\nGOAL:\nHelp patient find available appointment slots and (when confirmed) book an appointment.\n\nTOOLS (provided by n8n):\n- Get Available Appointments: fetch available time slots between fromDate and toDate (YYYY-MM-DD).\n- Book Appointment: book a selected slotId.\n\nRESPONSE FORMAT (STRICT JSON ONLY, NO markdown):\n{\n  \"reply\": \"...human readable Vietnamese...\",\n  \"intent\": \"BOOK_APPOINTMENT\"|\"CHECK_AVAILABILITY\"|\"CONFIRM_BOOKING\"|\"ASK_CLARIFICATION\"|\"SMALL_TALK\"|\"UNKNOWN\",\n  \"requiresConfirmation\": boolean,\n  \"suggestedSlots\": [ {\"doctorId\":\"\",\"doctorName\":\"\",\"startAt\":\"ISO\",\"endAt\":\"ISO?\",\"price\":number?,\"location\":\"\"?} ],\n  \"action\": {\"type\":\"CONFIRM_BOOKING\"|\"PICK_SLOT\"|\"OPEN_DOCTOR_LIST\"|\"NONE\",\"payload\":{ } },\n  \"traceId\": \"...\"\n}\n\nIMPORTANT:\n- Always confirm booking details before calling Book Appointment.\n- If tool errors/empty:\n  - availability: \"Xin lỗi, hiện tại không tìm thấy lịch hẹn khả dụng. Vui lòng thử lại sau hoặc liên hệ trực tiếp với phòng khám.\"\n  - booking: \"Xin lỗi, không thể đặt lịch hẹn này. Lịch hẹn có thể đã được đặt hoặc không còn khả dụng. Vui lòng chọn thời gian khác hoặc liên hệ phòng khám.\""
+          "systemMessage": "You are a helpful medical appointment assistant for an ophthalmology clinic.\n\nINPUT CONTRACT (from Webhook):\n- message/chatInput/text: the patient's request.\n- sessionId: stable session identifier.\n- metadata: { userId, userEmail, token, screeningId, riskLevel }\n- context.consultationContext: screening context (optional)\n\nGOAL:\nHelp patient find available appointment slots and (when confirmed) reserve + confirm a booking.\n\nCRITICAL FLOW (must follow):\n1) Find slots (Get Available Appointments)\n2) Ask patient to pick ONE slot (or you propose best match)\n3) Reserve that slot (Reserve Slot) to prevent race conditions\n4) Ask explicit consent questions (must collect both):\n   - shareAiResults? (yes/no)\n   - shareRetinalImages? (yes/no)\n   If patient declines, Release Reservation.\n5) Only after patient clearly confirms booking AND provides both consent flags, call Confirm Reservation.\n\nTOOLS (provided by n8n):\n- Get Available Appointments: fetch available time slots between fromDate and toDate (YYYY-MM-DD).\n- Reserve Slot: reserve a selected slotId.\n- Confirm Reservation: confirm reserved slot; may deduct wallet; creates ConsultationSession.\n- Release Reservation: release a reserved slot.\n\nRESPONSE FORMAT (STRICT JSON ONLY, NO markdown):\n{\n  \"reply\": \"...human readable Vietnamese...\",\n  \"intent\": \"BOOK_APPOINTMENT\"|\"CHECK_AVAILABILITY\"|\"CONFIRM_BOOKING\"|\"ASK_CLARIFICATION\"|\"SMALL_TALK\"|\"UNKNOWN\",\n  \"requiresConfirmation\": boolean,\n  \"suggestedSlots\": [ {\"doctorId\":\"\",\"doctorName\":\"\",\"startAt\":\"ISO\",\"endAt\":\"ISO?\",\"price\":number?,\"location\":\"\"?} ],\n  \"action\": {\"type\":\"CONFIRM_BOOKING\"|\"PICK_SLOT\"|\"OPEN_DOCTOR_LIST\"|\"NONE\",\"payload\":{ } },\n  \"traceId\": \"...\"\n}\n\nERROR HANDLING:\n- If availability is empty/error: apologize and propose alternatives.\n- If reserve conflicts: ask to pick different slot.\n- If confirm fails (wallet/expired reservation): explain and propose next steps.\n\nIMPORTANT:\n- Never call Confirm Reservation without both consent flags.\n- Prefer Vietnamese replies."
         }
       },
       "id": "78fec91e-5516-4c74-8b64-b9c3fbe7e400",
@@ -99,31 +101,133 @@
     },
     {
       "parameters": {
-        "toolDescription": "Books an appointment slot for the authenticated patient.\nRequired AI input: slotId (guid of available appointment slot).\nPatientId is resolved on BE from Authorization token.\nReturns booking confirmation or error details.",
+        "toolDescription": "Reserve a slot for the authenticated patient to prevent race conditions.\nRequired AI inputs: slotId (guid). Optional: reservationMinutes (default 5).",
         "method": "POST",
-        "url": "https://api.auraeyes.site/api/appointment-slots/book",
+        "url": "https://api.auraeyes.site/api/appointment-slots/reserve",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$('Normalize FE Contract').first().json.metadata.token}}"
+            }
+          ]
+        },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
               "name": "slotId",
-              "value": "={{ $fromAI('slotId', 'The ID (guid) of the appointment slot to book', 'string') }}"
+              "value": "={{ $fromAI('slotId', 'The ID (guid) of the appointment slot to reserve', 'string') }}"
+            },
+            {
+              "name": "reservationMinutes",
+              "value": "={{ $fromAI('reservationMinutes', 'Reservation duration in minutes (default 5)', 'number') }}"
             }
           ]
         },
         "options": {
           "response": {
             "response": {
+              "fullResponse": true,
               "neverError": true
             }
           }
         }
       },
       "id": "79b08b9c-1a07-4169-b1c5-797ab30051d4",
-      "name": "Book Appointment1",
+      "name": "Reserve Slot",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [2704, 832]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Confirm a reserved slot reservation.\nRequired AI inputs: slotId (guid), shareAiResults (boolean), shareRetinalImages (boolean). Optional: aiScreeningId (guid).",
+        "method": "POST",
+        "url": "https://api.auraeyes.site/api/appointment-slots/confirm",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$('Normalize FE Contract').first().json.metadata.token}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "slotId",
+              "value": "={{ $fromAI('slotId', 'The reserved slot ID (guid) to confirm', 'string') }}"
+            },
+            {
+              "name": "aiScreeningId",
+              "value": "={{ $fromAI('aiScreeningId', 'Optional AI screening ID (guid) to attach', 'string') }}"
+            },
+            {
+              "name": "shareAiResults",
+              "value": "={{ $fromAI('shareAiResults', 'Patient consent to share AI results (true/false)', 'boolean') }}"
+            },
+            {
+              "name": "shareRetinalImages",
+              "value": "={{ $fromAI('shareRetinalImages', 'Patient consent to share retinal images (true/false)', 'boolean') }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c1f0b0a6-9f3b-4c3c-9e64-9f9a3c2011b3",
+      "name": "Confirm Reservation",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [2880, 832]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Release a reserved slot reservation.\nRequired AI input: slotId (guid). Use if patient cancels or declines.",
+        "method": "POST",
+        "url": "https://api.auraeyes.site/api/appointment-slots/release",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$('Normalize FE Contract').first().json.metadata.token}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "slotId",
+              "value": "={{ $fromAI('slotId', 'The reserved slot ID (guid) to release', 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c1d3a6f5-7a51-41df-8d4c-6d1f8f5b22aa",
+      "name": "Release Reservation",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [3056, 832]
     },
     {
       "parameters": {
@@ -209,7 +313,29 @@
         ]
       ]
     },
-    "Book Appointment1": {
+    "Reserve Slot": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Reservation": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Release Reservation": {
       "ai_tool": [
         [
           {
