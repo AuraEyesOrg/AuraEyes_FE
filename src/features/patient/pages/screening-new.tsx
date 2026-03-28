@@ -18,6 +18,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { toast } from 'react-toastify';
+import { aiCoreClient } from '../../../lib/axios';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -45,6 +46,92 @@ const _STEPS: { key: Step; label: string; number: number }[] = [
   { key: 'analysis', label: 'Analysis', number: 2 },
   { key: 'review', label: 'Review', number: 3 },
 ];
+
+interface FundusValidationApiResponse {
+  is_fundus: boolean;
+  confidence: number;
+  quality: 'high' | 'medium' | 'low';
+  reason: string;
+  warnings: string[];
+  metrics: Record<string, number>;
+}
+
+async function analyzeImageQuality(file: File): Promise<{
+  status: ImageStatus;
+  quality?: 'high' | 'medium' | 'low';
+  message?: string;
+}> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const { data } = await aiCoreClient.post<FundusValidationApiResponse>(
+      '/diagnosis/validate-fundus',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 15000,
+      }
+    );
+
+    if (!data.is_fundus) {
+      return {
+        status: 'error',
+        quality: 'low',
+        message:
+          'This does not look like a retinal fundus image. Please upload a valid fundus photo only.',
+      };
+    }
+
+    const warnings = data.warnings ?? [];
+    if (warnings.includes('cropped_edges')) {
+      return {
+        status: 'warning',
+        quality: 'low',
+        message:
+          'Retina appears cropped at the edge. Please recapture with better centering.',
+      };
+    }
+
+    if (warnings.includes('blurry')) {
+      return {
+        status: 'warning',
+        quality: 'low',
+        message: 'Image appears blurry for reliable analysis. Please retake.',
+      };
+    }
+
+    if (warnings.includes('too_dark')) {
+      return {
+        status: 'warning',
+        quality: 'low',
+        message: 'Image is too dark. Please retake with better lighting.',
+      };
+    }
+
+    if (warnings.includes('overexposed')) {
+      return {
+        status: 'warning',
+        quality: 'low',
+        message: 'Image is overexposed. Please reduce brightness and retake.',
+      };
+    }
+
+    return {
+      status: 'ready',
+      quality: data.quality === 'high' ? 'high' : 'medium',
+      message:
+        data.quality === 'high' ? 'High quality image' : 'Acceptable quality',
+    };
+  } catch {
+    return {
+      status: 'error',
+      quality: 'low',
+      message:
+        'Fundus validation service is unavailable. Please try again in a moment.',
+    };
+  }
+}
 
 export default function ScreeningNewPage() {
   const navigate = useNavigate();
@@ -147,71 +234,79 @@ export default function ScreeningNewPage() {
       id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       file,
       preview: URL.createObjectURL(file),
-      status: 'uploading' as ImageStatus,
-      progress: 0,
+      status: 'validating' as ImageStatus,
+      progress: 100,
     }));
 
     setImages((prev) => [...prev, ...newImages]);
 
     newImages.forEach((img) => {
-      simulateUploadAndValidation(img.id);
+      void validateUploadedImage(img.id, img.file);
     });
   };
 
-  const simulateUploadAndValidation = (imageId: string) => {
-    let progress = 0;
-    const uploadInterval = setInterval(() => {
-      progress += Math.random() * 25;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(uploadInterval);
+  const validateUploadedImage = async (imageId: string, file: File) => {
+    // Keep a smooth progress animation for better UX while validating.
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              status: 'uploading',
+              progress: 18,
+              message: 'Processing...',
+            }
+          : img
+      )
+    );
 
-        setImages((prev) =>
-          prev.map((img) =>
-            img.id === imageId
-              ? { ...img, status: 'validating', progress: 100 }
-              : img
-          )
-        );
+    await new Promise((resolve) => setTimeout(resolve, 120));
 
-        // Simulate validation
-        setTimeout(() => {
-          const random = Math.random();
-          let status: ImageStatus;
-          let quality: 'high' | 'medium' | 'low' | undefined;
-          let message: string | undefined;
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              status: 'validating',
+              progress: 30,
+              message: 'Analyzing image quality...',
+            }
+          : img
+      )
+    );
 
-          if (random > 0.7) {
-            status = 'warning';
-            quality = 'low';
-            message =
-              'Image is too blurry for accurate AI analysis. Please retake.';
-          } else if (random > 0.3) {
-            status = 'ready';
-            quality = 'high';
-            message = 'Ready for analysis';
-          } else {
-            status = 'ready';
-            quality = 'medium';
-            message = 'Acceptable quality';
-          }
+    let animatedProgress = 30;
+    const progressTimer = window.setInterval(() => {
+      animatedProgress = Math.min(animatedProgress + 7, 92);
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === imageId ? { ...img, progress: animatedProgress } : img
+        )
+      );
+    }, 70);
 
-          setImages((prev) =>
-            prev.map((img) =>
-              img.id === imageId ? { ...img, status, quality, message } : img
-            )
-          );
-        }, 1500);
-      } else {
-        setImages((prev) =>
-          prev.map((img) =>
-            img.id === imageId
-              ? { ...img, progress: Math.min(progress, 99) }
-              : img
-          )
-        );
-      }
-    }, 150);
+    const startedAt = performance.now();
+    const qualityResult = await analyzeImageQuality(file);
+    const elapsed = performance.now() - startedAt;
+    if (elapsed < 350) {
+      await new Promise((resolve) => setTimeout(resolve, 350 - elapsed));
+    }
+
+    window.clearInterval(progressTimer);
+
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              status: qualityResult.status,
+              quality: qualityResult.quality,
+              message: qualityResult.message,
+              progress: 100,
+            }
+          : img
+      )
+    );
   };
 
   const removeImage = (imageId: string) => {
@@ -226,20 +321,23 @@ export default function ScreeningNewPage() {
   };
 
   const retryImage = (imageId: string) => {
+    const retryTarget = images.find((img) => img.id === imageId);
+    if (!retryTarget) return;
+
     setImages((prev) =>
       prev.map((img) =>
         img.id === imageId
           ? {
               ...img,
-              status: 'uploading',
-              progress: 0,
+              status: 'validating',
+              progress: 100,
               quality: undefined,
               message: undefined,
             }
           : img
       )
     );
-    simulateUploadAndValidation(imageId);
+    void validateUploadedImage(imageId, retryTarget.file);
   };
 
   const readyImages = images.filter((img) => img.status === 'ready');
@@ -286,14 +384,14 @@ export default function ScreeningNewPage() {
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-full border border-amber-500/30">
             <AlertCircle className="w-3 h-3" />
-            Blur Detected
+            Quality Warning
           </span>
         );
       case 'error':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">
             <X className="w-3 h-3" />
-            Failed
+            Not Fundus
           </span>
         );
     }
@@ -544,19 +642,27 @@ export default function ScreeningNewPage() {
                             </div>
                           )}
 
-                          {/* Warning message */}
-                          {img.status === 'warning' && img.message && (
-                            <p className="text-xs text-amber-400 mt-1">
-                              {img.message}
-                            </p>
-                          )}
+                          {/* Warning / Error message */}
+                          {(img.status === 'warning' ||
+                            img.status === 'error') &&
+                            img.message && (
+                              <p
+                                className={`text-xs mt-1 ${
+                                  img.status === 'error'
+                                    ? 'text-red-400'
+                                    : 'text-amber-400'
+                                }`}
+                              >
+                                {img.message}
+                              </p>
+                            )}
                         </div>
 
                         {/* Status Badge */}
                         {getStatusBadge(img)}
 
                         {/* Actions */}
-                        {img.status === 'warning' ? (
+                        {img.status === 'warning' || img.status === 'error' ? (
                           <button
                             onClick={() => retryImage(img.id)}
                             className="p-2 text-[var(--text-muted)] hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
