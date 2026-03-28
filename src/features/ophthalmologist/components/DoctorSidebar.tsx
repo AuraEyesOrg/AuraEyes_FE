@@ -5,6 +5,7 @@ import {
   Users,
   Eye,
   BarChart3,
+  Wallet,
   Calendar,
   CalendarClock,
   LogOut,
@@ -70,6 +71,11 @@ const navItems = [
     labelKey: 'Ophthalmologist.sidebar.contract',
     icon: FileText,
     path: '/ophthalmologist/contract',
+  },
+  {
+    labelKey: 'Ophthalmologist.sidebar.wallet',
+    icon: Wallet,
+    path: '/ophthalmologist/wallet',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.settings',

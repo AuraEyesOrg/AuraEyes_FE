@@ -52,6 +52,34 @@ interface PagedResult<T> {
   hasNext: boolean;
 }
 
+export type WithdrawalRequestStatus =
+  | 'Pending'
+  | 'Processing'
+  | 'Completed'
+  | 'Failed'
+  | 'Cancelled'
+  | 'Refunded';
+
+export interface AdminWithdrawalRequestItem {
+  id: string;
+  userId: string;
+  walletId: string;
+  amount: number;
+  status: WithdrawalRequestStatus;
+  bankName: string;
+  bankAccountNumber: string;
+  accountHolderName: string;
+  contractNumber?: string | null;
+  note?: string | null;
+  adminNote?: string | null;
+  transferReference?: string | null;
+  processedByAdminId?: string | null;
+  processedAt?: string | null;
+  createdAt: string;
+  doctorFullName: string;
+  doctorEmail: string;
+}
+
 export const ophthalmologistApi = {
   /**
    * Fetch ophthalmologists with pagination and filtering
@@ -87,6 +115,62 @@ export const ophthalmologistApi = {
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.VERIFY(id),
       { approve, rejectionReason }
     );
+    return response.data;
+  },
+
+  async paySalary(id: string, amount?: number, note?: string) {
+    const response = await api.post<ApiResponse<string>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.PAY_SALARY(id),
+      { amount, note }
+    );
+    return response.data;
+  },
+
+  async getWithdrawalRequests(
+    pageNumber = 1,
+    pageSize = 20,
+    status?: WithdrawalRequestStatus
+  ) {
+    const response = await api.get<
+      ApiResponse<PagedResult<AdminWithdrawalRequestItem>>
+    >(API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.WITHDRAWAL_REQUESTS, {
+      params: {
+        pageNumber,
+        pageSize,
+        status: status || undefined,
+      },
+    });
+
+    return unwrapApiData<PagedResult<AdminWithdrawalRequestItem>>(
+      response.data
+    );
+  },
+
+  async confirmWithdrawalRequest(
+    requestId: string,
+    payload?: { transferReference?: string; note?: string }
+  ) {
+    const response = await api.post<ApiResponse<string>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.CONFIRM_WITHDRAWAL_REQUEST(
+        requestId
+      ),
+      payload ?? {}
+    );
+
+    return response.data;
+  },
+
+  async rejectWithdrawalRequest(
+    requestId: string,
+    payload?: { reason?: string }
+  ) {
+    const response = await api.post<ApiResponse<string>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.REJECT_WITHDRAWAL_REQUEST(
+        requestId
+      ),
+      payload ?? {}
+    );
+
     return response.data;
   },
 };
