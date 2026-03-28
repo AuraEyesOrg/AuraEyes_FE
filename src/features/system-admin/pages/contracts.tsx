@@ -3,7 +3,7 @@
  * Lists all contracts, allows viewing scanned documents and verifying (signing) contracts.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
@@ -26,6 +26,7 @@ import { formatViDate } from '@/lib/date-utils';
 import type {
   ContractDto,
   ContractStatusValue,
+  SignContractPayload,
 } from '../types/system-admin.types';
 
 const CONTRACTS_QUERY_KEY = 'admin-contracts';
@@ -114,12 +115,35 @@ function ContractDetailDialog({
 }: {
   contractId: string;
   onClose: () => void;
-  onVerify: (id: string) => void;
+  onVerify: (id: string, payload: SignContractPayload) => void;
 }) {
   const { data: contract, isLoading } = useQuery({
     queryKey: [CONTRACTS_QUERY_KEY, contractId],
     queryFn: () => contractsApi.getContractById(contractId),
   });
+
+  const [commissionRate, setCommissionRate] = useState<string>('');
+  const [actualMonthlySalary, setActualMonthlySalary] = useState<string>('');
+
+  useEffect(() => {
+    if (!contract) return;
+
+    const commissionSeed =
+      contract.commissionRate ?? contract.platformCommissionRate ?? 0;
+    setCommissionRate(String(commissionSeed));
+    setActualMonthlySalary(String(contract.actualMonthlySalary ?? ''));
+  }, [contract]);
+
+  const commissionRateValue = Number(commissionRate);
+  const actualMonthlySalaryValue = Number(actualMonthlySalary);
+  const canVerifyWithDeal =
+    Number.isFinite(commissionRateValue) &&
+    Number.isFinite(actualMonthlySalaryValue) &&
+    commissionRate.trim().length > 0 &&
+    actualMonthlySalary.trim().length > 0 &&
+    commissionRateValue >= 0 &&
+    commissionRateValue <= 100 &&
+    actualMonthlySalaryValue >= 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -179,7 +203,65 @@ function ContractDetailDialog({
                   label="Hoa hồng"
                   value={`${contract.platformCommissionRate}%`}
                 />
+                <InfoRow
+                  label="Commission deal"
+                  value={
+                    contract.commissionRate !== undefined
+                      ? `${contract.commissionRate}%`
+                      : 'Chưa chốt'
+                  }
+                />
+                <InfoRow
+                  label="Lương deal"
+                  value={
+                    contract.actualMonthlySalary !== undefined
+                      ? `${contract.actualMonthlySalary.toLocaleString('en-US')} USD`
+                      : 'Chưa chốt'
+                  }
+                />
               </div>
+
+              {contract.status === 'PendingSignature' &&
+                contract.scannedDocumentUrl && (
+                  <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      Deal Terms (Admin xác nhận)
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="text-sm text-slate-600 dark:text-slate-300">
+                        Commission rate (%)
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.01}
+                          value={commissionRate}
+                          onChange={(e) => setCommissionRate(e.target.value)}
+                          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="text-sm text-slate-600 dark:text-slate-300">
+                        Actual monthly salary (USD)
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={actualMonthlySalary}
+                          onChange={(e) =>
+                            setActualMonthlySalary(e.target.value)
+                          }
+                          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                    {!canVerifyWithDeal && (
+                      <p className="text-xs text-red-500">
+                        Nhập Commission rate (0-100) và lương thực tế trước khi
+                        xác nhận hợp đồng.
+                      </p>
+                    )}
+                  </div>
+                )}
 
               {/* Scanned document */}
               {contract.scannedDocumentUrl && (
@@ -250,7 +332,13 @@ function ContractDetailDialog({
                 Đóng
               </button>
               <button
-                onClick={() => onVerify(contractId)}
+                onClick={() =>
+                  onVerify(contractId, {
+                    commissionRate: commissionRateValue,
+                    actualMonthlySalary: actualMonthlySalaryValue,
+                  })
+                }
+                disabled={!canVerifyWithDeal}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
               >
                 <CheckCircle className="w-4 h-4" />
@@ -319,15 +407,21 @@ export default function ContractsPage() {
   const totalPages = data?.totalPages ?? 1;
 
   const signMutation = useMutation({
-    mutationFn: (id: string) => contractsApi.signContract(id, {}),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: SignContractPayload;
+    }) => contractsApi.signContract(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CONTRACTS_QUERY_KEY] });
       setSelectedId(null);
     },
   });
 
-  const handleVerify = (id: string) => {
-    signMutation.mutate(id);
+  const handleVerify = (id: string, payload: SignContractPayload) => {
+    signMutation.mutate({ id, payload });
   };
 
   // Count pending contracts with uploaded documents
@@ -478,13 +572,13 @@ export default function ContractsPage() {
                           {c.status === 'PendingSignature' &&
                             c.scannedDocumentUrl && (
                               <button
-                                onClick={() => handleVerify(c.id)}
+                                onClick={() => setSelectedId(c.id)}
                                 disabled={signMutation.isPending}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                                title="Xác nhận hợp đồng"
+                                title="Nhập deal và xác nhận hợp đồng"
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
-                                Xác nhận
+                                Deal & xác nhận
                               </button>
                             )}
                         </div>
