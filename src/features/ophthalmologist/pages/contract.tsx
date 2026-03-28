@@ -5,7 +5,6 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { formatViDate } from '@/lib/date-utils';
@@ -27,11 +26,6 @@ import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
 import Spinner from '@/components/ui/spinner';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -415,9 +409,6 @@ function UploadSection({
 export default function ContractPage() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const { user, setUser } = useAuthStore();
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -430,16 +421,13 @@ export default function ContractPage() {
     queryFn: contractApi.getMyContract,
   });
 
-  // Sync contractStatus to auth store when admin activates the contract,
-  // then redirect to dashboard so the doctor is no longer gated here.
+  // Sync contractStatus to auth store when admin activates the contract.
+  // Keep doctor on this page so they can still review/download the contract.
   useEffect(() => {
     if (contract?.status === 'Active' && user?.contractStatus !== 'Active') {
       setUser({ ...user!, contractStatus: 'Active' });
-      navigate(withLocalePathname(locale, '/ophthalmologist/dashboard'), {
-        replace: true,
-      });
     }
-  }, [contract?.status, locale, navigate, setUser, user]);
+  }, [contract?.status, setUser, user]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
@@ -597,6 +585,24 @@ export default function ContractPage() {
                       </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatViDate(contract.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Commission</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">
+                        {contract.commissionRate !== undefined
+                          ? `${contract.commissionRate}%`
+                          : 'Pending deal'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">
+                        Actual salary
+                      </span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">
+                        {contract.actualMonthlySalary !== undefined
+                          ? `${contract.actualMonthlySalary.toLocaleString('en-US')} USD`
+                          : 'Pending deal'}
                       </span>
                     </div>
                   </div>
