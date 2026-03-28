@@ -12,9 +12,9 @@ interface TopUpQuotaModalProps {
 }
 
 /**
- * TopUpQuotaModal — Modal to purchase AI screening quota bundles.
+ * TopUpQuotaModal — Modal to purchase AI screening quota credits.
  *
- * Shows bundle info (e.g. "5 lượt — 50.000đ") and confirms purchase.
+ * Shows configured unit price info and confirms purchase.
  * Uses LoadingButton with mutation pending state.
  * Auto-closes on success after brief confirmation message.
  */
@@ -23,15 +23,17 @@ export function TopUpQuotaModal({
   onClose,
   currentQuota,
 }: TopUpQuotaModalProps) {
+  const DEFAULT_UNIT_PRICE = 10000;
   const MAX_QUOTA_AMOUNT = 9999;
   const backdropRef = useRef<HTMLDivElement>(null);
   const buyMutation = useBuyQuota();
   const [successMessage, setSuccessMessage] = useState('');
 
-  const bundleSize = currentQuota.bundleSize ?? 5;
-  const bundlePrice = currentQuota.bundlePrice ?? 50000;
-  const unitPrice = Math.max(1, bundlePrice / Math.max(bundleSize, 1));
-  const defaultQuotaAmount = Math.max(1, bundleSize);
+  const unitPrice =
+    currentQuota.unitPrice && currentQuota.unitPrice > 0
+      ? currentQuota.unitPrice
+      : DEFAULT_UNIT_PRICE;
+  const defaultQuotaAmount = 1;
   const [quotaAmount, setQuotaAmount] = useState(defaultQuotaAmount);
   const [quotaAmountInput, setQuotaAmountInput] = useState(
     defaultQuotaAmount.toString()

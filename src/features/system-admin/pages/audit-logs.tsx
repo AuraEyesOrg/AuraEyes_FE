@@ -25,11 +25,7 @@ import { exportApi } from '../api';
 import { useAuditLogs } from '../hooks/useAuditLogs';
 import useDebounce from '@/hooks/use-debounce';
 import type { AuditLogDto } from '../types/system-admin.types';
-import {
-  buildTimestampedFileName,
-  convertToCsv,
-  downloadCsvFile,
-} from '@/lib/file-export';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 // ============ Action Badge Config ============
@@ -166,19 +162,31 @@ export default function AuditLogsPage() {
         return;
       }
 
-      const csv = convertToCsv(logsForExport, [
-        { header: 'Timestamp', value: (row) => row.createdAt },
-        { header: 'User Name', value: (row) => row.userName ?? 'System' },
-        { header: 'User ID', value: (row) => row.userId ?? '' },
-        { header: 'Action', value: (row) => row.action },
-        { header: 'Entity Name', value: (row) => row.entityName },
-        { header: 'Entity ID', value: (row) => row.entityId ?? '' },
-        { header: 'IP Address', value: (row) => row.ipAddress ?? '' },
-      ]);
-
-      downloadCsvFile(
-        csv,
-        buildTimestampedFileName('system-admin-audit-logs', 'csv')
+      await downloadXlsxFile(
+        logsForExport,
+        [
+          { header: 'Timestamp', value: (row: AuditLogDto) => row.createdAt },
+          {
+            header: 'User Name',
+            value: (row: AuditLogDto) => row.userName ?? 'System',
+          },
+          { header: 'User ID', value: (row: AuditLogDto) => row.userId ?? '' },
+          { header: 'Action', value: (row: AuditLogDto) => row.action },
+          {
+            header: 'Entity Name',
+            value: (row: AuditLogDto) => row.entityName,
+          },
+          {
+            header: 'Entity ID',
+            value: (row: AuditLogDto) => row.entityId ?? '',
+          },
+          {
+            header: 'IP Address',
+            value: (row: AuditLogDto) => row.ipAddress ?? '',
+          },
+        ],
+        buildTimestampedFileName('system-admin-audit-logs', 'xlsx'),
+        'Audit Logs'
       );
       toast.success(`Exported ${logsForExport.length} audit logs.`);
     } catch (error) {
@@ -205,7 +213,7 @@ export default function AuditLogsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export CSV'}
+                {isExporting ? 'Exporting...' : 'Export Excel'}
               </button>
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <FileText className="w-4 h-4 text-primary" />

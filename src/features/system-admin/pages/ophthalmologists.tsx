@@ -35,11 +35,7 @@ import {
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
 import { formatCurrency } from '@/lib/helper';
-import {
-  buildTimestampedFileName,
-  convertToCsv,
-  downloadCsvFile,
-} from '@/lib/file-export';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
@@ -281,38 +277,38 @@ export default function OphthalmologistsPage() {
         return;
       }
 
-      const csv = convertToCsv(mappedDoctors, [
-        { header: 'Ophthalmologist ID', value: (row) => row.id },
-        { header: 'User ID', value: (row) => row.userId },
-        { header: 'Full Name', value: (row) => row.fullName },
-        { header: 'Email', value: (row) => row.email },
-        { header: 'Phone', value: (row) => row.phone ?? '' },
-        {
-          header: 'Verification Status',
-          value: (row) => row.verificationStatus,
-        },
-        {
-          header: 'Is Verified',
-          value: (row) => (row.isVerified ? 'Yes' : 'No'),
-        },
-        {
-          header: 'Active Status',
-          value: (row) => (row.isActive ? 'Active' : 'Inactive'),
-        },
-        {
-          header: 'Years of Experience',
-          value: (row) => row.yearsOfExperience,
-        },
-        {
-          header: 'Organisation',
-          value: (row) => row.organisationName ?? '',
-        },
-        { header: 'Created At', value: (row) => row.createdAt },
-      ]);
-
-      downloadCsvFile(
-        csv,
-        buildTimestampedFileName('system-admin-ophthalmologists', 'csv')
+      await downloadXlsxFile(
+        mappedDoctors,
+        [
+          { header: 'Ophthalmologist ID', value: (row) => row.id },
+          { header: 'User ID', value: (row) => row.userId },
+          { header: 'Full Name', value: (row) => row.fullName },
+          { header: 'Email', value: (row) => row.email },
+          { header: 'Phone', value: (row) => row.phone ?? '' },
+          {
+            header: 'Verification Status',
+            value: (row) => row.verificationStatus,
+          },
+          {
+            header: 'Is Verified',
+            value: (row) => (row.isVerified ? 'Yes' : 'No'),
+          },
+          {
+            header: 'Active Status',
+            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+          },
+          {
+            header: 'Years of Experience',
+            value: (row) => row.yearsOfExperience,
+          },
+          {
+            header: 'Organisation',
+            value: (row) => row.organisationName ?? '',
+          },
+          { header: 'Created At', value: (row) => row.createdAt },
+        ],
+        buildTimestampedFileName('system-admin-ophthalmologists', 'xlsx'),
+        'Ophthalmologists'
       );
       toast.success(`Exported ${mappedDoctors.length} ophthalmologists.`);
     } catch (error) {

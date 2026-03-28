@@ -37,11 +37,7 @@ import type {
 } from '../types/system-admin.types';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { formatCurrency } from '@/lib/helper';
-import {
-  buildTimestampedFileName,
-  convertToCsv,
-  downloadCsvFile,
-} from '@/lib/file-export';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
@@ -197,28 +193,28 @@ export default function OrganisationsPage() {
         return;
       }
 
-      const csv = convertToCsv(organisationsForExport, [
-        { header: 'Organisation ID', value: (row) => row.id },
-        { header: 'Name', value: (row) => row.name },
-        { header: 'Type', value: (row) => row.orgType ?? '' },
-        { header: 'Address', value: (row) => row.address ?? '' },
-        { header: 'Contact Email', value: (row) => row.contactEmail ?? '' },
-        {
-          header: 'License Number',
-          value: (row) => row.licenseNumber ?? '',
-        },
-        { header: 'Device Count', value: (row) => row.deviceCount ?? 0 },
-        { header: 'Users Count', value: (row) => row.usersCount ?? 0 },
-        {
-          header: 'Status',
-          value: (row) => (row.isActive ? 'Active' : 'Inactive'),
-        },
-        { header: 'Created At', value: (row) => row.createdAt },
-      ]);
-
-      downloadCsvFile(
-        csv,
-        buildTimestampedFileName('system-admin-organisations', 'csv')
+      await downloadXlsxFile(
+        organisationsForExport,
+        [
+          { header: 'Organisation ID', value: (row) => row.id },
+          { header: 'Name', value: (row) => row.name },
+          { header: 'Type', value: (row) => row.orgType ?? '' },
+          { header: 'Address', value: (row) => row.address ?? '' },
+          { header: 'Contact Email', value: (row) => row.contactEmail ?? '' },
+          {
+            header: 'License Number',
+            value: (row) => row.licenseNumber ?? '',
+          },
+          { header: 'Device Count', value: (row) => row.deviceCount ?? 0 },
+          { header: 'Users Count', value: (row) => row.usersCount ?? 0 },
+          {
+            header: 'Status',
+            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+          },
+          { header: 'Created At', value: (row) => row.createdAt },
+        ],
+        buildTimestampedFileName('system-admin-organisations', 'xlsx'),
+        'Organisations'
       );
       toast.success(`Exported ${organisationsForExport.length} organisations.`);
     } catch (error) {

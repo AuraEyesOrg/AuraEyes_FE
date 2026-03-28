@@ -23,11 +23,7 @@ import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { exportApi, userApi } from '../api';
 import type { User, UserRole } from '../types/system-admin.types';
-import {
-  buildTimestampedFileName,
-  convertToCsv,
-  downloadCsvFile,
-} from '@/lib/file-export';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 const roleLabels: Record<UserRole, string> = {
@@ -115,27 +111,27 @@ export default function UsersPage() {
         return;
       }
 
-      const csv = convertToCsv(usersForExport, [
-        { header: 'User ID', value: (row) => row.id },
-        { header: 'Name', value: (row) => row.name },
-        { header: 'Email', value: (row) => row.email },
-        { header: 'Role', value: (row) => roleLabels[row.role] ?? row.role },
-        { header: 'Status', value: (row) => row.status },
-        {
-          header: 'Organisation',
-          value: (row) => row.organisationName ?? '',
-        },
-        { header: 'Last Login', value: (row) => row.lastLogin ?? '' },
-        { header: 'Created At', value: (row) => row.createdAt },
-        {
-          header: 'Email Verified',
-          value: (row) => (row.emailVerified ? 'Yes' : 'No'),
-        },
-      ]);
-
-      downloadCsvFile(
-        csv,
-        buildTimestampedFileName('system-admin-users', 'csv')
+      await downloadXlsxFile(
+        usersForExport,
+        [
+          { header: 'User ID', value: (row) => row.id },
+          { header: 'Name', value: (row) => row.name },
+          { header: 'Email', value: (row) => row.email },
+          { header: 'Role', value: (row) => roleLabels[row.role] ?? row.role },
+          { header: 'Status', value: (row) => row.status },
+          {
+            header: 'Organisation',
+            value: (row) => row.organisationName ?? '',
+          },
+          { header: 'Last Login', value: (row) => row.lastLogin ?? '' },
+          { header: 'Created At', value: (row) => row.createdAt },
+          {
+            header: 'Email Verified',
+            value: (row) => (row.emailVerified ? 'Yes' : 'No'),
+          },
+        ],
+        buildTimestampedFileName('system-admin-users', 'xlsx'),
+        'Users'
       );
       toast.success(`Exported ${usersForExport.length} users.`);
     } catch (error) {

@@ -1,32 +1,22 @@
-export interface CsvColumn<T> {
+export interface XlsxColumn<T> {
   header: string;
   value: (row: T) => unknown;
 }
 
 const INVALID_FILE_NAME_CHARS = /[<>:"/\\|?*]+/g;
 
-const escapeCsvValue = (value: unknown): string => {
+const normalizeXlsxCellValue = (value: unknown): string | number | boolean => {
   if (value === null || value === undefined) return '';
-
-  const normalized = String(value)
-    .replace(/\r?\n|\r/g, ' ')
-    .trim();
-  if (/[",]/.test(normalized)) {
-    return `"${normalized.replace(/"/g, '""')}"`;
+  if (typeof value === 'string') {
+    return value.replace(/\r?\n|\r/g, ' ').trim();
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return value;
   }
 
-  return normalized;
-};
-
-export const convertToCsv = <T>(rows: T[], columns: CsvColumn<T>[]): string => {
-  const headerRow = columns
-    .map((column) => escapeCsvValue(column.header))
-    .join(',');
-  const dataRows = rows.map((row) =>
-    columns.map((column) => escapeCsvValue(column.value(row))).join(',')
-  );
-
-  return [headerRow, ...dataRows].join('\n');
+  return String(value)
+    .replace(/\r?\n|\r/g, ' ')
+    .trim();
 };
 
 export const sanitizeFileName = (fileName: string): string => {
@@ -93,6 +83,33 @@ export const downloadTextFile = (
   downloadBlobFile(blob, fileName);
 };
 
-export const downloadCsvFile = (csvContent: string, fileName: string): void => {
-  downloadTextFile(csvContent, fileName, 'text/csv;charset=utf-8');
+export const downloadXlsxFile = async <T>(
+  rows: T[],
+  columns: XlsxColumn<T>[],
+  fileName: string,
+  sheetName = 'Sheet1'
+): Promise<void> => {
+  const XLSX = await import('xlsx');
+
+  const sheetRows = [
+    columns.map((column) => column.header),
+    ...rows.map((row) =>
+      columns.map((column) => normalizeXlsxCellValue(column.value(row)))
+    ),
+  ];
+
+  const worksheet = XLSX.utils.aoa_to_sheet(sheetRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+  const workbookBytes = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array',
+  });
+
+  const blob = new Blob([workbookBytes], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+
+  downloadBlobFile(blob, fileName);
 };

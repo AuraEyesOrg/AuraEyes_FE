@@ -24,11 +24,7 @@ import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { exportApi } from '../api';
 import { patientApi, type PatientListItem } from '../api/patient.api';
-import {
-  buildTimestampedFileName,
-  convertToCsv,
-  downloadCsvFile,
-} from '@/lib/file-export';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 interface Patient extends PatientListItem {
@@ -130,27 +126,27 @@ export default function PatientsPage() {
         return;
       }
 
-      const csv = convertToCsv(patientsForExport, [
-        { header: 'Patient ID', value: (row) => row.id },
-        { header: 'User ID', value: (row) => row.userId },
-        { header: 'Full Name', value: (row) => row.fullName },
-        { header: 'Email', value: (row) => row.email },
-        { header: 'Phone', value: (row) => row.phone ?? '' },
-        {
-          header: 'Status',
-          value: (row) => (row.isActive ? 'Active' : 'Locked'),
-        },
-        {
-          header: 'Email Confirmed',
-          value: (row) => (row.emailConfirmed ? 'Yes' : 'No'),
-        },
-        { header: 'Created At', value: (row) => row.createdAt },
-        { header: 'Last Login', value: (row) => row.lastLoginAt ?? '' },
-      ]);
-
-      downloadCsvFile(
-        csv,
-        buildTimestampedFileName('system-admin-patients', 'csv')
+      await downloadXlsxFile(
+        patientsForExport,
+        [
+          { header: 'Patient ID', value: (row) => row.id },
+          { header: 'User ID', value: (row) => row.userId },
+          { header: 'Full Name', value: (row) => row.fullName },
+          { header: 'Email', value: (row) => row.email },
+          { header: 'Phone', value: (row) => row.phone ?? '' },
+          {
+            header: 'Status',
+            value: (row) => (row.isActive ? 'Active' : 'Locked'),
+          },
+          {
+            header: 'Email Confirmed',
+            value: (row) => (row.emailConfirmed ? 'Yes' : 'No'),
+          },
+          { header: 'Created At', value: (row) => row.createdAt },
+          { header: 'Last Login', value: (row) => row.lastLoginAt ?? '' },
+        ],
+        buildTimestampedFileName('system-admin-patients', 'xlsx'),
+        'Patients'
       );
       toast.success(`Exported ${patientsForExport.length} patients.`);
     } catch (error) {

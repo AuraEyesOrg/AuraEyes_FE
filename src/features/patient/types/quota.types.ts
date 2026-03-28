@@ -3,6 +3,8 @@ export interface QuotaBalance {
   usedAiQuota: number;
   remainingQuota: number;
   quotaSource: 'Free' | 'Purchased' | 'Contract' | 'None';
+  unitPrice: number | null;
+  // Deprecated compatibility fields from older bundle-based pricing.
   bundlePrice: number | null;
   bundleSize: number | null;
 }
