@@ -184,6 +184,20 @@
         "successTitle": "Confirmation email has been resent!",
         "successDescription": "Please check your inbox."
       }
+    },
+    "pendingApproval": {
+      "brandSubtitle": "Retinal Health Screening",
+      "brandDescription": "Retinal Health Screening System",
+      "statusBadge": "Under Verification",
+      "title": "Welcome to AURA!",
+      "primaryMessage": "Please wait for the admin to verify the information you provided.",
+      "secondaryMessage": "The system is reviewing your professional credentials to ensure medical quality standards and unlock consultation features.",
+      "processingTime": "24-48 business hours",
+      "closing": "Thank you for your patience",
+      "infoBox": "You will receive an email notification as soon as your profile is approved. After that, sign in again to start receiving cases and consultations.",
+      "goHome": "Back to the introduction page",
+      "logout": "Log out",
+      "footer": "© 2026 AURA. All rights reserved."
     }
   },
   "Ophthalmologist": {

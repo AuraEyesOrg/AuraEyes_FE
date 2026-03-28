@@ -8,6 +8,17 @@ export interface OphthalmologistDashboardMetrics {
   urgentCases: number;
   completedToday: number;
   openSlotsToday: number;
+  urgentCaseList: OphthalmologistUrgentCase[];
+}
+
+export interface OphthalmologistUrgentCase {
+  consultationSessionId: string;
+  patientId: string;
+  patientName: string;
+  riskLevel: string;
+  confidenceScore: number;
+  appointmentTime: string | null;
+  createdAt: string;
 }
 
 export const getOphthalmologistDashboardMetrics =

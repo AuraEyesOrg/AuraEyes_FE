@@ -3,12 +3,11 @@ export interface QuotaBalance {
   usedAiQuota: number;
   remainingQuota: number;
   quotaSource: 'Free' | 'Purchased' | 'Contract' | 'None';
-  bundlePrice: number | null;
-  bundleSize: number | null;
+  unitPrice: number | null;
 }
 
 export interface BuyQuotaRequest {
-  numberOfBundles: number;
+  quotaAmount: number;
 }
 
 export interface BuyQuotaResponse {

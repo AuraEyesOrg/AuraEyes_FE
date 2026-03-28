@@ -28,6 +28,7 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { exportApi } from '../api';
 import { organisationApi } from '../api/organisation.api';
 import type {
   ApproveOrganisationOnboardingResult,
@@ -36,6 +37,8 @@ import type {
 } from '../types/system-admin.types';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { formatCurrency } from '@/lib/helper';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 type ContractStatus = 'active' | 'pending' | 'expired' | 'suspended';
 type TabType = 'organisations' | 'billing' | 'contracts';
@@ -104,6 +107,7 @@ export default function OrganisationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -173,6 +177,51 @@ export default function OrganisationsPage() {
       );
     } finally {
       setApprovingRequestId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const organisationsForExport = await exportApi.getOrganisations({
+        searchTerm: searchQuery || undefined,
+        orgType: statusFilter === 'all' ? undefined : statusFilter,
+      });
+
+      if (organisationsForExport.length === 0) {
+        toast.info('No organisations available for export.');
+        return;
+      }
+
+      await downloadXlsxFile(
+        organisationsForExport,
+        [
+          { header: 'Organisation ID', value: (row) => row.id },
+          { header: 'Name', value: (row) => row.name },
+          { header: 'Type', value: (row) => row.orgType ?? '' },
+          { header: 'Address', value: (row) => row.address ?? '' },
+          { header: 'Contact Email', value: (row) => row.contactEmail ?? '' },
+          {
+            header: 'License Number',
+            value: (row) => row.licenseNumber ?? '',
+          },
+          { header: 'Device Count', value: (row) => row.deviceCount ?? 0 },
+          { header: 'Users Count', value: (row) => row.usersCount ?? 0 },
+          {
+            header: 'Status',
+            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+          },
+          { header: 'Created At', value: (row) => row.createdAt },
+        ],
+        buildTimestampedFileName('system-admin-organisations', 'xlsx'),
+        'Organisations'
+      );
+      toast.success(`Exported ${organisationsForExport.length} organisations.`);
+    } catch (error) {
+      console.error('Failed to export organisations:', error);
+      toast.error('Failed to export organisations. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -483,9 +532,13 @@ export default function OrganisationsPage() {
           description="Manage organizations, contracts, billing, and AI usage reports"
           actions={
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <Download className="w-4 h-4" />
-                Export Report
+                {isExporting ? 'Exporting...' : 'Export Report'}
               </button>
               <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4" />

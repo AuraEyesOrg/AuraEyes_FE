@@ -8,6 +8,15 @@ import { API_ENDPOINTS } from '@/lib/endpoints';
 import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 
+export interface OphthalmologistCredentialItem {
+  id: string;
+  name: string;
+  issuingAuthority?: string;
+  issuedDate: string;
+  expiryDate?: string;
+  certificateUrl?: string;
+}
+
 export interface OphthalmologistListItem {
   id: string;
   userId: string;
@@ -20,6 +29,8 @@ export interface OphthalmologistListItem {
   isVerified: boolean;
   licenseUrl?: string;
   degreeUrl?: string;
+  licenses?: OphthalmologistCredentialItem[];
+  degrees?: OphthalmologistCredentialItem[];
   rejectionReason?: string;
   organisationName?: string;
   isActive: boolean;

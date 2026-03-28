@@ -4,10 +4,16 @@ import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 
 export interface OrganisationDashboardMetrics {
+  utilizationRatePercent: number;
+  remainingAiQuota: number;
   totalAppointments: number;
-  pendingAppointments: number;
-  availableSlotsToday: number;
-  activeDoctors: number;
+  appointmentStatus: {
+    pending: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+  };
 }
 
 export const getOrganisationDashboardMetrics =
