@@ -86,6 +86,12 @@ export interface SystemAdminDashboardMetrics {
   paymentMethods: SystemAdminPaymentMethodPoint[];
   monthlyRevenue: SystemAdminRevenuePoint[];
   dailyRevenue: SystemAdminRevenuePoint[];
+  /** Sum of completed deposit requests in the current calendar year (VND). */
+  totalDepositRevenueYear: number;
+  /** Platform share from consultations (System wallet) in the current calendar year (VND). */
+  totalPlatformCommissionYear: number;
+  monthlyPlatformCommission: SystemAdminRevenuePoint[];
+  dailyPlatformCommission: SystemAdminRevenuePoint[];
 }
 
 // ============ ORGANISATIONS & DEVICES ============

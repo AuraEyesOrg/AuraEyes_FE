@@ -37,6 +37,10 @@ interface AdminMetricsDto {
   paymentMethodBreakdown: AdminPaymentMethodRevenueDto[];
   monthlyRevenue: AdminRevenuePointDto[];
   dailyRevenue: AdminRevenuePointDto[];
+  totalDepositRevenueYear: number;
+  totalPlatformCommissionYear: number;
+  monthlyPlatformCommission: AdminRevenuePointDto[];
+  dailyPlatformCommission: AdminRevenuePointDto[];
 }
 
 export const dashboardApi = {
@@ -66,6 +70,22 @@ export const dashboardApi = {
           label: item.label,
           value: Number(item.revenue ?? 0),
         })),
+        totalDepositRevenueYear: Number(data.totalDepositRevenueYear ?? 0),
+        totalPlatformCommissionYear: Number(
+          data.totalPlatformCommissionYear ?? 0
+        ),
+        monthlyPlatformCommission: (data.monthlyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
+        dailyPlatformCommission: (data.dailyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
       };
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);

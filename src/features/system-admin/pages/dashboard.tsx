@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Building2, Download, Stethoscope, Users } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  Building2,
+  Download,
+  Landmark,
+  Stethoscope,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -46,6 +53,24 @@ export default function SystemAdminDashboard() {
   const isLoading = metricsQuery.isLoading;
   const [isExporting, setIsExporting] = useState(false);
 
+  const monthlyChartData = useMemo(() => {
+    if (!metrics) return [];
+    return metrics.monthlyRevenue.map((row, i) => ({
+      label: row.label,
+      topUps: row.value,
+      commission: metrics.monthlyPlatformCommission[i]?.value ?? 0,
+    }));
+  }, [metrics]);
+
+  const dailyChartData = useMemo(() => {
+    if (!metrics) return [];
+    return metrics.dailyRevenue.map((row, i) => ({
+      label: row.label,
+      topUps: row.value,
+      commission: metrics.dailyPlatformCommission[i]?.value ?? 0,
+    }));
+  }, [metrics]);
+
   const topCards = metrics
     ? [
         {
@@ -74,6 +99,27 @@ export default function SystemAdminDashboard() {
           description: `This month: ${metrics.patients.currentMonth} | Previous month: ${metrics.patients.previousMonth}`,
           icon: Users,
           variant: 'warning' as const,
+        },
+      ]
+    : [];
+
+  const revenueKpiCards = metrics
+    ? [
+        {
+          title: 'Wallet top-ups (YTD)',
+          value: formatCurrency(metrics.totalDepositRevenueYear),
+          description:
+            'Completed patient deposits (current calendar year, from payment requests)',
+          icon: Wallet,
+          variant: 'primary' as const,
+        },
+        {
+          title: 'Consultation commission (YTD)',
+          value: formatCurrency(metrics.totalPlatformCommissionYear),
+          description:
+            'Platform share from consultations credited to the System wallet',
+          icon: Landmark,
+          variant: 'success' as const,
         },
       ]
     : [];
@@ -118,6 +164,16 @@ export default function SystemAdminDashboard() {
           metric: 'Patients - Growth %',
           value: metrics.patients.growthPercentage,
         },
+        {
+          section: 'Revenue (YTD)',
+          metric: 'Wallet top-ups (calendar year)',
+          value: metrics.totalDepositRevenueYear,
+        },
+        {
+          section: 'Revenue (YTD)',
+          metric: 'Consultation commission (calendar year)',
+          value: metrics.totalPlatformCommissionYear,
+        },
         ...metrics.paymentMethods.map((item) => ({
           section: 'Payment Methods',
           metric: item.name,
@@ -128,8 +184,18 @@ export default function SystemAdminDashboard() {
           metric: item.label,
           value: item.value,
         })),
+        ...metrics.monthlyPlatformCommission.map((item) => ({
+          section: 'Monthly platform commission',
+          metric: item.label,
+          value: item.value,
+        })),
         ...metrics.dailyRevenue.map((item) => ({
           section: 'Daily Revenue',
+          metric: item.label,
+          value: item.value,
+        })),
+        ...metrics.dailyPlatformCommission.map((item) => ({
+          section: 'Daily platform commission',
           metric: item.label,
           value: item.value,
         })),
@@ -161,7 +227,7 @@ export default function SystemAdminDashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
           title="System Admin Dashboard"
-          description="Overview of user growth and real revenue"
+          description="User growth, wallet top-ups, and consultation commission"
           actions={
             <button
               onClick={handleExportDashboard}
@@ -202,23 +268,36 @@ export default function SystemAdminDashboard() {
                   ))}
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {revenueKpiCards.map((card) => (
+                    <StatsCard
+                      key={card.title}
+                      title={card.title}
+                      value={card.value}
+                      icon={card.icon}
+                      description={card.description}
+                      variant={card.variant}
+                    />
+                  ))}
+                </div>
+
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                   <section className="xl:col-span-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                     <h3 className="text-slate-900 dark:text-white text-base font-bold mb-1">
-                      Monthly Revenue
+                      Monthly revenue (current year)
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                      Real revenue data for the current year
+                      Wallet top-ups vs platform commission from consultations
                     </p>
 
-                    {metrics.monthlyRevenue.length === 0 ? (
+                    {monthlyChartData.length === 0 ? (
                       <div className="h-80 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
                         No data
                       </div>
                     ) : (
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={metrics.monthlyRevenue}>
+                          <BarChart data={monthlyChartData}>
                             <CartesianGrid
                               strokeDasharray="3 3"
                               stroke="#cbd5e1"
@@ -236,9 +315,15 @@ export default function SystemAdminDashboard() {
                             />
                             <Legend />
                             <Bar
-                              dataKey="value"
-                              name="Revenue"
+                              dataKey="topUps"
+                              name="Wallet top-ups"
                               fill="#0ea5e9"
+                              radius={[6, 6, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="commission"
+                              name="Consultation commission"
+                              fill="#14b8a6"
                               radius={[6, 6, 0, 0]}
                             />
                           </BarChart>
@@ -295,20 +380,21 @@ export default function SystemAdminDashboard() {
 
                 <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                   <h3 className="text-slate-900 dark:text-white text-base font-bold mb-1">
-                    Last 7 Days Revenue Trend
+                    Last 7 days — top-ups & commission
                   </h3>
                   <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                    Daily revenue movement over the most recent 7 days
+                    Daily wallet deposits vs platform commission from
+                    consultations
                   </p>
 
-                  {metrics.dailyRevenue.length === 0 ? (
+                  {dailyChartData.length === 0 ? (
                     <div className="h-80 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
                       No data
                     </div>
                   ) : (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={metrics.dailyRevenue}>
+                        <LineChart data={dailyChartData}>
                           <CartesianGrid
                             strokeDasharray="3 3"
                             stroke="#cbd5e1"
@@ -325,8 +411,17 @@ export default function SystemAdminDashboard() {
                           <Legend />
                           <Line
                             type="monotone"
-                            dataKey="value"
-                            name="Revenue"
+                            dataKey="topUps"
+                            name="Wallet top-ups"
+                            stroke="#0ea5e9"
+                            strokeWidth={3}
+                            dot={{ r: 5 }}
+                            activeDot={{ r: 7 }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="commission"
+                            name="Consultation commission"
                             stroke="#14b8a6"
                             strokeWidth={3}
                             dot={{ r: 5 }}
