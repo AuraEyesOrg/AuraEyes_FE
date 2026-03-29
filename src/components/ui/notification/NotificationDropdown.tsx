@@ -219,7 +219,7 @@ export default function NotificationDropdown({
           {recentNotifications.length > 0 && (
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <Link
-                to="/notifications"
+                to="/notifications/view-all"
                 className="block text-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 onClick={() => setIsOpen(false)}
               >

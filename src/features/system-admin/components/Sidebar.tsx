@@ -11,7 +11,7 @@ import {
   Building2,
   FileText,
   LogOut,
-  Network,
+  Globe,
   Stethoscope,
   KeyRound,
   ScrollText,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const navItems = [
   { label: 'Dashboard', icon: BarChart3, path: '/system-admin/dashboard' },
@@ -57,12 +58,13 @@ const navItems = [
     path: '/system-admin/contracts',
   },
   { label: 'Audit Logs', icon: FileText, path: '/system-admin/audit-logs' },
-  { label: 'Aura Network', icon: Network, path: '/network' },
+  { label: 'Aura Network', icon: Globe, path: '/network' },
   { label: 'Settings', icon: Settings, path: '/system-admin/settings' },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
 
   const displayName = user?.fullName ?? 'System Admin';
@@ -110,7 +112,11 @@ export default function Sidebar() {
                   <span className={isActive ? 'text-primary' : ''}>
                     <item.icon className="w-5 h-5" />
                   </span>
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <span className="text-sm font-medium">
+                    {item.path === '/network'
+                      ? t('Common.sidebar.auraNetwork', 'Aura Network')
+                      : item.label}
+                  </span>
                 </div>
               )}
             </NavLink>

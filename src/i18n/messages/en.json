@@ -13,7 +13,10 @@
     "bookAppointment": "Book Appointment",
     "findDoctor": "Find a Doctor",
     "learnMore": "Learn More",
-    "language": "Language"
+    "language": "Language",
+    "sidebar": {
+      "auraNetwork": "Aura Network"
+    }
   },
   "Auth": {
     "login": "Login",

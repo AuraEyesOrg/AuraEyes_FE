@@ -13,7 +13,10 @@
     "bookAppointment": "Đặt lịch khám",
     "findDoctor": "Tìm bác sĩ",
     "learnMore": "Tìm hiểu thêm",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "sidebar": {
+      "auraNetwork": "Aura Network"
+    }
   },
   "Auth": {
     "login": "Đăng nhập",

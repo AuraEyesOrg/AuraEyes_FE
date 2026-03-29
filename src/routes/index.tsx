@@ -100,6 +100,9 @@ const HelpFeedbackPage = lazy(
 const NotificationsPage = lazy(
   () => import('@/features/patient/pages/notifications')
 );
+const ViewAllNotificationsPage = lazy(
+  () => import('@/features/notifications/pages/view-all')
+);
 
 // Organisation pages
 const OrganisationDashboard = lazy(
@@ -569,6 +572,22 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/notifications/view-all"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={[
+                'Patient',
+                'SystemAdmin',
+                'Admin',
+                'OrgAdmin',
+                'Organization',
+                'Ophthalmologist',
+              ]}
+              element={<ViewAllNotificationsPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/appointments"
           element={
             <LocalizedPrivateRoute
@@ -915,6 +934,23 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <NotificationsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/notifications/view-all"
+          element={
+            <PrivateRoute
+              allowedRoles={[
+                'Patient',
+                'SystemAdmin',
+                'Admin',
+                'OrgAdmin',
+                'Organization',
+                'Ophthalmologist',
+              ]}
+            >
+              <ViewAllNotificationsPage />
             </PrivateRoute>
           }
         />
