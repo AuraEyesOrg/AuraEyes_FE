@@ -10,6 +10,7 @@ import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 import type {
   NotificationsResponse,
+  NotificationType,
   UnreadCountResponse,
 } from '@/types/notification';
 
@@ -19,6 +20,7 @@ export interface GetNotificationsParams {
   pageNumber?: number;
   pageSize?: number;
   isRead?: boolean;
+  type?: NotificationType | number;
 }
 
 // ============ QUERIES ============

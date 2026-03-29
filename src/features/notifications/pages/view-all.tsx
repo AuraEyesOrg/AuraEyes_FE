@@ -10,6 +10,7 @@ import {
   getNotificationIcon,
   getNotificationColor,
   getNotificationRoute,
+  NotificationType,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
@@ -34,8 +35,19 @@ export default function ViewAllNotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+
+  const typeParam = searchParams.get('type');
+  const parsedType = Number(typeParam);
+  const initialType =
+    typeParam !== null && Number.isInteger(parsedType)
+      ? (parsedType as NotificationType)
+      : null;
+
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get('search') || ''
+  );
+  const [selectedType, setSelectedType] = useState<NotificationType | null>(
+    initialType
   );
   const [currentPage, setCurrentPage] = useState(
     Number(searchParams.get('page')) || 1
@@ -48,6 +60,7 @@ export default function ViewAllNotificationsPage() {
   const { data: notificationsResponse, isLoading } = useNotifications({
     pageNumber: currentPage,
     pageSize,
+    type: selectedType ?? undefined,
   });
 
   const notifications = notificationsResponse?.items ?? [];
@@ -146,6 +159,9 @@ export default function ViewAllNotificationsPage() {
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
+  const typeOptions = Object.values(NotificationType).filter(
+    (value): value is NotificationType => typeof value === 'number'
+  );
 
   const content = (
     <div className="min-h-screen bg-(--bg-primary)">
@@ -185,6 +201,36 @@ export default function ViewAllNotificationsPage() {
                 className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
             </div>
+
+            <select
+              value={selectedType ?? ''}
+              onChange={(event) => {
+                const value = event.target.value;
+                const nextType =
+                  value === '' ? null : (Number(value) as NotificationType);
+
+                setSelectedType(nextType);
+                setCurrentPage(1);
+                setSearchParams((prev) => {
+                  const params = new URLSearchParams(prev);
+                  if (nextType === null) {
+                    params.delete('type');
+                  } else {
+                    params.set('type', String(nextType));
+                  }
+                  params.set('page', '1');
+                  return params;
+                });
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">All types</option>
+              {typeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {getNotificationTypeLabel(type)}
+                </option>
+              ))}
+            </select>
 
             {unreadCount > 0 && (
               <button
