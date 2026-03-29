@@ -246,7 +246,6 @@ declare module 'i18next' {
           noBio: string;
         };
         pageTitle: string;
-        pageSubtitle: string;
         profile: {
           title: string;
           edit: string;

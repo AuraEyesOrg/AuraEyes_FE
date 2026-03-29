@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { screeningApi } from '../api/screening.api';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
@@ -256,6 +258,7 @@ interface LocationState {
   screeningId?: string; // From new screening flow
   images?: RouteStateImage[];
   source?: string;
+  consentAccepted?: boolean;
   rawJsonOutput?: string;
   resultsPersisted?: boolean;
 }
@@ -441,6 +444,14 @@ export default function RetinalAnalysis() {
 
   useEffect(() => {
     const incomingScreeningId = routeState?.screeningId;
+
+    if (
+      routeState?.source === 'new-screening' &&
+      (!incomingScreeningId || !routeState.consentAccepted)
+    ) {
+      navigate('/patient/screening/new', { replace: true });
+      return;
+    }
 
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
@@ -706,6 +717,10 @@ export default function RetinalAnalysis() {
         if (sessionResp.data?.screeningId) {
           ensuredScreeningId = sessionResp.data.screeningId;
           setScreeningId(sessionResp.data.screeningId);
+
+          await agreeScreeningConsent(sessionResp.data.screeningId, {
+            content: UPLOAD_SCREENING_CONSENT_CONTENT,
+          });
         }
       }
 
