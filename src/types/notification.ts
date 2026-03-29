@@ -145,6 +145,7 @@ export interface SignalRNotification {
  */
 export interface NotificationsResponse {
   items: Notification[];
+  unreadCount?: number;
   totalCount: number;
   pageNumber: number;
   pageSize: number;
@@ -156,7 +157,8 @@ export interface NotificationsResponse {
  * Unread count response
  */
 export interface UnreadCountResponse {
-  count: number;
+  count?: number;
+  unreadCount?: number;
 }
 
 /**

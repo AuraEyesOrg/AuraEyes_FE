@@ -31,24 +31,53 @@ type AppRoleLayout =
   | 'organisation'
   | 'system-admin';
 
+type NotificationTypeFilter =
+  | 'all'
+  | 'screening'
+  | 'consultation'
+  | 'message'
+  | 'appointment'
+  | 'wallet'
+  | 'system';
+
+const TYPE_GROUPS: Record<
+  Exclude<NotificationTypeFilter, 'all'>,
+  NotificationType[]
+> = {
+  screening: [NotificationType.AiScreeningCompleted],
+  consultation: [
+    NotificationType.ConsultationAccepted,
+    NotificationType.ConsultationResultProvided,
+    NotificationType.NewConsultationRequest,
+  ],
+  message: [NotificationType.NewPatientMessage],
+  appointment: [
+    NotificationType.NewAppointmentBooked,
+    NotificationType.ScheduleChanged,
+  ],
+  wallet: [
+    NotificationType.WalletDepositSuccess,
+    NotificationType.WalletPaymentProcessed,
+  ],
+  system: [NotificationType.SystemAlert],
+};
+
 export default function ViewAllNotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  const typeParam = searchParams.get('type');
-  const parsedType = Number(typeParam);
-  const initialType =
-    typeParam !== null && Number.isInteger(parsedType)
-      ? (parsedType as NotificationType)
-      : null;
+  const rawTypeFilter = (searchParams.get('type') || 'all').toLowerCase();
+  const initialFilter: NotificationTypeFilter =
+    rawTypeFilter in TYPE_GROUPS || rawTypeFilter === 'all'
+      ? (rawTypeFilter as NotificationTypeFilter)
+      : 'all';
 
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get('search') || ''
   );
-  const [selectedType, setSelectedType] = useState<NotificationType | null>(
-    initialType
-  );
+  const [selectedFilter, setSelectedFilter] =
+    useState<NotificationTypeFilter>(initialFilter);
   const [currentPage, setCurrentPage] = useState(
     Number(searchParams.get('page')) || 1
   );
@@ -60,7 +89,7 @@ export default function ViewAllNotificationsPage() {
   const { data: notificationsResponse, isLoading } = useNotifications({
     pageNumber: currentPage,
     pageSize,
-    type: selectedType ?? undefined,
+    types: selectedFilter === 'all' ? undefined : TYPE_GROUPS[selectedFilter],
   });
 
   const notifications = notificationsResponse?.items ?? [];
@@ -159,9 +188,6 @@ export default function ViewAllNotificationsPage() {
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
-  const typeOptions = Object.values(NotificationType).filter(
-    (value): value is NotificationType => typeof value === 'number'
-  );
 
   const content = (
     <div className="min-h-screen bg-(--bg-primary)">
@@ -203,20 +229,18 @@ export default function ViewAllNotificationsPage() {
             </div>
 
             <select
-              value={selectedType ?? ''}
+              value={selectedFilter}
               onChange={(event) => {
-                const value = event.target.value;
-                const nextType =
-                  value === '' ? null : (Number(value) as NotificationType);
+                const nextFilter = event.target.value as NotificationTypeFilter;
 
-                setSelectedType(nextType);
+                setSelectedFilter(nextFilter);
                 setCurrentPage(1);
                 setSearchParams((prev) => {
                   const params = new URLSearchParams(prev);
-                  if (nextType === null) {
+                  if (nextFilter === 'all') {
                     params.delete('type');
                   } else {
-                    params.set('type', String(nextType));
+                    params.set('type', nextFilter);
                   }
                   params.set('page', '1');
                   return params;
@@ -224,12 +248,13 @@ export default function ViewAllNotificationsPage() {
               }}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All types</option>
-              {typeOptions.map((type) => (
-                <option key={type} value={type}>
-                  {getNotificationTypeLabel(type)}
-                </option>
-              ))}
+              <option value="all">All types</option>
+              <option value="screening">Screening</option>
+              <option value="consultation">Consultation</option>
+              <option value="message">Message</option>
+              <option value="appointment">Appointment</option>
+              <option value="wallet">Wallet</option>
+              <option value="system">System</option>
             </select>
 
             {unreadCount > 0 && (
