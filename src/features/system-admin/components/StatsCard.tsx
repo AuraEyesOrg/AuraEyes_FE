@@ -1,9 +1,10 @@
 /**
  * Reusable Stats Card Component
- * Displays key metrics with trends and status indicators
+ * Displays key metrics with trends and optional sparkline
  */
 
 import { LucideIcon } from 'lucide-react';
+import { Line, LineChart, ResponsiveContainer } from 'recharts';
 
 interface StatsCardProps {
   title: string;
@@ -13,6 +14,11 @@ interface StatsCardProps {
   trend?: 'up' | 'down' | 'stable';
   description?: string;
   variant?: 'primary' | 'success' | 'warning' | 'danger';
+  /** Y values for a tiny trend line (no axes). */
+  sparklineData?: number[];
+  sparklineColor?: string;
+  /** Tighter padding and smaller value text */
+  compact?: boolean;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -23,6 +29,9 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   trend = 'stable',
   description,
   variant = 'primary',
+  sparklineData,
+  sparklineColor = '#0ea5e9',
+  compact = false,
 }) => {
   const getTrendColor = () => {
     switch (trend) {
@@ -59,87 +68,92 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     }
   };
 
+  const sparklineChartData = sparklineData?.map((y, i) => ({ i, y })) ?? [];
+
+  const showSparkline =
+    sparklineChartData.length > 1 &&
+    sparklineChartData.some((d) => d.y !== sparklineChartData[0].y);
+
   return (
     <div
-      className={`rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm ${getBackgroundColor()}`}
+      className={`rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm ${getBackgroundColor()} ${
+        compact ? 'p-3.5' : 'p-6'
+      }`}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <p className="text-slate-600 dark:text-slate-400 text-sm font-semibold uppercase tracking-wider">
-            {title}
-          </p>
-        </div>
+      <div
+        className={`flex items-start justify-between ${compact ? 'mb-2' : 'mb-3'}`}
+      >
+        <p
+          className={`text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider leading-tight ${
+            compact ? 'text-[10px]' : 'text-sm'
+          }`}
+        >
+          {title}
+        </p>
         {Icon && (
-          <Icon className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+          <Icon
+            className={`shrink-0 text-slate-400 dark:text-slate-500 ${
+              compact ? 'w-4 h-4' : 'w-5 h-5'
+            }`}
+          />
         )}
       </div>
 
-      <div className="flex items-baseline gap-2 mb-2">
-        <p className="text-slate-900 dark:text-white text-3xl font-bold">
-          {value}
-        </p>
-        {change !== undefined && (
-          <span
-            className={`flex items-center gap-0.5 text-sm font-semibold ${getTrendColor()}`}
+      <div className="flex items-end justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <p
+              className={`text-slate-900 dark:text-white font-bold tabular-nums ${
+                compact ? 'text-xl' : 'text-3xl'
+              }`}
+            >
+              {value}
+            </p>
+            {change !== undefined && (
+              <span
+                className={`flex items-center gap-0.5 text-xs font-semibold ${getTrendColor()}`}
+              >
+                <span>{getTrendIcon()}</span>
+                <span>{Math.abs(change)}%</span>
+              </span>
+            )}
+          </div>
+          {description && (
+            <p
+              className={`text-slate-500 dark:text-slate-400 mt-1 leading-snug ${
+                compact ? 'text-[11px]' : 'text-sm'
+              }`}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        {showSparkline ? (
+          <div
+            className={`shrink-0 opacity-90 ${
+              compact ? 'w-20 h-9' : 'w-28 h-12'
+            }`}
           >
-            <span>{getTrendIcon()}</span>
-            <span>{Math.abs(change)}%</span>
-          </span>
-        )}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={sparklineChartData}
+                margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+              >
+                <Line
+                  type="monotone"
+                  dataKey="y"
+                  stroke={sparklineColor}
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null}
       </div>
-
-      {description && (
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
-          {description}
-        </p>
-      )}
     </div>
   );
 };
 
 export default StatsCard;
-
-// Legacy interface for backward compatibility
-interface LegacyStatsCardProps {
-  icon: LucideIcon;
-  value: number;
-  goal: number;
-  unit: string;
-  label: string;
-  color: string;
-}
-
-function _LegacyStatsCard({
-  icon: Icon,
-  value,
-  goal,
-  unit: _unit,
-  label,
-  color,
-}: LegacyStatsCardProps) {
-  return (
-    <div className="bg-[#1e3a5f] dark:bg-[#1e3a5f] light:bg-white rounded-xl p-6 border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 hover:border-primary transition-colors">
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${color}20` }}
-        >
-          <Icon size={24} style={{ color }} />
-        </div>
-      </div>
-
-      <div className="mb-1">
-        <span className="text-2xl font-bold text-white dark:text-white light:text-gray-900">
-          {value}
-        </span>
-        <span className="text-gray-400 dark:text-gray-400 light:text-gray-500 text-sm">
-          /{goal}
-        </span>
-      </div>
-
-      <p className="text-gray-400 dark:text-gray-400 light:text-gray-600 text-sm">
-        {label}
-      </p>
-    </div>
-  );
-}

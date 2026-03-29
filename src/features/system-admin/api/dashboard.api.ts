@@ -30,6 +30,33 @@ interface AdminRevenuePointDto {
   revenue: number;
 }
 
+interface AdminPendingActionsDto {
+  pendingOphthalmologistVerifications: number;
+  pendingWithdrawalRequests: number;
+  pendingOrganisationOnboarding: number;
+}
+
+interface AdminSystemStatusDto {
+  liveConsultationSessions: number;
+  apiHealthy: boolean;
+  databaseHealthy: boolean;
+}
+
+interface AdminTopDoctorDto {
+  ophthalmologistId: string;
+  name: string;
+  revenue: number;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+interface AdminTopOrganisationDto {
+  organisationId: string;
+  name: string;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
 interface AdminMetricsDto {
   doctors: AdminUserGrowthMetricDto;
   organisations: AdminUserGrowthMetricDto;
@@ -37,6 +64,17 @@ interface AdminMetricsDto {
   paymentMethodBreakdown: AdminPaymentMethodRevenueDto[];
   monthlyRevenue: AdminRevenuePointDto[];
   dailyRevenue: AdminRevenuePointDto[];
+  totalDepositRevenueYear: number;
+  totalPlatformCommissionYear: number;
+  monthlyPlatformCommission: AdminRevenuePointDto[];
+  dailyPlatformCommission: AdminRevenuePointDto[];
+  monthlyNewDoctorCounts: number[];
+  monthlyNewOrganisationCounts: number[];
+  monthlyNewPatientCounts: number[];
+  pendingActions: AdminPendingActionsDto;
+  systemStatus: AdminSystemStatusDto;
+  topDoctorsByConsultationRevenue: AdminTopDoctorDto[];
+  topOrganisationsByRating: AdminTopOrganisationDto[];
 }
 
 export const dashboardApi = {
@@ -66,6 +104,56 @@ export const dashboardApi = {
           label: item.label,
           value: Number(item.revenue ?? 0),
         })),
+        totalDepositRevenueYear: Number(data.totalDepositRevenueYear ?? 0),
+        totalPlatformCommissionYear: Number(
+          data.totalPlatformCommissionYear ?? 0
+        ),
+        monthlyPlatformCommission: (data.monthlyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
+        dailyPlatformCommission: (data.dailyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
+        monthlyNewDoctorCounts: data.monthlyNewDoctorCounts ?? [],
+        monthlyNewOrganisationCounts: data.monthlyNewOrganisationCounts ?? [],
+        monthlyNewPatientCounts: data.monthlyNewPatientCounts ?? [],
+        pendingActions: {
+          pendingOphthalmologistVerifications:
+            data.pendingActions?.pendingOphthalmologistVerifications ?? 0,
+          pendingWithdrawalRequests:
+            data.pendingActions?.pendingWithdrawalRequests ?? 0,
+          pendingOrganisationOnboarding:
+            data.pendingActions?.pendingOrganisationOnboarding ?? 0,
+        },
+        systemStatus: {
+          liveConsultationSessions:
+            data.systemStatus?.liveConsultationSessions ?? 0,
+          apiHealthy: data.systemStatus?.apiHealthy ?? true,
+          databaseHealthy: data.systemStatus?.databaseHealthy ?? false,
+        },
+        topDoctorsByConsultationRevenue: (
+          data.topDoctorsByConsultationRevenue ?? []
+        ).map((d) => ({
+          ophthalmologistId: d.ophthalmologistId,
+          name: d.name,
+          revenue: Number(d.revenue ?? 0),
+          ratingAverage: Number(d.ratingAverage ?? 0),
+          ratingCount: d.ratingCount ?? 0,
+        })),
+        topOrganisationsByRating: (data.topOrganisationsByRating ?? []).map(
+          (o) => ({
+            organisationId: o.organisationId,
+            name: o.name,
+            ratingAverage: Number(o.ratingAverage ?? 0),
+            ratingCount: o.ratingCount ?? 0,
+          })
+        ),
       };
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);

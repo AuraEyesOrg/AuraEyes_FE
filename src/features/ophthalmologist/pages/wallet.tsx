@@ -19,6 +19,7 @@ import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import {
   TransactionType,
+  parseWalletTransactionType,
   type WalletTransactionDto,
   type WithdrawalRequestDto,
 } from '../api/wallet.api';
@@ -54,12 +55,26 @@ const getTransactionLabel = (type: TransactionType): string => {
   }
 };
 
+const getBookingConsultationSubLabel = (
+  transaction: WalletTransactionDto
+): string | null => {
+  if (transaction.referenceType !== 'Booking') {
+    return null;
+  }
+  const t = parseWalletTransactionType(transaction.transactionType);
+  if (t === TransactionType.Deposit || t === TransactionType.Transfer) {
+    return 'Thu nhập tư vấn';
+  }
+  return null;
+};
+
 const isCreditTransaction = (transaction: WalletTransactionDto): boolean => {
+  const t = parseWalletTransactionType(transaction.transactionType);
   return (
-    transaction.transactionType === TransactionType.Deposit ||
-    transaction.transactionType === TransactionType.Refund ||
-    transaction.transactionType === TransactionType.Transfer ||
-    transaction.transactionType === TransactionType.Bonus
+    t === TransactionType.Deposit ||
+    t === TransactionType.Refund ||
+    t === TransactionType.Transfer ||
+    t === TransactionType.Bonus
   );
 };
 
@@ -98,11 +113,13 @@ export default function OphthalmologistWalletPage() {
 
   const consultationEarnings = useMemo(() => {
     return transactions
-      .filter(
-        (item) =>
-          item.referenceType === 'Booking' &&
-          item.transactionType === TransactionType.Transfer
-      )
+      .filter((item) => {
+        if (item.referenceType !== 'Booking') {
+          return false;
+        }
+        const t = parseWalletTransactionType(item.transactionType);
+        return t === TransactionType.Transfer || t === TransactionType.Deposit;
+      })
       .reduce((sum, item) => sum + item.amount, 0);
   }, [transactions]);
 
@@ -295,7 +312,10 @@ export default function OphthalmologistWalletPage() {
 
             <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-2">
-                {t('Ophthalmologist.wallet.thisMonthIn', 'Nạp/thu tháng này')}
+                {t(
+                  'Ophthalmologist.wallet.thisMonthIn',
+                  'Tiền vào ví tháng này'
+                )}
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">
                 {formatCurrency(
@@ -304,7 +324,8 @@ export default function OphthalmologistWalletPage() {
                 )}
               </p>
               <p className="text-xs text-slate-500 mt-2">
-                {wallet.transactionsThisMonth} giao dịch tháng này
+                Gồm nạp ví, thưởng, hoàn tiền và thu nhập tư vấn —{' '}
+                {wallet.transactionsThisMonth} giao dịch trong tháng
               </p>
             </div>
 
@@ -445,6 +466,10 @@ export default function OphthalmologistWalletPage() {
               <div className="space-y-3">
                 {transactions.map((tx) => {
                   const isCredit = isCreditTransaction(tx);
+                  const txType = parseWalletTransactionType(tx.transactionType);
+                  const bookingSub = getBookingConsultationSubLabel(tx);
+                  const typeSubLabel =
+                    bookingSub ?? getTransactionLabel(txType);
                   return (
                     <div
                       key={tx.id}
@@ -466,8 +491,7 @@ export default function OphthalmologistWalletPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                            {tx.description ||
-                              getTransactionLabel(tx.transactionType)}
+                            {tx.description || getTransactionLabel(txType)}
                           </p>
                           <p className="text-xs text-slate-500">
                             {formatDateTimeWithYear(tx.createdAt)}
@@ -483,9 +507,7 @@ export default function OphthalmologistWalletPage() {
                           {isCredit ? '+' : '-'}
                           {formatCurrency(tx.amount, vndCurrencyOptions)}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          {getTransactionLabel(tx.transactionType)}
-                        </p>
+                        <p className="text-xs text-slate-500">{typeSubLabel}</p>
                       </div>
                     </div>
                   );
