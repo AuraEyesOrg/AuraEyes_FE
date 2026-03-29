@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { screeningApi } from '../api/screening.api';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
@@ -198,7 +200,6 @@ function mapStandardResponseToAnomalies(
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
   const bestLesion = lesions.length > 0 ? lesions[0] : null;
-  const primaryName = data.prediction.primary.class_name;
 
   // Map each top_k prediction → one Anomaly card
   for (const pred of data.prediction.top_k) {
@@ -271,6 +272,7 @@ interface LocationState {
   screeningId?: string; // From new screening flow
   images?: RouteStateImage[];
   source?: string;
+  consentAccepted?: boolean;
   rawJsonOutput?: string;
   resultsPersisted?: boolean;
 }
@@ -579,6 +581,14 @@ export default function RetinalAnalysis() {
       }
     }
 
+    if (
+      routeState?.source === 'new-screening' &&
+      (!incomingScreeningId || !routeState.consentAccepted)
+    ) {
+      navigate('/patient/screening/new', { replace: true });
+      return;
+    }
+
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
       saveLastScreeningId(incomingScreeningId);
@@ -813,7 +823,50 @@ export default function RetinalAnalysis() {
       const rawOutput = JSON.stringify(data);
       setRawJsonOutput(rawOutput);
 
-      const ensuredScreeningId = await ensureScreeningSession();
+      let ensuredScreeningId = screeningId;
+
+      if (!screeningId) {
+        const files = await Promise.all(
+          images.map(async (img, idx) => {
+            const resp = await fetch(img.url);
+            const imgBlob = await resp.blob();
+            const fileType = imgBlob.type || 'image/jpeg';
+            const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+            return new File([imgBlob], fileNameForUpload, { type: fileType });
+          })
+        );
+
+        const uploadResp = await screeningApi.uploadRetinalImages(files);
+        const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+        if (uploadedUrls.length === 0) {
+          throw new Error('Failed to upload retinal images');
+        }
+
+        const retinalImages = uploadedUrls.map((url, idx) => ({
+          imageUrl: url,
+          eyeSide: inferEyeSideFromName(
+            images[idx]?.name || '',
+            idx,
+            uploadedUrls.length
+          ),
+          deviceName: 'Retinal Camera',
+        }));
+
+        const sessionResp = await screeningApi.createSession({
+          modelVersion: '1.0',
+          retinalImages,
+        });
+
+        if (sessionResp.data?.screeningId) {
+          ensuredScreeningId = sessionResp.data.screeningId;
+          setScreeningId(sessionResp.data.screeningId);
+
+          await agreeScreeningConsent(sessionResp.data.screeningId, {
+            content: UPLOAD_SCREENING_CONSENT_CONTENT,
+          });
+        }
+      }
 
       if (!ensuredScreeningId) {
         throw new Error('Screening session not available to save AI results');

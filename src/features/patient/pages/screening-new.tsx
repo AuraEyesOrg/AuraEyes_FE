@@ -18,7 +18,9 @@ import {
 import Spinner from '@/components/ui/spinner';
 import FocusModeLayout from '../components/FocusModeLayout';
 import { toast } from 'react-toastify';
-import { aiCoreClient } from '../../../lib/axios';
+import { screeningApi } from '../api/screening.api';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -35,6 +37,28 @@ interface UploadedImage {
 type Step = 'upload' | 'analysis' | 'review';
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff'];
+
+const inferEyeSideFromName = (
+  name: string,
+  index: number,
+  total: number
+): 'Left' | 'Right' | 'Both' => {
+  const normalized = name.toLowerCase();
+  if (total === 1) return 'Both';
+  if (
+    normalized.includes('left') ||
+    normalized.includes('_os') ||
+    normalized.includes('(os)')
+  )
+    return 'Left';
+  if (
+    normalized.includes('right') ||
+    normalized.includes('_od') ||
+    normalized.includes('(od)')
+  )
+    return 'Right';
+  return index % 2 === 0 ? 'Right' : 'Left';
+};
 
 const isSupportedImage = (file: File): boolean => {
   const lowerName = file.name.toLowerCase();
@@ -139,6 +163,7 @@ export default function ScreeningNewPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [showPolicyPopup, setShowPolicyPopup] = useState(false);
+  const [isPreparingSession, setIsPreparingSession] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -343,18 +368,67 @@ export default function ScreeningNewPage() {
   const readyImages = images.filter((img) => img.status === 'ready');
   const canProceed = readyImages.length > 0;
 
-  const startAnalysis = () => {
-    navigate('/patient/analysis', {
-      state: {
-        images: readyImages.map((img) => ({
-          id: img.id,
-          name: img.file.name,
-          preview: img.preview,
-          quality: img.quality,
-        })),
-        source: 'new-screening',
-      },
-    });
+  const startAnalysis = async () => {
+    if (!canProceed || isPreparingSession) {
+      return;
+    }
+
+    setIsPreparingSession(true);
+
+    try {
+      const files = readyImages.map((img) => img.file);
+      const uploadResp = await screeningApi.uploadRetinalImages(files);
+      const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+      if (uploadedUrls.length === 0) {
+        throw new Error('No uploaded image URL returned from server.');
+      }
+
+      const retinalImages = uploadedUrls.map((url, idx) => ({
+        imageUrl: url,
+        eyeSide: inferEyeSideFromName(
+          readyImages[idx]?.file.name ?? '',
+          idx,
+          uploadedUrls.length
+        ),
+        deviceName: 'Retinal Camera',
+      }));
+
+      const sessionResp = await screeningApi.createSession({
+        modelVersion: '1.0',
+        retinalImages,
+      });
+
+      const createdScreeningId = sessionResp.data?.screeningId;
+      if (!createdScreeningId) {
+        throw new Error('Failed to create screening session.');
+      }
+
+      await agreeScreeningConsent(createdScreeningId, {
+        content: UPLOAD_SCREENING_CONSENT_CONTENT,
+      });
+
+      navigate('/patient/analysis', {
+        state: {
+          screeningId: createdScreeningId,
+          images: readyImages.map((img) => ({
+            id: img.id,
+            name: img.file.name,
+            preview: img.preview,
+            quality: img.quality,
+          })),
+          source: 'new-screening',
+          consentAccepted: true,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to prepare consented screening session:', error);
+      toast.error(
+        'Unable to save consent and start analysis. Please try again.'
+      );
+    } finally {
+      setIsPreparingSession(false);
+    }
   };
 
   const getStatusBadge = (img: UploadedImage) => {
@@ -693,7 +767,7 @@ export default function ScreeningNewPage() {
                     {readyImages.length !== 1 ? 's' : ''} ready to submit
                   </span>
                   <button
-                    disabled={!canProceed}
+                    disabled={!canProceed || isPreparingSession}
                     onClick={() => setShowPolicyPopup(true)}
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
@@ -724,27 +798,33 @@ export default function ScreeningNewPage() {
                 Data Sharing Consent
               </h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
-                By continuing, you agree that your retinal images and AI
-                analysis results can be processed and securely stored for
-                diagnosis, medical review, and improving service quality.
+                {UPLOAD_SCREENING_CONSENT_CONTENT}
               </p>
               <div className="flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowPolicyPopup(false)}
+                  disabled={isPreparingSession}
                   className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowPolicyPopup(false);
-                    startAnalysis();
+                  disabled={isPreparingSession}
+                  onClick={async () => {
+                    await startAnalysis();
                   }}
                   className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:brightness-110"
                 >
-                  I Agree, Continue
+                  {isPreparingSession ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner size={14} />
+                      Saving...
+                    </span>
+                  ) : (
+                    'I Agree, Continue'
+                  )}
                 </button>
               </div>
             </div>
