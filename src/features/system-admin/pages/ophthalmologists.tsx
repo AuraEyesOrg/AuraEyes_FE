@@ -29,11 +29,14 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
+import { exportApi } from '../api';
 import {
   ophthalmologistApi,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
 import { formatCurrency } from '@/lib/helper';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
 
 type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
 
@@ -53,6 +56,24 @@ interface Ophthalmologist extends OphthalmologistListItem {
   joinedAt: string;
 }
 
+const calculateCommissionAmount = (
+  actualMonthlySalary: number | null | undefined,
+  commissionRate: number | null | undefined
+): number | null => {
+  if (actualMonthlySalary == null || actualMonthlySalary <= 0) {
+    return null;
+  }
+
+  if (commissionRate == null || commissionRate <= 0) {
+    return null;
+  }
+
+  // Accept both 5 (percent) and 0.05 (fraction) representations.
+  const normalizedRate =
+    commissionRate > 1 ? commissionRate / 100 : commissionRate;
+  return actualMonthlySalary * normalizedRate;
+};
+
 /** Map API item to UI Ophthalmologist model */
 const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
   ...item,
@@ -61,7 +82,7 @@ const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
   totalRequests: 0,
   pendingRequests: 0,
   completedRequests: 0,
-  monthlyEarnings: 0,
+  monthlyEarnings: item.actualMonthlySalary ?? 0,
   totalEarnings: 0,
   pendingPayouts: 0,
   averageRating: 0,
@@ -127,6 +148,8 @@ export default function OphthalmologistsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [rejectError, setRejectError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [payingSalary, setPayingSalary] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -216,6 +239,29 @@ export default function OphthalmologistsPage() {
     }
   };
 
+  const handlePaySalary = async (doctor: Ophthalmologist) => {
+    if (doctor.actualMonthlySalary == null || doctor.actualMonthlySalary <= 0) {
+      toast.error('Doctor has no valid actual salary to payout.');
+      return;
+    }
+
+    setPayingSalary(true);
+    try {
+      await ophthalmologistApi.paySalary(
+        doctor.id,
+        doctor.actualMonthlySalary,
+        `Salary payout (${new Date().toISOString().slice(0, 7)})`
+      );
+      toast.success('Salary paid to doctor wallet successfully.');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to pay salary:', error);
+      toast.error('Failed to pay salary. Please try again.');
+    } finally {
+      setPayingSalary(false);
+    }
+  };
+
   const handleRejectClick = (doctor: Ophthalmologist) => {
     setRejectingDoctor(doctor);
     setRejectReason('');
@@ -253,9 +299,71 @@ export default function OphthalmologistsPage() {
     }
   };
 
-  const usdCurrencyOptions = {
-    locale: 'en-US',
-    currency: 'USD',
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const doctorsForExport = await exportApi.getOphthalmologists({
+        searchTerm: searchQuery || undefined,
+        verificationStatus:
+          verificationFilter === 'all' ? undefined : verificationFilter,
+      });
+
+      const mappedDoctors = doctorsForExport
+        .map(mapToUiModel)
+        .filter((doctor) =>
+          statusFilter === 'all' ? true : doctor.status === statusFilter
+        );
+
+      if (mappedDoctors.length === 0) {
+        toast.info('No ophthalmologists available for export.');
+        return;
+      }
+
+      await downloadXlsxFile(
+        mappedDoctors,
+        [
+          { header: 'Ophthalmologist ID', value: (row) => row.id },
+          { header: 'User ID', value: (row) => row.userId },
+          { header: 'Full Name', value: (row) => row.fullName },
+          { header: 'Email', value: (row) => row.email },
+          { header: 'Phone', value: (row) => row.phone ?? '' },
+          {
+            header: 'Verification Status',
+            value: (row) => row.verificationStatus,
+          },
+          {
+            header: 'Is Verified',
+            value: (row) => (row.isVerified ? 'Yes' : 'No'),
+          },
+          {
+            header: 'Active Status',
+            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+          },
+          {
+            header: 'Years of Experience',
+            value: (row) => row.yearsOfExperience,
+          },
+          {
+            header: 'Organisation',
+            value: (row) => row.organisationName ?? '',
+          },
+          { header: 'Created At', value: (row) => row.createdAt },
+        ],
+        buildTimestampedFileName('system-admin-ophthalmologists', 'xlsx'),
+        'Ophthalmologists'
+      );
+      toast.success(`Exported ${mappedDoctors.length} ophthalmologists.`);
+    } catch (error) {
+      console.error('Failed to export ophthalmologists:', error);
+      toast.error('Failed to export ophthalmologists. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const vndCurrencyOptions = {
+    locale: 'vi-VN',
+    currency: 'VND',
     minimumFractionDigits: 0,
   } as const;
 
@@ -345,9 +453,32 @@ export default function OphthalmologistsPage() {
       accessor: 'monthlyEarnings',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-          {formatCurrency(value as number, usdCurrencyOptions)}
+          {formatCurrency(value as number, vndCurrencyOptions)}
         </span>
       ),
+    },
+    {
+      header: 'Deal Terms',
+      accessor: 'commissionRate',
+      render: (_, row) => {
+        const commissionAmount = calculateCommissionAmount(
+          row.actualMonthlySalary,
+          row.commissionRate
+        );
+
+        return (
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+              {row.commissionRate != null ? `${row.commissionRate}%` : 'N/A'}
+            </span>
+            <span className="text-xs text-slate-500">
+              {commissionAmount != null
+                ? formatCurrency(commissionAmount, vndCurrencyOptions)
+                : 'Commission pending'}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: 'Rating',
@@ -421,9 +552,13 @@ export default function OphthalmologistsPage() {
           description="Manage doctors, monitor consultation requests, earnings, and feedback"
           actions={
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 <Download className="w-4 h-4" />
-                Export
+                {isExporting ? 'Exporting...' : 'Export'}
               </button>
             </div>
           }
@@ -463,7 +598,7 @@ export default function OphthalmologistsPage() {
               />
               <StatsCard
                 title="Monthly Revenue"
-                value={formatCurrency(totalMonthlyEarnings, usdCurrencyOptions)}
+                value={formatCurrency(totalMonthlyEarnings, vndCurrencyOptions)}
                 icon={DollarSign}
                 change={12}
                 trend="up"
@@ -533,7 +668,7 @@ export default function OphthalmologistsPage() {
                         (sum, o) => sum + o.pendingPayouts,
                         0
                       ),
-                      usdCurrencyOptions
+                      vndCurrencyOptions
                     )}
                   </span>
                 </div>
@@ -896,7 +1031,7 @@ export default function OphthalmologistsPage() {
                   <p className="text-xl font-bold text-emerald-600">
                     {formatCurrency(
                       selectedDoctor.monthlyEarnings,
-                      usdCurrencyOptions
+                      vndCurrencyOptions
                     )}
                   </p>
                 </div>
@@ -980,7 +1115,7 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
                       {formatCurrency(
                         selectedDoctor.totalEarnings,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
                   </div>
@@ -989,7 +1124,7 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-emerald-600">
                       {formatCurrency(
                         selectedDoctor.monthlyEarnings,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
                   </div>
@@ -1000,9 +1135,70 @@ export default function OphthalmologistsPage() {
                     <p className="text-lg font-bold text-amber-600">
                       {formatCurrency(
                         selectedDoctor.pendingPayouts,
-                        usdCurrencyOptions
+                        vndCurrencyOptions
                       )}
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
+                  Contract Deal Terms
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Employment</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.employmentType}
+                    </p>
+                    {selectedDoctor.workingHoursPerWeek !== undefined && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        {selectedDoctor.workingHoursPerWeek}h/week
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Commission</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.commissionRate != null
+                        ? `${selectedDoctor.commissionRate}%`
+                        : 'Pending'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">
+                      Expected Salary
+                    </p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {selectedDoctor.expectedMonthlySalary !== undefined
+                        ? formatCurrency(
+                            selectedDoctor.expectedMonthlySalary,
+                            vndCurrencyOptions
+                          )
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs text-slate-500 mb-1">Actual Salary</p>
+                    <p className="text-lg font-bold text-emerald-600">
+                      {selectedDoctor.actualMonthlySalary != null
+                        ? formatCurrency(
+                            selectedDoctor.actualMonthlySalary,
+                            vndCurrencyOptions
+                          )
+                        : 'Pending'}
+                    </p>
+                    {selectedDoctor.actualMonthlySalary != null &&
+                      selectedDoctor.actualMonthlySalary > 0 && (
+                        <button
+                          onClick={() => handlePaySalary(selectedDoctor)}
+                          disabled={payingSalary}
+                          className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {payingSalary ? 'Paying...' : 'Pay salary to wallet'}
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>

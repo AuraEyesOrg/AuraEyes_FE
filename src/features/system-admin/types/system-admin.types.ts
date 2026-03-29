@@ -13,10 +13,16 @@ export interface DashboardStat {
 }
 
 export interface DashboardStats {
-  totalScreeningsToday: DashboardStat;
-  aiAccuracyRate: DashboardStat;
-  pendingReviews: DashboardStat;
-  criticalRisks: DashboardStat;
+  totalInflow: DashboardStat;
+  totalOutflow: DashboardStat;
+  netCashflow: DashboardStat;
+  estimatedCommission: DashboardStat;
+  refundOutflow: DashboardStat;
+  paymentMethodBreakdown: Array<{
+    paymentMethod: string;
+    amount: number;
+    percentage: number;
+  }>;
 }
 
 export interface ScreeningVolumeTrend {
@@ -54,6 +60,73 @@ export interface DashboardData {
   recentScreenings: RecentScreening[];
   riskDistribution: RiskDistribution[];
   systemHealth: SystemHealth;
+}
+
+export interface SystemAdminUserGrowthMetric {
+  total: number;
+  currentMonth: number;
+  previousMonth: number;
+  growthPercentage: number;
+}
+
+export interface SystemAdminPaymentMethodPoint {
+  name: string;
+  value: number;
+}
+
+export interface SystemAdminRevenuePoint {
+  label: string;
+  value: number;
+}
+
+export interface SystemAdminDashboardPendingActions {
+  pendingOphthalmologistVerifications: number;
+  pendingWithdrawalRequests: number;
+  pendingOrganisationOnboarding: number;
+}
+
+export interface SystemAdminDashboardSystemStatus {
+  liveConsultationSessions: number;
+  apiHealthy: boolean;
+  databaseHealthy: boolean;
+}
+
+export interface SystemAdminTopDoctor {
+  ophthalmologistId: string;
+  name: string;
+  revenue: number;
+  /** Average rating from patient feedback (1–5); 0 if none. */
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+export interface SystemAdminTopOrganisation {
+  organisationId: string;
+  name: string;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+export interface SystemAdminDashboardMetrics {
+  doctors: SystemAdminUserGrowthMetric;
+  organisations: SystemAdminUserGrowthMetric;
+  patients: SystemAdminUserGrowthMetric;
+  paymentMethods: SystemAdminPaymentMethodPoint[];
+  monthlyRevenue: SystemAdminRevenuePoint[];
+  dailyRevenue: SystemAdminRevenuePoint[];
+  /** Sum of completed deposit requests in the current calendar year (VND). */
+  totalDepositRevenueYear: number;
+  /** Platform share from consultations (System wallet) in the current calendar year (VND). */
+  totalPlatformCommissionYear: number;
+  monthlyPlatformCommission: SystemAdminRevenuePoint[];
+  dailyPlatformCommission: SystemAdminRevenuePoint[];
+  monthlyNewDoctorCounts: number[];
+  monthlyNewOrganisationCounts: number[];
+  monthlyNewPatientCounts: number[];
+  pendingActions: SystemAdminDashboardPendingActions;
+  systemStatus: SystemAdminDashboardSystemStatus;
+  topDoctorsByConsultationRevenue: SystemAdminTopDoctor[];
+  topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
 
 // ============ ORGANISATIONS & DEVICES ============
@@ -437,6 +510,8 @@ export interface ContractDto {
   userEmail: string;
   aiQuotaLimit: number;
   platformCommissionRate: number;
+  commissionRate?: number | null;
+  actualMonthlySalary?: number | null;
   signedDate?: string;
   scannedDocumentUrl?: string;
   createdAt: string;
@@ -462,6 +537,8 @@ export interface UpdateContractPayload {
 }
 
 export interface SignContractPayload {
+  commissionRate: number;
+  actualMonthlySalary: number;
   signedContent?: string;
   scannedDocumentUrl?: string;
 }

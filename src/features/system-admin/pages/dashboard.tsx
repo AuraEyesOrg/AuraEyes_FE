@@ -1,114 +1,272 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, AlertCircle, Brain, ShieldCheck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Activity,
+  Building2,
+  ChevronRight,
+  Download,
+  Landmark,
+  Radio,
+  Stethoscope,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
-import StatusBadge, { RiskBadge } from '../components/StatusBadge';
-import DataTable, { type TableColumn } from '../components/DataTable';
 import { dashboardApi } from '../api';
-import type {
-  DashboardStats,
-  ScreeningVolumeTrend,
-  RecentScreening,
-  RiskDistribution,
-} from '../types/system-admin.types';
+import type { SystemAdminDashboardMetrics } from '../types/system-admin.types';
+import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { toast } from 'react-toastify';
+
+const DONUT_COLORS = ['#06b6d4', '#14b8a6', '#22c55e', '#f59e0b', '#8b5cf6'];
+
+const formatCurrency = (value: number) =>
+  `${Math.round(value).toLocaleString('en-US')} VND`;
+
+/** Axis labels for small VND amounts (avoids everything showing as 0M). */
+const formatAxisVnd = (value: number) => {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return '0';
+  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(v) >= 1_000) return `${Math.round(v / 1_000)}k`;
+  return `${Math.round(v)}`;
+};
+
+const resolveTrend = (growthPercentage: number): 'up' | 'down' | 'stable' => {
+  if (growthPercentage > 0) return 'up';
+  if (growthPercentage < 0) return 'down';
+  return 'stable';
+};
 
 export default function SystemAdminDashboard() {
-  const statsQuery = useQuery<DashboardStats>({
-    queryKey: ['system-admin-dashboard', 'stats'],
-    queryFn: dashboardApi.getStats,
+  const metricsQuery = useQuery<SystemAdminDashboardMetrics>({
+    queryKey: ['system-admin-dashboard', 'metrics'],
+    queryFn: dashboardApi.getMetrics,
   });
 
-  const recentScreeningsQuery = useQuery<RecentScreening[]>({
-    queryKey: ['system-admin-dashboard', 'recent-screenings'],
-    queryFn: () => dashboardApi.getRecentScreenings(5),
-  });
+  const metrics = metricsQuery.data;
+  const isLoading = metricsQuery.isLoading;
+  const [isExporting, setIsExporting] = useState(false);
 
-  const trendsQuery = useQuery<ScreeningVolumeTrend[]>({
-    queryKey: ['system-admin-dashboard', 'trends'],
-    queryFn: dashboardApi.getScreeningVolume,
-  });
+  const monthlyChartData = useMemo(() => {
+    if (!metrics) return [];
+    return metrics.monthlyRevenue.map((row, i) => ({
+      label: row.label,
+      topUps: row.value,
+      commission: metrics.monthlyPlatformCommission[i]?.value ?? 0,
+    }));
+  }, [metrics]);
 
-  const riskQuery = useQuery<RiskDistribution[]>({
-    queryKey: ['system-admin-dashboard', 'risks'],
-    queryFn: dashboardApi.getRiskDistribution,
-  });
+  const dailyChartData = useMemo(() => {
+    if (!metrics) return [];
+    return metrics.dailyRevenue.map((row, i) => ({
+      label: row.label,
+      topUps: row.value,
+      commission: metrics.dailyPlatformCommission[i]?.value ?? 0,
+    }));
+  }, [metrics]);
 
-  const healthQuery = useQuery({
-    queryKey: ['system-admin-dashboard', 'health'],
-    queryFn: dashboardApi.getSystemHealth,
-  });
+  const topCards = metrics
+    ? [
+        {
+          title: 'Doctors',
+          value: metrics.doctors.total,
+          change: metrics.doctors.growthPercentage,
+          trend: resolveTrend(metrics.doctors.growthPercentage),
+          description: `This month: ${metrics.doctors.currentMonth} · Prev: ${metrics.doctors.previousMonth}`,
+          icon: Stethoscope,
+          variant: 'primary' as const,
+          sparklineData: metrics.monthlyNewDoctorCounts,
+          sparklineColor: '#0ea5e9',
+        },
+        {
+          title: 'Organizations',
+          value: metrics.organisations.total,
+          change: metrics.organisations.growthPercentage,
+          trend: resolveTrend(metrics.organisations.growthPercentage),
+          description: `This month: ${metrics.organisations.currentMonth} · Prev: ${metrics.organisations.previousMonth}`,
+          icon: Building2,
+          variant: 'success' as const,
+          sparklineData: metrics.monthlyNewOrganisationCounts,
+          sparklineColor: '#22c55e',
+        },
+        {
+          title: 'Patients',
+          value: metrics.patients.total,
+          change: metrics.patients.growthPercentage,
+          trend: resolveTrend(metrics.patients.growthPercentage),
+          description: `This month: ${metrics.patients.currentMonth} · Prev: ${metrics.patients.previousMonth}`,
+          icon: Users,
+          variant: 'warning' as const,
+          sparklineData: metrics.monthlyNewPatientCounts,
+          sparklineColor: '#f59e0b',
+        },
+        {
+          title: 'Live consultations',
+          value: metrics.systemStatus.liveConsultationSessions,
+          description: 'Sessions with open chat (active window)',
+          icon: Radio,
+          variant: 'primary' as const,
+        },
+      ]
+    : [];
 
-  const stats = statsQuery.data;
-  const recentScreenings = recentScreeningsQuery.data ?? [];
-  const volumeTrends = trendsQuery.data ?? [];
-  const riskDistribution = riskQuery.data ?? [];
-  const isLoading =
-    statsQuery.isLoading ||
-    recentScreeningsQuery.isLoading ||
-    trendsQuery.isLoading ||
-    riskQuery.isLoading;
+  const revenueKpiCards = metrics
+    ? [
+        {
+          title: 'Wallet top-ups (YTD)',
+          value: formatCurrency(metrics.totalDepositRevenueYear),
+          description: 'Completed deposits (calendar year)',
+          icon: Wallet,
+          variant: 'primary' as const,
+          sparklineData: metrics.monthlyRevenue.map((m) => m.value),
+          sparklineColor: '#0ea5e9',
+        },
+        {
+          title: 'Consultation commission (YTD)',
+          value: formatCurrency(metrics.totalPlatformCommissionYear),
+          description: 'Platform share → System wallet',
+          icon: Landmark,
+          variant: 'success' as const,
+          sparklineData: metrics.monthlyPlatformCommission.map((m) => m.value),
+          sparklineColor: '#14b8a6',
+        },
+      ]
+    : [];
 
-  const recentScreeningColumns: TableColumn<RecentScreening>[] = [
-    { header: 'ID', accessor: 'id', width: '140px' },
-    { header: 'Clinic', accessor: 'clinic' },
-    {
-      header: 'Date & Time',
-      accessor: 'date',
-      render: (_, row) => `${row.date}, ${row.time}`,
-    },
-    {
-      header: 'AI Result',
-      accessor: 'aiResult',
-      render: (value) => {
-        const riskMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> =
-          {
-            low_risk: 'low',
-            medium_risk: 'medium',
-            high_risk: 'high',
-            processing: 'critical',
-          };
-        const labelMap: Record<string, string> = {
-          low_risk: 'Low Risk',
-          medium_risk: 'Medium Risk',
-          high_risk: 'High Risk',
-          processing: 'Processing',
-        };
+  const handleExportDashboard = async () => {
+    if (!metrics) {
+      toast.info('No dashboard data available for export.');
+      return;
+    }
 
-        return (
-          <RiskBadge
-            risk={riskMap[value as string] || 'low'}
-            label={labelMap[value as string]}
-          />
-        );
-      },
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (value) => {
-        const statusMap: Record<string, 'success' | 'warning' | 'processing'> =
-          {
-            completed: 'success',
-            flagged: 'warning',
-            analyzing: 'processing',
-          };
-        const labelMap: Record<string, string> = {
-          completed: 'Completed',
-          flagged: 'Flagged',
-          analyzing: 'Analyzing',
-        };
+    try {
+      setIsExporting(true);
 
-        return (
-          <StatusBadge
-            status={statusMap[value as string] || 'info'}
-            label={labelMap[value as string] || String(value)}
-          />
-        );
-      },
-    },
-  ];
+      const rows = [
+        {
+          section: 'Users',
+          metric: 'Doctors - Total',
+          value: metrics.doctors.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Doctors - Growth %',
+          value: metrics.doctors.growthPercentage,
+        },
+        {
+          section: 'Users',
+          metric: 'Organisations - Total',
+          value: metrics.organisations.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Organisations - Growth %',
+          value: metrics.organisations.growthPercentage,
+        },
+        {
+          section: 'Users',
+          metric: 'Patients - Total',
+          value: metrics.patients.total,
+        },
+        {
+          section: 'Users',
+          metric: 'Patients - Growth %',
+          value: metrics.patients.growthPercentage,
+        },
+        {
+          section: 'Operations',
+          metric: 'Live consultation sessions',
+          value: metrics.systemStatus.liveConsultationSessions,
+        },
+        {
+          section: 'Pending',
+          metric: 'Ophthalmologist verifications',
+          value: metrics.pendingActions.pendingOphthalmologistVerifications,
+        },
+        {
+          section: 'Pending',
+          metric: 'Withdrawal requests',
+          value: metrics.pendingActions.pendingWithdrawalRequests,
+        },
+        {
+          section: 'Pending',
+          metric: 'Organisation onboarding',
+          value: metrics.pendingActions.pendingOrganisationOnboarding,
+        },
+        {
+          section: 'Revenue (YTD)',
+          metric: 'Wallet top-ups (calendar year)',
+          value: metrics.totalDepositRevenueYear,
+        },
+        {
+          section: 'Revenue (YTD)',
+          metric: 'Consultation commission (calendar year)',
+          value: metrics.totalPlatformCommissionYear,
+        },
+        ...metrics.paymentMethods.map((item) => ({
+          section: 'Payment Methods',
+          metric: item.name,
+          value: item.value,
+        })),
+        ...metrics.monthlyRevenue.map((item) => ({
+          section: 'Monthly Revenue',
+          metric: item.label,
+          value: item.value,
+        })),
+        ...metrics.monthlyPlatformCommission.map((item) => ({
+          section: 'Monthly platform commission',
+          metric: item.label,
+          value: item.value,
+        })),
+        ...metrics.dailyRevenue.map((item) => ({
+          section: 'Daily Revenue',
+          metric: item.label,
+          value: item.value,
+        })),
+        ...metrics.dailyPlatformCommission.map((item) => ({
+          section: 'Daily platform commission',
+          metric: item.label,
+          value: item.value,
+        })),
+      ];
+
+      await downloadXlsxFile(
+        rows,
+        [
+          { header: 'Section', value: (row) => row.section },
+          { header: 'Metric', value: (row) => row.metric },
+          { header: 'Value', value: (row) => row.value },
+        ],
+        buildTimestampedFileName('system-admin-dashboard', 'xlsx'),
+        'Dashboard'
+      );
+      toast.success('Dashboard data exported successfully.');
+    } catch (error) {
+      console.error('Failed to export dashboard data:', error);
+      toast.error('Failed to export dashboard data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -116,254 +274,407 @@ export default function SystemAdminDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Dashboard Overview"
-          description="Real-time insights on screening throughput and platform health"
-          badge={
-            <StatusBadge
-              status={healthQuery.data?.uptime === 100 ? 'success' : 'warning'}
-              label={
-                healthQuery.data?.uptime === 100
-                  ? 'System Healthy'
-                  : 'Attention Needed'
-              }
-            />
+          title="System Admin Dashboard"
+          description="Growth, revenue, queue, and system status"
+          actions={
+            <button
+              onClick={handleExportDashboard}
+              disabled={isExporting || !metrics}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting...' : 'Export Excel'}
+            </button>
           }
           showNotifications={true}
         />
 
         <main className="flex-1 overflow-y-auto">
-          <div className="px-6 md:px-10 py-6 max-w-[1600px] mx-auto w-full space-y-6">
+          <div className="px-4 md:px-8 py-5 max-w-[1680px] mx-auto w-full">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <Spinner size={36} />
               </div>
-            ) : !stats ? (
+            ) : !metrics ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
                 Unable to load live dashboard metrics.
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatsCard
-                    title="Total Screenings Today"
-                    value={stats.totalScreeningsToday.value || 0}
-                    icon={Activity}
-                    change={stats.totalScreeningsToday.change}
-                    trend={stats.totalScreeningsToday.trend}
-                    description={stats.totalScreeningsToday.description}
-                    variant="primary"
-                  />
-                  <StatsCard
-                    title="AI Accuracy Rate"
-                    value={`${stats.aiAccuracyRate.value}%`}
-                    icon={Brain}
-                    change={stats.aiAccuracyRate.change}
-                    trend={stats.aiAccuracyRate.trend}
-                    description={stats.aiAccuracyRate.description}
-                    variant="success"
-                  />
-                  <StatsCard
-                    title="Pending Reviews"
-                    value={stats.pendingReviews.value || 0}
-                    icon={AlertCircle}
-                    change={stats.pendingReviews.change}
-                    trend={stats.pendingReviews.trend}
-                    description={stats.pendingReviews.description}
-                    variant="warning"
-                  />
-                  <StatsCard
-                    title="Critical Risk Cases"
-                    value={stats.criticalRisks.value || 0}
-                    icon={ShieldCheck}
-                    change={stats.criticalRisks.change}
-                    trend={stats.criticalRisks.trend}
-                    description={stats.criticalRisks.description}
-                    variant="danger"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <div className="flex justify-between items-start mb-6">
-                        <div>
-                          <h3 className="text-slate-900 dark:text-white text-base font-bold">
-                            Screening Volume Trends
-                          </h3>
-                          <p className="text-slate-500 dark:text-slate-400 text-sm">
-                            Monthly throughput based on live screening records
-                          </p>
-                        </div>
-                        <StatusBadge status="info" label="Live Data" />
-                      </div>
-
-                      <div className="w-full h-48 flex items-end gap-4 justify-between px-4">
-                        {volumeTrends.length > 0 ? (
-                          volumeTrends.map((trend, idx) => {
-                            const maxValue = Math.max(
-                              ...volumeTrends.map((item) => item.screenings)
-                            );
-                            const height =
-                              maxValue === 0
-                                ? 0
-                                : (trend.screenings / maxValue) * 100;
-
-                            return (
-                              <div
-                                key={`${trend.week}-${idx}`}
-                                className="flex flex-col items-center flex-1 gap-2"
-                              >
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                                  {trend.screenings.toLocaleString()}
-                                </span>
-                                <div
-                                  className="w-full bg-gradient-to-t from-primary to-primary/70 rounded-t-lg transition-all hover:opacity-80 min-h-[20px]"
-                                  style={{ height: `${height}%` }}
-                                />
-                                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center">
-                                  {trend.week}
-                                </span>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="w-full text-center text-slate-500 py-10">
-                            No screening activity yet.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                      <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                        <h3 className="text-slate-900 dark:text-white text-base font-bold">
-                          Recent Screenings
-                        </h3>
-                        <StatusBadge status="info" label="Live Feed" />
-                      </div>
-                      <DataTable<RecentScreening>
-                        columns={recentScreeningColumns}
-                        data={recentScreenings}
-                        keyExtractor={(row) => row.id}
-                        isLoading={recentScreeningsQuery.isLoading}
-                        emptyMessage="No recent screenings"
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
+                <div className="lg:col-span-8 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {[...topCards, ...revenueKpiCards].map((card) => (
+                      <StatsCard
+                        key={card.title}
+                        title={card.title}
+                        value={
+                          typeof card.value === 'number'
+                            ? card.value.toLocaleString('en-US')
+                            : card.value
+                        }
+                        icon={card.icon}
+                        change={'change' in card ? card.change : undefined}
+                        trend={'trend' in card ? card.trend : undefined}
+                        description={card.description}
+                        variant={card.variant}
+                        sparklineData={card.sparklineData}
+                        sparklineColor={card.sparklineColor}
                       />
-                    </div>
+                    ))}
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <h3 className="text-slate-900 dark:text-white text-base font-bold mb-4">
-                        Risk Distribution
+                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <section className="xl:col-span-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
+                      <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
+                        Monthly revenue (current year)
                       </h3>
-
-                      <div className="space-y-4">
-                        {riskDistribution.length > 0 ? (
-                          riskDistribution.map((risk) => (
-                            <div key={risk.riskLevel} className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <RiskBadge risk={risk.riskLevel} />
-                                <span className="text-slate-900 dark:text-white font-bold">
-                                  {risk.count.toLocaleString()}
-                                </span>
-                              </div>
-                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                                <div
-                                  className={`h-2 rounded-full transition-all ${
-                                    risk.riskLevel === 'low'
-                                      ? 'bg-green-500'
-                                      : risk.riskLevel === 'medium'
-                                        ? 'bg-amber-500'
-                                        : risk.riskLevel === 'high'
-                                          ? 'bg-orange-500'
-                                          : 'bg-red-500'
-                                  }`}
-                                  style={{ width: `${risk.percentage}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {risk.percentage.toFixed(1)}% of screenings
-                              </p>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-slate-500 text-sm py-4">
-                            No risk distribution available.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                      <h3 className="text-slate-900 dark:text-white text-base font-bold mb-4">
-                        System Health
-                      </h3>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Uptime
-                          </span>
-                          <span className="text-green-600 dark:text-green-400 font-semibold">
-                            {healthQuery.data?.uptime ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Response Time
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.responseTime ?? 0}ms
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            CPU Usage
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.cpuUsage ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Memory
-                          </span>
-                          <span className="text-slate-900 dark:text-white font-semibold">
-                            {healthQuery.data?.memoryUsage ?? 0}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Storage
-                          </span>
-                          <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                            {healthQuery.data?.storageUsage ?? 0}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl bg-gradient-to-br from-primary to-teal-600 p-6 shadow-lg text-slate-900">
-                      <h3 className="text-base font-bold mb-2">
-                        Quick Actions
-                      </h3>
-                      <p className="text-sm opacity-80 mb-4">
-                        Operational shortcuts
+                      <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
+                        Wallet top-ups vs platform commission
                       </p>
-                      <div className="space-y-2">
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          Generate Report
-                        </button>
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          View Audit Logs
-                        </button>
-                        <button className="w-full py-2 px-3 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors text-left">
-                          Manage Users
-                        </button>
+
+                      {monthlyChartData.length === 0 ? (
+                        <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                          No data
+                        </div>
+                      ) : (
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={monthlyChartData}>
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#cbd5e1"
+                                className="dark:stroke-slate-700"
+                              />
+                              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                              <YAxis
+                                tick={{ fontSize: 11 }}
+                                tickFormatter={formatAxisVnd}
+                              />
+                              <Tooltip
+                                formatter={(value) =>
+                                  formatCurrency(Number(value))
+                                }
+                              />
+                              <Legend wrapperStyle={{ fontSize: 12 }} />
+                              <Bar
+                                dataKey="topUps"
+                                name="Wallet top-ups"
+                                fill="#0ea5e9"
+                                radius={[4, 4, 0, 0]}
+                              />
+                              <Bar
+                                dataKey="commission"
+                                name="Consultation commission"
+                                fill="#14b8a6"
+                                radius={[4, 4, 0, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+                    </section>
+
+                    <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
+                      <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
+                        Payment methods
+                      </h3>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
+                        By total completed deposit amount
+                      </p>
+
+                      {metrics.paymentMethods.length === 0 ? (
+                        <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                          No data
+                        </div>
+                      ) : (
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={metrics.paymentMethods}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={52}
+                                outerRadius={80}
+                                paddingAngle={2}
+                              >
+                                {metrics.paymentMethods.map((item, index) => (
+                                  <Cell
+                                    key={`${item.name}-${index}`}
+                                    fill={
+                                      DONUT_COLORS[index % DONUT_COLORS.length]
+                                    }
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                formatter={(value) =>
+                                  formatCurrency(Number(value))
+                                }
+                              />
+                              <Legend wrapperStyle={{ fontSize: 11 }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+                    </section>
+                  </div>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
+                      Last 7 days — top-ups & commission
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
+                      Daily movement (recent week)
+                    </p>
+
+                    {dailyChartData.length === 0 ? (
+                      <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                        No data
+                      </div>
+                    ) : (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={dailyChartData}>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="#cbd5e1"
+                              className="dark:stroke-slate-700"
+                            />
+                            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                            <YAxis
+                              tick={{ fontSize: 11 }}
+                              tickFormatter={formatAxisVnd}
+                            />
+                            <Tooltip
+                              formatter={(value) =>
+                                formatCurrency(Number(value))
+                              }
+                            />
+                            <Legend wrapperStyle={{ fontSize: 12 }} />
+                            <Line
+                              type="monotone"
+                              dataKey="topUps"
+                              name="Wallet top-ups"
+                              stroke="#0ea5e9"
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              activeDot={{ r: 5 }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="commission"
+                              name="Consultation commission"
+                              stroke="#14b8a6"
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              activeDot={{ r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </section>
+                </div>
+
+                <aside className="lg:col-span-4 space-y-4">
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-amber-500" />
+                      Pending actions
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-3">
+                      Queues that need your attention
+                    </p>
+                    <ul className="space-y-1">
+                      <li>
+                        <Link
+                          to="/system-admin/verifications"
+                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
+                        >
+                          <span>
+                            Doctor profile reviews
+                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
+                              Pending verification
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-1 font-semibold tabular-nums">
+                            {
+                              metrics.pendingActions
+                                .pendingOphthalmologistVerifications
+                            }
+                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                          </span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/system-admin/withdrawal-requests"
+                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
+                        >
+                          <span>
+                            Withdrawal requests
+                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
+                              Pending / processing
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-1 font-semibold tabular-nums">
+                            {metrics.pendingActions.pendingWithdrawalRequests}
+                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                          </span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/system-admin/organisations"
+                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
+                        >
+                          <span>
+                            Organisation onboarding
+                            <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
+                              Awaiting approval
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-1 font-semibold tabular-nums">
+                            {
+                              metrics.pendingActions
+                                .pendingOrganisationOnboarding
+                            }
+                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                          </span>
+                        </Link>
+                      </li>
+                    </ul>
+                  </section>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-3">
+                      System status
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-600 dark:text-slate-400">
+                          API
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              metrics.systemStatus.apiHealthy
+                                ? 'bg-emerald-500'
+                                : 'bg-red-500'
+                            }`}
+                          />
+                          <span className="text-slate-800 dark:text-slate-200">
+                            {metrics.systemStatus.apiHealthy
+                              ? 'Operational'
+                              : 'Issue'}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-600 dark:text-slate-400">
+                          Database
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              metrics.systemStatus.databaseHealthy
+                                ? 'bg-emerald-500'
+                                : 'bg-red-500'
+                            }`}
+                          />
+                          <span className="text-slate-800 dark:text-slate-200">
+                            {metrics.systemStatus.databaseHealthy
+                              ? 'Connected'
+                              : 'Unreachable'}
+                          </span>
+                        </span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </>
+                  </section>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-1">
+                      Top doctors
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-3">
+                      By consultation revenue (all time)
+                    </p>
+                    {metrics.topDoctorsByConsultationRevenue.length === 0 ? (
+                      <p className="text-slate-500 text-xs">No data yet</p>
+                    ) : (
+                      <ol className="space-y-2">
+                        {metrics.topDoctorsByConsultationRevenue.map(
+                          (d, idx) => (
+                            <li
+                              key={d.ophthalmologistId}
+                              className="flex items-start justify-between gap-2 text-xs"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-slate-700 dark:text-slate-300 truncate">
+                                  <span className="text-slate-400 mr-1.5">
+                                    {idx + 1}.
+                                  </span>
+                                  {d.name || '—'}
+                                </div>
+                                {d.ratingCount > 0 ? (
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    ★ {d.ratingAverage.toFixed(1)}
+                                    <span className="text-slate-400 ml-1">
+                                      ({d.ratingCount} reviews)
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    No ratings yet
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
+                                {formatCurrency(d.revenue)}
+                              </span>
+                            </li>
+                          )
+                        )}
+                      </ol>
+                    )}
+                  </section>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-1">
+                      Top organisations
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-3">
+                      By average rating
+                    </p>
+                    {metrics.topOrganisationsByRating.length === 0 ? (
+                      <p className="text-slate-500 text-xs">No data yet</p>
+                    ) : (
+                      <ol className="space-y-2">
+                        {metrics.topOrganisationsByRating.map((o, idx) => (
+                          <li
+                            key={o.organisationId}
+                            className="flex items-center justify-between gap-2 text-xs"
+                          >
+                            <span className="text-slate-700 dark:text-slate-300 truncate">
+                              <span className="text-slate-400 mr-1.5">
+                                {idx + 1}.
+                              </span>
+                              {o.name}
+                            </span>
+                            <span className="text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
+                              ★ {o.ratingAverage.toFixed(1)}
+                              <span className="text-slate-400 ml-1">
+                                ({o.ratingCount})
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </section>
+                </aside>
+              </div>
             )}
           </div>
         </main>

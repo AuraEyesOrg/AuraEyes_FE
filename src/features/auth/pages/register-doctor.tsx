@@ -4,13 +4,11 @@ import {
   Mail,
   User,
   Phone,
-  Stethoscope,
   Upload,
   FileText,
   X,
   CheckCircle,
   Calendar,
-  Eye,
   Shield,
   Activity,
   Zap,
@@ -20,9 +18,25 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { registerOphthalmologist } from '../api/auth.api';
+import { AuraLogo } from '@/components/ui/aura-logo';
 import '@/styles/auth-animations.css';
 
 interface CredentialFormItem {
+  name: string;
+  issuingAuthority: string;
+  issuedDate: string;
+  expiryDate: string;
+  file: File | null;
+}
+
+interface DegreeFormItem {
+  name: string;
+  issuingAuthority: string;
+  issuedDate: string;
+  file: File | null;
+}
+
+interface CertificateFormItem {
   name: string;
   issuingAuthority: string;
   issuedDate: string;
@@ -41,11 +55,18 @@ interface DoctorFormData {
   workingHoursPerWeek: string;
   expectedMonthlySalary: string;
   bio: string;
-  degrees: CredentialFormItem[];
-  certificates: CredentialFormItem[];
+  degrees: DegreeFormItem[];
+  certificates: CertificateFormItem[];
 }
 
-const createDefaultCredential = (): CredentialFormItem => ({
+const createDefaultDegree = (): DegreeFormItem => ({
+  name: '',
+  issuingAuthority: '',
+  issuedDate: '',
+  file: null,
+});
+
+const createDefaultCertificate = (): CertificateFormItem => ({
   name: '',
   issuingAuthority: '',
   issuedDate: '',
@@ -72,8 +93,8 @@ const RegisterDoctorPage = () => {
       employmentType: 'FullTime',
       workingHoursPerWeek: '40',
       expectedMonthlySalary: '',
-      degrees: [createDefaultCredential()],
-      certificates: [createDefaultCredential()],
+      degrees: [createDefaultDegree()],
+      certificates: [createDefaultCertificate()],
     },
   });
 
@@ -109,14 +130,11 @@ const RegisterDoctorPage = () => {
   const certificates = watch('certificates') || [];
 
   useEffect(() => {
-    const currentHours = getValues('workingHoursPerWeek');
-    if (!currentHours) {
-      setValue(
-        'workingHoursPerWeek',
-        selectedEmploymentType === 'PartTime' ? '20' : '40'
-      );
-    }
-  }, [selectedEmploymentType, getValues, setValue]);
+    setValue(
+      'workingHoursPerWeek',
+      selectedEmploymentType === 'PartTime' ? '28' : '48'
+    );
+  }, [selectedEmploymentType, setValue]);
 
   const handleCredentialFileChange = (
     group: 'degrees' | 'certificates',
@@ -124,6 +142,15 @@ const RegisterDoctorPage = () => {
     file?: File
   ) => {
     setValue(`${group}.${index}.file`, file || null, { shouldValidate: true });
+  };
+
+  const toUtcIsoDate = (dateInput: string): string => {
+    const date = new Date(`${dateInput}T00:00:00.000Z`);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error('Invalid date input.');
+    }
+
+    return date.toISOString();
   };
 
   const onSubmit = async (data: DoctorFormData) => {
@@ -149,6 +176,22 @@ const RegisterDoctorPage = () => {
       return;
     }
 
+    if (data.certificates.some((item) => !item.expiryDate)) {
+      setSubmitError('Every certificate item must include an expiry date.');
+      return;
+    }
+
+    if (
+      data.certificates.some(
+        (item) =>
+          new Date(`${item.expiryDate}T00:00:00.000Z`) <=
+          new Date(`${item.issuedDate}T00:00:00.000Z`)
+      )
+    ) {
+      setSubmitError('Certificate expiry date must be later than issued date.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -169,15 +212,15 @@ const RegisterDoctorPage = () => {
         degrees: data.degrees.map((item) => ({
           name: item.name,
           issuingAuthority: item.issuingAuthority || undefined,
-          issuedDate: item.issuedDate,
-          expiryDate: item.expiryDate || undefined,
+          issuedDate: toUtcIsoDate(item.issuedDate),
+          expiryDate: undefined,
           file: item.file as File,
         })),
         certificates: data.certificates.map((item) => ({
           name: item.name,
           issuingAuthority: item.issuingAuthority || undefined,
-          issuedDate: item.issuedDate,
-          expiryDate: item.expiryDate || undefined,
+          issuedDate: toUtcIsoDate(item.issuedDate),
+          expiryDate: toUtcIsoDate(item.expiryDate),
           file: item.file as File,
         })),
       });
@@ -207,10 +250,7 @@ const RegisterDoctorPage = () => {
           </div>
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <Eye className="text-[#00d1c0] w-10 h-10" />
-              <span className="text-2xl font-bold tracking-tight">AURA</span>
-            </div>
+            <AuraLogo size="sm" variant="light" className="mb-2" />
           </div>
 
           <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -279,10 +319,7 @@ const RegisterDoctorPage = () => {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <Eye className="text-[#00d1c0] w-10 h-10" />
-            <span className="text-2xl font-bold tracking-tight">AURA</span>
-          </div>
+          <AuraLogo size="sm" variant="light" className="mb-2" />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -309,8 +346,8 @@ const RegisterDoctorPage = () => {
         <div className="flex-1 p-6 sm:p-12 lg:p-16">
           <div className="w-full max-w-[640px] mx-auto animate-slide-in-right">
             <div className="mb-8 text-center">
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-[#1F85F5] to-[#00d1c0] text-white mb-4">
-                <Stethoscope className="h-6 w-6" />
+              <div className="mb-4 flex justify-center">
+                <AuraLogo size="sm" showText={false} variant="dark" />
               </div>
               <h2 className="text-3xl font-bold text-[#1A202C] mb-2 tracking-tight">
                 Doctor Registration
@@ -545,12 +582,11 @@ const RegisterDoctorPage = () => {
                     type="number"
                     {...register('workingHoursPerWeek', {
                       required: 'Working hours is required',
-                      min: { value: 1, message: 'Minimum is 1 hour/week' },
-                      max: { value: 112, message: 'Maximum is 112 hours/week' },
                     })}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                    disabled
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                     placeholder={
-                      selectedEmploymentType === 'PartTime' ? '20' : '40'
+                      selectedEmploymentType === 'PartTime' ? '28' : '48'
                     }
                   />
                 </div>
@@ -613,7 +649,7 @@ const RegisterDoctorPage = () => {
                   <button
                     type="button"
                     data-testid="add-degree"
-                    onClick={() => appendDegree(createDefaultCredential())}
+                    onClick={() => appendDegree(createDefaultDegree())}
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
                   >
                     <Plus className="h-4 w-4" /> Add Degree
@@ -664,35 +700,22 @@ const RegisterDoctorPage = () => {
                       placeholder="Issuing authority (optional)"
                     />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs text-gray-600">
-                          Issued date
-                        </label>
-                        <input
-                          type="date"
-                          {...register(`degrees.${index}.issuedDate`, {
-                            required: 'Issued date is required',
-                          })}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                        {errors.degrees?.[index]?.issuedDate && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.degrees[index]?.issuedDate?.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="text-xs text-gray-600">
-                          Expiry date
-                        </label>
-                        <input
-                          type="date"
-                          {...register(`degrees.${index}.expiryDate`)}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
+                    <div>
+                      <label className="text-xs text-gray-600">
+                        Issued date
+                      </label>
+                      <input
+                        type="date"
+                        {...register(`degrees.${index}.issuedDate`, {
+                          required: 'Issued date is required',
+                        })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      {errors.degrees?.[index]?.issuedDate && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.degrees[index]?.issuedDate?.message}
+                        </p>
+                      )}
                     </div>
 
                     {!degrees[index]?.file ? (
@@ -761,7 +784,9 @@ const RegisterDoctorPage = () => {
                   <button
                     type="button"
                     data-testid="add-certificate"
-                    onClick={() => appendCertificate(createDefaultCredential())}
+                    onClick={() =>
+                      appendCertificate(createDefaultCertificate())
+                    }
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
                   >
                     <Plus className="h-4 w-4" /> Add Certificate
@@ -834,13 +859,36 @@ const RegisterDoctorPage = () => {
 
                       <div>
                         <label className="text-xs text-gray-600">
-                          Expiry date
+                          Expiry date <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
-                          {...register(`certificates.${index}.expiryDate`)}
+                          {...register(`certificates.${index}.expiryDate`, {
+                            required: 'Expiry date is required',
+                            validate: (value) => {
+                              if (!value) return 'Expiry date is required';
+
+                              const issuedDate = getValues(
+                                `certificates.${index}.issuedDate`
+                              );
+                              if (
+                                issuedDate &&
+                                new Date(`${value}T00:00:00.000Z`) <=
+                                  new Date(`${issuedDate}T00:00:00.000Z`)
+                              ) {
+                                return 'Expiry date must be later than issued date';
+                              }
+
+                              return true;
+                            },
+                          })}
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
+                        {errors.certificates?.[index]?.expiryDate && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {errors.certificates[index]?.expiryDate?.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 

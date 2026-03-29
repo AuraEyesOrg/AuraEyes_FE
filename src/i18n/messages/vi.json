@@ -184,6 +184,20 @@
         "successTitle": "Email xác nhận đã được gửi lại!",
         "successDescription": "Vui lòng kiểm tra hộp thư của bạn."
       }
+    },
+    "pendingApproval": {
+      "brandSubtitle": "Sàng lọc sức khỏe võng mạc",
+      "brandDescription": "Hệ thống sàng lọc sức khỏe võng mạc",
+      "statusBadge": "Đang xác minh",
+      "title": "Chào mừng bạn đến với AURA!",
+      "primaryMessage": "Vui lòng đợi admin xác minh thông tin bạn cung cấp.",
+      "secondaryMessage": "Hệ thống đang xem xét các chứng chỉ hành nghề của bạn để đảm bảo tiêu chuẩn y tế và mở tính năng tư vấn.",
+      "processingTime": "24-48 giờ làm việc",
+      "closing": "Cảm ơn bạn đã kiên nhẫn",
+      "infoBox": "Bạn sẽ nhận được email thông báo ngay khi hồ sơ được phê duyệt. Sau đó, hãy đăng nhập lại để bắt đầu nhận ca bệnh và tư vấn.",
+      "goHome": "Quay về trang chủ giới thiệu",
+      "logout": "Đăng xuất",
+      "footer": "© 2026 AURA. All rights reserved."
     }
   },
   "Ophthalmologist": {
@@ -1078,5 +1092,22 @@
       "primary": "Liên hệ đội bảo mật",
       "secondary": "Xem chính sách quyền riêng tư"
     }
+  },
+  "PatientReview": {
+    "status": {
+      "healthy": "Mắt khỏe",
+      "low": "Nguy cơ thấp",
+      "moderate": "Cần bác sĩ đánh giá",
+      "high": "Cần chú ý"
+    },
+    "summary": {
+      "healthy": "Kết quả quét cho thấy mắt bạn khỏe. Không phát hiện bất thường đáng kể - hãy duy trì khám mắt định kỳ.",
+      "low": "Phát hiện dấu hiệu nguy cơ thấp. Bạn nên theo dõi định kỳ với bác sĩ mắt.",
+      "moderate": "Đã phát hiện bất thường và nên được bác sĩ chuyên khoa mắt đánh giá để xác nhận và tư vấn bước tiếp theo.",
+      "high": "Đã phát hiện vùng cần được bác sĩ chuyên khoa mắt xem xét sớm. Can thiệp sớm là cách tốt nhất để bảo vệ thị lực."
+    },
+    "findingsDetected": "Các dấu hiệu phát hiện gồm:",
+    "backToDashboard": "Về Dashboard",
+    "sessionLabel": "Phiên"
   }
 }
