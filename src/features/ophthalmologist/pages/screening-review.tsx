@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
+import { toast } from 'react-toastify';
 import {
   ArrowLeft,
   ZoomIn,
@@ -28,8 +29,13 @@ import {
   type OphthalmologistScreeningDetailDto,
   type OphthalmologistRetinalImageDto,
 } from '../api/ophthalmologist-screenings.api';
+import {
+  useConsultationSessions,
+  useSubmitVerificationReport,
+} from '@/features/consultation/hooks/use-consultation';
 import { hydrateConsultationPreviewAnomalies } from '@/features/patient/pages/retinal-analysis';
 import type { Anomaly } from '@/features/patient/types/type';
+import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -140,6 +146,8 @@ type SidebarTab = 'patient' | 'history' | 'exam' | 'reports';
 export default function ScreeningReviewPage() {
   const { screeningId } = useParams<{ screeningId: string }>();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const currentDoctorId = user?.roleId ?? '';
 
   const [detail, setDetail] =
     useState<OphthalmologistScreeningDetailDto | null>(null);
@@ -154,10 +162,20 @@ export default function ScreeningReviewPage() {
   const [zoom, setZoom] = useState(1);
   const [focusedFinding, setFocusedFinding] = useState<string | null>(null);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
-  const [diagnosisNote, setDiagnosisNote] = useState('');
+  const [diagnosisCode, setDiagnosisCode] = useState('');
+  const [codingSystem, setCodingSystem] = useState('ICD-10');
+  const [clinicalFindings, setClinicalFindings] = useState('');
+  const [severityLevel, setSeverityLevel] = useState('Moderate');
+  const [confidenceLevel, setConfidenceLevel] = useState('');
   const [treatmentPlan, setTreatmentPlan] = useState('');
+  const [recommendations, setRecommendations] = useState('');
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const [diagnosisSubmitError, setDiagnosisSubmitError] = useState<
+    string | null
+  >(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -175,6 +193,20 @@ export default function ScreeningReviewPage() {
     () => detail?.images.map(mapApiImage) ?? [],
     [detail]
   );
+
+  const submitVerificationReportMutation = useSubmitVerificationReport();
+  const consultationSessionsQuery = useConsultationSessions(
+    {
+      ophthalmologistId: currentDoctorId || undefined,
+      aiScreeningId: screeningId,
+      pageNumber: 1,
+      pageSize: 1,
+    },
+    { enabled: Boolean(currentDoctorId && screeningId && isUuid(screeningId)) }
+  );
+
+  const verificationSessionId =
+    consultationSessionsQuery.data?.items?.[0]?.id ?? null;
 
   const selectedImage = useMemo(() => {
     return (
@@ -353,6 +385,95 @@ export default function ScreeningReviewPage() {
         return 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/20';
       default:
         return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
+    }
+  };
+
+  useEffect(() => {
+    if (!showDiagnosisModal) return;
+    if (confidenceLevel.trim().length > 0) return;
+    if (aiConfidencePct <= 0) return;
+    setConfidenceLevel(String(aiConfidencePct));
+  }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
+
+  const handleSubmitDiagnosis = async () => {
+    setDiagnosisSubmitError(null);
+
+    if (!currentDoctorId) {
+      const message = 'Missing doctor identity.';
+      setDiagnosisSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!verificationSessionId) {
+      const message =
+        'No linked verification session was found for this screening.';
+      setDiagnosisSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    const normalizedDiagnosisCode = diagnosisCode.trim();
+    const normalizedFindings = clinicalFindings.trim();
+
+    if (!normalizedDiagnosisCode || !normalizedFindings) {
+      const message =
+        'Diagnosis code and clinical findings are required before saving.';
+      setDiagnosisSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    const parsedConfidence =
+      confidenceLevel.trim().length > 0 ? Number(confidenceLevel) : undefined;
+
+    if (
+      parsedConfidence !== undefined &&
+      (!Number.isFinite(parsedConfidence) ||
+        parsedConfidence < 0 ||
+        parsedConfidence > 100)
+    ) {
+      const message = 'Confidence level must be between 0 and 100.';
+      setDiagnosisSubmitError(message);
+      toast.error(message);
+      return;
+    }
+
+    try {
+      await submitVerificationReportMutation.mutateAsync({
+        sessionId: verificationSessionId,
+        doctorId: currentDoctorId,
+        diagnosisCode: normalizedDiagnosisCode,
+        diagnosesCode: normalizedDiagnosisCode,
+        codingSystem: codingSystem.trim() || undefined,
+        clinicalFindings: normalizedFindings,
+        diagnosesText: normalizedFindings,
+        severityLevel: severityLevel.trim() || undefined,
+        confidenceLevel: parsedConfidence,
+        treatmentPlan: treatmentPlan.trim() || undefined,
+        recommendations: recommendations.trim() || undefined,
+        isUrgent,
+        status: diagnosisStatus.trim() || undefined,
+        followUpDate: followUpDate
+          ? new Date(`${followUpDate}T00:00:00`).toISOString()
+          : undefined,
+        isReferralNeeded: referralRequired,
+        finalizedAt:
+          diagnosisStatus.trim().toLowerCase() === 'finalized'
+            ? new Date().toISOString()
+            : undefined,
+      });
+
+      toast.success('Diagnosis report saved successfully.');
+      setShowDiagnosisModal(false);
+    } catch (error) {
+      const message =
+        isAxiosError(error) && typeof error.response?.data?.message === 'string'
+          ? error.response.data.message
+          : 'Failed to submit diagnosis report. Please try again.';
+
+      setDiagnosisSubmitError(message);
+      toast.error(message);
     }
   };
 
@@ -1121,49 +1242,143 @@ export default function ScreeningReviewPage() {
                 </div>
               </div>
 
-              {/* Diagnosis Code */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Diagnosis Code (ICD-10)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., E11.319 - Type 2 diabetes mellitus with unspecified diabetic retinopathy"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                />
+              {diagnosisSubmitError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                  {diagnosisSubmitError}
+                </div>
+              ) : null}
+
+              {/* Diagnosis core */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  Diagnosis Core
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    value={diagnosisCode}
+                    onChange={(e) => setDiagnosisCode(e.target.value)}
+                    placeholder="Diagnosis code"
+                    className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  />
+                  <select
+                    value={codingSystem}
+                    onChange={(e) => setCodingSystem(e.target.value)}
+                    className="px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  >
+                    <option value="ICD-10">ICD-10</option>
+                    <option value="SNOMED CT">SNOMED CT</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <select
+                  value={diagnosisStatus}
+                  onChange={(e) => setDiagnosisStatus(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Reviewed">Reviewed</option>
+                  <option value="Finalized">Finalized</option>
+                </select>
               </div>
 
-              {/* Diagnosis Notes */}
+              {/* Clinical findings */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Clinical Notes
-                </label>
+                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                  Clinical Findings
+                </h4>
                 <textarea
-                  value={diagnosisNote}
-                  onChange={(e) => setDiagnosisNote(e.target.value)}
-                  placeholder="Enter your clinical assessment and observations..."
+                  value={clinicalFindings}
+                  onChange={(e) => setClinicalFindings(e.target.value)}
+                  placeholder="Document physician findings and interpretation..."
                   rows={4}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
               </div>
 
-              {/* Treatment Plan */}
+              {/* Severity and urgency */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-2">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    Severity Level
+                  </p>
+                  <select
+                    value={severityLevel}
+                    onChange={(e) => setSeverityLevel(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  >
+                    <option value="Mild">Mild</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        Urgent Case
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Mark if immediate attention is required
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsUrgent(!isUrgent)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${
+                        isUrgent ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                          isUrgent ? 'left-7' : 'left-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confidence */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Treatment Plan
-                </label>
+                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                  Confidence Level (0 - 100)
+                </h4>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={confidenceLevel}
+                  onChange={(e) => setConfidenceLevel(e.target.value)}
+                  placeholder="e.g., 92"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+              </div>
+
+              {/* Treatment and recommendations */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  Treatment and Advice
+                </h4>
                 <textarea
                   value={treatmentPlan}
                   onChange={(e) => setTreatmentPlan(e.target.value)}
-                  placeholder="Recommended treatment and next steps..."
+                  placeholder="Treatment plan..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
+                />
+                <textarea
+                  value={recommendations}
+                  onChange={(e) => setRecommendations(e.target.value)}
+                  placeholder="Recommendations for patient and follow-up care..."
                   rows={3}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
               </div>
 
-              {/* Options */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Referral */}
+              {/* Follow-up and referral */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1191,7 +1406,6 @@ export default function ScreeningReviewPage() {
                   </div>
                 </div>
 
-                {/* Follow-up Date */}
                 <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
                   <p className="font-medium text-gray-900 dark:text-white mb-2">
                     Follow-up Date
@@ -1219,9 +1433,15 @@ export default function ScreeningReviewPage() {
                   <Download className="w-4 h-4" />
                   Export PDF
                 </button>
-                <button className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2">
+                <button
+                  onClick={handleSubmitDiagnosis}
+                  disabled={submitVerificationReportMutation.isPending}
+                  className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                >
                   <Save className="w-4 h-4" />
-                  Confirm & Save
+                  {submitVerificationReportMutation.isPending
+                    ? 'Saving...'
+                    : 'Confirm & Save'}
                 </button>
               </div>
             </div>
