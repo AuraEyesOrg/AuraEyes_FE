@@ -105,8 +105,6 @@ export const PATIENT_ENDPOINTS = {
   ROADMAPS: {
     LIST: '/patient/roadmaps',
     GET: (id: string) => `/patient/roadmaps/${id}`,
-    UPDATE_MILESTONE: (roadmapId: string, milestoneId: string) =>
-      `/patient/roadmaps/${roadmapId}/milestones/${milestoneId}`,
   },
 
   // Chat
@@ -623,17 +621,6 @@ export const getRoadmap = async (id: string): Promise<HealthRoadmap> => {
     PATIENT_ENDPOINTS.ROADMAPS.GET(id)
   );
   return response.data.data!;
-};
-
-export const updateMilestone = async (
-  roadmapId: string,
-  milestoneId: string,
-  status: 'pending' | 'in-progress' | 'completed'
-): Promise<void> => {
-  await api.patch(
-    PATIENT_ENDPOINTS.ROADMAPS.UPDATE_MILESTONE(roadmapId, milestoneId),
-    { status }
-  );
 };
 
 // ============ CHAT API ============

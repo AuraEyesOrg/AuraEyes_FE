@@ -219,37 +219,20 @@ export interface VerificationFinding {
 export interface HealthRoadmap {
   id: string;
   patientId: string;
-  diagnosisId: string;
-  title: string;
-  description: string;
-  status: 'active' | 'completed' | 'paused';
-  startDate: string;
-  endDate?: string;
-  progress: number;
-  milestones: RoadmapMilestone[];
-  recommendations: RoadmapRecommendation[];
-  createdAt: string;
-  updatedAt: string;
+  medicalDiagnosisId: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  summary: string;
+  nextSteps: string[];
+  lifestyleAdvice: string[];
+  warningSigns: string[];
+  followUp: HealthRoadmapFollowUp;
+  source: 'AI' | 'DOCTOR_OVERRIDE';
+  generatedAt: string;
 }
 
-export interface RoadmapMilestone {
-  id: string;
-  title: string;
-  description: string;
-  targetDate: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'missed';
-  completedAt?: string;
-  type: 'checkup' | 'screening' | 'lifestyle' | 'medication' | 'other';
-}
-
-export interface RoadmapRecommendation {
-  id: string;
-  category: 'diet' | 'exercise' | 'medication' | 'lifestyle' | 'monitoring';
-  title: string;
-  description: string;
-  frequency?: string;
-  priority: 'low' | 'medium' | 'high';
-  isCompleted: boolean;
+export interface HealthRoadmapFollowUp {
+  needed: boolean;
+  timeframe: string;
 }
 
 // ============ CHAT TYPES ============
