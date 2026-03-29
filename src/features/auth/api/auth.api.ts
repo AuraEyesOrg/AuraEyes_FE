@@ -252,34 +252,54 @@ export const registerOphthalmologist = async (
   if (data.organizationId)
     formData.append('organizationId', data.organizationId);
 
-  data.degrees.forEach((item, index) => {
-    formData.append(`degrees[${index}].name`, item.name);
+  let credentialIndex = 0;
+
+  data.degrees.forEach((item) => {
+    formData.append(`certificates[${credentialIndex}].type`, 'Degree');
+    formData.append(`certificates[${credentialIndex}].name`, item.name);
+    if (item.degreeLevel) {
+      formData.append(
+        `certificates[${credentialIndex}].degreeLevel`,
+        item.degreeLevel
+      );
+    }
     if (item.issuingAuthority) {
       formData.append(
-        `degrees[${index}].issuingAuthority`,
+        `certificates[${credentialIndex}].issuingAuthority`,
         item.issuingAuthority
       );
     }
-    formData.append(`degrees[${index}].issuedDate`, item.issuedDate);
-    if (item.expiryDate) {
-      formData.append(`degrees[${index}].expiryDate`, item.expiryDate);
-    }
-    formData.append(`degrees[${index}].file`, item.file);
+    formData.append(
+      `certificates[${credentialIndex}].issuedDate`,
+      item.issuedDate
+    );
+    formData.append(`certificates[${credentialIndex}].file`, item.file);
+
+    credentialIndex += 1;
   });
 
-  data.certificates.forEach((item, index) => {
-    formData.append(`certificates[${index}].name`, item.name);
+  data.certificates.forEach((item) => {
+    formData.append(`certificates[${credentialIndex}].type`, 'License');
+    formData.append(`certificates[${credentialIndex}].name`, item.name);
     if (item.issuingAuthority) {
       formData.append(
-        `certificates[${index}].issuingAuthority`,
+        `certificates[${credentialIndex}].issuingAuthority`,
         item.issuingAuthority
       );
     }
-    formData.append(`certificates[${index}].issuedDate`, item.issuedDate);
+    formData.append(
+      `certificates[${credentialIndex}].issuedDate`,
+      item.issuedDate
+    );
     if (item.expiryDate) {
-      formData.append(`certificates[${index}].expiryDate`, item.expiryDate);
+      formData.append(
+        `certificates[${credentialIndex}].expiryDate`,
+        item.expiryDate
+      );
     }
-    formData.append(`certificates[${index}].file`, item.file);
+    formData.append(`certificates[${credentialIndex}].file`, item.file);
+
+    credentialIndex += 1;
   });
 
   const response = await api.post<ApiResponse<{ userId: string }>>(

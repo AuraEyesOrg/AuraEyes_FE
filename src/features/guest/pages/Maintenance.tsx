@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Settings2, Wrench, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 export default function MaintenancePage() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-(--bg-primary) text-(--text-primary)">
       <Header />
@@ -19,17 +22,15 @@ export default function MaintenancePage() {
           <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-200">
               <Settings2 className="h-3.5 w-3.5" />
-              System Maintenance
+              {t('GuestMaintenance.badge')}
             </span>
 
             <h1 className="text-4xl font-black leading-tight text-brand md:text-5xl">
-              AURA is tuning the engine.
+              {t('GuestMaintenance.title')}
             </h1>
 
             <p className="max-w-xl text-base leading-relaxed text-(--text-secondary)">
-              He thong dang duoc bao tri de nang cap do on dinh va hieu nang.
-              Ban vui long quay lai trong it phut nua. Chung toi xin loi vi su
-              bat tien nay.
+              {t('GuestMaintenance.description')}
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -37,13 +38,13 @@ export default function MaintenancePage() {
                 to="/"
                 className="inline-flex items-center rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
               >
-                Ve trang chu
+                {t('GuestMaintenance.primaryCta')}
               </Link>
               <Link
                 to="/status"
                 className="inline-flex items-center rounded-xl border border-(--border-color) bg-(--bg-secondary) px-5 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-white dark:hover:bg-slate-800"
               >
-                Xem trang trang thai
+                {t('GuestMaintenance.secondaryCta')}
               </Link>
             </div>
           </div>
@@ -52,11 +53,12 @@ export default function MaintenancePage() {
             <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-5 dark:border-cyan-900 dark:bg-cyan-950/30">
               <div className="mb-2 flex items-center gap-2 text-cyan-700 dark:text-cyan-200">
                 <Wrench className="h-4 w-4" />
-                <p className="text-sm font-semibold">Dang cap nhat dich vu</p>
+                <p className="text-sm font-semibold">
+                  {t('GuestMaintenance.card1.title')}
+                </p>
               </div>
               <p className="text-sm text-(--text-secondary)">
-                Toi uu hoa luong xu ly va cai thien trai nghiem cho phien kham
-                truc tuyen.
+                {t('GuestMaintenance.card1.description')}
               </p>
             </div>
 
@@ -64,12 +66,11 @@ export default function MaintenancePage() {
               <div className="mb-2 flex items-center gap-2 text-emerald-700 dark:text-emerald-200">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">
-                  Bao mat du lieu duoc uu tien
+                  {t('GuestMaintenance.card2.title')}
                 </p>
               </div>
               <p className="text-sm text-(--text-secondary)">
-                Tat ca du lieu nguoi dung van an toan va khong bi anh huong
-                trong qua trinh bao tri.
+                {t('GuestMaintenance.card2.description')}
               </p>
             </div>
           </div>

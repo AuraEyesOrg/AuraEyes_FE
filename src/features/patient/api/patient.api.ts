@@ -224,6 +224,7 @@ export interface OphthalmologistSearchItem {
   degrees?: {
     id?: string;
     name?: string | null;
+    degreeLevel?: string | null;
     title?: string | null;
     abbreviation?: string | null;
     degreeUrl?: string | null;
@@ -231,7 +232,9 @@ export interface OphthalmologistSearchItem {
   }[];
   certificates?: {
     id?: string;
+    type?: string;
     name?: string | null;
+    degreeLevel?: string | null;
     issuingAuthority?: string | null;
     issuedDate?: string;
     expiryDate?: string | null;
@@ -259,6 +262,7 @@ export interface OphthalmologistDetailItem {
   degrees?: {
     id?: string;
     name?: string | null;
+    degreeLevel?: string | null;
     title?: string | null;
     abbreviation?: string | null;
     degreeUrl?: string | null;
@@ -266,7 +270,9 @@ export interface OphthalmologistDetailItem {
   }[];
   certificates?: {
     id: string;
+    type?: string;
     name: string;
+    degreeLevel?: string | null;
     issuingAuthority?: string | null;
     issuedDate: string;
     expiryDate?: string | null;

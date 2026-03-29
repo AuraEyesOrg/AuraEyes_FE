@@ -69,6 +69,10 @@ function parseNullableNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function toIsoDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
 export default function DoctorsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -150,6 +154,12 @@ export default function DoctorsPage() {
   // Real query results
   const apiDoctors: OphthalmologistSearchItem[] = data?.items ?? [];
   const timeFilterEnabled = Boolean(timeFrom && timeTo);
+  const defaultSlotFromDate = useMemo(() => toIsoDate(new Date()), []);
+  const defaultSlotToDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    return toIsoDate(date);
+  }, []);
   const maxPriceRangeDays = 30;
   const selectedRangeDays = useMemo(() => {
     if (!timeFilterEnabled) return 0;
@@ -177,6 +187,21 @@ export default function DoctorsPage() {
         pageSize: 200,
       },
       { enabled: slotsEnabled }
+    );
+
+  const { data: cardScheduleSlotsData, isLoading: cardScheduleSlotsLoading } =
+    useAppointmentSlots(
+      {
+        ophthalId: undefined,
+        status: ScheduleStatus.Available,
+        slotType: SlotType.Consultation,
+        fromDate: defaultSlotFromDate,
+        toDate: defaultSlotToDate,
+        excludePastSlots: true,
+        pageNumber: 1,
+        pageSize: 400,
+      },
+      { enabled: true }
     );
 
   // Compute min cost per doctor in the selected time range (used for price filter + "From ...")
@@ -321,16 +346,76 @@ export default function DoctorsPage() {
 
   const getDegreeLabel = (degree: {
     name?: string | null;
+    degreeLevel?: string | null;
     title?: string | null;
     abbreviation?: string | null;
   }) => {
+    const abbreviation = degree.abbreviation?.trim();
+    if (abbreviation) return abbreviation;
+
+    const degreeName = degree.name?.trim().toUpperCase() ?? '';
+    if (/\bMD\b/.test(degreeName)) {
+      return t('PatientDoctors.degrees.MD');
+    }
+
+    const levelKey = degree.degreeLevel?.trim() || '';
+    const i18nDegreeKey =
+      levelKey === 'Doctor'
+        ? 'Doctorate'
+        : levelKey === 'AssociateProfessor'
+          ? 'AssocProf'
+          : levelKey;
+
+    if (i18nDegreeKey) {
+      const translated = t(`PatientDoctors.degrees.${i18nDegreeKey}`);
+      if (translated && !translated.startsWith('PatientDoctors.degrees.')) {
+        return translated;
+      }
+    }
+
     return (
-      degree.abbreviation?.trim() ||
-      degree.name?.trim() ||
       degree.title?.trim() ||
+      degree.name?.trim() ||
       t('PatientDoctors.credentials.defaultDegree')
     );
   };
+
+  const nextSlotLabelByDoctorId = useMemo(() => {
+    const map = new Map<string, { timestamp: number; label: string }>();
+    const slots = cardScheduleSlotsData?.items ?? [];
+
+    for (const slot of slots) {
+      const doctorId = slot.ophthalId;
+      if (!doctorId) continue;
+
+      const slotDateTime =
+        slot.date && slot.startTime ? `${slot.date}T${slot.startTime}` : '';
+      if (!slotDateTime) continue;
+
+      const timestamp = Date.parse(slotDateTime);
+      if (Number.isNaN(timestamp)) continue;
+
+      const formatted = new Intl.DateTimeFormat(undefined, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(timestamp));
+
+      const current = map.get(doctorId);
+      if (!current || timestamp < current.timestamp) {
+        map.set(doctorId, { timestamp, label: formatted });
+      }
+    }
+
+    return new Map(
+      Array.from(map.entries()).map(([doctorId, value]) => [
+        doctorId,
+        value.label,
+      ])
+    );
+  }, [cardScheduleSlotsData?.items]);
 
   const getDegreeUrl = (degree: {
     degreeUrl?: string | null;
@@ -669,8 +754,33 @@ export default function DoctorsPage() {
             const doctorCertificates = Array.isArray(doctor.certificates)
               ? doctor.certificates
               : [];
-            const expertiseText = buildExpertiseText(doctorCertificates);
-
+            const degreeText =
+              doctorDegrees.length > 0
+                ? doctorDegrees
+                    .map((degree) => {
+                      const label = getDegreeLabel(degree);
+                      const degreeName = degree.name?.trim();
+                      return degreeName && degreeName !== label
+                        ? `${label} (${degreeName})`
+                        : label;
+                    })
+                    .join(', ')
+                : t('PatientDoctors.card.degreeMissing');
+            const certificateText =
+              doctorCertificates.length > 0
+                ? doctorCertificates
+                    .map((certificate) => getCertificateLabel(certificate))
+                    .join(', ')
+                : t('PatientDoctors.card.certificateMissing');
+            const bioText =
+              doctor.bio?.trim() || t('PatientDoctors.card.bioMissing');
+            const nextScheduleText = nextSlotLabelByDoctorId.get(doctor.id)
+              ? t('PatientDoctors.card.scheduleNext', {
+                  datetime: nextSlotLabelByDoctorId.get(doctor.id),
+                })
+              : cardScheduleSlotsLoading
+                ? t('PatientDoctors.loading.prices')
+                : t('PatientDoctors.card.scheduleNoSlots');
             return (
               <div
                 key={doctor.id}
@@ -703,17 +813,6 @@ export default function DoctorsPage() {
                   {/* Name */}
                   <div className="mb-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {doctorDegrees.map((degree, index) => {
-                        const label = getDegreeLabel(degree);
-                        return (
-                          <span
-                            key={`${degree.id ?? label}-${index}`}
-                            className="inline-flex items-center rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand"
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
                       <h3 className="text-xl font-bold text-brand group-hover:text-brand/80 transition-colors">
                         {doctorName}
                       </h3>
@@ -721,6 +820,24 @@ export default function DoctorsPage() {
                   </div>
 
                   <div className="space-y-3 flex-1 flex flex-col justify-center">
+                    <p className="text-sm text-(--text-primary) flex items-start gap-3">
+                      <Award className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
+                      <span className="leading-relaxed">
+                        <span className="font-semibold">
+                          {t('PatientDoctors.card.degreeLabel')}:
+                        </span>{' '}
+                        {degreeText}
+                      </span>
+                    </p>
+                    <p className="text-sm text-(--text-primary) flex items-start gap-3">
+                      <Stethoscope className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
+                      <span className="leading-relaxed">
+                        <span className="font-semibold">
+                          {t('PatientDoctors.card.certificateLabel')}:
+                        </span>{' '}
+                        {certificateText}
+                      </span>
+                    </p>
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <MapPin className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
                       <span className="leading-snug text-(--text-muted)">
@@ -730,29 +847,23 @@ export default function DoctorsPage() {
                       </span>
                     </p>
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
-                      <Stethoscope className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                      <span className="leading-relaxed">
-                        <span className="font-semibold">
-                          {t('PatientDoctors.card.expertiseLabel')}:
+                      <FileText className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
+                      <span className="line-clamp-2 text-sm italic text-(--text-muted) leading-relaxed">
+                        <span className="font-semibold not-italic text-(--text-secondary)">
+                          {t('PatientDoctors.card.aboutLabel')}:
                         </span>{' '}
-                        {expertiseText}
+                        {bioText}
                       </span>
                     </p>
-                    {doctor.bio && (
-                      <p className="text-sm text-(--text-primary) flex items-start gap-3">
-                        <FileText className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                        <span className="line-clamp-2 text-sm italic text-(--text-muted) leading-relaxed">
-                          <span className="font-semibold not-italic text-(--text-secondary)">
-                            {t('PatientDoctors.card.aboutLabel')}:
-                          </span>{' '}
-                          {doctor.bio}
-                        </span>
-                      </p>
-                    )}
                     {/* Time / Dates available */}
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
                       <Calendar className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />
-                      <span>{t('PatientDoctors.card.scheduleFlexible')}</span>
+                      <span>
+                        <span className="font-semibold">
+                          {t('PatientDoctors.card.scheduleLabel')}:
+                        </span>{' '}
+                        {nextScheduleText}
+                      </span>
                     </p>
                     {/* Price */}
                     <p className="text-sm text-(--text-primary) flex items-start gap-3">
