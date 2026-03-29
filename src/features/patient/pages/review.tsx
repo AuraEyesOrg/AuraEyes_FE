@@ -594,7 +594,7 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
-      <N8nChatWidget />
+      <N8nChatWidget consultationContext={consultationContext} />
     </FocusModeLayout>
   );
 }

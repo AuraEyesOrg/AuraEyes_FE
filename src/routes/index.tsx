@@ -155,6 +155,9 @@ const OphthalmologistSlotManagementPage = lazy(
 const OphthalmologistContractPage = lazy(
   () => import('@/features/ophthalmologist/pages/contract')
 );
+const OphthalmologistWalletPage = lazy(
+  () => import('@/features/ophthalmologist/pages/wallet')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -171,6 +174,9 @@ const SystemAdminOphthalmologists = lazy(
 );
 const SystemAdminVerificationRequests = lazy(
   () => import('@/features/system-admin/pages/verification-requests')
+);
+const SystemAdminWithdrawalRequests = lazy(
+  () => import('@/features/system-admin/pages/withdrawal-requests')
 );
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
@@ -486,6 +492,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistContractPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/wallet"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistWalletPage />}
             />
           }
         />
@@ -1194,6 +1209,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminVerificationRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/withdrawal-requests"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminWithdrawalRequests />
             </PrivateRoute>
           }
         />

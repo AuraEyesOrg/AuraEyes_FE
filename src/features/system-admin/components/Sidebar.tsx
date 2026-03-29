@@ -17,6 +17,7 @@ import {
   ScrollText,
   ClipboardCheck,
   FileCheck,
+  Landmark,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -37,6 +38,11 @@ const navItems = [
     label: 'Verifications',
     icon: ClipboardCheck,
     path: '/system-admin/verifications',
+  },
+  {
+    label: 'Withdrawal Requests',
+    icon: Landmark,
+    path: '/system-admin/withdrawal-requests',
   },
   { label: 'Patients', icon: Users, path: '/system-admin/patients' },
   { label: 'Permissions', icon: KeyRound, path: '/system-admin/permissions' },
