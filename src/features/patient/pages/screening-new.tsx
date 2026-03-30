@@ -22,6 +22,8 @@ import { screeningApi } from '../api/screening.api';
 import { agreeScreeningConsent } from '../api/consent.api';
 import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
 
+import { aiCoreClient } from '@/lib/axios';
+
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
 interface UploadedImage {
