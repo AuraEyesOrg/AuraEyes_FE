@@ -53,6 +53,20 @@ const formatDate = (value: string | undefined) => {
 const isImageUrl = (url: string) =>
   /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
 
+const formatDegreeLevel = (value?: string) => {
+  if (!value) return 'N/A';
+
+  const mapping: Record<string, string> = {
+    Bachelor: 'Bachelor',
+    Master: 'Master',
+    Doctorate: 'Doctorate',
+    AssociateProfessor: 'Associate Professor',
+    Professor: 'Professor',
+  };
+
+  return mapping[value] ?? value;
+};
+
 const getCredentialCounts = (doctor: OphthalmologistListItem) => {
   const licenseCount = doctor.licenses?.length ?? (doctor.licenseUrl ? 1 : 0);
   const degreeCount = doctor.degrees?.length ?? (doctor.degreeUrl ? 1 : 0);
@@ -329,7 +343,10 @@ function VerificationDetailModal({
 
   const renderCredentialCards = (
     credentials: NonNullable<OphthalmologistListItem['licenses']>,
-    emptyMessage: string
+    emptyMessage: string,
+    options?: {
+      showDegreeLevel?: boolean;
+    }
   ) => {
     if (!credentials.length) {
       return (
@@ -356,6 +373,14 @@ function VerificationDetailModal({
                   {credential.issuingAuthority || 'N/A'}
                 </dd>
               </div>
+              {options?.showDegreeLevel && (
+                <div className="flex justify-between gap-3">
+                  <dt>Học vị</dt>
+                  <dd className="text-right">
+                    {formatDegreeLevel(credential.degreeLevel)}
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between gap-3">
                 <dt>Ngày cấp</dt>
                 <dd className="text-right">
@@ -447,7 +472,8 @@ function VerificationDetailModal({
             </h4>
             {renderCredentialCards(
               degrees,
-              'Bác sĩ chưa cung cấp thông tin bằng cấp.'
+              'Bác sĩ chưa cung cấp thông tin bằng cấp.',
+              { showDegreeLevel: true }
             )}
           </section>
         </div>

@@ -7,7 +7,11 @@ import {
 } from '@playwright/test';
 import { injectAuthState } from '../helpers/auth.helper';
 import { query } from '../helpers/postgres';
-import { getApiBaseUrl, getBackdoorKey } from '../helpers/test-backdoor.helper';
+import {
+  getApiBaseUrl,
+  getBackdoorKey,
+  resetAndSeed,
+} from '../helpers/test-backdoor.helper';
 
 type MagicLoginResponse = {
   success: boolean;
@@ -106,6 +110,10 @@ async function injectMagicAuth(
 }
 
 test.describe('Flow 01 - Ophthalmologist Onboarding and Verification', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetAndSeed(request);
+  });
+
   test('should complete ophthalmologist onboarding, admin verification, and protected access', async ({
     page,
     request,
@@ -205,5 +213,17 @@ test.describe('Flow 01 - Ophthalmologist Onboarding and Verification', () => {
     await expect(
       page.getByText(/Hợp đồng hợp tác|Dashboard/i).first()
     ).toBeVisible();
+  });
+
+  test('should block submit when required onboarding fields are missing', async ({
+    page,
+  }) => {
+    await page.goto('/register-doctor');
+    await expect(
+      page.getByRole('heading', { name: 'Doctor Registration' })
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Submit Application' }).click();
+    await expect(page.getByText(/required/i).first()).toBeVisible();
   });
 });
