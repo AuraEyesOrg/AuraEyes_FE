@@ -1,70 +1,50 @@
-# Project Context: Aura Retinal Health Screening (Aura Eyes)
+# Project Guidelines
 
-You are an expert Senior Frontend Engineer assisting with the "Aura Eyes" project.
-This project is a modern web application focused on retinal health screening.
+## Code Style
 
-## Tech Stack & Versions
+- Use React 19 functional components and hooks only.
+- Keep strict TypeScript typing. Avoid `any`; prefer `interface` for object contracts.
+- Prefer named exports for components and feature modules.
+- Use Tailwind CSS v4 first; use SASS only for complex legacy overrides.
+- Use `@tanstack/react-query` for server data and `zustand` for global client state.
+- Use `react-hook-form` with `yup` schemas defined outside component bodies.
+- Use `@` path alias for imports from `src`.
 
-- **Framework:** React 19 (Latest) with Vite.
-- **Language:** TypeScript (Strict mode).
-- **Styling:** Tailwind CSS v4 (using `@tailwindcss/vite`), SASS for complex overrides.
-- **State Management:** Zustand (Client state), TanStack Query v5 (Server state/Async).
-- **Routing:** React Router v7.
-- **Forms:** React Hook Form + Yup (Validation) + @hookform/resolvers.
-- **Animations:** GSAP (Complex timelines) & Framer Motion (UI transitions).
-- **Icons:** Lucide React.
-- **Testing:** Jest + React Testing Library.
+## Architecture
 
-## Coding Principles & Rules
+- Provider composition lives in `src/provider.tsx` (i18n, auth locale, query client, theme, SignalR).
+- Route graph is centralized in `src/routes/index.tsx` with role-based and locale-aware guards.
+- Keep API access in `src/lib/api.ts` and auth/refresh behavior in `src/lib/interceptors.ts`.
+- Follow feature-sliced boundaries under `src/features/*`.
 
-### 1. React & TypeScript
+## Build and Test
 
-- **React 19:** Use functional components and Hooks. Avoid class components.
-- **Typing:** strictly type all props, state, and API responses. Avoid `any`. Use `interface` for object definitions.
-- **Imports:** Use absolute paths (configured via `vite-tsconfig-paths`) if applicable, or explicit relative paths.
-- **Exports:** Prefer named exports for components (`export const Component = ...`) to ensure consistent naming.
+- Install: `npm install`
+- Dev server: `npm run dev`
+- Build: `npm run build` (runs `prebuild` to generate i18n types)
+- Unit/component tests: `npm run test`
+- E2E tests: `npm run test:e2e` (requires setup in docs)
+- Lint/format: `npm run lint`, `npm run lint:fix`, `npm run format`
 
-### 2. Styling (Tailwind CSS v4)
+## Conventions
 
-- **Priority:** Use Tailwind utility classes for styling. Only use SASS (`.scss`) for very complex animations or legacy overrides.
-- **Design System:** Follow a mobile-first approach.
-- **Class Sorting:** Keep Tailwind classes organized (e.g., layout -> spacing -> typography -> visual).
-- **Components:** When creating reusable UI components, use `clsx` or `tailwind-merge` (if available) or template literals to allow class overriding.
+- Locale-first routing is required. Keep `/:locale/*` paths consistent with route guards and navigation helpers.
+- Default locale is Vietnamese (`vi`). Keep locale behavior aligned in i18n and language store logic.
+- Keep new ophthalmologist translations in `Ophthalmologist.*` namespaces for both `vi` and `en` locale files.
+- `PrivateRoute` wrappers must pass a `ReactElement` child, not a `ReactNode`.
+- Regenerate translation typings when locale keys change: `npm run i18n:types`.
 
-### 3. State Management
+## Docs
 
-- **Global UI State:** Use `zustand`. Keep stores small and focused (e.g., `useAuthStore`, `useThemeStore`).
-- **Server Data:** ALWAYS use `@tanstack/react-query` for fetching data. Do not use `useEffect` + `axios` directly in components for data fetching.
-- **Mutations:** Use `useMutation` for POST/PUT/DELETE operations.
+- Overview and setup: [../README.md](../README.md)
+- Router intent and layout notes: [../ROUTES_README.md](../ROUTES_README.md)
+- Structure map and selectors: [../PROJECT_STRUCTURE_MAP.md](../PROJECT_STRUCTURE_MAP.md)
+- E2E prerequisites and env setup: [../docs/E2E_PLAYWRIGHT_EXECUTION_GUIDE.md](../docs/E2E_PLAYWRIGHT_EXECUTION_GUIDE.md)
+- E2E flow coverage: [../tests/e2e/e2e-flows.md](../tests/e2e/e2e-flows.md)
 
-### 4. Forms & Validation
+## Pitfalls
 
-- **Pattern:** Use `react-hook-form` controlled by `yup` schemas via `@hookform/resolvers/yup`.
-- **Validation:** Define the Yup schema _outside_ the component or in a separate `.schema.ts` file.
-
-### 5. Routing (React Router v7)
-
-- Use the modern data APIs (loaders, actions) if adhering to the v7 full-stack capabilities, or standard Route objects.
-- Ensure type safety for route parameters.
-
-### 6. Animations
-
-- **UI Interactions:** Use `framer-motion` for simple layout transitions, hover effects, and page transitions.
-- **Complex Sequences:** Use `gsap` for timeline-based animations or high-performance interactions.
-
-### 7. Testing
-
-- Write unit tests using `jest` and `@testing-library/react`.
-- Mock API calls using Jest mocks or MSW (if setup).
-
-## Code Generation Examples
-
-**Fetching Data:**
-
-```tsx
-// Do this:
-const { data, isLoading } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
-
-// Do NOT do this:
-useEffect(() => { axios.get('/users').then(...) }, []);
-```
+- `README.md` contains some legacy scripts that do not match current `package.json`; trust `package.json` scripts.
+- Playwright config uses port `3001` in test mode, while some docs mention `3000`.
+- Runtime env mostly uses `VITE_API_END_POINT`; avoid mixing it with `VITE_API_ENDPOINT`.
+- Jest is the active unit test runner even though Vite config includes a `test` section.

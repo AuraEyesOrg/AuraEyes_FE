@@ -358,8 +358,13 @@ export default function SettingsPage() {
         authUser?.fullName ??
         t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
       email: profileData?.userEmail ?? authUser?.email ?? 'N/A',
-      phone: profileData?.userPhoneNumber ?? 'N/A',
-      bio: profileData?.bio?.trim() || 'No profile bio available.',
+      phone: 'N/A',
+      bio:
+        profileData?.bio?.trim() ||
+        t(
+          'Ophthalmologist.settings.defaults.noBio',
+          'No profile bio available.'
+        ),
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
       hospital: authUser?.organizationId ?? 'N/A',

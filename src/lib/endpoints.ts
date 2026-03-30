@@ -196,6 +196,11 @@ export const API_ENDPOINTS = {
     END: (sessionId: string) => `/consultation-sessions/${sessionId}/end`,
   },
 
+  CONSENTS: {
+    AGREE_SCREENING: (screeningId: string) =>
+      `/consents/screenings/${screeningId}/agree`,
+  },
+
   // Appointment Slots - Patient Booking Flow
   APPOINTMENT_SLOTS: {
     LIST: '/appointment-slots',

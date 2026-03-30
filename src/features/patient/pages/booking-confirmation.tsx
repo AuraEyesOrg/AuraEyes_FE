@@ -35,6 +35,8 @@ import {
 import PatientImageViewer from '../components/ImageViewer';
 import type { Anomaly, RetinalImage, ToggleState } from '../types/type';
 import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { buildBookingShareConsentContent } from '../constants/consent-content';
 
 // ============ HELPERS ============
 
@@ -234,6 +236,18 @@ export default function BookingConfirmationPage(
     setErrorMessage('');
 
     try {
+      if (
+        consultationContext?.screeningId &&
+        (shareRetinalImages || shareAiResults)
+      ) {
+        await agreeScreeningConsent(consultationContext.screeningId, {
+          content: buildBookingShareConsentContent(
+            shareRetinalImages,
+            shareAiResults
+          ),
+        });
+      }
+
       const result = await confirmMutation.mutateAsync({
         slotId,
         request: {
