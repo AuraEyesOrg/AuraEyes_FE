@@ -642,6 +642,140 @@ declare module 'i18next' {
       primaryCta: string;
       secondaryCta: string;
     };
+    GuestMaintenance: {
+      badge: string;
+      title: string;
+      description: string;
+      primaryCta: string;
+      secondaryCta: string;
+      card1: {
+        title: string;
+        description: string;
+      };
+      card2: {
+        title: string;
+        description: string;
+      };
+    };
+    GuestNotFound: {
+      badge: string;
+      title: string;
+      description: string;
+      requestedPath: string;
+      primaryCta: string;
+      secondaryCta: string;
+    };
+    PatientDoctors: {
+      avatar: {
+        fallbackInitials: string;
+      };
+      common: {
+        noData: string;
+      };
+      header: {
+        title: string;
+        subtitle: string;
+        backToReview: string;
+      };
+      hero: {
+        title: string;
+        feature1: string;
+        feature2: string;
+        feature3: string;
+        feature4: string;
+        hotlineLabel: string;
+        hotline: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      consultMode: {
+        now: string;
+        schedule: string;
+        clinics: string;
+        nowNotice: string;
+      };
+      filters: {
+        showOptions: string;
+        hideOptions: string;
+        title: string;
+        clear: string;
+        timeFrom: string;
+        timeTo: string;
+        minRating: string;
+        price: string;
+        min: string;
+        max: string;
+        any: string;
+        maxRangeWarning: string;
+        priceHint: string;
+      };
+      loading: {
+        doctors: string;
+        prices: string;
+      };
+      degrees: {
+        Bachelor: string;
+        Master: string;
+        Doctorate: string;
+        AssocProf: string;
+        Professor: string;
+        MD: string;
+      };
+      card: {
+        unnamed: string;
+        verifiedCredentials: string;
+        verifiedOphthalmologist: string;
+        degreeLabel: string;
+        degreeMissing: string;
+        certificateLabel: string;
+        certificateMissing: string;
+        experience: string;
+        expertiseLabel: string;
+        aboutLabel: string;
+        bioMissing: string;
+        generalOphthalmology: string;
+        scheduleLabel: string;
+        scheduleFlexible: string;
+        scheduleNoSlots: string;
+        scheduleNext: string;
+        priceLabel: string;
+        priceBySchedule: string;
+        bookNow: string;
+        bookAppointment: string;
+      };
+      empty: {
+        title: string;
+        adjustFilters: string;
+        adjustSearch: string;
+      };
+      assistant: {
+        title: string;
+        description: string;
+        cta: string;
+      };
+      modal: {
+        verifiedExperience: string;
+        noRating: string;
+        reviewCount: string;
+        totalCredentials: string;
+        expertiseLabel: string;
+        aboutDoctor: string;
+        patientFeedback: string;
+        anonymousPatient: string;
+        noCommentProvided: string;
+        noReviewsYet: string;
+        bookAppointment: string;
+      };
+      credentials: {
+        title: string;
+        degrees: string;
+        certificates: string;
+        defaultDegree: string;
+        defaultCertificate: string;
+        empty: string;
+      };
+    };
     About: {
       heroTitle: string;
       heroDescription: string;

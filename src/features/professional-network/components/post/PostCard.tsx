@@ -88,6 +88,24 @@ const reactionConfig: Record<
   },
 };
 
+const parseInternalCaseSections = (content: string) => {
+  const resultMatch = content.match(
+    /\[CASE_RESULT\]([\s\S]*?)\[\/CASE_RESULT\]/
+  );
+  const doctorMatch = content.match(
+    /\[DOCTOR_NOTE\]([\s\S]*?)\[\/DOCTOR_NOTE\]/
+  );
+
+  if (!resultMatch && !doctorMatch) {
+    return null;
+  }
+
+  return {
+    caseResult: resultMatch?.[1]?.trim() ?? '',
+    doctorNote: doctorMatch?.[1]?.trim() ?? '',
+  };
+};
+
 export function PostCard({
   post,
   currentUserId,
@@ -161,6 +179,9 @@ export function PostCard({
       : null;
 
   const isOwnPost = !!currentUserId && post.author.id === currentUserId;
+  const parsedInternalCase = post.isInternalCase
+    ? parseInternalCaseSections(post.content)
+    : null;
 
   const handleSave = () => {
     if (isOwnPost) return;
@@ -404,25 +425,52 @@ export function PostCard({
               <>
                 {/* Content */}
                 <Link to={`/network/post/${post.id}`} className="block mt-2">
-                  <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
-                    {post.content.split('\n').map((line, i) => {
-                      const boldRegex = /\*\*(.*?)\*\*/g;
-                      const parts = line.split(boldRegex);
-
-                      return (
-                        <p
-                          key={i}
-                          className={
-                            line.startsWith('#') ? 'text-brand-primary' : ''
-                          }
-                        >
-                          {parts.map((part, j) =>
-                            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-                          )}
+                  {post.isInternalCase && parsedInternalCase ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
+                          Case Result and Diagnosis
                         </p>
-                      );
-                    })}
-                  </div>
+                        <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
+                          {parsedInternalCase.caseResult ||
+                            'No AI summary or diagnosis provided.'}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
+                          Doctor Note
+                        </p>
+                        <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
+                          {parsedInternalCase.doctorNote ||
+                            `${post.author.fullName}: "No note provided."`}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[15px] text-(--text-primary) whitespace-pre-wrap leading-normal">
+                      {post.content.split('\n').map((line, i) => {
+                        const boldRegex = /\*\*(.*?)\*\*/g;
+                        const parts = line.split(boldRegex);
+
+                        return (
+                          <p
+                            key={i}
+                            className={
+                              line.startsWith('#') ? 'text-brand-primary' : ''
+                            }
+                          >
+                            {parts.map((part, j) =>
+                              j % 2 === 1 ? (
+                                <strong key={j}>{part}</strong>
+                              ) : (
+                                part
+                              )
+                            )}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  )}
                 </Link>
 
                 {/* Media - images from attachments */}

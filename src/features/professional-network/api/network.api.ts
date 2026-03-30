@@ -27,6 +27,7 @@ export const NETWORK_ENDPOINTS = {
   POSTS: {
     FEED: '/network/feed',
     CREATE: '/network/posts',
+    SHARE_CONSULTATION: '/network/posts/share-consultation',
     GET: (id: string) => `/network/posts/${id}`,
     UPDATE: (id: string) => `/network/posts/${id}`,
     DELETE: (id: string) => `/network/posts/${id}`,
@@ -167,6 +168,17 @@ export const postsApi = {
           'Content-Type': 'multipart/form-data',
         },
       }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * One-click share of an internal consultation case.
+   */
+  async shareConsultationCase(consultationSessionId: string) {
+    const response = await api.post<ApiResponse<string>>(
+      NETWORK_ENDPOINTS.POSTS.SHARE_CONSULTATION,
+      { consultationSessionId }
     );
     return response.data.data;
   },

@@ -121,6 +121,7 @@ export interface Notification {
   title: string;
   message: string;
   type: NotificationType;
+  referenceId?: string | null;
   isRead: boolean;
   payload: NotificationPayloadRaw;
   createdAt: string;
@@ -134,6 +135,7 @@ export interface SignalRNotification {
   title: string;
   message: string;
   type: NotificationType;
+  referenceId?: string | null;
   payload: NotificationPayloadRaw;
   createdAt: string;
 }
@@ -143,6 +145,7 @@ export interface SignalRNotification {
  */
 export interface NotificationsResponse {
   items: Notification[];
+  unreadCount?: number;
   totalCount: number;
   pageNumber: number;
   pageSize: number;
@@ -154,7 +157,8 @@ export interface NotificationsResponse {
  * Unread count response
  */
 export interface UnreadCountResponse {
-  count: number;
+  count?: number;
+  unreadCount?: number;
 }
 
 /**
@@ -276,10 +280,19 @@ export function getNotificationRoute(
   const normalizedRoles = roles.map((r) => r.toLowerCase());
   const payload = parsePayload(notification.payload);
 
-  const screeningId = readString(payload, 'screeningId', 'aiScreeningId');
-  const consultationId = readString(payload, 'sessionId', 'consultationId');
-  const appointmentId = readString(payload, 'appointmentId', 'slotId');
-  const transactionId = readString(payload, 'transactionId');
+  const fallbackReferenceId =
+    typeof notification.referenceId === 'string'
+      ? notification.referenceId
+      : '';
+
+  const screeningId =
+    readString(payload, 'screeningId', 'aiScreeningId') || fallbackReferenceId;
+  const consultationId =
+    readString(payload, 'sessionId', 'consultationId') || fallbackReferenceId;
+  const appointmentId =
+    readString(payload, 'appointmentId', 'slotId') || fallbackReferenceId;
+  const transactionId =
+    readString(payload, 'transactionId') || fallbackReferenceId;
 
   const _isSystemAdmin = hasRole(normalizedRoles, ['systemadmin']);
   const isOrgAdmin = hasRole(normalizedRoles, [

@@ -14,7 +14,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
-import { useNotifications } from '@/features/notifications/hooks/use-notifications';
+import {
+  useNotifications,
+  useUnreadCount,
+} from '@/features/notifications/hooks/use-notifications';
 import { getNotificationTypeLabel } from '@/store/useNotificationStore';
 import {
   getNotificationIcon,
@@ -52,6 +55,8 @@ export default function NotificationDropdown({
       enabled: isOpen,
     }
   );
+
+  useUnreadCount();
 
   // Get recent notifications (max 5)
   const recentNotifications = notificationsResponse?.items ?? [];
@@ -214,7 +219,7 @@ export default function NotificationDropdown({
           {recentNotifications.length > 0 && (
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <Link
-                to="/notifications"
+                to="/notifications/view-all"
                 className="block text-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 onClick={() => setIsOpen(false)}
               >

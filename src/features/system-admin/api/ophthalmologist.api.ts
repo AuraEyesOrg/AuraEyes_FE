@@ -11,6 +11,7 @@ import { unwrapApiData } from '@/types/api-response';
 export interface OphthalmologistCredentialItem {
   id: string;
   name: string;
+  degreeLevel?: string;
   issuingAuthority?: string;
   issuedDate: string;
   expiryDate?: string;

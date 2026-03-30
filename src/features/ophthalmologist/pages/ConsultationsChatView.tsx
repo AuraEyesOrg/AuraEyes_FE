@@ -46,7 +46,7 @@ import {
   useSendMessage,
   consultationKeys,
 } from '@/features/consultation/hooks';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import {
   ChatStatus,
@@ -72,6 +72,7 @@ import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { postsApi } from '@/features/professional-network/api/network.api';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -346,6 +347,7 @@ export default function ConsultationsChatView({
   const [isSearchPending, startSearchTransition] = useTransition();
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
+  const [shareDoctorNote, setShareDoctorNote] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
@@ -380,6 +382,69 @@ export default function ConsultationsChatView({
   const sendMessageMutation = useSendMessage();
   const cancelSessionMutation = useCancelSession();
   const endSessionMutation = useEndSession();
+
+  const buildInternalCasePostContent = (
+    aiSummary: string,
+    finalDiagnosis: string,
+    doctorName: string,
+    doctorNote: string
+  ) => {
+    return [
+      '[CASE_RESULT]',
+      `AI Summary: ${aiSummary || 'N/A'}`,
+      `Final Diagnosis: ${finalDiagnosis || 'N/A'}`,
+      '[/CASE_RESULT]',
+      '',
+      '[DOCTOR_NOTE]',
+      `${doctorName}: "${doctorNote}"`,
+      '[/DOCTOR_NOTE]',
+    ].join('\n');
+  };
+
+  const shareConsultationMutation = useMutation({
+    mutationFn: async ({
+      consultationSessionId,
+      aiSummary,
+      finalDiagnosis,
+      doctorName,
+      doctorNote,
+    }: {
+      consultationSessionId: string;
+      aiSummary: string;
+      finalDiagnosis: string;
+      doctorName: string;
+      doctorNote: string;
+    }) => {
+      const formData = new FormData();
+      formData.append('authorType', 'Ophthalmologist');
+      formData.append('category', 'CasePresentation');
+      formData.append('visibility', 'Public');
+      formData.append('allowComments', 'true');
+      formData.append('isInternalCase', 'true');
+      formData.append('consultationSessionId', consultationSessionId);
+      formData.append('isAnonymizationConfirmed', 'true');
+      formData.append(
+        'content',
+        buildInternalCasePostContent(
+          aiSummary,
+          finalDiagnosis,
+          doctorName,
+          doctorNote
+        )
+      );
+      return postsApi.createPost(formData);
+    },
+    onSuccess: () => {
+      toast.success('Case shared to professional network');
+      queryClient.invalidateQueries({ queryKey: ['network'] });
+      setShareDoctorNote('');
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(error, 'Failed to share consultation case')
+      );
+    },
+  });
 
   const phase = currentSession ? getPhase(currentSession) : 'PRE_VISIT';
   const phaseUIConfig = getPhaseUIConfig(t);
@@ -1403,6 +1468,57 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                  Share Internal Case
+                </p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                  Share retinal images uploaded by patient and final doctor
+                  diagnosis to Aura Network in anonymized mode.
+                </p>
+                <textarea
+                  value={shareDoctorNote}
+                  onChange={(event) => setShareDoctorNote(event.target.value)}
+                  placeholder="Doctor note for peers (example: Cac ban nhin vao case nay can chu y... )"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-[#1e3a5f] dark:bg-[#0b1f3a] dark:text-slate-100"
+                  rows={3}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    currentSession &&
+                    selectedSession?.caseSnapshot &&
+                    shareConsultationMutation.mutate({
+                      consultationSessionId: currentSession.id,
+                      aiSummary: selectedSession.caseSnapshot.summary ?? '',
+                      finalDiagnosis:
+                        selectedSession.caseSnapshot.findings ??
+                        selectedSession.caseSnapshot.summary ??
+                        '',
+                      doctorName: user?.fullName ?? 'Doctor',
+                      doctorNote: shareDoctorNote.trim(),
+                    })
+                  }
+                  disabled={
+                    !currentSession?.id ||
+                    !selectedSession?.caseSnapshot ||
+                    !shareDoctorNote.trim() ||
+                    shareConsultationMutation.isPending
+                  }
+                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {shareConsultationMutation.isPending
+                    ? 'Sharing case...'
+                    : 'Share Internal Case To Network'}
+                </button>
+                {!selectedSession?.caseSnapshot && (
+                  <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-300">
+                    This consultation has no retinal snapshot / final diagnosis
+                    data yet, so it cannot be shared.
+                  </p>
+                )}
               </div>
             </div>
 

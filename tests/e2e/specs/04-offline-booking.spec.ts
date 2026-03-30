@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
+import { resetAndSeed } from '../helpers/test-backdoor.helper';
 import { bypassRecaptcha, loginByUi } from '../helpers/ui-login.helper';
 import { query } from '../helpers/postgres';
 
@@ -7,6 +8,10 @@ const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
 test.describe('Flow 04 - Organisation Slot Booking and Offline Appointment', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetAndSeed(request);
+  });
+
   test('patient reviews organisation slots and completes offline appointment booking from clinics page', async ({
     browser,
   }) => {
@@ -89,6 +94,39 @@ test.describe('Flow 04 - Organisation Slot Booking and Offline Appointment', () 
       timeout: 15_000,
     });
 
+    await ctx.close();
+  });
+
+  test('should show validation when booking reason is missing', async ({
+    browser,
+  }) => {
+    const orgRows = await query<{ OrgName: string }>(
+      `SELECT "Name" AS "OrgName" FROM "Organisations" ORDER BY "CreatedAt" DESC LIMIT 1`
+    );
+    expect(orgRows.length).toBeGreaterThan(0);
+
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+
+    await bypassRecaptcha(page);
+    await loginByUi(page, PATIENT_EMAIL, DEFAULT_PASSWORD, /\/patient\//, {
+      postLoginPath: '/patient/clinics',
+    });
+
+    await page
+      .getByPlaceholder(/Search organisation by name, city, or address/i)
+      .fill(orgRows[0].OrgName);
+    await page
+      .locator('button', { hasText: new RegExp(orgRows[0].OrgName, 'i') })
+      .first()
+      .click();
+
+    await page
+      .getByRole('button', { name: /Book Appointment|Book Clinic Visit/i })
+      .first()
+      .click();
+
+    await expect(page.getByText(/reason|required/i).first()).toBeVisible();
     await ctx.close();
   });
 });

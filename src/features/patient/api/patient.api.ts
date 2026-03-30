@@ -221,6 +221,26 @@ export interface OphthalmologistSearchItem {
   ratingCount?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
+  degrees?: {
+    id?: string;
+    name?: string | null;
+    degreeLevel?: string | null;
+    title?: string | null;
+    abbreviation?: string | null;
+    degreeUrl?: string | null;
+    url?: string | null;
+  }[];
+  certificates?: {
+    id?: string;
+    type?: string;
+    name?: string | null;
+    degreeLevel?: string | null;
+    issuingAuthority?: string | null;
+    issuedDate?: string;
+    expiryDate?: string | null;
+    certificateUrl?: string | null;
+    isExpired?: boolean;
+  }[];
 }
 
 export interface OphthalmologistDetailItem {
@@ -239,6 +259,26 @@ export interface OphthalmologistDetailItem {
   ratingCount?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
+  degrees?: {
+    id?: string;
+    name?: string | null;
+    degreeLevel?: string | null;
+    title?: string | null;
+    abbreviation?: string | null;
+    degreeUrl?: string | null;
+    url?: string | null;
+  }[];
+  certificates?: {
+    id: string;
+    type?: string;
+    name: string;
+    degreeLevel?: string | null;
+    issuingAuthority?: string | null;
+    issuedDate: string;
+    expiryDate?: string | null;
+    certificateUrl?: string | null;
+    isExpired?: boolean;
+  }[];
 }
 
 export interface AvailableSlotItem {

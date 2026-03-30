@@ -7,11 +7,12 @@ import {
   BarChart3,
   FileText,
   Users,
-  Network,
+  Globe,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface SidebarProps {
   pendingCount?: number;
@@ -27,7 +28,7 @@ const navItems = [
     hasBadge: true,
   },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
-  { icon: Network, label: 'Aura Network', path: '/network' },
+  { icon: Globe, label: 'Aura Network', path: '/network' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
   { icon: CalendarCog, label: 'Slots', path: '/organisation/slots' },
   { icon: Settings, label: 'Settings', path: '/organisation/settings' },
@@ -35,6 +36,7 @@ const navItems = [
 
 export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
   const contractApproved = user?.contractStatus === 'Active';
   const visibleNavItems = contractApproved
@@ -87,7 +89,11 @@ export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
                     <span className={isActive ? 'text-primary' : ''}>
                       <item.icon className="w-5 h-5" />
                     </span>
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium">
+                      {item.path === '/network'
+                        ? t('Common.sidebar.auraNetwork', 'Aura Network')
+                        : item.label}
+                    </span>
                   </div>
                   {item.hasBadge && pendingCount > 0 && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">

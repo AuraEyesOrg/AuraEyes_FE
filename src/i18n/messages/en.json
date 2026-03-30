@@ -13,7 +13,10 @@
     "bookAppointment": "Book Appointment",
     "findDoctor": "Find a Doctor",
     "learnMore": "Learn More",
-    "language": "Language"
+    "language": "Language",
+    "sidebar": {
+      "auraNetwork": "Aura Network"
+    }
   },
   "Auth": {
     "login": "Login",
@@ -638,6 +641,140 @@
     "description": "Aura Eyes helps medical organizations accelerate screening, standardize data, and connect patients to specialists.",
     "primaryCta": "Book Appointment",
     "secondaryCta": "Find a Doctor"
+  },
+  "GuestMaintenance": {
+    "badge": "System Maintenance",
+    "title": "AURA is tuning the engine.",
+    "description": "We're currently performing maintenance to improve performance and reliability. Please check back in a few minutes. Thank you for your patience.",
+    "primaryCta": "Back to Home",
+    "secondaryCta": "View Status Page",
+    "card1": {
+      "title": "Service update in progress",
+      "description": "We are optimizing processing pipelines and improving the online consultation experience."
+    },
+    "card2": {
+      "title": "Data security remains a priority",
+      "description": "All user data remains protected and is not affected during this maintenance window."
+    }
+  },
+  "GuestNotFound": {
+    "badge": "404 Not Found",
+    "title": "Page not found",
+    "description": "The page you requested does not exist in the AURA system. Please check the URL or go back to the homepage.",
+    "requestedPath": "Requested path",
+    "primaryCta": "Back to Home",
+    "secondaryCta": "Explore AURA"
+  },
+  "PatientDoctors": {
+    "avatar": {
+      "fallbackInitials": "DR"
+    },
+    "common": {
+      "noData": "-"
+    },
+    "header": {
+      "title": "Find Ophthalmologists",
+      "subtitle": "Search and select a verified eye specialist for your consultation",
+      "backToReview": "Back to Review"
+    },
+    "hero": {
+      "title": "Video Consultation With Doctors",
+      "feature1": "Remote health consultation with specialist doctors",
+      "feature2": "Message your doctor before, during, and after consultation",
+      "feature3": "Fast and convenient payment",
+      "feature4": "Secure and private call information",
+      "hotlineLabel": "Need specialist support:",
+      "hotline": "1900 2115"
+    },
+    "search": {
+      "placeholder": "Search doctors, specialties..."
+    },
+    "consultMode": {
+      "now": "Consult Now",
+      "schedule": "Book Appointment",
+      "clinics": "Medical Facilities",
+      "nowNotice": "You selected video consultation. To book an on-site visit, please choose the corresponding function."
+    },
+    "filters": {
+      "showOptions": "Show options",
+      "hideOptions": "Hide options",
+      "title": "Filters",
+      "clear": "Clear",
+      "timeFrom": "Time From",
+      "timeTo": "Time To",
+      "minRating": "Min Rating",
+      "price": "Price (VND)",
+      "min": "Min",
+      "max": "Max",
+      "any": "Any",
+      "maxRangeWarning": "Selected time range is too wide. Please choose up to {{maxDays}} days.",
+      "priceHint": "Price filter is being applied. If the list is empty, try reducing the price range or changing the time range."
+    },
+    "loading": {
+      "doctors": "Loading ophthalmologists...",
+      "prices": "Loading price availability..."
+    },
+    "degrees": {
+      "Bachelor": "B.S.",
+      "Master": "M.Sc.",
+      "Doctorate": "Ph.D.",
+      "AssocProf": "Assoc. Prof.",
+      "Professor": "Prof.",
+      "MD": "MD"
+    },
+    "card": {
+      "unnamed": "Unnamed Ophthalmologist",
+      "verifiedCredentials": "{{count}} verified credentials",
+      "verifiedOphthalmologist": "Verified ophthalmologist",
+      "degreeLabel": "Degrees",
+      "degreeMissing": "Degree information is unavailable",
+      "certificateLabel": "Certificates",
+      "certificateMissing": "Certificate information is unavailable",
+      "experience": "AuraEyes Clinic, {{years}} years of experience",
+      "expertiseLabel": "Expertise",
+      "aboutLabel": "About",
+      "bioMissing": "No bio provided yet",
+      "generalOphthalmology": "General ophthalmology",
+      "scheduleLabel": "Schedule",
+      "scheduleFlexible": "Flexible",
+      "scheduleNoSlots": "No available schedule yet",
+      "scheduleNext": "{{datetime}}",
+      "priceLabel": "Consultation fee",
+      "priceBySchedule": "Based on selected slot",
+      "bookNow": "Book Now",
+      "bookAppointment": "Book Appointment"
+    },
+    "empty": {
+      "title": "No doctors found",
+      "adjustFilters": "Try adjusting your time/rating/price filters.",
+      "adjustSearch": "Try adjusting your search term."
+    },
+    "assistant": {
+      "title": "Need help choosing?",
+      "description": "Not sure which doctor to pick? Ask AURA for suggestions based on your condition and preferred schedule.",
+      "cta": "Ask AURA AI Assistant"
+    },
+    "modal": {
+      "verifiedExperience": "Verified - {{years}} yrs exp",
+      "noRating": "No rating",
+      "reviewCount": "{{count}} Reviews",
+      "totalCredentials": "Credentials",
+      "expertiseLabel": "Expertise",
+      "aboutDoctor": "About Doctor",
+      "patientFeedback": "Patient Feedback",
+      "anonymousPatient": "Anonymous Patient",
+      "noCommentProvided": "No comment provided.",
+      "noReviewsYet": "There are no reviews yet.",
+      "bookAppointment": "Book Appointment"
+    },
+    "credentials": {
+      "title": "Credentials",
+      "degrees": "Degrees",
+      "certificates": "Certificates",
+      "defaultDegree": "Degree",
+      "defaultCertificate": "Certificate",
+      "empty": "No credentials available."
+    }
   },
   "About": {
     "heroTitle": "Shaping the future of retinal screening",
