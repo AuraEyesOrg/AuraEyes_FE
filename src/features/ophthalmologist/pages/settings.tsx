@@ -30,7 +30,11 @@ import {
   DollarSign,
   X,
 } from 'lucide-react';
-import { DoctorSidebar, DoctorHeader } from '../components';
+import {
+  DoctorSidebar,
+  DoctorHeader,
+  UploadCredentialsModal,
+} from '../components';
 import { useTheme } from '@/contexts/ThemeContext';
 import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
@@ -219,6 +223,8 @@ export default function SettingsPage() {
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showUploadCredentialsModal, setShowUploadCredentialsModal] =
+    useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
     null
@@ -772,7 +778,10 @@ export default function SettingsPage() {
                       'Medical Credentials'
                     )}
                   </h2>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-sm font-medium transition-colors">
+                  <button
+                    onClick={() => setShowUploadCredentialsModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-sm font-medium transition-colors"
+                  >
                     <Upload className="w-4 h-4" />
                     {t(
                       'Ophthalmologist.settings.credentials.upload',
@@ -1474,6 +1483,11 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+      <UploadCredentialsModal
+        isOpen={showUploadCredentialsModal}
+        onClose={() => setShowUploadCredentialsModal(false)}
+        ophthalmologistId={ophthalmologistId as string}
+      />
     </div>
   );
 }

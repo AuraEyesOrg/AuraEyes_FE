@@ -546,8 +546,7 @@ export default function ChatPage() {
     user?.fullName ?? currentSession?.patientName ?? 'Patient';
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
-    currentTimeMs,
-    t
+    currentTimeMs
   );
   const meetingButtonActive =
     phaseInfo.meetingActive && meetingAccessState.canJoin;
