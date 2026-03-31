@@ -15,7 +15,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
-import { formatRelativeTime } from '@/lib/date-utils';
+import { format } from 'date-fns';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -368,7 +368,7 @@ function NotificationListItem({
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             )}
             <span className="text-xs text-gray-500 dark:text-gray-500">
-              {formatRelativeTime(notification.createdAt)}
+              {format(new Date(notification.createdAt), 'dd/MM/yyyy HH:mm')}
             </span>
           </div>
 

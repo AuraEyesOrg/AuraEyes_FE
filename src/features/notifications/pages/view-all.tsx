@@ -14,7 +14,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
-import { formatRelativeTime } from '@/lib/date-utils';
+import { format } from 'date-fns';
 import PatientLayout from '@/features/patient/components/PatientLayout';
 import {
   DoctorHeader,
@@ -416,7 +416,7 @@ function NotificationListItem({
               <span className="h-2 w-2 rounded-full bg-blue-500" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-500">
-              {formatRelativeTime(notification.createdAt)}
+              {format(new Date(notification.createdAt), 'dd/MM/yyyy HH:mm')}
             </span>
           </div>
 

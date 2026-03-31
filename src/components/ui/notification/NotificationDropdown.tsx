@@ -25,7 +25,7 @@ import {
   getNotificationRoute,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
-import { formatRelativeTime } from '@/lib/date-utils';
+import { format } from 'date-fns';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -312,7 +312,7 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           </p>
 
           <p className="text-xs text-gray-500 dark:text-gray-500">
-            {formatRelativeTime(notification.createdAt)}
+            {format(new Date(notification.createdAt), 'dd/MM/yyyy HH:mm')}
           </p>
         </div>
       </div>
