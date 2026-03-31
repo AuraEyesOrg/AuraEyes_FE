@@ -8,7 +8,7 @@ import {
   useTransition,
   type KeyboardEvent,
 } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   Activity,
   ArrowLeft,
@@ -138,8 +138,7 @@ const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
-  nowMs: number,
-  t: (key: string, options?: any) => string = (k) => k
+  nowMs: number
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
@@ -159,19 +158,13 @@ const getMeetingAccessState = (
       return {
         canJoin: false,
         buttonLabel: 'Join Locked',
-        helperText: t('chat.joinBeforeXMinutes', {
-          defaultValue: `Vào phòng trước ${PREJOIN_OPEN_MINUTES} phút`,
-          minutes: PREJOIN_OPEN_MINUTES,
-        }),
+        helperText: `Vào phòng trước ${PREJOIN_OPEN_MINUTES} phút`,
       };
     }
     return {
       canJoin: false,
       buttonLabel: 'Join Locked',
-      helperText: t('chat.openAfter', {
-        defaultValue: `Mở sau ${formatCountdown(secondsUntilUnlock)}`,
-        time: formatCountdown(secondsUntilUnlock),
-      }),
+      helperText: `mở sau ${formatCountdown(secondsUntilUnlock)}`,
     };
   }
 
@@ -179,19 +172,14 @@ const getMeetingAccessState = (
     return {
       canJoin: true,
       buttonLabel: 'Join Meeting',
-      helperText: t('chat.canJoinBeforeXMinutes', {
-        defaultValue: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
-        minutes: PREJOIN_OPEN_MINUTES,
-      }),
+      helperText: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
     };
   }
 
   return {
     canJoin: false,
     buttonLabel: 'Meeting Ended',
-    helperText: t('chat.meetingEnded', {
-      defaultValue: 'Cuộc hẹn đã qua thời gian tham gia',
-    }),
+    helperText: 'Cuộc hẹn đã qua thời gian tham gia',
   };
 };
 
@@ -258,15 +246,13 @@ const AvatarBadge = ({
 
 export default function ChatPage() {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const querySessionId = searchParams.get('sessionId');
   const queryClient = useQueryClient();
   const sharedScan =
     (location.state as { sharedScan?: SharedScanData } | null)?.sharedScan ??
     null;
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    querySessionId ?? null
+    null
   );
   const [newMessage, setNewMessage] = useState(
     sharedScan

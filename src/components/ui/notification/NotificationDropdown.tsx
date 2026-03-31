@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bell,
   X,
@@ -25,7 +26,7 @@ import {
   getNotificationRoute,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
-import { format } from 'date-fns';
+import { formatNotificationDateTime } from '@/lib/date-utils';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -38,6 +39,7 @@ interface NotificationDropdownProps {
 export default function NotificationDropdown({
   className = '',
 }: NotificationDropdownProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -160,7 +162,7 @@ export default function NotificationDropdown({
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Notifications
+                {t('Settings.profile.notifications.title', 'Notifications')}
               </h3>
               {connectionStatus === 'connected' && (
                 <p className="text-xs text-green-600 dark:text-green-400">
@@ -271,9 +273,10 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick }: NotificationItemProps) {
+  const { t } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
-  const typeLabel = getNotificationTypeLabel(notification.type);
+  const typeLabel = getNotificationTypeLabel(notification.type, t);
 
   return (
     <button
@@ -312,7 +315,7 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           </p>
 
           <p className="text-xs text-gray-500 dark:text-gray-500">
-            {format(new Date(notification.createdAt), 'dd/MM/yyyy HH:mm')}
+            {formatNotificationDateTime(notification.createdAt)}
           </p>
         </div>
       </div>

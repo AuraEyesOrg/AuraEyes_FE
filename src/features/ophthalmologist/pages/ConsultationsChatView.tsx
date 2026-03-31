@@ -47,7 +47,6 @@ import {
   consultationKeys,
 } from '@/features/consultation/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import {
   ChatStatus,
@@ -339,11 +338,9 @@ export default function ConsultationsChatView({
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
-  const [searchParams] = useSearchParams();
-  const querySessionId = searchParams.get('sessionId');
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    querySessionId ?? null
+    null
   );
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');

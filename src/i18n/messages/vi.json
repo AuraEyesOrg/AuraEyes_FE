@@ -1246,5 +1246,15 @@
     "findingsDetected": "Các dấu hiệu phát hiện gồm:",
     "backToDashboard": "Về Dashboard",
     "sessionLabel": "Phiên"
+  },
+  "notification": {
+    "types": {
+      "screening": "Sàng lọc",
+      "consultation": "Tư vấn",
+      "message": "Tin nhắn",
+      "appointment": "Lịch hẹn",
+      "wallet": "Ví điện tử",
+      "notification": "Thông báo"
+    }
   }
 }

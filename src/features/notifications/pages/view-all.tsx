@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, Search, CheckCheck, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
@@ -14,7 +15,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
-import { format } from 'date-fns';
+import { formatNotificationDateTime } from '@/lib/date-utils';
 import PatientLayout from '@/features/patient/components/PatientLayout';
 import {
   DoctorHeader,
@@ -387,9 +388,10 @@ function NotificationListItem({
   notification,
   onClick,
 }: NotificationListItemProps) {
+  const { t } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
-  const typeLabel = getNotificationTypeLabel(notification.type);
+  const typeLabel = getNotificationTypeLabel(notification.type, t);
 
   return (
     <button
@@ -416,7 +418,7 @@ function NotificationListItem({
               <span className="h-2 w-2 rounded-full bg-blue-500" />
             )}
             <span className="text-xs text-gray-500 dark:text-gray-500">
-              {format(new Date(notification.createdAt), 'dd/MM/yyyy HH:mm')}
+              {formatNotificationDateTime(notification.createdAt)}
             </span>
           </div>
 
