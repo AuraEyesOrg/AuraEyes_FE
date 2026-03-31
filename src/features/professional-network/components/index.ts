@@ -23,11 +23,5 @@ export {
   DiscoverSkeleton,
 } from './post/PostSkeleton';
 
-// Group
-export { GroupCard } from './group/GroupCard';
-
 // Organisation
 export { OrganisationCard } from './organisation/OrganisationCard';
-
-// Connection
-export { ConnectionRequestCard } from './connection/ConnectionRequestCard';

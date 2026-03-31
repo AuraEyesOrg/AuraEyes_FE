@@ -21,6 +21,7 @@ import { LoadingButton } from '@/components/ui/loading-button';
 import { useConsultationSession } from '@/features/consultation/hooks';
 import { getConsultationSessions } from '@/features/consultation/api/consultation.api';
 import { SessionStatus } from '@/types/consultation';
+import { ShareClinicCaseModal } from './ShareClinicCaseModal';
 
 const postTypes: {
   type: PostCategory;
@@ -53,6 +54,8 @@ export function PostComposer() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isAnonymizationConfirmed, setIsAnonymizationConfirmed] =
+    useState(false);
+  const [isShareClinicCaseModalOpen, setIsShareClinicCaseModalOpen] =
     useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createPost = useCreatePost();
@@ -425,6 +428,13 @@ export function PostComposer() {
                           Patient identity is hidden. Only medical snapshot is
                           shared.
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => setIsShareClinicCaseModalOpen(true)}
+                          className="mt-3 w-full rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600"
+                        >
+                          ✎ Add doctor notes
+                        </button>
                       </div>
                     )}
                   </div>
@@ -572,6 +582,18 @@ export function PostComposer() {
           </>
         )}
       </div>
+
+      {/* Share Clinic Case Modal */}
+      <ShareClinicCaseModal
+        session={selectedSessionDetail ?? null}
+        isOpen={isShareClinicCaseModalOpen}
+        onClose={() => setIsShareClinicCaseModalOpen(false)}
+        onShare={(notes) => {
+          // Update content with notes
+          setContent((prev) => `${prev}\n\nDoctor Notes:\n${notes}`);
+          setIsShareClinicCaseModalOpen(false);
+        }}
+      />
     </div>
   );
 }

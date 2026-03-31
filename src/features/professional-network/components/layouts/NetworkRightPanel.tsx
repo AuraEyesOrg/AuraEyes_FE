@@ -98,7 +98,7 @@ export function NetworkRightPanel() {
           {myGroups.slice(0, 3).map((group) => (
             <Link
               key={group.id}
-              to={`/network/groups`}
+              to="/network/discover"
               className="flex items-center gap-3 px-4 py-3 hover-card hover-animation"
             >
               <img
@@ -118,7 +118,7 @@ export function NetworkRightPanel() {
           ))}
         </div>
         <Link
-          to="/network/groups"
+          to="/network/discover"
           className="custom-button accent-tab hover-card block w-full rounded-2xl
                      rounded-t-none text-center text-brand-primary px-4 py-3"
         >
