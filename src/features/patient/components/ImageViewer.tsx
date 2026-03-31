@@ -7,8 +7,10 @@ interface ImageViewerProps {
   zoomLevel: number;
   anomalies: Anomaly[];
   isAnalyzing: boolean;
-  currentImage?: RetinalImage | null;
-  showHighlights?: boolean;
+  currentImage: RetinalImage | null;
+  showHighlights: boolean;
+  showHeatmap?: boolean;
+  heatmapUrl?: string;
 }
 
 const ImageViewer: React.FC<ImageViewerProps> = ({
@@ -17,15 +19,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   isAnalyzing,
   currentImage,
   showHighlights = false,
+  showHeatmap = false,
+  heatmapUrl,
 }) => {
-  const defaultImageUrl =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4';
-  const imageUrl = currentImage?.url || defaultImageUrl;
-  const imageName = currentImage?.name || 'Your retinal scan';
-
-  // Track the rendered image rect so annotations align perfectly
-  const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  // Always call hooks first before any conditional rendering
   const [imgRect, setImgRect] = useState<{
     offsetX: number;
     offsetY: number;
@@ -33,6 +30,11 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     height: number;
   } | null>(null);
 
+  // Image and container references
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Function to update image dimensions and position
   const updateImgRect = useCallback(() => {
     const img = imgRef.current;
     const container = containerRef.current;
@@ -43,7 +45,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     const nw = img.naturalWidth || 1;
     const nh = img.naturalHeight || 1;
 
-    // Replicate object-contain math
+    // Replicate object-contain math for scaling image
     const scale = Math.min(cw / nw, ch / nh);
     const rw = nw * scale;
     const rh = nh * scale;
@@ -98,11 +100,11 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
-      {/* Image — fills the container with object-contain */}
+      {/* Image */}
       <img
         ref={imgRef}
-        src={imageUrl}
-        alt={imageName}
+        src={currentImage?.url || 'defaultImageUrl'}
+        alt={currentImage?.name || 'Your retinal scan'}
         className="w-full h-full object-contain"
         draggable={false}
         onLoad={updateImgRect}
@@ -116,7 +118,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         </div>
       )}
 
-      {/* AI highlight annotations — positioned relative to the actual rendered image */}
+      {/* Annotations */}
       {showHighlights && imgRect && (
         <div
           className="absolute pointer-events-none z-10"
@@ -154,7 +156,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                   height: `${anomaly.location.height}%`,
                 }}
               >
-                {/* Rectangle border — glowing pulse for highest confidence */}
                 <div
                   className={`absolute inset-0 rounded-md border-2 transition-opacity duration-500 ${
                     style.glow
@@ -172,7 +173,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                       : {}),
                   }}
                 />
-                {/* Text label */}
                 <div
                   className="absolute left-0 bottom-full mb-1.5 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium whitespace-nowrap shadow-md"
                   style={{ backgroundColor: style.labelBg }}
@@ -184,6 +184,20 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
             );
           })}
         </div>
+      )}
+
+      {/* Heatmap Overlay */}
+      {showHeatmap && heatmapUrl && (
+        <img
+          src={heatmapUrl}
+          alt="Heatmap overlay"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          style={{
+            opacity: 0.42,
+            mixBlendMode: 'screen',
+            zIndex: 20,
+          }}
+        />
       )}
 
       <style>{`
