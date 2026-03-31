@@ -46,4 +46,5 @@ export interface RetinalImage {
   analyzed: boolean;
   anomalies: Anomaly[];
   thumbnail?: string;
+  heatmapUrl?: string;
 }
