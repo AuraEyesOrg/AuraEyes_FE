@@ -310,7 +310,9 @@
         "title": "Cài đặt tài khoản",
         "security": "Bảo mật",
         "securityHint": "Đặt lại mật khẩu & 2FA",
-        "language": "Ngôn ngữ"
+        "language": "Ngôn ngữ",
+        "languageVi": "Tiếng Việt (VN)",
+        "languageEn": "English (US)"
       },
       "appearance": {
         "title": "Giao diện",

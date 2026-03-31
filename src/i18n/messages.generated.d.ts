@@ -314,6 +314,8 @@ declare module 'i18next' {
           security: string;
           securityHint: string;
           language: string;
+          languageVi: string;
+          languageEn: string;
         };
         appearance: {
           title: string;

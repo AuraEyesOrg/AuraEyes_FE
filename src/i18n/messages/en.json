@@ -310,7 +310,9 @@
         "title": "Account Settings",
         "security": "Security",
         "securityHint": "Reset password & 2FA",
-        "language": "Language"
+        "language": "Language",
+        "languageVi": "Tiếng Việt (VN)",
+        "languageEn": "English (US)"
       },
       "appearance": {
         "title": "Appearance",
