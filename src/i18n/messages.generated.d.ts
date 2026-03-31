@@ -17,6 +17,9 @@ declare module 'i18next' {
       findDoctor: string;
       learnMore: string;
       language: string;
+      sidebar: {
+        auraNetwork: string;
+      };
     };
     Auth: {
       login: string;
