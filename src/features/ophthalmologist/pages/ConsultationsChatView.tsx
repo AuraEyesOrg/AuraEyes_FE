@@ -330,6 +330,133 @@ interface ConsultationsChatViewProps {
   sessionsLoading: boolean;
 }
 
+interface ShareCaseModalProps {
+  isOpen: boolean;
+  isSubmitting: boolean;
+  patientName: string;
+  content: string;
+  onChangeContent: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+  caseSnapshot: {
+    summary: string | null;
+    findings: string | null;
+    riskLevel: string | null;
+    confidenceScore: number | null;
+    originalImageUrls: string[];
+  };
+}
+
+function ShareCaseModal({
+  isOpen,
+  isSubmitting,
+  patientName,
+  content,
+  onChangeContent,
+  onClose,
+  onSubmit,
+  caseSnapshot,
+}: ShareCaseModalProps) {
+  if (!isOpen) return null;
+
+  const livePreview = [
+    'Bài đăng chia sẻ ca lâm sàng (ẩn danh)',
+    `Bệnh nhân: ${patientName}`,
+    `Mức độ nguy cơ: ${caseSnapshot.riskLevel ?? 'N/A'}`,
+    `Độ tin cậy AI: ${caseSnapshot.confidenceScore ?? '--'}%`,
+    '',
+    `Tóm tắt: ${caseSnapshot.summary ?? 'N/A'}`,
+    `Chẩn đoán cuối: ${caseSnapshot.findings ?? 'N/A'}`,
+    '',
+    `Bác sĩ nói rằng: ${content.trim() || '...'}`,
+  ].join('\n');
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Share Case To Network
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-[#0a1929]"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid gap-0 md:grid-cols-2">
+          <div className="border-b border-slate-200 p-5 dark:border-[#1e3a5f] md:border-b-0 md:border-r">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+              Nội dung từ bác sĩ
+            </p>
+            <textarea
+              value={content}
+              onChange={(event) => onChangeContent(event.target.value)}
+              placeholder="Nhập ghi chú chuyên môn để chia sẻ với mạng lưới bác sĩ..."
+              rows={7}
+              className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-100"
+            />
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+                Ảnh võng mạc ({caseSnapshot.originalImageUrls.length})
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {caseSnapshot.originalImageUrls
+                  .slice(0, 6)
+                  .map((url, index) => (
+                    <img
+                      key={`${url}-${index}`}
+                      src={url}
+                      alt={`retinal-${index + 1}`}
+                      className="h-20 w-full rounded-xl border border-slate-200 object-cover dark:border-[#1e3a5f]"
+                    />
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+              Xem trước bài đăng
+            </p>
+            <div className="mt-3 h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-200">
+              <pre className="whitespace-pre-wrap font-sans">{livePreview}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#1e3a5f] dark:text-slate-200 dark:hover:bg-[#0a1929]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting || !content.trim()}
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+            {isSubmitting ? 'Sharing case...' : 'Share Case To Network'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ConsultationsChatView({
   sessions,
   sessionsLoading,
@@ -347,7 +474,8 @@ export default function ConsultationsChatView({
   const [isSearchPending, startSearchTransition] = useTransition();
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
-  const [shareDoctorNote, setShareDoctorNote] = useState('');
+  const [isShareCaseModalOpen, setIsShareCaseModalOpen] = useState(false);
+  const [shareCaseContent, setShareCaseContent] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
@@ -386,7 +514,6 @@ export default function ConsultationsChatView({
   const buildInternalCasePostContent = (
     aiSummary: string,
     finalDiagnosis: string,
-    doctorName: string,
     doctorNote: string
   ) => {
     return [
@@ -396,7 +523,7 @@ export default function ConsultationsChatView({
       '[/CASE_RESULT]',
       '',
       '[DOCTOR_NOTE]',
-      `${doctorName}: "${doctorNote}"`,
+      `Bác sĩ nói rằng: ${doctorNote}`,
       '[/DOCTOR_NOTE]',
     ].join('\n');
   };
@@ -406,13 +533,11 @@ export default function ConsultationsChatView({
       consultationSessionId,
       aiSummary,
       finalDiagnosis,
-      doctorName,
       doctorNote,
     }: {
       consultationSessionId: string;
       aiSummary: string;
       finalDiagnosis: string;
-      doctorName: string;
       doctorNote: string;
     }) => {
       const formData = new FormData();
@@ -425,19 +550,15 @@ export default function ConsultationsChatView({
       formData.append('isAnonymizationConfirmed', 'true');
       formData.append(
         'content',
-        buildInternalCasePostContent(
-          aiSummary,
-          finalDiagnosis,
-          doctorName,
-          doctorNote
-        )
+        buildInternalCasePostContent(aiSummary, finalDiagnosis, doctorNote)
       );
       return postsApi.createPost(formData);
     },
     onSuccess: () => {
       toast.success('Case shared to professional network');
       queryClient.invalidateQueries({ queryKey: ['network'] });
-      setShareDoctorNote('');
+      setShareCaseContent('');
+      setIsShareCaseModalOpen(false);
     },
     onError: (error) => {
       toast.error(
@@ -1472,46 +1593,25 @@ export default function ConsultationsChatView({
 
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                  Share Internal Case
+                  Share Case To Network
                 </p>
                 <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
-                  Share retinal images uploaded by patient and final doctor
-                  diagnosis to Aura Network in anonymized mode.
+                  Chia sẻ ca đã ẩn danh lên Aura Network với bố cục bài đăng y
+                  khoa.
                 </p>
-                <textarea
-                  value={shareDoctorNote}
-                  onChange={(event) => setShareDoctorNote(event.target.value)}
-                  placeholder="Doctor note for peers (example: Cac ban nhin vao case nay can chu y... )"
-                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-[#1e3a5f] dark:bg-[#0b1f3a] dark:text-slate-100"
-                  rows={3}
-                />
                 <button
                   type="button"
-                  onClick={() =>
-                    currentSession &&
-                    selectedSession?.caseSnapshot &&
-                    shareConsultationMutation.mutate({
-                      consultationSessionId: currentSession.id,
-                      aiSummary: selectedSession.caseSnapshot.summary ?? '',
-                      finalDiagnosis:
-                        selectedSession.caseSnapshot.findings ??
-                        selectedSession.caseSnapshot.summary ??
-                        '',
-                      doctorName: user?.fullName ?? 'Doctor',
-                      doctorNote: shareDoctorNote.trim(),
-                    })
-                  }
+                  onClick={() => setIsShareCaseModalOpen(true)}
                   disabled={
                     !currentSession?.id ||
                     !selectedSession?.caseSnapshot ||
-                    !shareDoctorNote.trim() ||
                     shareConsultationMutation.isPending
                   }
                   className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {shareConsultationMutation.isPending
                     ? 'Sharing case...'
-                    : 'Share Internal Case To Network'}
+                    : 'Share Case To Network'}
                 </button>
                 {!selectedSession?.caseSnapshot && (
                   <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-300">
@@ -1613,6 +1713,35 @@ export default function ConsultationsChatView({
             </div>
           </div>
         </aside>
+      )}
+
+      {currentSession && selectedSession?.caseSnapshot && (
+        <ShareCaseModal
+          isOpen={isShareCaseModalOpen}
+          isSubmitting={shareConsultationMutation.isPending}
+          patientName={patientName}
+          content={shareCaseContent}
+          onChangeContent={setShareCaseContent}
+          onClose={() => setIsShareCaseModalOpen(false)}
+          onSubmit={() =>
+            shareConsultationMutation.mutate({
+              consultationSessionId: currentSession.id,
+              aiSummary: selectedSession.caseSnapshot?.summary ?? '',
+              finalDiagnosis:
+                selectedSession.caseSnapshot?.findings ??
+                selectedSession.caseSnapshot?.summary ??
+                '',
+              doctorNote: shareCaseContent.trim(),
+            })
+          }
+          caseSnapshot={{
+            summary: selectedSession.caseSnapshot.summary,
+            findings: selectedSession.caseSnapshot.findings,
+            riskLevel: selectedSession.caseSnapshot.riskLevel,
+            confidenceScore: selectedSession.caseSnapshot.confidenceScore,
+            originalImageUrls: selectedSession.caseSnapshot.originalImageUrls,
+          }}
+        />
       )}
     </div>
   );

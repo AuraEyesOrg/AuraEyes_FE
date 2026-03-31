@@ -118,7 +118,7 @@ export function PostCard({
 }: Props) {
   const { user } = useAuthStore();
   const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
-  
+
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);

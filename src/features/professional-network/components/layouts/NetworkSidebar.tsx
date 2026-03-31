@@ -11,7 +11,6 @@ import {
   Bookmark,
   User,
   Shield,
-  Eye,
   LogOut,
   ArrowLeft,
   Sun,
@@ -65,8 +64,8 @@ export function NetworkSidebar() {
       <div className="p-6 flex flex-col h-full">
         {/* Logo - AURA Network */}
         <div className="flex items-center gap-3 mb-10 px-2">
-          <img 
-            src="/logo.png" 
+          <img
+            src="/logo.png"
             alt="AURA"
             className="w-10 h-10 rounded-xl object-contain"
           />

@@ -396,8 +396,8 @@ function NotificationListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-750 ${
-        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      className={`w-full p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/35' : ''
       }`}
     >
       <div className="flex items-start gap-4">
@@ -417,7 +417,7 @@ function NotificationListItem({
             {!notification.isRead && (
               <span className="h-2 w-2 rounded-full bg-blue-500" />
             )}
-            <span className="text-xs text-gray-500 dark:text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-300">
               {formatNotificationDateTime(notification.createdAt)}
             </span>
           </div>

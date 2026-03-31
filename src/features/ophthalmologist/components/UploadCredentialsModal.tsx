@@ -5,7 +5,20 @@ import { Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
 
-type DegreeLevel = 'Doctor' | 'Master' | 'Bachelor';
+type DegreeLevel =
+  | 'Bachelor'
+  | 'Master'
+  | 'Doctor'
+  | 'AssociateProfessor'
+  | 'Professor';
+
+const DEGREE_LEVEL_OPTIONS: Array<{ value: DegreeLevel; label: string }> = [
+  { value: 'Bachelor', label: 'Bachelor' },
+  { value: 'Master', label: 'Master' },
+  { value: 'Doctor', label: 'Doctor (PhD)' },
+  { value: 'AssociateProfessor', label: 'Associate Professor' },
+  { value: 'Professor', label: 'Professor' },
+];
 
 interface DegreeFormItem {
   name: string;
@@ -261,9 +274,11 @@ export default function UploadCredentialsModal({
                         })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-[#2d4a6f] rounded-lg bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white"
                       >
-                        <option value="Bachelor">Bachelor</option>
-                        <option value="Master">Master</option>
-                        <option value="Doctor">Doctor</option>
+                        {DEGREE_LEVEL_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
