@@ -225,6 +225,9 @@ export default function SettingsPage() {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showUploadCredentialsModal, setShowUploadCredentialsModal] =
     useState(false);
+  const [credentialTab, setCredentialTab] = useState<'degree' | 'license'>(
+    'degree'
+  );
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
     null
@@ -790,57 +793,114 @@ export default function SettingsPage() {
                   </button>
                 </div>
 
+                {/* Credential Tabs */}
+                <div className="flex border-b border-gray-200 dark:border-[#1e3a5f]">
+                  <button
+                    onClick={() => setCredentialTab('degree')}
+                    className={`flex-1 px-6 py-4 font-medium text-center transition-colors ${
+                      credentialTab === 'degree'
+                        ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 dark:border-cyan-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {t(
+                      'Ophthalmologist.settings.credentials.degrees',
+                      'Bằng cấp học vị'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setCredentialTab('license')}
+                    className={`flex-1 px-6 py-4 font-medium text-center transition-colors ${
+                      credentialTab === 'license'
+                        ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 dark:border-cyan-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {t(
+                      'Ophthalmologist.settings.credentials.licenses',
+                      'Chứng chỉ hành nghề'
+                    )}
+                  </button>
+                </div>
+
                 <div className="p-6 space-y-4">
-                  {profile.certificates.map((cert) => {
-                    const CertIcon = getCertificateIcon(cert.type);
-                    return (
-                      <div
-                        key={cert.id}
-                        className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1e3a5f] transition-colors group"
-                      >
-                        <div className="w-12 h-12 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f] rounded-lg flex items-center justify-center shrink-0">
-                          <CertIcon className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
-                              {cert.name}
-                            </h4>
-                            {getStatusBadge(cert.status)}
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            {t(
-                              'Ophthalmologist.settings.credentials.issuedBy',
-                              'Issued by'
-                            )}{' '}
-                            {cert.issuedBy}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
-                            <span>
-                              {t(
-                                'Ophthalmologist.settings.credentials.issued',
-                                'Issued'
-                              )}
-                              : {new Date(cert.issuedDate).toLocaleDateString()}
-                            </span>
-                            {cert.expiryDate && (
-                              <span>
-                                {t(
-                                  'Ophthalmologist.settings.credentials.expires',
-                                  'Expires'
-                                )}
-                                :{' '}
-                                {new Date(cert.expiryDate).toLocaleDateString()}
-                              </span>
+                  {profile.certificates
+                    .filter((cert) => cert.type === credentialTab)
+                    .length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Award className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        {credentialTab === 'degree'
+                          ? t(
+                              'Ophthalmologist.settings.credentials.noDegrees',
+                              'No degrees uploaded yet'
+                            )
+                          : t(
+                              'Ophthalmologist.settings.credentials.noLicenses',
+                              'No licenses uploaded yet'
                             )}
+                      </p>
+                      <button
+                        onClick={() => setShowUploadCredentialsModal(true)}
+                        className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
+                      >
+                        + {t('Ophthalmologist.settings.credentials.addNow', 'Add now')}
+                      </button>
+                    </div>
+                  ) : (
+                    profile.certificates
+                      .filter((cert) => cert.type === credentialTab)
+                      .map((cert) => {
+                        const CertIcon = getCertificateIcon(cert.type);
+                        return (
+                          <div
+                            key={cert.id}
+                            className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1e3a5f] transition-colors group"
+                          >
+                            <div className="w-12 h-12 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f] rounded-lg flex items-center justify-center shrink-0">
+                              <CertIcon className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h4 className="font-medium text-gray-900 dark:text-white">
+                                  {cert.name}
+                                </h4>
+                                {getStatusBadge(cert.status)}
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                {t(
+                                  'Ophthalmologist.settings.credentials.issuedBy',
+                                  'Issued by'
+                                )}{' '}
+                                {cert.issuedBy}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                <span>
+                                  {t(
+                                    'Ophthalmologist.settings.credentials.issued',
+                                    'Issued'
+                                  )}
+                                  : {new Date(cert.issuedDate).toLocaleDateString()}
+                                </span>
+                                {cert.expiryDate && (
+                                  <span>
+                                    {t(
+                                      'Ophthalmologist.settings.credentials.expires',
+                                      'Expires'
+                                    )}
+                                    :{' '}
+                                    {new Date(cert.expiryDate).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg transition-all">
+                              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            </button>
                           </div>
-                        </div>
-                        <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg transition-all">
-                          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                        );
+                      })
+                  )}
                 </div>
               </div>
 

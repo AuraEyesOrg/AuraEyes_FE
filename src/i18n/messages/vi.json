@@ -279,9 +279,14 @@
       "credentials": {
         "title": "Chứng chỉ chuyên môn",
         "upload": "Tải lên chứng chỉ",
+        "degrees": "Bằng cấp học vị",
+        "licenses": "Chứng chỉ hành nghề",
         "issuedBy": "Cấp bởi",
         "issued": "Ngày cấp",
         "expires": "Hết hạn",
+        "noDegrees": "Chưa có bằng cấp nào",
+        "noLicenses": "Chưa có chứng chỉ nào",
+        "addNow": "Thêm ngay",
         "status": {
           "verified": "Đã xác thực",
           "pending": "Chờ duyệt",
