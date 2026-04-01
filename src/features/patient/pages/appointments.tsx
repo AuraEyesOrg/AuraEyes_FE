@@ -38,7 +38,12 @@ import {
 } from '@/features/patient/components';
 import ConfirmModal from '@/components/ui/confirm-modal';
 import useAuthStore from '@/store/auth-store';
-import { formatDate, formatSlotTime, formatShortTime } from '@/lib/date-utils';
+import {
+  formatDate,
+  formatSlotTime,
+  formatShortDate,
+  formatShortTime,
+} from '@/lib/date-utils';
 import {
   SessionStatus,
   ConsultationSessionType,
@@ -654,7 +659,11 @@ const AppointmentsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                             <Calendar className="w-4 h-4" />
-                            <span>{format(session.appointmentTime)}</span>
+                            <span>
+                              {session.appointmentTime
+                                ? formatShortDate(session.appointmentTime)
+                                : 'Not scheduled yet'}
+                            </span>
                           </div>
                           {session.appointmentTime && (
                             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
