@@ -21,6 +21,7 @@ import {
   organisationContractApi,
   type OrganisationContractDetailDto,
 } from '../api/contract.api';
+import { toast } from 'react-toastify';
 
 const CONTRACT_QUERY_KEY = ['organisation', 'my-contract'] as const;
 
@@ -125,11 +126,11 @@ function UploadSection({
       'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert('Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF.');
+      toast.error('Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF.');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert('Kích thước file không được vượt quá 10MB.');
+      toast.error('Kích thước file không được vượt quá 10MB.');
       return;
     }
     setSelectedFile(file);

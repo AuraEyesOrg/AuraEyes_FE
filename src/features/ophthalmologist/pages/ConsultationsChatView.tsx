@@ -72,6 +72,7 @@ import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import ConfirmModal from '@/components/ui/confirm-modal';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -346,6 +347,10 @@ export default function ConsultationsChatView({
   const [isSearchPending, startSearchTransition] = useTransition();
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
+  const [sessionActionTarget, setSessionActionTarget] = useState<{
+    type: 'cancel' | 'complete';
+    sessionId: string;
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
@@ -484,43 +489,46 @@ export default function ConsultationsChatView({
   }, [currentSession]);
 
   const handleCancelSession = (sessionId: string) => {
-    if (!currentDoctorId) return;
-    if (
-      !confirm(
-        t(
-          'Ophthalmologist.consultations.chat.confirmCancelSession',
-          'Cancel this session? The slot will be burned and the patient will be refunded.'
-        )
-      )
-    ) {
-      return;
-    }
-    cancelSessionMutation.mutate({
-      sessionId,
-      cancelledByUserId: currentDoctorId,
-      reason: t(
-        'Ophthalmologist.consultations.chat.cancelReason',
-        'Cancelled by doctor'
-      ),
-    });
+    setSessionActionTarget({ type: 'cancel', sessionId });
   };
 
   const handleEndSession = (sessionId: string) => {
-    if (!currentDoctorId) return;
-    if (
-      !confirm(
-        t(
-          'Ophthalmologist.consultations.chat.confirmCompleteSession',
-          'Complete this consultation? The patient will be charged and the chat will be locked.'
-        )
-      )
-    ) {
+    setSessionActionTarget({ type: 'complete', sessionId });
+  };
+
+  const confirmSessionAction = () => {
+    if (!sessionActionTarget || !currentDoctorId) {
+      setSessionActionTarget(null);
       return;
     }
-    endSessionMutation.mutate({
-      sessionId,
-      doctorId: currentDoctorId,
-    });
+
+    if (sessionActionTarget.type === 'cancel') {
+      cancelSessionMutation.mutate(
+        {
+          sessionId: sessionActionTarget.sessionId,
+          cancelledByUserId: currentDoctorId,
+          reason: t(
+            'Ophthalmologist.consultations.chat.cancelReason',
+            'Cancelled by doctor'
+          ),
+        },
+        {
+          onSettled: () => setSessionActionTarget(null),
+        }
+      );
+
+      return;
+    }
+
+    endSessionMutation.mutate(
+      {
+        sessionId: sessionActionTarget.sessionId,
+        doctorId: currentDoctorId,
+      },
+      {
+        onSettled: () => setSessionActionTarget(null),
+      }
+    );
   };
 
   const handleSendMessage = () => {
@@ -1498,6 +1506,40 @@ export default function ConsultationsChatView({
           </div>
         </aside>
       )}
+
+      <ConfirmModal
+        open={!!sessionActionTarget}
+        title={
+          sessionActionTarget?.type === 'cancel'
+            ? 'Cancel session?'
+            : 'Complete consultation?'
+        }
+        message={
+          sessionActionTarget?.type === 'cancel'
+            ? t(
+                'Ophthalmologist.consultations.chat.confirmCancelSession',
+                'Cancel this session? The slot will be burned and the patient will be refunded.'
+              )
+            : t(
+                'Ophthalmologist.consultations.chat.confirmCompleteSession',
+                'Complete this consultation? The patient will be charged and the chat will be locked.'
+              )
+        }
+        confirmLabel={
+          sessionActionTarget?.type === 'cancel'
+            ? t('Ophthalmologist.common.cancel', 'Cancel')
+            : t('Ophthalmologist.consultations.chat.complete', 'Complete')
+        }
+        cancelLabel="Back"
+        tone={sessionActionTarget?.type === 'cancel' ? 'danger' : 'default'}
+        isLoading={
+          sessionActionTarget?.type === 'cancel'
+            ? cancelSessionMutation.isPending
+            : endSessionMutation.isPending
+        }
+        onCancel={() => setSessionActionTarget(null)}
+        onConfirm={confirmSessionAction}
+      />
     </div>
   );
 }

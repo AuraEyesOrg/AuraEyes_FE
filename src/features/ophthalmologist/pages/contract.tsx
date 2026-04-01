@@ -26,6 +26,7 @@ import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
 import Spinner from '@/components/ui/spinner';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { toast } from 'react-toastify';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -158,7 +159,7 @@ function UploadSection({
       'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert(
+      toast.error(
         t(
           'Ophthalmologist.contract.upload.invalidType',
           'Only JPEG, PNG, WebP, or PDF files are allowed.'
@@ -167,7 +168,7 @@ function UploadSection({
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert(
+      toast.error(
         t(
           'Ophthalmologist.contract.upload.fileTooLarge',
           'File size must not exceed 10MB.'

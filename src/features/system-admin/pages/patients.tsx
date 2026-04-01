@@ -26,6 +26,7 @@ import { exportApi } from '../api';
 import { patientApi, type PatientListItem } from '../api/patient.api';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
+import ConfirmModal from '@/components/ui/confirm-modal';
 
 interface Patient extends PatientListItem {
   name: string;
@@ -57,6 +58,11 @@ export default function PatientsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [lockTarget, setLockTarget] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
+  const [isLockingPatient, setIsLockingPatient] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -101,15 +107,43 @@ export default function PatientsPage() {
   const handleToggleLock = async (userId: string, currentStatus: string) => {
     try {
       const action = currentStatus === 'locked' ? 'activate' : 'lock';
-      let reason: string | undefined;
+
       if (action === 'lock') {
-        reason =
-          window.prompt('Enter reason for locking this patient:') || undefined;
+        const targetPatient = patients.find(
+          (patient) => patient.userId === userId
+        );
+        setLockTarget({
+          userId,
+          name: targetPatient?.name ?? 'this patient',
+        });
+        return;
       }
-      await patientApi.updatePatientStatus(userId, action, reason);
+
+      await patientApi.updatePatientStatus(userId, action);
+      toast.success('Patient has been activated successfully.');
       loadData();
     } catch (error) {
       console.error('Failed to toggle patient lock status:', error);
+      toast.error('Failed to update patient status. Please try again.');
+    }
+  };
+
+  const confirmLockPatient = async () => {
+    if (!lockTarget) {
+      return;
+    }
+
+    try {
+      setIsLockingPatient(true);
+      await patientApi.updatePatientStatus(lockTarget.userId, 'lock');
+      toast.success('Patient has been locked successfully.');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to lock patient:', error);
+      toast.error('Failed to update patient status. Please try again.');
+    } finally {
+      setIsLockingPatient(false);
+      setLockTarget(null);
     }
   };
 
@@ -398,6 +432,18 @@ export default function PatientsPage() {
           </div>
         </main>
       </div>
+
+      <ConfirmModal
+        open={!!lockTarget}
+        title="Lock patient account?"
+        message={`Are you sure you want to lock ${lockTarget?.name ?? 'this patient'}? They will not be able to access the system until re-activated.`}
+        confirmLabel="Lock account"
+        cancelLabel="Keep active"
+        tone="danger"
+        isLoading={isLockingPatient}
+        onCancel={() => setLockTarget(null)}
+        onConfirm={confirmLockPatient}
+      />
     </div>
   );
 }

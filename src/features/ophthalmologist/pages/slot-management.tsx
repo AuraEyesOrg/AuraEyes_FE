@@ -42,6 +42,7 @@ import {
   formatWeekDayLabel,
 } from '@/lib/date-utils';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import ConfirmModal from '@/components/ui/confirm-modal';
 
 const formatTemplateCost = (
   cost: number | null | undefined,
@@ -86,6 +87,9 @@ export default function SlotManagementPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] =
     useState<ScheduleTemplateDto | null>(null);
+  const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(
+    null
+  );
 
   // Template form state
   const [templateDayOfWeek, setTemplateDayOfWeek] = useState(1);
@@ -390,40 +394,33 @@ export default function SlotManagementPage() {
     t,
   ]);
 
-  const handleDeleteTemplate = useCallback(
-    (templateId: string) => {
-      if (
-        confirm(
+  const handleDeleteTemplate = useCallback(() => {
+    if (!templateToDeleteId) {
+      return;
+    }
+
+    resetMessages();
+    deleteTemplateMutation.mutate(templateToDeleteId, {
+      onSuccess: () =>
+        setMessage(
           t(
-            'Ophthalmologist.slotManagement.confirmDeleteTemplate',
-            'Are you sure you want to delete this template?'
+            'Ophthalmologist.slotManagement.messages.templateDeleted',
+            'Template deleted.'
           )
-        )
-      ) {
-        resetMessages();
-        deleteTemplateMutation.mutate(templateId, {
-          onSuccess: () =>
-            setMessage(
-              t(
-                'Ophthalmologist.slotManagement.messages.templateDeleted',
-                'Template deleted.'
-              )
-            ),
-          onError: (err) =>
-            setError(
-              extractApiErrorMessage(
-                err,
-                t(
-                  'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
-                  'Failed to delete template.'
-                )
-              )
-            ),
-        });
-      }
-    },
-    [deleteTemplateMutation, resetMessages, t]
-  );
+        ),
+      onError: (err) =>
+        setError(
+          extractApiErrorMessage(
+            err,
+            t(
+              'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
+              'Failed to delete template.'
+            )
+          )
+        ),
+      onSettled: () => setTemplateToDeleteId(null),
+    });
+  }, [deleteTemplateMutation, resetMessages, t, templateToDeleteId]);
 
   const openGenerateModal = useCallback((template: ScheduleTemplateDto) => {
     setSelectedTemplate(template);
@@ -610,7 +607,7 @@ export default function SlotManagementPage() {
                         {DAY_OF_WEEK_LABELS[template.dayOfWeek]}
                       </span>
                       <button
-                        onClick={() => handleDeleteTemplate(template.id)}
+                        onClick={() => setTemplateToDeleteId(template.id)}
                         className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -821,6 +818,21 @@ export default function SlotManagementPage() {
           </div>
         </main>
       </div>
+
+      <ConfirmModal
+        open={!!templateToDeleteId}
+        title={t(
+          'Ophthalmologist.slotManagement.confirmDeleteTemplate',
+          'Delete this template?'
+        )}
+        message="This action cannot be undone. Related future slot generation from this template will no longer be available."
+        confirmLabel="Delete template"
+        cancelLabel={t('Ophthalmologist.common.cancel', 'Cancel')}
+        tone="danger"
+        isLoading={deleteTemplateMutation.isPending}
+        onCancel={() => setTemplateToDeleteId(null)}
+        onConfirm={handleDeleteTemplate}
+      />
 
       {/* Create Template Modal */}
       {showTemplateModal && (
