@@ -11,6 +11,7 @@ import {
   History,
   AlertCircle,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -139,6 +140,16 @@ export default function PatientDashboard() {
     latestReport?.summary || getDetectedSummary(effectiveLatestRisk);
   const heroDate = latestReport?.createdAt ?? latestSession?.createdAt;
   const heroScanId = latestReport?.id ?? latestSession?.screeningId;
+  const [isHeroImageLoaded, setIsHeroImageLoaded] = useState(false);
+  const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
+
+  useEffect(() => {
+    setIsHeroImageLoaded(false);
+    setIsHeroImageErrored(false);
+  }, [heroImageUrl]);
+
+  const showHeroImageSkeleton =
+    Boolean(heroImageUrl) && !isHeroImageLoaded && !isHeroImageErrored;
 
   // Build stats cards from real data
   const statsCards = [
@@ -222,10 +233,21 @@ export default function PatientDashboard() {
               <div className="lg:w-1/3 relative h-64 lg:h-auto min-h-[250px] bg-black rounded-lg overflow-hidden m-1 group">
                 {heroImageUrl ? (
                   <>
-                    <div
-                      className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{
-                        backgroundImage: `url("${heroImageUrl}")`,
+                    {showHeroImageSkeleton && (
+                      <div className="absolute inset-0 skeleton-shimmer bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700" />
+                    )}
+                    <img
+                      src={heroImageUrl}
+                      alt="Latest retinal scan"
+                      className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+                        showHeroImageSkeleton
+                          ? 'opacity-0'
+                          : 'opacity-80 group-hover:opacity-100'
+                      }`}
+                      onLoad={() => setIsHeroImageLoaded(true)}
+                      onError={() => {
+                        setIsHeroImageErrored(true);
+                        setIsHeroImageLoaded(true);
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
