@@ -133,7 +133,7 @@ const getPhaseUIConfig = (
 });
 
 const PREJOIN_OPEN_MINUTES = 15;
-const MEETING_ACTIVE_MINUTES = 60;
+const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
@@ -143,19 +143,33 @@ const getMeetingAccessState = (
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
-      canJoin: true,
+      canJoin: false,
       buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinMeeting',
-        'Join Meeting'
+        'Ophthalmologist.consultations.chat.joinLocked',
+        'Join Locked'
       ),
       helperText: t(
-        'Ophthalmologist.consultations.chat.meetingLinkReady',
-        'Meeting link is ready.'
+        'Ophthalmologist.consultations.chat.schedulePending',
+        'Schedule pending'
       ),
     };
   }
 
   const appointmentMs = new Date(appointmentTime).getTime();
+  if (Number.isNaN(appointmentMs)) {
+    return {
+      canJoin: false,
+      buttonLabel: t(
+        'Ophthalmologist.consultations.chat.joinLocked',
+        'Join Locked'
+      ),
+      helperText: t(
+        'Ophthalmologist.consultations.chat.invalidSchedule',
+        'Schedule is unavailable'
+      ),
+    };
+  }
+
   const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
   const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
   const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
@@ -580,6 +594,9 @@ export default function ConsultationsChatView({
     currentTimeMs,
     t
   );
+  const isMeetingClosedBySessionState = phase === 'COMPLETED';
+  const canJoinMeeting =
+    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
 
   if (sessionsLoading) {
     return (
@@ -866,7 +883,7 @@ export default function ConsultationsChatView({
                     )}
 
                     {currentSession.meetingLink ? (
-                      meetingAccessState.canJoin ? (
+                      canJoinMeeting ? (
                         <a
                           href={currentSession.meetingLink}
                           target="_blank"
@@ -885,7 +902,7 @@ export default function ConsultationsChatView({
                           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                         >
                           <Video className="h-4 w-4" />
-                          {phase === 'COMPLETED'
+                          {isMeetingClosedBySessionState
                             ? t(
                                 'Ophthalmologist.consultations.chat.meetingEnded',
                                 'Meeting Ended'
@@ -909,7 +926,12 @@ export default function ConsultationsChatView({
 
                   {currentSession.meetingLink && (
                     <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                      {meetingAccessState.helperText}
+                      {isMeetingClosedBySessionState
+                        ? t(
+                            'Ophthalmologist.consultations.chat.meetingWindowClosed',
+                            'Appointment has passed the meeting window'
+                          )
+                        : meetingAccessState.helperText}
                     </p>
                   )}
                 </div>

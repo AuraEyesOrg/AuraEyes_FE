@@ -133,7 +133,7 @@ const formatAppointmentSlotOrPending = (value: string | null) =>
   value ? formatAppointmentSlot(value) : 'Schedule pending';
 
 const PREJOIN_OPEN_MINUTES = 15;
-const MEETING_ACTIVE_MINUTES = 60;
+const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
@@ -142,13 +142,21 @@ const getMeetingAccessState = (
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
-      canJoin: true,
-      buttonLabel: 'Join Meeting',
-      helperText: 'Meeting link is ready.',
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: 'Schedule pending',
     };
   }
 
   const appointmentMs = new Date(appointmentTime).getTime();
+  if (Number.isNaN(appointmentMs)) {
+    return {
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: 'Schedule is unavailable.',
+    };
+  }
+
   const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
   const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
   const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
@@ -534,8 +542,12 @@ export default function ChatPage() {
     currentSession?.appointmentTime ?? null,
     currentTimeMs
   );
-  const meetingButtonActive =
-    phaseInfo.meetingActive && meetingAccessState.canJoin;
+  const isMeetingClosedBySessionState =
+    currentSession?.status === SessionStatus.Completed ||
+    currentSession?.status === SessionStatus.Cancelled ||
+    currentSession?.chatStatus === ChatStatus.Archived;
+  const canJoinMeeting =
+    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
 
   if (sessionsLoading) {
     return (
@@ -773,7 +785,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col items-start gap-1 sm:items-end">
                     {currentSession.meetingLink ? (
-                      meetingButtonActive ? (
+                      canJoinMeeting ? (
                         <a
                           href={currentSession.meetingLink}
                           target="_blank"
@@ -789,7 +801,7 @@ export default function ChatPage() {
                           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                         >
                           <Video className="h-4 w-4" />
-                          {phaseInfo.phase === 'COMPLETED'
+                          {isMeetingClosedBySessionState
                             ? 'Meeting Ended'
                             : meetingAccessState.buttonLabel}
                         </button>
@@ -805,11 +817,9 @@ export default function ChatPage() {
                     )}
                     {currentSession.meetingLink && (
                       <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                        {phaseInfo.phase === 'PRE_VISIT'
-                          ? meetingAccessState.helperText
-                          : phaseInfo.phase === 'COMPLETED'
-                            ? 'Consultation completed'
-                            : meetingAccessState.helperText}
+                        {isMeetingClosedBySessionState
+                          ? 'Consultation completed'
+                          : meetingAccessState.helperText}
                       </p>
                     )}
                   </div>
