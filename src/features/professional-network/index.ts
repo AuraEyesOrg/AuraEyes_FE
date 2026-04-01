@@ -26,9 +26,7 @@ export {
   PostCard,
   PostComposer,
   CommentCard,
-  GroupCard,
   OrganisationCard,
-  ConnectionRequestCard,
 } from './components';
 
 // API
@@ -37,8 +35,6 @@ export {
   postsApi,
   professionalsApi,
   organisationsApi,
-  connectionsApi,
-  groupsApi,
   savedApi,
 } from './api';
 

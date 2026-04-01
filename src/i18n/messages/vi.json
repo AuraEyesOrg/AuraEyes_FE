@@ -279,9 +279,14 @@
       "credentials": {
         "title": "Chứng chỉ chuyên môn",
         "upload": "Tải lên chứng chỉ",
+        "degrees": "Bằng cấp học vị",
+        "licenses": "Chứng chỉ hành nghề",
         "issuedBy": "Cấp bởi",
         "issued": "Ngày cấp",
         "expires": "Hết hạn",
+        "noDegrees": "Chưa có bằng cấp nào",
+        "noLicenses": "Chưa có chứng chỉ nào",
+        "addNow": "Thêm ngay",
         "status": {
           "verified": "Đã xác thực",
           "pending": "Chờ duyệt",
@@ -305,7 +310,9 @@
         "title": "Cài đặt tài khoản",
         "security": "Bảo mật",
         "securityHint": "Đặt lại mật khẩu & 2FA",
-        "language": "Ngôn ngữ"
+        "language": "Ngôn ngữ",
+        "languageVi": "Tiếng Việt (VN)",
+        "languageEn": "English (US)"
       },
       "appearance": {
         "title": "Giao diện",
@@ -1246,5 +1253,15 @@
     "findingsDetected": "Các dấu hiệu phát hiện gồm:",
     "backToDashboard": "Về Dashboard",
     "sessionLabel": "Phiên"
+  },
+  "notification": {
+    "types": {
+      "screening": "Sàng lọc",
+      "consultation": "Tư vấn",
+      "message": "Tin nhắn",
+      "appointment": "Lịch hẹn",
+      "wallet": "Ví điện tử",
+      "notification": "Thông báo"
+    }
   }
 }

@@ -38,7 +38,11 @@ import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
-type VerificationStatus = 'PendingVerification' | 'Approved' | 'Rejected';
+type VerificationStatus =
+  | 'PendingVerification'
+  | 'PendingUpdate'
+  | 'Approved'
+  | 'Rejected';
 
 interface Ophthalmologist extends OphthalmologistListItem {
   // UI mapped fields
@@ -182,7 +186,7 @@ export default function OphthalmologistsPage() {
   // Load total pending count for tab badge (independent of current page filter)
   useEffect(() => {
     ophthalmologistApi
-      .getOphthalmologists(1, 1, undefined, 'PendingVerification')
+      .getOphthalmologists(1, 1, undefined, 'PendingVerification,PendingUpdate')
       .then((r) => setPendingTotalCount(r.totalCount))
       .catch(() => {});
   }, []);
@@ -193,7 +197,9 @@ export default function OphthalmologistsPage() {
     (o) => o.verificationStatus === 'Approved'
   ).length;
   const pendingVerification = ophthalmologists.filter(
-    (o) => o.verificationStatus === 'PendingVerification'
+    (o) =>
+      o.verificationStatus === 'PendingVerification' ||
+      o.verificationStatus === 'PendingUpdate'
   ).length;
   const availableDoctors = ophthalmologists.filter(
     (o) => o.status === 'available'
@@ -225,7 +231,8 @@ export default function OphthalmologistsPage() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setPageNumber(1);
-    if (tab === 'requests') setVerificationFilter('PendingVerification');
+    if (tab === 'requests')
+      setVerificationFilter('PendingVerification,PendingUpdate');
     else if (tab === 'overview') setVerificationFilter('all');
   };
 
@@ -423,6 +430,7 @@ export default function OphthalmologistsPage() {
         > = {
           Approved: { status: 'success', label: 'Verified' },
           PendingVerification: { status: 'warning', label: 'Pending' },
+          PendingUpdate: { status: 'warning', label: 'Pending Update' },
           Rejected: { status: 'error', label: 'Rejected' },
         };
         const config = statusMap[value as VerificationStatus];
@@ -505,7 +513,8 @@ export default function OphthalmologistsPage() {
           >
             <Eye className="w-4 h-4" />
           </button>
-          {row.verificationStatus === 'PendingVerification' && (
+          {(row.verificationStatus === 'PendingVerification' ||
+            row.verificationStatus === 'PendingUpdate') && (
             <>
               <button
                 onClick={() => handleVerify(row.id)}
@@ -723,7 +732,9 @@ export default function OphthalmologistsPage() {
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
                     <option value="all">All Verification</option>
-                    <option value="PendingVerification">Pending</option>
+                    <option value="PendingVerification,PendingUpdate">
+                      Pending
+                    </option>
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>
                   </select>

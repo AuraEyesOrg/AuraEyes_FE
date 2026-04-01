@@ -262,6 +262,20 @@ export function formatViDate(isoOrDateStr: string): string {
   return date.toLocaleDateString(VI_VN);
 }
 
+/**
+ * Formats an ISO datetime string for notifications: `"31/03/2026 14:30"` (dd/MM/yyyy HH:mm).
+ * Vietnamese standard notification format - consistent across all notifications.
+ */
+export function formatNotificationDateTime(isoString: string): string {
+  return new Date(isoString).toLocaleString(VI_VN, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. RELATIVE TIME
 // ─────────────────────────────────────────────────────────────────────────────
@@ -269,21 +283,47 @@ export function formatViDate(isoOrDateStr: string): string {
 /**
  * Returns a human-readable relative time string.
  *
- * - < 1 min  → `"Just now"`
- * - < 60 min → `"Xm ago"`
- * - < 24 h   → `"Xh ago"`
- * - < 7 d    → `"Xd ago"`
+ * - < 1 min  → `"Just now"` (English) or `"Vừa xong"` (Vietnamese)
+ * - < 60 min → `"Xm ago"` (English) or `"X phút trước"` (Vietnamese)
+ * - < 24 h   → `"Xh ago"` (English) or `"X giờ trước"` (Vietnamese)
+ * - < 7 d    → `"Xd ago"` (English) or `"X ngày trước"` (Vietnamese)
  * - else     → `formatCompactDate` (e.g. `"Mar 17"`)
  *
  * @param isoString - UTC ISO timestamp
  * @param verbose   - When true, uses word labels: `"X minutes ago"`, etc.
+ * @param locale    - Locale for output: 'en-US' or 'vi-VN'. Defaults to 'en-US'.
  */
-export function formatRelativeTime(isoString: string, verbose = false): string {
+export function formatRelativeTime(
+  isoString: string,
+  verbose = false,
+  locale: string = EN_US
+): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
   const diffMin = Math.floor(diffMs / 60_000);
   const diffH = Math.floor(diffMs / 3_600_000);
   const diffD = Math.floor(diffMs / 86_400_000);
 
+  if (locale === VI_VN) {
+    if (diffMin < 1) return 'Vừa xong';
+
+    if (verbose) {
+      if (diffMin < 60)
+        return `${diffMin} phút${diffMin !== 1 ? '' : ''} trước`;
+      if (diffH < 24) return `${diffH} giờ${diffH !== 1 ? '' : ''} trước`;
+      if (diffD < 7) return `${diffD} ngày${diffD !== 1 ? '' : ''} trước`;
+      const diffW = Math.floor(diffD / 7);
+      if (diffW < 4) return `${diffW} tuần${diffW !== 1 ? '' : ''} trước`;
+      const diffMo = Math.floor(diffD / 30);
+      return `${diffMo} tháng${diffMo !== 1 ? '' : ''} trước`;
+    }
+
+    if (diffMin < 60) return `${diffMin}p trước`;
+    if (diffH < 24) return `${diffH}g trước`;
+    if (diffD < 7) return `${diffD}n trước`;
+    return formatCompactDate(isoString);
+  }
+
+  // Default English locale
   if (diffMin < 1) return 'Just now';
 
   if (verbose) {

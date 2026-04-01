@@ -8,8 +8,6 @@ export {
   postsApi,
   professionalsApi,
   organisationsApi,
-  connectionsApi,
-  groupsApi,
   savedApi,
   profileApi,
 } from './network.api';

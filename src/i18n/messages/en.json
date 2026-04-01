@@ -279,9 +279,14 @@
       "credentials": {
         "title": "Professional Credentials",
         "upload": "Upload Credentials",
+        "degrees": "Degrees",
+        "licenses": "Licenses",
         "issuedBy": "Issued by",
         "issued": "Issued",
         "expires": "Expires",
+        "noDegrees": "No degrees uploaded yet",
+        "noLicenses": "No licenses uploaded yet",
+        "addNow": "Add now",
         "status": {
           "verified": "Verified",
           "pending": "Pending",
@@ -305,7 +310,9 @@
         "title": "Account Settings",
         "security": "Security",
         "securityHint": "Reset password & 2FA",
-        "language": "Language"
+        "language": "Language",
+        "languageVi": "Tiếng Việt (VN)",
+        "languageEn": "English (US)"
       },
       "appearance": {
         "title": "Appearance",

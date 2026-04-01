@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, Search, CheckCheck, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
@@ -14,7 +15,7 @@ import {
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
-import { formatRelativeTime } from '@/lib/date-utils';
+import { formatNotificationDateTime } from '@/lib/date-utils';
 import PatientLayout from '@/features/patient/components/PatientLayout';
 import {
   DoctorHeader,
@@ -387,15 +388,16 @@ function NotificationListItem({
   notification,
   onClick,
 }: NotificationListItemProps) {
+  const { t } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
-  const typeLabel = getNotificationTypeLabel(notification.type);
+  const typeLabel = getNotificationTypeLabel(notification.type, t);
 
   return (
     <button
       onClick={onClick}
-      className={`w-full p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-750 ${
-        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      className={`w-full p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/35' : ''
       }`}
     >
       <div className="flex items-start gap-4">
@@ -415,8 +417,8 @@ function NotificationListItem({
             {!notification.isRead && (
               <span className="h-2 w-2 rounded-full bg-blue-500" />
             )}
-            <span className="text-xs text-gray-500 dark:text-gray-500">
-              {formatRelativeTime(notification.createdAt)}
+            <span className="text-xs text-gray-500 dark:text-gray-300">
+              {formatNotificationDateTime(notification.createdAt)}
             </span>
           </div>
 

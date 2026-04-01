@@ -31,6 +31,7 @@ import { InitialsAvatar } from '../professional/InitialsAvatar';
 import { useRepostMutation } from '../../hooks/useRepostMutation';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { formatViCompactDate } from '@/lib/date-utils';
+import useAuthStore from '@/store/auth-store';
 
 interface Props {
   post: ProfessionalPost;
@@ -115,6 +116,9 @@ export function PostCard({
   canModerate = false,
   isHidingPost = false,
 }: Props) {
+  const { user } = useAuthStore();
+  const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
+
   const [showReactions, setShowReactions] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -306,7 +310,7 @@ export function PostCard({
                         <Copy className="w-4 h-4" />
                         Copy link
                       </button>
-                      {!isOwnPost && (
+                      {!isOwnPost && !isSystemAdmin && (
                         <button
                           onClick={handleSave}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-(--text-primary) hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
@@ -658,8 +662,8 @@ export function PostCard({
                 </motion.button>
               )}
 
-              {/* Save — hidden for own posts */}
-              {!isOwnPost && (
+              {/* Save — hidden for own posts and system admins */}
+              {!isOwnPost && !isSystemAdmin && (
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={handleSave}

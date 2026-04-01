@@ -31,7 +31,11 @@ export interface OphthalmologistListItem {
   expectedMonthlySalary?: number;
   commissionRate?: number;
   actualMonthlySalary?: number;
-  verificationStatus: 'PendingVerification' | 'Approved' | 'Rejected';
+  verificationStatus:
+    | 'PendingVerification'
+    | 'PendingUpdate'
+    | 'Approved'
+    | 'Rejected';
   isVerified: boolean;
   licenseUrl?: string;
   degreeUrl?: string;

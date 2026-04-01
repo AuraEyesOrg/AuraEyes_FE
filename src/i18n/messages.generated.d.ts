@@ -17,6 +17,9 @@ declare module 'i18next' {
       findDoctor: string;
       learnMore: string;
       language: string;
+      sidebar: {
+        auraNetwork: string;
+      };
     };
     Auth: {
       login: string;
@@ -279,9 +282,14 @@ declare module 'i18next' {
         credentials: {
           title: string;
           upload: string;
+          degrees: string;
+          licenses: string;
           issuedBy: string;
           issued: string;
           expires: string;
+          noDegrees: string;
+          noLicenses: string;
+          addNow: string;
           status: {
             verified: string;
             pending: string;
@@ -306,6 +314,8 @@ declare module 'i18next' {
           security: string;
           securityHint: string;
           language: string;
+          languageVi: string;
+          languageEn: string;
         };
         appearance: {
           title: string;
@@ -1246,6 +1256,16 @@ declare module 'i18next' {
       findingsDetected: string;
       backToDashboard: string;
       sessionLabel: string;
+    };
+    notification: {
+      types: {
+        screening: string;
+        consultation: string;
+        message: string;
+        appointment: string;
+        wallet: string;
+        notification: string;
+      };
     };
   }
 

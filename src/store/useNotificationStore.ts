@@ -263,25 +263,53 @@ function showBrowserNotification(notification: Notification): void {
 
 /**
  * Helper to get notification type label
+ * @param type - NotificationType enum value
+ * @param t - i18n translate function (optional). If not provided, returns English labels.
  */
-export function getNotificationTypeLabel(type: NotificationType): string {
+export function getNotificationTypeLabel(
+  type: NotificationType,
+  t?: (key: string, defaultValue: string) => string
+): string {
+  if (!t) {
+    // Fallback English labels if no i18n function provided
+    switch (type) {
+      case NotificationType.AiScreeningCompleted:
+        return 'Screening';
+      case NotificationType.ConsultationAccepted:
+      case NotificationType.ConsultationResultProvided:
+      case NotificationType.NewConsultationRequest:
+        return 'Consultation';
+      case NotificationType.NewPatientMessage:
+        return 'Message';
+      case NotificationType.NewAppointmentBooked:
+      case NotificationType.ScheduleChanged:
+        return 'Appointment';
+      case NotificationType.WalletDepositSuccess:
+      case NotificationType.WalletPaymentProcessed:
+        return 'Wallet';
+      default:
+        return 'Notification';
+    }
+  }
+
+  // i18n-based labels
   switch (type) {
     case NotificationType.AiScreeningCompleted:
-      return 'Screening';
+      return t('notification.types.screening', 'Screening');
     case NotificationType.ConsultationAccepted:
     case NotificationType.ConsultationResultProvided:
     case NotificationType.NewConsultationRequest:
-      return 'Consultation';
+      return t('notification.types.consultation', 'Consultation');
     case NotificationType.NewPatientMessage:
-      return 'Message';
+      return t('notification.types.message', 'Message');
     case NotificationType.NewAppointmentBooked:
     case NotificationType.ScheduleChanged:
-      return 'Appointment';
+      return t('notification.types.appointment', 'Appointment');
     case NotificationType.WalletDepositSuccess:
     case NotificationType.WalletPaymentProcessed:
-      return 'Wallet';
+      return t('notification.types.wallet', 'Wallet');
     default:
-      return 'Notification';
+      return t('notification.types.notification', 'Notification');
   }
 }
 

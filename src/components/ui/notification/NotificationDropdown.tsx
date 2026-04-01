@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bell,
   X,
@@ -25,7 +26,7 @@ import {
   getNotificationRoute,
 } from '@/types/notification';
 import type { Notification } from '@/types/notification';
-import { formatRelativeTime } from '@/lib/date-utils';
+import { formatNotificationDateTime } from '@/lib/date-utils';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -38,6 +39,7 @@ interface NotificationDropdownProps {
 export default function NotificationDropdown({
   className = '',
 }: NotificationDropdownProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -160,7 +162,7 @@ export default function NotificationDropdown({
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Notifications
+                {t('Settings.profile.notifications.title', 'Notifications')}
               </h3>
               {connectionStatus === 'connected' && (
                 <p className="text-xs text-green-600 dark:text-green-400">
@@ -271,15 +273,16 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick }: NotificationItemProps) {
+  const { t } = useTranslation();
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
-  const typeLabel = getNotificationTypeLabel(notification.type);
+  const typeLabel = getNotificationTypeLabel(notification.type, t);
 
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors ${
-        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/35' : ''
       }`}
     >
       <div className="flex items-start gap-3">
@@ -303,16 +306,16 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
             )}
           </div>
 
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1 truncate">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1 truncate">
             {notification.title}
           </h4>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+          <p className="text-sm text-gray-600 dark:text-gray-200 mb-2 line-clamp-2">
             {notification.message}
           </p>
 
-          <p className="text-xs text-gray-500 dark:text-gray-500">
-            {formatRelativeTime(notification.createdAt)}
+          <p className="text-xs text-gray-500 dark:text-gray-300">
+            {formatNotificationDateTime(notification.createdAt)}
           </p>
         </div>
       </div>
