@@ -11,6 +11,7 @@ import { unwrapApiData } from '@/types/api-response';
 export interface OphthalmologistCredentialItem {
   id: string;
   name: string;
+  degreeLevel?: string;
   issuingAuthority?: string;
   issuedDate: string;
   expiryDate?: string;
@@ -30,7 +31,11 @@ export interface OphthalmologistListItem {
   expectedMonthlySalary?: number;
   commissionRate?: number;
   actualMonthlySalary?: number;
-  verificationStatus: 'PendingVerification' | 'Approved' | 'Rejected';
+  verificationStatus:
+    | 'PendingVerification'
+    | 'PendingUpdate'
+    | 'Approved'
+    | 'Rejected';
   isVerified: boolean;
   licenseUrl?: string;
   degreeUrl?: string;

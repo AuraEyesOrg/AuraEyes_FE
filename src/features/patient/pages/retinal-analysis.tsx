@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
 import { screeningApi } from '../api/screening.api';
+import { agreeScreeningConsent } from '../api/consent.api';
+import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
 import { quotaKeys } from '../hooks/use-quota';
 import { useQuotaBalance } from '../hooks/use-quota';
 import FocusModeLayout from '../components/FocusModeLayout';
@@ -171,6 +173,7 @@ interface AIStandardResponse {
     num_lesions: number;
     all_lesions: AILesionLocation[];
   } | null;
+  heatmap_colormap_url?: string;
 }
 
 /** Get the natural dimensions of an image from its URL */
@@ -182,7 +185,41 @@ function getImageNaturalSize(url: string): Promise<{ w: number; h: number }> {
     img.src = url;
   });
 }
+function resolveAiAssetUrl(url?: string): string | undefined {
+  if (!url) return undefined;
 
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+
+  try {
+    const base =
+      typeof aiCoreClient.defaults.baseURL === 'string' &&
+      aiCoreClient.defaults.baseURL.length > 0
+        ? aiCoreClient.defaults.baseURL
+        : window.location.origin;
+
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
+}
+
+function extractHeatmapUrlFromRaw(rawJsonOutput?: string): string | undefined {
+  if (!rawJsonOutput) return undefined;
+
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Partial<AIStandardResponse>;
+    return resolveAiAssetUrl(parsed.heatmap_colormap_url);
+  } catch {
+    return undefined;
+  }
+}
 /**
  * Map AI standard response → Anomaly[] for the frontend.
  * Faithfully reflects the API top_k predictions.
@@ -198,7 +235,6 @@ function mapStandardResponseToAnomalies(
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
   const bestLesion = lesions.length > 0 ? lesions[0] : null;
-  const primaryName = data.prediction.primary.class_name;
 
   // Map each top_k prediction → one Anomaly card
   for (const pred of data.prediction.top_k) {
@@ -271,6 +307,7 @@ interface LocationState {
   screeningId?: string; // From new screening flow
   images?: RouteStateImage[];
   source?: string;
+  consentAccepted?: boolean;
   rawJsonOutput?: string;
   resultsPersisted?: boolean;
 }
@@ -579,6 +616,14 @@ export default function RetinalAnalysis() {
       }
     }
 
+    if (
+      routeState?.source === 'new-screening' &&
+      (!incomingScreeningId || !routeState.consentAccepted)
+    ) {
+      navigate('/patient/screening/new', { replace: true });
+      return;
+    }
+
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
       saveLastScreeningId(incomingScreeningId);
@@ -609,6 +654,7 @@ export default function RetinalAnalysis() {
             uploadedAt: new Date().toISOString(),
             analyzed: false,
             anomalies: [],
+            heatmapUrl: undefined,
           })) ?? [];
 
         if (routeImages.length === 0) {
@@ -635,12 +681,14 @@ export default function RetinalAnalysis() {
           uploadedAt: img.capturedAt,
           analyzed: false,
           anomalies: [],
+          heatmapUrl: undefined,
         }));
 
         const sessionImages = mappedPersisted;
 
         const mergedRawJson =
           response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
+        const restoredHeatmapUrl = extractHeatmapUrlFromRaw(mergedRawJson);
         setRawJsonOutput(mergedRawJson);
         setResultsPersisted(Boolean(response.data?.latestResult));
 
@@ -657,8 +705,13 @@ export default function RetinalAnalysis() {
         const restoredAnomalies = restored.anomalies;
 
         const hydratedImages = sessionImages.map((img, idx) =>
-          idx === 0 && restoredAnomalies.length > 0
-            ? { ...img, analyzed: true, anomalies: restoredAnomalies }
+          idx === 0
+            ? {
+                ...img,
+                analyzed: restoredAnomalies.length > 0,
+                anomalies: restoredAnomalies,
+                heatmapUrl: restoredHeatmapUrl,
+              }
             : img
         );
 
@@ -687,6 +740,10 @@ export default function RetinalAnalysis() {
       setAnalyzed(selectedImg.analyzed);
       setIsFallback(false);
       setErrorMessage(null);
+
+      if (!selectedImg.heatmapUrl) {
+        setShowHeatmap(false);
+      }
     }
   };
 
@@ -726,7 +783,7 @@ export default function RetinalAnalysis() {
       border: 'border-amber-200',
       icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
       summary:
-        "Our AI noticed some areas that may benefit from a specialist\'s review. This doesn\'t mean there\'s a problem — it simply means a closer look could be helpful.",
+        "Our AI noticed some areas that may benefit from a specialist\'s review. This doesn't mean there's a problem — it simply means a closer look could be helpful.",
     },
     high: {
       label: 'Needs Attention',
@@ -735,7 +792,7 @@ export default function RetinalAnalysis() {
       border: 'border-orange-200',
       icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
       summary:
-        "We\'ve found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision — your next step is to have these results reviewed by a doctor.",
+        "We've found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision — your next step is to have these results reviewed by a doctor.",
     },
   };
 
@@ -808,12 +865,57 @@ export default function RetinalAnalysis() {
         }
       );
 
+      const resolvedHeatmapUrl = resolveAiAssetUrl(data.heatmap_colormap_url);
+
       // Map AI response → deduplicated Anomaly[] with correct image-relative coords
       const mapped = mapStandardResponseToAnomalies(data, imgWidth, imgHeight);
       const rawOutput = JSON.stringify(data);
       setRawJsonOutput(rawOutput);
 
-      const ensuredScreeningId = await ensureScreeningSession();
+      let ensuredScreeningId = screeningId;
+
+      if (!screeningId) {
+        const files = await Promise.all(
+          images.map(async (img, idx) => {
+            const resp = await fetch(img.url);
+            const imgBlob = await resp.blob();
+            const fileType = imgBlob.type || 'image/jpeg';
+            const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+            return new File([imgBlob], fileNameForUpload, { type: fileType });
+          })
+        );
+
+        const uploadResp = await screeningApi.uploadRetinalImages(files);
+        const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+        if (uploadedUrls.length === 0) {
+          throw new Error('Failed to upload retinal images');
+        }
+
+        const retinalImages = uploadedUrls.map((url, idx) => ({
+          imageUrl: url,
+          eyeSide: inferEyeSideFromName(
+            images[idx]?.name || '',
+            idx,
+            uploadedUrls.length
+          ),
+          deviceName: 'Retinal Camera',
+        }));
+
+        const sessionResp = await screeningApi.createSession({
+          modelVersion: '1.0',
+          retinalImages,
+        });
+
+        if (sessionResp.data?.screeningId) {
+          ensuredScreeningId = sessionResp.data.screeningId;
+          setScreeningId(sessionResp.data.screeningId);
+
+          await agreeScreeningConsent(sessionResp.data.screeningId, {
+            content: UPLOAD_SCREENING_CONSENT_CONTENT,
+          });
+        }
+      }
 
       if (!ensuredScreeningId) {
         throw new Error('Screening session not available to save AI results');
@@ -866,7 +968,12 @@ export default function RetinalAnalysis() {
         setImages((prev) =>
           prev.map((img) =>
             img.id === currentImage.id
-              ? { ...img, analyzed: true, anomalies: mapped }
+              ? {
+                  ...img,
+                  analyzed: true,
+                  anomalies: mapped,
+                  heatmapUrl: resolvedHeatmapUrl,
+                }
               : img
           )
         );
@@ -895,6 +1002,13 @@ export default function RetinalAnalysis() {
     }
   };
 
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const heatmapUrl = currentImage?.heatmapUrl;
+  useEffect(() => {
+    if (!heatmapUrl) {
+      setShowHeatmap(false);
+    }
+  }, [heatmapUrl]);
   if (images.length === 0) {
     return null;
   }
@@ -915,6 +1029,7 @@ export default function RetinalAnalysis() {
             {/* Toggle — above image, aligned right */}
             {analyzed && (
               <div className="flex-shrink-0 flex justify-end px-4 py-2">
+                {/* Toggle bounding box */}
                 <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
                   <span className="text-sm font-medium text-slate-600">
                     Show AI Highlights
@@ -934,6 +1049,28 @@ export default function RetinalAnalysis() {
                     />
                   </button>
                 </label>
+                {/* Toggle heatmap overlay nếu có heatmapUrl */}
+                {heatmapUrl && (
+                  <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
+                    <span className="text-sm font-medium text-slate-600">
+                      Show Heatmap
+                    </span>
+                    <button
+                      role="switch"
+                      aria-checked={showHeatmap}
+                      onClick={() => setShowHeatmap(!showHeatmap)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        showHeatmap ? 'bg-orange-400' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                          showHeatmap ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </label>
+                )}
               </div>
             )}
 
@@ -946,6 +1083,8 @@ export default function RetinalAnalysis() {
                 isAnalyzing={isAnalyzing}
                 currentImage={currentImage}
                 showHighlights={showHighlights}
+                showHeatmap={showHeatmap}
+                heatmapUrl={heatmapUrl}
               />
             </div>
 

@@ -141,7 +141,7 @@ const mapSlotToScheduleDetail = (slot: AppointmentSlotDto): ScheduleDto => ({
 export const getSchedules = async (
   params: GetSchedulesParams
 ): Promise<PagedResult<ScheduleListDto>> => {
-  const { ophthalmologistId, slotType, ...queryParams } = params;
+  const { ophthalmologistId, ...queryParams } = params;
   const response = await api.get<
     ApiResponse<PagedResult<AppointmentSlotListDto>>
   >(API_ENDPOINTS.APPOINTMENT_SLOTS.LIST, {

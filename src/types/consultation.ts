@@ -127,9 +127,25 @@ export interface CreateVideoCallSessionRequest {
 
 export interface SubmitVerificationReportRequest {
   doctorId: string;
-  diagnosesCode: string;
-  diagnosesText: string;
+
+  // New payload fields.
+  diagnosisCode?: string;
+  codingSystem?: string;
+  clinicalFindings?: string;
+  severityLevel?: string;
+  confidenceLevel?: number;
   treatmentPlan?: string;
+  recommendations?: string;
+  lifestyleAdvice?: string;
+  isUrgent?: boolean;
+  status?: string;
+  followUpDate?: string;
+  isReferralNeeded?: boolean;
+  finalizedAt?: string;
+
+  // Backward-compatible aliases for legacy clients.
+  diagnosesCode?: string;
+  diagnosesText?: string;
 }
 
 export interface SendMessageRequest {
@@ -150,6 +166,7 @@ export interface EndSessionRequest {
 export interface GetConsultationSessionsParams {
   patientId?: string;
   ophthalmologistId?: string;
+  aiScreeningId?: string;
   type?: ConsultationSessionType;
   status?: SessionStatus;
   chatStatus?: ChatStatus;

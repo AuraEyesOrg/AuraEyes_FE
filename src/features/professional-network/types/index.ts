@@ -97,6 +97,10 @@ export interface ProfessionalPost {
   repostCount: number;
   viewCount: number;
   allowComments: boolean;
+  isInternalCase?: boolean;
+  consultationSessionId?: string;
+  patientAge?: number;
+  patientGender?: string;
   attachments: PostAttachment[];
   currentUserReaction?: ReactionType;
   isBookmarked: boolean;
@@ -296,6 +300,10 @@ export interface CreatePostRequest {
   category: PostCategory;
   organisationId?: string;
   allowComments: boolean;
+  isInternalCase?: boolean;
+  consultationSessionId?: string;
+  patientAge?: number;
+  patientGender?: string;
 }
 
 // Maps to BE ToggleReactionCommand body

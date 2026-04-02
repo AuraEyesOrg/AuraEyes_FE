@@ -27,11 +27,19 @@ export interface RegisterPatientRequest {
 
 export interface CredentialItemRequest {
   name: string;
+  degreeLevel?: DegreeLevel;
   issuingAuthority?: string;
   issuedDate: string;
   expiryDate?: string;
   file: File;
 }
+
+export type DegreeLevel =
+  | 'Bachelor'
+  | 'Master'
+  | 'Doctor'
+  | 'AssociateProfessor'
+  | 'Professor';
 
 export interface RegisterOphthalmologistRequest {
   email: string;

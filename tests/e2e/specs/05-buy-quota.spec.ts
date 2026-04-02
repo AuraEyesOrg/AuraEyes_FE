@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { getApiBaseUrl, resetAndSeed } from '../helpers/test-backdoor.helper';
 import { bypassRecaptcha, loginByUi } from '../helpers/ui-login.helper';
 import { query } from '../helpers/postgres';
 
@@ -6,6 +7,10 @@ const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
 test.describe('Flow 05 - AI Quota Purchase for Screening Service', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetAndSeed(request);
+  });
+
   test('patient purchases additional ai quota from screening service and quota is updated', async ({
     browser,
   }) => {
@@ -102,5 +107,20 @@ test.describe('Flow 05 - AI Quota Purchase for Screening Service', () => {
     expect(quotaAfterBuy[0].PurchasedAiQuota).toBeGreaterThan(0);
 
     await ctx.close();
+  });
+
+  test('backdoor endpoint should reject request without X-Test-Key', async ({
+    request,
+  }) => {
+    const response = await request.post(
+      `${getApiBaseUrl()}/api/test-backdoor/payments/mark-success`,
+      {
+        data: {
+          orderCode: `E2E-${Date.now()}`,
+        },
+      }
+    );
+
+    expect([401, 403]).toContain(response.status());
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   Mail,
@@ -30,18 +31,23 @@ import {
   DollarSign,
   X,
 } from 'lucide-react';
-import { DoctorSidebar, DoctorHeader } from '../components';
+import {
+  DoctorSidebar,
+  DoctorHeader,
+  UploadCredentialsModal,
+} from '../components';
 import { useTheme } from '@/contexts/ThemeContext';
 import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
-import { getCurrentUser } from '@/features/auth/api/auth.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { formatCurrency } from '@/lib/helper';
 import {
+  type AppLocale,
   DEFAULT_LOCALE,
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -103,14 +109,23 @@ interface OphthalmologistProfileApi {
   id: string;
   userFullName?: string | null;
   userEmail?: string | null;
+  userAvatarUrl?: string | null;
   userPhoneNumber?: string | null;
   userAddress?: string | null;
   bio?: string | null;
   yearsOfExperience: number;
   isVerified: boolean;
   createdAt: string;
+  degrees: Array<{
+    id: string;
+    name: string;
+    issuingAuthority?: string | null;
+    issuedDate: string;
+    degreeUrl?: string | null;
+  }>;
   certificates: Array<{
     id: string;
+    type?: string | null;
     name: string;
     issuingAuthority?: string | null;
     issuedDate: string;
@@ -194,10 +209,11 @@ const normalizeTransactionType = (value: number | string): TransactionType => {
   }
 };
 
-const mapCertificateType = (
-  name: string
+const mapCertificateTypeFromApi = (
+  value: string | null | undefined
 ): 'license' | 'degree' | 'certification' => {
-  const normalized = name.toLowerCase();
+  const normalized = (value ?? '').toLowerCase();
+
   if (normalized.includes('license')) return 'license';
   if (normalized.includes('degree')) return 'degree';
   return 'certification';
@@ -205,7 +221,9 @@ const mapCertificateType = (
 
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
   const toLocalizedPath = (pathname: string): string =>
@@ -219,6 +237,11 @@ export default function SettingsPage() {
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showUploadCredentialsModal, setShowUploadCredentialsModal] =
+    useState(false);
+  const [credentialTab, setCredentialTab] = useState<'degree' | 'license'>(
+    'degree'
+  );
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
     null
@@ -232,20 +255,11 @@ export default function SettingsPage() {
       yearsOfExperience: 0,
     });
 
-  const currentUserQuery = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: getCurrentUser,
-  });
-
-  const ophthalmologistId =
-    currentUserQuery.data?.roleId ?? user?.roleId ?? null;
-
   const profileQuery = useQuery({
-    queryKey: ['ophthalmologist', 'detail', ophthalmologistId],
-    enabled: Boolean(ophthalmologistId),
+    queryKey: ['ophthalmologist', 'me', 'profile'],
     queryFn: async () => {
       const response = await api.get<ApiResponse<OphthalmologistProfileApi>>(
-        `/ophthalmologists/${ophthalmologistId}`
+        '/ophthalmologists/me'
       );
       return response.data.data;
     },
@@ -281,9 +295,8 @@ export default function SettingsPage() {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
         queryClient.invalidateQueries({
-          queryKey: ['ophthalmologist', 'detail', ophthalmologistId],
+          queryKey: ['ophthalmologist', 'me', 'profile'],
         }),
       ]);
       setShowEditProfileModal(false);
@@ -327,6 +340,9 @@ export default function SettingsPage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['ophthalmologist', 'me', 'profile'],
+      });
       toast.success('Avatar uploaded successfully.');
     },
     onError: (error: unknown) => {
@@ -343,42 +359,66 @@ export default function SettingsPage() {
   });
 
   const displayAvatarUrl =
-    avatarUrlOverride ?? currentUserQuery.data?.avatarUrl ?? user?.avatarUrl;
+    avatarUrlOverride ?? profileQuery.data?.userAvatarUrl ?? user?.avatarUrl;
 
   const profile = useMemo<OphthalmologistProfile>(() => {
-    const authUser = currentUserQuery.data ?? user;
     const profileData = profileQuery.data;
 
-    if (!authUser && !profileData) return DEFAULT_PROFILE;
+    if (!user && !profileData) return DEFAULT_PROFILE;
 
     return {
-      id: profileData?.id ?? authUser?.roleId ?? authUser?.id ?? '',
+      id: profileData?.id ?? user?.roleId ?? user?.id ?? '',
       fullName:
         profileData?.userFullName ??
-        authUser?.fullName ??
+        user?.fullName ??
         t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
-      email: profileData?.userEmail ?? authUser?.email ?? 'N/A',
+      email: profileData?.userEmail ?? user?.email ?? 'N/A',
       phone: profileData?.userPhoneNumber ?? 'N/A',
-      bio: profileData?.bio?.trim() || 'No profile bio available.',
+      bio:
+        profileData?.bio?.trim() ||
+        t(
+          'Ophthalmologist.settings.defaults.noBio',
+          'No profile bio available.'
+        ),
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
-      hospital: authUser?.organizationId ?? 'N/A',
+      hospital: user?.organizationId ?? 'N/A',
       department: 'N/A',
       address: profileData?.userAddress ?? 'N/A',
-      isVerified: profileData?.isVerified ?? Boolean(authUser?.isVerified),
+      isVerified: profileData?.isVerified ?? Boolean(user?.isVerified),
       createdAt: profileData?.createdAt ?? new Date().toISOString(),
-      certificates:
-        profileData?.certificates.map((cert) => ({
+      certificates: [
+        ...(profileData?.degrees ?? []).map((degree) => ({
+          id: degree.id,
+          name: degree.name,
+          type: 'degree' as const,
+          issuedBy: degree.issuingAuthority ?? 'N/A',
+          issuedDate: degree.issuedDate,
+          status: 'verified' as const,
+          fileUrl: degree.degreeUrl ?? undefined,
+        })),
+        ...(profileData?.certificates ?? []).map((cert) => ({
           id: cert.id,
           name: cert.name,
-          type: mapCertificateType(cert.name),
+          type: mapCertificateTypeFromApi(cert.type ?? cert.name),
           issuedBy: cert.issuingAuthority ?? 'N/A',
           issuedDate: cert.issuedDate,
           expiryDate: cert.expiryDate ?? undefined,
-          status: cert.isExpired ? 'expired' : 'verified',
-        })) ?? [],
+          status: cert.isExpired ? ('expired' as const) : ('verified' as const),
+        })),
+      ],
     };
-  }, [currentUserQuery.data, profileQuery.data, user]);
+  }, [profileQuery.data, t, user]);
+
+  const handleLanguageChange = (nextLocale: AppLocale) => {
+    if (nextLocale === locale) return;
+
+    persistLocale(nextLocale);
+    void i18n.changeLanguage(nextLocale);
+
+    const localizedPath = withLocalePathname(nextLocale, location.pathname);
+    navigate(`${localizedPath}${location.search}${location.hash}`);
+  };
 
   useEffect(() => {
     if (!showEditProfileModal) return;
@@ -767,7 +807,10 @@ export default function SettingsPage() {
                       'Medical Credentials'
                     )}
                   </h2>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-sm font-medium transition-colors">
+                  <button
+                    onClick={() => setShowUploadCredentialsModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-transparent border border-cyan-500 text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-sm font-medium transition-colors"
+                  >
                     <Upload className="w-4 h-4" />
                     {t(
                       'Ophthalmologist.settings.credentials.upload',
@@ -776,57 +819,123 @@ export default function SettingsPage() {
                   </button>
                 </div>
 
+                {/* Credential Tabs */}
+                <div className="flex border-b border-gray-200 dark:border-[#1e3a5f]">
+                  <button
+                    onClick={() => setCredentialTab('degree')}
+                    className={`flex-1 px-6 py-4 font-medium text-center transition-colors ${
+                      credentialTab === 'degree'
+                        ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 dark:border-cyan-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {t(
+                      'Ophthalmologist.settings.credentials.degrees',
+                      'Bằng cấp học vị'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setCredentialTab('license')}
+                    className={`flex-1 px-6 py-4 font-medium text-center transition-colors ${
+                      credentialTab === 'license'
+                        ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-600 dark:border-cyan-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {t(
+                      'Ophthalmologist.settings.credentials.licenses',
+                      'Chứng chỉ hành nghề'
+                    )}
+                  </button>
+                </div>
+
                 <div className="p-6 space-y-4">
-                  {profile.certificates.map((cert) => {
-                    const CertIcon = getCertificateIcon(cert.type);
-                    return (
-                      <div
-                        key={cert.id}
-                        className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1e3a5f] transition-colors group"
-                      >
-                        <div className="w-12 h-12 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f] rounded-lg flex items-center justify-center shrink-0">
-                          <CertIcon className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
-                              {cert.name}
-                            </h4>
-                            {getStatusBadge(cert.status)}
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            {t(
-                              'Ophthalmologist.settings.credentials.issuedBy',
-                              'Issued by'
-                            )}{' '}
-                            {cert.issuedBy}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
-                            <span>
-                              {t(
-                                'Ophthalmologist.settings.credentials.issued',
-                                'Issued'
-                              )}
-                              : {new Date(cert.issuedDate).toLocaleDateString()}
-                            </span>
-                            {cert.expiryDate && (
-                              <span>
-                                {t(
-                                  'Ophthalmologist.settings.credentials.expires',
-                                  'Expires'
-                                )}
-                                :{' '}
-                                {new Date(cert.expiryDate).toLocaleDateString()}
-                              </span>
+                  {profile.certificates.filter(
+                    (cert) => cert.type === credentialTab
+                  ).length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Award className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        {credentialTab === 'degree'
+                          ? t(
+                              'Ophthalmologist.settings.credentials.noDegrees',
+                              'No degrees uploaded yet'
+                            )
+                          : t(
+                              'Ophthalmologist.settings.credentials.noLicenses',
+                              'No licenses uploaded yet'
                             )}
+                      </p>
+                      <button
+                        onClick={() => setShowUploadCredentialsModal(true)}
+                        className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
+                      >
+                        +{' '}
+                        {t(
+                          'Ophthalmologist.settings.credentials.addNow',
+                          'Add now'
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    profile.certificates
+                      .filter((cert) => cert.type === credentialTab)
+                      .map((cert) => {
+                        const CertIcon = getCertificateIcon(cert.type);
+                        return (
+                          <div
+                            key={cert.id}
+                            className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1e3a5f] transition-colors group"
+                          >
+                            <div className="w-12 h-12 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#2d4a6f] rounded-lg flex items-center justify-center shrink-0">
+                              <CertIcon className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h4 className="font-medium text-gray-900 dark:text-white">
+                                  {cert.name}
+                                </h4>
+                                {getStatusBadge(cert.status)}
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                {t(
+                                  'Ophthalmologist.settings.credentials.issuedBy',
+                                  'Issued by'
+                                )}{' '}
+                                {cert.issuedBy}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                <span>
+                                  {t(
+                                    'Ophthalmologist.settings.credentials.issued',
+                                    'Issued'
+                                  )}
+                                  :{' '}
+                                  {new Date(
+                                    cert.issuedDate
+                                  ).toLocaleDateString()}
+                                </span>
+                                {cert.expiryDate && (
+                                  <span>
+                                    {t(
+                                      'Ophthalmologist.settings.credentials.expires',
+                                      'Expires'
+                                    )}
+                                    :{' '}
+                                    {new Date(
+                                      cert.expiryDate
+                                    ).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg transition-all">
+                              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            </button>
                           </div>
-                        </div>
-                        <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg transition-all">
-                          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                        );
+                      })
+                  )}
                 </div>
               </div>
 
@@ -990,7 +1099,7 @@ export default function SettingsPage() {
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
                   </Link>
 
-                  <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group">
+                  <div className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                         <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -1003,12 +1112,39 @@ export default function SettingsPage() {
                           )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {locale === 'vi' ? 'Tieng Viet (VN)' : 'English (US)'}
+                          {locale === 'vi'
+                            ? t(
+                                'Ophthalmologist.settings.accountSettings.languageVi',
+                                'Tiếng Việt (VN)'
+                              )
+                            : t(
+                                'Ophthalmologist.settings.accountSettings.languageEn',
+                                'English (US)'
+                              )}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
-                  </button>
+                    <select
+                      value={locale}
+                      onChange={(event) =>
+                        handleLanguageChange(event.target.value as AppLocale)
+                      }
+                      className="min-w-36 px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="vi">
+                        {t(
+                          'Ophthalmologist.settings.accountSettings.languageVi',
+                          'Tiếng Việt (VN)'
+                        )}
+                      </option>
+                      <option value="en">
+                        {t(
+                          'Ophthalmologist.settings.accountSettings.languageEn',
+                          'English (US)'
+                        )}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1469,6 +1605,11 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+      <UploadCredentialsModal
+        isOpen={showUploadCredentialsModal}
+        onClose={() => setShowUploadCredentialsModal(false)}
+        ophthalmologistId={profile.id}
+      />
     </div>
   );
 }

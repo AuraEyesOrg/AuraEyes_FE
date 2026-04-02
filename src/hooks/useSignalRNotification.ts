@@ -38,8 +38,12 @@ export function useSignalRNotification(): {
   const reconnectAttemptRef = useRef(0);
 
   const { isAuthenticated, user } = useAuthStore();
-  const { addNotification, setConnectionStatus, connectionStatus } =
-    useNotificationStore();
+  const {
+    addNotification,
+    setUnreadCount,
+    setConnectionStatus,
+    connectionStatus,
+  } = useNotificationStore();
 
   /**
    * Get access token for SignalR authentication
@@ -123,6 +127,18 @@ export function useSignalRNotification(): {
   );
 
   /**
+   * Handle unread count updates from SignalR
+   */
+  const handleUnreadCountReceived = useCallback(
+    (count: number) => {
+      if (typeof count === 'number' && Number.isFinite(count) && count >= 0) {
+        setUnreadCount(count);
+      }
+    },
+    [setUnreadCount]
+  );
+
+  /**
    * Build and configure SignalR connection
    */
   const buildConnection = useCallback((): HubConnection => {
@@ -155,9 +171,15 @@ export function useSignalRNotification(): {
 
     // Register notification event handler
     connection.on('ReceiveNotification', handleNotificationReceived);
+    connection.on('ReceiveUnreadCount', handleUnreadCountReceived);
 
     return connection;
-  }, [getAccessToken, handleNotificationReceived, setConnectionStatus]);
+  }, [
+    getAccessToken,
+    handleNotificationReceived,
+    handleUnreadCountReceived,
+    setConnectionStatus,
+  ]);
 
   /**
    * Start SignalR connection

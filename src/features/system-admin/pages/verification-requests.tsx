@@ -53,10 +53,44 @@ const formatDate = (value: string | undefined) => {
 const isImageUrl = (url: string) =>
   /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
 
+const formatDegreeLevel = (value?: string) => {
+  if (!value) return 'N/A';
+
+  const mapping: Record<string, string> = {
+    Bachelor: 'Bachelor',
+    Master: 'Master',
+    Doctorate: 'Doctorate',
+    AssociateProfessor: 'Associate Professor',
+    Professor: 'Professor',
+  };
+
+  return mapping[value] ?? value;
+};
+
 const getCredentialCounts = (doctor: OphthalmologistListItem) => {
   const licenseCount = doctor.licenses?.length ?? (doctor.licenseUrl ? 1 : 0);
   const degreeCount = doctor.degrees?.length ?? (doctor.degreeUrl ? 1 : 0);
   return { licenseCount, degreeCount };
+};
+
+const getVerificationRequestType = (
+  verificationStatus: OphthalmologistListItem['verificationStatus']
+) => {
+  if (verificationStatus === 'PendingUpdate') {
+    return {
+      label: 'Credential Update Review',
+      hint: 'Bác sĩ cập nhật chứng chỉ sau khi đã được duyệt trước đó.',
+      className:
+        'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
+    };
+  }
+
+  return {
+    label: 'Onboarding Verification',
+    hint: 'Hồ sơ xác minh ban đầu của bác sĩ mới đăng ký.',
+    className:
+      'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
+  };
 };
 
 // ─────────────────────────────────────────────
@@ -329,7 +363,10 @@ function VerificationDetailModal({
 
   const renderCredentialCards = (
     credentials: NonNullable<OphthalmologistListItem['licenses']>,
-    emptyMessage: string
+    emptyMessage: string,
+    options?: {
+      showDegreeLevel?: boolean;
+    }
   ) => {
     if (!credentials.length) {
       return (
@@ -356,6 +393,14 @@ function VerificationDetailModal({
                   {credential.issuingAuthority || 'N/A'}
                 </dd>
               </div>
+              {options?.showDegreeLevel && (
+                <div className="flex justify-between gap-3">
+                  <dt>Học vị</dt>
+                  <dd className="text-right">
+                    {formatDegreeLevel(credential.degreeLevel)}
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between gap-3">
                 <dt>Ngày cấp</dt>
                 <dd className="text-right">
@@ -430,7 +475,7 @@ function VerificationDetailModal({
           </button>
         </div>
 
-        <div className="space-y-6 overflow-y-auto p-6">
+        <div className="max-h-[85vh] space-y-6 overflow-y-auto p-6">
           <section>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               Licenses / Certificates ({licenses.length})
@@ -447,7 +492,8 @@ function VerificationDetailModal({
             </h4>
             {renderCredentialCards(
               degrees,
-              'Bác sĩ chưa cung cấp thông tin bằng cấp.'
+              'Bác sĩ chưa cung cấp thông tin bằng cấp.',
+              { showDegreeLevel: true }
             )}
           </section>
         </div>
@@ -479,7 +525,7 @@ export default function VerificationRequestsPage() {
         pageNumber,
         10,
         searchQuery || undefined,
-        'PendingVerification'
+        'PendingVerification,PendingUpdate'
       ),
     placeholderData: (prev) => prev,
   });
@@ -594,6 +640,9 @@ export default function VerificationRequestsPage() {
                       Credentials Summary
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
+                      Loại xác minh
+                    </th>
+                    <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
                       Thời gian nộp
                     </th>
                     <th className="text-center px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
@@ -606,7 +655,7 @@ export default function VerificationRequestsPage() {
                     // Skeleton rows
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
-                        {Array.from({ length: 4 }).map((_, j) => (
+                        {Array.from({ length: 5 }).map((_, j) => (
                           <td key={j} className="px-5 py-4">
                             <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
                           </td>
@@ -615,7 +664,7 @@ export default function VerificationRequestsPage() {
                     ))
                   ) : items.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-16 text-center">
+                      <td colSpan={5} className="px-5 py-16 text-center">
                         <div className="flex flex-col items-center gap-3">
                           <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-600" />
                           <p className="text-slate-500 font-medium">
@@ -663,6 +712,28 @@ export default function VerificationRequestsPage() {
                               </div>
                             </div>
                           </div>
+                        </td>
+
+                        {/* Request type */}
+                        <td className="px-5 py-4">
+                          {(() => {
+                            const requestType = getVerificationRequestType(
+                              doctor.verificationStatus
+                            );
+
+                            return (
+                              <div className="space-y-1.5">
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${requestType.className}`}
+                                >
+                                  {requestType.label}
+                                </span>
+                                <p className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+                                  {requestType.hint}
+                                </p>
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* Documents */}

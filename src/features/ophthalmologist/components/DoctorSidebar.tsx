@@ -63,6 +63,11 @@ const navItems = [
     hasBadge: true,
   },
   {
+    labelKey: 'Common.sidebar.auraNetwork',
+    icon: Globe,
+    path: '/network',
+  },
+  {
     labelKey: 'Ophthalmologist.sidebar.analytics',
     icon: BarChart3,
     path: '/ophthalmologist/analytics',
@@ -135,7 +140,11 @@ export default function DoctorSidebar({
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
-              to={toLocalizedPath(item.path)}
+              to={
+                item.path === '/network'
+                  ? item.path
+                  : toLocalizedPath(item.path)
+              }
               className={({ isActive }) =>
                 `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
@@ -153,7 +162,9 @@ export default function DoctorSidebar({
                     <span className="text-sm font-medium">
                       {t(
                         item.labelKey,
-                        item.labelKey.split('.').pop() ?? 'Item'
+                        item.path === '/network'
+                          ? 'Aura Network'
+                          : (item.labelKey.split('.').pop() ?? 'Item')
                       )}
                     </span>
                   </div>

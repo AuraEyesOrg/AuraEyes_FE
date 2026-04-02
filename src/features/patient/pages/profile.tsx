@@ -115,7 +115,7 @@ export default function ProfilePage() {
           toast.success('Profile updated successfully');
           setIsEditing(false);
         },
-        onError: (err) => {
+        onError: (_err) => {
           toast.error('Failed to update profile');
         },
       }
@@ -162,7 +162,7 @@ export default function ProfilePage() {
         const dataUrl = await processImageFile(file);
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load image');
       }
     },
@@ -199,7 +199,7 @@ export default function ProfilePage() {
         const dataUrl = await processImageFile(file);
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load image');
       }
     },
@@ -246,7 +246,7 @@ export default function ProfilePage() {
         setPreviewUrl(null);
         setAvatarFile(null);
       },
-      onError: (err) => {
+      onError: (_err) => {
         toast.error('Failed to upload avatar');
       },
     });
@@ -268,7 +268,7 @@ export default function ProfilePage() {
         setShowChangePassword(false);
         resetPw();
       },
-      onError: (err) => {
+      onError: (_err) => {
         toast.error('Failed to change password');
       },
     });

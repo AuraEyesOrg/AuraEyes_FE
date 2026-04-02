@@ -44,15 +44,6 @@ import {
 
 // ============ HELPERS ============
 
-const getStartOfWeekMonday = (input: Date): Date => {
-  const date = new Date(input);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
-
 const getNextAvailableDate = (candidates: AppointmentSlotListDto[]) => {
   if (!candidates.length) return null;
   const sortedCandidates = candidates.toSorted(
@@ -306,7 +297,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const autoSelectedRef = useRef(false);
 
-  const { data: doctorDetail, isLoading: doctorLoading } = useQuery({
+  const { data: doctorDetail } = useQuery({
     queryKey: ['patient-ophthalmologist-detail', selectedDoctorId],
     queryFn: () => getOphthalmologistDetailForPatient(selectedDoctorId),
     enabled: !!selectedDoctorId,

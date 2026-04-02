@@ -122,8 +122,6 @@ export default function PatientDashboard() {
   };
 
   const currentDate = formatShortDate(new Date().toISOString());
-  const latestReportSummary =
-    latestReport?.summary ?? 'No analysis results yet.';
   const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
   const effectiveLatestRisk = latestReportRisk ?? latestSessionRisk;
   const hasLatestSession = Boolean(latestSession);
