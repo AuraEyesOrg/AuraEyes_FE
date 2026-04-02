@@ -14,6 +14,7 @@ export interface N8nChatMetadata {
   token?: string;
   screeningId?: string;
   riskLevel?: 'low' | 'moderate' | 'high';
+  minBookingTime?: string;
 }
 
 export interface N8nChatRequest {
@@ -57,6 +58,73 @@ export interface N8nChatResponse {
 const FALLBACK_ASSISTANT_REPLY =
   'Mình đã nhận yêu cầu. Bạn cho phép mình tìm lịch phù hợp và gợi ý phương án đặt lịch nhé?';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const tryParseJson = (value: string): unknown | null => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const mergeNestedResponse = (
+  payload: Record<string, unknown>
+): Record<string, unknown> => {
+  if (isRecord(payload.data)) {
+    return {
+      ...payload.data,
+      ...payload,
+    };
+  }
+
+  return payload;
+};
+
+const extractReplyCandidate = (
+  payload: Record<string, unknown>
+): string | null => {
+  const normalizedPayload = mergeNestedResponse(payload);
+  const candidate =
+    normalizedPayload.reply ??
+    normalizedPayload.message ??
+    normalizedPayload.text ??
+    normalizedPayload.output;
+
+  if (typeof candidate === 'string') {
+    const parsedCandidate = tryParseJson(candidate);
+    if (isRecord(parsedCandidate)) {
+      const nestedReply = extractReplyCandidate(parsedCandidate);
+      if (nestedReply) {
+        return nestedReply;
+      }
+    }
+
+    return candidate;
+  }
+
+  if (isRecord(candidate)) {
+    return extractReplyCandidate(candidate);
+  }
+
+  return null;
+};
+
+const sanitizeAssistantReply = (value: string): string =>
+  value
+    .replace(/\r\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/```(?:json|markdown|md|text)?\n?/gi, '')
+    .replace(/```/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/^>\s?/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
 export const buildN8nChatRequest = (args: {
   message: string;
   sessionId: string;
@@ -80,14 +148,19 @@ export const buildN8nChatRequest = (args: {
 
 export const normalizeN8nChatResponse = (payload: unknown): N8nChatResponse => {
   if (typeof payload === 'string') {
+    const parsedPayload = tryParseJson(payload.trim());
+    if (isRecord(parsedPayload)) {
+      return normalizeN8nChatResponse(parsedPayload);
+    }
+
     return {
-      reply: payload.trim() || FALLBACK_ASSISTANT_REPLY,
+      reply: sanitizeAssistantReply(payload) || FALLBACK_ASSISTANT_REPLY,
       intent: 'UNKNOWN',
       action: { type: 'NONE' },
     };
   }
 
-  if (payload == null || typeof payload !== 'object') {
+  if (!isRecord(payload)) {
     return {
       reply: FALLBACK_ASSISTANT_REPLY,
       intent: 'UNKNOWN',
@@ -95,19 +168,27 @@ export const normalizeN8nChatResponse = (payload: unknown): N8nChatResponse => {
     };
   }
 
-  const data = payload as Record<string, unknown>;
-  const candidate =
-    data.reply ??
-    data.message ??
-    data.text ??
-    data.output ??
-    (typeof data.data === 'object' && data.data != null
-      ? (data.data as Record<string, unknown>).output
-      : null);
+  const normalizedPayload = mergeNestedResponse(payload);
+  const parsedOutput =
+    typeof normalizedPayload.output === 'string'
+      ? tryParseJson(normalizedPayload.output)
+      : normalizedPayload.output;
 
+  const normalizedOutput = isRecord(parsedOutput)
+    ? mergeNestedResponse(parsedOutput)
+    : undefined;
+
+  const data = normalizedOutput
+    ? {
+        ...normalizedOutput,
+        ...normalizedPayload,
+      }
+    : normalizedPayload;
+
+  const replyCandidate = extractReplyCandidate(data);
   const reply =
-    typeof candidate === 'string' && candidate.trim().length > 0
-      ? candidate.trim()
+    typeof replyCandidate === 'string' && replyCandidate.trim().length > 0
+      ? sanitizeAssistantReply(replyCandidate)
       : FALLBACK_ASSISTANT_REPLY;
 
   const suggestedSlots = Array.isArray(data.suggestedSlots)
