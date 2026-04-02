@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import ConsultationsChatView from './ConsultationsChatView';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import { useConsultationSessions } from '@/features/consultation/hooks';
@@ -25,7 +26,10 @@ export default function ConsultationsPage() {
       { enabled: !!currentDoctorId }
     );
 
-  const sessions: ConsultationSessionListDto[] = sessionsData?.items ?? [];
+  const sessions = useMemo<ConsultationSessionListDto[]>(
+    () => sessionsData?.items ?? [],
+    [sessionsData]
+  );
 
   const pendingCount = sessions.filter(
     (s) => s.status === SessionStatus.Pending

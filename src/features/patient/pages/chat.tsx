@@ -630,9 +630,12 @@ export default function ChatPage() {
   const sendMessageMutation = useSendMessage();
   const uploadChatImagesMutation = useUploadChatImages();
 
-  const sessions = sessionsData?.items ?? [];
-  const chatSessions = sessions.filter(
-    (s) => s.status !== SessionStatus.Cancelled
+  const chatSessions = useMemo(
+    () =>
+      (sessionsData?.items ?? []).filter(
+        (s) => s.status !== SessionStatus.Cancelled
+      ),
+    [sessionsData]
   );
 
   const filteredSessions = useMemo(() => {
@@ -847,6 +850,10 @@ export default function ChatPage() {
       [selectedSession.id]: stripped || attachmentFallback,
     }));
   }, [selectedSession]);
+
+  useEffect(() => {
+    setIsSessionOverviewOpen(false);
+  }, [selectedSessionId]);
 
   useEffect(() => {
     if (!selectedSession) return;

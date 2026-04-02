@@ -780,8 +780,9 @@ export default function ConsultationsChatView({
   const activeTypingSessionIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  const chatSessions = sessions.filter(
-    (s) => s.status !== SessionStatus.Cancelled
+  const chatSessions = useMemo(
+    () => sessions.filter((s) => s.status !== SessionStatus.Cancelled),
+    [sessions]
   );
 
   const filteredSessions = useMemo(() => {
@@ -1069,6 +1070,10 @@ export default function ConsultationsChatView({
       [selectedSession.id]: stripped || attachmentFallback,
     }));
   }, [selectedSession, t]);
+
+  useEffect(() => {
+    setIsSessionOverviewOpen(false);
+  }, [selectedSessionId]);
 
   useEffect(() => {
     if (!selectedSessionId) return;

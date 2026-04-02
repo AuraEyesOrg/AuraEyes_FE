@@ -124,7 +124,7 @@ export default function DoctorSidebar({
   };
 
   return (
-    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
+    <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-50 h-screen">
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
         <div className="mb-10 px-2">
