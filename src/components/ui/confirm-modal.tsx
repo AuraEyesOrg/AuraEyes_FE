@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 
@@ -35,6 +35,9 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+
   useEffect(() => {
     if (!open) {
       return;
@@ -63,6 +66,8 @@ export default function ConfirmModal({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
         className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
@@ -70,7 +75,10 @@ export default function ConfirmModal({
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-300" />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3
+              id={titleId}
+              className="text-base font-bold text-slate-900 dark:text-white"
+            >
               {title}
             </h3>
           </div>
@@ -85,7 +93,10 @@ export default function ConfirmModal({
         </div>
 
         <div className="px-6 py-5">
-          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+          <p
+            id={descriptionId}
+            className="text-sm leading-6 text-slate-600 dark:text-slate-300"
+          >
             {message}
           </p>
         </div>

@@ -364,7 +364,7 @@ export const sendSessionMessage = async (
   );
 };
 
-/** POST /api/screenings/upload-images */
+/** POST /api/consultation-sessions/upload-images */
 export const uploadChatImages = async (
   files: File[]
 ): Promise<UploadChatImagesResponse> => {
@@ -372,7 +372,7 @@ export const uploadChatImages = async (
   files.forEach((file) => formData.append('images', file));
 
   const response = await api.post<ApiResponse<UploadChatImagesResponse>>(
-    '/screenings/upload-images',
+    API_ENDPOINTS.CONSULTATION_SESSIONS.UPLOAD_IMAGES,
     formData,
     {
       headers: { 'Content-Type': 'multipart/form-data' },

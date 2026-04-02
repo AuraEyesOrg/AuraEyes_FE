@@ -527,6 +527,8 @@
       "generating": "Đang sinh...",
       "blockReason": "Đã chặn bởi bác sĩ",
       "confirmDeleteTemplate": "Bạn có chắc muốn xóa mẫu này không?",
+      "confirmDeleteTemplateMessage": "Hành động này không thể hoàn tác. Các lần sinh slot trong tương lai từ mẫu này sẽ không còn khả dụng.",
+      "confirmDeleteTemplateAction": "Xóa mẫu",
       "blockThisSlot": "Chặn slot này",
       "unblockThisSlot": "Bỏ chặn slot này",
       "stats": {

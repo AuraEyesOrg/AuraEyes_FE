@@ -825,8 +825,14 @@ export default function SlotManagementPage() {
           'Ophthalmologist.slotManagement.confirmDeleteTemplate',
           'Delete this template?'
         )}
-        message="This action cannot be undone. Related future slot generation from this template will no longer be available."
-        confirmLabel="Delete template"
+        message={t(
+          'Ophthalmologist.slotManagement.confirmDeleteTemplateMessage',
+          'This action cannot be undone. Related future slot generation from this template will no longer be available.'
+        )}
+        confirmLabel={t(
+          'Ophthalmologist.slotManagement.confirmDeleteTemplateAction',
+          'Delete template'
+        )}
         cancelLabel={t('Ophthalmologist.common.cancel', 'Cancel')}
         tone="danger"
         isLoading={deleteTemplateMutation.isPending}
