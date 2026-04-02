@@ -42,6 +42,11 @@ interface PagedResult<T> {
   hasNext: boolean;
 }
 
+export interface UploadChatImagesResponse {
+  uploadedUrls: string[];
+  count: number;
+}
+
 type RawEnumValue = string | number | null | undefined;
 
 interface RawChatMessageDto {
@@ -357,6 +362,24 @@ export const sendSessionMessage = async (
     API_ENDPOINTS.CONSULTATION_SESSIONS.SEND_MESSAGE(sessionId),
     data
   );
+};
+
+/** POST /api/screenings/upload-images */
+export const uploadChatImages = async (
+  files: File[]
+): Promise<UploadChatImagesResponse> => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('images', file));
+
+  const response = await api.post<ApiResponse<UploadChatImagesResponse>>(
+    '/screenings/upload-images',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }
+  );
+
+  return unwrapApiData<UploadChatImagesResponse>(response.data);
 };
 
 /** POST /api/consultation-sessions/:sessionId/cancel */
