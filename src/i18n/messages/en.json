@@ -527,6 +527,8 @@
       "generating": "Generating...",
       "blockReason": "Blocked by doctor",
       "confirmDeleteTemplate": "Are you sure you want to delete this template?",
+      "confirmDeleteTemplateMessage": "This action cannot be undone. Related future slot generation from this template will no longer be available.",
+      "confirmDeleteTemplateAction": "Delete template",
       "blockThisSlot": "Block this slot",
       "unblockThisSlot": "Unblock this slot",
       "stats": {

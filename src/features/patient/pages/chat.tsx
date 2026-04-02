@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -19,7 +20,7 @@ import {
   Clock3,
   MessageCircle,
   Send,
-  Paperclip,
+  Smile,
   Image as ImageIcon,
   MoreHorizontal,
   Video,
@@ -41,6 +42,7 @@ import {
   useConsultationSessions,
   useConsultationSession,
   useSendMessage,
+  useUploadChatImages,
   consultationKeys,
   useConsultationPhase,
 } from '@/features/consultation/hooks';
@@ -84,6 +86,26 @@ interface ScanAttachmentMeta {
   title: string;
   riskLabel: string;
 }
+
+interface ImageAttachmentMeta {
+  url: string;
+  fileName?: string;
+}
+
+const QUICK_EMOJIS = [
+  '😀',
+  '😄',
+  '😊',
+  '😍',
+  '😢',
+  '😮',
+  '👍',
+  '🙏',
+  '❤️',
+  '🎉',
+  '👀',
+  '✅',
+];
 
 type PhaseUIEntry = {
   label: string;
@@ -133,7 +155,7 @@ const formatAppointmentSlotOrPending = (value: string | null) =>
   value ? formatAppointmentSlot(value) : 'Schedule pending';
 
 const PREJOIN_OPEN_MINUTES = 15;
-const MEETING_ACTIVE_MINUTES = 60;
+const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 
 const getMeetingAccessState = (
@@ -142,13 +164,21 @@ const getMeetingAccessState = (
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
-      canJoin: true,
-      buttonLabel: 'Join Meeting',
-      helperText: 'Meeting link is ready.',
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: 'Schedule pending',
     };
   }
 
   const appointmentMs = new Date(appointmentTime).getTime();
+  if (Number.isNaN(appointmentMs)) {
+    return {
+      canJoin: false,
+      buttonLabel: 'Join Locked',
+      helperText: 'Schedule is unavailable.',
+    };
+  }
+
   const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
   const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
   const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
@@ -192,7 +222,7 @@ const getInitials = (value: string) =>
     .join('') || 'AU';
 
 const extractScanAttachment = (message: string): ScanAttachmentMeta | null => {
-  const match = message.match(/\n\n\[Scan Attached: (.+?) - (.+?)\]$/);
+  const match = message.match(/\[Scan Attached: (.+?) - (.+?)\]/);
 
   if (!match) {
     return null;
@@ -204,8 +234,39 @@ const extractScanAttachment = (message: string): ScanAttachmentMeta | null => {
   };
 };
 
-const stripScanAttachment = (message: string) =>
-  message.replace(/\n\n\[Scan Attached: .+? - .+?\]$/, '').trim();
+const extractImageAttachment = (
+  message: string
+): ImageAttachmentMeta | null => {
+  const withNameMatch = message.match(
+    /\[Image Attached: (https?:\/\/[^\]\s]+) \| Name: ([^\]]+)\]/
+  );
+
+  if (withNameMatch) {
+    return {
+      url: withNameMatch[1],
+      fileName: withNameMatch[2],
+    };
+  }
+
+  const match = message.match(/\[Image Attached: (https?:\/\/[^\]\s]+)\]/);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    url: match[1],
+  };
+};
+
+const stripChatAttachments = (message: string) =>
+  message
+    .replace(/\n?\n?\[Scan Attached: .+? - .+?\]/g, '')
+    .replace(
+      /\n?\n?\[Image Attached: https?:\/\/[^\]\s]+(?: \| Name: [^\]]+)?\]/g,
+      ''
+    )
+    .trim();
 
 const AvatarBadge = ({
   name,
@@ -264,9 +325,13 @@ export default function ChatPage() {
   const [pendingScan, setPendingScan] = useState<SharedScanData | null>(
     sharedScan
   );
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pendingImageName, setPendingImageName] = useState<string | null>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
@@ -290,6 +355,7 @@ export default function ChatPage() {
     });
 
   const sendMessageMutation = useSendMessage();
+  const uploadChatImagesMutation = useUploadChatImages();
 
   const sessions = sessionsData?.items ?? [];
   const chatSessions = sessions.filter(
@@ -351,8 +417,8 @@ export default function ChatPage() {
   }, [selectedSession, scrollToBottom]);
 
   useEffect(() => {
-    if (pendingScan) scrollToBottom();
-  }, [pendingScan, scrollToBottom]);
+    if (pendingScan || pendingImageUrl) scrollToBottom();
+  }, [pendingScan, pendingImageUrl, scrollToBottom]);
 
   useEffect(() => {
     if (!selectedSession) {
@@ -418,17 +484,91 @@ export default function ChatPage() {
     };
   }, [queryClient]);
 
+  const appendEmoji = (emoji: string) => {
+    setNewMessage((previous) => `${previous}${emoji}`);
+  };
+
+  const handleImageButtonClick = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be 10MB or less.');
+      return;
+    }
+
+    try {
+      const result = await uploadChatImagesMutation.mutateAsync([file]);
+      const uploadedUrl = result.uploadedUrls[0];
+
+      if (!uploadedUrl) {
+        toast.error('Upload failed. Please try again.');
+        return;
+      }
+
+      setPendingImageUrl(uploadedUrl);
+      setPendingImageName(file.name);
+      toast.success('Image attached.');
+    } catch (error) {
+      const raw = extractApiErrorMessage(
+        error,
+        'Unable to upload image. Please try again.'
+      );
+      toast.error(raw);
+    }
+  };
+
   const handleSendMessage = () => {
-    if ((!newMessage.trim() && !pendingScan) || !selectedSessionId) return;
+    if (
+      (!newMessage.trim() && !pendingScan && !pendingImageUrl) ||
+      !selectedSessionId
+    )
+      return;
 
-    const messageContent = pendingScan
-      ? `${newMessage}\n\n[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
-      : newMessage;
+    const messageParts: string[] = [];
+    const trimmedMessage = newMessage.trim();
 
+    if (trimmedMessage) {
+      messageParts.push(trimmedMessage);
+    }
+
+    if (pendingScan) {
+      messageParts.push(
+        `[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
+      );
+    }
+
+    if (pendingImageUrl) {
+      messageParts.push(
+        pendingImageName
+          ? `[Image Attached: ${pendingImageUrl} | Name: ${pendingImageName}]`
+          : `[Image Attached: ${pendingImageUrl}]`
+      );
+    }
+
+    const messageContent = messageParts.join('\n\n');
     const draftText = newMessage;
     const draftScan = pendingScan;
+    const draftImageUrl = pendingImageUrl;
+    const draftImageName = pendingImageName;
     setNewMessage('');
     setPendingScan(null);
+    setPendingImageUrl(null);
+    setPendingImageName(null);
+    setIsEmojiPickerOpen(false);
 
     sendMessageMutation.mutate(
       {
@@ -447,6 +587,8 @@ export default function ChatPage() {
           }
           setNewMessage(draftText);
           setPendingScan(draftScan);
+          setPendingImageUrl(draftImageUrl);
+          setPendingImageName(draftImageName);
         },
       }
     );
@@ -534,8 +676,12 @@ export default function ChatPage() {
     currentSession?.appointmentTime ?? null,
     currentTimeMs
   );
-  const meetingButtonActive =
-    phaseInfo.meetingActive && meetingAccessState.canJoin;
+  const isMeetingClosedBySessionState =
+    currentSession?.status === SessionStatus.Completed ||
+    currentSession?.status === SessionStatus.Cancelled ||
+    currentSession?.chatStatus === ChatStatus.Archived;
+  const canJoinMeeting =
+    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
 
   if (sessionsLoading) {
     return (
@@ -773,7 +919,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col items-start gap-1 sm:items-end">
                     {currentSession.meetingLink ? (
-                      meetingButtonActive ? (
+                      canJoinMeeting ? (
                         <a
                           href={currentSession.meetingLink}
                           target="_blank"
@@ -789,7 +935,7 @@ export default function ChatPage() {
                           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
                         >
                           <Video className="h-4 w-4" />
-                          {phaseInfo.phase === 'COMPLETED'
+                          {isMeetingClosedBySessionState
                             ? 'Meeting Ended'
                             : meetingAccessState.buttonLabel}
                         </button>
@@ -805,11 +951,9 @@ export default function ChatPage() {
                     )}
                     {currentSession.meetingLink && (
                       <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                        {phaseInfo.phase === 'PRE_VISIT'
-                          ? meetingAccessState.helperText
-                          : phaseInfo.phase === 'COMPLETED'
-                            ? 'Consultation completed'
-                            : meetingAccessState.helperText}
+                        {isMeetingClosedBySessionState
+                          ? 'Consultation completed'
+                          : meetingAccessState.helperText}
                       </p>
                     )}
                   </div>
@@ -883,10 +1027,13 @@ export default function ChatPage() {
                 <div className="space-y-4">
                   {messageList.map((message, index) => {
                     const isPatientMessage = message.senderUserId === patientId;
-                    const attachmentMeta = extractScanAttachment(
+                    const scanAttachmentMeta = extractScanAttachment(
                       message.message
                     );
-                    const messageBody = stripScanAttachment(message.message);
+                    const imageAttachmentMeta = extractImageAttachment(
+                      message.message
+                    );
+                    const messageBody = stripChatAttachments(message.message);
                     const previousMessage = messageList[index - 1];
                     const showDateDivider =
                       !previousMessage ||
@@ -962,7 +1109,45 @@ export default function ChatPage() {
                                 </p>
                               )}
 
-                              {attachmentMeta && (
+                              {imageAttachmentMeta && (
+                                <div
+                                  className={`mt-3 rounded-2xl border p-2 ${
+                                    isPatientMessage
+                                      ? 'border-white/20 bg-white/10'
+                                      : 'border-cyan-100 bg-cyan-50 dark:border-cyan-800/40 dark:bg-cyan-950/20'
+                                  }`}
+                                >
+                                  <a
+                                    href={imageAttachmentMeta.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block"
+                                  >
+                                    <img
+                                      src={imageAttachmentMeta.url}
+                                      alt={
+                                        imageAttachmentMeta.fileName ??
+                                        'Shared image'
+                                      }
+                                      className="max-h-64 w-full rounded-xl object-cover"
+                                      loading="lazy"
+                                    />
+                                  </a>
+                                  {imageAttachmentMeta.fileName && (
+                                    <p
+                                      className={`mt-2 truncate text-xs ${
+                                        isPatientMessage
+                                          ? 'text-white/80'
+                                          : 'text-cyan-700 dark:text-cyan-200'
+                                      }`}
+                                    >
+                                      {imageAttachmentMeta.fileName}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {scanAttachmentMeta && (
                                 <div
                                   className={`mt-3 rounded-2xl border px-3 py-3 ${
                                     isPatientMessage
@@ -982,7 +1167,7 @@ export default function ChatPage() {
                                     </div>
                                     <div>
                                       <p className="text-sm font-semibold">
-                                        {attachmentMeta.title}
+                                        {scanAttachmentMeta.title}
                                       </p>
                                       <p
                                         className={`mt-1 text-xs ${
@@ -991,7 +1176,7 @@ export default function ChatPage() {
                                             : 'text-cyan-700 dark:text-cyan-200'
                                         }`}
                                       >
-                                        {attachmentMeta.riskLabel}
+                                        {scanAttachmentMeta.riskLabel}
                                       </p>
                                     </div>
                                   </div>
@@ -1092,15 +1277,64 @@ export default function ChatPage() {
                 </div>
               )}
 
+              {pendingImageUrl && (
+                <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-950/20">
+                  <img
+                    src={pendingImageUrl}
+                    alt={pendingImageName ?? 'Pending image'}
+                    className="h-14 w-14 rounded-2xl object-cover ring-1 ring-emerald-200 dark:ring-emerald-800/50"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                      Ready to share image
+                    </p>
+                    <p className="mt-1 truncate text-xs text-emerald-700 dark:text-emerald-200">
+                      {pendingImageName ?? pendingImageUrl}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setPendingImageUrl(null);
+                      setPendingImageName(null);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-emerald-600 ring-1 ring-emerald-200 transition hover:bg-emerald-100 dark:bg-[#0a1f44] dark:text-emerald-300 dark:ring-emerald-800/50 dark:hover:bg-emerald-950/40"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
               {canSendMessage ? (
                 <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
                   <div className="flex items-end gap-3">
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                      <Paperclip className="h-4 w-4" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsEmojiPickerOpen((previous) => !previous)
+                      }
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]"
+                    >
+                      <Smile className="h-4 w-4" />
                     </button>
-                    <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                      <ImageIcon className="h-4 w-4" />
+                    <button
+                      type="button"
+                      onClick={handleImageButtonClick}
+                      disabled={uploadChatImagesMutation.isPending}
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 disabled:cursor-not-allowed disabled:text-slate-300 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]"
+                    >
+                      {uploadChatImagesMutation.isPending ? (
+                        <Spinner size={16} className="text-cyan-500" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4" />
+                      )}
                     </button>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageSelected}
+                    />
                     <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70 dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
                       <textarea
                         value={newMessage}
@@ -1116,14 +1350,35 @@ export default function ChatPage() {
                           Messages are encrypted and visible only to your care
                           team.
                         </div>
-                        <div>{newMessage.trim().length} characters</div>
+                        <div>
+                          {newMessage.trim().length} characters
+                          {pendingImageUrl ? ' / image attached' : ''}
+                        </div>
                       </div>
+
+                      {isEmojiPickerOpen && (
+                        <div className="mt-3 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-[#1e3a5f] dark:bg-[#0a1929]/50">
+                          {QUICK_EMOJIS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => appendEmoji(emoji)}
+                              className="rounded-xl bg-white px-2.5 py-1.5 text-base shadow-sm ring-1 ring-slate-200 transition hover:scale-105 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={handleSendMessage}
                       disabled={
-                        (!newMessage.trim() && !pendingScan) ||
-                        sendMessageMutation.isPending
+                        (!newMessage.trim() &&
+                          !pendingScan &&
+                          !pendingImageUrl) ||
+                        sendMessageMutation.isPending ||
+                        uploadChatImagesMutation.isPending
                       }
                       className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition hover:from-emerald-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
                     >

@@ -17,6 +17,7 @@ import {
   createVideoCallSession,
   submitVerificationReport,
   sendSessionMessage,
+  uploadChatImages,
   cancelSession,
   endSession,
 } from '../api/consultation.api';
@@ -173,6 +174,12 @@ export const useSendMessage = () => {
     },
   });
 };
+
+/** Upload chat image(s) and return public URLs */
+export const useUploadChatImages = () =>
+  useMutation({
+    mutationFn: (files: File[]) => uploadChatImages(files),
+  });
 
 /** Cancel a session */
 export const useCancelSession = () => {
