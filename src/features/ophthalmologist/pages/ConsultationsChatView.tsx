@@ -289,28 +289,28 @@ const getSessionPreviewText = (
 
   if (session.chatStatus === ChatStatus.MemoOnly) {
     return t(
-      'Ophthalmologist.consultations.chat.previewPreVisit',
-      'Patient pre-visit note is ready for review.'
+      'Ophthalmologist.consultations.chat.previewPreVisitEmpty',
+      'Awaiting patient pre-visit notes…'
     );
   }
 
   if (session.chatStatus === ChatStatus.Archived) {
     return t(
-      'Ophthalmologist.consultations.chat.previewCompleted',
-      'Consultation completed. Conversation is read-only.'
+      'Ophthalmologist.consultations.chat.previewCompletedEmpty',
+      'Session completed — no messages'
     );
   }
 
   if (session.chatStatus === ChatStatus.Locked) {
     return t(
       'Ophthalmologist.consultations.chat.previewLocked',
-      'Chat is locked until the consultation opens.'
+      'Chat opens at appointment time'
     );
   }
 
   return t(
     'Ophthalmologist.consultations.chat.previewUnavailable',
-    'No message preview available yet.'
+    'No messages yet'
   );
 };
 

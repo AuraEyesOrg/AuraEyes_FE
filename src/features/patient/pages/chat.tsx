@@ -301,18 +301,18 @@ const getSessionPreviewText = (session: ConsultationSessionListDto) => {
   }
 
   if (session.chatStatus === ChatStatus.MemoOnly) {
-    return 'Pre-visit note is waiting for doctor review.';
+    return 'Leave a note for your doctor…';
   }
 
   if (session.chatStatus === ChatStatus.Archived) {
-    return 'Consultation completed. Conversation is read-only.';
+    return 'Session completed — no messages';
   }
 
   if (session.chatStatus === ChatStatus.Locked) {
-    return 'Chat is locked until the consultation opens.';
+    return 'Chat opens at appointment time';
   }
 
-  return 'No message preview available yet.';
+  return 'No messages yet';
 };
 
 const CharacterProgressArc = ({
