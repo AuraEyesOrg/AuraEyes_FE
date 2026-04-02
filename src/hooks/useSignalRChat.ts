@@ -6,6 +6,8 @@ import {
   LogLevel,
 } from '@microsoft/signalr';
 import useAuthStore from '@/store/auth-store';
+import { api } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/endpoints';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
   SIGNALR_ROOM_STATE_CHANGED_EVENT,
@@ -19,6 +21,7 @@ import {
 const CHAT_HUB_URL =
   (import.meta.env.VITE_API_END_POINT as string) + '/hubs/chat';
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
+const TOKEN_EXPIRY_BUFFER_MS = 15_000;
 
 let activeChatConnection: HubConnection | null = null;
 
@@ -56,8 +59,35 @@ export function useSignalRChat(): void {
   const connectionRef = useRef<HubConnection | null>(null);
   const { isAuthenticated } = useAuthStore();
 
-  const getAccessToken = useCallback((): string => {
-    return sanitizeToken(localStorage.getItem('token'));
+  const getAccessToken = useCallback(async (): Promise<string> => {
+    const currentToken = sanitizeToken(localStorage.getItem('token'));
+    if (!currentToken) return '';
+
+    try {
+      const segments = currentToken.split('.');
+      if (segments.length >= 2) {
+        const base64 = segments[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+        const payload = JSON.parse(atob(padded)) as { exp?: unknown };
+        const exp = typeof payload.exp === 'number' ? payload.exp : null;
+
+        if (
+          typeof exp === 'number' &&
+          exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS
+        ) {
+          try {
+            await api.get(API_ENDPOINTS.AUTH.ME);
+          } catch {
+            // Interceptor handles the refresh and updates localStorage.
+          }
+          return sanitizeToken(localStorage.getItem('token'));
+        }
+      }
+    } catch {
+      // Malformed token — fall through to return current value.
+    }
+
+    return currentToken;
   }, []);
 
   const handleChatMessageReceived = useCallback(
@@ -138,7 +168,7 @@ export function useSignalRChat(): void {
       return;
     }
 
-    const token = getAccessToken();
+    const token = await getAccessToken();
     if (!token) {
       console.log('[ChatHub] No token, skipping connection');
       return;

@@ -107,6 +107,9 @@ export interface ConsultationSessionListDto {
   isRetinalImagesShared?: boolean;
   isAIResultShared?: boolean;
   caseSnapshot?: ConsultationCaseSnapshotDto | null;
+
+  /** Truncated text of the most recent chat message (from BE list endpoint). */
+  latestMessagePreview?: string | null;
 }
 
 // ============ REQUEST MODELS (match BE Controller request records) ============

@@ -175,10 +175,6 @@ const TYPING_AUTO_HIDE_MS = 2200;
 type TrendDirection = 'up' | 'down' | 'flat';
 
 type SessionOptionalMetadata = ConsultationSessionListDto & {
-  latestMessagePreview?: string | null;
-  lastMessagePreview?: string | null;
-  latestMessage?: string | null;
-  lastMessage?: string | null;
   unreadCount?: number | null;
 };
 
@@ -282,17 +278,8 @@ const getSessionUnreadCount = (session: ConsultationSessionListDto) => {
 };
 
 const getSessionPreviewFromPayload = (session: ConsultationSessionListDto) => {
-  const metadata = session as SessionOptionalMetadata;
-  const preview =
-    metadata.latestMessagePreview ??
-    metadata.lastMessagePreview ??
-    metadata.latestMessage ??
-    metadata.lastMessage;
-
-  if (typeof preview !== 'string') {
-    return null;
-  }
-
+  const preview = session.latestMessagePreview;
+  if (typeof preview !== 'string') return null;
   const normalized = preview.trim();
   return normalized.length > 0 ? normalized : null;
 };
@@ -600,6 +587,7 @@ export default function ChatPage() {
   >({});
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const [isPeerTyping, setIsPeerTyping] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
@@ -756,7 +744,10 @@ export default function ChatPage() {
   }, [chatSessions, selectedSessionId]);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }
   }, []);
 
   const clearTypingEmitTimer = useCallback(() => {
@@ -1320,9 +1311,6 @@ export default function ChatPage() {
                         </p>
 
                         <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-gray-400">
-                          <span
-                            className={`h-2 w-2 rounded-full ${statusDotClass}`}
-                          />
                           <span>{SESSION_STATUS_LABELS[session.status]}</span>
                           <span className="text-slate-300 dark:text-gray-600">
                             •
@@ -1511,7 +1499,10 @@ export default function ChatPage() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto px-4 py-6 md:px-6"
+            >
               {sessionLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Spinner size={32} />
