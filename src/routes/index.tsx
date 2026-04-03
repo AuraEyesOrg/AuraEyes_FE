@@ -126,6 +126,18 @@ const OrganisationSlotManagementPage = lazy(
 const OrganisationContractPage = lazy(
   () => import('@/features/organisation/pages/contract')
 );
+const OrganisationScreeningPage = lazy(
+  () => import('@/features/organisation/pages/screening')
+);
+const OrganisationScreeningResultPage = lazy(
+  () => import('@/features/organisation/pages/screening-result')
+);
+const OrganisationBillingPage = lazy(
+  () => import('@/features/organisation/pages/billing')
+);
+const OrganisationReportsPage = lazy(
+  () => import('@/features/organisation/pages/reports')
+);
 
 // Ophthalmologist pages
 const OphthalmologistDashboard = lazy(
@@ -729,6 +741,42 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['OrgAdmin', 'Organization']}
               element={<OrganisationAnalyticsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/screening"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationScreeningPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/screening/result"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationScreeningResultPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/billing"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationBillingPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/reports"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationReportsPage />}
             />
           }
         />
