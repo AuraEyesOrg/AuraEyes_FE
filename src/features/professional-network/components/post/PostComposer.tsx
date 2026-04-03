@@ -3,7 +3,8 @@
  * Component for creating new posts with file upload and anonymization consent
  */
 
-import { useState, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Image,
   FileText,
@@ -14,8 +15,13 @@ import {
 } from 'lucide-react';
 import type { PostCategory } from '../../types';
 import { useCreatePost } from '../../hooks/useCreatePost';
+import { postsApi } from '../../api/network.api';
 import useAuthStore from '@/store/auth-store';
 import { LoadingButton } from '@/components/ui/loading-button';
+import { useConsultationSession } from '@/features/consultation/hooks';
+import { getConsultationSessions } from '@/features/consultation/api/consultation.api';
+import { SessionStatus } from '@/types/consultation';
+import { ShareClinicCaseModal } from './ShareClinicCaseModal';
 
 const postTypes: {
   type: PostCategory;
@@ -32,21 +38,116 @@ export function PostComposer() {
   const [content, setContent] = useState('');
   const [selectedType, setSelectedType] =
     useState<PostCategory>('KnowledgeShare');
+  const [caseSource, setCaseSource] = useState<'external' | 'internal'>(
+    'external'
+  );
+  const [selectedInternalSessionId, setSelectedInternalSessionId] =
+    useState('');
+  const [patientAge, setPatientAge] = useState('');
+  const [patientGender, setPatientGender] = useState('');
+  const [patientHeight, setPatientHeight] = useState('');
+  const [patientWeight, setPatientWeight] = useState('');
+  const [medicalDiagnosis, setMedicalDiagnosis] = useState('');
+  const [isCaseDisclaimerAccepted, setIsCaseDisclaimerAccepted] =
+    useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isAnonymizationConfirmed, setIsAnonymizationConfirmed] =
     useState(false);
+  const [isShareClinicCaseModalOpen, setIsShareClinicCaseModalOpen] =
+    useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createPost = useCreatePost();
   const { user } = useAuthStore();
 
+  const shareInternalCase = useMutation({
+    mutationFn: (consultationSessionId: string) =>
+      postsApi.shareConsultationCase(consultationSessionId),
+  });
+
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
+  const isCasePresentation = selectedType === 'CasePresentation';
   const hasFiles = files.length > 0;
+  const isInternalCase = isCasePresentation && caseSource === 'internal';
+
+  const { data: internalSessionsData, isLoading: isInternalSessionsLoading } =
+    useQuery({
+      queryKey: ['network', 'internal-case-sessions', user?.roleId],
+      enabled: Boolean(
+        isExpanded && isCasePresentation && caseSource === 'internal'
+      ),
+      staleTime: 30_000,
+      queryFn: async () => {
+        const allItems = [];
+        let pageNumber = 1;
+        let hasNext = true;
+
+        while (hasNext && pageNumber <= 20) {
+          const response = await getConsultationSessions({
+            ophthalmologistId: user?.roleId ?? undefined,
+            status: SessionStatus.Completed,
+            pageNumber,
+            pageSize: 100,
+          });
+
+          allItems.push(...response.items);
+          hasNext = response.hasNext;
+          pageNumber += 1;
+        }
+
+        return allItems;
+      },
+    });
+
+  const internalSessions = useMemo(
+    () => internalSessionsData ?? [],
+    [internalSessionsData]
+  );
+
+  const selectedSessionSummary = useMemo(
+    () =>
+      internalSessions.find(
+        (session) => session.id === selectedInternalSessionId
+      ),
+    [internalSessions, selectedInternalSessionId]
+  );
+
+  const { data: selectedSessionDetail } = useConsultationSession(
+    selectedInternalSessionId,
+    {
+      enabled: Boolean(selectedInternalSessionId),
+    }
+  );
+
+  const selectedCaseSnapshot =
+    selectedSessionDetail?.caseSnapshot ??
+    selectedSessionSummary?.caseSnapshot ??
+    null;
+  const selectedCaseDiagnosis =
+    selectedCaseSnapshot?.findings ?? selectedCaseSnapshot?.summary ?? '';
+  const hasSelectedInternalCaseImage = Boolean(
+    selectedCaseSnapshot?.originalImageUrls?.length ||
+    selectedCaseSnapshot?.annotatedImageUrl
+  );
+  const hasSelectedInternalDiagnosis = Boolean(selectedCaseDiagnosis.trim());
+  const hasCaseMedia = hasFiles || hasSelectedInternalCaseImage;
+  const hasContent = content.trim() !== '';
+
+  const hasRequiredCaseMetadata =
+    !isCasePresentation ||
+    (caseSource === 'internal'
+      ? isCaseDisclaimerAccepted &&
+        selectedInternalSessionId !== '' &&
+        hasSelectedInternalCaseImage &&
+        hasSelectedInternalDiagnosis
+      : isCaseDisclaimerAccepted && hasCaseMedia);
   const isPostDisabled =
-    !content.trim() ||
+    (!hasContent && !(isCasePresentation && isInternalCase)) ||
     createPost.isPending ||
-    (hasFiles && !isAnonymizationConfirmed);
+    shareInternalCase.isPending ||
+    (hasFiles && !isAnonymizationConfirmed) ||
+    !hasRequiredCaseMetadata;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -83,16 +184,60 @@ export function PostComposer() {
   const handleSubmit = () => {
     if (isPostDisabled) return;
 
+    if (isCasePresentation && isInternalCase) {
+      shareInternalCase.mutate(selectedInternalSessionId, {
+        onSuccess: () => {
+          setContent('');
+          setCaseSource('external');
+          setSelectedInternalSessionId('');
+          setFiles([]);
+          setPreviews([]);
+          setPatientAge('');
+          setPatientGender('');
+          setPatientHeight('');
+          setPatientWeight('');
+          setMedicalDiagnosis('');
+          setIsCaseDisclaimerAccepted(false);
+          setIsAnonymizationConfirmed(false);
+          setIsExpanded(false);
+        },
+      });
+      return;
+    }
+
     const formData = new FormData();
+    const normalizedContent = medicalDiagnosis.trim()
+      ? `${content.trim()}\n\nMedical diagnosis: ${medicalDiagnosis.trim()}`
+      : content.trim();
+
     formData.append('authorType', 'Ophthalmologist');
-    formData.append('content', content.trim());
+    formData.append('content', normalizedContent);
     formData.append('category', selectedType);
     formData.append('visibility', 'Public');
     formData.append('allowComments', 'true');
+    formData.append('isInternalCase', 'false');
     formData.append(
       'isAnonymizationConfirmed',
       String(isAnonymizationConfirmed)
     );
+
+    if (isCasePresentation) {
+      if (patientAge.trim()) {
+        formData.append('patientAge', patientAge.trim());
+      }
+      if (patientGender.trim()) {
+        formData.append('patientGender', patientGender.trim());
+      }
+      if (patientHeight.trim()) {
+        formData.append('patientHeight', patientHeight.trim());
+      }
+      if (patientWeight.trim()) {
+        formData.append('patientWeight', patientWeight.trim());
+      }
+      if (medicalDiagnosis.trim()) {
+        formData.append('medicalDiagnosis', medicalDiagnosis.trim());
+      }
+    }
 
     files.forEach((file) => {
       formData.append('attachments', file);
@@ -103,6 +248,12 @@ export function PostComposer() {
         setContent('');
         setFiles([]);
         setPreviews([]);
+        setPatientAge('');
+        setPatientGender('');
+        setPatientHeight('');
+        setPatientWeight('');
+        setMedicalDiagnosis('');
+        setIsCaseDisclaimerAccepted(false);
         setIsAnonymizationConfirmed(false);
         setIsExpanded(false);
       },
@@ -188,6 +339,176 @@ export function PostComposer() {
               </div>
             </div>
 
+            {isCasePresentation && (
+              <div className="mt-3 space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
+                <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
+                  Case source
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCaseSource('external')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      caseSource === 'external'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white text-cyan-800 border border-cyan-200 dark:bg-slate-900 dark:text-cyan-200 dark:border-cyan-700'
+                    }`}
+                  >
+                    External Case
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCaseSource('internal')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      caseSource === 'internal'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white text-cyan-800 border border-cyan-200 dark:bg-slate-900 dark:text-cyan-200 dark:border-cyan-700'
+                    }`}
+                  >
+                    Internal Case
+                  </button>
+                </div>
+
+                {caseSource === 'internal' && (
+                  <div className="space-y-3 rounded-lg border border-cyan-200 bg-white p-3 dark:border-cyan-800 dark:bg-slate-900/40">
+                    <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-200">
+                      Select consultation case
+                    </label>
+                    <select
+                      value={selectedInternalSessionId}
+                      onChange={(e) =>
+                        setSelectedInternalSessionId(e.target.value)
+                      }
+                      className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                    >
+                      <option value="">
+                        {isInternalSessionsLoading
+                          ? 'Loading internal cases...'
+                          : 'Choose an internal case'}
+                      </option>
+                      {internalSessions.map((session) => (
+                        <option key={session.id} value={session.id}>
+                          {session.patientName || 'Anonymous patient'} •{' '}
+                          {session.typeName} • {session.statusName} • #
+                          {session.id.slice(0, 8).toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+
+                    {selectedCaseSnapshot && (
+                      <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
+                        <p className="text-[12px] font-semibold text-cyan-900 dark:text-cyan-200">
+                          Internal case preview (anonymized)
+                        </p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div className="overflow-hidden rounded-lg border border-cyan-200 bg-white dark:border-cyan-800 dark:bg-slate-900">
+                            {selectedCaseSnapshot.originalImageUrls?.[0] ? (
+                              <img
+                                src={selectedCaseSnapshot.originalImageUrls[0]}
+                                alt="Retinal case preview"
+                                className="h-24 w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-24 items-center justify-center text-xs text-cyan-800 dark:text-cyan-300">
+                                No image preview
+                              </div>
+                            )}
+                          </div>
+                          <div className="rounded-lg border border-cyan-200 bg-white p-2 dark:border-cyan-800 dark:bg-slate-900">
+                            <p className="text-[11px] font-semibold text-cyan-800 dark:text-cyan-200">
+                              Medical diagnosis
+                            </p>
+                            <p className="mt-1 text-[11px] leading-snug text-cyan-900 dark:text-cyan-100 line-clamp-5">
+                              {selectedCaseDiagnosis ||
+                                'No final doctor diagnosis available for this case.'}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-[11px] text-cyan-800 dark:text-cyan-200">
+                          Patient identity is hidden. Only medical snapshot is
+                          shared.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setIsShareClinicCaseModalOpen(true)}
+                          className="mt-3 w-full rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600"
+                        >
+                          ✎ Add doctor notes
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
+                  Allowed anonymized patient info (optional)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={patientAge}
+                    onChange={(e) => setPatientAge(e.target.value)}
+                    placeholder="Patient age"
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  />
+                  <select
+                    value={patientGender}
+                    onChange={(e) => setPatientGender(e.target.value)}
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  >
+                    <option value="">Patient gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <input
+                    type="number"
+                    min={0}
+                    max={250}
+                    value={patientHeight}
+                    onChange={(e) => setPatientHeight(e.target.value)}
+                    placeholder="Height (cm)"
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    max={300}
+                    value={patientWeight}
+                    onChange={(e) => setPatientWeight(e.target.value)}
+                    placeholder="Weight (kg)"
+                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                  />
+                </div>
+                <textarea
+                  value={medicalDiagnosis}
+                  onChange={(e) => setMedicalDiagnosis(e.target.value)}
+                  placeholder="Medical diagnosis (optional)"
+                  className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900 min-h-[88px]"
+                />
+                <div className="rounded-lg border border-cyan-200 bg-white p-2 text-[11px] text-cyan-800 dark:border-cyan-800 dark:bg-slate-900 dark:text-cyan-200">
+                  Allowed only: age, gender, height, weight, diagnosis, medical
+                  images. Do not include name, address, or phone number.
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isCaseDisclaimerAccepted}
+                    onChange={(e) =>
+                      setIsCaseDisclaimerAccepted(e.target.checked)
+                    }
+                    className="mt-0.5 w-4 h-4 rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="text-[12px] leading-snug text-cyan-800 dark:text-cyan-200">
+                    I confirm this case is anonymized and shared for
+                    professional educational discussion only.
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Anonymization Consent Checkbox */}
             {hasFiles && (
               <label className="flex items-start gap-2 mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer select-none">
@@ -243,17 +564,36 @@ export function PostComposer() {
               <div className="flex items-center gap-3">
                 <LoadingButton
                   onClick={handleSubmit}
-                  isPending={createPost.isPending}
+                  isPending={
+                    createPost.isPending ||
+                    (isCasePresentation &&
+                      isInternalCase &&
+                      shareInternalCase.isPending)
+                  }
                   disabled={isPostDisabled}
                   className="btn-primary py-2 px-5 text-[15px]"
                 >
-                  Post
+                  {isCasePresentation && isInternalCase
+                    ? 'Share Internal Case'
+                    : 'Post'}
                 </LoadingButton>
               </div>
             </div>
           </>
         )}
       </div>
+
+      {/* Share Clinic Case Modal */}
+      <ShareClinicCaseModal
+        session={selectedSessionDetail ?? null}
+        isOpen={isShareClinicCaseModalOpen}
+        onClose={() => setIsShareClinicCaseModalOpen(false)}
+        onShare={(notes) => {
+          // Update content with notes
+          setContent((prev) => `${prev}\n\nDoctor Notes:\n${notes}`);
+          setIsShareClinicCaseModalOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import FocusModeLayout from '../components/FocusModeLayout';
@@ -70,6 +70,7 @@ const RISK_STYLE_CONFIG = {
 
 const FALLBACK_RESOURCE_IMAGE =
   'https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=900&q=80';
+const RESOURCE_SKELETON_COUNT = 3;
 
 export default function ReviewPage() {
   const location = useLocation();
@@ -181,9 +182,11 @@ export default function ReviewPage() {
     [anomalies]
   );
 
-  const { data: educationalResources = [] } = useQuery<
-    PatientEducationalResourceItem[]
-  >({
+  const {
+    data: educationalResources = [],
+    isLoading: isEducationalResourcesLoading,
+    isFetching: isEducationalResourcesFetching,
+  } = useQuery<PatientEducationalResourceItem[]>({
     queryKey: ['patient-eye-health-resources', diseaseKeywords],
     queryFn: () =>
       getEyeHealthResourcesForPatient({
@@ -193,6 +196,9 @@ export default function ReviewPage() {
     staleTime: 5 * 60 * 1000,
     enabled: true,
   });
+  const [loadedResourceImageIds, setLoadedResourceImageIds] = useState<
+    Record<string, boolean>
+  >({});
   const riskLevel =
     activeState?.riskLevel ??
     relevantStoredContext?.riskLevel ??
@@ -297,6 +303,15 @@ export default function ReviewPage() {
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
   const scanId = screeningId?.slice(0, 8);
+  const showEducationalResourcesSkeleton =
+    (isEducationalResourcesLoading || isEducationalResourcesFetching) &&
+    educationalResources.length === 0;
+
+  const markResourceImageReady = (resourceId: string) => {
+    setLoadedResourceImageIds((previous) =>
+      previous[resourceId] ? previous : { ...previous, [resourceId]: true }
+    );
+  };
 
   /* guard: no route state */
   if (!activeState && !storedConsultationContext && !hydratedSession) {
@@ -553,29 +568,59 @@ export default function ReviewPage() {
               </a>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {educationalResources.map((resource) => (
-                <a
-                  key={resource.id}
-                  href={resource.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col group"
-                >
-                  <div className="h-40 rounded-xl bg-gray-200 dark:bg-slate-700 overflow-hidden mb-3">
-                    <img
-                      src={resource.image || FALLBACK_RESOURCE_IMAGE}
-                      alt={resource.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <h4 className="font-bold text-(--text-primary) mb-1 group-hover:text-primary transition-colors">
-                    {resource.title}
-                  </h4>
-                  <p className="text-sm text-(--text-secondary) line-clamp-2">
-                    {resource.description}
-                  </p>
-                </a>
-              ))}
+              {showEducationalResourcesSkeleton
+                ? Array.from({ length: RESOURCE_SKELETON_COUNT }).map(
+                    (_, index) => (
+                      <div
+                        key={`resource-skeleton-${index}`}
+                        className="flex flex-col"
+                      >
+                        <div className="skeleton-shimmer h-40 rounded-xl bg-slate-200 dark:bg-slate-700 mb-3" />
+                        <div className="skeleton-shimmer h-4 w-4/5 rounded bg-slate-200 dark:bg-slate-700 mb-2" />
+                        <div className="skeleton-shimmer h-3 w-full rounded bg-slate-200 dark:bg-slate-700 mb-1.5" />
+                        <div className="skeleton-shimmer h-3 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
+                      </div>
+                    )
+                  )
+                : educationalResources.map((resource) => {
+                    const resourceId = String(resource.id);
+                    const isResourceImageLoaded = Boolean(
+                      loadedResourceImageIds[resourceId]
+                    );
+
+                    return (
+                      <a
+                        key={resource.id}
+                        href={resource.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col group"
+                      >
+                        <div className="relative h-40 rounded-xl bg-gray-200 dark:bg-slate-700 overflow-hidden mb-3">
+                          {!isResourceImageLoaded && (
+                            <div className="absolute inset-0 skeleton-shimmer bg-slate-200 dark:bg-slate-700" />
+                          )}
+                          <img
+                            src={resource.image || FALLBACK_RESOURCE_IMAGE}
+                            alt={resource.title}
+                            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                              isResourceImageLoaded
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                            }`}
+                            onLoad={() => markResourceImageReady(resourceId)}
+                            onError={() => markResourceImageReady(resourceId)}
+                          />
+                        </div>
+                        <h4 className="font-bold text-(--text-primary) mb-1 group-hover:text-primary transition-colors">
+                          {resource.title}
+                        </h4>
+                        <p className="text-sm text-(--text-secondary) line-clamp-2">
+                          {resource.description}
+                        </p>
+                      </a>
+                    );
+                  })}
             </div>
           </section>
 

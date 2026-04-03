@@ -10,3 +10,4 @@ src/styles.css
 playwright-report
 test-results
 tests/.auth
+docs/n8n/workflow.json

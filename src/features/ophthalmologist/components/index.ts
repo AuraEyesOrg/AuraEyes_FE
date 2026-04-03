@@ -7,3 +7,4 @@ export {
   CaseSnapshotAiThumbnail,
   ScreeningReviewLink,
 } from './CaseSnapshotAiThumbnail';
+export { default as UploadCredentialsModal } from './UploadCredentialsModal';

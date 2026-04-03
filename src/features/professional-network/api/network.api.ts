@@ -10,8 +10,6 @@ import type {
   ProfessionalPost,
   Ophthalmologist,
   Organisation,
-  ProfessionalGroup,
-  ProfessionalConnection,
   PostComment,
   SavedCollection,
   SavedPost,
@@ -27,6 +25,7 @@ export const NETWORK_ENDPOINTS = {
   POSTS: {
     FEED: '/network/feed',
     CREATE: '/network/posts',
+    SHARE_CONSULTATION: '/network/posts/share-consultation',
     GET: (id: string) => `/network/posts/${id}`,
     UPDATE: (id: string) => `/network/posts/${id}`,
     DELETE: (id: string) => `/network/posts/${id}`,
@@ -43,7 +42,6 @@ export const NETWORK_ENDPOINTS = {
     SEARCH: '/network/professionals/search',
     GET: (id: string) => `/network/professionals/${id}`,
     POSTS: (id: string) => `/network/professionals/${id}/posts`,
-    CONNECTIONS: (id: string) => `/network/professionals/${id}/connections`,
   },
 
   // Organisations
@@ -52,32 +50,7 @@ export const NETWORK_ENDPOINTS = {
     SEARCH: '/network/organisations/search',
     GET: (id: string) => `/network/organisations/${id}`,
     POSTS: (id: string) => `/network/organisations/${id}/posts`,
-    MEMBERS: (id: string) => `/network/organisations/${id}/members`,
     FOLLOW: (id: string) => `/network/organisations/${id}/follow`,
-  },
-
-  // Connections
-  CONNECTIONS: {
-    LIST: '/network/connections',
-    PENDING: '/network/connections/pending',
-    SUGGESTIONS: '/network/connections/suggestions',
-    REQUEST: '/network/connections/request',
-    ACCEPT: (id: string) => `/network/connections/${id}/accept`,
-    DECLINE: (id: string) => `/network/connections/${id}/decline`,
-    REMOVE: (id: string) => `/network/connections/${id}`,
-  },
-
-  // Groups
-  GROUPS: {
-    LIST: '/network/groups',
-    MY_GROUPS: '/network/groups/my',
-    DISCOVER: '/network/groups/discover',
-    CREATE: '/network/groups',
-    GET: (id: string) => `/network/groups/${id}`,
-    JOIN: (id: string) => `/network/groups/${id}/join`,
-    LEAVE: (id: string) => `/network/groups/${id}/leave`,
-    POSTS: (id: string) => `/network/groups/${id}/posts`,
-    MEMBERS: (id: string) => `/network/groups/${id}/members`,
   },
 
   // Saved
@@ -167,6 +140,17 @@ export const postsApi = {
           'Content-Type': 'multipart/form-data',
         },
       }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * One-click share of an internal consultation case.
+   */
+  async shareConsultationCase(consultationSessionId: string) {
+    const response = await api.post<ApiResponse<string>>(
+      NETWORK_ENDPOINTS.POSTS.SHARE_CONSULTATION,
+      { consultationSessionId }
     );
     return response.data.data;
   },
@@ -331,126 +315,6 @@ export const organisationsApi = {
   async toggleFollow(id: string) {
     const response = await api.post<ApiResponse<{ isFollowing: boolean }>>(
       NETWORK_ENDPOINTS.ORGANISATIONS.FOLLOW(id)
-    );
-    return response.data.data;
-  },
-};
-
-// ============ CONNECTIONS API ============
-
-export const connectionsApi = {
-  /**
-   * Get user connections
-   */
-  async getConnections(page = 1, pageSize = 10) {
-    const response = await api.get<
-      ApiResponse<PagedResult<ProfessionalConnection>>
-    >(NETWORK_ENDPOINTS.CONNECTIONS.LIST, { params: { page, pageSize } });
-    return response.data.data;
-  },
-
-  /**
-   * Get pending connection requests
-   */
-  async getPendingRequests() {
-    const response = await api.get<ApiResponse<ProfessionalConnection[]>>(
-      NETWORK_ENDPOINTS.CONNECTIONS.PENDING
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Get connection suggestions
-   */
-  async getSuggestions() {
-    const response = await api.get<ApiResponse<Ophthalmologist[]>>(
-      NETWORK_ENDPOINTS.CONNECTIONS.SUGGESTIONS
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Send connection request
-   */
-  async sendRequest(userId: string, message?: string) {
-    const response = await api.post<ApiResponse<ProfessionalConnection>>(
-      NETWORK_ENDPOINTS.CONNECTIONS.REQUEST,
-      { userId, message }
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Accept connection request
-   */
-  async acceptRequest(connectionId: string) {
-    const response = await api.post<ApiResponse<ProfessionalConnection>>(
-      NETWORK_ENDPOINTS.CONNECTIONS.ACCEPT(connectionId)
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Decline connection request
-   */
-  async declineRequest(connectionId: string) {
-    const response = await api.post<ApiResponse<{ success: boolean }>>(
-      NETWORK_ENDPOINTS.CONNECTIONS.DECLINE(connectionId)
-    );
-    return response.data.data;
-  },
-};
-
-// ============ GROUPS API ============
-
-export const groupsApi = {
-  /**
-   * Get my groups
-   */
-  async getMyGroups() {
-    const response = await api.get<ApiResponse<ProfessionalGroup[]>>(
-      NETWORK_ENDPOINTS.GROUPS.MY_GROUPS
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Discover groups
-   */
-  async discoverGroups(page = 1, pageSize = 10) {
-    const response = await api.get<ApiResponse<PagedResult<ProfessionalGroup>>>(
-      NETWORK_ENDPOINTS.GROUPS.DISCOVER,
-      { params: { page, pageSize } }
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Get group details
-   */
-  async getGroup(id: string) {
-    const response = await api.get<ApiResponse<ProfessionalGroup>>(
-      NETWORK_ENDPOINTS.GROUPS.GET(id)
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Join group
-   */
-  async joinGroup(id: string) {
-    const response = await api.post<ApiResponse<{ success: boolean }>>(
-      NETWORK_ENDPOINTS.GROUPS.JOIN(id)
-    );
-    return response.data.data;
-  },
-
-  /**
-   * Leave group
-   */
-  async leaveGroup(id: string) {
-    const response = await api.post<ApiResponse<{ success: boolean }>>(
-      NETWORK_ENDPOINTS.GROUPS.LEAVE(id)
     );
     return response.data.data;
   },

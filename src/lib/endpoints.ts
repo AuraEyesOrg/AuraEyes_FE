@@ -188,6 +188,7 @@ export const API_ENDPOINTS = {
     DETAIL: (sessionId: string) => `/consultation-sessions/${sessionId}`,
     CREATE_VERIFICATION: '/consultation-sessions/verification',
     CREATE_VIDEO_CALL: '/consultation-sessions/video-call',
+    UPLOAD_IMAGES: '/consultation-sessions/upload-images',
     SUBMIT_REPORT: (sessionId: string) =>
       `/consultation-sessions/${sessionId}/verification-report`,
     SEND_MESSAGE: (sessionId: string) =>

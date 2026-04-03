@@ -121,6 +121,7 @@ export interface Notification {
   title: string;
   message: string;
   type: NotificationType;
+  referenceId?: string | null;
   isRead: boolean;
   payload: NotificationPayloadRaw;
   createdAt: string;
@@ -134,6 +135,7 @@ export interface SignalRNotification {
   title: string;
   message: string;
   type: NotificationType;
+  referenceId?: string | null;
   payload: NotificationPayloadRaw;
   createdAt: string;
 }
@@ -143,6 +145,7 @@ export interface SignalRNotification {
  */
 export interface NotificationsResponse {
   items: Notification[];
+  unreadCount?: number;
   totalCount: number;
   pageNumber: number;
   pageSize: number;
@@ -154,7 +157,8 @@ export interface NotificationsResponse {
  * Unread count response
  */
 export interface UnreadCountResponse {
-  count: number;
+  count?: number;
+  unreadCount?: number;
 }
 
 /**
@@ -254,6 +258,20 @@ function hasRole(roles: string[], roleCandidates: string[]): boolean {
   return roleCandidates.some((candidate) => roles.includes(candidate));
 }
 
+function normalizeForMatch(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function containsAny(text: string, keywords: string[]): boolean {
+  const normalizedText = normalizeForMatch(text);
+  return keywords.some((keyword) =>
+    normalizedText.includes(normalizeForMatch(keyword))
+  );
+}
+
 function getRoleHome(roles: string[]): string {
   if (hasRole(roles, ['systemadmin'])) return '/system-admin/dashboard';
   if (hasRole(roles, ['orgadmin', 'organization', 'clinic']))
@@ -276,12 +294,21 @@ export function getNotificationRoute(
   const normalizedRoles = roles.map((r) => r.toLowerCase());
   const payload = parsePayload(notification.payload);
 
-  const screeningId = readString(payload, 'screeningId', 'aiScreeningId');
-  const consultationId = readString(payload, 'sessionId', 'consultationId');
-  const appointmentId = readString(payload, 'appointmentId', 'slotId');
-  const transactionId = readString(payload, 'transactionId');
+  const fallbackReferenceId =
+    typeof notification.referenceId === 'string'
+      ? notification.referenceId
+      : '';
 
-  const _isSystemAdmin = hasRole(normalizedRoles, ['systemadmin']);
+  const screeningId =
+    readString(payload, 'screeningId', 'aiScreeningId') || fallbackReferenceId;
+  const consultationId =
+    readString(payload, 'sessionId', 'consultationId') || fallbackReferenceId;
+  const appointmentId =
+    readString(payload, 'appointmentId', 'slotId') || fallbackReferenceId;
+  const transactionId =
+    readString(payload, 'transactionId') || fallbackReferenceId;
+
+  const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin']);
   const isOrgAdmin = hasRole(normalizedRoles, [
     'orgadmin',
     'organization',
@@ -366,6 +393,65 @@ export function getNotificationRoute(
             ? '/ophthalmologist/dashboard'
             : '/system-admin/dashboard';
       return appendIdQuery(base, 'transactionId', transactionId);
+    }
+
+    case NotificationType.SystemAlert: {
+      const action = readString(
+        payload,
+        'action',
+        'event',
+        'eventName',
+        'notificationAction'
+      ).toLowerCase();
+      const flowType = readString(
+        payload,
+        'verificationFlowType',
+        'reviewFlowType'
+      ).toLowerCase();
+
+      const content = [
+        action,
+        flowType,
+        notification.title.toLowerCase(),
+        notification.message.toLowerCase(),
+      ].join(' ');
+
+      const isVerificationRelated = containsAny(content, [
+        'verification',
+        'verify',
+        'xác minh',
+        'chứng chỉ',
+        'credential',
+        'certificate',
+        'license',
+        'onboarding',
+      ]);
+
+      const isContractRelated = containsAny(content, ['contract', 'hợp đồng']);
+
+      if (isSystemAdmin) {
+        if (isContractRelated) return '/system-admin/contracts';
+        if (isVerificationRelated) return '/system-admin/verifications';
+        return '/system-admin/dashboard';
+      }
+
+      if (isDoctor) {
+        if (isContractRelated) return '/ophthalmologist/contract';
+        if (isVerificationRelated) return '/ophthalmologist/settings';
+        return '/ophthalmologist/dashboard';
+      }
+
+      if (isOrgAdmin) {
+        if (isContractRelated) return '/organisation/contract';
+        if (isVerificationRelated) return '/organisation/dashboard';
+        return '/organisation/dashboard';
+      }
+
+      if (isPatient) {
+        return '/patient/notifications';
+      }
+
+      return getRoleHome(normalizedRoles);
     }
 
     default:

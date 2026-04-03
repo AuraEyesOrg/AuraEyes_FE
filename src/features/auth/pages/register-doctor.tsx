@@ -21,6 +21,21 @@ import { registerOphthalmologist } from '../api/auth.api';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import '@/styles/auth-animations.css';
 
+type DegreeLevel =
+  | 'Bachelor'
+  | 'Master'
+  | 'Doctor'
+  | 'AssociateProfessor'
+  | 'Professor';
+
+const DEGREE_LEVEL_OPTIONS: Array<{ value: DegreeLevel; label: string }> = [
+  { value: 'Bachelor', label: 'Bachelor' },
+  { value: 'Master', label: 'Master' },
+  { value: 'Doctor', label: 'Doctor (PhD)' },
+  { value: 'AssociateProfessor', label: 'Associate Professor' },
+  { value: 'Professor', label: 'Professor' },
+];
+
 interface CredentialFormItem {
   name: string;
   issuingAuthority: string;
@@ -31,6 +46,7 @@ interface CredentialFormItem {
 
 interface DegreeFormItem {
   name: string;
+  degreeLevel: DegreeLevel;
   issuingAuthority: string;
   issuedDate: string;
   file: File | null;
@@ -61,6 +77,7 @@ interface DoctorFormData {
 
 const createDefaultDegree = (): DegreeFormItem => ({
   name: '',
+  degreeLevel: 'Bachelor',
   issuingAuthority: '',
   issuedDate: '',
   file: null,
@@ -85,6 +102,7 @@ const RegisterDoctorPage = () => {
     register,
     handleSubmit,
     watch,
+    setError,
     setValue,
     getValues,
     formState: { errors },
@@ -154,6 +172,15 @@ const RegisterDoctorPage = () => {
   };
 
   const onSubmit = async (data: DoctorFormData) => {
+    if (data.password !== data.confirmPassword) {
+      setError('confirmPassword', {
+        type: 'validate',
+        message: 'Passwords do not match',
+      });
+      setSubmitError('Passwords do not match. Please re-check your password.');
+      return;
+    }
+
     if (!data.degrees.length) {
       setSubmitError('At least one degree is required before submitting.');
       return;
@@ -211,6 +238,7 @@ const RegisterDoctorPage = () => {
           parseFloat(data.expectedMonthlySalary) || undefined,
         degrees: data.degrees.map((item) => ({
           name: item.name,
+          degreeLevel: item.degreeLevel,
           issuingAuthority: item.issuingAuthority || undefined,
           issuedDate: toUtcIsoDate(item.issuedDate),
           expiryDate: undefined,
@@ -228,9 +256,27 @@ const RegisterDoctorPage = () => {
       setSubmittedEmail(data.email);
       setIsSubmitted(true);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
+      const error = err as {
+        response?: {
+          data?: {
+            message?: string;
+            title?: string;
+            errors?: Record<string, string[]>;
+          };
+        };
+      };
+
+      const validationErrors = error?.response?.data?.errors;
+      const firstValidationMessage = validationErrors
+        ? Object.values(validationErrors)
+            .flat()
+            .find((item) => Boolean(item))
+        : undefined;
+
       setSubmitError(
-        error?.response?.data?.message ||
+        firstValidationMessage ||
+          error?.response?.data?.message ||
+          error?.response?.data?.title ||
           'Registration failed. Please try again.'
       );
     } finally {
@@ -481,6 +527,8 @@ const RegisterDoctorPage = () => {
                     type="password"
                     {...register('confirmPassword', {
                       required: 'Please confirm your password',
+                      validate: (value) =>
+                        value === watch('password') || 'Passwords do not match',
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                     placeholder="Re-enter your password"
@@ -692,6 +740,29 @@ const RegisterDoctorPage = () => {
                         {errors.degrees[index]?.name?.message}
                       </p>
                     )}
+
+                    <div>
+                      <label className="text-xs text-gray-600">
+                        Degree level <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        {...register(`degrees.${index}.degreeLevel`, {
+                          required: 'Degree level is required',
+                        })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      >
+                        {DEGREE_LEVEL_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.degrees?.[index]?.degreeLevel && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.degrees[index]?.degreeLevel?.message}
+                        </p>
+                      )}
+                    </div>
 
                     <input
                       type="text"

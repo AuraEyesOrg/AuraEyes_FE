@@ -10,6 +10,7 @@ import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
 import type {
   NotificationsResponse,
+  NotificationType,
   UnreadCountResponse,
 } from '@/types/notification';
 
@@ -19,6 +20,7 @@ export interface GetNotificationsParams {
   pageNumber?: number;
   pageSize?: number;
   isRead?: boolean;
+  types?: Array<NotificationType | number>;
 }
 
 // ============ QUERIES ============
@@ -30,9 +32,16 @@ export interface GetNotificationsParams {
 export const getNotifications = async (
   params: GetNotificationsParams = {}
 ): Promise<NotificationsResponse> => {
+  const requestParams = {
+    ...params,
+    ...(params.types && params.types.length > 0
+      ? { types: params.types.join(',') }
+      : {}),
+  };
+
   const response = await api.get<ApiResponse<NotificationsResponse>>(
     API_ENDPOINTS.NOTIFICATIONS.LIST,
-    { params }
+    { params: requestParams }
   );
   return unwrapApiData<NotificationsResponse>(response.data);
 };

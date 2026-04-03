@@ -13,7 +13,10 @@
     "bookAppointment": "Đặt lịch khám",
     "findDoctor": "Tìm bác sĩ",
     "learnMore": "Tìm hiểu thêm",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "sidebar": {
+      "auraNetwork": "Aura Network"
+    }
   },
   "Auth": {
     "login": "Đăng nhập",
@@ -276,9 +279,14 @@
       "credentials": {
         "title": "Chứng chỉ chuyên môn",
         "upload": "Tải lên chứng chỉ",
+        "degrees": "Bằng cấp học vị",
+        "licenses": "Chứng chỉ hành nghề",
         "issuedBy": "Cấp bởi",
         "issued": "Ngày cấp",
         "expires": "Hết hạn",
+        "noDegrees": "Chưa có bằng cấp nào",
+        "noLicenses": "Chưa có chứng chỉ nào",
+        "addNow": "Thêm ngay",
         "status": {
           "verified": "Đã xác thực",
           "pending": "Chờ duyệt",
@@ -302,7 +310,9 @@
         "title": "Cài đặt tài khoản",
         "security": "Bảo mật",
         "securityHint": "Đặt lại mật khẩu & 2FA",
-        "language": "Ngôn ngữ"
+        "language": "Ngôn ngữ",
+        "languageVi": "Tiếng Việt (VN)",
+        "languageEn": "English (US)"
       },
       "appearance": {
         "title": "Giao diện",
@@ -517,6 +527,8 @@
       "generating": "Đang sinh...",
       "blockReason": "Đã chặn bởi bác sĩ",
       "confirmDeleteTemplate": "Bạn có chắc muốn xóa mẫu này không?",
+      "confirmDeleteTemplateMessage": "Hành động này không thể hoàn tác. Các lần sinh slot trong tương lai từ mẫu này sẽ không còn khả dụng.",
+      "confirmDeleteTemplateAction": "Xóa mẫu",
       "blockThisSlot": "Chặn slot này",
       "unblockThisSlot": "Bỏ chặn slot này",
       "stats": {
@@ -638,6 +650,140 @@
     "description": "Aura Eyes hỗ trợ cơ sở y tế sàng lọc nhanh, chuẩn hóa dữ liệu và kết nối bệnh nhân với bác sĩ chuyên khoa.",
     "primaryCta": "Đặt lịch khám",
     "secondaryCta": "Tìm bác sĩ"
+  },
+  "GuestMaintenance": {
+    "badge": "Bảo trì hệ thống",
+    "title": "AURA đang được tinh chỉnh hệ thống.",
+    "description": "Chúng tôi đang bảo trì để tăng độ ổn định và hiệu năng. Vui lòng quay lại sau ít phút. Cảm ơn bạn đã thông cảm.",
+    "primaryCta": "Về trang chủ",
+    "secondaryCta": "Xem trạng thái hệ thống",
+    "card1": {
+      "title": "Đang cập nhật dịch vụ",
+      "description": "Chúng tôi đang tối ưu luồng xử lý và nâng cao trải nghiệm tư vấn trực tuyến."
+    },
+    "card2": {
+      "title": "Ưu tiên bảo mật dữ liệu",
+      "description": "Toàn bộ dữ liệu người dùng vẫn an toàn và không bị ảnh hưởng trong quá trình bảo trì."
+    }
+  },
+  "GuestNotFound": {
+    "badge": "404 Không tìm thấy",
+    "title": "Không tìm thấy trang",
+    "description": "Đường dẫn bạn vừa truy cập hiện không tồn tại trong hệ thống AURA. Vui lòng kiểm tra lại URL hoặc quay về trang chủ để tiếp tục.",
+    "requestedPath": "Đường dẫn yêu cầu",
+    "primaryCta": "Về trang chủ",
+    "secondaryCta": "Khám phá AURA"
+  },
+  "PatientDoctors": {
+    "avatar": {
+      "fallbackInitials": "BS"
+    },
+    "common": {
+      "noData": "-"
+    },
+    "header": {
+      "title": "Tìm Bác Sĩ Nhãn Khoa",
+      "subtitle": "Tìm kiếm và chọn bác sĩ chuyên khoa đã xác minh cho buổi tư vấn của bạn",
+      "backToReview": "Quay lại kết quả sàng lọc"
+    },
+    "hero": {
+      "title": "Gọi Video Với Bác Sĩ",
+      "feature1": "Khám/tư vấn sức khỏe từ xa với bác sĩ chuyên khoa",
+      "feature2": "Nhắn tin với bác sĩ trước, trong và sau buổi khám",
+      "feature3": "Thanh toán tiện lợi, nhanh chóng",
+      "feature4": "Bảo mật thông tin cuộc gọi an toàn",
+      "hotlineLabel": "Liên hệ chuyên gia để tư vấn thêm:",
+      "hotline": "1900 2115"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm bác sĩ, chuyên khoa..."
+    },
+    "consultMode": {
+      "now": "Tư vấn ngay",
+      "schedule": "Đặt lịch hẹn",
+      "clinics": "Cơ sở y tế",
+      "nowNotice": "Bạn đang chọn dịch vụ khám qua video. Để chuyển sang khám tại cơ sở y tế, vui lòng chọn chức năng tương ứng."
+    },
+    "filters": {
+      "showOptions": "Tùy chọn hiển thị",
+      "hideOptions": "Ẩn tùy chọn",
+      "title": "Bộ lọc",
+      "clear": "Xóa lọc",
+      "timeFrom": "Từ ngày",
+      "timeTo": "Đến ngày",
+      "minRating": "Đánh giá tối thiểu",
+      "price": "Giá khám (VND)",
+      "min": "Tối thiểu",
+      "max": "Tối đa",
+      "any": "Bất kỳ",
+      "maxRangeWarning": "Khoảng thời gian lọc quá rộng. Vui lòng chọn tối đa {{maxDays}} ngày.",
+      "priceHint": "Đang áp dụng bộ lọc theo giá. Nếu danh sách rỗng, hãy giảm khoảng giá hoặc thay đổi thời gian."
+    },
+    "loading": {
+      "doctors": "Đang tải danh sách bác sĩ...",
+      "prices": "Đang tải mức giá theo lịch..."
+    },
+    "degrees": {
+      "Bachelor": "CN",
+      "Master": "ThS",
+      "Doctorate": "TS",
+      "AssocProf": "PGS",
+      "Professor": "GS",
+      "MD": "BS"
+    },
+    "card": {
+      "unnamed": "Bác sĩ chưa cập nhật tên",
+      "verifiedCredentials": "{{count}} chứng chỉ đã xác minh",
+      "verifiedOphthalmologist": "Bác sĩ nhãn khoa đã xác minh",
+      "degreeLabel": "Bằng cấp",
+      "degreeMissing": "Chưa cập nhật bằng cấp",
+      "certificateLabel": "Chứng chỉ",
+      "certificateMissing": "Chưa cập nhật chứng chỉ",
+      "experience": "Phòng khám AuraEyes, {{years}} năm kinh nghiệm",
+      "expertiseLabel": "Chuyên môn",
+      "aboutLabel": "Giới thiệu",
+      "bioMissing": "Chưa cập nhật phần giới thiệu",
+      "generalOphthalmology": "Nhãn khoa tổng quát",
+      "scheduleLabel": "Lịch khám",
+      "scheduleFlexible": "Tùy chọn",
+      "scheduleNoSlots": "Chưa có lịch khả dụng",
+      "scheduleNext": "{{datetime}}",
+      "priceLabel": "Giá khám",
+      "priceBySchedule": "Theo lịch đặt",
+      "bookNow": "Đặt ngay",
+      "bookAppointment": "Đặt khám ngay"
+    },
+    "empty": {
+      "title": "Chưa có bác sĩ phù hợp",
+      "adjustFilters": "Hãy thử điều chỉnh bộ lọc thời gian/đánh giá/giá.",
+      "adjustSearch": "Hãy thử thay đổi từ khóa tìm kiếm."
+    },
+    "assistant": {
+      "title": "Cần hỗ trợ chọn bác sĩ?",
+      "description": "Bạn chưa chắc chọn bác sĩ nào? Hãy hỏi AURA để được gợi ý theo tình trạng và thời gian phù hợp.",
+      "cta": "Hỏi trợ lý AI AURA"
+    },
+    "modal": {
+      "verifiedExperience": "Đã xác minh - {{years}} năm kinh nghiệm",
+      "noRating": "Chưa có đánh giá",
+      "reviewCount": "{{count}} đánh giá",
+      "totalCredentials": "Chứng thực",
+      "expertiseLabel": "Chuyên môn",
+      "aboutDoctor": "Thông tin bác sĩ",
+      "patientFeedback": "Phản hồi bệnh nhân",
+      "anonymousPatient": "Bệnh nhân ẩn danh",
+      "noCommentProvided": "Chưa có nhận xét.",
+      "noReviewsYet": "Chưa có đánh giá nào.",
+      "bookAppointment": "Đặt lịch khám"
+    },
+    "credentials": {
+      "title": "Bằng cấp & Chứng chỉ",
+      "degrees": "Bằng cấp",
+      "certificates": "Chứng chỉ",
+      "defaultDegree": "Bằng cấp",
+      "defaultCertificate": "Chứng chỉ",
+      "empty": "Chưa có thông tin chứng thực."
+    }
   },
   "About": {
     "heroTitle": "Định hình tương lai sàng lọc võng mạc",
@@ -1109,5 +1255,15 @@
     "findingsDetected": "Các dấu hiệu phát hiện gồm:",
     "backToDashboard": "Về Dashboard",
     "sessionLabel": "Phiên"
+  },
+  "notification": {
+    "types": {
+      "screening": "Sàng lọc",
+      "consultation": "Tư vấn",
+      "message": "Tin nhắn",
+      "appointment": "Lịch hẹn",
+      "wallet": "Ví điện tử",
+      "notification": "Thông báo"
+    }
   }
 }
