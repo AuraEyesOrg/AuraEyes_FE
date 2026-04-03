@@ -44,8 +44,8 @@ export const Footer = () => {
 
   return (
     <footer className="border-t border-[#D8E0EA] bg-[#EEF2F7]">
-      <div className="mx-auto max-w-7xl px-4 pb-8 pt-14 sm:px-6 lg:px-8">
-        <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 lg:px-8">
+        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="max-w-sm">
             <div className="mb-5">
