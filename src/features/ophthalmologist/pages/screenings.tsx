@@ -263,7 +263,7 @@ export default function ScreeningsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={stats.pending} />
+      <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader pageName="Screenings" />
