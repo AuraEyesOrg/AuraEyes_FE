@@ -8,6 +8,9 @@ import {
   FileText,
   Users,
   Globe,
+  ScanEye,
+  Receipt,
+  FileBarChart,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
@@ -27,7 +30,10 @@ const navItems = [
     path: '/organisation/patients',
     hasBadge: true,
   },
+  { icon: ScanEye, label: 'Screening', path: '/organisation/screening' },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
+  { icon: Receipt, label: 'Billing', path: '/organisation/billing' },
+  { icon: FileBarChart, label: 'Reports', path: '/organisation/reports' },
   { icon: Globe, label: 'Aura Network', path: '/network' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
   { icon: CalendarCog, label: 'Slots', path: '/organisation/slots' },
