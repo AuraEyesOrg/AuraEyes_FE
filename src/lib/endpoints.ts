@@ -279,6 +279,13 @@ export const API_ENDPOINTS = {
     CALENDAR: '/organisation/calendar',
     ANALYTICS: '/organisation/analytics',
     SETTINGS: '/organisation/settings',
+    // Organisation Screening
+    SCREENING: {
+      CREATE_SESSION: '/organisations/screenings/create-session',
+      HISTORY: '/organisations/screenings/history',
+    },
+    BILLING_SUMMARY: '/organisations/billing/summary',
+    SCREENING_REPORTS: '/organisations/screening-reports',
   },
 
   // AI Quota Management
