@@ -22,7 +22,7 @@ export const quotaApi = {
     return response.data.data;
   },
 
-  /** POST /api/quotas/buy - Buy AI quota bundles using wallet balance */
+  /** POST /api/quotas/buy - Buy AI quota amount using wallet balance */
   async buy(data: BuyQuotaRequest): Promise<BuyQuotaResponse> {
     const response = await api.post<BackendApiResponse<BuyQuotaResponse>>(
       API_ENDPOINTS.QUOTAS.BUY,

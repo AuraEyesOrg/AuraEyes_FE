@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
 import { quotaApi } from '../api/quota.api';
@@ -27,6 +27,12 @@ import {
   Info,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import { getDiseaseUrgency } from '../mock';
+import i18n from '@/i18n/i18n';
+import {
+  isNormalDisease,
+  toDisplayDiseaseName,
+} from '@/features/patient/lib/disease-translation';
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -189,6 +195,8 @@ function mapStandardResponseToAnomalies(
   imgWidth: number,
   imgHeight: number
 ): Anomaly[] {
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const preferVietnamese = currentLanguage.toLowerCase().startsWith('vi');
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
   const bestLesion = lesions.length > 0 ? lesions[0] : null;
@@ -197,6 +205,10 @@ function mapStandardResponseToAnomalies(
   for (const pred of data.prediction.top_k) {
     const isPrimary = pred.rank === 1;
     const friendly = FRIENDLY_NAMES[pred.class_name];
+    const localizedDiseaseName = toDisplayDiseaseName(
+      pred.class_name,
+      currentLanguage
+    );
 
     // Primary gets the best lesion bbox, others get no location
     const location =
@@ -214,7 +226,9 @@ function mapStandardResponseToAnomalies(
       color: getColorClass(pred.confidence),
       type: mapDiagnosisType(pred.confidence),
       location,
-      friendlyName: friendly?.name ?? pred.class_name,
+      friendlyName: preferVietnamese
+        ? localizedDiseaseName
+        : (friendly?.name ?? pred.class_name),
       friendlyDescription:
         friendly?.description ??
         `${pred.class_name} was detected by our AI screening. Your specialist can evaluate this further.`,
@@ -261,6 +275,32 @@ interface LocationState {
   consentAccepted?: boolean;
   rawJsonOutput?: string;
   resultsPersisted?: boolean;
+}
+
+const LAST_SCREENING_ID_KEY = 'patient:lastScreeningId';
+
+function loadLastScreeningId(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveLastScreeningId(id: string) {
+  try {
+    window.localStorage.setItem(LAST_SCREENING_ID_KEY, id);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function clearLastScreeningId() {
+  try {
+    window.localStorage.removeItem(LAST_SCREENING_ID_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
 }
 
 function mapEyeSideLabel(
@@ -410,9 +450,27 @@ function friendlyDescription(anomaly: Anomaly): string {
   );
 }
 
+function toRiskLevelFromUrgency(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal',
+  confidence: number
+): 'low' | 'moderate' | 'high' {
+  if (urgency === 'critical') return 'high';
+
+  if (urgency === 'warning') {
+    return confidence >= 70 ? 'high' : 'moderate';
+  }
+
+  if (urgency === 'caution') {
+    return confidence >= 70 ? 'moderate' : 'low';
+  }
+
+  return 'low';
+}
+
 export default function RetinalAnalysis() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const routeState = location.state as LocationState | null;
   const { data: quotaBalance } = useQuotaBalance();
@@ -437,13 +495,91 @@ export default function RetinalAnalysis() {
   const [resultsPersisted, setResultsPersisted] = useState<boolean>(
     Boolean(routeState?.resultsPersisted)
   );
+  const [isPreparingSession, setIsPreparingSession] = useState(false);
+  const sessionCreationPromiseRef = useRef<Promise<string> | null>(null);
 
   // Image management
   const [images, setImages] = useState<RetinalImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
+  const ensureScreeningSession = async (): Promise<string> => {
+    if (screeningId) return screeningId;
+    if (sessionCreationPromiseRef.current) {
+      return sessionCreationPromiseRef.current;
+    }
+
+    const createPromise = (async () => {
+      if (images.length === 0) {
+        throw new Error('No images available to create screening session');
+      }
+
+      setIsPreparingSession(true);
+      const files = await Promise.all(
+        images.map(async (img, idx) => {
+          const resp = await fetch(img.url);
+          const imgBlob = await resp.blob();
+          const fileType = imgBlob.type || 'image/jpeg';
+          const fileNameForUpload = img.name || `retinal-scan-${idx + 1}.jpg`;
+          return new File([imgBlob], fileNameForUpload, { type: fileType });
+        })
+      );
+
+      const uploadResp = await screeningApi.uploadRetinalImages(files);
+      const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
+
+      if (uploadedUrls.length === 0) {
+        throw new Error('Failed to upload retinal images');
+      }
+
+      const retinalImages = uploadedUrls.map((url, idx) => ({
+        imageUrl: url,
+        eyeSide: inferEyeSideFromName(
+          images[idx]?.name || '',
+          idx,
+          uploadedUrls.length
+        ),
+        deviceName: 'Retinal Camera',
+      }));
+
+      const sessionResp = await screeningApi.createSession({
+        modelVersion: '1.0',
+        retinalImages,
+      });
+
+      const createdId = sessionResp.data?.screeningId;
+      if (!createdId) {
+        throw new Error('Missing screening ID from createSession response');
+      }
+
+      setScreeningId(createdId);
+      saveLastScreeningId(createdId);
+      setSearchParams({ screeningId: createdId }, { replace: true });
+      return createdId;
+    })().finally(() => {
+      setIsPreparingSession(false);
+      sessionCreationPromiseRef.current = null;
+    });
+
+    sessionCreationPromiseRef.current = createPromise;
+    return createPromise;
+  };
+
   useEffect(() => {
-    const incomingScreeningId = routeState?.screeningId;
+    const queryScreeningId = searchParams.get('screeningId') ?? undefined;
+    const storedScreeningId = loadLastScreeningId() ?? undefined;
+    const hasFreshRouteImages =
+      Boolean(routeState?.images?.length) && !routeState?.screeningId;
+    const incomingScreeningId = hasFreshRouteImages
+      ? undefined
+      : (routeState?.screeningId ?? queryScreeningId ?? storedScreeningId);
+
+    if (hasFreshRouteImages) {
+      setScreeningId(null);
+      clearLastScreeningId();
+      if (queryScreeningId) {
+        setSearchParams({}, { replace: true });
+      }
+    }
 
     if (
       routeState?.source === 'new-screening' &&
@@ -455,6 +591,14 @@ export default function RetinalAnalysis() {
 
     if (incomingScreeningId) {
       setScreeningId(incomingScreeningId);
+      saveLastScreeningId(incomingScreeningId);
+
+      if (queryScreeningId !== incomingScreeningId) {
+        setSearchParams(
+          { screeningId: incomingScreeningId },
+          { replace: true }
+        );
+      }
     }
 
     const loadSession = async () => {
@@ -503,23 +647,7 @@ export default function RetinalAnalysis() {
           anomalies: [],
         }));
 
-        const fallbackFromRoute: RetinalImage[] =
-          routeState?.images?.map((img) => ({
-            id: img.id,
-            url: img.preview,
-            name: img.name,
-            eye:
-              img.name.toLowerCase().includes('right') ||
-              img.name.toLowerCase().includes('(od)')
-                ? 'Right Eye (OD)'
-                : 'Left Eye (OS)',
-            uploadedAt: new Date().toISOString(),
-            analyzed: false,
-            anomalies: [],
-          })) ?? [];
-
-        const sessionImages =
-          mappedPersisted.length > 0 ? mappedPersisted : fallbackFromRoute;
+        const sessionImages = mappedPersisted;
 
         const mergedRawJson =
           response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
@@ -556,7 +684,7 @@ export default function RetinalAnalysis() {
     };
 
     loadSession();
-  }, [navigate, routeState]);
+  }, [navigate, routeState, searchParams, setSearchParams]);
 
   const currentImage =
     images.find((img) => img.id === selectedImageId) || images[0] || null;
@@ -572,28 +700,34 @@ export default function RetinalAnalysis() {
     }
   };
 
-  // --- Risk score computation ---
-  const riskScore =
-    anomalies.length > 0
-      ? Math.round(
-          anomalies.reduce((acc, curr) => acc + curr.confidence, 0) /
-            anomalies.length /
-            10
-        )
-      : 0;
+  // --- Risk score computation (primary finding + disease urgency) ---
+  const primaryAnomaly =
+    anomalies.find((a) => a.isHighest) ??
+    (anomalies.length > 0
+      ? [...anomalies].sort((a, b) => b.confidence - a.confidence)[0]
+      : null);
+  const primaryConfidence = primaryAnomaly?.confidence ?? 0;
+  const primaryUrgency = getDiseaseUrgency(primaryAnomaly?.name ?? 'Normal');
+  const isPrimaryNormal =
+    primaryAnomaly != null
+      ? isNormalDisease(primaryAnomaly.name)
+      : anomalies.length === 0;
 
-  const riskLevel: 'low' | 'moderate' | 'high' =
-    riskScore >= 7 ? 'high' : riskScore >= 4 ? 'moderate' : 'low';
+  const riskScore = Math.round(primaryConfidence / 10);
+  const riskLevel: 'low' | 'moderate' | 'high' = toRiskLevelFromUrgency(
+    primaryUrgency,
+    primaryConfidence
+  );
 
   const riskConfig = {
     low: {
-      label: 'Looks Healthy',
+      label: 'Low Risk',
       color: 'text-emerald-700',
       bg: 'bg-emerald-50',
       border: 'border-emerald-200',
       icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
       summary:
-        'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+        'Your scan shows low-risk findings. Keep regular follow-up to monitor your retinal health.',
     },
     moderate: {
       label: 'Worth Reviewing',
@@ -615,7 +749,17 @@ export default function RetinalAnalysis() {
     },
   };
 
-  const risk = riskConfig[riskLevel];
+  const healthyRisk = {
+    label: 'Looks Healthy',
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+    summary:
+      'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+  };
+
+  const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
 
   // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {
@@ -728,28 +872,40 @@ export default function RetinalAnalysis() {
         throw new Error('Screening session not available to save AI results');
       }
 
-      const avgConfidence =
-        mapped.length > 0
-          ? Math.round(
-              mapped.reduce((acc, item) => acc + item.confidence, 0) /
-                mapped.length
-            )
-          : 0;
-
+      const primaryMapped =
+        mapped.find((a) => a.isHighest) ??
+        (mapped.length > 0
+          ? [...mapped].sort((a, b) => b.confidence - a.confidence)[0]
+          : null);
+      const persistedConfidence = primaryMapped?.confidence ?? 0;
+      const persistedUrgency = getDiseaseUrgency(
+        primaryMapped?.name ?? 'Normal'
+      );
       const mappedRiskLevel: 'Low' | 'Moderate' | 'High' =
-        avgConfidence >= 70 ? 'High' : avgConfidence >= 40 ? 'Moderate' : 'Low';
+        toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) === 'high'
+          ? 'High'
+          : toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) ===
+              'moderate'
+            ? 'Moderate'
+            : 'Low';
+
+      const significantFindings = mapped
+        .filter((a, idx) => idx === 0 || a.confidence >= 15)
+        .slice(0, 3);
 
       await screeningApi.saveAiResults(ensuredScreeningId, {
         rawJsonOutput: rawOutput,
         riskLevel: mappedRiskLevel,
-        confidenceScore: avgConfidence,
+        confidenceScore: persistedConfidence,
         summary:
           mappedRiskLevel === 'High'
             ? 'Findings need attention from an ophthalmologist.'
             : mappedRiskLevel === 'Moderate'
               ? 'Some findings may need specialist review.'
-              : 'No major risk findings detected.',
-        findings: mapped
+              : persistedUrgency === 'normal'
+                ? 'No major risk findings detected.'
+                : 'Low-risk findings detected. Routine specialist follow-up is recommended.',
+        findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),
       });
@@ -891,9 +1047,11 @@ export default function RetinalAnalysis() {
                         className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/20"
                       >
                         <Sparkles className="w-5 h-5" />
-                        {(quotaBalance?.remainingQuota ?? 0) <= 0
-                          ? 'Out of quota'
-                          : 'Start Screening'}
+                        {isPreparingSession
+                          ? 'Preparing session...'
+                          : (quotaBalance?.remainingQuota ?? 0) <= 0
+                            ? 'Out of quota'
+                            : 'Start Screening'}
                       </button>
                       {(quotaBalance?.remainingQuota ?? 0) <= 0 && (
                         <p className="text-sm text-amber-600">

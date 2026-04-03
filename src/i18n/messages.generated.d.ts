@@ -188,6 +188,20 @@ declare module 'i18next' {
           successDescription: string;
         };
       };
+      pendingApproval: {
+        brandSubtitle: string;
+        brandDescription: string;
+        statusBadge: string;
+        title: string;
+        primaryMessage: string;
+        secondaryMessage: string;
+        processingTime: string;
+        closing: string;
+        infoBox: string;
+        goHome: string;
+        logout: string;
+        footer: string;
+      };
     };
     Ophthalmologist: {
       common: {
@@ -1081,6 +1095,23 @@ declare module 'i18next' {
         primary: string;
         secondary: string;
       };
+    };
+    PatientReview: {
+      status: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      summary: {
+        healthy: string;
+        low: string;
+        moderate: string;
+        high: string;
+      };
+      findingsDetected: string;
+      backToDashboard: string;
+      sessionLabel: string;
     };
   }
 

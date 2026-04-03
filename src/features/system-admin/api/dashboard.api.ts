@@ -5,68 +5,80 @@
 
 import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
-import type { ApiResponse, DashboardData } from '../types/system-admin.types';
+import type {
+  ApiResponse,
+  SystemAdminDashboardMetrics,
+} from '../types/system-admin.types';
 
-interface AdminMetricsDto {
-  totalScreeningsToday: number;
-  totalScreeningsYesterday: number;
-  screeningsChangePercentage: number;
-  aiAccuracy: number;
-  aiAccuracyChangePercentage: number;
-  pendingReviews: number;
-  criticalCases: number;
+interface AdminUserGrowthMetricDto {
+  total: number;
+  currentMonth: number;
+  previousMonth: number;
+  growthPercentage: number;
 }
 
-interface AdminTrendPointDto {
-  label: string;
-  count: number;
-}
-
-interface AdminTrendDto {
-  dataPoints: AdminTrendPointDto[];
-}
-
-interface AdminRecentScreeningDto {
-  screeningCode: string;
-  clinicName: string | null;
-  riskLevel: string | null;
-  isCritical: boolean;
-  status: string;
-  createdAt: string;
-}
-
-interface AdminRiskCategoryDto {
-  riskLevel: string;
-  count: number;
+interface AdminPaymentMethodRevenueDto {
+  paymentMethod: string;
+  amount: number;
   percentage: number;
 }
 
-interface AdminRiskDto {
-  riskCategories: AdminRiskCategoryDto[];
+interface AdminRevenuePointDto {
+  month?: number;
+  date?: string;
+  label: string;
+  revenue: number;
 }
 
-interface AdminSystemHealthComponentDto {
-  componentName: string;
-  status: string;
-  isHealthy: boolean;
-  latencyMs?: number;
-  uptimePercentage?: number;
+interface AdminPendingActionsDto {
+  pendingOphthalmologistVerifications: number;
+  pendingWithdrawalRequests: number;
+  pendingOrganisationOnboarding: number;
 }
 
-interface AdminSystemHealthDto {
-  allSystemsOperational: boolean;
-  components: AdminSystemHealthComponentDto[];
+interface AdminSystemStatusDto {
+  liveConsultationSessions: number;
+  apiHealthy: boolean;
+  databaseHealthy: boolean;
 }
 
-interface PagedResult<T> {
-  items: T[];
+interface AdminTopDoctorDto {
+  ophthalmologistId: string;
+  name: string;
+  revenue: number;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+interface AdminTopOrganisationDto {
+  organisationId: string;
+  name: string;
+  ratingAverage: number;
+  ratingCount: number;
+}
+
+interface AdminMetricsDto {
+  doctors: AdminUserGrowthMetricDto;
+  organisations: AdminUserGrowthMetricDto;
+  patients: AdminUserGrowthMetricDto;
+  paymentMethodBreakdown: AdminPaymentMethodRevenueDto[];
+  monthlyRevenue: AdminRevenuePointDto[];
+  dailyRevenue: AdminRevenuePointDto[];
+  totalDepositRevenueYear: number;
+  totalPlatformCommissionYear: number;
+  monthlyPlatformCommission: AdminRevenuePointDto[];
+  dailyPlatformCommission: AdminRevenuePointDto[];
+  monthlyNewDoctorCounts: number[];
+  monthlyNewOrganisationCounts: number[];
+  monthlyNewPatientCounts: number[];
+  pendingActions: AdminPendingActionsDto;
+  systemStatus: AdminSystemStatusDto;
+  topDoctorsByConsultationRevenue: AdminTopDoctorDto[];
+  topOrganisationsByRating: AdminTopOrganisationDto[];
 }
 
 export const dashboardApi = {
-  /**
-   * Fetch dashboard statistics
-   */
-  async getStats() {
+  async getMetrics(): Promise<SystemAdminDashboardMetrics> {
     try {
       const response = await api.get<ApiResponse<AdminMetricsDto>>(
         API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.STATS
@@ -77,165 +89,74 @@ export const dashboardApi = {
       }
 
       return {
-        totalScreeningsToday: {
-          value: data.totalScreeningsToday,
-          change: data.screeningsChangePercentage,
-          trend: data.screeningsChangePercentage >= 0 ? 'up' : 'down',
-          description: `vs yesterday ${data.totalScreeningsYesterday}`,
+        doctors: data.doctors,
+        organisations: data.organisations,
+        patients: data.patients,
+        paymentMethods: data.paymentMethodBreakdown.map((item) => ({
+          name: item.paymentMethod,
+          value: Number(item.amount ?? 0),
+        })),
+        monthlyRevenue: data.monthlyRevenue.map((item) => ({
+          label: item.label,
+          value: Number(item.revenue ?? 0),
+        })),
+        dailyRevenue: data.dailyRevenue.map((item) => ({
+          label: item.label,
+          value: Number(item.revenue ?? 0),
+        })),
+        totalDepositRevenueYear: Number(data.totalDepositRevenueYear ?? 0),
+        totalPlatformCommissionYear: Number(
+          data.totalPlatformCommissionYear ?? 0
+        ),
+        monthlyPlatformCommission: (data.monthlyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
+        dailyPlatformCommission: (data.dailyPlatformCommission ?? []).map(
+          (item) => ({
+            label: item.label,
+            value: Number(item.revenue ?? 0),
+          })
+        ),
+        monthlyNewDoctorCounts: data.monthlyNewDoctorCounts ?? [],
+        monthlyNewOrganisationCounts: data.monthlyNewOrganisationCounts ?? [],
+        monthlyNewPatientCounts: data.monthlyNewPatientCounts ?? [],
+        pendingActions: {
+          pendingOphthalmologistVerifications:
+            data.pendingActions?.pendingOphthalmologistVerifications ?? 0,
+          pendingWithdrawalRequests:
+            data.pendingActions?.pendingWithdrawalRequests ?? 0,
+          pendingOrganisationOnboarding:
+            data.pendingActions?.pendingOrganisationOnboarding ?? 0,
         },
-        aiAccuracyRate: {
-          value: data.aiAccuracy,
-          change: data.aiAccuracyChangePercentage,
-          trend: data.aiAccuracyChangePercentage >= 0 ? 'up' : 'down',
-          description: 'Average confidence across completed screenings',
+        systemStatus: {
+          liveConsultationSessions:
+            data.systemStatus?.liveConsultationSessions ?? 0,
+          apiHealthy: data.systemStatus?.apiHealthy ?? true,
+          databaseHealthy: data.systemStatus?.databaseHealthy ?? false,
         },
-        pendingReviews: {
-          value: data.pendingReviews,
-          description: 'Waiting for ophthalmologist review',
-        },
-        criticalRisks: {
-          value: data.criticalCases,
-          description: 'High and critical risk cases',
-        },
-      } satisfies DashboardData['stats'];
+        topDoctorsByConsultationRevenue: (
+          data.topDoctorsByConsultationRevenue ?? []
+        ).map((d) => ({
+          ophthalmologistId: d.ophthalmologistId,
+          name: d.name,
+          revenue: Number(d.revenue ?? 0),
+          ratingAverage: Number(d.ratingAverage ?? 0),
+          ratingCount: d.ratingCount ?? 0,
+        })),
+        topOrganisationsByRating: (data.topOrganisationsByRating ?? []).map(
+          (o) => ({
+            organisationId: o.organisationId,
+            name: o.name,
+            ratingAverage: Number(o.ratingAverage ?? 0),
+            ratingCount: o.ratingCount ?? 0,
+          })
+        ),
+      };
     } catch (error) {
-      console.error('Failed to fetch dashboard stats:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Fetch screening volume trends
-   */
-  async getScreeningVolume() {
-    try {
-      const response = await api.get<ApiResponse<AdminTrendDto>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SCREENING_VOLUME,
-        {
-          params: { timeRange: 'monthly', periods: 6 },
-        }
-      );
-      const data = response.data.data;
-      if (!data) {
-        throw new Error('Dashboard trends response is empty.');
-      }
-
-      return data.dataPoints.map((item) => ({
-        week: item.label,
-        screenings: item.count,
-      })) satisfies DashboardData['volumeTrends'];
-    } catch (error) {
-      console.error('Failed to fetch screening volume:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Fetch recent screenings
-   */
-  async getRecentScreenings(limit = 10) {
-    try {
-      const response = await api.get<
-        ApiResponse<PagedResult<AdminRecentScreeningDto>>
-      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.RECENT_SCREENINGS, {
-        params: { pageNumber: 1, pageSize: limit },
-      });
-      const data = response.data.data;
-      if (!data) {
-        throw new Error('Recent screenings response is empty.');
-      }
-
-      return data.items.map((item) => ({
-        id: item.screeningCode,
-        clinic: item.clinicName || 'N/A',
-        date: new Date(item.createdAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
-        time: new Date(item.createdAt).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        aiResult:
-          item.status.toLowerCase() === 'analyzing'
-            ? 'processing'
-            : item.riskLevel?.toLowerCase() === 'moderate'
-              ? 'medium_risk'
-              : item.riskLevel?.toLowerCase() === 'high' || item.isCritical
-                ? 'high_risk'
-                : 'low_risk',
-        status:
-          item.status.toLowerCase() === 'completed'
-            ? item.isCritical
-              ? 'flagged'
-              : 'completed'
-            : 'analyzing',
-      })) satisfies DashboardData['recentScreenings'];
-    } catch (error) {
-      console.error('Failed to fetch recent screenings:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Fetch system health metrics
-   */
-  async getSystemHealth() {
-    try {
-      const response = await api.get<ApiResponse<AdminSystemHealthDto>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.SYSTEM_HEALTH
-      );
-      const data = response.data.data;
-      if (!data) {
-        throw new Error('System health response is empty.');
-      }
-
-      const database = data.components.find(
-        (component) => component.componentName === 'Database'
-      );
-      const aiService = data.components.find(
-        (component) => component.componentName === 'AI Service'
-      );
-
-      return {
-        uptime: data.allSystemsOperational
-          ? 100
-          : (database?.uptimePercentage ?? 0),
-        responseTime: aiService?.latencyMs ?? 0,
-        cpuUsage: 0,
-        memoryUsage: 0,
-        storageUsage: 0,
-      } satisfies DashboardData['systemHealth'];
-    } catch (error) {
-      console.error('Failed to fetch system health:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Fetch risk distribution
-   */
-  async getRiskDistribution() {
-    try {
-      const response = await api.get<ApiResponse<AdminRiskDto>>(
-        API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.RISK_DISTRIBUTION
-      );
-      const data = response.data.data;
-      if (!data) {
-        throw new Error('Risk distribution response is empty.');
-      }
-
-      return data.riskCategories.map((item) => ({
-        riskLevel: item.riskLevel.toLowerCase() as
-          | 'low'
-          | 'medium'
-          | 'high'
-          | 'critical',
-        count: item.count,
-        percentage: item.percentage,
-      })) satisfies DashboardData['riskDistribution'];
-    } catch (error) {
-      console.error('Failed to fetch risk distribution:', error);
+      console.error('Failed to fetch dashboard metrics:', error);
       throw error;
     }
   },

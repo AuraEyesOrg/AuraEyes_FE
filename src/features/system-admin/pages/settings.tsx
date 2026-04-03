@@ -85,10 +85,9 @@ export default function SettingsPage() {
     language: 'en',
     maintenanceMode: false,
     minAdvanceBookingHours: 0.5,
-    aiQuotaBundle: 100,
+    aiQuotaUnitPrice: 10000,
     defaultPlatformCommission: 0.05,
     freeAiQuota: 3,
-    aiQuotaPrice: 50000,
   });
 
   // Trusted medical domains for AI resource search
@@ -104,18 +103,15 @@ export default function SettingsPage() {
         minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
           ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
           : 0.5,
-        aiQuotaBundle: systemSettings['AI_QUOTA_BUNDLE']
-          ? parseInt(systemSettings['AI_QUOTA_BUNDLE'], 10)
-          : 100,
+        aiQuotaUnitPrice: systemSettings['AI_QUOTA_UNIT_PRICE']
+          ? parseFloat(systemSettings['AI_QUOTA_UNIT_PRICE'])
+          : 10000,
         defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
           ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
           : 0.05,
         freeAiQuota: systemSettings['FREE_AI_QUOTA']
           ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
           : 3,
-        aiQuotaPrice: systemSettings['AI_QUOTA_PRICE']
-          ? parseFloat(systemSettings['AI_QUOTA_PRICE'])
-          : 50000,
       }));
 
       if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
@@ -154,13 +150,15 @@ export default function SettingsPage() {
           0.5,
           generalSettings.minAdvanceBookingHours
         ).toString(),
-        AI_QUOTA_BUNDLE: Math.max(0, generalSettings.aiQuotaBundle).toString(),
+        AI_QUOTA_UNIT_PRICE: Math.max(
+          1,
+          generalSettings.aiQuotaUnitPrice
+        ).toString(),
         DEFAULT_PLATFORM_COMMISSION: Math.max(
           0,
           generalSettings.defaultPlatformCommission
         ).toString(),
         FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
-        AI_QUOTA_PRICE: Math.max(0, generalSettings.aiQuotaPrice).toString(),
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
@@ -288,21 +286,24 @@ export default function SettingsPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            AI Quota Bundle
+            AI Quota Unit Price (VND per quota)
           </label>
           <input
             type="number"
             min={1}
-            step={1}
-            value={generalSettings.aiQuotaBundle}
+            step={1000}
+            value={generalSettings.aiQuotaUnitPrice}
             onChange={(e) =>
               setGeneralSettings({
                 ...generalSettings,
-                aiQuotaBundle: parseInt(e.target.value) || 0,
+                aiQuotaUnitPrice: parseFloat(e.target.value) || 0,
               })
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
           />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Total purchase cost = quantity x unit price.
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -341,23 +342,11 @@ export default function SettingsPage() {
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            AI Quota Price (VND per Bundle)
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={1000}
-            value={generalSettings.aiQuotaPrice}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                aiQuotaPrice: parseFloat(e.target.value) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
+        <div className="md:col-span-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            This unit price is used directly by backend billing when purchasing
+            AI quota.
+          </p>
         </div>
       </div>
 

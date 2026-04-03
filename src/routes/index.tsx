@@ -149,6 +149,9 @@ const OphthalmologistSlotManagementPage = lazy(
 const OphthalmologistContractPage = lazy(
   () => import('@/features/ophthalmologist/pages/contract')
 );
+const OphthalmologistWalletPage = lazy(
+  () => import('@/features/ophthalmologist/pages/wallet')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -166,11 +169,11 @@ const SystemAdminOphthalmologists = lazy(
 const SystemAdminVerificationRequests = lazy(
   () => import('@/features/system-admin/pages/verification-requests')
 );
+const SystemAdminWithdrawalRequests = lazy(
+  () => import('@/features/system-admin/pages/withdrawal-requests')
+);
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
-);
-const SystemAdminAIModels = lazy(
-  () => import('@/features/system-admin/pages/ai-models')
 );
 const SystemAdminAuditLogs = lazy(
   () => import('@/features/system-admin/pages/audit-logs')
@@ -349,8 +352,19 @@ const Router = () => (
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
         />
         <Route
+          path="/:locale/ophthalmologist/pending-approval"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<PendingApprovalPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/pending-approval"
-          element={<LocalizedPublicRoute element={<PendingApprovalPage />} />}
+          element={
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
+          }
         />
 
         <Route
@@ -449,6 +463,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistContractPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/wallet"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistWalletPage />}
             />
           }
         />
@@ -785,11 +808,17 @@ const Router = () => (
           }
         />
         <Route
+          path="/ophthalmologist/pending-approval"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <PendingApprovalPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/pending-approval"
           element={
-            <PublicRoute>
-              <PendingApprovalPage />
-            </PublicRoute>
+            <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
 
@@ -1153,18 +1182,18 @@ const Router = () => (
           }
         />
         <Route
-          path="/system-admin/users"
+          path="/system-admin/withdrawal-requests"
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
-              <SystemAdminUsers />
+              <SystemAdminWithdrawalRequests />
             </PrivateRoute>
           }
         />
         <Route
-          path="/system-admin/ai-models"
+          path="/system-admin/users"
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
-              <SystemAdminAIModels />
+              <SystemAdminUsers />
             </PrivateRoute>
           }
         />

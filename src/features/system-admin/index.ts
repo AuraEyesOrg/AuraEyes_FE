@@ -11,7 +11,6 @@ export {
   DashboardPage,
   OrganisationsPage,
   UsersPage,
-  AIModelsPage,
   AuditLogsPage,
   PermissionsPage,
 } from './pages';

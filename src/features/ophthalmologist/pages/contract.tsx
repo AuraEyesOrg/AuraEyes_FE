@@ -5,7 +5,6 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { formatViDate } from '@/lib/date-utils';
@@ -29,11 +28,6 @@ import Spinner from '@/components/ui/spinner';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
-import {
-  DEFAULT_LOCALE,
-  getLocaleFromPathname,
-  withLocalePathname,
-} from '@/i18n/locales';
 
 const CONTRACT_QUERY_KEY = ['ophthalmologist', 'my-contract'] as const;
 
@@ -134,10 +128,12 @@ function getStatusConfig(
 function UploadSection({
   contract,
   onUploadSuccess,
+  allowReupload,
   t,
 }: {
   contract: ContractDetailDto;
   onUploadSuccess: () => void;
+  allowReupload: boolean;
   t: (key: string, fallback: string) => string;
 }) {
   const [dragActive, setDragActive] = useState(false);
@@ -286,13 +282,27 @@ function UploadSection({
             </a>
             <button
               onClick={() => setShowReupload(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors"
+              disabled={!allowReupload}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              {t('Ophthalmologist.contract.upload.reupload', 'Re-upload')}
+              {allowReupload
+                ? t('Ophthalmologist.contract.upload.reupload', 'Re-upload')
+                : t('Ophthalmologist.contract.activeTitle', 'Contract Active')}
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!allowReupload) {
+    return (
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-600 dark:text-slate-300">
+        {t(
+          'Ophthalmologist.contract.activeDescription',
+          'You can now start receiving cases and consulting on the AURA platform.'
+        )}
       </div>
     );
   }
@@ -425,9 +435,6 @@ function UploadSection({
 export default function ContractPage() {
   const { t } = useSafeTranslation();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const { user, setUser } = useAuthStore();
 
   const {
@@ -439,16 +446,13 @@ export default function ContractPage() {
     queryFn: contractApi.getMyContract,
   });
 
-  // Sync contractStatus to auth store when admin activates the contract,
-  // then redirect to dashboard so the doctor is no longer gated here.
+  // Sync contractStatus to auth store when admin activates the contract.
+  // Keep doctor on this page so they can still review/download the contract.
   useEffect(() => {
     if (contract?.status === 'Active' && user?.contractStatus !== 'Active') {
       setUser({ ...user!, contractStatus: 'Active' });
-      navigate(withLocalePathname(locale, '/ophthalmologist/dashboard'), {
-        replace: true,
-      });
     }
-  }, [contract?.status, locale, navigate, setUser, user]);
+  }, [contract?.status, setUser, user]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
@@ -608,6 +612,24 @@ export default function ContractPage() {
                         {formatViDate(contract.createdAt)}
                       </span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Commission</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">
+                        {contract.commissionRate != null
+                          ? `${contract.commissionRate}%`
+                          : 'Pending deal'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">
+                        Actual salary
+                      </span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">
+                        {contract.actualMonthlySalary != null
+                          ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
+                          : 'Pending deal'}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
@@ -706,74 +728,87 @@ export default function ContractPage() {
                 )}
               </div>
 
-              {/* Upload section - only show when PendingSignature */}
-              {contract.status === 'PendingSignature' && (
+              {/* Upload/signed section - visible for PendingSignature and Active */}
+              {(contract.status === 'PendingSignature' ||
+                contract.status === 'Active') && (
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                      {t(
-                        'Ophthalmologist.contract.upload.uploadSignedTitle',
-                        'Upload signed contract'
-                      )}
+                      {contract.scannedDocumentUrl
+                        ? t(
+                            'Ophthalmologist.contract.upload.signedContract',
+                            'Signed contract'
+                          )
+                        : t(
+                            'Ophthalmologist.contract.upload.uploadSignedTitle',
+                            'Upload signed contract'
+                          )}
                     </p>
                     <p className="text-sm text-slate-500">
-                      {t(
-                        'Ophthalmologist.contract.upload.uploadSignedDescription',
-                        'Print the contract, sign and stamp it, then upload a photo or scanned copy'
-                      )}
+                      {contract.scannedDocumentUrl
+                        ? t(
+                            'Ophthalmologist.contract.upload.sentNotice',
+                            'Your contract has been submitted'
+                          )
+                        : t(
+                            'Ophthalmologist.contract.upload.uploadSignedDescription',
+                            'Print the contract, sign and stamp it, then upload a photo or scanned copy'
+                          )}
                     </p>
                   </div>
 
                   {/* Step guide */}
-                  {!contract.scannedDocumentUrl && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        {
-                          step: 1,
-                          icon: Download,
-                          text: t(
-                            'Ophthalmologist.contract.upload.steps.downloadPrint',
-                            'Download and print contract'
-                          ),
-                        },
-                        {
-                          step: 2,
-                          icon: FileText,
-                          text: t(
-                            'Ophthalmologist.contract.upload.steps.signStamp',
-                            'Sign and stamp'
-                          ),
-                        },
-                        {
-                          step: 3,
-                          icon: Image,
-                          text: t(
-                            'Ophthalmologist.contract.upload.steps.captureUpload',
-                            'Capture and upload'
-                          ),
-                        },
-                      ].map(({ step, icon: Icon, text }) => (
-                        <div
-                          key={step}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold flex-shrink-0">
-                            {step}
+                  {contract.status === 'PendingSignature' &&
+                    !contract.scannedDocumentUrl && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[
+                          {
+                            step: 1,
+                            icon: Download,
+                            text: t(
+                              'Ophthalmologist.contract.upload.steps.downloadPrint',
+                              'Download and print contract'
+                            ),
+                          },
+                          {
+                            step: 2,
+                            icon: FileText,
+                            text: t(
+                              'Ophthalmologist.contract.upload.steps.signStamp',
+                              'Sign and stamp'
+                            ),
+                          },
+                          {
+                            step: 3,
+                            icon: Image,
+                            text: t(
+                              'Ophthalmologist.contract.upload.steps.captureUpload',
+                              'Capture and upload'
+                            ),
+                          },
+                        ].map(({ step, icon: Icon, text }) => (
+                          <div
+                            key={step}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold flex-shrink-0">
+                              {step}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Icon className="w-4 h-4 text-slate-400" />
+                              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                {text}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-slate-400" />
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                              {text}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
 
                   <UploadSection
                     contract={contract}
                     onUploadSuccess={handleUploadSuccess}
+                    allowReupload={contract.status === 'PendingSignature'}
                     t={t}
                   />
                 </div>
