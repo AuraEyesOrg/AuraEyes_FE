@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   TrendingUp,
   TrendingDown,
@@ -9,70 +11,80 @@ import {
   Clock,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
+import Spinner from '@/components/ui/spinner';
+import useAuthStore from '@/store/auth-store';
+import { useConsultationSessions } from '@/features/consultation/hooks';
+import { formatRelativeTime } from '@/lib/date-utils';
+import {
+  getOphthalmologistDashboardMetrics,
+  type OphthalmologistDashboardMetrics,
+} from '../api/dashboard.api';
+import {
+  listOphthalmologistScreenings,
+  type OphthalmologistScreeningListItemDto,
+} from '../api/ophthalmologist-screenings.api';
 
-// Mock analytics data
-const weeklyStats = {
-  screenings: { value: 156, change: 12.5, trend: 'up' as const },
-  patientsServed: { value: 142, change: 8.3, trend: 'up' as const },
-  avgReviewTime: { value: '4.2 min', change: -15.2, trend: 'down' as const },
-  aiAccuracy: { value: '94.8%', change: 2.1, trend: 'up' as const },
+type Trend = 'up' | 'down';
+
+type ActivityItem = {
+  day: string;
+  screenings: number;
+  reviews: number;
 };
 
-const conditionBreakdown = [
-  { name: 'Healthy', count: 87, percentage: 56, color: '#10b981' },
-  { name: 'Diabetic Retinopathy', count: 28, percentage: 18, color: '#f59e0b' },
-  { name: 'Macular Degeneration', count: 18, percentage: 12, color: '#8b5cf6' },
-  { name: 'Glaucoma', count: 12, percentage: 8, color: '#ec4899' },
-  { name: 'Hypertensive', count: 11, percentage: 7, color: '#ef4444' },
-];
+type ConditionItem = {
+  name: string;
+  count: number;
+  percentage: number;
+  color: string;
+};
 
-const weeklyActivity = [
-  { day: 'Mon', screenings: 24, reviews: 22 },
-  { day: 'Tue', screenings: 31, reviews: 28 },
-  { day: 'Wed', screenings: 28, reviews: 27 },
-  { day: 'Thu', screenings: 35, reviews: 32 },
-  { day: 'Fri', screenings: 29, reviews: 26 },
-  { day: 'Sat', screenings: 9, reviews: 8 },
-  { day: 'Sun', screenings: 0, reviews: 0 },
-];
+const CONDITION_COLORS = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444'];
 
-const recentActivity = [
-  {
-    type: 'review',
-    message: 'Reviewed screening for Elena Miller',
-    time: '10 min ago',
-    icon: CheckCircle,
-    color: 'text-emerald-500',
-  },
-  {
-    type: 'flag',
-    message: 'Flagged case for Sarah Jenkins',
-    time: '25 min ago',
-    icon: AlertTriangle,
-    color: 'text-amber-500',
-  },
-  {
-    type: 'screening',
-    message: 'New screening received from David Kim',
-    time: '1 hour ago',
-    icon: Eye,
-    color: 'text-blue-500',
-  },
-  {
-    type: 'ai',
-    message: 'AI detected potential glaucoma in patient #48325',
-    time: '2 hours ago',
-    icon: Brain,
-    color: 'text-purple-500',
-  },
-  {
-    type: 'review',
-    message: 'Approved screening for Marcus Wright',
-    time: '3 hours ago',
-    icon: CheckCircle,
-    color: 'text-emerald-500',
-  },
-];
+const REVIEWED_STATUSES = new Set([
+  'reviewed',
+  'approved',
+  'rejected',
+  'flagged',
+]);
+
+const HIGH_RISK_LEVELS = new Set(['high', 'critical']);
+
+const toDateKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+const getDateKeyFromIso = (value: string | null | undefined) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return toDateKey(date);
+};
+
+const toPercent = (numerator: number, denominator: number) =>
+  denominator > 0 ? Math.round((numerator / denominator) * 1000) / 10 : 0;
+
+const calcChange = (current: number, previous: number) => {
+  if (previous <= 0) return current > 0 ? 100 : 0;
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
+
+const getMostCommonModelVersion = (
+  screenings: OphthalmologistScreeningListItemDto[]
+) => {
+  if (screenings.length === 0) return 'N/A';
+  const counts = new Map<string, number>();
+  for (const item of screenings) {
+    const key = item.modelVersion?.trim() || 'N/A';
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
+};
+
+const isReviewed = (status: string | null | undefined) =>
+  REVIEWED_STATUSES.has((status ?? '').trim().toLowerCase());
+
+const isHighRisk = (riskLevel: string | null | undefined) =>
+  HIGH_RISK_LEVELS.has((riskLevel ?? '').trim().toLowerCase());
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -119,7 +131,221 @@ function StatCard({
 }
 
 export default function AnalyticsPage() {
-  const maxScreenings = Math.max(...weeklyActivity.map((d) => d.screenings));
+  const { user } = useAuthStore();
+  const currentDoctorId = user?.roleId ?? '';
+
+  const metricsQuery = useQuery({
+    queryKey: ['ophthalmologist-analytics', 'dashboard-metrics'],
+    queryFn: getOphthalmologistDashboardMetrics,
+  });
+
+  const screeningsQuery = useQuery({
+    queryKey: ['ophthalmologist-analytics', 'screenings'],
+    queryFn: listOphthalmologistScreenings,
+    enabled: Boolean(currentDoctorId),
+  });
+
+  const sessionsQuery = useConsultationSessions(
+    {
+      ophthalmologistId: currentDoctorId || undefined,
+      pageSize: 200,
+    },
+    { enabled: Boolean(currentDoctorId) }
+  );
+
+  const screenings = screeningsQuery.data ?? [];
+  const sessions = sessionsQuery.data?.items ?? [];
+  const metrics: OphthalmologistDashboardMetrics | null =
+    metricsQuery.data ?? null;
+
+  const {
+    screeningsThisWeek,
+    patientsThisWeek,
+    confidenceThisWeek,
+    urgentThisWeek,
+    screeningsChange,
+    patientsChange,
+    confidenceChange,
+    urgentChange,
+    weeklyActivity,
+    conditionBreakdown,
+    reviewedRate,
+    highRiskRate,
+    modelVersion,
+    recentActivity,
+  } = useMemo(() => {
+    const now = new Date();
+    const startCurrent = new Date(now);
+    startCurrent.setHours(0, 0, 0, 0);
+    startCurrent.setDate(startCurrent.getDate() - 6);
+
+    const startPrevious = new Date(startCurrent);
+    startPrevious.setDate(startPrevious.getDate() - 7);
+    const endPrevious = new Date(startCurrent);
+    endPrevious.setDate(endPrevious.getDate() - 1);
+
+    const isInRange = (value: string | null | undefined, start: Date, end: Date) => {
+      if (!value) return false;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return false;
+      return d >= start && d <= end;
+    };
+
+    const currentWeekScreenings = screenings.filter((s) =>
+      isInRange(s.createdAt, startCurrent, now)
+    );
+    const previousWeekScreenings = screenings.filter((s) =>
+      isInRange(s.createdAt, startPrevious, endPrevious)
+    );
+
+    const currentWeekSessions = sessions.filter((s) =>
+      isInRange(s.createdAt, startCurrent, now)
+    );
+    const previousWeekSessions = sessions.filter((s) =>
+      isInRange(s.createdAt, startPrevious, endPrevious)
+    );
+
+    const patientsCurrent = new Set(currentWeekSessions.map((s) => s.patientId)).size;
+    const patientsPrevious = new Set(previousWeekSessions.map((s) => s.patientId)).size;
+
+    const avgConfidence = (items: OphthalmologistScreeningListItemDto[]) => {
+      const confidence = items
+        .map((s) => s.confidenceScore)
+        .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+      if (confidence.length === 0) return 0;
+      const normalized = confidence.map((v) => (v > 0 && v <= 1 ? v * 100 : v));
+      return Math.round(normalized.reduce((sum, v) => sum + v, 0) / normalized.length);
+    };
+
+    const currentConfidence = avgConfidence(currentWeekScreenings);
+    const previousConfidence = avgConfidence(previousWeekScreenings);
+
+    const urgentCurrent = currentWeekScreenings.filter((s) =>
+      isHighRisk(s.latestRiskLevel)
+    ).length;
+    const urgentPrevious = previousWeekScreenings.filter((s) =>
+      isHighRisk(s.latestRiskLevel)
+    ).length;
+
+    const activity: ActivityItem[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date(now);
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() - i);
+      const dayKey = toDateKey(day);
+      const dayLabel = day.toLocaleDateString('en-US', { weekday: 'short' });
+
+      const dayScreenings = screenings.filter(
+        (s) => getDateKeyFromIso(s.createdAt) === dayKey
+      ).length;
+
+      const dayReviews = screenings.filter((s) => {
+        if (!isReviewed(s.reviewStatus)) return false;
+        const sourceDate = s.processedAt ?? s.createdAt;
+        return getDateKeyFromIso(sourceDate) === dayKey;
+      }).length;
+
+      activity.push({
+        day: dayLabel,
+        screenings: dayScreenings,
+        reviews: dayReviews,
+      });
+    }
+
+    const conditionCounter = new Map<string, number>();
+    for (const s of screenings) {
+      const label =
+        s.aiPrimaryLabel?.trim() || s.latestRiskLevel?.trim() || 'Unknown';
+      conditionCounter.set(label, (conditionCounter.get(label) ?? 0) + 1);
+    }
+
+    const conditions: ConditionItem[] = [...conditionCounter.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count], index) => ({
+        name,
+        count,
+        percentage: toPercent(count, screenings.length),
+        color: CONDITION_COLORS[index % CONDITION_COLORS.length],
+      }));
+
+    const reviewedCount = screenings.filter((s) => isReviewed(s.reviewStatus)).length;
+    const highRiskCount = screenings.filter((s) => isHighRisk(s.latestRiskLevel)).length;
+
+    const activityFeed = [...screenings]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 5)
+      .map((item) => {
+        const reviewed = isReviewed(item.reviewStatus);
+        const highRisk = isHighRisk(item.latestRiskLevel);
+        const icon = reviewed ? CheckCircle : highRisk ? AlertTriangle : Eye;
+        const color = reviewed
+          ? 'text-emerald-500'
+          : highRisk
+            ? 'text-amber-500'
+            : 'text-blue-500';
+
+        const message = reviewed
+          ? `Reviewed screening for ${item.patientName}`
+          : highRisk
+            ? `Flagged high-risk case for ${item.patientName}`
+            : `New screening received from ${item.patientName}`;
+
+        return {
+          message,
+          time: formatRelativeTime(item.createdAt),
+          icon,
+          color,
+        };
+      });
+
+    return {
+      screeningsThisWeek: currentWeekScreenings.length,
+      patientsThisWeek: patientsCurrent,
+      confidenceThisWeek: currentConfidence,
+      urgentThisWeek: urgentCurrent,
+      screeningsChange: calcChange(currentWeekScreenings.length, previousWeekScreenings.length),
+      patientsChange: calcChange(patientsCurrent, patientsPrevious),
+      confidenceChange: calcChange(currentConfidence, previousConfidence),
+      urgentChange: calcChange(urgentCurrent, urgentPrevious),
+      weeklyActivity: activity,
+      conditionBreakdown: conditions,
+      reviewedRate: toPercent(reviewedCount, screenings.length),
+      highRiskRate: toPercent(highRiskCount, screenings.length),
+      modelVersion: getMostCommonModelVersion(screenings),
+      recentActivity: activityFeed,
+    };
+  }, [screenings, sessions]);
+
+  const maxScreenings = Math.max(1, ...weeklyActivity.map((d) => d.screenings));
+  const isLoading =
+    metricsQuery.isLoading || screeningsQuery.isLoading || sessionsQuery.isLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full bg-(--bg-primary)">
+        <DoctorSidebar pendingCount={0} />
+        <div className="flex-1 h-full overflow-y-auto">
+          <DoctorHeader pageName="Analytics" />
+          <main className="p-6">
+            <div className="flex items-center justify-center h-[60vh]">
+              <div className="text-center">
+                <Spinner size={40} className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
+                  Loading analytics...
+                </p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnyData = screenings.length > 0 || sessions.length > 0;
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -146,9 +372,9 @@ export default function AnalyticsPage() {
                 <Eye className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
               }
               title="Screenings This Week"
-              value={weeklyStats.screenings.value}
-              change={weeklyStats.screenings.change}
-              trend={weeklyStats.screenings.trend}
+              value={screeningsThisWeek}
+              change={screeningsChange}
+              trend={screeningsChange >= 0 ? 'up' : 'down'}
               iconBg="bg-cyan-50 dark:bg-cyan-900/30"
             />
             <StatCard
@@ -156,29 +382,29 @@ export default function AnalyticsPage() {
                 <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               }
               title="Patients Served"
-              value={weeklyStats.patientsServed.value}
-              change={weeklyStats.patientsServed.change}
-              trend={weeklyStats.patientsServed.trend}
+              value={patientsThisWeek}
+              change={patientsChange}
+              trend={patientsChange >= 0 ? 'up' : 'down'}
               iconBg="bg-purple-50 dark:bg-purple-900/30"
             />
             <StatCard
               icon={
                 <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               }
-              title="Avg Review Time"
-              value={weeklyStats.avgReviewTime.value}
-              change={Math.abs(weeklyStats.avgReviewTime.change)}
-              trend={weeklyStats.avgReviewTime.trend}
+              title="Avg Confidence"
+              value={`${confidenceThisWeek}%`}
+              change={confidenceChange}
+              trend={confidenceChange >= 0 ? 'up' : 'down'}
               iconBg="bg-amber-50 dark:bg-amber-900/30"
             />
             <StatCard
               icon={
-                <Brain className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                <AlertTriangle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               }
-              title="AI Accuracy"
-              value={weeklyStats.aiAccuracy.value}
-              change={weeklyStats.aiAccuracy.change}
-              trend={weeklyStats.aiAccuracy.trend}
+              title="Urgent Cases"
+              value={metrics?.urgentCases ?? urgentThisWeek}
+              change={urgentChange}
+              trend={urgentChange >= 0 ? 'up' : 'down'}
               iconBg="bg-emerald-50 dark:bg-emerald-900/30"
             />
           </div>
@@ -239,29 +465,35 @@ export default function AnalyticsPage() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6">
                 Condition Breakdown
               </h3>
-              <div className="space-y-4">
-                {conditionBreakdown.map((condition) => (
-                  <div key={condition.name}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {condition.name}
-                      </span>
-                      <span className="text-sm font-medium text-gray-800 dark:text-white">
-                        {condition.count}
-                      </span>
+              {conditionBreakdown.length > 0 ? (
+                <div className="space-y-4">
+                  {conditionBreakdown.map((condition) => (
+                    <div key={condition.name}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {condition.name}
+                        </span>
+                        <span className="text-sm font-medium text-gray-800 dark:text-white">
+                          {condition.count}
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${condition.percentage}%`,
+                            backgroundColor: condition.color,
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${condition.percentage}%`,
-                          backgroundColor: condition.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No condition distribution data yet.
+                </p>
+              )}
             </div>
           </div>
 
@@ -275,35 +507,36 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    Accuracy Rate
+                    Avg Confidence
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                    94.8%
+                    {confidenceThisWeek}%
                   </p>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                    +2.1% from last week
+                    {confidenceChange >= 0 ? '+' : ''}
+                    {confidenceChange}% from last week
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    False Positives
+                    High Risk Ratio
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                    3.2%
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                    -0.8% from last week
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    Processing Time
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                    1.2s
+                    {highRiskRate}%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Per image average
+                    Based on reviewed screenings
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    Reviewed Rate
+                  </p>
+                  <p className="text-2xl font-bold text-gray-800 dark:text-white">
+                    {reviewedRate}%
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {screenings.length} total screenings
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
@@ -311,10 +544,10 @@ export default function AnalyticsPage() {
                     Model Version
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                    v2.4
+                    {modelVersion}
                   </p>
-                  <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
-                    Latest available
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Most used in recent screenings
                   </p>
                 </div>
               </div>
@@ -325,27 +558,39 @@ export default function AnalyticsPage() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 Recent Activity
               </h3>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div
-                      className={`p-2 rounded-lg bg-gray-50 dark:bg-[#0a1929] ${activity.color}`}
-                    >
-                      <activity.icon size={16} />
+              {recentActivity.length > 0 ? (
+                <div className="space-y-4">
+                  {recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div
+                        className={`p-2 rounded-lg bg-gray-50 dark:bg-[#0a1929] ${activity.color}`}
+                      >
+                        <activity.icon size={16} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {activity.message}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                          {activity.time}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {activity.message}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No recent screening activity.
+                </p>
+              )}
             </div>
           </div>
+
+          {!hasAnyData && (
+            <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-300">
+              No analytics data available yet for this ophthalmologist.
+            </div>
+          )}
         </main>
       </div>
     </div>
