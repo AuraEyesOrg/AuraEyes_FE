@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -45,6 +46,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 interface ApiResponse<T> {

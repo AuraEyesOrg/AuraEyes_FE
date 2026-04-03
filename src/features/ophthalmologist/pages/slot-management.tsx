@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
   useAppointmentSlots,
@@ -374,45 +375,33 @@ export default function SlotManagementPage() {
     );
   }, [selectedTemplate, generateFromDate, generateToDate, generateMutation, t]);
 
-  const handleDeleteTemplate = useCallback(
-    async (templateId: string) => {
-      const confirmed = await ophthalToast.confirm(
-        t(
-          'Ophthalmologist.slotManagement.confirmDeleteTemplate',
-          'Are you sure you want to delete this template?'
-        ),
-        {
-          confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
-          cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
-        }
-      );
+  const handleDeleteTemplate = useCallback(() => {
+    if (!templateToDeleteId) {
+      return;
+    }
 
-      if (!confirmed) {
-        return;
-      }
-
-      deleteTemplateMutation.mutate(templateId, {
-        onSuccess: () =>
-          ophthalToast.success(
+    deleteTemplateMutation.mutate(templateToDeleteId, {
+      onSuccess: () => {
+        setTemplateToDeleteId(null);
+        ophthalToast.success(
+          t(
+            'Ophthalmologist.slotManagement.messages.templateDeleted',
+            'Template deleted.'
+          )
+        );
+      },
+      onError: (err) =>
+        ophthalToast.error(
+          extractApiErrorMessage(
+            err,
             t(
-              'Ophthalmologist.slotManagement.messages.templateDeleted',
-              'Template deleted.'
+              'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
+              'Failed to delete template.'
             )
-          ),
-        onError: (err) =>
-          ophthalToast.error(
-            extractApiErrorMessage(
-              err,
-              t(
-                'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
-                'Failed to delete template.'
-              )
-            )
-          ),
-      });
-    },
-    [deleteTemplateMutation, t]
-  );
+          )
+        ),
+    });
+  }, [deleteTemplateMutation, t, templateToDeleteId]);
 
   const openGenerateModal = useCallback((template: ScheduleTemplateDto) => {
     setSelectedTemplate(template);

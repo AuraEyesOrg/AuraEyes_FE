@@ -39,6 +39,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { CaseSnapshotAiThumbnail, ScreeningReviewLink } from '../components';
 import AvatarBadge from '../components/AvatarBadge';
 import {
@@ -78,6 +79,7 @@ import { formatCurrency } from '@/lib/helper';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import { postsApi } from '@/features/professional-network/api/network.api';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -843,13 +845,13 @@ export default function ConsultationsChatView({
       return postsApi.createPost(formData);
     },
     onSuccess: () => {
-      toast.success('Case shared to professional network');
+      ophthalToast.success('Case shared to professional network');
       queryClient.invalidateQueries({ queryKey: ['network'] });
       setShareCaseContent('');
       setIsShareCaseModalOpen(false);
     },
     onError: (error) => {
-      toast.error(
+      ophthalToast.error(
         extractApiErrorMessage(error, 'Failed to share consultation case')
       );
     },
@@ -1196,19 +1198,16 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
-  const handleCancelSession = async (sessionId: string) => {
-    if (!currentDoctorId) return;
-    const confirmed = await ophthalToast.confirm(
-      t(
-        'Ophthalmologist.consultations.chat.confirmCancelSession',
-        'Cancel this session? The slot will be burned and the patient will be refunded.'
-      ),
-      {
-        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
-        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
-      }
-    );
-    if (!confirmed) {
+  const handleCancelSession = (sessionId: string) => {
+    setSessionActionTarget({ type: 'cancel', sessionId });
+  };
+
+  const handleEndSession = (sessionId: string) => {
+    setSessionActionTarget({ type: 'complete', sessionId });
+  };
+
+  const confirmSessionAction = useCallback(() => {
+    if (!currentDoctorId || !sessionActionTarget) {
       return;
     }
 
@@ -1226,7 +1225,6 @@ export default function ConsultationsChatView({
           onSettled: () => setSessionActionTarget(null),
         }
       );
-
       return;
     }
 
@@ -1239,22 +1237,81 @@ export default function ConsultationsChatView({
         onSettled: () => setSessionActionTarget(null),
       }
     );
+  }, [
+    cancelSessionMutation,
+    currentDoctorId,
+    endSessionMutation,
+    sessionActionTarget,
+    t,
+  ]);
+
+  const appendEmoji = (emoji: string) => {
+    setNewMessage((previous) => {
+      const next = `${previous}${emoji}`;
+      if (next.length > MESSAGE_CHARACTER_LIMIT) {
+        return next.slice(0, MESSAGE_CHARACTER_LIMIT);
+      }
+      return next;
+    });
   };
 
-  const handleEndSession = async (sessionId: string) => {
-    if (!currentDoctorId) return;
-    const confirmed = await ophthalToast.confirm(
-      t(
-        'Ophthalmologist.consultations.chat.confirmCompleteSession',
-        'Complete this consultation? The patient will be charged and the chat will be locked.'
-      ),
-      {
-        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
-        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
-      }
-    );
-    if (!confirmed) {
+  const handleImageButtonClick = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleMessageChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    const nextValue = event.target.value;
+    const boundedValue =
+      nextValue.length <= MESSAGE_CHARACTER_LIMIT
+        ? nextValue
+        : nextValue.slice(0, MESSAGE_CHARACTER_LIMIT);
+
+    setNewMessage(boundedValue);
+
+    if (boundedValue.trim() && canSendMessage && selectedSessionId) {
+      scheduleOwnTyping();
       return;
+    }
+
+    stopOwnTyping();
+  };
+
+  const handleImageSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      ophthalToast.error('Please select a valid image file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      ophthalToast.error('Image size must be 10MB or less.');
+      return;
+    }
+
+    try {
+      const result = await uploadChatImagesMutation.mutateAsync([file]);
+      const uploadedUrl = result.uploadedUrls[0];
+
+      if (!uploadedUrl) {
+        ophthalToast.error('Upload failed. Please try again.');
+        return;
+      }
+
+      setPendingImageUrl(uploadedUrl);
+      setPendingImageName(file.name);
+      ophthalToast.success('Image attached.');
+    } catch (error) {
+      const raw = extractApiErrorMessage(
+        error,
+        'Unable to upload image. Please try again.'
+      );
+      ophthalToast.error(raw);
     }
   };
 
