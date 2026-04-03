@@ -402,7 +402,7 @@ export default function PatientsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={urgentPatients} />
+      <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader

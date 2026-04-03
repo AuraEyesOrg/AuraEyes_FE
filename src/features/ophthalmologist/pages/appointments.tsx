@@ -163,6 +163,8 @@ export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const toConsultationByPatientPath = (patientId: string) =>
+    `${toLocalizedPath('/ophthalmologist/consultations')}?patientId=${encodeURIComponent(patientId)}`;
 
   const { user } = useAuthStore();
   const ophthalmologistId = user?.roleId;
@@ -289,14 +291,6 @@ export default function AppointmentsPage() {
     },
   ];
 
-  const pendingCount =
-    todaySessions.length +
-    upcomingSessions.filter(
-      (s) =>
-        s.status === SessionStatus.Pending ||
-        s.status === SessionStatus.Confirmed
-    ).length;
-
   const handleCancelSession = (sessionId: string) => {
     if (!currentUserId) {
       ophthalToast.error(
@@ -365,7 +359,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={pendingCount} />
+      <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
@@ -675,6 +669,19 @@ export default function AppointmentsPage() {
 
                         {/* Right actions */}
                         <div className="flex items-center gap-2 shrink-0">
+                          {activeTab === 'today' && session.patientId && (
+                            <Link
+                              to={toConsultationByPatientPath(session.patientId)}
+                              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-xl text-sm font-medium transition-all hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              {t(
+                                'Ophthalmologist.appointments.openPatientConversation',
+                                'Patient Chat'
+                              )}
+                            </Link>
+                          )}
+
                           {isActive && (
                             <Link
                               to={toLocalizedPath(
