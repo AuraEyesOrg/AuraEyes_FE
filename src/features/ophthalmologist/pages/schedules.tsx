@@ -35,6 +35,7 @@ import {
 import type { ScheduleListDto, CreateScheduleRequest } from '@/types/schedule';
 import { useTranslation } from 'react-i18next';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 // Fallback value for local development if auth user does not include profile id.
 const CURRENT_DOCTOR_ID = 'a2f30076-6cb8-432a-b920-687c90dd0af0';
@@ -197,7 +198,15 @@ export default function SchedulesPage() {
   ).length;
 
   const handleCreateSchedule = useCallback(() => {
-    if (!formDate || !formStartTime || !formEndTime) return;
+    if (!formDate || !formStartTime || !formEndTime) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.schedules.validation.missingDateTime',
+          'Please select date and time range.'
+        )
+      );
+      return;
+    }
 
     // Build full datetime strings for validation
     const startDateTimeStr = `${formDate}T${formStartTime}:00`;
@@ -212,6 +221,12 @@ export default function SchedulesPage() {
       Number.isNaN(endDateTime.getTime()) ||
       endDateTime <= startDateTime
     ) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.schedules.validation.invalidRange',
+          'End time must be after start time.'
+        )
+      );
       return;
     }
 
@@ -219,6 +234,12 @@ export default function SchedulesPage() {
     if (formCost !== '') {
       const numericCost = Number(formCost);
       if (!Number.isFinite(numericCost) || numericCost < 0) {
+        ophthalToast.error(
+          t(
+            'Ophthalmologist.schedules.validation.invalidCost',
+            'Cost must be a non-negative number.'
+          )
+        );
         return;
       }
       parsedCost = numericCost;
@@ -236,12 +257,29 @@ export default function SchedulesPage() {
       { ...request, ophthalmologistId: doctorId },
       {
         onSuccess: () => {
+          ophthalToast.success(
+            t(
+              'Ophthalmologist.schedules.toast.createSuccess',
+              'Time slot created successfully.'
+            )
+          );
           setShowCreateModal(false);
           setFormDate('');
           setFormStartTime('09:00');
           setFormEndTime('09:30');
           setFormSlotType(SlotType.Consultation);
           setFormCost('');
+        },
+        onError: (error) => {
+          ophthalToast.error(
+            extractApiErrorMessage(
+              error,
+              t(
+                'Ophthalmologist.schedules.errorCreateSlot',
+                'Failed to create slot. Please try again.'
+              )
+            )
+          );
         },
       }
     );
@@ -253,25 +291,39 @@ export default function SchedulesPage() {
     formCost,
     createMutation,
     doctorId,
+    t,
   ]);
 
   const handleCancelSlot = (scheduleId: string) => {
-    updateStatusMutation.mutate({
-      ophthalmologistId: doctorId,
-      scheduleId,
-      newStatus: ScheduleStatus.Cancelled,
-    });
+    updateStatusMutation.mutate(
+      {
+        ophthalmologistId: doctorId,
+        scheduleId,
+        newStatus: ScheduleStatus.Cancelled,
+      },
+      {
+        onSuccess: () => {
+          ophthalToast.success(
+            t(
+              'Ophthalmologist.schedules.toast.cancelSuccess',
+              'Slot cancelled successfully.'
+            )
+          );
+        },
+        onError: (error) => {
+          ophthalToast.error(
+            extractApiErrorMessage(
+              error,
+              t(
+                'Ophthalmologist.schedules.toast.cancelError',
+                'Failed to cancel slot. Please try again.'
+              )
+            )
+          );
+        },
+      }
+    );
   };
-
-  const createErrorMessage = createMutation.isError
-    ? extractApiErrorMessage(
-        createMutation.error,
-        t(
-          'Ophthalmologist.schedules.errorCreateSlot',
-          'Failed to create slot. Please try again.'
-        )
-      )
-    : null;
 
   if (isLoading) {
     return (
@@ -644,13 +696,6 @@ export default function SchedulesPage() {
                 />
               </div>
             </div>
-
-            {createErrorMessage && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-red-500">
-                <AlertCircle className="w-4 h-4" />
-                <span>{createErrorMessage}</span>
-              </div>
-            )}
 
             <div className="flex items-center justify-end gap-3 mt-6">
               <button

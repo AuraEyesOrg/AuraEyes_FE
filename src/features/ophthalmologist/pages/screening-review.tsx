@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
-import { toast } from 'react-toastify';
 import {
   ArrowLeft,
   ZoomIn,
@@ -33,10 +32,12 @@ import {
   useConsultationSessions,
   useSubmitVerificationReport,
 } from '@/features/consultation/hooks/use-consultation';
+import { ConsultationSessionType } from '@/types/consultation';
 import { hydrateConsultationPreviewAnomalies } from '@/features/patient/pages/retinal-analysis';
 import type { Anomaly } from '@/features/patient/types/type';
 import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -65,10 +66,6 @@ function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     s
   );
-}
-
-function formatPatientRef(patientId: string): string {
-  return `#${patientId.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
 }
 
 function mapApiImage(img: OphthalmologistRetinalImageDto): RetinalImage {
@@ -148,6 +145,7 @@ export default function ScreeningReviewPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const currentDoctorId = user?.roleId ?? '';
+  const doctorFilterId = isUuid(currentDoctorId) ? currentDoctorId : undefined;
 
   const [detail, setDetail] =
     useState<OphthalmologistScreeningDetailDto | null>(null);
@@ -173,9 +171,6 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
-  const [diagnosisSubmitError, setDiagnosisSubmitError] = useState<
-    string | null
-  >(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -197,16 +192,32 @@ export default function ScreeningReviewPage() {
   const submitVerificationReportMutation = useSubmitVerificationReport();
   const consultationSessionsQuery = useConsultationSessions(
     {
-      ophthalmologistId: currentDoctorId || undefined,
+      ophthalmologistId: doctorFilterId,
       aiScreeningId: screeningId,
       pageNumber: 1,
-      pageSize: 1,
+      pageSize: 100,
     },
-    { enabled: Boolean(currentDoctorId && screeningId && isUuid(screeningId)) }
+    { enabled: Boolean(screeningId && isUuid(screeningId)) }
   );
 
-  const verificationSessionId =
-    consultationSessionsQuery.data?.items?.[0]?.id ?? null;
+  const linkedSessions = consultationSessionsQuery.data?.items ?? [];
+  const linkedSession = linkedSessions[0] ?? null;
+  const verificationSession =
+    linkedSessions.find(
+      (session) => session.type === ConsultationSessionType.Verification
+    ) ?? null;
+  const videoCallSession =
+    linkedSessions.find(
+      (session) => session.type === ConsultationSessionType.VideoCall
+    ) ?? null;
+  const reportableSession = verificationSession ?? videoCallSession;
+
+  const reportableSessionId = reportableSession?.id ?? null;
+  const resolvedDoctorId =
+    doctorFilterId ||
+    reportableSession?.ophthalmologistId ||
+    linkedSession?.ophthalmologistId ||
+    '';
 
   const selectedImage = useMemo(() => {
     return (
@@ -396,20 +407,27 @@ export default function ScreeningReviewPage() {
   }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
 
   const handleSubmitDiagnosis = async () => {
-    setDiagnosisSubmitError(null);
-
-    if (!currentDoctorId) {
-      const message = 'Missing doctor identity.';
-      setDiagnosisSubmitError(message);
-      toast.error(message);
+    if (
+      consultationSessionsQuery.isLoading ||
+      consultationSessionsQuery.isFetching
+    ) {
+      const message =
+        'Still loading linked consultation session. Please retry in a moment.';
+      ophthalToast.info(message);
       return;
     }
 
-    if (!verificationSessionId) {
-      const message =
-        'No linked verification session was found for this screening.';
-      setDiagnosisSubmitError(message);
-      toast.error(message);
+    if (!resolvedDoctorId) {
+      const message = 'Missing doctor identity.';
+      ophthalToast.error(message);
+      return;
+    }
+
+    if (!reportableSessionId) {
+      const message = linkedSession
+        ? `Linked consultation exists but it is "${linkedSession.typeName}". Only Verification or VideoCall sessions can submit this report.`
+        : 'No linked Verification or VideoCall session was found for this screening.';
+      ophthalToast.error(message);
       return;
     }
 
@@ -419,8 +437,7 @@ export default function ScreeningReviewPage() {
     if (!normalizedDiagnosisCode || !normalizedFindings) {
       const message =
         'Diagnosis code and clinical findings are required before saving.';
-      setDiagnosisSubmitError(message);
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
@@ -434,15 +451,14 @@ export default function ScreeningReviewPage() {
         parsedConfidence > 100)
     ) {
       const message = 'Confidence level must be between 0 and 100.';
-      setDiagnosisSubmitError(message);
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
     try {
       await submitVerificationReportMutation.mutateAsync({
-        sessionId: verificationSessionId,
-        doctorId: currentDoctorId,
+        sessionId: reportableSessionId,
+        doctorId: resolvedDoctorId,
         diagnosisCode: normalizedDiagnosisCode,
         diagnosesCode: normalizedDiagnosisCode,
         codingSystem: codingSystem.trim() || undefined,
@@ -464,7 +480,7 @@ export default function ScreeningReviewPage() {
             : undefined,
       });
 
-      toast.success('Diagnosis report saved successfully.');
+      ophthalToast.success('Diagnosis report saved successfully.');
       setShowDiagnosisModal(false);
     } catch (error) {
       const message =
@@ -472,8 +488,7 @@ export default function ScreeningReviewPage() {
           ? error.response.data.message
           : 'Failed to submit diagnosis report. Please try again.';
 
-      setDiagnosisSubmitError(message);
-      toast.error(message);
+      ophthalToast.error(message);
     }
   };
 
@@ -491,7 +506,7 @@ export default function ScreeningReviewPage() {
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
-      <DoctorSidebar pendingCount={12} />
+      <DoctorSidebar pendingCount={0} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">
@@ -535,13 +550,7 @@ export default function ScreeningReviewPage() {
                       Screening Review
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Exam #
-                      {screeningId
-                        ? screeningId
-                            .replace(/-/g, '')
-                            .slice(0, 8)
-                            .toUpperCase()
-                        : '—'}
+                      Case details and AI findings
                     </p>
                   </div>
                 </div>
@@ -580,9 +589,6 @@ export default function ScreeningReviewPage() {
                         <h2 className="text-gray-900 dark:text-white font-semibold">
                           {detail.patientFullName}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Patient {formatPatientRef(detail.patientId)}
-                        </p>
                       </div>
                     </div>
 
@@ -760,14 +766,6 @@ export default function ScreeningReviewPage() {
                               </span>
                               <span className="text-gray-900 dark:text-white font-medium">
                                 {detail.patientFullName}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-500 dark:text-gray-400">
-                                Patient ID
-                              </span>
-                              <span className="text-gray-900 dark:text-white font-medium">
-                                {formatPatientRef(detail.patientId)}
                               </span>
                             </div>
                           </div>
@@ -1242,12 +1240,6 @@ export default function ScreeningReviewPage() {
                 </div>
               </div>
 
-              {diagnosisSubmitError ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                  {diagnosisSubmitError}
-                </div>
-              ) : null}
-
               {/* Diagnosis core */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -1435,13 +1427,20 @@ export default function ScreeningReviewPage() {
                 </button>
                 <button
                   onClick={handleSubmitDiagnosis}
-                  disabled={submitVerificationReportMutation.isPending}
+                  disabled={
+                    submitVerificationReportMutation.isPending ||
+                    consultationSessionsQuery.isLoading ||
+                    consultationSessionsQuery.isFetching
+                  }
                   className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {submitVerificationReportMutation.isPending
                     ? 'Saving...'
-                    : 'Confirm & Save'}
+                    : consultationSessionsQuery.isLoading ||
+                        consultationSessionsQuery.isFetching
+                      ? 'Linking session...'
+                      : 'Confirm & Save'}
                 </button>
               </div>
             </div>

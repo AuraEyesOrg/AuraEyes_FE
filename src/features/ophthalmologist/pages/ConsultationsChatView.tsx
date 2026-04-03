@@ -12,7 +12,6 @@ import {
 } from 'react';
 import {
   Activity,
-  AlertCircle,
   Archive,
   ArrowDownRight,
   ArrowLeft,
@@ -76,11 +75,9 @@ import {
   formatRelativeTime,
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
-import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import { postsApi } from '@/features/professional-network/api/network.api';
-import ConfirmModal from '@/components/ui/confirm-modal';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -1199,17 +1196,19 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
-  const handleCancelSession = (sessionId: string) => {
-    setSessionActionTarget({ type: 'cancel', sessionId });
-  };
-
-  const handleEndSession = (sessionId: string) => {
-    setSessionActionTarget({ type: 'complete', sessionId });
-  };
-
-  const confirmSessionAction = () => {
-    if (!sessionActionTarget || !currentDoctorId) {
-      setSessionActionTarget(null);
+  const handleCancelSession = async (sessionId: string) => {
+    if (!currentDoctorId) return;
+    const confirmed = await ophthalToast.confirm(
+      t(
+        'Ophthalmologist.consultations.chat.confirmCancelSession',
+        'Cancel this session? The slot will be burned and the patient will be refunded.'
+      ),
+      {
+        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
+        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
+      }
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -1242,70 +1241,20 @@ export default function ConsultationsChatView({
     );
   };
 
-  const appendEmoji = (emoji: string) => {
-    setNewMessage((previous) => `${previous}${emoji}`);
-  };
-
-  const handleImageButtonClick = () => {
-    imageInputRef.current?.click();
-  };
-
-  const handleMessageChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    const nextValue = event.target.value;
-    const boundedValue =
-      nextValue.length <= MESSAGE_CHARACTER_LIMIT
-        ? nextValue
-        : nextValue.slice(0, MESSAGE_CHARACTER_LIMIT);
-
-    setNewMessage(boundedValue);
-
-    if (boundedValue.trim() && canSendMessage && selectedSessionId) {
-      scheduleOwnTyping();
-      return;
-    }
-
-    stopOwnTyping();
-  };
-
-  const handleImageSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file.');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image size must be 10MB or less.');
-      return;
-    }
-
-    try {
-      const result = await uploadChatImagesMutation.mutateAsync([file]);
-      const uploadedUrl = result.uploadedUrls[0];
-
-      if (!uploadedUrl) {
-        toast.error('Upload failed. Please try again.');
-        return;
+  const handleEndSession = async (sessionId: string) => {
+    if (!currentDoctorId) return;
+    const confirmed = await ophthalToast.confirm(
+      t(
+        'Ophthalmologist.consultations.chat.confirmCompleteSession',
+        'Complete this consultation? The patient will be charged and the chat will be locked.'
+      ),
+      {
+        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
+        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
       }
-
-      setPendingImageUrl(uploadedUrl);
-      setPendingImageName(file.name);
-      toast.success('Image attached.');
-    } catch (error) {
-      const raw = extractApiErrorMessage(
-        error,
-        t(
-          'Ophthalmologist.consultations.chat.uploadError',
-          'Unable to upload image. Please try again.'
-        )
-      );
-      toast.error(raw);
+    );
+    if (!confirmed) {
+      return;
     }
   };
 
@@ -1351,8 +1300,10 @@ export default function ConsultationsChatView({
             )
           );
           if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
-            toast.warning(raw);
+            ophthalToast.warning(raw);
             sendMessageMutation.reset();
+          } else {
+            ophthalToast.error(raw);
           }
           // Restore the draft so the user doesn't lose content on failure.
           setNewMessage(draftText);
@@ -2322,18 +2273,6 @@ export default function ConsultationsChatView({
                         'Ophthalmologist.consultations.chat.preVisitReadOnly',
                         'Pre-visit mode — patient notes only. Chat opens at appointment time.'
                       )}
-                </span>
-              </div>
-            )}
-
-            {sendMessageMutation.isError && (
-              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
-                <AlertCircle className="h-4 w-4" />
-                <span>
-                  {t(
-                    'Ophthalmologist.consultations.chat.sendError',
-                    'Failed to send message. Please try again.'
-                  )}
                 </span>
               </div>
             )}

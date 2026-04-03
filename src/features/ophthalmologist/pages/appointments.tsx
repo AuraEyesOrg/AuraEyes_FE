@@ -17,7 +17,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -39,6 +38,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type TabKey = 'today' | 'upcoming' | 'past' | 'cancelled';
 
@@ -163,6 +163,8 @@ export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const toConsultationByPatientPath = (patientId: string) =>
+    `${toLocalizedPath('/ophthalmologist/consultations')}?patientId=${encodeURIComponent(patientId)}`;
 
   const { user } = useAuthStore();
   const ophthalmologistId = user?.roleId;
@@ -289,17 +291,9 @@ export default function AppointmentsPage() {
     },
   ];
 
-  const pendingCount =
-    todaySessions.length +
-    upcomingSessions.filter(
-      (s) =>
-        s.status === SessionStatus.Pending ||
-        s.status === SessionStatus.Confirmed
-    ).length;
-
   const handleCancelSession = (sessionId: string) => {
     if (!currentUserId) {
-      toast.error(
+      ophthalToast.error(
         t(
           'Ophthalmologist.appointments.toast.missingDoctorIdentity',
           'Cannot determine current doctor identity.'
@@ -319,14 +313,14 @@ export default function AppointmentsPage() {
       },
       {
         onSuccess: () =>
-          toast.success(
+          ophthalToast.success(
             t(
               'Ophthalmologist.appointments.toast.cancelSuccess',
               'Appointment cancelled successfully.'
             )
           ),
         onError: () =>
-          toast.error(
+          ophthalToast.error(
             t(
               'Ophthalmologist.appointments.toast.cancelError',
               'Unable to cancel appointment. Please try again.'
@@ -365,7 +359,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <DoctorSidebar pendingCount={pendingCount} />
+      <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
@@ -675,6 +669,19 @@ export default function AppointmentsPage() {
 
                         {/* Right actions */}
                         <div className="flex items-center gap-2 shrink-0">
+                          {activeTab === 'today' && session.patientId && (
+                            <Link
+                              to={toConsultationByPatientPath(session.patientId)}
+                              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-xl text-sm font-medium transition-all hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              {t(
+                                'Ophthalmologist.appointments.openPatientConversation',
+                                'Patient Chat'
+                              )}
+                            </Link>
+                          )}
+
                           {isActive && (
                             <Link
                               to={toLocalizedPath(
