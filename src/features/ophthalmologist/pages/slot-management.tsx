@@ -42,6 +42,7 @@ import {
   formatWeekDayLabel,
 } from '@/lib/date-utils';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { toast } from 'react-toastify';
 
 const formatTemplateCost = (
   cost: number | null | undefined,
@@ -100,8 +101,6 @@ export default function SlotManagementPage() {
   // Generate form state
   const [generateFromDate, setGenerateFromDate] = useState('');
   const [generateToDate, setGenerateToDate] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   // Calculate week range
   const weekRange = useMemo(() => {
@@ -138,11 +137,6 @@ export default function SlotManagementPage() {
   const deleteTemplateMutation = useDeleteScheduleTemplate();
 
   const slots = slotsData?.items ?? [];
-
-  const resetMessages = useCallback(() => {
-    setMessage('');
-    setError('');
-  }, []);
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
@@ -195,7 +189,7 @@ export default function SlotManagementPage() {
   const handleBlockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
       if (!slot.ophthalId || slot.ophthalId !== doctorId) {
-        setError(
+        toast.error(
           t(
             'Ophthalmologist.slotManagement.errors.onlyOwnBlock',
             'You can only block your own slots.'
@@ -204,7 +198,6 @@ export default function SlotManagementPage() {
         return;
       }
 
-      resetMessages();
       blockMutation.mutate(
         {
           slotId: slot.id,
@@ -218,14 +211,14 @@ export default function SlotManagementPage() {
         },
         {
           onSuccess: () =>
-            setMessage(
+            toast.success(
               t(
                 'Ophthalmologist.slotManagement.messages.slotBlocked',
                 'Slot blocked.'
               )
             ),
           onError: (err) =>
-            setError(
+            toast.error(
               extractApiErrorMessage(
                 err,
                 t(
@@ -237,13 +230,13 @@ export default function SlotManagementPage() {
         }
       );
     },
-    [doctorId, blockMutation, resetMessages, t]
+    [doctorId, blockMutation, t]
   );
 
   const handleUnblockSlot = useCallback(
     (slot: AppointmentSlotListDto) => {
       if (!slot.ophthalId || slot.ophthalId !== doctorId) {
-        setError(
+        toast.error(
           t(
             'Ophthalmologist.slotManagement.errors.onlyOwnUnblock',
             'You can only unblock your own slots.'
@@ -252,7 +245,6 @@ export default function SlotManagementPage() {
         return;
       }
 
-      resetMessages();
       unblockMutation.mutate(
         {
           slotId: slot.id,
@@ -260,14 +252,14 @@ export default function SlotManagementPage() {
         },
         {
           onSuccess: () =>
-            setMessage(
+            toast.success(
               t(
                 'Ophthalmologist.slotManagement.messages.slotUnblocked',
                 'Slot unblocked.'
               )
             ),
           onError: (err) =>
-            setError(
+            toast.error(
               extractApiErrorMessage(
                 err,
                 t(
@@ -279,11 +271,10 @@ export default function SlotManagementPage() {
         }
       );
     },
-    [doctorId, unblockMutation, resetMessages, t]
+    [doctorId, unblockMutation, t]
   );
 
   const handleCreateTemplate = useCallback(() => {
-    resetMessages();
     createTemplateMutation.mutate(
       {
         ophthalId: doctorId,
@@ -297,7 +288,7 @@ export default function SlotManagementPage() {
       },
       {
         onSuccess: () => {
-          setMessage(
+          toast.success(
             t(
               'Ophthalmologist.slotManagement.messages.templateCreated',
               'Template created successfully.'
@@ -313,7 +304,7 @@ export default function SlotManagementPage() {
           setTemplateCost('200000');
         },
         onError: (err) => {
-          setError(
+          toast.error(
             extractApiErrorMessage(
               err,
               t(
@@ -334,13 +325,12 @@ export default function SlotManagementPage() {
     templateSlotType,
     templateCost,
     createTemplateMutation,
-    resetMessages,
     t,
   ]);
 
   const handleGenerateSlots = useCallback(() => {
     if (!selectedTemplate || !generateFromDate || !generateToDate) {
-      setError(
+      toast.error(
         t(
           'Ophthalmologist.slotManagement.errors.missingGenerateInputs',
           'Please choose a template and date range before generating.'
@@ -348,8 +338,6 @@ export default function SlotManagementPage() {
       );
       return;
     }
-
-    resetMessages();
 
     generateMutation.mutate(
       {
@@ -364,12 +352,12 @@ export default function SlotManagementPage() {
           setSelectedTemplate(null);
           setGenerateFromDate('');
           setGenerateToDate('');
-          setMessage(
+          toast.success(
             `${t('Ophthalmologist.slotManagement.messages.generatedPrefix', 'Generated')} ${count} ${t('Ophthalmologist.slotManagement.messages.generatedSuffix', 'slots.')}`
           );
         },
         onError: (err) => {
-          setError(
+          toast.error(
             extractApiErrorMessage(
               err,
               t(
@@ -381,48 +369,90 @@ export default function SlotManagementPage() {
         },
       }
     );
-  }, [
-    selectedTemplate,
-    generateFromDate,
-    generateToDate,
-    generateMutation,
-    resetMessages,
-    t,
-  ]);
+  }, [selectedTemplate, generateFromDate, generateToDate, generateMutation, t]);
+
+  const requestToastConfirmation = useCallback(
+    (message: string) =>
+      new Promise<boolean>((resolve) => {
+        let settled = false;
+        const settle = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        toast.info(
+          ({ closeToast }) => (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-900">{message}</p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    settle(false);
+                    closeToast?.();
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
+                >
+                  {t('Ophthalmologist.common.cancel', 'Cancel')}
+                </button>
+                <button
+                  onClick={() => {
+                    settle(true);
+                    closeToast?.();
+                  }}
+                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                  {t('Ophthalmologist.common.confirm', 'Confirm')}
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            autoClose: false,
+            closeOnClick: false,
+            draggable: false,
+            closeButton: false,
+            onClose: () => settle(false),
+          }
+        );
+      }),
+    [t]
+  );
 
   const handleDeleteTemplate = useCallback(
-    (templateId: string) => {
-      if (
-        confirm(
-          t(
-            'Ophthalmologist.slotManagement.confirmDeleteTemplate',
-            'Are you sure you want to delete this template?'
-          )
+    async (templateId: string) => {
+      const confirmed = await requestToastConfirmation(
+        t(
+          'Ophthalmologist.slotManagement.confirmDeleteTemplate',
+          'Are you sure you want to delete this template?'
         )
-      ) {
-        resetMessages();
-        deleteTemplateMutation.mutate(templateId, {
-          onSuccess: () =>
-            setMessage(
-              t(
-                'Ophthalmologist.slotManagement.messages.templateDeleted',
-                'Template deleted.'
-              )
-            ),
-          onError: (err) =>
-            setError(
-              extractApiErrorMessage(
-                err,
-                t(
-                  'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
-                  'Failed to delete template.'
-                )
-              )
-            ),
-        });
+      );
+
+      if (!confirmed) {
+        return;
       }
+
+      deleteTemplateMutation.mutate(templateId, {
+        onSuccess: () =>
+          toast.success(
+            t(
+              'Ophthalmologist.slotManagement.messages.templateDeleted',
+              'Template deleted.'
+            )
+          ),
+        onError: (err) =>
+          toast.error(
+            extractApiErrorMessage(
+              err,
+              t(
+                'Ophthalmologist.slotManagement.errors.failedDeleteTemplate',
+                'Failed to delete template.'
+              )
+            )
+          ),
+      });
     },
-    [deleteTemplateMutation, resetMessages, t]
+    [deleteTemplateMutation, requestToastConfirmation, t]
   );
 
   const openGenerateModal = useCallback((template: ScheduleTemplateDto) => {
@@ -478,21 +508,6 @@ export default function SlotManagementPage() {
         />
 
         <main className="p-6">
-          {(message || error) && (
-            <div className="mb-4 space-y-2">
-              {message && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {message}
-                </div>
-              )}
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>

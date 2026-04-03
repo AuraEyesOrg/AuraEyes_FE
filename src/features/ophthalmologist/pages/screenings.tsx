@@ -12,6 +12,7 @@ import {
   Activity,
   Shield,
   SlidersHorizontal,
+  RefreshCw,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -19,6 +20,7 @@ import {
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
 import Spinner from '@/components/ui/spinner';
+import { toast } from 'react-toastify';
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -189,6 +191,12 @@ export default function ScreeningsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+    }
+  }, [loadError]);
+
   const filteredScreenings = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const filtered = items.filter((row) => {
@@ -271,20 +279,15 @@ export default function ScreeningsPage() {
                 AI screening results for your patients — sorted by urgency
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-200 dark:hover:bg-[#1e3a5f]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </button>
           </div>
-
-          {loadError && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-              {loadError}
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="ml-3 font-medium text-red-900 underline dark:text-red-100"
-              >
-                Retry
-              </button>
-            </div>
-          )}
 
           {/* ── Compact Stats Pills ── */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">

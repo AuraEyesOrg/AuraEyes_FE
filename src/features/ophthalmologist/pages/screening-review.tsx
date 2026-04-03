@@ -173,9 +173,6 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
-  const [diagnosisSubmitError, setDiagnosisSubmitError] = useState<
-    string | null
-  >(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -396,11 +393,8 @@ export default function ScreeningReviewPage() {
   }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
 
   const handleSubmitDiagnosis = async () => {
-    setDiagnosisSubmitError(null);
-
     if (!currentDoctorId) {
       const message = 'Missing doctor identity.';
-      setDiagnosisSubmitError(message);
       toast.error(message);
       return;
     }
@@ -408,7 +402,6 @@ export default function ScreeningReviewPage() {
     if (!verificationSessionId) {
       const message =
         'No linked verification session was found for this screening.';
-      setDiagnosisSubmitError(message);
       toast.error(message);
       return;
     }
@@ -419,7 +412,6 @@ export default function ScreeningReviewPage() {
     if (!normalizedDiagnosisCode || !normalizedFindings) {
       const message =
         'Diagnosis code and clinical findings are required before saving.';
-      setDiagnosisSubmitError(message);
       toast.error(message);
       return;
     }
@@ -434,7 +426,6 @@ export default function ScreeningReviewPage() {
         parsedConfidence > 100)
     ) {
       const message = 'Confidence level must be between 0 and 100.';
-      setDiagnosisSubmitError(message);
       toast.error(message);
       return;
     }
@@ -472,7 +463,6 @@ export default function ScreeningReviewPage() {
           ? error.response.data.message
           : 'Failed to submit diagnosis report. Please try again.';
 
-      setDiagnosisSubmitError(message);
       toast.error(message);
     }
   };
@@ -1241,12 +1231,6 @@ export default function ScreeningReviewPage() {
                   </span>
                 </div>
               </div>
-
-              {diagnosisSubmitError ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                  {diagnosisSubmitError}
-                </div>
-              ) : null}
 
               {/* Diagnosis core */}
               <div className="space-y-3">

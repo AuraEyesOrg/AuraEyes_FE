@@ -11,7 +11,6 @@ import {
 } from 'react';
 import {
   Activity,
-  AlertCircle,
   Archive,
   ArrowLeft,
   BadgeDollarSign,
@@ -483,16 +482,63 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
-  const handleCancelSession = (sessionId: string) => {
+  const requestToastConfirmation = useCallback(
+    (message: string) =>
+      new Promise<boolean>((resolve) => {
+        let settled = false;
+        const settle = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        toast.info(
+          ({ closeToast }) => (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-900">{message}</p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    settle(false);
+                    closeToast?.();
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
+                >
+                  {t('Ophthalmologist.common.cancel', 'Cancel')}
+                </button>
+                <button
+                  onClick={() => {
+                    settle(true);
+                    closeToast?.();
+                  }}
+                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                  {t('Ophthalmologist.common.confirm', 'Confirm')}
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            autoClose: false,
+            closeOnClick: false,
+            draggable: false,
+            closeButton: false,
+            onClose: () => settle(false),
+          }
+        );
+      }),
+    [t]
+  );
+
+  const handleCancelSession = async (sessionId: string) => {
     if (!currentDoctorId) return;
-    if (
-      !confirm(
-        t(
-          'Ophthalmologist.consultations.chat.confirmCancelSession',
-          'Cancel this session? The slot will be burned and the patient will be refunded.'
-        )
+    const confirmed = await requestToastConfirmation(
+      t(
+        'Ophthalmologist.consultations.chat.confirmCancelSession',
+        'Cancel this session? The slot will be burned and the patient will be refunded.'
       )
-    ) {
+    );
+    if (!confirmed) {
       return;
     }
     cancelSessionMutation.mutate({
@@ -505,16 +551,15 @@ export default function ConsultationsChatView({
     });
   };
 
-  const handleEndSession = (sessionId: string) => {
+  const handleEndSession = async (sessionId: string) => {
     if (!currentDoctorId) return;
-    if (
-      !confirm(
-        t(
-          'Ophthalmologist.consultations.chat.confirmCompleteSession',
-          'Complete this consultation? The patient will be charged and the chat will be locked.'
-        )
+    const confirmed = await requestToastConfirmation(
+      t(
+        'Ophthalmologist.consultations.chat.confirmCompleteSession',
+        'Complete this consultation? The patient will be charged and the chat will be locked.'
       )
-    ) {
+    );
+    if (!confirmed) {
       return;
     }
     endSessionMutation.mutate({
@@ -544,6 +589,8 @@ export default function ConsultationsChatView({
           if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
             toast.warning(raw);
             sendMessageMutation.reset();
+          } else {
+            toast.error(raw);
           }
           // Restore the draft so the user doesn't lose content on failure.
           setNewMessage(draftText);
@@ -1272,18 +1319,6 @@ export default function ConsultationsChatView({
                         'Ophthalmologist.consultations.chat.preVisitReadOnly',
                         'Pre-visit mode — patient notes only. Chat opens at appointment time.'
                       )}
-                </span>
-              </div>
-            )}
-
-            {sendMessageMutation.isError && (
-              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
-                <AlertCircle className="h-4 w-4" />
-                <span>
-                  {t(
-                    'Ophthalmologist.consultations.chat.sendError',
-                    'Failed to send message. Please try again.'
-                  )}
                 </span>
               </div>
             )}

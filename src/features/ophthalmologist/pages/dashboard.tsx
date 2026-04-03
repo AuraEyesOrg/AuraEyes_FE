@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarClock, ClipboardList, Siren, Stethoscope } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader, StatsCardGrid } from '../components';
@@ -5,6 +6,7 @@ import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import { getOphthalmologistDashboardMetrics } from '../api/dashboard.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { toast } from 'react-toastify';
 
 function getGreeting(
   hour: number,
@@ -25,6 +27,17 @@ export default function OphthalmologistDashboard() {
     queryFn: getOphthalmologistDashboardMetrics,
   });
 
+  useEffect(() => {
+    if (metricsQuery.isError) {
+      toast.error(
+        t(
+          'Ophthalmologist.dashboard.loadError',
+          'Unable to load the live ophthalmologist dashboard.'
+        )
+      );
+    }
+  }, [metricsQuery.isError, t]);
+
   if (metricsQuery.isLoading || !metricsQuery.data) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -41,11 +54,22 @@ export default function OphthalmologistDashboard() {
   if (metricsQuery.isError) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          {t(
-            'Ophthalmologist.dashboard.loadError',
-            'Unable to load the live ophthalmologist dashboard.'
-          )}
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-5 text-center dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+          <p className="text-slate-700 dark:text-slate-200">
+            {t(
+              'Ophthalmologist.dashboard.loadError',
+              'Unable to load the live ophthalmologist dashboard.'
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              void metricsQuery.refetch();
+            }}
+            className="mt-3 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white hover:bg-cyan-700"
+          >
+            {t('Ophthalmologist.common.retry', 'Retry')}
+          </button>
         </div>
       </div>
     );
