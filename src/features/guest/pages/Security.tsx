@@ -8,7 +8,7 @@ const SecurityPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col pt-16">
+    <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
       <Header />
 
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8">
