@@ -1,6 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Facebook, Linkedin, Mail, MapPin, Phone, Twitter } from 'lucide-react';
+import {
+  Contact,
+  Facebook,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
+} from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import {
   DEFAULT_LOCALE,
@@ -21,6 +29,8 @@ export const Footer = () => {
         reserved: 'Tất cả quyền được bảo lưu',
         privacy: 'Chính sách bảo mật',
         terms: 'Điều khoản sử dụng',
+        personalData: 'Dữ liệu cá nhân',
+        security: 'Tiêu chuẩn bảo mật',
       }
     : {
         platform: 'Platform',
@@ -28,6 +38,8 @@ export const Footer = () => {
         reserved: 'All rights reserved',
         privacy: 'Privacy policy',
         terms: 'Terms of use',
+        personalData: 'Personal data',
+        security: 'Security policy',
       };
 
   return (
@@ -107,6 +119,17 @@ export const Footer = () => {
                   <span>FPT University, HCM, VN</span>
                 </div>
               </li>
+              <li>
+                <div className="flex items-start gap-3">
+                  <Contact className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
+                  <Link
+                    className="transition-colors hover:text-[#2B6CB0]"
+                    to={withLocalePathname(locale, '/contact')}
+                  >
+                    {t('Navigation.contact')}
+                  </Link>
+                </div>
+              </li>
             </ul>
           </div>
 
@@ -130,14 +153,6 @@ export const Footer = () => {
                   to={withLocalePathname(locale, '/ethics')}
                 >
                   {t('Navigation.ethicsPrivacy')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
-                  to={withLocalePathname(locale, '/contact')}
-                >
-                  {t('Navigation.contact')}
                 </Link>
               </li>
               <li>
@@ -191,16 +206,28 @@ export const Footer = () => {
           <p className="text-sm text-[#5E7290]">
             2026 © AURA Health. {footerLabels.reserved}
           </p>
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-[#5E7290]">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#5E7290]">
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
-              to={withLocalePathname(locale, '/ethics')}
+              to={withLocalePathname(locale, '/personal-data')}
+            >
+              {footerLabels.personalData}
+            </Link>
+            <Link
+              className="transition-colors hover:text-[#2B6CB0]"
+              to={withLocalePathname(locale, '/privacy')}
             >
               {footerLabels.privacy}
             </Link>
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
-              to={withLocalePathname(locale, '/compliance')}
+              to={withLocalePathname(locale, '/security')}
+            >
+              {footerLabels.security}
+            </Link>
+            <Link
+              className="transition-colors hover:text-[#2B6CB0]"
+              to={withLocalePathname(locale, '/terms')}
             >
               {footerLabels.terms}
             </Link>

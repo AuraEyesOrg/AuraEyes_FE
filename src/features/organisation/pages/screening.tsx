@@ -301,7 +301,7 @@ export default function OrganisationScreeningPage() {
                     >
                       <AvatarFallback
                         fullName={patient.name}
-                        avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.name)}`}
+                        avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.id.slice(0, 8))}`}
                         size="w-11 h-11"
                         className="shrink-0"
                       />
@@ -412,7 +412,7 @@ export default function OrganisationScreeningPage() {
                       fullName={selectedPatient?.name || ''}
                       avatarUrl={
                         selectedPatient
-                          ? `${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(selectedPatient.name)}`
+                          ? `${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(selectedPatient.id.slice(0, 8))}`
                           : ''
                       }
                       size="w-12 h-12"

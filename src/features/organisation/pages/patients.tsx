@@ -209,7 +209,7 @@ export default function PatientsPage() {
                             <div className="flex items-center gap-3">
                               <AvatarFallback
                                 fullName={patient.name}
-                                avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.name)}`}
+                                avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.id.slice(0, 8))}`}
                                 size="w-10 h-10"
                               />
                               <div>
