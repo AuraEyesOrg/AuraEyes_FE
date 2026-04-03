@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   User,
   Search,
-  Plus,
   X,
   FileImage,
   ArrowRight,
@@ -18,11 +17,13 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
-import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import AvatarFallback from '@/components/ui/avatar-fallback';
 import { getOrganisationRecentPatients } from '../api/patients.api';
 import type { OrganisationRecentPatientDto } from '../api/patients.api';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
+import { toast } from 'react-toastify';
+import { isAxiosError } from 'axios';
 
 /* ═══════════════════════════════════════════════════════════════════════
    STEP DEFINITIONS
@@ -57,7 +58,6 @@ export default function OrganisationScreeningPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
 
   // Fetch patients
   const { data: patients = [], isLoading: loadingPatients } = useQuery({
@@ -69,7 +69,8 @@ export default function OrganisationScreeningPage() {
   const filteredPatients = patients.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.phoneNumber &&
+        p.phoneNumber.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // ── Step Navigation ──
@@ -157,6 +158,23 @@ export default function OrganisationScreeningPage() {
       }
     } catch (err) {
       console.error('Screening creation failed:', err);
+      let errorMessage =
+        'Failed to create screening session. Please try again.';
+      if (isAxiosError(err) && err.response?.data) {
+        const data = err.response.data as any;
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (
+          Array.isArray(data.errors) &&
+          data.errors.length > 0 &&
+          data.errors[0]?.error
+        ) {
+          errorMessage = data.errors.map((e: any) => e.error).join(', ');
+        } else if (data.detail) {
+          errorMessage = data.detail;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
       setIsUploading(false);
@@ -246,18 +264,12 @@ export default function OrganisationScreeningPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-tertiary)" />
                     <input
                       type="text"
-                      placeholder="Search by patient name or ID..."
+                      placeholder="Search by patient name or phone number..."
                       className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-(--text-primary) placeholder:text-(--text-tertiary) focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <button
-                    onClick={() => setIsWalkInModalOpen(true)}
-                    className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 shrink-0"
-                  >
-                    <Plus className="w-5 h-5" /> Walk-in
-                  </button>
                 </div>
 
                 {/* Patient List */}
@@ -287,15 +299,12 @@ export default function OrganisationScreeningPage() {
                           : 'border-(--border-primary) bg-(--bg-secondary) hover:border-primary/40'
                       }`}
                     >
-                      <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-primary font-bold text-sm">
-                          {patient.name
-                            .split(' ')
-                            .map((w) => w[0])
-                            .join('')
-                            .slice(0, 2)}
-                        </span>
-                      </div>
+                      <AvatarFallback
+                        fullName={patient.name}
+                        avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.name)}`}
+                        size="w-11 h-11"
+                        className="shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-(--text-primary) truncate">
                           {patient.name}
@@ -399,9 +408,16 @@ export default function OrganisationScreeningPage() {
 
                   {/* Patient */}
                   <div className="flex items-center gap-4 p-4 rounded-xl bg-(--bg-primary) border border-(--border-primary)">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary" />
-                    </div>
+                    <AvatarFallback
+                      fullName={selectedPatient?.name || ''}
+                      avatarUrl={
+                        selectedPatient
+                          ? `${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(selectedPatient.name)}`
+                          : ''
+                      }
+                      size="w-12 h-12"
+                      className="shrink-0"
+                    />
                     <div>
                       <p className="font-semibold text-(--text-primary)">
                         {selectedPatient?.name}
@@ -488,15 +504,6 @@ export default function OrganisationScreeningPage() {
               )}
             </div>
           </div>
-          <CreateWalkInPatientModal
-            isOpen={isWalkInModalOpen}
-            onClose={() => setIsWalkInModalOpen(false)}
-            onSuccess={(pId) => {
-              setIsWalkInModalOpen(false);
-              // Optimistically set the selected patient id or refetch queries
-              setSearchQuery(pId);
-            }}
-          />
         </main>
       </div>
     </div>

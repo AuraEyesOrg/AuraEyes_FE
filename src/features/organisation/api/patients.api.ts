@@ -8,6 +8,7 @@ export interface OrganisationRecentPatientDto {
   name: string;
   age: number;
   gender: 'M' | 'F';
+  phoneNumber?: string;
   lastScreening: string;
   aiPrediction: string;
   confidence: number; // 0-100

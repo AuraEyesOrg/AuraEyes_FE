@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, UserPlus, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { isAxiosError } from 'axios';
 import {
   CreateWalkInPatientRequest,
   orgWalkInPatientApi,
@@ -31,11 +33,28 @@ export default function CreateWalkInPatientModal({
     onSuccess: (data: string) => {
       // Invalidate the recent patients query so the new one shows up
       queryClient.invalidateQueries({ queryKey: ['org-patients'] });
+      toast.success('Walk-in patient created successfully!');
       onSuccess(data);
     },
     onError: (error) => {
       console.error('Failed to create walk-in patient', error);
-      // handled toast externally or show inline
+      let errorMessage =
+        'Failed to create walk-in patient. Please check the details and try again.';
+      if (isAxiosError(error) && error.response?.data) {
+        const data = error.response.data as any;
+        if (data.message) {
+          errorMessage = data.message;
+        } else if (
+          Array.isArray(data.errors) &&
+          data.errors.length > 0 &&
+          data.errors[0]?.error
+        ) {
+          errorMessage = data.errors.map((e: any) => e.error).join(', ');
+        } else if (data.detail) {
+          errorMessage = data.detail;
+        }
+      }
+      toast.error(errorMessage);
     },
   });
 

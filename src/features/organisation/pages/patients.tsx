@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, XCircle } from 'lucide-react';
+import { Search, XCircle, Plus } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import AvatarFallback from '@/components/ui/avatar-fallback';
+import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import {
   getOrganisationRecentPatients,
   type OrganisationRecentPatientDto,
@@ -34,6 +36,7 @@ function getStatusBadge(status: string) {
 export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
 
   const patientsQuery = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -49,7 +52,9 @@ export default function PatientsPage() {
 
     return patients.filter((p) => {
       const matchesSearch =
-        !q || normalize(p.name).includes(q) || normalize(p.id).includes(q);
+        !q ||
+        normalize(p.name).includes(q) ||
+        (p.phoneNumber && normalize(p.phoneNumber).includes(q));
       const matchesStatus = status === 'all' || normalize(p.status) === status;
       return matchesSearch && matchesStatus;
     });
@@ -116,7 +121,7 @@ export default function PatientsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search by name or ID..."
+                  placeholder="Search by name or phone number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-[#0a1f44] border border-gray-300 dark:border-[#2d4a6f] rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-primary"
@@ -146,6 +151,14 @@ export default function PatientsPage() {
               >
                 <XCircle size={16} />
                 Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsWalkInModalOpen(true)}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition shadow-sm shrink-0 ml-auto"
+              >
+                <Plus className="w-4 h-4" /> Walk-in
               </button>
             </div>
           </div>
@@ -194,9 +207,11 @@ export default function PatientsPage() {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
-                                {patient.name.charAt(0)}
-                              </div>
+                              <AvatarFallback
+                                fullName={patient.name}
+                                avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.name)}`}
+                                size="w-10 h-10"
+                              />
                               <div>
                                 <div className="text-sm font-semibold text-gray-900 dark:text-white">
                                   {patient.name}
@@ -255,6 +270,15 @@ export default function PatientsPage() {
               </table>
             </div>
           </div>
+
+          <CreateWalkInPatientModal
+            isOpen={isWalkInModalOpen}
+            onClose={() => setIsWalkInModalOpen(false)}
+            onSuccess={(phoneOrId) => {
+              setIsWalkInModalOpen(false);
+              patientsQuery.refetch();
+            }}
+          />
         </main>
       </div>
     </div>
