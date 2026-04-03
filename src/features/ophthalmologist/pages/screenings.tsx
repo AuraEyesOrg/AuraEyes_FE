@@ -20,7 +20,7 @@ import {
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
 import Spinner from '@/components/ui/spinner';
-import { toast } from 'react-toastify';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -193,7 +193,7 @@ export default function ScreeningsPage() {
 
   useEffect(() => {
     if (loadError) {
-      toast.error(loadError);
+      ophthalToast.error(loadError);
     }
   }, [loadError]);
 

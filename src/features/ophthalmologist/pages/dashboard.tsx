@@ -6,7 +6,7 @@ import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import { getOphthalmologistDashboardMetrics } from '../api/dashboard.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import { toast } from 'react-toastify';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 function getGreeting(
   hour: number,
@@ -29,7 +29,7 @@ export default function OphthalmologistDashboard() {
 
   useEffect(() => {
     if (metricsQuery.isError) {
-      toast.error(
+      ophthalToast.error(
         t(
           'Ophthalmologist.dashboard.loadError',
           'Unable to load the live ophthalmologist dashboard.'

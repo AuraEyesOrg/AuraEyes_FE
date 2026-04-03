@@ -17,7 +17,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -39,6 +38,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type TabKey = 'today' | 'upcoming' | 'past' | 'cancelled';
 
@@ -299,7 +299,7 @@ export default function AppointmentsPage() {
 
   const handleCancelSession = (sessionId: string) => {
     if (!currentUserId) {
-      toast.error(
+      ophthalToast.error(
         t(
           'Ophthalmologist.appointments.toast.missingDoctorIdentity',
           'Cannot determine current doctor identity.'
@@ -319,14 +319,14 @@ export default function AppointmentsPage() {
       },
       {
         onSuccess: () =>
-          toast.success(
+          ophthalToast.success(
             t(
               'Ophthalmologist.appointments.toast.cancelSuccess',
               'Appointment cancelled successfully.'
             )
           ),
         onError: () =>
-          toast.error(
+          ophthalToast.error(
             t(
               'Ophthalmologist.appointments.toast.cancelError',
               'Unable to cancel appointment. Please try again.'

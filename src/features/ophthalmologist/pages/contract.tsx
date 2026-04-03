@@ -27,8 +27,8 @@ import DoctorHeader from '../components/DoctorHeader';
 import { contractApi, type ContractDetailDto } from '../api/contract.api';
 import Spinner from '@/components/ui/spinner';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -152,7 +152,7 @@ function UploadSection({
       setSelectedFile(null);
       setPreviewUrl(null);
       setShowReupload(false);
-      toast.success(
+      ophthalToast.success(
         t(
           'Ophthalmologist.contract.upload.uploadSuccess',
           'Signed contract uploaded successfully.'
@@ -161,7 +161,7 @@ function UploadSection({
       onUploadSuccess();
     },
     onError: (error) => {
-      toast.error(
+      ophthalToast.error(
         extractApiErrorMessage(
           error,
           t(
@@ -181,7 +181,7 @@ function UploadSection({
       'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
-      toast.error(
+      ophthalToast.error(
         t(
           'Ophthalmologist.contract.upload.invalidType',
           'Only JPEG, PNG, WebP, or PDF files are allowed.'
@@ -190,7 +190,7 @@ function UploadSection({
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error(
+      ophthalToast.error(
         t(
           'Ophthalmologist.contract.upload.fileTooLarge',
           'File size must not exceed 10MB.'
@@ -675,7 +675,7 @@ export default function ContractPage() {
                           contract.contractNumber
                         );
                       } catch (error) {
-                        toast.error(
+                        ophthalToast.error(
                           error instanceof Error
                             ? error.message
                             : t(

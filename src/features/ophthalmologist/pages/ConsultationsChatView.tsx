@@ -68,9 +68,9 @@ import {
   formatRelativeTime,
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
-import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -482,61 +482,17 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
-  const requestToastConfirmation = useCallback(
-    (message: string) =>
-      new Promise<boolean>((resolve) => {
-        let settled = false;
-        const settle = (value: boolean) => {
-          if (settled) return;
-          settled = true;
-          resolve(value);
-        };
-
-        toast.info(
-          ({ closeToast }) => (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-900">{message}</p>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    settle(false);
-                    closeToast?.();
-                  }}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
-                >
-                  {t('Ophthalmologist.common.cancel', 'Cancel')}
-                </button>
-                <button
-                  onClick={() => {
-                    settle(true);
-                    closeToast?.();
-                  }}
-                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white"
-                >
-                  {t('Ophthalmologist.common.confirm', 'Confirm')}
-                </button>
-              </div>
-            </div>
-          ),
-          {
-            autoClose: false,
-            closeOnClick: false,
-            draggable: false,
-            closeButton: false,
-            onClose: () => settle(false),
-          }
-        );
-      }),
-    [t]
-  );
-
   const handleCancelSession = async (sessionId: string) => {
     if (!currentDoctorId) return;
-    const confirmed = await requestToastConfirmation(
+    const confirmed = await ophthalToast.confirm(
       t(
         'Ophthalmologist.consultations.chat.confirmCancelSession',
         'Cancel this session? The slot will be burned and the patient will be refunded.'
-      )
+      ),
+      {
+        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
+        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
+      }
     );
     if (!confirmed) {
       return;
@@ -553,11 +509,15 @@ export default function ConsultationsChatView({
 
   const handleEndSession = async (sessionId: string) => {
     if (!currentDoctorId) return;
-    const confirmed = await requestToastConfirmation(
+    const confirmed = await ophthalToast.confirm(
       t(
         'Ophthalmologist.consultations.chat.confirmCompleteSession',
         'Complete this consultation? The patient will be charged and the chat will be locked.'
-      )
+      ),
+      {
+        confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
+        cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
+      }
     );
     if (!confirmed) {
       return;
@@ -587,10 +547,10 @@ export default function ConsultationsChatView({
             )
           );
           if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
-            toast.warning(raw);
+            ophthalToast.warning(raw);
             sendMessageMutation.reset();
           } else {
-            toast.error(raw);
+            ophthalToast.error(raw);
           }
           // Restore the draft so the user doesn't lose content on failure.
           setNewMessage(draftText);

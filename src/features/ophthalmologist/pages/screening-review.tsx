@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
-import { toast } from 'react-toastify';
 import {
   ArrowLeft,
   ZoomIn,
@@ -37,6 +36,7 @@ import { hydrateConsultationPreviewAnomalies } from '@/features/patient/pages/re
 import type { Anomaly } from '@/features/patient/types/type';
 import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -395,14 +395,14 @@ export default function ScreeningReviewPage() {
   const handleSubmitDiagnosis = async () => {
     if (!currentDoctorId) {
       const message = 'Missing doctor identity.';
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
     if (!verificationSessionId) {
       const message =
         'No linked verification session was found for this screening.';
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
@@ -412,7 +412,7 @@ export default function ScreeningReviewPage() {
     if (!normalizedDiagnosisCode || !normalizedFindings) {
       const message =
         'Diagnosis code and clinical findings are required before saving.';
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
@@ -426,7 +426,7 @@ export default function ScreeningReviewPage() {
         parsedConfidence > 100)
     ) {
       const message = 'Confidence level must be between 0 and 100.';
-      toast.error(message);
+      ophthalToast.error(message);
       return;
     }
 
@@ -455,7 +455,7 @@ export default function ScreeningReviewPage() {
             : undefined,
       });
 
-      toast.success('Diagnosis report saved successfully.');
+      ophthalToast.success('Diagnosis report saved successfully.');
       setShowDiagnosisModal(false);
     } catch (error) {
       const message =
@@ -463,7 +463,7 @@ export default function ScreeningReviewPage() {
           ? error.response.data.message
           : 'Failed to submit diagnosis report. Please try again.';
 
-      toast.error(message);
+      ophthalToast.error(message);
     }
   };
 
@@ -481,7 +481,7 @@ export default function ScreeningReviewPage() {
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       {/* Sidebar */}
-      <DoctorSidebar pendingCount={12} />
+      <DoctorSidebar pendingCount={0} />
 
       {/* Main Content */}
       <div className="flex-1 h-full overflow-y-auto">

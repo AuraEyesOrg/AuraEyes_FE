@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import {
   Mail,
   Phone,
@@ -42,6 +41,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -287,13 +287,13 @@ export default function SettingsPage() {
         }),
       ]);
       setShowEditProfileModal(false);
-      toast.success('Profile updated successfully.');
+      ophthalToast.success('Profile updated successfully.');
     },
     onError: (error: unknown) => {
       const err = error as {
         response?: { data?: { message?: string; errors?: string[] } };
       };
-      toast.error(
+      ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
           'Unable to update profile right now. Please try again.'
@@ -327,14 +327,14 @@ export default function SettingsPage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      toast.success('Avatar uploaded successfully.');
+      ophthalToast.success('Avatar uploaded successfully.');
     },
     onError: (error: unknown) => {
       const err = error as {
         response?: { data?: { message?: string; errors?: string[] } };
       };
 
-      toast.error(
+      ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
           'Unable to upload avatar right now. Please try again.'
@@ -399,7 +399,7 @@ export default function SettingsPage() {
 
   const handleUpdateProfile = () => {
     if (!profileForm.fullName.trim()) {
-      toast.error('Full name is required.');
+      ophthalToast.error('Full name is required.');
       return;
     }
 
@@ -426,13 +426,13 @@ export default function SettingsPage() {
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Supported: JPG, PNG, GIF, WebP');
+      ophthalToast.error('Invalid file type. Supported: JPG, PNG, GIF, WebP');
       event.target.value = '';
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be smaller than 5MB');
+      ophthalToast.error('File must be smaller than 5MB');
       event.target.value = '';
       return;
     }
