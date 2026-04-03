@@ -31,6 +31,12 @@ const MaintenancePage = lazy(
   () => import('@/features/guest/pages/Maintenance')
 );
 const NotFoundPage = lazy(() => import('@/features/guest/pages/NotFound'));
+const PersonalDataPage = lazy(
+  () => import('@/features/guest/pages/PersonalData')
+);
+const PrivacyPage = lazy(() => import('@/features/guest/pages/Privacy'));
+const SecurityPage = lazy(() => import('@/features/guest/pages/Security'));
+const TermsOfUsePage = lazy(() => import('@/features/guest/pages/TermsofUse'));
 
 // Auth pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login'));
@@ -125,6 +131,18 @@ const OrganisationSlotManagementPage = lazy(
 );
 const OrganisationContractPage = lazy(
   () => import('@/features/organisation/pages/contract')
+);
+const OrganisationScreeningPage = lazy(
+  () => import('@/features/organisation/pages/screening')
+);
+const OrganisationScreeningResultPage = lazy(
+  () => import('@/features/organisation/pages/screening-result')
+);
+const OrganisationBillingPage = lazy(
+  () => import('@/features/organisation/pages/billing')
+);
+const OrganisationReportsPage = lazy(
+  () => import('@/features/organisation/pages/reports')
 );
 
 // Ophthalmologist pages
@@ -345,6 +363,19 @@ const Router = () => (
           path="/maintenance"
           element={<LocalizedRedirect target="/maintenance" />}
         />
+        <Route
+          path="/personal-data"
+          element={<LocalizedRedirect target="/personal-data" />}
+        />
+        <Route
+          path="/privacy"
+          element={<LocalizedRedirect target="/privacy" />}
+        />
+        <Route
+          path="/security"
+          element={<LocalizedRedirect target="/security" />}
+        />
+        <Route path="/terms" element={<LocalizedRedirect target="/terms" />} />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
         <Route path="/logout" element={<LogoutRoute />} />
         <Route path="/:locale/logout" element={<LogoutRoute />} />
@@ -733,6 +764,42 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/organisation/screening"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationScreeningPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/screening/result"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationScreeningResultPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/billing"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationBillingPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/organisation/reports"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationReportsPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/organisation/calendar"
           element={
             <LocalizedPrivateRoute
@@ -788,6 +855,10 @@ const Router = () => (
           <Route path="status" element={<StatusPage />} />
           <Route path="compliance" element={<CompliancePage />} />
           <Route path="maintenance" element={<MaintenancePage />} />
+          <Route path="personal-data" element={<PersonalDataPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="security" element={<SecurityPage />} />
+          <Route path="terms" element={<TermsOfUsePage />} />
           <Route path="404" element={<NotFoundPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
