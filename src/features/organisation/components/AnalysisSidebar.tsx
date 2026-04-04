@@ -1,5 +1,4 @@
 import React from 'react';
-import { ToggleState, Anomaly } from '../types/retinal.types';
 import {
   Info,
   Sparkles,
@@ -10,6 +9,10 @@ import {
   FileText,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import type {
+  Anomaly,
+  ToggleState,
+} from '@/features/organisation/types/retinal.types';
 
 interface AnalysisSidebarProps {
   toggles: ToggleState;

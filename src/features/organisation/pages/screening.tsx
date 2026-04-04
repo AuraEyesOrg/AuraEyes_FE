@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ScanEye,
   Upload,
@@ -14,10 +14,12 @@ import {
   Loader2,
   AlertTriangle,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
+import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import { getOrganisationRecentPatients } from '../api/patients.api';
 import type { OrganisationRecentPatientDto } from '../api/patients.api';
 import { orgScreeningApi } from '../api/screening.api';
@@ -40,7 +42,7 @@ interface UploadedImage {
   file: File;
   preview: string;
   eyeSide: 'Left' | 'Right' | 'Both';
-  url?: string; // after upload to storage
+  url?: string;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -48,6 +50,8 @@ interface UploadedImage {
    ═══════════════════════════════════════════════════════════════════════ */
 export default function OrganisationScreeningPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Wizard state
@@ -58,12 +62,25 @@ export default function OrganisationScreeningPage() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
 
-  // Fetch patients
+  // Fetch patients — use consistent query key with patients page
   const { data: patients = [], isLoading: loadingPatients } = useQuery({
-    queryKey: ['org-patients'],
+    queryKey: ['organisation-patients', 'recent'],
     queryFn: getOrganisationRecentPatients,
   });
+
+  // Pre-select patient from URL params (from "Screen Now" on Patients page)
+  const preSelectedPatientId = searchParams.get('patientId');
+  useEffect(() => {
+    if (preSelectedPatientId && patients.length > 0 && !selectedPatient) {
+      const match = patients.find((p) => p.id === preSelectedPatientId);
+      if (match) {
+        setSelectedPatient(match);
+        setCurrentStep('upload-images');
+      }
+    }
+  }, [preSelectedPatientId, patients, selectedPatient]);
 
   // Filter patients by search
   const filteredPatients = patients.filter(
@@ -189,6 +206,13 @@ export default function OrganisationScreeningPage() {
         ? images.length > 0
         : !!selectedPatient && images.length > 0;
 
+  // ── Walk-in success handler ──
+  const handleWalkInSuccess = (patientId: string) => {
+    setIsWalkInModalOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['organisation-patients'] });
+    // After walk-in created, patient list will refresh, user can then select
+  };
+
   /* ═══════════════════════════════════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════════════════════════════════ */
@@ -258,7 +282,7 @@ export default function OrganisationScreeningPage() {
             {/* STEP 1: Select Patient */}
             {currentStep === 'select-patient' && (
               <div className="space-y-6">
-                {/* Search */}
+                {/* Search + Walk-in button */}
                 <div className="flex gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-(--text-tertiary)" />
@@ -270,6 +294,14 @@ export default function OrganisationScreeningPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsWalkInModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:border-primary/60 hover:text-primary transition whitespace-nowrap"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Walk-in
+                  </button>
                 </div>
 
                 {/* Patient List */}
@@ -285,7 +317,7 @@ export default function OrganisationScreeningPage() {
                       <User className="w-12 h-12 mx-auto mb-3 opacity-40" />
                       <p className="font-medium">No patients found</p>
                       <p className="text-sm mt-1">
-                        Try a different search query
+                        Try a different search or create a walk-in patient
                       </p>
                     </div>
                   )}
@@ -311,8 +343,16 @@ export default function OrganisationScreeningPage() {
                         </p>
                         <p className="text-xs text-(--text-tertiary)">
                           {patient.gender === 'M' ? 'Male' : 'Female'} ·{' '}
-                          {patient.age} yrs · Last screening:{' '}
-                          {new Date(patient.lastScreening).toLocaleDateString()}
+                          {patient.age} yrs
+                          {patient.phoneNumber && ` · ${patient.phoneNumber}`}
+                          {patient.lastScreening && (
+                            <>
+                              {' · Last: '}
+                              {new Date(
+                                patient.lastScreening
+                              ).toLocaleDateString()}
+                            </>
+                          )}
                         </p>
                       </div>
                       <div className="shrink-0">
@@ -329,6 +369,27 @@ export default function OrganisationScreeningPage() {
             {/* STEP 2: Upload Images */}
             {currentStep === 'upload-images' && (
               <div className="space-y-6">
+                {/* Selected patient summary */}
+                {selectedPatient && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-(--bg-secondary) border border-(--border-primary)">
+                    <AvatarFallback
+                      fullName={selectedPatient.name}
+                      avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(selectedPatient.id.slice(0, 8))}`}
+                      size="w-9 h-9"
+                      className="shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-(--text-primary)">
+                        {selectedPatient.name}
+                      </p>
+                      <p className="text-xs text-(--text-tertiary)">
+                        {selectedPatient.gender === 'M' ? 'Male' : 'Female'} ·{' '}
+                        {selectedPatient.age} yrs
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Drop Zone */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -425,6 +486,8 @@ export default function OrganisationScreeningPage() {
                       <p className="text-sm text-(--text-tertiary)">
                         {selectedPatient?.gender === 'M' ? 'Male' : 'Female'} ·{' '}
                         {selectedPatient?.age} yrs
+                        {selectedPatient?.phoneNumber &&
+                          ` · ${selectedPatient.phoneNumber}`}
                       </p>
                     </div>
                   </div>
@@ -504,6 +567,13 @@ export default function OrganisationScreeningPage() {
               )}
             </div>
           </div>
+
+          {/* Walk-in Modal */}
+          <CreateWalkInPatientModal
+            isOpen={isWalkInModalOpen}
+            onClose={() => setIsWalkInModalOpen(false)}
+            onSuccess={handleWalkInSuccess}
+          />
         </main>
       </div>
     </div>

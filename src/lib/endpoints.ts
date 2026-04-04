@@ -282,6 +282,8 @@ export const API_ENDPOINTS = {
     // Organisation Screening
     SCREENING: {
       CREATE_SESSION: '/organisations/screenings/create-session',
+      DETAIL: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}`,
       HISTORY: '/organisations/screenings/history',
     },
     BILLING_SUMMARY: '/organisations/billing/summary',

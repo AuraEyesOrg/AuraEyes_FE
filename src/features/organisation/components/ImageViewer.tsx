@@ -1,6 +1,10 @@
 import React from 'react';
-import { ToggleState, Anomaly, RetinalImage } from '../types/retinal.types';
 import { AlertTriangle, AlertCircle } from 'lucide-react';
+import type {
+  Anomaly,
+  RetinalImage,
+  ToggleState,
+} from '@/features/organisation/types/retinal.types';
 
 interface ImageViewerProps {
   toggles: ToggleState;
