@@ -215,6 +215,7 @@ function UploadSection({
   };
 
   const isImageUrl = (url: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url);
+  const isActiveContract = contract.status === 'Active';
 
   // Already uploaded — show the scanned document prominently
   if (contract.scannedDocumentUrl && !showReupload) {
@@ -249,21 +250,41 @@ function UploadSection({
         {/* Status + actions row */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-blue-600" />
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                isActiveContract
+                  ? 'bg-emerald-100 dark:bg-emerald-900/40'
+                  : 'bg-blue-100 dark:bg-blue-900/40'
+              }`}
+            >
+              {isActiveContract ? (
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Clock className="w-4 h-4 text-blue-600" />
+              )}
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                {t(
-                  'Ophthalmologist.contract.upload.waitingAdmin',
-                  'Waiting for admin confirmation'
-                )}
+                {isActiveContract
+                  ? t(
+                      'Ophthalmologist.contract.activeTitle',
+                      'Contract has been activated!'
+                    )
+                  : t(
+                      'Ophthalmologist.contract.upload.waitingAdmin',
+                      'Waiting for admin confirmation'
+                    )}
               </p>
               <p className="text-xs text-slate-500">
-                {t(
-                  'Ophthalmologist.contract.upload.sentNotice',
-                  'Your contract has been submitted'
-                )}
+                {isActiveContract
+                  ? t(
+                      'Ophthalmologist.contract.activeDescription',
+                      'You can now start receiving cases and consulting on the AURA platform.'
+                    )
+                  : t(
+                      'Ophthalmologist.contract.upload.sentNotice',
+                      'Your contract has been submitted'
+                    )}
               </p>
             </div>
           </div>
@@ -280,16 +301,20 @@ function UploadSection({
                 'Open original'
               )}
             </a>
-            <button
-              onClick={() => setShowReupload(true)}
-              disabled={!allowReupload}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              {allowReupload
-                ? t('Ophthalmologist.contract.upload.reupload', 'Re-upload')
-                : t('Ophthalmologist.contract.activeTitle', 'Contract Active')}
-            </button>
+            {allowReupload ? (
+              <button
+                onClick={() => setShowReupload(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                {t('Ophthalmologist.contract.upload.reupload', 'Re-upload')}
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 border border-emerald-200 bg-emerald-50">
+                <CheckCircle className="w-3.5 h-3.5" />
+                {t('Ophthalmologist.contract.status.active', 'Active')}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -746,10 +771,15 @@ export default function ContractPage() {
                     </p>
                     <p className="text-sm text-slate-500">
                       {contract.scannedDocumentUrl
-                        ? t(
-                            'Ophthalmologist.contract.upload.sentNotice',
-                            'Your contract has been submitted'
-                          )
+                        ? contract.status === 'Active'
+                          ? t(
+                              'Ophthalmologist.contract.activeDescription',
+                              'You can now start receiving cases and consulting on the AURA platform.'
+                            )
+                          : t(
+                              'Ophthalmologist.contract.upload.sentNotice',
+                              'Your contract has been submitted'
+                            )
                         : t(
                             'Ophthalmologist.contract.upload.uploadSignedDescription',
                             'Print the contract, sign and stamp it, then upload a photo or scanned copy'

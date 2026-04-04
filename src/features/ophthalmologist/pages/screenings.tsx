@@ -19,6 +19,9 @@ import {
   listOphthalmologistScreenings,
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
+import { useConsultationSessions } from '@/features/consultation/hooks/use-consultation';
+import { SessionStatus } from '@/types/consultation';
+import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
@@ -46,6 +49,12 @@ function avatarColorForKey(key: string): string {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
 }
 
 function formatScreeningRef(screeningId: string): string {
@@ -166,12 +175,24 @@ type SortMode = 'priority' | 'date';
 
 export default function ScreeningsPage() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const currentDoctorId = user?.roleId ?? '';
+  const doctorFilterId = isUuid(currentDoctorId) ? currentDoctorId : undefined;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortMode, setSortMode] = useState<SortMode>('priority');
   const [items, setItems] = useState<OphthalmologistScreeningListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const consultationSessionsQuery = useConsultationSessions(
+    {
+      ophthalmologistId: doctorFilterId,
+      pageNumber: 1,
+      pageSize: 500,
+    },
+    { enabled: Boolean(doctorFilterId) }
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -197,6 +218,36 @@ export default function ScreeningsPage() {
     }
   }, [loadError]);
 
+  const completedConsultationByScreeningId = useMemo(() => {
+    const sessionItems = consultationSessionsQuery.data?.items ?? [];
+    const completedMap = new Map<string, boolean>();
+
+    sessionItems.forEach((session) => {
+      if (!session.aiScreeningId) return;
+      if (session.status !== SessionStatus.Completed) return;
+      completedMap.set(session.aiScreeningId.toLowerCase(), true);
+    });
+
+    return completedMap;
+  }, [consultationSessionsQuery.data?.items]);
+
+  const getEffectiveReviewStatus = useCallback(
+    (row: OphthalmologistScreeningListItemDto): string => {
+      const rawStatus = (row.reviewStatus ?? '').trim().toLowerCase();
+      if (rawStatus && rawStatus !== 'pending-review') {
+        return rawStatus;
+      }
+
+      const screeningKey = row.screeningId.toLowerCase();
+      if (completedConsultationByScreeningId.get(screeningKey)) {
+        return 'reviewed';
+      }
+
+      return rawStatus || 'pending-review';
+    },
+    [completedConsultationByScreeningId]
+  );
+
   const filteredScreenings = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const filtered = items.filter((row) => {
@@ -206,7 +257,7 @@ export default function ScreeningsPage() {
         row.patientName.toLowerCase().includes(q) ||
         row.screeningId.toLowerCase().includes(q) ||
         ref.includes(q);
-      const rowStatus = (row.reviewStatus ?? '').trim().toLowerCase();
+      const rowStatus = getEffectiveReviewStatus(row);
       const selectedNormalized =
         selectedStatus === 'all' ? 'all' : selectedStatus.trim().toLowerCase();
       const matchesStatus =
@@ -217,8 +268,8 @@ export default function ScreeningsPage() {
     // Sort
     if (sortMode === 'priority') {
       filtered.sort((a, b) => {
-        const statusA = getStatusConfig(a.reviewStatus).priority;
-        const statusB = getStatusConfig(b.reviewStatus).priority;
+        const statusA = getStatusConfig(getEffectiveReviewStatus(a)).priority;
+        const statusB = getStatusConfig(getEffectiveReviewStatus(b)).priority;
         if (statusA !== statusB) return statusA - statusB;
         const riskA = getRiskLevel(a).priority;
         const riskB = getRiskLevel(b).priority;
@@ -235,15 +286,21 @@ export default function ScreeningsPage() {
     }
 
     return filtered;
-  }, [items, searchQuery, selectedStatus, sortMode]);
+  }, [getEffectiveReviewStatus, items, searchQuery, selectedStatus, sortMode]);
 
   const stats = useMemo(() => {
     const pending = items.filter(
-      (s) => s.reviewStatus === 'pending-review'
+      (s) => getEffectiveReviewStatus(s) === 'pending-review'
     ).length;
-    const reviewed = items.filter((s) => s.reviewStatus === 'reviewed').length;
-    const approved = items.filter((s) => s.reviewStatus === 'approved').length;
-    const flagged = items.filter((s) => s.reviewStatus === 'flagged').length;
+    const reviewed = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'reviewed'
+    ).length;
+    const approved = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'approved'
+    ).length;
+    const flagged = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'flagged'
+    ).length;
     return {
       total: items.length,
       pending,
@@ -251,7 +308,7 @@ export default function ScreeningsPage() {
       approved,
       flagged,
     };
-  }, [items]);
+  }, [getEffectiveReviewStatus, items]);
 
   const statusTabs = [
     { key: 'all', label: 'All', count: stats.total },
@@ -406,7 +463,9 @@ export default function ScreeningsPage() {
             ) : (
               <div className="divide-y divide-gray-50 dark:divide-[#1e3a5f]/50">
                 {filteredScreenings.map((screening) => {
-                  const statusCfg = getStatusConfig(screening.reviewStatus);
+                  const effectiveReviewStatus =
+                    getEffectiveReviewStatus(screening);
+                  const statusCfg = getStatusConfig(effectiveReviewStatus);
                   const risk = getRiskLevel(screening);
                   const confidence = toConfidencePercent(
                     screening.confidenceScore
@@ -424,8 +483,8 @@ export default function ScreeningsPage() {
                     minute: '2-digit',
                   });
                   const aiLabel = aiLabelForRow(screening);
-                  const isPending = screening.reviewStatus === 'pending-review';
-                  const isFlagged = screening.reviewStatus === 'flagged';
+                  const isPending = effectiveReviewStatus === 'pending-review';
+                  const isFlagged = effectiveReviewStatus === 'flagged';
 
                   return (
                     <div
