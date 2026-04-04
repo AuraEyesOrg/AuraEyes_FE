@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
   useAppointmentSlots,
