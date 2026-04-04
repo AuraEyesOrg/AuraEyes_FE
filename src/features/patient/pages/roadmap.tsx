@@ -28,26 +28,34 @@ const riskLevelStyle: Record<
   }
 > = {
   LOW: {
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    panel: 'border-emerald-200 bg-emerald-50/70',
+    badge:
+      'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-700/50',
+    panel:
+      'border-emerald-200 bg-emerald-50/70 dark:border-emerald-700/50 dark:bg-emerald-900/20',
     dot: 'bg-emerald-600',
     label: 'Low Risk',
   },
   MEDIUM: {
-    badge: 'bg-amber-50 text-amber-700 border-amber-200',
-    panel: 'border-amber-200 bg-amber-50/70',
+    badge:
+      'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700/50',
+    panel:
+      'border-amber-200 bg-amber-50/70 dark:border-amber-700/50 dark:bg-amber-900/20',
     dot: 'bg-amber-500',
     label: 'Medium Risk',
   },
   HIGH: {
-    badge: 'bg-orange-50 text-orange-700 border-orange-200',
-    panel: 'border-orange-200 bg-orange-50/70',
+    badge:
+      'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-200 dark:border-orange-700/50',
+    panel:
+      'border-orange-200 bg-orange-50/70 dark:border-orange-700/50 dark:bg-orange-900/20',
     dot: 'bg-orange-500',
     label: 'High Risk',
   },
   CRITICAL: {
-    badge: 'bg-red-50 text-red-700 border-red-200',
-    panel: 'border-red-200 bg-red-50/70',
+    badge:
+      'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700/50',
+    panel:
+      'border-red-200 bg-red-50/70 dark:border-red-700/50 dark:bg-red-900/20',
     dot: 'bg-red-600',
     label: 'Critical Risk',
   },
@@ -85,7 +93,7 @@ const highlightMedicalKeywords = (text: string) => {
     return (
       <mark
         key={`${segment}-${index}`}
-        className="bg-red-100 text-red-800 font-semibold rounded px-1"
+        className="bg-(--roadmap-warning-highlight-bg) text-(--roadmap-warning-highlight-text) font-semibold rounded px-1"
       >
         {segment}
       </mark>
@@ -218,7 +226,8 @@ export default function RoadmapPage() {
       ? {
           label: 'Doctor Reviewed',
           icon: <ShieldCheck className="w-4.5 h-4.5 text-emerald-600" />,
-          className: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+          className:
+            'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200',
         }
       : {
           label: 'AI Generated',
@@ -265,7 +274,7 @@ export default function RoadmapPage() {
                   </span>
                 </div>
                 {latestRoadmap.source === 'DOCTOR_OVERRIDE' && (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-700/50 dark:text-emerald-200 text-xs font-semibold">
                     <ShieldCheck className="w-4 h-4" />
                     Doctor Verified
                   </div>
@@ -283,14 +292,14 @@ export default function RoadmapPage() {
               </Link>
               <Link
                 to={ctaLinks.viewDiagnosis}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-white text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
               >
                 <FileSearch className="w-4.5 h-4.5" />
                 View Diagnosis
               </Link>
               <Link
                 to={ctaLinks.downloadReport}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-white text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
               >
                 <FileDown className="w-4.5 h-4.5" />
                 Download Report
@@ -301,7 +310,7 @@ export default function RoadmapPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-6">
-            <article className="medical-card border-2 border-brand/25 bg-white">
+            <article className="medical-card border-2 border-brand/25 bg-(--bg-primary)">
               <div className="flex items-center gap-2 mb-4">
                 <ClipboardList className="w-4.5 h-4.5 text-brand" />
                 <h2 className="text-xl font-semibold text-(--text-primary)">
@@ -319,7 +328,7 @@ export default function RoadmapPage() {
                       key={`${step}-${index}`}
                       className="flex gap-3 p-3 rounded-xl bg-(--bg-secondary) border border-(--border-color)"
                     >
-                      <span className="mt-0.5 inline-flex w-7 h-7 items-center justify-center rounded-full bg-brand-soft text-brand text-sm font-bold">
+                      <span className="mt-0.5 inline-flex w-7 h-7 items-center justify-center rounded-full bg-(--roadmap-step-chip-bg) text-(--roadmap-step-chip-text) text-sm font-bold">
                         {index + 1}
                       </span>
                       <p className="text-sm text-(--text-primary) leading-relaxed">
@@ -358,15 +367,15 @@ export default function RoadmapPage() {
           </div>
 
           <aside className="lg:col-span-5 space-y-6">
-            <article className="medical-card border border-red-200 bg-red-50/70">
+            <article className="medical-card border border-(--roadmap-warning-border) bg-(--roadmap-warning-bg)">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-4.5 h-4.5 text-red-600" />
-                <h2 className="text-lg font-semibold text-red-800">
+                <AlertTriangle className="w-4.5 h-4.5 text-(--roadmap-warning-title)" />
+                <h2 className="text-lg font-semibold text-(--roadmap-warning-title)">
                   Warning Signs
                 </h2>
               </div>
               {latestRoadmap.warningSigns.length === 0 ? (
-                <p className="text-sm text-red-700/80">
+                <p className="text-sm text-(--roadmap-warning-item-text)">
                   No warning signs were listed.
                 </p>
               ) : (
@@ -374,7 +383,7 @@ export default function RoadmapPage() {
                   {latestRoadmap.warningSigns.map((sign, index) => (
                     <li
                       key={`${sign}-${index}`}
-                      className="rounded-xl border border-red-100 bg-white px-3 py-2 text-sm text-red-900 leading-relaxed"
+                      className="rounded-xl border border-(--roadmap-warning-item-border) bg-(--roadmap-warning-item-bg) px-3 py-2 text-sm text-(--roadmap-warning-item-text) leading-relaxed"
                     >
                       {highlightMedicalKeywords(sign)}
                     </li>
@@ -383,9 +392,9 @@ export default function RoadmapPage() {
               )}
             </article>
 
-            <article className="medical-card border-brand/20 bg-brand-soft/40">
+            <article className="medical-card border border-(--roadmap-followup-border) bg-(--roadmap-followup-bg)">
               <div className="flex items-start gap-3">
-                <CalendarClock className="w-4.5 h-4.5 text-brand mt-1" />
+                <CalendarClock className="w-4.5 h-4.5 text-(--roadmap-followup-icon) mt-1" />
                 <div>
                   <h2 className="text-base font-semibold text-(--text-primary)">
                     Follow-up Recommendation

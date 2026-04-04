@@ -64,6 +64,23 @@
   --risk-low: #00e5ff;
   --risk-medium: #f6ad55;
   --risk-high: #fc8181;
+
+  /* Patient roadmap semantic tokens */
+  --roadmap-warning-bg: #fff1f2;
+  --roadmap-warning-border: #fecdd3;
+  --roadmap-warning-title: #be123c;
+  --roadmap-warning-item-bg: #ffffff;
+  --roadmap-warning-item-border: #fda4af;
+  --roadmap-warning-item-text: #881337;
+  --roadmap-warning-highlight-bg: #ffe4e6;
+  --roadmap-warning-highlight-text: #9f1239;
+
+  --roadmap-followup-bg: #ecfeff;
+  --roadmap-followup-border: #a5f3fc;
+  --roadmap-followup-icon: #0891b2;
+
+  --roadmap-step-chip-bg: #e6fffb;
+  --roadmap-step-chip-text: #0f766e;
 }
 
 .light {
@@ -76,6 +93,22 @@
   --text-primary: #2d3748;
   --text-secondary: #718096;
   --text-muted: #a0aec0;
+
+  --roadmap-warning-bg: #fff1f2;
+  --roadmap-warning-border: #fecdd3;
+  --roadmap-warning-title: #be123c;
+  --roadmap-warning-item-bg: #ffffff;
+  --roadmap-warning-item-border: #fda4af;
+  --roadmap-warning-item-text: #881337;
+  --roadmap-warning-highlight-bg: #ffe4e6;
+  --roadmap-warning-highlight-text: #9f1239;
+
+  --roadmap-followup-bg: #ecfeff;
+  --roadmap-followup-border: #a5f3fc;
+  --roadmap-followup-icon: #0891b2;
+
+  --roadmap-step-chip-bg: #e6fffb;
+  --roadmap-step-chip-text: #0f766e;
 }
 
 .dark {
@@ -88,6 +121,22 @@
   --text-primary: #f7fafc;
   --text-secondary: #cbd5e0;
   --text-muted: #a0aec0;
+
+  --roadmap-warning-bg: #3a1f28;
+  --roadmap-warning-border: #7f1d3a;
+  --roadmap-warning-title: #fecdd3;
+  --roadmap-warning-item-bg: #4b2732;
+  --roadmap-warning-item-border: #9f1239;
+  --roadmap-warning-item-text: #ffe4e6;
+  --roadmap-warning-highlight-bg: #9f1239;
+  --roadmap-warning-highlight-text: #fff1f2;
+
+  --roadmap-followup-bg: #143240;
+  --roadmap-followup-border: #155e75;
+  --roadmap-followup-icon: #67e8f9;
+
+  --roadmap-step-chip-bg: #164e63;
+  --roadmap-step-chip-text: #a5f3fc;
 }
 
 body {
