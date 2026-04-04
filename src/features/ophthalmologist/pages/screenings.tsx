@@ -24,6 +24,7 @@ import { SessionStatus } from '@/types/consultation';
 import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -37,6 +38,8 @@ const AVATAR_PALETTE = [
   '#6366f1',
   '#f43f5e',
 ];
+
+type TranslateFn = (key: string, fallback: string) => string;
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -68,7 +71,10 @@ function toConfidencePercent(score: number | null | undefined): number {
   return Math.round(Math.min(100, Math.max(0, n)));
 }
 
-function getRiskLevel(row: OphthalmologistScreeningListItemDto): {
+function getRiskLevel(
+  row: OphthalmologistScreeningListItemDto,
+  t: TranslateFn
+): {
   label: string;
   color: string;
   stripColor: string;
@@ -78,7 +84,7 @@ function getRiskLevel(row: OphthalmologistScreeningListItemDto): {
   const risk = (row.latestRiskLevel ?? '').trim().toLowerCase();
   if (risk === 'high' || risk === 'critical')
     return {
-      label: 'High Risk',
+      label: t('Ophthalmologist.screenings.risk.high', 'High Risk'),
       color: 'text-red-600 dark:text-red-400',
       stripColor: 'bg-red-500',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -86,7 +92,7 @@ function getRiskLevel(row: OphthalmologistScreeningListItemDto): {
     };
   if (risk === 'medium' || risk === 'moderate')
     return {
-      label: 'Medium Risk',
+      label: t('Ophthalmologist.screenings.risk.medium', 'Medium Risk'),
       color: 'text-amber-600 dark:text-amber-400',
       stripColor: 'bg-amber-500',
       bgColor: 'bg-amber-50 dark:bg-amber-900/20',
@@ -94,14 +100,14 @@ function getRiskLevel(row: OphthalmologistScreeningListItemDto): {
     };
   if (risk === 'low')
     return {
-      label: 'Low Risk',
+      label: t('Ophthalmologist.screenings.risk.low', 'Low Risk'),
       color: 'text-green-600 dark:text-green-400',
       stripColor: 'bg-green-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
       priority: 2,
     };
   return {
-    label: 'Unknown',
+    label: t('Ophthalmologist.screenings.risk.unknown', 'Unknown'),
     color: 'text-gray-500 dark:text-gray-400',
     stripColor: 'bg-gray-400',
     bgColor: 'bg-gray-50 dark:bg-gray-800',
@@ -109,40 +115,43 @@ function getRiskLevel(row: OphthalmologistScreeningListItemDto): {
   };
 }
 
-function getStatusConfig(status: string) {
+function getStatusConfig(status: string, t: TranslateFn) {
   const normalized = (status ?? '').trim().toLowerCase();
   switch (normalized) {
     case 'approved':
       return {
-        text: 'Approved',
+        text: t('Ophthalmologist.screenings.status.approved', 'Approved'),
         icon: <CheckCircle size={14} />,
         cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
         priority: 4,
       };
     case 'reviewed':
       return {
-        text: 'Reviewed',
+        text: t('Ophthalmologist.screenings.status.reviewed', 'Reviewed'),
         icon: <CheckCircle size={14} />,
         cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
         priority: 3,
       };
     case 'flagged':
       return {
-        text: 'Flagged',
+        text: t('Ophthalmologist.screenings.status.flagged', 'Flagged'),
         icon: <AlertTriangle size={14} />,
         cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
         priority: 1,
       };
     case 'rejected':
       return {
-        text: 'Rejected',
+        text: t('Ophthalmologist.screenings.status.rejected', 'Rejected'),
         icon: <XCircle size={14} />,
         cls: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
         priority: 5,
       };
     default:
       return {
-        text: 'Pending Review',
+        text: t(
+          'Ophthalmologist.screenings.status.pendingReview',
+          'Pending Review'
+        ),
         icon: <Clock size={14} />,
         cls: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400',
         priority: 0,
@@ -168,17 +177,23 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-500';
 }
 
-function getConfidenceLabel(confidence: number): string {
-  if (confidence >= 90) return 'High';
-  if (confidence >= 70) return 'Moderate';
-  if (confidence > 0) return 'Low';
-  return 'N/A';
+function getConfidenceLabel(confidence: number, t: TranslateFn): string {
+  if (confidence >= 90)
+    return t('Ophthalmologist.screenings.confidence.high', 'High');
+  if (confidence >= 70)
+    return t('Ophthalmologist.screenings.confidence.moderate', 'Moderate');
+  if (confidence > 0)
+    return t('Ophthalmologist.screenings.confidence.low', 'Low');
+  return t('Ophthalmologist.screenings.confidence.na', 'N/A');
 }
 
-function aiLabelForRow(row: OphthalmologistScreeningListItemDto): string {
+function aiLabelForRow(
+  row: OphthalmologistScreeningListItemDto,
+  t: TranslateFn
+): string {
   if (row.aiPrimaryLabel?.trim()) return row.aiPrimaryLabel.trim();
   if (row.latestRiskLevel?.trim()) return row.latestRiskLevel.trim();
-  return 'Pending analysis';
+  return t('Ophthalmologist.screenings.pendingAnalysis', 'Pending analysis');
 }
 
 type SortMode = 'priority' | 'date';
@@ -187,6 +202,7 @@ const SCREENINGS_PAGE_SIZE = 8;
 /* ────────────────────── component ────────────────────── */
 
 export default function ScreeningsPage() {
+  const { t } = useSafeTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const currentDoctorId = user?.roleId ?? '';
@@ -215,12 +231,17 @@ export default function ScreeningsPage() {
       const data = await listOphthalmologistScreenings();
       setItems(data);
     } catch {
-      setLoadError('Could not load screenings. Please try again.');
+      setLoadError(
+        t(
+          'Ophthalmologist.screenings.loadError',
+          'Could not load screenings. Please try again.'
+        )
+      );
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -345,11 +366,31 @@ export default function ScreeningsPage() {
   }, [getEffectiveReviewStatus, items]);
 
   const statusTabs = [
-    { key: 'all', label: 'All', count: stats.total },
-    { key: 'pending-review', label: 'Pending', count: stats.pending },
-    { key: 'flagged', label: 'Flagged', count: stats.flagged },
-    { key: 'reviewed', label: 'Reviewed', count: stats.reviewed },
-    { key: 'approved', label: 'Approved', count: stats.approved },
+    {
+      key: 'all',
+      label: t('Ophthalmologist.screenings.filter.all', 'All'),
+      count: stats.total,
+    },
+    {
+      key: 'pending-review',
+      label: t('Ophthalmologist.screenings.filter.pending', 'Pending'),
+      count: stats.pending,
+    },
+    {
+      key: 'flagged',
+      label: t('Ophthalmologist.screenings.filter.flagged', 'Flagged'),
+      count: stats.flagged,
+    },
+    {
+      key: 'reviewed',
+      label: t('Ophthalmologist.screenings.filter.reviewed', 'Reviewed'),
+      count: stats.reviewed,
+    },
+    {
+      key: 'approved',
+      label: t('Ophthalmologist.screenings.filter.approved', 'Approved'),
+      count: stats.approved,
+    },
   ];
 
   return (
@@ -357,17 +398,22 @@ export default function ScreeningsPage() {
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader pageName="Screenings" />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.screenings.title', 'Screenings')}
+        />
 
-        <main className="p-6 max-w-[1400px] mx-auto">
+        <main className="p-6 max-w-350 mx-auto">
           {/* ── Header ── */}
           <div className="flex items-end justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                Screenings
+                {t('Ophthalmologist.screenings.title', 'Screenings')}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                AI screening results for your patients — sorted by urgency
+                {t(
+                  'Ophthalmologist.screenings.subtitle',
+                  'AI screening results for your patients - sorted by urgency'
+                )}
               </p>
             </div>
             <button
@@ -376,7 +422,7 @@ export default function ScreeningsPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-200 dark:hover:bg-[#1e3a5f]"
             >
               <RefreshCw className="h-4 w-4" />
-              Refresh
+              {t('Ophthalmologist.common.refresh', 'Refresh')}
             </button>
           </div>
 
@@ -388,7 +434,7 @@ export default function ScreeningsPage() {
                 {stats.total}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Total
+                {t('Ophthalmologist.screenings.stats.total', 'Total')}
               </span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
@@ -397,7 +443,7 @@ export default function ScreeningsPage() {
                 {stats.pending}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Pending
+                {t('Ophthalmologist.screenings.stats.pending', 'Pending')}
               </span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
@@ -406,7 +452,7 @@ export default function ScreeningsPage() {
                 {stats.flagged}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Flagged
+                {t('Ophthalmologist.screenings.stats.flagged', 'Flagged')}
               </span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
@@ -415,7 +461,7 @@ export default function ScreeningsPage() {
                 {stats.approved}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Approved
+                {t('Ophthalmologist.screenings.stats.approved', 'Approved')}
               </span>
             </div>
           </div>
@@ -426,7 +472,10 @@ export default function ScreeningsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by patient name or screening ID..."
+                placeholder={t(
+                  'Ophthalmologist.screenings.searchPlaceholder',
+                  'Search by patient name or screening ID...'
+                )}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-sm text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
@@ -464,10 +513,15 @@ export default function ScreeningsPage() {
                 setSortMode((m) => (m === 'priority' ? 'date' : 'priority'))
               }
               className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-sm text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-[#1e3a5f] transition-colors"
-              title="Toggle sort order"
+              title={t(
+                'Ophthalmologist.screenings.toggleSortOrder',
+                'Toggle sort order'
+              )}
             >
               <SlidersHorizontal size={14} />
-              {sortMode === 'priority' ? 'By Priority' : 'By Date'}
+              {sortMode === 'priority'
+                ? t('Ophthalmologist.screenings.sort.byPriority', 'By Priority')
+                : t('Ophthalmologist.screenings.sort.byDate', 'By Date')}
             </button>
           </div>
 
@@ -477,7 +531,10 @@ export default function ScreeningsPage() {
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Spinner size={36} />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Loading screenings…
+                  {t(
+                    'Ophthalmologist.screenings.loading',
+                    'Loading screenings...'
+                  )}
                 </p>
               </div>
             </div>
@@ -487,12 +544,21 @@ export default function ScreeningsPage() {
                 <Eye className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No Screenings Found
+                {t(
+                  'Ophthalmologist.screenings.empty.title',
+                  'No Screenings Found'
+                )}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                 {searchQuery || selectedStatus !== 'all'
-                  ? 'No screenings match your current filters. Try adjusting your search or status filter.'
-                  : 'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'}
+                  ? t(
+                      'Ophthalmologist.screenings.empty.filtered',
+                      'No screenings match your current filters. Try adjusting your search or status filter.'
+                    )
+                  : t(
+                      'Ophthalmologist.screenings.empty.default',
+                      'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'
+                    )}
               </p>
             </div>
           ) : (
@@ -500,13 +566,13 @@ export default function ScreeningsPage() {
               {pagedScreenings.map((screening) => {
                 const effectiveReviewStatus =
                   getEffectiveReviewStatus(screening);
-                const statusCfg = getStatusConfig(effectiveReviewStatus);
-                const risk = getRiskLevel(screening);
+                const statusCfg = getStatusConfig(effectiveReviewStatus, t);
+                const risk = getRiskLevel(screening, t);
                 const confidence = toConfidencePercent(
                   screening.confidenceScore
                 );
                 const confidenceColor = getConfidenceColor(confidence);
-                const confidenceLabel = getConfidenceLabel(confidence);
+                const confidenceLabel = getConfidenceLabel(confidence, t);
                 const created = new Date(screening.createdAt);
                 const dateStr = created.toLocaleDateString(undefined, {
                   month: 'short',
@@ -517,7 +583,7 @@ export default function ScreeningsPage() {
                   hour: '2-digit',
                   minute: '2-digit',
                 });
-                const aiLabel = aiLabelForRow(screening);
+                const aiLabel = aiLabelForRow(screening, t);
                 const isPending = effectiveReviewStatus === 'pending-review';
                 const isFlagged = effectiveReviewStatus === 'flagged';
 
@@ -565,7 +631,10 @@ export default function ScreeningsPage() {
                             {isFlagged && (
                               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse">
                                 <AlertTriangle className="w-3 h-3" />
-                                Needs attention
+                                {t(
+                                  'Ophthalmologist.screenings.needsAttention',
+                                  'Needs attention'
+                                )}
                               </span>
                             )}
                           </div>
@@ -574,7 +643,10 @@ export default function ScreeningsPage() {
                           <div className="flex flex-wrap items-center gap-4 mb-3">
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                AI Prediction
+                                {t(
+                                  'Ophthalmologist.screenings.aiPrediction',
+                                  'AI Prediction'
+                                )}
                               </span>
                               <span className="text-sm font-semibold text-gray-800 dark:text-white px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
                                 {aiLabel}
@@ -582,7 +654,10 @@ export default function ScreeningsPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Confidence
+                                {t(
+                                  'Ophthalmologist.screenings.confidence',
+                                  'Confidence'
+                                )}
                               </span>
                               <div className="flex items-center gap-2">
                                 <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -622,7 +697,8 @@ export default function ScreeningsPage() {
                             </span>
                             <span className="flex items-center gap-1.5">
                               <Eye size={12} />
-                              {screening.imagesCount} images
+                              {screening.imagesCount}{' '}
+                              {t('Ophthalmologist.screenings.images', 'images')}
                             </span>
                             <span className="text-gray-400 dark:text-gray-500">
                               {formatScreeningRef(screening.screeningId)}
@@ -649,16 +725,19 @@ export default function ScreeningsPage() {
                           {isPending ? (
                             <>
                               <Eye className="w-4 h-4" />
-                              Review Now
+                              {t(
+                                'Ophthalmologist.screenings.reviewNow',
+                                'Review Now'
+                              )}
                             </>
                           ) : isFlagged ? (
                             <>
                               <AlertTriangle className="w-4 h-4" />
-                              Review
+                              {t('Ophthalmologist.screenings.review', 'Review')}
                             </>
                           ) : (
                             <>
-                              View
+                              {t('Ophthalmologist.common.view', 'View')}
                               <ArrowRight className="w-3.5 h-3.5" />
                             </>
                           )}
@@ -674,12 +753,14 @@ export default function ScreeningsPage() {
           {filteredScreenings.length > 0 && (
             <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Showing {(safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE + 1}-
+                {t('Ophthalmologist.common.showing', 'Showing')}{' '}
+                {(safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE + 1}-
                 {Math.min(
                   safeCurrentPage * SCREENINGS_PAGE_SIZE,
                   filteredScreenings.length
                 )}{' '}
-                of {filteredScreenings.length}
+                {t('Ophthalmologist.common.of', 'of')}{' '}
+                {filteredScreenings.length}
               </p>
 
               <div className="flex items-center gap-2">
@@ -691,7 +772,7 @@ export default function ScreeningsPage() {
                   disabled={safeCurrentPage <= 1}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  Previous
+                  {t('Ophthalmologist.common.previous', 'Previous')}
                 </button>
 
                 <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
@@ -706,7 +787,7 @@ export default function ScreeningsPage() {
                   disabled={safeCurrentPage >= totalPages}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  Next
+                  {t('Ophthalmologist.common.next', 'Next')}
                 </button>
               </div>
             </div>
