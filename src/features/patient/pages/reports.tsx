@@ -12,6 +12,7 @@ import {
   TrendingUp,
   ChevronRight,
   ExternalLink,
+  X,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { Link } from 'react-router-dom';
@@ -26,6 +27,14 @@ interface Report {
   hasHeatmap: boolean;
   isVerified: boolean;
   conditions?: string[];
+  medicalDiagnosis?: {
+    diagnosisCode?: string;
+    summary: string;
+    findings: string[];
+    recommendations: string[];
+    treatmentPlan?: string;
+    followUp?: string;
+  };
 }
 
 const mockReports: Report[] = [
@@ -39,6 +48,21 @@ const mockReports: Report[] = [
     hasHeatmap: true,
     isVerified: true,
     conditions: [],
+    medicalDiagnosis: {
+      diagnosisCode: 'H35.30',
+      summary:
+        'No critical retinal abnormalities were identified. Continue routine preventive care.',
+      findings: [
+        'Retinal structure appears stable.',
+        'No signs of active hemorrhage or edema.',
+      ],
+      recommendations: [
+        'Maintain annual retinal screening schedule.',
+        'Use adequate lighting and rest your eyes every 20 minutes.',
+      ],
+      treatmentPlan: 'No immediate treatment is required.',
+      followUp: 'Routine follow-up in 12 months.',
+    },
   },
   {
     id: '2',
@@ -50,6 +74,22 @@ const mockReports: Report[] = [
     hasHeatmap: true,
     isVerified: true,
     conditions: ['Early AMD signs'],
+    medicalDiagnosis: {
+      diagnosisCode: 'H35.31',
+      summary:
+        'Early age-related macular degeneration features observed with moderate progression risk.',
+      findings: [
+        'Small drusen deposits in macular region.',
+        'Mild pigmentary changes noted bilaterally.',
+      ],
+      recommendations: [
+        'Review with ophthalmologist for personalized risk management.',
+        'Increase dietary antioxidants and omega-3 intake.',
+      ],
+      treatmentPlan:
+        'Conservative monitoring with lifestyle optimization and scheduled reassessment.',
+      followUp: 'Follow-up retinal exam in 3-6 months.',
+    },
   },
   {
     id: '3',
@@ -60,6 +100,17 @@ const mockReports: Report[] = [
     doctor: 'AI Analysis',
     hasHeatmap: true,
     isVerified: false,
+    medicalDiagnosis: {
+      diagnosisCode: 'R69',
+      summary:
+        'Preliminary AI-only analysis suggests low immediate risk. Doctor verification is pending.',
+      findings: ['No high-risk lesion patterns in uploaded images.'],
+      recommendations: [
+        'Await doctor verification for final clinical interpretation.',
+      ],
+      treatmentPlan: 'Pending physician review.',
+      followUp: 'Follow-up date will be set after verification.',
+    },
   },
   {
     id: '4',
@@ -71,12 +122,29 @@ const mockReports: Report[] = [
     hasHeatmap: true,
     isVerified: true,
     conditions: ['Diabetic Retinopathy - Stage 1', 'Monitor blood sugar'],
+    medicalDiagnosis: {
+      diagnosisCode: 'E11.319',
+      summary:
+        'Findings are consistent with early diabetic retinopathy requiring close monitoring.',
+      findings: [
+        'Microaneurysms noted in posterior pole.',
+        'Mild retinal hemorrhagic spots without macular edema.',
+      ],
+      recommendations: [
+        'Coordinate diabetic control with internal medicine specialist.',
+        'Report any sudden vision changes immediately.',
+      ],
+      treatmentPlan:
+        'Structured follow-up plan with retinal reassessment and glycemic optimization.',
+      followUp: 'Follow-up with ophthalmologist in 8 weeks.',
+    },
   },
 ];
 
 const ReportsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   const filteredReports = mockReports.filter((report) => {
     const matchesSearch =
@@ -85,6 +153,10 @@ const ReportsPage = () => {
     const matchesRisk = filterRisk === 'all' || report.riskLevel === filterRisk;
     return matchesSearch && matchesRisk;
   });
+
+  const closeDiagnosisModal = () => {
+    setSelectedReport(null);
+  };
 
   const getRiskBadge = (risk: string) => {
     switch (risk) {
@@ -314,7 +386,10 @@ const ReportsPage = () => {
               </div>
 
               <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors">
+                <button
+                  onClick={() => setSelectedReport(report)}
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
+                >
                   <Eye className="w-4 h-4" />
                   View Details
                 </button>
@@ -352,6 +427,146 @@ const ReportsPage = () => {
             Start Your First Screening
             <ChevronRight className="w-5 h-5" />
           </Link>
+        </div>
+      )}
+
+      {selectedReport && (
+        <div
+          className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4"
+          onClick={closeDiagnosisModal}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-(--bg-primary) border border-(--border-color) shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="p-5 border-b border-(--border-color) flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-(--text-muted)">
+                  Medical Diagnosis
+                </p>
+                <h3 className="text-xl font-bold text-(--text-primary) mt-1">
+                  {getTypeLabel(selectedReport.type)}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {getRiskBadge(selectedReport.riskLevel)}
+                  {selectedReport.isVerified && (
+                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
+                      <CheckCircle className="w-3 h-3" /> Verified
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeDiagnosisModal}
+                className="p-2 rounded-lg hover:bg-(--bg-secondary) text-(--text-secondary)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl border border-(--border-color) p-3 bg-(--bg-secondary)">
+                  <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                    Diagnosis Code
+                  </p>
+                  <p className="text-(--text-primary) font-semibold mt-1">
+                    {selectedReport.medicalDiagnosis?.diagnosisCode || 'N/A'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-(--border-color) p-3 bg-(--bg-secondary)">
+                  <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                    Evaluated By
+                  </p>
+                  <p className="text-(--text-primary) font-semibold mt-1">
+                    {selectedReport.doctor}
+                  </p>
+                </div>
+              </div>
+
+              <section className="rounded-xl border border-(--border-color) p-4">
+                <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
+                  Clinical Summary
+                </h4>
+                <p className="text-sm text-(--text-secondary) leading-relaxed">
+                  {selectedReport.medicalDiagnosis?.summary ||
+                    'Medical diagnosis details are currently unavailable for this report.'}
+                </p>
+              </section>
+
+              <section className="rounded-xl border border-(--border-color) p-4">
+                <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
+                  Findings
+                </h4>
+                <ul className="space-y-2">
+                  {(selectedReport.medicalDiagnosis?.findings || []).map(
+                    (item) => (
+                      <li
+                        key={item}
+                        className="text-sm text-(--text-secondary)"
+                      >
+                        • {item}
+                      </li>
+                    )
+                  )}
+                  {(!selectedReport.medicalDiagnosis?.findings ||
+                    selectedReport.medicalDiagnosis.findings.length === 0) && (
+                    <li className="text-sm text-(--text-muted)">
+                      No detailed findings available.
+                    </li>
+                  )}
+                </ul>
+              </section>
+
+              <section className="rounded-xl border border-(--border-color) p-4">
+                <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
+                  Recommendations
+                </h4>
+                <ul className="space-y-2">
+                  {(selectedReport.medicalDiagnosis?.recommendations || []).map(
+                    (item) => (
+                      <li
+                        key={item}
+                        className="text-sm text-(--text-secondary)"
+                      >
+                        • {item}
+                      </li>
+                    )
+                  )}
+                  {(!selectedReport.medicalDiagnosis?.recommendations ||
+                    selectedReport.medicalDiagnosis.recommendations.length ===
+                      0) && (
+                    <li className="text-sm text-(--text-muted)">
+                      No recommendations available.
+                    </li>
+                  )}
+                </ul>
+              </section>
+
+              {(selectedReport.medicalDiagnosis?.treatmentPlan ||
+                selectedReport.medicalDiagnosis?.followUp) && (
+                <section className="rounded-xl border border-(--border-color) p-4 bg-brand-soft/40">
+                  {selectedReport.medicalDiagnosis?.treatmentPlan && (
+                    <p className="text-sm text-(--text-secondary)">
+                      <span className="font-semibold text-(--text-primary)">
+                        Treatment Plan:{' '}
+                      </span>
+                      {selectedReport.medicalDiagnosis.treatmentPlan}
+                    </p>
+                  )}
+                  {selectedReport.medicalDiagnosis?.followUp && (
+                    <p className="text-sm text-(--text-secondary) mt-2">
+                      <span className="font-semibold text-(--text-primary)">
+                        Follow-up:{' '}
+                      </span>
+                      {selectedReport.medicalDiagnosis.followUp}
+                    </p>
+                  )}
+                </section>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </PatientLayout>
