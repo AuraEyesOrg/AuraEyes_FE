@@ -15,10 +15,10 @@ export const WebsiteFeedbackForm = ({
 }: WebsiteFeedbackFormProps) => {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { latestAnalysis, isLoading } = useDashboard();
+  const { canSubmitWebsiteFeedback, isLoading } = useDashboard();
   const createWebsiteFeedbackMutation = useCreateWebsiteFeedback();
 
-  const canSubmit = !!latestAnalysis;
+  const canSubmit = canSubmitWebsiteFeedback;
 
   return (
     <div className={className}>
@@ -38,7 +38,8 @@ export const WebsiteFeedbackForm = ({
 
             {!isLoading && !canSubmit && (
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-300">
-                Use AI analysis at least once to unlock website feedback.
+                Complete at least one analysis, report, or appointment to unlock
+                website feedback.
               </div>
             )}
 

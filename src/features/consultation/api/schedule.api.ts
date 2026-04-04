@@ -76,7 +76,7 @@ const calcSlotDurationMinutes = (
   const start = sh * 60 + sm;
   const end = eh * 60 + em;
   const duration = end - start;
-  return duration > 0 ? duration : 30;
+  return duration > 0 ? duration : 5;
 };
 
 const mapStatusToValue = (status: string): number => {
