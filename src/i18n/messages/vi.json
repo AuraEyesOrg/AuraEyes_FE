@@ -1635,6 +1635,59 @@
       "bookSuccess": "Bạn đã đặt lịch thành công!"
     }
   },
+  "PatientRetinalAnalysis": {
+    "page": {
+      "title": "Kết quả sàng lọc của bạn"
+    },
+    "toggles": {
+      "showHighlights": "Hiển thị vùng AI đánh dấu",
+      "showHeatmap": "Hiển thị heatmap"
+    },
+    "summary": {
+      "title": "Tóm tắt sức khỏe võng mạc",
+      "preAnalyzeDescription": "AI sẽ phân tích ảnh võng mạc của bạn để tìm các dấu hiệu cần chú ý. Quá trình này thường chỉ mất vài giây.",
+      "analyzing": "Đang phân tích ảnh võng mạc của bạn..."
+    },
+    "actions": {
+      "preparingSession": "Đang chuẩn bị phiên...",
+      "outOfQuota": "Hết lượt",
+      "startScreening": "Bắt đầu sàng lọc",
+      "continueToReview": "Tiếp tục tới bước đánh giá",
+      "reanalyze": "Phân tích lại"
+    },
+    "risk": {
+      "low": {
+        "label": "Nguy cơ thấp",
+        "summary": "Ảnh quét cho thấy các dấu hiệu nguy cơ thấp. Hãy theo dõi định kỳ để duy trì sức khỏe võng mạc ổn định."
+      },
+      "moderate": {
+        "label": "Nên được đánh giá thêm",
+        "summary": "AI phát hiện một số vùng có thể cần bác sĩ chuyên khoa xem xét thêm. Điều này không khẳng định bạn đang mắc bệnh, mà chỉ cho thấy nên kiểm tra kỹ hơn."
+      },
+      "high": {
+        "label": "Cần chú ý",
+        "summary": "AI phát hiện một số vùng cần trao đổi với bác sĩ chuyên khoa mắt. Phát hiện sớm là cách tốt nhất để bảo vệ thị lực, và bước tiếp theo là nhờ bác sĩ xem kết quả này."
+      },
+      "healthy": {
+        "label": "Trông khỏe mạnh",
+        "summary": "Tin tốt là ảnh quét võng mạc của bạn trông khỏe mạnh. Không có dấu hiệu đáng lo ngại. Bạn vẫn nên duy trì khám mắt định kỳ để giữ thị lực tốt."
+      }
+    },
+    "errors": {
+      "noImagesInSession": "Không tìm thấy ảnh trong phiên sàng lọc này.",
+      "loadScreeningFailed": "Không thể tải ảnh sàng lọc. Vui lòng thử lại.",
+      "noImageForAnalysis": "Không có ảnh để phân tích",
+      "quotaExceeded": "Bạn đã hết lượt AI. Vui lòng mua thêm để tiếp tục.",
+      "quotaDeductFailed": "Không thể trừ lượt AI. Vui lòng thử lại.",
+      "modelLoading": "Mô hình AI đang khởi động. Vui lòng thử lại sau ít phút.",
+      "invalidImage": "Ảnh không hợp lệ. Vui lòng tải lên ảnh đáy mắt hợp lệ.",
+      "analysisUnavailable": "Không thể phân tích AI lúc này. Vui lòng kiểm tra dịch vụ AI đang hoạt động."
+    },
+    "disclaimer": {
+      "importantLabel": "Quan trọng:",
+      "message": "Sàng lọc AI hỗ trợ đánh giá, không thay thế tư vấn y khoa chuyên môn. Kết quả cần được bác sĩ nhãn khoa đủ chuyên môn xem xét."
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",

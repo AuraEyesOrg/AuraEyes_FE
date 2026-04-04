@@ -1634,5 +1634,58 @@
     "toast": {
       "bookSuccess": "Clinic booking completed successfully!"
     }
+  },
+  "PatientRetinalAnalysis": {
+    "page": {
+      "title": "Your Screening Results"
+    },
+    "toggles": {
+      "showHighlights": "Show AI Highlights",
+      "showHeatmap": "Show Heatmap"
+    },
+    "summary": {
+      "title": "Your Retinal Health Summary",
+      "preAnalyzeDescription": "Our AI will examine your retinal images for any signs that need attention. This usually takes just a few seconds.",
+      "analyzing": "Analyzing your retinal scan..."
+    },
+    "actions": {
+      "preparingSession": "Preparing session...",
+      "outOfQuota": "Out of quota",
+      "startScreening": "Start Screening",
+      "continueToReview": "Continue to Review",
+      "reanalyze": "Re-analyze scan"
+    },
+    "risk": {
+      "low": {
+        "label": "Low Risk",
+        "summary": "Your scan shows low-risk findings. Keep regular follow-up to monitor your retinal health."
+      },
+      "moderate": {
+        "label": "Worth Reviewing",
+        "summary": "Our AI noticed some areas that may benefit from a specialist's review. This does not mean there is a problem, it means a closer look could be helpful."
+      },
+      "high": {
+        "label": "Needs Attention",
+        "summary": "We found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision, and your next step is to have these results reviewed by a doctor."
+      },
+      "healthy": {
+        "label": "Looks Healthy",
+        "summary": "Great news, your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape."
+      }
+    },
+    "errors": {
+      "noImagesInSession": "No images found in this screening session.",
+      "loadScreeningFailed": "Unable to load screening images. Please try again.",
+      "noImageForAnalysis": "No image available for analysis",
+      "quotaExceeded": "You are out of AI credits. Please purchase more to continue.",
+      "quotaDeductFailed": "Unable to deduct AI quota. Please try again.",
+      "modelLoading": "AI model is loading. Please try again in a moment.",
+      "invalidImage": "Invalid image. Please upload a valid retinal fundus image.",
+      "analysisUnavailable": "AI analysis is unavailable. Please check that the AI service is running."
+    },
+    "disclaimer": {
+      "importantLabel": "Important:",
+      "message": "This AI screening assists but does not replace professional medical advice. Results should be reviewed by a qualified ophthalmologist."
+    }
   }
 }

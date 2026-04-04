@@ -1638,6 +1638,59 @@ declare module 'i18next' {
         bookSuccess: string;
       };
     };
+    PatientRetinalAnalysis: {
+      page: {
+        title: string;
+      };
+      toggles: {
+        showHighlights: string;
+        showHeatmap: string;
+      };
+      summary: {
+        title: string;
+        preAnalyzeDescription: string;
+        analyzing: string;
+      };
+      actions: {
+        preparingSession: string;
+        outOfQuota: string;
+        startScreening: string;
+        continueToReview: string;
+        reanalyze: string;
+      };
+      risk: {
+        low: {
+          label: string;
+          summary: string;
+        };
+        moderate: {
+          label: string;
+          summary: string;
+        };
+        high: {
+          label: string;
+          summary: string;
+        };
+        healthy: {
+          label: string;
+          summary: string;
+        };
+      };
+      errors: {
+        noImagesInSession: string;
+        loadScreeningFailed: string;
+        noImageForAnalysis: string;
+        quotaExceeded: string;
+        quotaDeductFailed: string;
+        modelLoading: string;
+        invalidImage: string;
+        analysisUnavailable: string;
+      };
+      disclaimer: {
+        importantLabel: string;
+        message: string;
+      };
+    };
     notification: {
       types: {
         screening: string;
