@@ -1,5 +1,21 @@
 import React from 'react';
-import { ToggleState, Anomaly } from '../types/retinal.types';
+
+// Inline types formerly from retinal.types.ts
+interface ToggleState {
+  vesselSegmentation: boolean;
+  hemorrhages: boolean;
+  exudates: boolean;
+  opticDisc: boolean;
+}
+interface Anomaly {
+  id: string;
+  name: string;
+  confidence: number;
+  description: string;
+  color: string;
+  type: 'warning' | 'priority_high' | 'info';
+  location: { x: number; y: number; width: number; height: number };
+}
 import {
   Info,
   Sparkles,

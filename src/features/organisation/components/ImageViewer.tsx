@@ -1,5 +1,30 @@
 import React from 'react';
-import { ToggleState, Anomaly, RetinalImage } from '../types/retinal.types';
+
+// Inline types formerly from retinal.types.ts
+interface ToggleState {
+  vesselSegmentation: boolean;
+  hemorrhages: boolean;
+  exudates: boolean;
+  opticDisc: boolean;
+}
+interface Anomaly {
+  id: string;
+  name: string;
+  confidence: number;
+  description: string;
+  color: string;
+  type: 'warning' | 'priority_high' | 'info';
+  location: { x: number; y: number; width: number; height: number };
+}
+interface RetinalImage {
+  id: string;
+  url: string;
+  name: string;
+  eye: string;
+  uploadedAt: string;
+  analyzed: boolean;
+  anomalies: Anomaly[];
+}
 import { AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface ImageViewerProps {
