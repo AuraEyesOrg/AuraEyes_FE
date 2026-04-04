@@ -1154,11 +1154,11 @@ export default function ChatPage() {
   const getSessionTypeLabel = (type: ConsultationSessionType) => {
     switch (type) {
       case ConsultationSessionType.Verification:
-        return t('PatientChat.sessionType.verification');
+        return t('PatientChat.session.type.verification');
       case ConsultationSessionType.VideoCall:
-        return t('PatientChat.sessionType.videoCall');
+        return t('PatientChat.session.type.videoCall');
       case ConsultationSessionType.ClinicBooking:
-        return t('PatientChat.sessionType.clinicBooking');
+        return t('PatientChat.session.type.clinicBooking');
       default:
         return '';
     }
@@ -1167,13 +1167,13 @@ export default function ChatPage() {
   const getSessionStatusLabel = (status: SessionStatus) => {
     switch (status) {
       case SessionStatus.Pending:
-        return t('PatientChat.sessionStatus.pending');
+        return t('PatientChat.session.status.pending');
       case SessionStatus.Confirmed:
-        return t('PatientChat.sessionStatus.confirmed');
+        return t('PatientChat.session.status.confirmed');
       case SessionStatus.Completed:
-        return t('PatientChat.sessionStatus.completed');
+        return t('PatientChat.session.status.completed');
       case SessionStatus.Cancelled:
-        return t('PatientChat.sessionStatus.cancelled');
+        return t('PatientChat.session.status.cancelled');
       default:
         return '';
     }
@@ -1601,9 +1601,9 @@ export default function ChatPage() {
 
                     const bubbleMetaTitle = isPatientMessage
                       ? phaseInfo.phase === 'PRE_VISIT'
-                        ? t('PatientChat.messageMeta.savedPreVisit')
-                        : t('PatientChat.messageMeta.deliveredToDoctor')
-                      : t('PatientChat.messageMeta.doctorNote');
+                        ? t('PatientChat.message.meta.savedPreVisit')
+                        : t('PatientChat.message.meta.deliveredToDoctor')
+                      : t('PatientChat.message.meta.doctorNote');
                     const BubbleMetaIcon = isPatientMessage
                       ? phaseInfo.phase === 'PRE_VISIT'
                         ? FileText

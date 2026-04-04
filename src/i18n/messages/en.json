@@ -1530,6 +1530,160 @@
       "bookAppointment": "Book Appointment"
     }
   },
+  "PatientSettings": {
+    "page": {
+      "title": "Settings",
+      "subtitle": "Manage your account settings and preferences"
+    },
+    "sections": {
+      "account": "Account",
+      "preferences": "Preferences",
+      "billing": "Billing"
+    },
+    "items": {
+      "profile": {
+        "title": "Profile",
+        "description": "Manage your personal information and avatar"
+      },
+      "security": {
+        "title": "Security",
+        "description": "Reset password and account security"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Email alerts, push notifications, reminders"
+      },
+      "paymentMethods": {
+        "title": "Payment Methods",
+        "description": "Manage wallet and payment options"
+      }
+    },
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark Mode",
+      "currentDark": "Currently using dark theme",
+      "currentLight": "Currently using light theme",
+      "toggleAriaLabel": "Toggle dark mode"
+    },
+    "language": {
+      "title": "Language & Region",
+      "subtitle": "Choose your preferred display language"
+    }
+  },
+  "PatientRoadmap": {
+    "page": {
+      "title": "Health Roadmap",
+      "subtitle": "Personalized guidance generated from your doctor diagnosis and AI screening context."
+    },
+    "error": {
+      "title": "Unable to load roadmap",
+      "description": "Please refresh the page or try again later."
+    },
+    "empty": {
+      "description": "Your personalized roadmap will appear after your doctor finalizes a diagnosis."
+    },
+    "risk": {
+      "badge": "{{risk}} Risk",
+      "levels": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      }
+    },
+    "generatedOn": "Generated on {{date}}",
+    "source": "Source: {{source}}",
+    "sections": {
+      "nextSteps": {
+        "title": "Next Steps",
+        "empty": "No immediate next steps were generated."
+      },
+      "lifestyleAdvice": {
+        "title": "Lifestyle Advice",
+        "empty": "No lifestyle guidance was generated."
+      },
+      "warningSigns": {
+        "title": "Warning Signs",
+        "empty": "No warning signs were listed."
+      }
+    },
+    "followUp": {
+      "title": "Follow-up Recommendation",
+      "needed": "Follow-up is recommended: {{timeframe}}",
+      "timeframeFallback": "Please contact your doctor for schedule details.",
+      "notNeeded": "No immediate follow-up is required.",
+      "disclaimer": "Clinical diagnosis and treatment decisions remain under doctor responsibility. This roadmap is patient-facing guidance."
+    }
+  },
+  "PatientNotifications": {
+    "page": {
+      "title": "Notifications",
+      "subtitle": "View and manage all your notifications"
+    },
+    "connection": {
+      "label": "Real-time notifications:",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "search": {
+      "placeholder": "Search notifications..."
+    },
+    "filters": {
+      "all": "All Notifications",
+      "unread": "Unread ({{count}})",
+      "aiScreenings": "AI Screenings",
+      "consultations": "Consultations",
+      "appointments": "Appointments",
+      "wallet": "Wallet"
+    },
+    "actions": {
+      "markAllRead": "Mark All Read",
+      "clickToViewDetails": "Click to view details ->"
+    },
+    "loading": {
+      "notifications": "Loading notifications..."
+    },
+    "empty": {
+      "title": "No notifications found",
+      "adjustSearchOrFilters": "Try adjusting your search or filter criteria",
+      "waiting": "We'll notify you when something happens"
+    },
+    "pagination": {
+      "showingRange": "Showing {{start}} to {{end}} of {{total}} notifications",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{current}} of {{total}}"
+    }
+  },
+  "PatientPaymentCallback": {
+    "toast": {
+      "depositSuccess": "Wallet top-up completed successfully!"
+    },
+    "loading": {
+      "title": "Verifying Payment...",
+      "description": "Please wait while we confirm your payment."
+    },
+    "success": {
+      "title": "Payment Successful!",
+      "description": "Your wallet has been credited successfully."
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "fallbackDescription": "The payment could not be verified. No charges have been made."
+    },
+    "cancelled": {
+      "title": "Payment Cancelled",
+      "description": "You cancelled the payment. No charges have been made."
+    },
+    "labels": {
+      "amount": "Amount",
+      "orderCode": "Order Code",
+      "newBalance": "New Balance"
+    },
+    "actions": {
+      "backToWallet": "Back to Wallet"
+    }
+  },
   "PatientReports": {
     "page": {
       "title": "Medical Reports",
@@ -1683,19 +1837,21 @@
       "invalidImage": "Invalid image. Please upload a valid retinal fundus image.",
       "analysisUnavailable": "AI analysis is unavailable. Please check that the AI service is running."
     },
-    "helper": {
-      "primaryFindingDescription": "{{disease}} detected as the primary finding ({{confidence}}% confidence).",
-      "secondaryFindingDescription": "{{disease}} - {{status}} ({{confidence}}% confidence).",
-      "confidenceDescription": "{{disease}} ({{confidence}}% confidence).",
-      "detectedByAi": "{{disease}} was detected by our AI screening.",
-      "detectedByAiWithReview": "{{disease}} was detected by our AI screening. Your specialist can evaluate this further.",
-      "detectedByAiTool": "Detected by our AI screening tool."
-    },
-    "persistedSummary": {
-      "high": "Findings need attention from an ophthalmologist.",
-      "moderate": "Some findings may need specialist review.",
-      "normal": "No major risk findings detected.",
-      "low": "Low-risk findings detected. Routine specialist follow-up is recommended."
+    "analysis": {
+      "helper": {
+        "primaryFindingDescription": "{{disease}} detected as the primary finding ({{confidence}}% confidence).",
+        "secondaryFindingDescription": "{{disease}} - {{status}} ({{confidence}}% confidence).",
+        "confidenceDescription": "{{disease}} ({{confidence}}% confidence).",
+        "detectedByAi": "{{disease}} was detected by our AI screening.",
+        "detectedByAiWithReview": "{{disease}} was detected by our AI screening. Your specialist can evaluate this further.",
+        "detectedByAiTool": "Detected by our AI screening tool."
+      },
+      "persistedSummary": {
+        "high": "Findings need attention from an ophthalmologist.",
+        "moderate": "Some findings may need specialist review.",
+        "normal": "No major risk findings detected.",
+        "low": "Low-risk findings detected. Routine specialist follow-up is recommended."
+      }
     },
     "disclaimer": {
       "importantLabel": "Important:",
@@ -1774,21 +1930,25 @@
       "imageAttached": "Image attached.",
       "sendMessageFailed": "Failed to send message. Please try again."
     },
-    "sessionType": {
-      "verification": "Verification",
-      "videoCall": "Video Call",
-      "clinicBooking": "Clinic Booking"
+    "session": {
+      "type": {
+        "verification": "Verification",
+        "videoCall": "Video Call",
+        "clinicBooking": "Clinic Booking"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
     },
-    "sessionStatus": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    },
-    "messageMeta": {
-      "savedPreVisit": "Saved as pre-visit note",
-      "deliveredToDoctor": "Delivered to your doctor",
-      "doctorNote": "Doctor note"
+    "message": {
+      "meta": {
+        "savedPreVisit": "Saved as pre-visit note",
+        "deliveredToDoctor": "Delivered to your doctor",
+        "doctorNote": "Doctor note"
+      }
     },
     "loading": {
       "conversations": "Loading conversations..."

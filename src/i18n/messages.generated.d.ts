@@ -1533,6 +1533,160 @@ declare module 'i18next' {
         bookAppointment: string;
       };
     };
+    PatientSettings: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      sections: {
+        account: string;
+        preferences: string;
+        billing: string;
+      };
+      items: {
+        profile: {
+          title: string;
+          description: string;
+        };
+        security: {
+          title: string;
+          description: string;
+        };
+        notifications: {
+          title: string;
+          description: string;
+        };
+        paymentMethods: {
+          title: string;
+          description: string;
+        };
+      };
+      appearance: {
+        title: string;
+        darkMode: string;
+        currentDark: string;
+        currentLight: string;
+        toggleAriaLabel: string;
+      };
+      language: {
+        title: string;
+        subtitle: string;
+      };
+    };
+    PatientRoadmap: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      error: {
+        title: string;
+        description: string;
+      };
+      empty: {
+        description: string;
+      };
+      risk: {
+        badge: string;
+        levels: {
+          LOW: string;
+          MEDIUM: string;
+          HIGH: string;
+          CRITICAL: string;
+        };
+      };
+      generatedOn: string;
+      source: string;
+      sections: {
+        nextSteps: {
+          title: string;
+          empty: string;
+        };
+        lifestyleAdvice: {
+          title: string;
+          empty: string;
+        };
+        warningSigns: {
+          title: string;
+          empty: string;
+        };
+      };
+      followUp: {
+        title: string;
+        needed: string;
+        timeframeFallback: string;
+        notNeeded: string;
+        disclaimer: string;
+      };
+    };
+    PatientNotifications: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      connection: {
+        label: string;
+        active: string;
+        inactive: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      filters: {
+        all: string;
+        unread: string;
+        aiScreenings: string;
+        consultations: string;
+        appointments: string;
+        wallet: string;
+      };
+      actions: {
+        markAllRead: string;
+        clickToViewDetails: string;
+      };
+      loading: {
+        notifications: string;
+      };
+      empty: {
+        title: string;
+        adjustSearchOrFilters: string;
+        waiting: string;
+      };
+      pagination: {
+        showingRange: string;
+        previous: string;
+        next: string;
+        pageOf: string;
+      };
+    };
+    PatientPaymentCallback: {
+      toast: {
+        depositSuccess: string;
+      };
+      loading: {
+        title: string;
+        description: string;
+      };
+      success: {
+        title: string;
+        description: string;
+      };
+      failed: {
+        title: string;
+        fallbackDescription: string;
+      };
+      cancelled: {
+        title: string;
+        description: string;
+      };
+      labels: {
+        amount: string;
+        orderCode: string;
+        newBalance: string;
+      };
+      actions: {
+        backToWallet: string;
+      };
+    };
     PatientReports: {
       page: {
         title: string;
@@ -1686,19 +1840,21 @@ declare module 'i18next' {
         invalidImage: string;
         analysisUnavailable: string;
       };
-      helper: {
-        primaryFindingDescription: string;
-        secondaryFindingDescription: string;
-        confidenceDescription: string;
-        detectedByAi: string;
-        detectedByAiWithReview: string;
-        detectedByAiTool: string;
-      };
-      persistedSummary: {
-        high: string;
-        moderate: string;
-        normal: string;
-        low: string;
+      analysis: {
+        helper: {
+          primaryFindingDescription: string;
+          secondaryFindingDescription: string;
+          confidenceDescription: string;
+          detectedByAi: string;
+          detectedByAiWithReview: string;
+          detectedByAiTool: string;
+        };
+        persistedSummary: {
+          high: string;
+          moderate: string;
+          normal: string;
+          low: string;
+        };
       };
       disclaimer: {
         importantLabel: string;
@@ -1777,21 +1933,25 @@ declare module 'i18next' {
         imageAttached: string;
         sendMessageFailed: string;
       };
-      sessionType: {
-        verification: string;
-        videoCall: string;
-        clinicBooking: string;
+      session: {
+        type: {
+          verification: string;
+          videoCall: string;
+          clinicBooking: string;
+        };
+        status: {
+          pending: string;
+          confirmed: string;
+          completed: string;
+          cancelled: string;
+        };
       };
-      sessionStatus: {
-        pending: string;
-        confirmed: string;
-        completed: string;
-        cancelled: string;
-      };
-      messageMeta: {
-        savedPreVisit: string;
-        deliveredToDoctor: string;
-        doctorNote: string;
+      message: {
+        meta: {
+          savedPreVisit: string;
+          deliveredToDoctor: string;
+          doctorNote: string;
+        };
       };
       loading: {
         conversations: string;

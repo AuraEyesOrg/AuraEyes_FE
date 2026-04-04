@@ -16,6 +16,7 @@ import {
 import type { Notification } from '@/types/notification';
 import { NotificationIcon } from '@/components/ui/notification';
 import { formatRelativeTime } from '@/lib/date-utils';
+import { useTranslation } from 'react-i18next';
 
 type NotificationFilter = 'all' | 'unread' | NotificationType;
 
@@ -27,6 +28,10 @@ const isNotificationTypeValue = (value: number): value is NotificationType => {
  * Notifications Page - Complete notification history with filtering & pagination
  */
 export default function NotificationsPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -162,10 +167,10 @@ export default function NotificationsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Notifications
+                {t('PatientNotifications.page.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                View and manage all your notifications
+                {t('PatientNotifications.page.subtitle')}
               </p>
             </div>
           </div>
@@ -182,8 +187,10 @@ export default function NotificationsPage() {
               }`}
             />
             <span className="text-gray-600 dark:text-gray-400">
-              Real-time notifications:{' '}
-              {connectionStatus === 'connected' ? 'Active' : 'Inactive'}
+              {t('PatientNotifications.connection.label')}{' '}
+              {connectionStatus === 'connected'
+                ? t('PatientNotifications.connection.active')
+                : t('PatientNotifications.connection.inactive')}
             </span>
           </div>
         </div>
@@ -199,7 +206,7 @@ export default function NotificationsPage() {
               />
               <input
                 type="text"
-                placeholder="Search notifications..."
+                placeholder={t('PatientNotifications.search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
@@ -218,19 +225,25 @@ export default function NotificationsPage() {
                          bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
                          focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Notifications</option>
-                <option value="unread">Unread ({unreadCount})</option>
+                <option value="all">
+                  {t('PatientNotifications.filters.all')}
+                </option>
+                <option value="unread">
+                  {t('PatientNotifications.filters.unread', {
+                    count: unreadCount,
+                  })}
+                </option>
                 <option value={NotificationType.AiScreeningCompleted}>
-                  AI Screenings
+                  {t('PatientNotifications.filters.aiScreenings')}
                 </option>
                 <option value={NotificationType.NewConsultationRequest}>
-                  Consultations
+                  {t('PatientNotifications.filters.consultations')}
                 </option>
                 <option value={NotificationType.NewAppointmentBooked}>
-                  Appointments
+                  {t('PatientNotifications.filters.appointments')}
                 </option>
                 <option value={NotificationType.WalletDepositSuccess}>
-                  Wallet
+                  {t('PatientNotifications.filters.wallet')}
                 </option>
               </select>
             </div>
@@ -243,7 +256,7 @@ export default function NotificationsPage() {
                          hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
               >
                 <CheckCheck size={20} />
-                Mark All Read
+                {t('PatientNotifications.actions.markAllRead')}
               </button>
             )}
           </div>
@@ -254,18 +267,20 @@ export default function NotificationsPage() {
           {isLoading ? (
             <div className="p-8 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-              <p className="mt-2 text-gray-500">Loading notifications...</p>
+              <p className="mt-2 text-gray-500">
+                {t('PatientNotifications.loading.notifications')}
+              </p>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-12 text-center">
               <Bell size={48} className="mx-auto mb-3 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No notifications found
+                {t('PatientNotifications.empty.title')}
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery || selectedFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria'
-                  : "We'll notify you when something happens"}
+                  ? t('PatientNotifications.empty.adjustSearchOrFilters')
+                  : t('PatientNotifications.empty.waiting')}
               </p>
             </div>
           ) : (
@@ -285,9 +300,11 @@ export default function NotificationsPage() {
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between">
             <span className="text-sm text-gray-700 dark:text-gray-300">
-              Showing {(currentPage - 1) * pageSize + 1} to{' '}
-              {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{' '}
-              notifications
+              {t('PatientNotifications.pagination.showingRange', {
+                start: (currentPage - 1) * pageSize + 1,
+                end: Math.min(currentPage * pageSize, totalCount),
+                total: totalCount,
+              })}
             </span>
 
             <div className="flex items-center gap-2">
@@ -298,11 +315,14 @@ export default function NotificationsPage() {
                          disabled:opacity-50 disabled:cursor-not-allowed
                          hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                Previous
+                {t('PatientNotifications.pagination.previous')}
               </button>
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Page {currentPage} of {totalPages}
+                {t('PatientNotifications.pagination.pageOf', {
+                  current: currentPage,
+                  total: totalPages,
+                })}
               </span>
 
               <button
@@ -312,7 +332,7 @@ export default function NotificationsPage() {
                          disabled:opacity-50 disabled:cursor-not-allowed
                          hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                Next
+                {t('PatientNotifications.pagination.next')}
               </button>
             </div>
           </div>
@@ -334,6 +354,10 @@ function NotificationListItem({
   notification,
   onClick,
 }: NotificationListItemProps) {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const iconName = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(notification.type);
   const typeLabel = getNotificationTypeLabel(notification.type);
@@ -388,7 +412,7 @@ function NotificationListItem({
 
           {/* Action hint */}
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-            Click to view details →
+            {t('PatientNotifications.actions.clickToViewDetails')}
           </p>
         </div>
 
