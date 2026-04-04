@@ -1691,6 +1691,86 @@ declare module 'i18next' {
         message: string;
       };
     };
+    PatientChat: {
+      phase: {
+        preVisitLabel: string;
+        preVisitDescription: string;
+        inProgressLabel: string;
+        inProgressDescription: string;
+        completedLabel: string;
+        completedDescription: string;
+      };
+      schedule: {
+        pending: string;
+        unavailable: string;
+      };
+      preview: {
+        memoOnly: string;
+        archived: string;
+        locked: string;
+        empty: string;
+        imageAttachmentShared: string;
+        scanShared: string;
+        newMessage: string;
+      };
+      meeting: {
+        joinLocked: string;
+        joinBeforeMinutes: string;
+        unlockAfter: string;
+        joinMeeting: string;
+        join: string;
+        canJoinBeforeMinutes: string;
+        ended: string;
+        sessionExpired: string;
+        linkPending: string;
+        consultationCompleted: string;
+      };
+      composer: {
+        initialSharedScanMessage: string;
+        placeholder: {
+          scanContext: string;
+          preVisit: string;
+          inProgress: string;
+          default: string;
+        };
+      };
+      fallback: {
+        assignedOphthalmologist: string;
+        patient: string;
+      };
+      loading: {
+        conversations: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      stats: {
+        all: string;
+        open: string;
+        upcoming: string;
+      };
+      empty: {
+        noSearchResultsTitle: string;
+        noSearchResultsDescription: string;
+      };
+      chatStatus: {
+        title: string;
+        unreadActivity: string;
+      };
+      overview: {
+        show: string;
+        hide: string;
+        title: string;
+        appointment: string;
+        lastActivity: string;
+        consultationFee: string;
+        phase: string;
+      };
+      guidance: {
+        title: string;
+        description: string;
+      };
+    };
     notification: {
       types: {
         screening: string;

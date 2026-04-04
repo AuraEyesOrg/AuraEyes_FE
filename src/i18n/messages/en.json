@@ -1687,5 +1687,85 @@
       "importantLabel": "Important:",
       "message": "This AI screening assists but does not replace professional medical advice. Results should be reviewed by a qualified ophthalmologist."
     }
+  },
+  "PatientChat": {
+    "phase": {
+      "preVisitLabel": "Pre-visit",
+      "preVisitDescription": "Share symptoms, scan notes, or questions before the consultation starts. The doctor will review them at appointment time.",
+      "inProgressLabel": "In Progress",
+      "inProgressDescription": "Consultation is active. You can chat and join the video call.",
+      "completedLabel": "Completed",
+      "completedDescription": "Consultation has been completed. Chat is now read-only."
+    },
+    "schedule": {
+      "pending": "Schedule pending",
+      "unavailable": "Schedule is unavailable."
+    },
+    "preview": {
+      "memoOnly": "Leave a note for your doctor...",
+      "archived": "Session completed - no messages",
+      "locked": "Chat opens at appointment time",
+      "empty": "No messages yet",
+      "imageAttachmentShared": "Image attachment shared",
+      "scanShared": "Retinal scan shared",
+      "newMessage": "New message"
+    },
+    "meeting": {
+      "joinLocked": "Join Locked",
+      "joinBeforeMinutes": "Join room {{minutes}} minutes before start",
+      "unlockAfter": "Opens in {{time}}",
+      "joinMeeting": "Join Meeting",
+      "join": "Join",
+      "canJoinBeforeMinutes": "Can join {{minutes}} minutes before start",
+      "ended": "Ended",
+      "sessionExpired": "Session has passed the allowed join window",
+      "linkPending": "Link Pending",
+      "consultationCompleted": "Consultation completed"
+    },
+    "composer": {
+      "initialSharedScanMessage": "Hi Doctor, I'd like to share my recent screening results for your review.",
+      "placeholder": {
+        "scanContext": "Add context for the scan before sending it to your ophthalmologist...",
+        "preVisit": "Share symptoms, scan notes, or questions before the consultation starts...",
+        "inProgress": "Type a message...",
+        "default": "Type your message here..."
+      }
+    },
+    "fallback": {
+      "assignedOphthalmologist": "Assigned ophthalmologist",
+      "patient": "Patient"
+    },
+    "loading": {
+      "conversations": "Loading conversations..."
+    },
+    "search": {
+      "placeholder": "Search by doctor, status, or session type"
+    },
+    "stats": {
+      "all": "All",
+      "open": "Open",
+      "upcoming": "Upcoming"
+    },
+    "empty": {
+      "noSearchResultsTitle": "No sessions match your search",
+      "noSearchResultsDescription": "Try a doctor name, chat status, or consultation type."
+    },
+    "chatStatus": {
+      "title": "Chat status: {{status}}",
+      "unreadActivity": "Unread activity"
+    },
+    "overview": {
+      "show": "Show session overview",
+      "hide": "Hide session overview",
+      "title": "Session Overview",
+      "appointment": "Appointment",
+      "lastActivity": "Last activity",
+      "consultationFee": "Consultation fee",
+      "phase": "Phase"
+    },
+    "guidance": {
+      "title": "Conversation Guidance",
+      "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster."
+    }
   }
 }

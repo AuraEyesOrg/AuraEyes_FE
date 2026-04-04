@@ -1688,6 +1688,86 @@
       "message": "Sàng lọc AI hỗ trợ đánh giá, không thay thế tư vấn y khoa chuyên môn. Kết quả cần được bác sĩ nhãn khoa đủ chuyên môn xem xét."
     }
   },
+  "PatientChat": {
+    "phase": {
+      "preVisitLabel": "Trước buổi khám",
+      "preVisitDescription": "Hãy chia sẻ triệu chứng, ghi chú ảnh quét hoặc câu hỏi trước khi buổi tư vấn bắt đầu. Bác sĩ sẽ xem các thông tin này vào giờ hẹn.",
+      "inProgressLabel": "Đang tư vấn",
+      "inProgressDescription": "Buổi tư vấn đang diễn ra. Bạn có thể nhắn tin và tham gia cuộc gọi video.",
+      "completedLabel": "Hoàn tất",
+      "completedDescription": "Buổi tư vấn đã hoàn tất. Khung chat hiện ở chế độ chỉ đọc."
+    },
+    "schedule": {
+      "pending": "Chưa có lịch cụ thể",
+      "unavailable": "Lịch hẹn hiện không khả dụng."
+    },
+    "preview": {
+      "memoOnly": "Để lại ghi chú cho bác sĩ...",
+      "archived": "Phiên đã hoàn tất - không còn tin nhắn",
+      "locked": "Chat sẽ mở khi đến giờ hẹn",
+      "empty": "Chưa có tin nhắn",
+      "imageAttachmentShared": "Đã chia sẻ ảnh đính kèm",
+      "scanShared": "Đã chia sẻ kết quả ảnh quét võng mạc",
+      "newMessage": "Tin nhắn mới"
+    },
+    "meeting": {
+      "joinLocked": "Chưa thể vào",
+      "joinBeforeMinutes": "Được vào phòng trước {{minutes}} phút",
+      "unlockAfter": "Mở sau {{time}}",
+      "joinMeeting": "Vào cuộc họp",
+      "join": "Vào",
+      "canJoinBeforeMinutes": "Có thể vào trước {{minutes}} phút",
+      "ended": "Đã kết thúc",
+      "sessionExpired": "Cuộc hẹn đã qua khung thời gian tham gia",
+      "linkPending": "Đang chờ liên kết",
+      "consultationCompleted": "Buổi tư vấn đã hoàn tất"
+    },
+    "composer": {
+      "initialSharedScanMessage": "Chào bác sĩ, em muốn chia sẻ kết quả sàng lọc gần nhất để bác sĩ xem giúp.",
+      "placeholder": {
+        "scanContext": "Thêm ngữ cảnh cho ảnh quét trước khi gửi cho bác sĩ...",
+        "preVisit": "Chia sẻ triệu chứng, ghi chú ảnh quét hoặc câu hỏi trước buổi tư vấn...",
+        "inProgress": "Nhập tin nhắn...",
+        "default": "Nhập tin nhắn của bạn..."
+      }
+    },
+    "fallback": {
+      "assignedOphthalmologist": "Bác sĩ được phân công",
+      "patient": "Bệnh nhân"
+    },
+    "loading": {
+      "conversations": "Đang tải cuộc trò chuyện..."
+    },
+    "search": {
+      "placeholder": "Tìm theo bác sĩ, trạng thái, hoặc loại phiên"
+    },
+    "stats": {
+      "all": "Tất cả",
+      "open": "Đang mở",
+      "upcoming": "Sắp tới"
+    },
+    "empty": {
+      "noSearchResultsTitle": "Không có phiên phù hợp với tìm kiếm",
+      "noSearchResultsDescription": "Hãy thử tìm theo tên bác sĩ, trạng thái chat hoặc loại tư vấn."
+    },
+    "chatStatus": {
+      "title": "Trạng thái chat: {{status}}",
+      "unreadActivity": "Có hoạt động chưa đọc"
+    },
+    "overview": {
+      "show": "Hiển thị tổng quan phiên",
+      "hide": "Ẩn tổng quan phiên",
+      "title": "Tổng quan phiên",
+      "appointment": "Lịch hẹn",
+      "lastActivity": "Hoạt động gần nhất",
+      "consultationFee": "Phí tư vấn",
+      "phase": "Giai đoạn"
+    },
+    "guidance": {
+      "title": "Hướng dẫn trao đổi",
+      "description": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn."
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",
