@@ -14,6 +14,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { getUserAvatarMeta } from '@/lib/user-avatar';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/patient/dashboard' },
@@ -36,9 +37,10 @@ export default function PatientSidebar() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
-  const userName = user?.fullName ?? 'Patient';
+  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Patient');
+  const userName = avatarMeta.displayName;
   const userAvatar = user?.avatarUrl;
-  const userId = user?.email ?? '';
+  const userEmail = user?.email ?? '';
 
   const handleLogout = () => {
     logout();
@@ -92,7 +94,7 @@ export default function PatientSidebar() {
             >
               <div className="relative shrink-0">
                 <div
-                  className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
+                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
                   style={{
                     backgroundImage: userAvatar
                       ? `url("${userAvatar}")`
@@ -101,17 +103,17 @@ export default function PatientSidebar() {
                 >
                   {!userAvatar && (
                     <span className="text-white font-bold text-sm">
-                      {userName.charAt(0)}
+                      {avatarMeta.initials || 'PT'}
                     </span>
                   )}
                 </div>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A202C]"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-(--bg-secondary)"></div>
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate group-hover:text-brand transition-colors">
                   {userName}
                 </p>
-                <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
+                <p className="text-xs text-gray-400 truncate">{userEmail}</p>
               </div>
             </NavLink>
             <button

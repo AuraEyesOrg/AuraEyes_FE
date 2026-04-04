@@ -17,6 +17,7 @@ import {
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getUserAvatarMeta } from '@/lib/user-avatar';
 import {
   DEFAULT_LOCALE,
   type AppLocale,
@@ -100,8 +101,10 @@ export default function DoctorSidebar({
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
-  const displayName = user?.fullName ?? 'Doctor';
+  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Doctor');
+  const displayName = avatarMeta.displayName;
   const userAvatar = user?.avatarUrl;
+  const displayEmail = user?.email ?? '';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';
@@ -194,17 +197,18 @@ export default function DoctorSidebar({
                 >
                   {!userAvatar && (
                     <span className="text-white font-bold text-sm">
-                      {displayName.split(' ').pop()?.charAt(0) || 'D'}
+                      {avatarMeta.initials || 'DR'}
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
-                  {displayName.split(' ').pop()}
+                  {displayName}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {t('Ophthalmologist.common.role', 'Ophthalmologist')}
+                  {displayEmail ||
+                    t('Ophthalmologist.common.role', 'Ophthalmologist')}
                 </p>
               </div>
             </div>

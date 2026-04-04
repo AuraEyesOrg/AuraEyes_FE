@@ -9,6 +9,7 @@ import { ChevronRight, LogOut } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
 
 export default function Sidebar() {
@@ -53,14 +54,10 @@ export default function Sidebar() {
     });
   }, [activeGroupIds]);
 
-  const displayName = user?.fullName ?? 'System Admin';
+  const avatarMeta = getUserAvatarMeta(user?.fullName, 'System Admin');
+  const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
-  const initials = displayName
-    .split(' ')
-    .map((w) => w.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const avatarUrl = user?.avatarUrl ?? '';
 
   const handleLogout = () => {
     logout();
@@ -213,8 +210,15 @@ export default function Sidebar() {
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0">
-                {initials || 'SA'}
+              <div
+                className="w-10 h-10 rounded-full bg-brand bg-cover bg-center flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0"
+                style={{
+                  backgroundImage: avatarUrl
+                    ? `url("${avatarUrl}")`
+                    : undefined,
+                }}
+              >
+                {!avatarUrl && (avatarMeta.initials || 'SA')}
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
