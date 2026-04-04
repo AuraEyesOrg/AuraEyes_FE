@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FileText,
   Download,
@@ -11,11 +11,10 @@ import {
   Clock,
   TrendingUp,
   ChevronRight,
-  ExternalLink,
   X,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 interface Report {
   id: string;
@@ -145,6 +144,7 @@ const ReportsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const filteredReports = mockReports.filter((report) => {
     const matchesSearch =
@@ -153,6 +153,24 @@ const ReportsPage = () => {
     const matchesRisk = filterRisk === 'all' || report.riskLevel === filterRisk;
     return matchesSearch && matchesRisk;
   });
+
+  const latestReport = useMemo(() => {
+    return [...mockReports].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0];
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get('openDiagnosis') !== 'latest' || !latestReport) {
+      return;
+    }
+
+    setSelectedReport(latestReport);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('openDiagnosis');
+    setSearchParams(nextParams, { replace: true });
+  }, [latestReport, searchParams, setSearchParams]);
 
   const closeDiagnosisModal = () => {
     setSelectedReport(null);
@@ -393,12 +411,6 @@ const ReportsPage = () => {
                   <Eye className="w-4 h-4" />
                   View Details
                 </button>
-                {report.hasHeatmap && (
-                  <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#1e3a5f] hover:bg-[#2d4a6f] text-white rounded-lg text-sm font-medium transition-colors">
-                    <ExternalLink className="w-4 h-4" />
-                    View Heatmap
-                  </button>
-                )}
                 <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors">
                   <Download className="w-4 h-4" />
                   Download PDF

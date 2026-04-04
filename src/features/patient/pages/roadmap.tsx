@@ -9,7 +9,6 @@ import {
   HeartPulse,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
@@ -120,8 +119,7 @@ export default function RoadmapPage() {
 
   const ctaLinks = useMemo(
     () => ({
-      bookConsultation: localizedPath('/patient/book-appointment'),
-      viewDiagnosis: localizedPath('/patient/reports'),
+      viewDiagnosis: `${localizedPath('/patient/reports')}?openDiagnosis=latest`,
       downloadReport: `${localizedPath('/patient/reports')}?diagnosisId=${latestRoadmap?.medicalDiagnosisId ?? ''}`,
     }),
     [currentLocale, latestRoadmap?.medicalDiagnosisId]
@@ -209,13 +207,6 @@ export default function RoadmapPage() {
             Your personalized roadmap will appear after your doctor finalizes a
             diagnosis.
           </p>
-          <Link
-            to={localizedPath('/patient/book-appointment')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            <Stethoscope className="w-4 h-4" />
-            Book Consultation
-          </Link>
         </div>
       </PatientLayout>
     );
@@ -282,14 +273,7 @@ export default function RoadmapPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3 min-w-60">
-              <Link
-                to={ctaLinks.bookConsultation}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-              >
-                <Stethoscope className="w-4.5 h-4.5" />
-                Book Consultation
-              </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 min-w-60">
               <Link
                 to={ctaLinks.viewDiagnosis}
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
