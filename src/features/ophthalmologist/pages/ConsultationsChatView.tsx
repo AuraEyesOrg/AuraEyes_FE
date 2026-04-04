@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   useTransition,
-  type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
 import {
@@ -1466,52 +1465,37 @@ export default function ConsultationsChatView({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-xs font-medium text-slate-500 dark:border-[#1e3a5f]">
-          <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+        <div className="border-b border-slate-200/80 px-5 py-4 dark:border-[#1e3a5f]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 {chatSessions.length}
-              </p>
-              <TrendIndicator trend={allSessionsTrend} />
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-1">
-              <p className="uppercase tracking-[0.14em]">
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {t('Ophthalmologist.consultations.chat.stats.all', 'All')}
-              </p>
-              <MiniSparkline series={allSessionsSeries} stroke="#06b6d4" />
+              </span>
             </div>
-          </div>
-
-          <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 {totalOpenSessions}
-              </p>
-              <TrendIndicator trend={openSessionsTrend} />
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-1">
-              <p className="uppercase tracking-[0.14em]">
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {t('Ophthalmologist.consultations.chat.stats.open', 'Open')}
-              </p>
-              <MiniSparkline series={openSessionsSeries} stroke="#10b981" />
+              </span>
             </div>
-          </div>
-
-          <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Clock3 className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 {upcomingSessions}
-              </p>
-              <TrendIndicator trend={upcomingSessionsTrend} />
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-1">
-              <p className="uppercase tracking-[0.14em]">
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {t(
                   'Ophthalmologist.consultations.chat.stats.upcoming',
                   'Upcoming'
                 )}
-              </p>
-              <MiniSparkline series={upcomingSessionsSeries} stroke="#f59e0b" />
+              </span>
             </div>
           </div>
         </div>

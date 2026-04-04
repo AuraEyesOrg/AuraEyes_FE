@@ -1,15 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Eye,
-  Brain,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-} from 'lucide-react';
+import { Users, Eye, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
@@ -24,8 +15,6 @@ import {
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
 
-type Trend = 'up' | 'down';
-
 type ActivityItem = {
   day: string;
   screenings: number;
@@ -39,7 +28,13 @@ type ConditionItem = {
   color: string;
 };
 
-const CONDITION_COLORS = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444'];
+const CONDITION_COLORS = [
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#ef4444',
+];
 
 const REVIEWED_STATUSES = new Set([
   'reviewed',
@@ -68,6 +63,14 @@ const calcChange = (current: number, previous: number) => {
   return Number((((current - previous) / previous) * 100).toFixed(1));
 };
 
+const getChangeClass = (change: number) =>
+  change >= 0
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : 'text-red-500 dark:text-red-400';
+
+const toChangeLabel = (change: number) =>
+  `${change > 0 ? '+' : ''}${Math.abs(change)}%`;
+
 const getMostCommonModelVersion = (
   screenings: OphthalmologistScreeningListItemDto[]
 ) => {
@@ -85,50 +88,6 @@ const isReviewed = (status: string | null | undefined) =>
 
 const isHighRisk = (riskLevel: string | null | undefined) =>
   HIGH_RISK_LEVELS.has((riskLevel ?? '').trim().toLowerCase());
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  change: number;
-  trend: 'up' | 'down';
-  iconBg: string;
-}
-
-function StatCard({
-  icon,
-  title,
-  value,
-  change,
-  trend,
-  iconBg,
-}: StatCardProps) {
-  return (
-    <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-5">
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBg}`}
-        >
-          {icon}
-        </div>
-        <div
-          className={`flex items-center gap-1 text-sm font-medium ${trend === 'up' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}
-        >
-          {trend === 'up' ? (
-            <TrendingUp size={14} />
-          ) : (
-            <TrendingDown size={14} />
-          )}
-          {Math.abs(change)}%
-        </div>
-      </div>
-      <p className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
-        {value}
-      </p>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-    </div>
-  );
-}
 
 export default function AnalyticsPage() {
   const { user } = useAuthStore();
@@ -184,7 +143,11 @@ export default function AnalyticsPage() {
     const endPrevious = new Date(startCurrent);
     endPrevious.setDate(endPrevious.getDate() - 1);
 
-    const isInRange = (value: string | null | undefined, start: Date, end: Date) => {
+    const isInRange = (
+      value: string | null | undefined,
+      start: Date,
+      end: Date
+    ) => {
       if (!value) return false;
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return false;
@@ -205,16 +168,23 @@ export default function AnalyticsPage() {
       isInRange(s.createdAt, startPrevious, endPrevious)
     );
 
-    const patientsCurrent = new Set(currentWeekSessions.map((s) => s.patientId)).size;
-    const patientsPrevious = new Set(previousWeekSessions.map((s) => s.patientId)).size;
+    const patientsCurrent = new Set(currentWeekSessions.map((s) => s.patientId))
+      .size;
+    const patientsPrevious = new Set(
+      previousWeekSessions.map((s) => s.patientId)
+    ).size;
 
     const avgConfidence = (items: OphthalmologistScreeningListItemDto[]) => {
       const confidence = items
         .map((s) => s.confidenceScore)
-        .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+        .filter(
+          (v): v is number => typeof v === 'number' && Number.isFinite(v)
+        );
       if (confidence.length === 0) return 0;
       const normalized = confidence.map((v) => (v > 0 && v <= 1 ? v * 100 : v));
-      return Math.round(normalized.reduce((sum, v) => sum + v, 0) / normalized.length);
+      return Math.round(
+        normalized.reduce((sum, v) => sum + v, 0) / normalized.length
+      );
     };
 
     const currentConfidence = avgConfidence(currentWeekScreenings);
@@ -269,8 +239,12 @@ export default function AnalyticsPage() {
         color: CONDITION_COLORS[index % CONDITION_COLORS.length],
       }));
 
-    const reviewedCount = screenings.filter((s) => isReviewed(s.reviewStatus)).length;
-    const highRiskCount = screenings.filter((s) => isHighRisk(s.latestRiskLevel)).length;
+    const reviewedCount = screenings.filter((s) =>
+      isReviewed(s.reviewStatus)
+    ).length;
+    const highRiskCount = screenings.filter((s) =>
+      isHighRisk(s.latestRiskLevel)
+    ).length;
 
     const activityFeed = [...screenings]
       .sort(
@@ -307,7 +281,10 @@ export default function AnalyticsPage() {
       patientsThisWeek: patientsCurrent,
       confidenceThisWeek: currentConfidence,
       urgentThisWeek: urgentCurrent,
-      screeningsChange: calcChange(currentWeekScreenings.length, previousWeekScreenings.length),
+      screeningsChange: calcChange(
+        currentWeekScreenings.length,
+        previousWeekScreenings.length
+      ),
       patientsChange: calcChange(patientsCurrent, patientsPrevious),
       confidenceChange: calcChange(currentConfidence, previousConfidence),
       urgentChange: calcChange(urgentCurrent, urgentPrevious),
@@ -322,7 +299,9 @@ export default function AnalyticsPage() {
 
   const maxScreenings = Math.max(1, ...weeklyActivity.map((d) => d.screenings));
   const isLoading =
-    metricsQuery.isLoading || screeningsQuery.isLoading || sessionsQuery.isLoading;
+    metricsQuery.isLoading ||
+    screeningsQuery.isLoading ||
+    sessionsQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -365,48 +344,64 @@ export default function AnalyticsPage() {
             </p>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <StatCard
-              icon={
-                <Eye className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-              }
-              title="Screenings This Week"
-              value={screeningsThisWeek}
-              change={screeningsChange}
-              trend={screeningsChange >= 0 ? 'up' : 'down'}
-              iconBg="bg-cyan-50 dark:bg-cyan-900/30"
-            />
-            <StatCard
-              icon={
-                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              }
-              title="Patients Served"
-              value={patientsThisWeek}
-              change={patientsChange}
-              trend={patientsChange >= 0 ? 'up' : 'down'}
-              iconBg="bg-purple-50 dark:bg-purple-900/30"
-            />
-            <StatCard
-              icon={
-                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-              }
-              title="Avg Confidence"
-              value={`${confidenceThisWeek}%`}
-              change={confidenceChange}
-              trend={confidenceChange >= 0 ? 'up' : 'down'}
-              iconBg="bg-amber-50 dark:bg-amber-900/30"
-            />
-            <StatCard
-              icon={
-                <AlertTriangle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              }
-              title="Urgent Cases"
-              value={metrics?.urgentCases ?? urgentThisWeek}
-              change={urgentChange}
-              trend={urgentChange >= 0 ? 'up' : 'down'}
-              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
-            />
+          {/* Compact Stats */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {screeningsThisWeek}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Screenings This Week
+              </span>
+              <span
+                className={`text-[11px] font-semibold ${getChangeClass(screeningsChange)}`}
+              >
+                {toChangeLabel(screeningsChange)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Users className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {patientsThisWeek}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Patients Served
+              </span>
+              <span
+                className={`text-[11px] font-semibold ${getChangeClass(patientsChange)}`}
+              >
+                {toChangeLabel(patientsChange)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {confidenceThisWeek}%
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Avg Confidence
+              </span>
+              <span
+                className={`text-[11px] font-semibold ${getChangeClass(confidenceChange)}`}
+              >
+                {toChangeLabel(confidenceChange)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <AlertTriangle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {metrics?.urgentCases ?? urgentThisWeek}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Urgent Cases
+              </span>
+              <span
+                className={`text-[11px] font-semibold ${getChangeClass(urgentChange)}`}
+              >
+                {toChangeLabel(urgentChange)}
+              </span>
+            </div>
           </div>
 
           {/* Charts Row */}

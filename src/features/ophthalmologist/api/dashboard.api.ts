@@ -21,11 +21,49 @@ export interface OphthalmologistUrgentCase {
   createdAt: string;
 }
 
+interface OphthalmologistDashboardMetricsRaw {
+  pendingReviews?: number;
+  urgentCases?: number;
+  completedToday?: number;
+  openSlotsToday?: number;
+  urgentCaseList?: unknown;
+}
+
+const normalizeUrgentCaseList = (
+  value: unknown
+): OphthalmologistUrgentCase[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(
+    (item): item is OphthalmologistUrgentCase =>
+      Boolean(item) && typeof item === 'object'
+  );
+};
+
+const normalizeDashboardMetrics = (
+  payload: OphthalmologistDashboardMetricsRaw
+): OphthalmologistDashboardMetrics => ({
+  pendingReviews:
+    typeof payload.pendingReviews === 'number' ? payload.pendingReviews : 0,
+  urgentCases:
+    typeof payload.urgentCases === 'number' ? payload.urgentCases : 0,
+  completedToday:
+    typeof payload.completedToday === 'number' ? payload.completedToday : 0,
+  openSlotsToday:
+    typeof payload.openSlotsToday === 'number' ? payload.openSlotsToday : 0,
+  urgentCaseList: normalizeUrgentCaseList(payload.urgentCaseList),
+});
+
 export const getOphthalmologistDashboardMetrics =
   async (): Promise<OphthalmologistDashboardMetrics> => {
     const response = await api.get<
-      ApiResponse<OphthalmologistDashboardMetrics>
+      ApiResponse<OphthalmologistDashboardMetricsRaw>
     >(API_ENDPOINTS.OPHTHALMOLOGIST.DASHBOARD_METRICS);
 
-    return unwrapApiData<OphthalmologistDashboardMetrics>(response.data);
+    const data = unwrapApiData<OphthalmologistDashboardMetricsRaw>(
+      response.data
+    );
+    return normalizeDashboardMetrics(data ?? {});
   };

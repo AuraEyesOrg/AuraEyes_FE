@@ -19,6 +19,9 @@ import {
   listOphthalmologistScreenings,
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
+import { useConsultationSessions } from '@/features/consultation/hooks/use-consultation';
+import { SessionStatus } from '@/types/consultation';
+import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
@@ -46,6 +49,12 @@ function avatarColorForKey(key: string): string {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
 }
 
 function formatScreeningRef(screeningId: string): string {
@@ -141,6 +150,18 @@ function getStatusConfig(status: string) {
   }
 }
 
+function isPendingLikeReviewStatus(status: string): boolean {
+  const normalized = (status ?? '').trim().toLowerCase();
+  return (
+    normalized.length === 0 ||
+    normalized === 'pending-review' ||
+    normalized === 'pending' ||
+    normalized === 'pendingreview' ||
+    normalized === 'in-review' ||
+    normalized === 'inreview'
+  );
+}
+
 function getConfidenceColor(confidence: number): string {
   if (confidence >= 90) return 'bg-emerald-500';
   if (confidence >= 70) return 'bg-amber-500';
@@ -161,17 +182,31 @@ function aiLabelForRow(row: OphthalmologistScreeningListItemDto): string {
 }
 
 type SortMode = 'priority' | 'date';
+const SCREENINGS_PAGE_SIZE = 8;
 
 /* ────────────────────── component ────────────────────── */
 
 export default function ScreeningsPage() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const currentDoctorId = user?.roleId ?? '';
+  const doctorFilterId = isUuid(currentDoctorId) ? currentDoctorId : undefined;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortMode, setSortMode] = useState<SortMode>('priority');
+  const [currentPage, setCurrentPage] = useState(1);
   const [items, setItems] = useState<OphthalmologistScreeningListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const consultationSessionsQuery = useConsultationSessions(
+    {
+      ophthalmologistId: doctorFilterId,
+      pageNumber: 1,
+      pageSize: 500,
+    },
+    { enabled: Boolean(doctorFilterId) }
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -197,6 +232,42 @@ export default function ScreeningsPage() {
     }
   }, [loadError]);
 
+  const completedConsultationByScreeningId = useMemo(() => {
+    const sessionItems = consultationSessionsQuery.data?.items ?? [];
+    const completedMap = new Map<string, boolean>();
+
+    sessionItems.forEach((session) => {
+      if (session.status !== SessionStatus.Completed) return;
+
+      const sessionScreeningId =
+        session.caseSnapshot?.screeningId ??
+        (session as { aiScreeningId?: string | null }).aiScreeningId ??
+        null;
+
+      if (!sessionScreeningId) return;
+      completedMap.set(sessionScreeningId.toLowerCase(), true);
+    });
+
+    return completedMap;
+  }, [consultationSessionsQuery.data?.items]);
+
+  const getEffectiveReviewStatus = useCallback(
+    (row: OphthalmologistScreeningListItemDto): string => {
+      const rawStatus = (row.reviewStatus ?? '').trim().toLowerCase();
+      if (!isPendingLikeReviewStatus(rawStatus)) {
+        return rawStatus;
+      }
+
+      const screeningKey = row.screeningId.toLowerCase();
+      if (completedConsultationByScreeningId.get(screeningKey)) {
+        return 'reviewed';
+      }
+
+      return rawStatus.length > 0 ? rawStatus : 'pending-review';
+    },
+    [completedConsultationByScreeningId]
+  );
+
   const filteredScreenings = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const filtered = items.filter((row) => {
@@ -206,7 +277,7 @@ export default function ScreeningsPage() {
         row.patientName.toLowerCase().includes(q) ||
         row.screeningId.toLowerCase().includes(q) ||
         ref.includes(q);
-      const rowStatus = (row.reviewStatus ?? '').trim().toLowerCase();
+      const rowStatus = getEffectiveReviewStatus(row);
       const selectedNormalized =
         selectedStatus === 'all' ? 'all' : selectedStatus.trim().toLowerCase();
       const matchesStatus =
@@ -217,8 +288,8 @@ export default function ScreeningsPage() {
     // Sort
     if (sortMode === 'priority') {
       filtered.sort((a, b) => {
-        const statusA = getStatusConfig(a.reviewStatus).priority;
-        const statusB = getStatusConfig(b.reviewStatus).priority;
+        const statusA = getStatusConfig(getEffectiveReviewStatus(a)).priority;
+        const statusB = getStatusConfig(getEffectiveReviewStatus(b)).priority;
         if (statusA !== statusB) return statusA - statusB;
         const riskA = getRiskLevel(a).priority;
         const riskB = getRiskLevel(b).priority;
@@ -235,15 +306,35 @@ export default function ScreeningsPage() {
     }
 
     return filtered;
-  }, [items, searchQuery, selectedStatus, sortMode]);
+  }, [getEffectiveReviewStatus, items, searchQuery, selectedStatus, sortMode]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedStatus, sortMode]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredScreenings.length / SCREENINGS_PAGE_SIZE)
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedScreenings = useMemo(() => {
+    const start = (safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE;
+    return filteredScreenings.slice(start, start + SCREENINGS_PAGE_SIZE);
+  }, [filteredScreenings, safeCurrentPage]);
 
   const stats = useMemo(() => {
     const pending = items.filter(
-      (s) => s.reviewStatus === 'pending-review'
+      (s) => getEffectiveReviewStatus(s) === 'pending-review'
     ).length;
-    const reviewed = items.filter((s) => s.reviewStatus === 'reviewed').length;
-    const approved = items.filter((s) => s.reviewStatus === 'approved').length;
-    const flagged = items.filter((s) => s.reviewStatus === 'flagged').length;
+    const reviewed = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'reviewed'
+    ).length;
+    const approved = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'approved'
+    ).length;
+    const flagged = items.filter(
+      (s) => getEffectiveReviewStatus(s) === 'flagged'
+    ).length;
     return {
       total: items.length,
       pending,
@@ -251,7 +342,7 @@ export default function ScreeningsPage() {
       approved,
       flagged,
     };
-  }, [items]);
+  }, [getEffectiveReviewStatus, items]);
 
   const statusTabs = [
     { key: 'all', label: 'All', count: stats.total },
@@ -381,200 +472,245 @@ export default function ScreeningsPage() {
           </div>
 
           {/* ── Screening Cards ── */}
-          <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
-            {loading ? (
+          {loading ? (
+            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f]">
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Spinner size={36} />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Loading screenings…
                 </p>
               </div>
-            ) : filteredScreenings.length === 0 ? (
-              <div className="py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-                  <Eye className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  No Screenings Found
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                  {searchQuery || selectedStatus !== 'all'
-                    ? 'No screenings match your current filters. Try adjusting your search or status filter.'
-                    : 'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'}
-                </p>
+            </div>
+          ) : filteredScreenings.length === 0 ? (
+            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+                <Eye className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
-            ) : (
-              <div className="divide-y divide-gray-50 dark:divide-[#1e3a5f]/50">
-                {filteredScreenings.map((screening) => {
-                  const statusCfg = getStatusConfig(screening.reviewStatus);
-                  const risk = getRiskLevel(screening);
-                  const confidence = toConfidencePercent(
-                    screening.confidenceScore
-                  );
-                  const confidenceColor = getConfidenceColor(confidence);
-                  const confidenceLabel = getConfidenceLabel(confidence);
-                  const created = new Date(screening.createdAt);
-                  const dateStr = created.toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  });
-                  const timeStr = created.toLocaleTimeString(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-                  const aiLabel = aiLabelForRow(screening);
-                  const isPending = screening.reviewStatus === 'pending-review';
-                  const isFlagged = screening.reviewStatus === 'flagged';
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No Screenings Found
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                {searchQuery || selectedStatus !== 'all'
+                  ? 'No screenings match your current filters. Try adjusting your search or status filter.'
+                  : 'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pagedScreenings.map((screening) => {
+                const effectiveReviewStatus =
+                  getEffectiveReviewStatus(screening);
+                const statusCfg = getStatusConfig(effectiveReviewStatus);
+                const risk = getRiskLevel(screening);
+                const confidence = toConfidencePercent(
+                  screening.confidenceScore
+                );
+                const confidenceColor = getConfidenceColor(confidence);
+                const confidenceLabel = getConfidenceLabel(confidence);
+                const created = new Date(screening.createdAt);
+                const dateStr = created.toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                });
+                const timeStr = created.toLocaleTimeString(undefined, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                const aiLabel = aiLabelForRow(screening);
+                const isPending = effectiveReviewStatus === 'pending-review';
+                const isFlagged = effectiveReviewStatus === 'flagged';
 
-                  return (
-                    <div
-                      key={screening.screeningId}
-                      className={`transition-colors hover:bg-gray-50/50 dark:hover:bg-[#0a1929]/30 ${
-                        isPending || isFlagged ? '' : 'opacity-80'
-                      }`}
-                    >
-                      <div className="p-5">
-                        <div className="flex items-start gap-4">
-                          {/* Avatar */}
-                          <div
-                            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-sm shrink-0"
-                            style={{
-                              backgroundColor: avatarColorForKey(
-                                screening.patientId
-                              ),
-                            }}
-                          >
-                            {initialsFromName(screening.patientName)}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            {/* Row 1: Name + Status + Risk */}
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-gray-800 dark:text-white">
-                                {screening.patientName}
-                              </h3>
-                              <span
-                                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCfg.cls}`}
-                              >
-                                {statusCfg.icon} {statusCfg.text}
-                              </span>
-                              <span
-                                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.bgColor} ${risk.color}`}
-                              >
-                                <Shield className="w-3 h-3" />
-                                {risk.label}
-                              </span>
-                              {isFlagged && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  Needs attention
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Row 2: AI Prediction + Confidence bar */}
-                            <div className="flex flex-wrap items-center gap-4 mb-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                  AI Prediction
-                                </span>
-                                <span className="text-sm font-semibold text-gray-800 dark:text-white px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                  {aiLabel}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                  Confidence
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full ${confidenceColor} rounded-full transition-all`}
-                                      style={{
-                                        width: `${confidence}%`,
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                    {confidence}%{' '}
-                                    <span className="font-normal text-gray-400">
-                                      ({confidenceLabel})
-                                    </span>
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Row 3: Summary snippet */}
-                            {screening.summarySnippet?.trim() && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                                {screening.summarySnippet}
-                              </p>
-                            )}
-
-                            {/* Row 4: Meta */}
-                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
-                              <span className="flex items-center gap-1.5">
-                                <Calendar size={12} />
-                                {dateStr}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Clock size={12} />
-                                {timeStr}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Eye size={12} />
-                                {screening.imagesCount} images
-                              </span>
-                              <span className="text-gray-400 dark:text-gray-500">
-                                {formatScreeningRef(screening.screeningId)}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Action button */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(
-                                `/ophthalmologist/screenings/${screening.screeningId}/review`
-                              )
-                            }
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0 ${
-                              isPending
-                                ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-sm hover:shadow-md hover:shadow-cyan-500/25'
-                                : isFlagged
-                                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
-                                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
-                            }`}
-                          >
-                            {isPending ? (
-                              <>
-                                <Eye className="w-4 h-4" />
-                                Review Now
-                              </>
-                            ) : isFlagged ? (
-                              <>
-                                <AlertTriangle className="w-4 h-4" />
-                                Review
-                              </>
-                            ) : (
-                              <>
-                                View
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </>
-                            )}
-                          </button>
+                return (
+                  <div
+                    key={screening.screeningId}
+                    className={`group bg-white dark:bg-[#0a1f44] rounded-2xl border transition-all duration-200 ${
+                      isPending || isFlagged
+                        ? 'border-gray-100 dark:border-[#1e3a5f] hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50'
+                        : 'border-gray-100 dark:border-[#1e3a5f]'
+                    }`}
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start gap-4">
+                        {/* Avatar */}
+                        <div
+                          className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-sm shrink-0"
+                          style={{
+                            backgroundColor: avatarColorForKey(
+                              screening.patientId
+                            ),
+                          }}
+                        >
+                          {initialsFromName(screening.patientName)}
                         </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Row 1: Name + Status + Risk */}
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-gray-800 dark:text-white">
+                              {screening.patientName}
+                            </h3>
+                            <span
+                              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCfg.cls}`}
+                            >
+                              {statusCfg.icon} {statusCfg.text}
+                            </span>
+                            <span
+                              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.bgColor} ${risk.color}`}
+                            >
+                              <Shield className="w-3 h-3" />
+                              {risk.label}
+                            </span>
+                            {isFlagged && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse">
+                                <AlertTriangle className="w-3 h-3" />
+                                Needs attention
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Row 2: AI Prediction + Confidence bar */}
+                          <div className="flex flex-wrap items-center gap-4 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                AI Prediction
+                              </span>
+                              <span className="text-sm font-semibold text-gray-800 dark:text-white px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                {aiLabel}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Confidence
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full ${confidenceColor} rounded-full transition-all`}
+                                    style={{
+                                      width: `${confidence}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                  {confidence}%{' '}
+                                  <span className="font-normal text-gray-400">
+                                    ({confidenceLabel})
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 3: Summary snippet */}
+                          {screening.summarySnippet?.trim() && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
+                              {screening.summarySnippet}
+                            </p>
+                          )}
+
+                          {/* Row 4: Meta */}
+                          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+                            <span className="flex items-center gap-1.5">
+                              <Calendar size={12} />
+                              {dateStr}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock size={12} />
+                              {timeStr}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Eye size={12} />
+                              {screening.imagesCount} images
+                            </span>
+                            <span className="text-gray-400 dark:text-gray-500">
+                              {formatScreeningRef(screening.screeningId)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action button */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              `/ophthalmologist/screenings/${screening.screeningId}/review`
+                            )
+                          }
+                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0 ${
+                            isPending
+                              ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-sm hover:shadow-md hover:shadow-cyan-500/25'
+                              : isFlagged
+                                ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
+                          }`}
+                        >
+                          {isPending ? (
+                            <>
+                              <Eye className="w-4 h-4" />
+                              Review Now
+                            </>
+                          ) : isFlagged ? (
+                            <>
+                              <AlertTriangle className="w-4 h-4" />
+                              Review
+                            </>
+                          ) : (
+                            <>
+                              View
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {filteredScreenings.length > 0 && (
+            <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Showing {(safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE + 1}-
+                {Math.min(
+                  safeCurrentPage * SCREENINGS_PAGE_SIZE,
+                  filteredScreenings.length
+                )}{' '}
+                of {filteredScreenings.length}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={safeCurrentPage <= 1}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Previous
+                </button>
+
+                <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                  {safeCurrentPage} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={safeCurrentPage >= totalPages}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Next
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

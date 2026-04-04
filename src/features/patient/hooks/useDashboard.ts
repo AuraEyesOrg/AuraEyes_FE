@@ -57,11 +57,24 @@ export const useDashboard = () => {
     queryFn: getAnalysisList,
   });
 
+  const normalizeStatus = (value?: string | null): string =>
+    (value ?? '').trim().toLowerCase();
+
+  const isCompletedAnalysisStatus = (value?: string | null): boolean => {
+    const normalized = normalizeStatus(value);
+    return normalized === 'completed' || normalized === 'verified';
+  };
+
+  const isCompletedAppointmentStatus = (value?: string | null): boolean => {
+    const normalized = normalizeStatus(value);
+    return normalized === 'completed';
+  };
+
   // Derived data
   const profile = profileQuery.data;
 
   const latestAnalysis = analysisQuery.data
-    ?.filter((a) => a.status === 'completed' || a.status === 'verified')
+    ?.filter((a) => isCompletedAnalysisStatus(a.status))
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -90,6 +103,21 @@ export const useDashboard = () => {
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
 
+  const hasCompletedAppointment =
+    appointmentsQuery.data?.some((appointment) =>
+      isCompletedAppointmentStatus(appointment.status)
+    ) ?? false;
+
+  const hasAnyReport = (reportsQuery.data?.length ?? 0) > 0;
+
+  const hasCompletedAnalysis =
+    analysisQuery.data?.some((analysis) =>
+      isCompletedAnalysisStatus(analysis.status)
+    ) ?? false;
+
+  const canSubmitWebsiteFeedback =
+    hasCompletedAnalysis || hasAnyReport || hasCompletedAppointment;
+
   const wallet = walletQuery.data;
 
   const isLoading =
@@ -106,6 +134,7 @@ export const useDashboard = () => {
     latestReport,
     recentReports,
     nextAppointment,
+    canSubmitWebsiteFeedback,
     isLoading,
     errors: {
       profile: profileQuery.error,

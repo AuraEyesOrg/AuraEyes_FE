@@ -196,6 +196,9 @@ export default function SchedulesPage() {
   const bookedCount = schedules.filter(
     (s: ScheduleListDto) => s.status === ScheduleStatus.Booked
   ).length;
+  const blockedCount = schedules.filter(
+    (s: ScheduleListDto) => s.status === ScheduleStatus.Blocked
+  ).length;
 
   const handleCreateSchedule = useCallback(() => {
     if (!formDate || !formStartTime || !formEndTime) {
@@ -381,78 +384,43 @@ export default function SchedulesPage() {
             </button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-cyan-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {schedules.length}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.schedules.stats.thisWeek', 'This Week')}
-                  </p>
-                </div>
-              </div>
+          {/* Compact Stats */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Calendar className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {schedules.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.schedules.stats.totalSlots', 'Total Slots')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {availableCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.schedules.stats.available',
-                      'Available'
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {availableCount}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.schedules.stats.available', 'Available')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {bookedCount}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('Ophthalmologist.schedules.stats.booked', 'Booked')}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Clock className="w-3.5 h-3.5 text-blue-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {bookedCount}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.schedules.stats.booked', 'Booked')}
+              </span>
             </div>
-            <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {
-                      schedules.filter(
-                        (s: ScheduleListDto) =>
-                          s.status === ScheduleStatus.Cancelled
-                      ).length
-                    }
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t(
-                      'Ophthalmologist.schedules.stats.cancelled',
-                      'Cancelled'
-                    )}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {blockedCount}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.schedules.stats.blocked', 'Blocked')}
+              </span>
             </div>
           </div>
 

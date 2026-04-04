@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Calendar,
   Clock,
@@ -41,6 +41,7 @@ import {
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 type TabKey = 'today' | 'upcoming' | 'past' | 'cancelled';
+const APPOINTMENTS_PAGE_SIZE = 8;
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -161,6 +162,7 @@ export default function AppointmentsPage() {
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const [activeTab, setActiveTab] = useState<TabKey>('today');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
   const toConsultationByPatientPath = (patientId: string) =>
@@ -258,6 +260,20 @@ export default function AppointmentsPage() {
           ? pastSessions
           : cancelledSessions
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(activeList.length / APPOINTMENTS_PAGE_SIZE)
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedActiveList = useMemo(() => {
+    const start = (safeCurrentPage - 1) * APPOINTMENTS_PAGE_SIZE;
+    return activeList.slice(start, start + APPOINTMENTS_PAGE_SIZE);
+  }, [activeList, safeCurrentPage]);
 
   const tabs: {
     key: TabKey;
@@ -393,7 +409,7 @@ export default function AppointmentsPage() {
           {/* ── Quick Stats Pills ── */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
-              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+              <Calendar className="w-3.5 h-3.5 text-cyan-500" />
               <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 {todaySessions.length}
               </span>
@@ -577,7 +593,7 @@ export default function AppointmentsPage() {
 
           {/* ── Appointment Cards ── */}
           <div className="space-y-3">
-            {activeList.map((session) => {
+            {pagedActiveList.map((session) => {
               const { dateLabel, timeLabel } = formatDateTime(
                 session.appointmentTime,
                 {
@@ -671,7 +687,9 @@ export default function AppointmentsPage() {
                         <div className="flex items-center gap-2 shrink-0">
                           {activeTab === 'today' && session.patientId && (
                             <Link
-                              to={toConsultationByPatientPath(session.patientId)}
+                              to={toConsultationByPatientPath(
+                                session.patientId
+                              )}
                               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-xl text-sm font-medium transition-all hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
                             >
                               <MessageSquare className="w-4 h-4" />
@@ -739,6 +757,47 @@ export default function AppointmentsPage() {
               );
             })}
           </div>
+
+          {activeList.length > 0 && (
+            <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Showing {(safeCurrentPage - 1) * APPOINTMENTS_PAGE_SIZE + 1}-
+                {Math.min(
+                  safeCurrentPage * APPOINTMENTS_PAGE_SIZE,
+                  activeList.length
+                )}{' '}
+                of {activeList.length}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={safeCurrentPage <= 1}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Previous
+                </button>
+
+                <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                  {safeCurrentPage} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={safeCurrentPage >= totalPages}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* ── Empty state ── */}
           {activeList.length === 0 && (
