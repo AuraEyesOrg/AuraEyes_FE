@@ -626,33 +626,38 @@ export default function ConsultationsChatView({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 border-b border-slate-200/80 px-5 py-4 text-center text-xs font-medium text-slate-500 dark:border-[#1e3a5f]">
-          <div className="rounded-2xl bg-white px-3 py-2 ring-1 ring-slate-200 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-            <p className="text-slate-900 dark:text-white">
-              {chatSessions.length}
-            </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">
-              {t('Ophthalmologist.consultations.chat.stats.all', 'All')}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50">
-            <p className="text-emerald-900 dark:text-emerald-200">
-              {totalOpenSessions}
-            </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">
-              {t('Ophthalmologist.consultations.chat.stats.open', 'Open')}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
-            <p className="text-amber-900 dark:text-amber-200">
-              {upcomingSessions}
-            </p>
-            <p className="mt-1 uppercase tracking-[0.16em]">
-              {t(
-                'Ophthalmologist.consultations.chat.stats.upcoming',
-                'Upcoming'
-              )}
-            </p>
+        <div className="border-b border-slate-200/80 px-5 py-4 dark:border-[#1e3a5f]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {chatSessions.length}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.consultations.chat.stats.all', 'All')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {totalOpenSessions}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('Ophthalmologist.consultations.chat.stats.open', 'Open')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+              <Clock3 className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                {upcomingSessions}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t(
+                  'Ophthalmologist.consultations.chat.stats.upcoming',
+                  'Upcoming'
+                )}
+              </span>
+            </div>
           </div>
         </div>
 

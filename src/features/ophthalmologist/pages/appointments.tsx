@@ -409,7 +409,7 @@ export default function AppointmentsPage() {
           {/* ── Quick Stats Pills ── */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">
             <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
-              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+              <Calendar className="w-3.5 h-3.5 text-cyan-500" />
               <span className="text-sm font-semibold text-gray-800 dark:text-white">
                 {todaySessions.length}
               </span>
