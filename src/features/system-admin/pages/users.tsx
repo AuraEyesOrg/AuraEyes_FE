@@ -72,12 +72,16 @@ export default function UsersPage() {
   const activeUsers = users.filter((u) => u.status === 'active').length;
   const lockedUsers = users.filter((u) => u.status === 'locked').length;
 
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const toSearchable = (value: unknown) => String(value ?? '').toLowerCase();
+
   // Filter data
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchQuery.toLowerCase());
+      normalizedSearchQuery.length === 0 ||
+      toSearchable(user.name).includes(normalizedSearchQuery) ||
+      toSearchable(user.email).includes(normalizedSearchQuery) ||
+      toSearchable(user.id).includes(normalizedSearchQuery);
 
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
@@ -147,23 +151,32 @@ export default function UsersPage() {
     {
       header: 'User',
       accessor: 'name',
-      render: (_, row) => (
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center text-white font-bold text-sm">
-            {row.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .slice(0, 2)}
+      render: (_, row) => {
+        const displayName =
+          (row.name || '').trim() || row.email || 'Unknown User';
+        const avatarInitials = displayName
+          .split(' ')
+          .map((namePart) => namePart[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase();
+
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+              {avatarInitials || 'U'}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">
+                {displayName}
+              </span>
+              <span className="text-xs text-slate-500">
+                {row.email || 'N/A'}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-900 dark:text-white">
-              {row.name}
-            </span>
-            <span className="text-xs text-slate-500">{row.email}</span>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: 'Role',
