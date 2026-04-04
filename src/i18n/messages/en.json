@@ -1352,6 +1352,10 @@
     }
   },
   "PatientReview": {
+    "page": {
+      "title": "Review & Next Steps",
+      "subtitle": "Analysis complete. Please review your results and recommended next steps."
+    },
     "status": {
       "healthy": "Looks Healthy",
       "low": "Low Risk",
@@ -1364,9 +1368,46 @@
       "moderate": "Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.",
       "high": "We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision."
     },
+    "empty": {
+      "description": "No analysis results to review. Please start a new screening first."
+    },
+    "sections": {
+      "recommendedActions": "Recommended Actions",
+      "learnMore": "Learn More About Your Eyes"
+    },
+    "labels": {
+      "retinalImage": "Retinal image",
+      "retinalScanAlt": "Retinal scan",
+      "noImage": "No image",
+      "scanId": "Scan ID: {{id}}",
+      "capturedAt": "Captured:",
+      "aiAssessment": "AI Assessment",
+      "aiConfidence": "AI Confidence: {{confidence}}%",
+      "pdfFormat": "PDF Format",
+      "primaryRecommendation": "Primary Recommendation"
+    },
+    "descriptions": {
+      "bookConsultation": "Connect with a certified ophthalmologist to review these results in detail. Early intervention is key to maintaining eye health.",
+      "startNewAnalysis": "Start a new analysis"
+    },
     "findingsDetected": "Detected findings include:",
     "backToDashboard": "Back to Dashboard",
-    "sessionLabel": "Session"
+    "sessionLabel": "Session",
+    "actions": {
+      "startNewScreening": "Start New Screening",
+      "zoomImage": "Zoom Image",
+      "viewFullAnalysisDetails": "View Full Analysis Details",
+      "bookConsultation": "Book a Consultation",
+      "findSpecialist": "Find a Specialist",
+      "askAuraAssistant": "Ask AURA AI Assistant",
+      "downloadReport": "Download Report",
+      "newScan": "New Scan",
+      "viewAllResources": "View all resources"
+    },
+    "footer": {
+      "importantDisclaimer": "AURA is an AI-assisted screening tool and does not provide a definitive medical diagnosis.",
+      "copyright": "© {{year}} AURA Health. All rights reserved."
+    }
   },
   "PatientAppointments": {
     "page": {
@@ -1682,6 +1723,326 @@
     },
     "actions": {
       "backToWallet": "Back to Wallet"
+    }
+  },
+  "PatientWallet": {
+    "page": {
+      "title": "Digital Wallet",
+      "subtitle": "Manage your balance and view transaction history"
+    },
+    "loading": {
+      "wallet": "Loading wallet..."
+    },
+    "error": {
+      "title": "Unable to load wallet",
+      "fallback": "An unexpected error occurred. Please try again.",
+      "retry": "Retry"
+    },
+    "balance": {
+      "available": "Available Balance"
+    },
+    "actions": {
+      "topUpWallet": "Top Up Wallet",
+      "cancel": "Cancel"
+    },
+    "stats": {
+      "thisMonth": "This Month",
+      "totalDeposits": "Total Deposits",
+      "totalSpent": "Total Spent",
+      "transactions": "Transactions"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "vnpayDescription": "Cards, Bank Transfer, QR",
+      "vnpayLongDescription": "Credit/Debit Card, Bank Transfer",
+      "payosDescription": "Bank Transfer, QR"
+    },
+    "transactions": {
+      "title": "Transaction History",
+      "totalCount": "{{count}} total",
+      "loadFailed": "Failed to load transactions",
+      "emptyTitle": "No transactions yet",
+      "emptyDescription": "Top up your wallet to get started"
+    },
+    "transactionStatus": {
+      "completed": "Completed"
+    },
+    "transactionTypes": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "payment": "Payment",
+      "refund": "Refund",
+      "transfer": "Transfer",
+      "bonus": "Bonus"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "deposit": {
+      "title": "Top Up Your Wallet",
+      "subtitle": "Choose an amount and payment method",
+      "description": "Wallet Top-up via {{method}}",
+      "selectAmount": "Select Amount",
+      "customAmountPlaceholder": "Or enter custom amount (min 10,000)",
+      "currency": "VND",
+      "minAmount": "Minimum deposit amount is 10,000 VND",
+      "maxAmount": "Maximum deposit amount is 50,000,000 VND",
+      "paymentMethod": "Payment Method",
+      "createFailed": "Failed to create deposit. Please try again.",
+      "creating": "Creating...",
+      "proceedToPay": "Proceed to Pay"
+    }
+  },
+  "PatientScreening": {
+    "page": {
+      "title": "My Scans",
+      "subtitle": "View and manage your retinal screening history"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "risk": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "critical": "Critical risk"
+    },
+    "stats": {
+      "totalScans": "Total Scans",
+      "completed": "Completed",
+      "processing": "Processing",
+      "findings": "Findings"
+    },
+    "search": {
+      "placeholder": "Search scans..."
+    },
+    "list": {
+      "recentScans": "Recent Scans ({{count}})"
+    },
+    "empty": {
+      "title": "No scans yet",
+      "description": "Start your first retinal screening to detect potential issues early"
+    },
+    "labels": {
+      "bothEyes": "Both Eyes",
+      "finding": "finding",
+      "findings": "findings"
+    },
+    "actions": {
+      "newScreening": "New Screening",
+      "filter": "Filter",
+      "viewReview": "View Review",
+      "downloadReport": "Download Report",
+      "shareWithDoctor": "Share with Doctor",
+      "delete": "Delete"
+    }
+  },
+  "PatientScreeningNew": {
+    "page": {
+      "title": "New Screening",
+      "uploadTitle": "Upload Retinal Images",
+      "uploadSubtitle": "High-resolution fundus photography for AI analysis. Quality validated in real-time."
+    },
+    "toast": {
+      "invalidFileType": "Invalid file type. Allowed: {{allowed}}",
+      "duplicateImages": "These images have already been uploaded!"
+    },
+    "errors": {
+      "noUploadedUrl": "No uploaded image URL returned from server.",
+      "createSessionFailed": "Failed to create screening session.",
+      "startAnalysisFailed": "Unable to save consent and start analysis. Please try again."
+    },
+    "validation": {
+      "notFundus": "This does not look like a retinal fundus image. Please upload a valid fundus photo only.",
+      "croppedEdges": "Retina appears cropped at the edge. Please recapture with better centering.",
+      "blurry": "Image appears blurry for reliable analysis. Please retake.",
+      "tooDark": "Image is too dark. Please retake with better lighting.",
+      "overexposed": "Image is overexposed. Please reduce brightness and retake.",
+      "highQuality": "High quality image",
+      "acceptableQuality": "Acceptable quality",
+      "serviceUnavailable": "Fundus validation service is unavailable. Please try again in a moment."
+    },
+    "processing": {
+      "local": "Processing locally...",
+      "analyzingQuality": "Analyzing image quality..."
+    },
+    "status": {
+      "uploading": "Uploading...",
+      "analyzing": "Analysing...",
+      "ready": "Ready",
+      "highQuality": "High Quality",
+      "qualityWarning": "Quality Warning",
+      "notFundus": "Not Fundus"
+    },
+    "qualityStandards": {
+      "title": "Quality Standards",
+      "evenLighting": "Even Lighting",
+      "evenLightingDescription": "Avoid dark spots or overexposure.",
+      "sharpFocus": "Sharp Focus",
+      "sharpFocusDescription": "Ensure vascular details are crisp.",
+      "centeredOpticDisc": "Centered Optic Disc",
+      "centeredOpticDiscDescription": "Retina should be centered in frame."
+    },
+    "supportedFormats": {
+      "title": "Supported Formats",
+      "value": "DICOM, JPG, PNG (Max 10MB)"
+    },
+    "dropzone": {
+      "dropHere": "Drop images here",
+      "dragAndDrop": "Drag & Drop fundus images here",
+      "or": "or",
+      "browseFiles": "browse files",
+      "fromComputer": "from your computer",
+      "pasteHintPrefix": "",
+      "pasteHintSuffix": "to paste from clipboard"
+    },
+    "queue": {
+      "title": "Validation Queue ({{count}})",
+      "empty": "No images uploaded yet. Drag & drop or click to upload.",
+      "readyToSubmit": "{{count}} file(s) ready to submit"
+    },
+    "consent": {
+      "title": "Data Sharing Consent"
+    },
+    "footer": {
+      "hipaa": "Your data is encrypted and HIPAA compliant. Uploaded images are used solely for your diagnostic session."
+    },
+    "actions": {
+      "clearAll": "Clear All",
+      "retry": "Retry",
+      "remove": "Remove",
+      "startAnalysis": "Start AI Analysis",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "agreeAndContinue": "I Agree, Continue"
+    }
+  },
+  "PatientProfile": {
+    "page": {
+      "title": "My Profile",
+      "subtitle": "Manage your personal information and account settings"
+    },
+    "loading": {
+      "profile": "Loading profile..."
+    },
+    "error": {
+      "title": "Failed to load profile",
+      "fallback": "An unexpected error occurred"
+    },
+    "toast": {
+      "profileUpdated": "Profile updated successfully",
+      "profileUpdateFailed": "Failed to update profile",
+      "loadImageFailed": "Failed to load image",
+      "avatarUpdated": "Profile photo updated successfully",
+      "avatarUploadFailed": "Failed to upload avatar",
+      "passwordChanged": "Password changed successfully",
+      "passwordChangeFailed": "Failed to change password"
+    },
+    "sections": {
+      "personalInformation": "Personal Information",
+      "securitySettings": "Security Settings"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "emailImmutable": "Email cannot be changed",
+      "phoneNumber": "Phone Number",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "address": "Address"
+    },
+    "gender": {
+      "preferNotToSay": "Prefer not to say",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "labels": {
+      "emailVerified": "Email Verified",
+      "emailNotVerified": "Email Not Verified",
+      "memberSince": "Member Since",
+      "twoFactorStatus": "2FA Status",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "avatar": {
+      "modalTitle": "Update Profile Photo",
+      "changeHint": "Click or drop another image to change",
+      "dropHere": "Drop your image here",
+      "dragDrop": "Drag & drop your photo",
+      "browseHint": "or click to browse files",
+      "pastePrefix": "You can also",
+      "pasteSuffix": "paste an image",
+      "supportedFormats": "Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB",
+      "savePhoto": "Save Photo",
+      "uploading": "Uploading...",
+      "selectImageFile": "Please select an image file",
+      "maxSizeError": "Image must be less than 5MB",
+      "readFileFailed": "Failed to read file"
+    },
+    "security": {
+      "passwordTitle": "Password",
+      "passwordDescription": "Change your account password",
+      "twoFactorTitle": "Two-Factor Authentication",
+      "notificationTitle": "Notification Preferences",
+      "notificationDescription": "Email & Push notifications",
+      "changePasswordModalTitle": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "changingPassword": "Changing..."
+    },
+    "actions": {
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "change": "Change",
+      "manage": "Manage",
+      "configure": "Configure",
+      "changePassword": "Change Password"
+    }
+  },
+  "PatientBookAppointment": {
+    "modal": {
+      "slotReserved": "Slot Reserved",
+      "timeRemaining": "Time remaining to complete booking",
+      "date": "Date",
+      "time": "Time",
+      "price": "Price:"
+    },
+    "labels": {
+      "ophthalmologist": "Ophthalmologist",
+      "bookingFor": "Booking for:",
+      "videoConsultation": "Video Consultation",
+      "inClinicOrVideo": "In-clinic / Video Consultation",
+      "selectTime": "Select a Time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "selected": "Selected:",
+      "at": "at"
+    },
+    "notice": {
+      "prefix": "Please note: Appointments must be booked at least",
+      "suffix": "in advance."
+    },
+    "empty": {
+      "noTimesFor": "No available times for",
+      "thisDate": "this date",
+      "selectDateAndTime": "Please select a date and an available time."
+    },
+    "errors": {
+      "signInRequired": "Please sign in to book a consultation slot."
+    },
+    "actions": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "processing": "Processing...",
+      "confirmBooking": "Confirm Booking"
     }
   },
   "PatientReports": {

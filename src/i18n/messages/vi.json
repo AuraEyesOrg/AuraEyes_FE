@@ -1352,6 +1352,10 @@
     }
   },
   "PatientReview": {
+    "page": {
+      "title": "Đánh giá & Bước tiếp theo",
+      "subtitle": "Phân tích đã hoàn tất. Vui lòng xem lại kết quả và các bước được khuyến nghị."
+    },
     "status": {
       "healthy": "Mắt khỏe",
       "low": "Nguy cơ thấp",
@@ -1364,9 +1368,46 @@
       "moderate": "Đã phát hiện bất thường và nên được bác sĩ chuyên khoa mắt đánh giá để xác nhận và tư vấn bước tiếp theo.",
       "high": "Đã phát hiện vùng cần được bác sĩ chuyên khoa mắt xem xét sớm. Can thiệp sớm là cách tốt nhất để bảo vệ thị lực."
     },
+    "empty": {
+      "description": "Không có kết quả phân tích để đánh giá. Vui lòng bắt đầu một phiên sàng lọc mới."
+    },
+    "sections": {
+      "recommendedActions": "Hành động khuyến nghị",
+      "learnMore": "Tìm hiểu thêm về đôi mắt của bạn"
+    },
+    "labels": {
+      "retinalImage": "Ảnh võng mạc",
+      "retinalScanAlt": "Ảnh quét võng mạc",
+      "noImage": "Không có ảnh",
+      "scanId": "Mã lượt quét: {{id}}",
+      "capturedAt": "Thời điểm chụp:",
+      "aiAssessment": "Đánh giá AI",
+      "aiConfidence": "Độ tin cậy AI: {{confidence}}%",
+      "pdfFormat": "Định dạng PDF",
+      "primaryRecommendation": "Khuyến nghị chính"
+    },
+    "descriptions": {
+      "bookConsultation": "Kết nối với bác sĩ nhãn khoa để xem chi tiết kết quả này. Can thiệp sớm là chìa khóa để duy trì sức khỏe thị lực.",
+      "startNewAnalysis": "Bắt đầu phân tích mới"
+    },
     "findingsDetected": "Các dấu hiệu phát hiện gồm:",
     "backToDashboard": "Về Dashboard",
-    "sessionLabel": "Phiên"
+    "sessionLabel": "Phiên",
+    "actions": {
+      "startNewScreening": "Bắt đầu phiên sàng lọc mới",
+      "zoomImage": "Phóng to ảnh",
+      "viewFullAnalysisDetails": "Xem chi tiết phân tích đầy đủ",
+      "bookConsultation": "Đặt lịch tư vấn",
+      "findSpecialist": "Tìm bác sĩ chuyên khoa",
+      "askAuraAssistant": "Hỏi trợ lý AI AURA",
+      "downloadReport": "Tải báo cáo",
+      "newScan": "Lượt quét mới",
+      "viewAllResources": "Xem tất cả tài liệu"
+    },
+    "footer": {
+      "importantDisclaimer": "AURA là công cụ sàng lọc có hỗ trợ AI và không thay thế chẩn đoán y khoa chính thức.",
+      "copyright": "© {{year}} AURA Health. Bảo lưu mọi quyền."
+    }
   },
   "PatientAppointments": {
     "page": {
@@ -1682,6 +1723,326 @@
     },
     "actions": {
       "backToWallet": "Quay lại ví"
+    }
+  },
+  "PatientWallet": {
+    "page": {
+      "title": "Ví điện tử",
+      "subtitle": "Quản lý số dư và xem lịch sử giao dịch"
+    },
+    "loading": {
+      "wallet": "Đang tải ví..."
+    },
+    "error": {
+      "title": "Không thể tải ví",
+      "fallback": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
+      "retry": "Thử lại"
+    },
+    "balance": {
+      "available": "Số dư khả dụng"
+    },
+    "actions": {
+      "topUpWallet": "Nạp tiền vào ví",
+      "cancel": "Hủy"
+    },
+    "stats": {
+      "thisMonth": "Tháng này",
+      "totalDeposits": "Tổng nạp",
+      "totalSpent": "Tổng chi",
+      "transactions": "Giao dịch"
+    },
+    "paymentMethods": {
+      "title": "Phương thức thanh toán",
+      "vnpayDescription": "Thẻ, chuyển khoản ngân hàng, QR",
+      "vnpayLongDescription": "Thẻ tín dụng/ghi nợ, chuyển khoản ngân hàng",
+      "payosDescription": "Chuyển khoản ngân hàng, QR"
+    },
+    "transactions": {
+      "title": "Lịch sử giao dịch",
+      "totalCount": "Tổng {{count}}",
+      "loadFailed": "Tải danh sách giao dịch thất bại",
+      "emptyTitle": "Chưa có giao dịch",
+      "emptyDescription": "Hãy nạp tiền vào ví để bắt đầu"
+    },
+    "transactionStatus": {
+      "completed": "Hoàn tất"
+    },
+    "transactionTypes": {
+      "deposit": "Nạp tiền",
+      "withdrawal": "Rút tiền",
+      "payment": "Thanh toán",
+      "refund": "Hoàn tiền",
+      "transfer": "Chuyển khoản",
+      "bonus": "Thưởng"
+    },
+    "pagination": {
+      "previous": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {{page}} / {{total}}"
+    },
+    "deposit": {
+      "title": "Nạp tiền vào ví",
+      "subtitle": "Chọn số tiền và phương thức thanh toán",
+      "description": "Nạp tiền ví qua {{method}}",
+      "selectAmount": "Chọn số tiền",
+      "customAmountPlaceholder": "Hoặc nhập số tiền tùy chỉnh (tối thiểu 10,000)",
+      "currency": "VND",
+      "minAmount": "Số tiền nạp tối thiểu là 10,000 VND",
+      "maxAmount": "Số tiền nạp tối đa là 50,000,000 VND",
+      "paymentMethod": "Phương thức thanh toán",
+      "createFailed": "Tạo giao dịch nạp thất bại. Vui lòng thử lại.",
+      "creating": "Đang tạo...",
+      "proceedToPay": "Tiếp tục thanh toán"
+    }
+  },
+  "PatientScreening": {
+    "page": {
+      "title": "Lượt quét của tôi",
+      "subtitle": "Xem và quản lý lịch sử sàng lọc võng mạc của bạn"
+    },
+    "status": {
+      "completed": "Hoàn tất",
+      "processing": "Đang xử lý",
+      "pending": "Đang chờ",
+      "failed": "Thất bại"
+    },
+    "risk": {
+      "low": "Nguy cơ thấp",
+      "medium": "Nguy cơ trung bình",
+      "high": "Nguy cơ cao",
+      "critical": "Nguy cơ nghiêm trọng"
+    },
+    "stats": {
+      "totalScans": "Tổng lượt quét",
+      "completed": "Hoàn tất",
+      "processing": "Đang xử lý",
+      "findings": "Phát hiện"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm lượt quét..."
+    },
+    "list": {
+      "recentScans": "Lượt quét gần đây ({{count}})"
+    },
+    "empty": {
+      "title": "Chưa có lượt quét",
+      "description": "Hãy bắt đầu phiên sàng lọc đầu tiên để phát hiện sớm các vấn đề tiềm ẩn"
+    },
+    "labels": {
+      "bothEyes": "Cả hai mắt",
+      "finding": "phát hiện",
+      "findings": "phát hiện"
+    },
+    "actions": {
+      "newScreening": "Sàng lọc mới",
+      "filter": "Bộ lọc",
+      "viewReview": "Xem đánh giá",
+      "downloadReport": "Tải báo cáo",
+      "shareWithDoctor": "Chia sẻ với bác sĩ",
+      "delete": "Xóa"
+    }
+  },
+  "PatientScreeningNew": {
+    "page": {
+      "title": "Phiên sàng lọc mới",
+      "uploadTitle": "Tải ảnh võng mạc",
+      "uploadSubtitle": "Ảnh đáy mắt độ phân giải cao cho phân tích AI. Chất lượng được kiểm tra theo thời gian thực."
+    },
+    "toast": {
+      "invalidFileType": "Định dạng tệp không hợp lệ. Được phép: {{allowed}}",
+      "duplicateImages": "Những ảnh này đã được tải lên trước đó!"
+    },
+    "errors": {
+      "noUploadedUrl": "Không nhận được URL ảnh đã tải lên từ máy chủ.",
+      "createSessionFailed": "Không thể tạo phiên sàng lọc.",
+      "startAnalysisFailed": "Không thể lưu chấp thuận và bắt đầu phân tích. Vui lòng thử lại."
+    },
+    "validation": {
+      "notFundus": "Ảnh này không phải ảnh đáy mắt hợp lệ. Vui lòng chỉ tải ảnh fundus.",
+      "croppedEdges": "Ảnh võng mạc bị cắt ở rìa. Vui lòng chụp lại với khung hình cân đối hơn.",
+      "blurry": "Ảnh bị mờ, khó phân tích chính xác. Vui lòng chụp lại.",
+      "tooDark": "Ảnh quá tối. Vui lòng chụp lại với ánh sáng tốt hơn.",
+      "overexposed": "Ảnh bị dư sáng. Vui lòng giảm sáng và chụp lại.",
+      "highQuality": "Ảnh chất lượng cao",
+      "acceptableQuality": "Chất lượng chấp nhận được",
+      "serviceUnavailable": "Dịch vụ kiểm tra ảnh fundus hiện không khả dụng. Vui lòng thử lại sau ít phút."
+    },
+    "processing": {
+      "local": "Đang xử lý cục bộ...",
+      "analyzingQuality": "Đang phân tích chất lượng ảnh..."
+    },
+    "status": {
+      "uploading": "Đang tải lên...",
+      "analyzing": "Đang phân tích...",
+      "ready": "Sẵn sàng",
+      "highQuality": "Chất lượng cao",
+      "qualityWarning": "Cảnh báo chất lượng",
+      "notFundus": "Không phải ảnh fundus"
+    },
+    "qualityStandards": {
+      "title": "Tiêu chuẩn chất lượng",
+      "evenLighting": "Ánh sáng đồng đều",
+      "evenLightingDescription": "Tránh vùng tối hoặc quá sáng.",
+      "sharpFocus": "Lấy nét rõ",
+      "sharpFocusDescription": "Đảm bảo chi tiết mạch máu sắc nét.",
+      "centeredOpticDisc": "Đĩa thị giác ở trung tâm",
+      "centeredOpticDiscDescription": "Võng mạc cần nằm cân đối trong khung hình."
+    },
+    "supportedFormats": {
+      "title": "Định dạng hỗ trợ",
+      "value": "DICOM, JPG, PNG (Tối đa 10MB)"
+    },
+    "dropzone": {
+      "dropHere": "Thả ảnh vào đây",
+      "dragAndDrop": "Kéo & thả ảnh fundus vào đây",
+      "or": "hoặc",
+      "browseFiles": "chọn tệp",
+      "fromComputer": "từ máy tính của bạn",
+      "pasteHintPrefix": "",
+      "pasteHintSuffix": "để dán từ clipboard"
+    },
+    "queue": {
+      "title": "Hàng đợi kiểm tra ({{count}})",
+      "empty": "Chưa có ảnh nào được tải lên. Kéo thả hoặc bấm để tải ảnh.",
+      "readyToSubmit": "{{count}} tệp sẵn sàng gửi"
+    },
+    "consent": {
+      "title": "Đồng ý chia sẻ dữ liệu"
+    },
+    "footer": {
+      "hipaa": "Dữ liệu của bạn được mã hóa và tuân thủ HIPAA. Ảnh tải lên chỉ được dùng cho phiên chẩn đoán của bạn."
+    },
+    "actions": {
+      "clearAll": "Xóa tất cả",
+      "retry": "Thử lại",
+      "remove": "Xóa",
+      "startAnalysis": "Bắt đầu phân tích AI",
+      "cancel": "Hủy",
+      "saving": "Đang lưu...",
+      "agreeAndContinue": "Tôi đồng ý, tiếp tục"
+    }
+  },
+  "PatientProfile": {
+    "page": {
+      "title": "Hồ sơ của tôi",
+      "subtitle": "Quản lý thông tin cá nhân và cài đặt tài khoản"
+    },
+    "loading": {
+      "profile": "Đang tải hồ sơ..."
+    },
+    "error": {
+      "title": "Không thể tải hồ sơ",
+      "fallback": "Đã xảy ra lỗi không mong muốn"
+    },
+    "toast": {
+      "profileUpdated": "Cập nhật hồ sơ thành công",
+      "profileUpdateFailed": "Cập nhật hồ sơ thất bại",
+      "loadImageFailed": "Tải ảnh thất bại",
+      "avatarUpdated": "Cập nhật ảnh đại diện thành công",
+      "avatarUploadFailed": "Tải ảnh đại diện thất bại",
+      "passwordChanged": "Đổi mật khẩu thành công",
+      "passwordChangeFailed": "Đổi mật khẩu thất bại"
+    },
+    "sections": {
+      "personalInformation": "Thông tin cá nhân",
+      "securitySettings": "Cài đặt bảo mật"
+    },
+    "fields": {
+      "fullName": "Họ và tên",
+      "email": "Email",
+      "emailImmutable": "Email không thể thay đổi",
+      "phoneNumber": "Số điện thoại",
+      "dateOfBirth": "Ngày sinh",
+      "gender": "Giới tính",
+      "address": "Địa chỉ"
+    },
+    "gender": {
+      "preferNotToSay": "Không muốn tiết lộ",
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác"
+    },
+    "labels": {
+      "emailVerified": "Email đã xác thực",
+      "emailNotVerified": "Email chưa xác thực",
+      "memberSince": "Tham gia từ",
+      "twoFactorStatus": "Trạng thái 2FA",
+      "enabled": "Đã bật",
+      "disabled": "Đã tắt"
+    },
+    "avatar": {
+      "modalTitle": "Cập nhật ảnh đại diện",
+      "changeHint": "Bấm hoặc thả ảnh khác để thay đổi",
+      "dropHere": "Thả ảnh vào đây",
+      "dragDrop": "Kéo & thả ảnh của bạn",
+      "browseHint": "hoặc bấm để chọn tệp",
+      "pastePrefix": "Bạn cũng có thể",
+      "pasteSuffix": "để dán ảnh",
+      "supportedFormats": "Định dạng hỗ trợ: JPG, PNG, GIF, WebP • Tối đa 5MB",
+      "savePhoto": "Lưu ảnh",
+      "uploading": "Đang tải lên...",
+      "selectImageFile": "Vui lòng chọn tệp hình ảnh",
+      "maxSizeError": "Ảnh phải nhỏ hơn 5MB",
+      "readFileFailed": "Không thể đọc tệp"
+    },
+    "security": {
+      "passwordTitle": "Mật khẩu",
+      "passwordDescription": "Thay đổi mật khẩu tài khoản",
+      "twoFactorTitle": "Xác thực hai lớp",
+      "notificationTitle": "Tùy chọn thông báo",
+      "notificationDescription": "Thông báo Email & Đẩy",
+      "changePasswordModalTitle": "Đổi mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmNewPassword": "Xác nhận mật khẩu mới",
+      "changingPassword": "Đang đổi..."
+    },
+    "actions": {
+      "edit": "Chỉnh sửa",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "change": "Thay đổi",
+      "manage": "Quản lý",
+      "configure": "Cấu hình",
+      "changePassword": "Đổi mật khẩu"
+    }
+  },
+  "PatientBookAppointment": {
+    "modal": {
+      "slotReserved": "Đã giữ chỗ",
+      "timeRemaining": "Thời gian còn lại để hoàn tất đặt lịch",
+      "date": "Ngày",
+      "time": "Giờ",
+      "price": "Chi phí:"
+    },
+    "labels": {
+      "ophthalmologist": "Bác sĩ nhãn khoa",
+      "bookingFor": "Đặt lịch cho:",
+      "videoConsultation": "Tư vấn video",
+      "inClinicOrVideo": "Khám tại cơ sở / Tư vấn video",
+      "selectTime": "Chọn giờ",
+      "morning": "Buổi sáng",
+      "afternoon": "Buổi chiều",
+      "selected": "Đã chọn:",
+      "at": "lúc"
+    },
+    "notice": {
+      "prefix": "Lưu ý: Lịch hẹn cần được đặt trước ít nhất",
+      "suffix": "."
+    },
+    "empty": {
+      "noTimesFor": "Không có khung giờ khả dụng cho",
+      "thisDate": "ngày này",
+      "selectDateAndTime": "Vui lòng chọn ngày và một khung giờ khả dụng."
+    },
+    "errors": {
+      "signInRequired": "Vui lòng đăng nhập để đặt lịch tư vấn."
+    },
+    "actions": {
+      "back": "Quay lại",
+      "cancel": "Hủy",
+      "processing": "Đang xử lý...",
+      "confirmBooking": "Xác nhận đặt lịch"
     }
   },
   "PatientReports": {
