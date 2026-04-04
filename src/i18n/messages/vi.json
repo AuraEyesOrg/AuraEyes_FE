@@ -208,7 +208,29 @@
       "doctor": "Bác sĩ",
       "role": "Bác sĩ nhãn khoa",
       "logout": "Đăng xuất",
-      "cancel": "Hủy"
+      "cancel": "Hủy",
+      "back": "Quay lại",
+      "email": "Email",
+      "next": "Tiếp",
+      "of": "trên",
+      "other": "Khác",
+      "page": "Trang",
+      "previous": "Trước",
+      "refresh": "Làm mới",
+      "retry": "Thử lại",
+      "saving": "Đang lưu...",
+      "severity": {
+        "mild": "Nhẹ",
+        "severe": "Nặng"
+      },
+      "showing": "Hiển thị",
+      "status": {
+        "draft": "Bản nháp",
+        "finalized": "Đã chốt",
+        "reviewed": "Đã rà soát"
+      },
+      "submitting": "Đang gửi...",
+      "view": "Xem"
     },
     "header": {
       "pages": "Trang",
@@ -224,7 +246,8 @@
       "consultations": "Tư vấn",
       "analytics": "Phân tích",
       "contract": "Hợp đồng",
-      "settings": "Cài đặt"
+      "settings": "Cài đặt",
+      "wallet": "Ví"
     },
     "dashboard": {
       "greeting": {
@@ -377,6 +400,12 @@
         "cancelReason": "Đã hủy bởi bác sĩ nhãn khoa",
         "cancelSuccess": "Đã hủy lịch hẹn thành công.",
         "cancelError": "Không thể hủy lịch hẹn. Vui lòng thử lại."
+      },
+      "tab": {
+        "cancelled": "Đã hủy",
+        "past": "Đã qua",
+        "today": "Hôm nay",
+        "upcoming": "Sắp tới"
       }
     },
     "schedules": {
@@ -392,7 +421,9 @@
         "thisWeek": "Tuần này",
         "available": "Còn trống",
         "booked": "Đã đặt",
-        "cancelled": "Đã hủy"
+        "cancelled": "Đã hủy",
+        "blocked": "Đã khóa",
+        "totalSlots": "Tổng số slot"
       },
       "filter": {
         "all": "Tất cả",
@@ -477,6 +508,14 @@
           "preVisitDescription": "Bệnh nhân có thể để lại ghi chú trước khi phiên tư vấn bắt đầu. Chat sẽ mở vào thời gian hẹn.",
           "inProgressDescription": "Phiên tư vấn đang hoạt động. Bạn có thể trò chuyện và tham gia cuộc gọi video.",
           "completedDescription": "Phiên tư vấn đã hoàn tất. Chat hiện ở chế độ chỉ đọc."
+        },
+        "shareCase": {
+          "aiConfidence": "Độ tin cậy AI",
+          "doctorSays": "Bác sĩ nhận định",
+          "finalDiagnosis": "Chẩn đoán cuối",
+          "patient": "Bệnh nhân",
+          "riskLevel": "Mức độ nguy cơ",
+          "summary": "Tóm tắt"
         }
       }
     },
@@ -511,7 +550,9 @@
         "active": "Đang hoạt động",
         "urgent": "Khẩn",
         "pastOnly": "Chỉ đã qua"
-      }
+      },
+      "emptyTitle": "Không tìm thấy bệnh nhân",
+      "message": "Nhắn tin"
     },
     "slotManagement": {
       "title": "Slot lịch hẹn",
@@ -634,7 +675,78 @@
           "signStamp": "Ký tên và đóng dấu",
           "captureUpload": "Chụp ảnh và upload"
         }
-      }
+      },
+      "commission": "Hoa hồng"
+    },
+    "analytics": {
+      "title": "Phân tích",
+      "unknown": "Không xác định"
+    },
+    "screeningReview": {
+      "note": "Lưu ý:"
+    },
+    "screenings": {
+      "confidence": {
+        "high": "Cao",
+        "low": "Thấp",
+        "moderate": "Trung bình",
+        "na": "Không có"
+      },
+      "filter": {
+        "all": "Tất cả",
+        "approved": "Đã duyệt",
+        "flagged": "Cần chú ý",
+        "pending": "Chờ duyệt",
+        "reviewed": "Đã rà soát"
+      },
+      "images": "ảnh",
+      "pendingAnalysis": "Đang chờ phân tích",
+      "review": "Xem xét",
+      "risk": {
+        "high": "Nguy cơ cao",
+        "low": "Nguy cơ thấp",
+        "medium": "Nguy cơ trung bình",
+        "unknown": "Không xác định"
+      },
+      "sort": {
+        "byDate": "Theo ngày",
+        "byPriority": "Theo ưu tiên"
+      },
+      "stats": {
+        "approved": "Đã duyệt",
+        "flagged": "Cần chú ý",
+        "pending": "Chờ duyệt",
+        "total": "Tổng"
+      },
+      "status": {
+        "approved": "Đã duyệt",
+        "flagged": "Cần chú ý",
+        "rejected": "Từ chối",
+        "reviewed": "Đã rà soát"
+      },
+      "title": "Sàng lọc"
+    },
+    "wallet": {
+      "balance": "Số dư hiện tại",
+      "loading": "Đang tải ví...",
+      "title": "Ví bác sĩ",
+      "transactionType": {
+        "bonus": "Thưởng",
+        "deposit": "Nạp tiền",
+        "payment": "Thanh toán",
+        "refund": "Hoàn tiền",
+        "transfer": "Chuyển khoản"
+      },
+      "transactions": "Lịch sử giao dịch",
+      "withdraw": {
+        "status": {
+          "cancelled": "Đã hủy",
+          "failed": "Từ chối",
+          "pending": "Đang chờ",
+          "processing": "Đang xử lý"
+        }
+      },
+      "yourNote": "Ghi chú của bạn"
     }
   },
   "MedicalTerms": {

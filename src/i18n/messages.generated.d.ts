@@ -212,6 +212,28 @@ declare module 'i18next' {
         role: string;
         logout: string;
         cancel: string;
+        back: string;
+        email: string;
+        next: string;
+        of: string;
+        other: string;
+        page: string;
+        previous: string;
+        refresh: string;
+        retry: string;
+        saving: string;
+        severity: {
+          mild: string;
+          severe: string;
+        };
+        showing: string;
+        status: {
+          draft: string;
+          finalized: string;
+          reviewed: string;
+        };
+        submitting: string;
+        view: string;
       };
       header: {
         pages: string;
@@ -228,6 +250,7 @@ declare module 'i18next' {
         analytics: string;
         contract: string;
         settings: string;
+        wallet: string;
       };
       dashboard: {
         greeting: {
@@ -381,6 +404,12 @@ declare module 'i18next' {
           cancelSuccess: string;
           cancelError: string;
         };
+        tab: {
+          cancelled: string;
+          past: string;
+          today: string;
+          upcoming: string;
+        };
       };
       schedules: {
         title: string;
@@ -396,6 +425,8 @@ declare module 'i18next' {
           available: string;
           booked: string;
           cancelled: string;
+          blocked: string;
+          totalSlots: string;
         };
         filter: {
           all: string;
@@ -481,6 +512,14 @@ declare module 'i18next' {
             inProgressDescription: string;
             completedDescription: string;
           };
+          shareCase: {
+            aiConfidence: string;
+            doctorSays: string;
+            finalDiagnosis: string;
+            patient: string;
+            riskLevel: string;
+            summary: string;
+          };
         };
       };
       patients: {
@@ -515,6 +554,8 @@ declare module 'i18next' {
           urgent: string;
           pastOnly: string;
         };
+        emptyTitle: string;
+        message: string;
       };
       slotManagement: {
         title: string;
@@ -638,6 +679,77 @@ declare module 'i18next' {
             captureUpload: string;
           };
         };
+        commission: string;
+      };
+      analytics: {
+        title: string;
+        unknown: string;
+      };
+      screeningReview: {
+        note: string;
+      };
+      screenings: {
+        confidence: {
+          high: string;
+          low: string;
+          moderate: string;
+          na: string;
+        };
+        filter: {
+          all: string;
+          approved: string;
+          flagged: string;
+          pending: string;
+          reviewed: string;
+        };
+        images: string;
+        pendingAnalysis: string;
+        review: string;
+        risk: {
+          high: string;
+          low: string;
+          medium: string;
+          unknown: string;
+        };
+        sort: {
+          byDate: string;
+          byPriority: string;
+        };
+        stats: {
+          approved: string;
+          flagged: string;
+          pending: string;
+          total: string;
+        };
+        status: {
+          approved: string;
+          flagged: string;
+          rejected: string;
+          reviewed: string;
+        };
+        title: string;
+      };
+      wallet: {
+        balance: string;
+        loading: string;
+        title: string;
+        transactionType: {
+          bonus: string;
+          deposit: string;
+          payment: string;
+          refund: string;
+          transfer: string;
+        };
+        transactions: string;
+        withdraw: {
+          status: {
+            cancelled: string;
+            failed: string;
+            pending: string;
+            processing: string;
+          };
+        };
+        yourNote: string;
       };
     };
     MedicalTerms: {

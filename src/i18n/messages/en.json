@@ -208,7 +208,29 @@
       "doctor": "Doctor",
       "role": "Ophthalmologist",
       "logout": "Logout",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "back": "Back",
+      "email": "Email",
+      "next": "Next",
+      "of": "of",
+      "other": "Other",
+      "page": "Page",
+      "previous": "Previous",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "saving": "Saving...",
+      "severity": {
+        "mild": "Mild",
+        "severe": "Severe"
+      },
+      "showing": "Showing",
+      "status": {
+        "draft": "Draft",
+        "finalized": "Finalized",
+        "reviewed": "Reviewed"
+      },
+      "submitting": "Submitting...",
+      "view": "View"
     },
     "header": {
       "pages": "Pages",
@@ -224,7 +246,8 @@
       "consultations": "Consultations",
       "analytics": "Analytics",
       "contract": "Contract",
-      "settings": "Settings"
+      "settings": "Settings",
+      "wallet": "Wallet"
     },
     "dashboard": {
       "greeting": {
@@ -377,6 +400,12 @@
         "cancelReason": "Cancelled by ophthalmologist",
         "cancelSuccess": "Appointment cancelled successfully.",
         "cancelError": "Unable to cancel appointment. Please try again."
+      },
+      "tab": {
+        "cancelled": "Cancelled",
+        "past": "Past",
+        "today": "Today",
+        "upcoming": "Upcoming"
       }
     },
     "schedules": {
@@ -392,7 +421,9 @@
         "thisWeek": "This Week",
         "available": "Available",
         "booked": "Booked",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "blocked": "Blocked",
+        "totalSlots": "Total Slots"
       },
       "filter": {
         "all": "All",
@@ -477,6 +508,14 @@
           "preVisitDescription": "Patient can leave notes before the consultation starts. Chat opens at appointment time.",
           "inProgressDescription": "Consultation is active. You can chat and join the video call.",
           "completedDescription": "Consultation has been completed. Chat is now read-only."
+        },
+        "shareCase": {
+          "aiConfidence": "AI confidence",
+          "doctorSays": "Doctor says",
+          "finalDiagnosis": "Final diagnosis",
+          "patient": "Patient",
+          "riskLevel": "Risk level",
+          "summary": "Summary"
         }
       }
     },
@@ -511,7 +550,9 @@
         "active": "Active",
         "urgent": "Urgent",
         "pastOnly": "Past Only"
-      }
+      },
+      "emptyTitle": "No Patients Found",
+      "message": "Message"
     },
     "slotManagement": {
       "title": "Appointment Slots",
@@ -634,7 +675,78 @@
           "signStamp": "Sign and stamp",
           "captureUpload": "Capture and upload"
         }
-      }
+      },
+      "commission": "Commission"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "unknown": "Unknown"
+    },
+    "screeningReview": {
+      "note": "Note:"
+    },
+    "screenings": {
+      "confidence": {
+        "high": "High",
+        "low": "Low",
+        "moderate": "Moderate",
+        "na": "N/A"
+      },
+      "filter": {
+        "all": "All",
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "pending": "Pending",
+        "reviewed": "Reviewed"
+      },
+      "images": "images",
+      "pendingAnalysis": "Pending analysis",
+      "review": "Review",
+      "risk": {
+        "high": "High Risk",
+        "low": "Low Risk",
+        "medium": "Medium Risk",
+        "unknown": "Unknown"
+      },
+      "sort": {
+        "byDate": "By Date",
+        "byPriority": "By Priority"
+      },
+      "stats": {
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "pending": "Pending",
+        "total": "Total"
+      },
+      "status": {
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "rejected": "Rejected",
+        "reviewed": "Reviewed"
+      },
+      "title": "Screenings"
+    },
+    "wallet": {
+      "balance": "Current balance",
+      "loading": "Loading wallet...",
+      "title": "Ophthalmologist Wallet",
+      "transactionType": {
+        "bonus": "Bonus",
+        "deposit": "Deposit",
+        "payment": "Payment",
+        "refund": "Refund",
+        "transfer": "Transfer"
+      },
+      "transactions": "Transaction History",
+      "withdraw": {
+        "status": {
+          "cancelled": "Cancelled",
+          "failed": "Rejected",
+          "pending": "Pending",
+          "processing": "Processing"
+        }
+      },
+      "yourNote": "Your note"
     }
   },
   "MedicalTerms": {
