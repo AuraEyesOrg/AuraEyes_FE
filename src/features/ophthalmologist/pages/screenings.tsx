@@ -150,6 +150,18 @@ function getStatusConfig(status: string) {
   }
 }
 
+function isPendingLikeReviewStatus(status: string): boolean {
+  const normalized = (status ?? '').trim().toLowerCase();
+  return (
+    normalized.length === 0 ||
+    normalized === 'pending-review' ||
+    normalized === 'pending' ||
+    normalized === 'pendingreview' ||
+    normalized === 'in-review' ||
+    normalized === 'inreview'
+  );
+}
+
 function getConfidenceColor(confidence: number): string {
   if (confidence >= 90) return 'bg-emerald-500';
   if (confidence >= 70) return 'bg-amber-500';
@@ -236,7 +248,7 @@ export default function ScreeningsPage() {
   const getEffectiveReviewStatus = useCallback(
     (row: OphthalmologistScreeningListItemDto): string => {
       const rawStatus = (row.reviewStatus ?? '').trim().toLowerCase();
-      if (rawStatus && rawStatus !== 'pending-review') {
+      if (!isPendingLikeReviewStatus(rawStatus)) {
         return rawStatus;
       }
 
@@ -245,7 +257,7 @@ export default function ScreeningsPage() {
         return 'reviewed';
       }
 
-      return rawStatus || 'pending-review';
+      return rawStatus.length > 0 ? rawStatus : 'pending-review';
     },
     [completedConsultationByScreeningId]
   );
