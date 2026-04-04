@@ -12,6 +12,7 @@ import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
 import { getRoadmaps } from '../api/patient.api';
 import type { HealthRoadmap } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const riskLevelStyle: Record<HealthRoadmap['riskLevel'], string> = {
   LOW: 'bg-green-500/15 text-green-400 border-green-500/30',
@@ -40,6 +41,10 @@ const renderGuidanceList = (items: string[], emptyText: string) => {
 };
 
 export default function RoadmapPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const roadmapQuery = useQuery({
     queryKey: ['patient', 'roadmaps'],
     queryFn: getRoadmaps,
@@ -74,10 +79,10 @@ export default function RoadmapPage() {
             <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
             <div>
               <h2 className="font-semibold text-(--text-primary)">
-                Unable to load roadmap
+                {t('PatientRoadmap.error.title')}
               </h2>
               <p className="text-sm text-(--text-secondary)">
-                Please refresh the page or try again later.
+                {t('PatientRoadmap.error.description')}
               </p>
             </div>
           </div>
@@ -91,11 +96,10 @@ export default function RoadmapPage() {
       <PatientLayout>
         <div className="medical-card">
           <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-            Health Roadmap
+            {t('PatientRoadmap.page.title')}
           </h1>
           <p className="text-(--text-secondary)">
-            Your personalized roadmap will appear after your doctor finalizes a
-            diagnosis.
+            {t('PatientRoadmap.empty.description')}
           </p>
         </div>
       </PatientLayout>
@@ -106,11 +110,10 @@ export default function RoadmapPage() {
     <PatientLayout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-          Health Roadmap
+          {t('PatientRoadmap.page.title')}
         </h1>
         <p className="text-(--text-secondary)">
-          Personalized guidance generated from your doctor diagnosis and AI
-          screening context.
+          {t('PatientRoadmap.page.subtitle')}
         </p>
       </div>
 
@@ -122,21 +125,27 @@ export default function RoadmapPage() {
               <span
                 className={`px-2.5 py-1 text-xs font-semibold border rounded-full ${riskLevelStyle[latestRoadmap.riskLevel]}`}
               >
-                {latestRoadmap.riskLevel} RISK
+                {t('PatientRoadmap.risk.badge', {
+                  risk: t(
+                    `PatientRoadmap.risk.levels.${latestRoadmap.riskLevel}`
+                  ),
+                })}
               </span>
             </div>
             <p className="text-(--text-primary) text-lg font-semibold">
               {latestRoadmap.summary}
             </p>
             <div className="text-sm text-(--text-muted)">
-              Generated on {formatShortDate(latestRoadmap.generatedAt)}
+              {t('PatientRoadmap.generatedOn', {
+                date: formatShortDate(latestRoadmap.generatedAt),
+              })}
             </div>
           </div>
 
           <div className="flex items-center gap-2 px-3 py-2 bg-(--bg-secondary) border border-(--border-color) rounded-xl">
             <ShieldAlert className="w-4 h-4 text-brand" />
             <span className="text-xs font-medium text-(--text-secondary)">
-              Source: {latestRoadmap.source}
+              {t('PatientRoadmap.source', { source: latestRoadmap.source })}
             </span>
           </div>
         </div>
@@ -146,11 +155,13 @@ export default function RoadmapPage() {
         <section className="medical-card space-y-4">
           <div className="flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-brand" />
-            <h2 className="font-semibold text-(--text-primary)">Next Steps</h2>
+            <h2 className="font-semibold text-(--text-primary)">
+              {t('PatientRoadmap.sections.nextSteps.title')}
+            </h2>
           </div>
           {renderGuidanceList(
             latestRoadmap.nextSteps,
-            'No immediate next steps were generated.'
+            t('PatientRoadmap.sections.nextSteps.empty')
           )}
         </section>
 
@@ -158,12 +169,12 @@ export default function RoadmapPage() {
           <div className="flex items-center gap-2">
             <HeartPulse className="w-5 h-5 text-brand" />
             <h2 className="font-semibold text-(--text-primary)">
-              Lifestyle Advice
+              {t('PatientRoadmap.sections.lifestyleAdvice.title')}
             </h2>
           </div>
           {renderGuidanceList(
             latestRoadmap.lifestyleAdvice,
-            'No lifestyle guidance was generated.'
+            t('PatientRoadmap.sections.lifestyleAdvice.empty')
           )}
         </section>
 
@@ -171,12 +182,12 @@ export default function RoadmapPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-brand" />
             <h2 className="font-semibold text-(--text-primary)">
-              Warning Signs
+              {t('PatientRoadmap.sections.warningSigns.title')}
             </h2>
           </div>
           {renderGuidanceList(
             latestRoadmap.warningSigns,
-            'No warning signs were listed.'
+            t('PatientRoadmap.sections.warningSigns.empty')
           )}
         </section>
       </div>
@@ -186,16 +197,19 @@ export default function RoadmapPage() {
           <CalendarClock className="w-5 h-5 text-brand mt-0.5" />
           <div>
             <h2 className="font-semibold text-(--text-primary)">
-              Follow-up Recommendation
+              {t('PatientRoadmap.followUp.title')}
             </h2>
             <p className="text-sm text-(--text-secondary) mt-1">
               {latestRoadmap.followUp.needed
-                ? `Follow-up is recommended: ${latestRoadmap.followUp.timeframe || 'Please contact your doctor for schedule details.'}`
-                : 'No immediate follow-up is required.'}
+                ? t('PatientRoadmap.followUp.needed', {
+                    timeframe:
+                      latestRoadmap.followUp.timeframe ||
+                      t('PatientRoadmap.followUp.timeframeFallback'),
+                  })
+                : t('PatientRoadmap.followUp.notNeeded')}
             </p>
             <p className="text-xs text-(--text-muted) mt-3">
-              Clinical diagnosis and treatment decisions remain under doctor
-              responsibility. This roadmap is patient-facing guidance.
+              {t('PatientRoadmap.followUp.disclaimer')}
             </p>
           </div>
         </div>

@@ -260,12 +260,15 @@ function mapStandardResponseToAnomalies(
       name: pred.class_name,
       confidence: Math.round(pred.confidence * 100),
       description: isPrimary
-        ? tRetinal('PatientRetinalAnalysis.helper.primaryFindingDescription', {
-            disease: pred.class_name,
-            confidence: Math.round(pred.confidence * 100),
-          })
+        ? tRetinal(
+            'PatientRetinalAnalysis.analysis.helper.primaryFindingDescription',
+            {
+              disease: pred.class_name,
+              confidence: Math.round(pred.confidence * 100),
+            }
+          )
         : tRetinal(
-            'PatientRetinalAnalysis.helper.secondaryFindingDescription',
+            'PatientRetinalAnalysis.analysis.helper.secondaryFindingDescription',
             {
               disease: pred.class_name,
               status: pred.status.replace(/_/g, ' '),
@@ -280,9 +283,12 @@ function mapStandardResponseToAnomalies(
         : (friendly?.name ?? pred.class_name),
       friendlyDescription:
         friendly?.description ??
-        tRetinal('PatientRetinalAnalysis.helper.detectedByAiWithReview', {
-          disease: pred.class_name,
-        }),
+        tRetinal(
+          'PatientRetinalAnalysis.analysis.helper.detectedByAiWithReview',
+          {
+            disease: pred.class_name,
+          }
+        ),
       isHighest: isPrimary,
     });
   }
@@ -427,7 +433,7 @@ async function mapSavedAnomaliesFromRaw(
         name: pred.class_name,
         confidence: Math.round((pred.confidence ?? 0) * 100),
         description: tRetinal(
-          'PatientRetinalAnalysis.helper.confidenceDescription',
+          'PatientRetinalAnalysis.analysis.helper.confidenceDescription',
           {
             disease: pred.class_name,
             confidence: Math.round((pred.confidence ?? 0) * 100),
@@ -438,7 +444,7 @@ async function mapSavedAnomaliesFromRaw(
         friendlyName: FRIENDLY_NAMES[pred.class_name]?.name ?? pred.class_name,
         friendlyDescription:
           FRIENDLY_NAMES[pred.class_name]?.description ??
-          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+          tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAi', {
             disease: pred.class_name,
           }),
         isHighest: (pred.rank ?? 1) === 1,
@@ -464,7 +470,7 @@ async function mapSavedAnomaliesFromRaw(
         name: a.name,
         confidence: Number(a.confidence ?? 0),
         description: tRetinal(
-          'PatientRetinalAnalysis.helper.confidenceDescription',
+          'PatientRetinalAnalysis.analysis.helper.confidenceDescription',
           {
             disease: a.name,
             confidence: Math.round(Number(a.confidence ?? 0)),
@@ -480,7 +486,7 @@ async function mapSavedAnomaliesFromRaw(
         friendlyName: FRIENDLY_NAMES[a.name]?.name ?? a.name,
         friendlyDescription:
           FRIENDLY_NAMES[a.name]?.description ??
-          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+          tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAi', {
             disease: a.name,
           }),
         isHighest: idx === 0,
@@ -513,7 +519,7 @@ function friendlyDescription(anomaly: Anomaly): string {
   return (
     anomaly.friendlyDescription ||
     anomaly.description ||
-    tRetinal('PatientRetinalAnalysis.helper.detectedByAiTool')
+    tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAiTool')
   );
 }
 
@@ -980,12 +986,12 @@ export default function RetinalAnalysis() {
         confidenceScore: persistedConfidence,
         summary:
           mappedRiskLevel === 'High'
-            ? t('PatientRetinalAnalysis.persistedSummary.high')
+            ? t('PatientRetinalAnalysis.analysis.persistedSummary.high')
             : mappedRiskLevel === 'Moderate'
-              ? t('PatientRetinalAnalysis.persistedSummary.moderate')
+              ? t('PatientRetinalAnalysis.analysis.persistedSummary.moderate')
               : persistedUrgency === 'normal'
-                ? t('PatientRetinalAnalysis.persistedSummary.normal')
-                : t('PatientRetinalAnalysis.persistedSummary.low'),
+                ? t('PatientRetinalAnalysis.analysis.persistedSummary.normal')
+                : t('PatientRetinalAnalysis.analysis.persistedSummary.low'),
         findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),

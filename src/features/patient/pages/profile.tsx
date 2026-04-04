@@ -37,8 +37,13 @@ import {
   type ChangePasswordFormData,
 } from '../schemas/profile.schema';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfilePage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const { data: profile, isLoading, error } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const uploadAvatarMutation = useUploadAvatar();
@@ -112,11 +117,11 @@ export default function ProfilePage() {
       },
       {
         onSuccess: () => {
-          toast.success('Profile updated successfully');
+          toast.success(t('PatientProfile.toast.profileUpdated'));
           setIsEditing(false);
         },
         onError: (_err) => {
-          toast.error('Failed to update profile');
+          toast.error(t('PatientProfile.toast.profileUpdateFailed'));
         },
       }
     );
@@ -137,22 +142,26 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  const processImageFile = useCallback((file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
-        reject(new Error('Please select an image file'));
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        reject(new Error('Image must be less than 5MB'));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  }, []);
+  const processImageFile = useCallback(
+    (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+          reject(new Error(t('PatientProfile.avatar.selectImageFile')));
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          reject(new Error(t('PatientProfile.avatar.maxSizeError')));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () =>
+          reject(new Error(t('PatientProfile.avatar.readFileFailed')));
+        reader.readAsDataURL(file);
+      });
+    },
+    [t]
+  );
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,10 +172,10 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch {
-        toast.error('Failed to load image');
+        toast.error(t('PatientProfile.toast.loadImageFailed'));
       }
     },
-    [processImageFile]
+    [processImageFile, t]
   );
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -200,10 +209,10 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch {
-        toast.error('Failed to load image');
+        toast.error(t('PatientProfile.toast.loadImageFailed'));
       }
     },
-    [processImageFile]
+    [processImageFile, t]
   );
 
   const handlePaste = useCallback(
@@ -222,14 +231,16 @@ export default function ProfilePage() {
             setAvatarFile(file);
           } catch (err) {
             toast.error(
-              err instanceof Error ? err.message : 'Failed to load image'
+              err instanceof Error
+                ? err.message
+                : t('PatientProfile.toast.loadImageFailed')
             );
           }
           break;
         }
       }
     },
-    [showAvatarUpload, processImageFile]
+    [showAvatarUpload, processImageFile, t]
   );
 
   useEffect(() => {
@@ -241,13 +252,13 @@ export default function ProfilePage() {
     if (!avatarFile) return;
     uploadAvatarMutation.mutate(avatarFile, {
       onSuccess: () => {
-        toast.success('Profile photo updated successfully');
+        toast.success(t('PatientProfile.toast.avatarUpdated'));
         setShowAvatarUpload(false);
         setPreviewUrl(null);
         setAvatarFile(null);
       },
       onError: (_err) => {
-        toast.error('Failed to upload avatar');
+        toast.error(t('PatientProfile.toast.avatarUploadFailed'));
       },
     });
   };
@@ -264,12 +275,12 @@ export default function ProfilePage() {
   const onPasswordSubmit = (data: ChangePasswordFormData) => {
     changePasswordMutation.mutate(data, {
       onSuccess: () => {
-        toast.success('Password changed successfully');
+        toast.success(t('PatientProfile.toast.passwordChanged'));
         setShowChangePassword(false);
         resetPw();
       },
       onError: (_err) => {
-        toast.error('Failed to change password');
+        toast.error(t('PatientProfile.toast.passwordChangeFailed'));
       },
     });
   };
@@ -282,7 +293,9 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Spinner size={40} />
-            <p className="text-[var(--text-secondary)]">Loading profile...</p>
+            <p className="text-[var(--text-secondary)]">
+              {t('PatientProfile.loading.profile')}
+            </p>
           </div>
         </div>
       </PatientLayout>
@@ -296,10 +309,10 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-4 text-center">
             <AlertCircle className="w-10 h-10 text-red-500" />
             <p className="text-[var(--text-primary)] font-medium">
-              Failed to load profile
+              {t('PatientProfile.error.title')}
             </p>
             <p className="text-[var(--text-secondary)] text-sm">
-              {error?.message || 'An unexpected error occurred'}
+              {error?.message || t('PatientProfile.error.fallback')}
             </p>
           </div>
         </div>
@@ -311,10 +324,10 @@ export default function ProfilePage() {
     <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-          My Profile
+          {t('PatientProfile.page.title')}
         </h1>
         <p className="text-[var(--text-secondary)]">
-          Manage your personal information and account settings
+          {t('PatientProfile.page.subtitle')}
         </p>
       </div>
 
@@ -351,7 +364,7 @@ export default function ProfilePage() {
                 <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                      Update Profile Photo
+                      {t('PatientProfile.avatar.modalTitle')}
                     </h3>
                     <button
                       onClick={handleAvatarCancel}
@@ -385,7 +398,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <p className="text-sm text-[var(--text-secondary)]">
-                          Click or drop another image to change
+                          {t('PatientProfile.avatar.changeHint')}
                         </p>
                       </div>
                     ) : (
@@ -406,11 +419,11 @@ export default function ProfilePage() {
                         <div>
                           <p className="text-[var(--text-primary)] font-medium mb-1">
                             {isDragging
-                              ? 'Drop your image here'
-                              : 'Drag & drop your photo'}
+                              ? t('PatientProfile.avatar.dropHere')
+                              : t('PatientProfile.avatar.dragDrop')}
                           </p>
                           <p className="text-sm text-[var(--text-secondary)]">
-                            or click to browse files
+                            {t('PatientProfile.avatar.browseHint')}
                           </p>
                         </div>
                       </div>
@@ -428,22 +441,22 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-center gap-2 mt-4 p-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
                     <Clipboard className="w-4 h-4 text-brand" />
                     <span className="text-sm text-[var(--text-secondary)]">
-                      You can also{' '}
+                      {t('PatientProfile.avatar.pastePrefix')}{' '}
                       <span className="text-brand font-medium">Ctrl+V</span> to
-                      paste an image
+                      {t('PatientProfile.avatar.pasteSuffix')}
                     </span>
                   </div>
 
                   {/* File requirements */}
                   <p className="text-xs text-[var(--text-muted)] text-center mt-3">
-                    Supported formats: JPG, PNG, GIF, WebP &bull; Max size: 5MB
+                    {t('PatientProfile.avatar.supportedFormats')}
                   </p>
 
                   {/* Upload error */}
                   {uploadAvatarMutation.isError && (
                     <p className="text-sm text-red-500 text-center mt-2">
                       {uploadAvatarMutation.error?.message ||
-                        'Failed to upload avatar'}
+                        t('PatientProfile.toast.avatarUploadFailed')}
                     </p>
                   )}
 
@@ -453,7 +466,7 @@ export default function ProfilePage() {
                       onClick={handleAvatarCancel}
                       className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
                     >
-                      Cancel
+                      {t('PatientProfile.actions.cancel')}
                     </button>
                     <button
                       onClick={handleAvatarSave}
@@ -463,12 +476,12 @@ export default function ProfilePage() {
                       {uploadAvatarMutation.isPending ? (
                         <>
                           <Spinner size={16} />
-                          Uploading...
+                          {t('PatientProfile.avatar.uploading')}
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          Save Photo
+                          {t('PatientProfile.avatar.savePhoto')}
                         </>
                       )}
                     </button>
@@ -492,8 +505,8 @@ export default function ProfilePage() {
               <CheckCircle className="w-4 h-4" />
               <span>
                 {profile.isEmailVerified
-                  ? 'Email Verified'
-                  : 'Email Not Verified'}
+                  ? t('PatientProfile.labels.emailVerified')
+                  : t('PatientProfile.labels.emailNotVerified')}
               </span>
             </div>
           </div>
@@ -503,13 +516,17 @@ export default function ProfilePage() {
           {/* Quick Stats */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">Member Since</span>
+              <span className="text-[var(--text-secondary)]">
+                {t('PatientProfile.labels.memberSince')}
+              </span>
               <span className="text-[var(--text-primary)] font-medium">
                 {formatMonthYear(profile.createdAt)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">2FA Status</span>
+              <span className="text-[var(--text-secondary)]">
+                {t('PatientProfile.labels.twoFactorStatus')}
+              </span>
               <span
                 className={`font-medium ${
                   profile.isTwoFactorEnabled
@@ -517,7 +534,9 @@ export default function ProfilePage() {
                     : 'text-yellow-600'
                 }`}
               >
-                {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
+                {profile.isTwoFactorEnabled
+                  ? t('PatientProfile.labels.enabled')
+                  : t('PatientProfile.labels.disabled')}
               </span>
             </div>
           </div>
@@ -532,7 +551,7 @@ export default function ProfilePage() {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                Personal Information
+                {t('PatientProfile.sections.personalInformation')}
               </h2>
               {!isEditing ? (
                 <button
@@ -541,7 +560,7 @@ export default function ProfilePage() {
                   className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
                   <Edit3 className="w-4 h-4" />
-                  Edit
+                  {t('PatientProfile.actions.edit')}
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -550,7 +569,7 @@ export default function ProfilePage() {
                     onClick={handleCancel}
                     className="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
-                    Cancel
+                    {t('PatientProfile.actions.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -563,6 +582,7 @@ export default function ProfilePage() {
                       <Save className="w-4 h-4" />
                     )}
                     Save
+                    {t('PatientProfile.actions.save')}
                   </button>
                 </div>
               )}
@@ -572,14 +592,14 @@ export default function ProfilePage() {
             {updateProfileMutation.isError && (
               <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
                 {updateProfileMutation.error?.message ||
-                  'Failed to update profile'}
+                  t('PatientProfile.toast.profileUpdateFailed')}
               </div>
             )}
 
             {/* Update success */}
             {updateProfileMutation.isSuccess && !isEditing && (
               <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                Profile updated successfully!
+                {t('PatientProfile.toast.profileUpdated')}
               </div>
             )}
 
@@ -588,7 +608,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <User className="w-4 h-4" />
-                  Full Name
+                  {t('PatientProfile.fields.fullName')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -614,14 +634,14 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Mail className="w-4 h-4" />
-                  Email
+                  {t('PatientProfile.fields.email')}
                 </label>
                 <p className="text-[var(--text-primary)] font-medium">
                   {profile.email}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  <span className="text-red-500">(*)</span> Email cannot be
-                  changed{' '}
+                  <span className="text-red-500">(*)</span>{' '}
+                  {t('PatientProfile.fields.emailImmutable')}
                 </p>
               </div>
 
@@ -629,7 +649,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Phone className="w-4 h-4" />
-                  Phone Number
+                  {t('PatientProfile.fields.phoneNumber')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -655,7 +675,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Calendar className="w-4 h-4" />
-                  Date of Birth
+                  {t('PatientProfile.fields.dateOfBirth')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -682,7 +702,7 @@ export default function ProfilePage() {
               {/* Gender */}
               <div>
                 <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Gender
+                  {t('PatientProfile.fields.gender')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -691,9 +711,18 @@ export default function ProfilePage() {
                       className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                     >
                       <option value="">Prefer not to say</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value="">
+                        {t('PatientProfile.gender.preferNotToSay')}
+                      </option>
+                      <option value="male">
+                        {t('PatientProfile.gender.male')}
+                      </option>
+                      <option value="female">
+                        {t('PatientProfile.gender.female')}
+                      </option>
+                      <option value="other">
+                        {t('PatientProfile.gender.other')}
+                      </option>
                     </select>
                     {formErrors.gender && (
                       <p className="text-sm text-red-500 mt-1">
@@ -712,7 +741,7 @@ export default function ProfilePage() {
               <div className="md:col-span-2">
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <MapPin className="w-4 h-4" />
-                  Address
+                  {t('PatientProfile.fields.address')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -739,7 +768,7 @@ export default function ProfilePage() {
           {/* Security Settings */}
           <div className="medical-card">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">
-              Security Settings
+              {t('PatientProfile.sections.securitySettings')}
             </h2>
 
             <div className="space-y-4">
@@ -751,10 +780,10 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-[var(--text-primary)] font-medium">
-                      Password
+                      {t('PatientProfile.security.passwordTitle')}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      Change your account password
+                      {t('PatientProfile.security.passwordDescription')}
                     </p>
                   </div>
                 </div>
@@ -762,7 +791,7 @@ export default function ProfilePage() {
                   onClick={() => setShowChangePassword(true)}
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
-                  Change
+                  {t('PatientProfile.actions.change')}
                 </button>
               </div>
 
@@ -786,7 +815,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-[var(--text-primary)] font-medium">
-                      Two-Factor Authentication
+                      {t('PatientProfile.security.twoFactorTitle')}
                     </p>
                     <p
                       className={`text-sm ${
@@ -795,7 +824,9 @@ export default function ProfilePage() {
                           : 'text-yellow-600'
                       }`}
                     >
-                      {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      {profile.isTwoFactorEnabled
+                        ? t('PatientProfile.labels.enabled')
+                        : t('PatientProfile.labels.disabled')}
                     </p>
                   </div>
                 </div>
@@ -803,7 +834,7 @@ export default function ProfilePage() {
                   to="/patient/security"
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
-                  Manage
+                  {t('PatientProfile.actions.manage')}
                 </Link>
               </div>
 
@@ -815,10 +846,10 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-[var(--text-primary)] font-medium">
-                      Notification Preferences
+                      {t('PatientProfile.security.notificationTitle')}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      Email & Push notifications
+                      {t('PatientProfile.security.notificationDescription')}
                     </p>
                   </div>
                 </div>
@@ -826,7 +857,7 @@ export default function ProfilePage() {
                   to="/patient/notifications"
                   className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
-                  Configure
+                  {t('PatientProfile.actions.configure')}
                 </Link>
               </div>
             </div>
@@ -840,7 +871,7 @@ export default function ProfilePage() {
           <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Change Password
+                {t('PatientProfile.security.changePasswordModalTitle')}
               </h3>
               <button
                 onClick={() => {
@@ -857,13 +888,13 @@ export default function ProfilePage() {
             {changePasswordMutation.isError && (
               <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
                 {changePasswordMutation.error?.message ||
-                  'Failed to change password'}
+                  t('PatientProfile.toast.passwordChangeFailed')}
               </div>
             )}
 
             {changePasswordMutation.isSuccess && (
               <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                Password changed successfully!
+                {t('PatientProfile.toast.passwordChanged')}
               </div>
             )}
 
@@ -873,7 +904,7 @@ export default function ProfilePage() {
             >
               <div>
                 <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Current Password
+                  {t('PatientProfile.security.currentPassword')}
                 </label>
                 <input
                   {...registerPw('currentPassword')}
@@ -889,7 +920,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  New Password
+                  {t('PatientProfile.security.newPassword')}
                 </label>
                 <input
                   {...registerPw('newPassword')}
@@ -905,7 +936,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Confirm New Password
+                  {t('PatientProfile.security.confirmNewPassword')}
                 </label>
                 <input
                   {...registerPw('confirmNewPassword')}
@@ -929,7 +960,7 @@ export default function ProfilePage() {
                   }}
                   className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
                 >
-                  Cancel
+                  {t('PatientProfile.actions.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -939,12 +970,12 @@ export default function ProfilePage() {
                   {changePasswordMutation.isPending ? (
                     <>
                       <Spinner size={16} />
-                      Changing...
+                      {t('PatientProfile.security.changingPassword')}
                     </>
                   ) : (
                     <>
                       <Key className="w-4 h-4" />
-                      Change Password
+                      {t('PatientProfile.actions.changePassword')}
                     </>
                   )}
                 </button>

@@ -27,6 +27,7 @@ import {
   useCreateDeposit,
 } from '../hooks/use-wallet';
 import { TransactionType, PaymentMethod } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const DEPOSIT_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];
 
@@ -48,6 +49,10 @@ const TRANSACTION_TYPE_MAP: Record<string | number, string> = {
 };
 
 export default function WalletPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -84,8 +89,16 @@ export default function WalletPage() {
   // ── Helpers ──
   const formatDate = formatDateTimeWithYear;
 
+  const getTransactionType = (txType: TransactionType) =>
+    TRANSACTION_TYPE_MAP[txType] ?? 'payment';
+
+  const getTransactionLabel = (txType: TransactionType) => {
+    const type = getTransactionType(txType);
+    return t(`PatientWallet.transactionTypes.${type}`);
+  };
+
   const getTransactionIcon = (txType: TransactionType) => {
-    const type = TRANSACTION_TYPE_MAP[txType];
+    const type = getTransactionType(txType);
     switch (type) {
       case 'deposit':
       case 'bonus':
@@ -101,7 +114,7 @@ export default function WalletPage() {
   };
 
   const getTransactionBgClass = (txType: TransactionType) => {
-    const type = TRANSACTION_TYPE_MAP[txType];
+    const type = getTransactionType(txType);
     switch (type) {
       case 'deposit':
       case 'bonus':
@@ -114,7 +127,7 @@ export default function WalletPage() {
   };
 
   const isPositiveAmount = (txType: TransactionType) => {
-    const type = TRANSACTION_TYPE_MAP[txType];
+    const type = getTransactionType(txType);
     return type === 'deposit' || type === 'refund' || type === 'bonus';
   };
 
@@ -133,7 +146,9 @@ export default function WalletPage() {
       {
         amountVnd: amount,
         paymentMethod,
-        description: `Wallet Top-up via ${selectedMethod === 'payos' ? 'PayOS' : 'VNPay'}`,
+        description: t('PatientWallet.deposit.description', {
+          method: selectedMethod === 'payos' ? 'PayOS' : 'VNPay',
+        }),
         returnUrl,
         cancelUrl,
       },
@@ -165,7 +180,9 @@ export default function WalletPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Spinner size={32} className="mx-auto mb-3" />
-            <p className="text-(--text-secondary)">Loading wallet...</p>
+            <p className="text-(--text-secondary)">
+              {t('PatientWallet.loading.wallet')}
+            </p>
           </div>
         </div>
       </PatientLayout>
@@ -180,18 +197,18 @@ export default function WalletPage() {
           <div className="text-center max-w-md">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
             <h2 className="text-xl font-bold text-(--text-primary) mb-2">
-              Unable to load wallet
+              {t('PatientWallet.error.title')}
             </h2>
             <p className="text-(--text-secondary) mb-4">
               {walletError instanceof Error
                 ? walletError.message
-                : 'An unexpected error occurred. Please try again.'}
+                : t('PatientWallet.error.fallback')}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-brand text-white rounded-xl font-semibold hover:brightness-110 transition-all"
             >
-              Retry
+              {t('PatientWallet.error.retry')}
             </button>
           </div>
         </div>
@@ -203,10 +220,10 @@ export default function WalletPage() {
     <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-          Digital Wallet
+          {t('PatientWallet.page.title')}
         </h1>
         <p className="text-(--text-secondary)">
-          Manage your balance and view transaction history
+          {t('PatientWallet.page.subtitle')}
         </p>
       </div>
 
@@ -221,7 +238,7 @@ export default function WalletPage() {
               </div>
               <div>
                 <p className="text-sm text-(--text-secondary) font-medium">
-                  Available Balance
+                  {t('PatientWallet.balance.available')}
                 </p>
                 <p className="text-3xl font-bold mt-1 text-(--text-primary)">
                   {formatCurrency(wallet?.balance ?? 0, { absolute: true })}
@@ -234,7 +251,7 @@ export default function WalletPage() {
               className="w-full py-3 rounded-xl font-semibold transition-all border border-(--border-color) bg-(--bg-secondary) text-(--text-primary) hover:bg-(--bg-tertiary) flex items-center justify-center gap-2 active:scale-95"
             >
               <Plus className="w-5 h-5 text-brand" />
-              Top Up Wallet
+              {t('PatientWallet.actions.topUpWallet')}
             </button>
           </div>
 
@@ -242,7 +259,7 @@ export default function WalletPage() {
           <div className="medical-card">
             <h2 className="text-lg font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-brand" />
-              This Month
+              {t('PatientWallet.stats.thisMonth')}
             </h2>
 
             <div className="space-y-4">
@@ -252,7 +269,7 @@ export default function WalletPage() {
                     <ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                   <span className="text-(--text-secondary) text-sm">
-                    Total Deposits
+                    {t('PatientWallet.stats.totalDeposits')}
                   </span>
                 </div>
                 <span className="text-green-600 dark:text-green-400 font-semibold">
@@ -268,7 +285,7 @@ export default function WalletPage() {
                     <ArrowUpRight className="w-4 h-4 text-red-500 dark:text-red-400" />
                   </div>
                   <span className="text-(--text-secondary) text-sm">
-                    Total Spent
+                    {t('PatientWallet.stats.totalSpent')}
                   </span>
                 </div>
                 <span className="text-red-500 dark:text-red-400 font-semibold">
@@ -284,7 +301,7 @@ export default function WalletPage() {
                     <History className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <span className="text-(--text-secondary) text-sm">
-                    Transactions
+                    {t('PatientWallet.stats.transactions')}
                   </span>
                 </div>
                 <span className="text-(--text-primary) font-semibold">
@@ -298,7 +315,7 @@ export default function WalletPage() {
           <div className="medical-card">
             <h2 className="text-lg font-semibold text-(--text-primary) mb-4 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-brand" />
-              Payment Methods
+              {t('PatientWallet.paymentMethods.title')}
             </h2>
 
             <div className="space-y-3">
@@ -310,7 +327,7 @@ export default function WalletPage() {
                   <div>
                     <p className="text-(--text-primary) font-medium">VNPay</p>
                     <p className="text-xs text-(--text-secondary)">
-                      Cards, Bank Transfer, QR
+                      {t('PatientWallet.paymentMethods.vnpayDescription')}
                     </p>
                   </div>
                 </div>
@@ -325,7 +342,7 @@ export default function WalletPage() {
                   <div>
                     <p className="text-(--text-primary) font-medium">PayOS</p>
                     <p className="text-xs text-(--text-secondary)">
-                      Bank Transfer, QR
+                      {t('PatientWallet.paymentMethods.payosDescription')}
                     </p>
                   </div>
                 </div>
@@ -341,11 +358,13 @@ export default function WalletPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-(--text-primary) flex items-center gap-2">
                 <History className="w-5 h-5 text-brand" />
-                Transaction History
+                {t('PatientWallet.transactions.title')}
               </h2>
               {transactionsData && transactionsData.totalCount > 0 && (
                 <span className="text-sm text-(--text-secondary)">
-                  {transactionsData.totalCount} total
+                  {t('PatientWallet.transactions.totalCount', {
+                    count: transactionsData.totalCount,
+                  })}
                 </span>
               )}
             </div>
@@ -362,7 +381,7 @@ export default function WalletPage() {
               <div className="text-center py-12">
                 <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
                 <p className="text-(--text-secondary)">
-                  Failed to load transactions
+                  {t('PatientWallet.transactions.loadFailed')}
                 </p>
               </div>
             )}
@@ -372,10 +391,10 @@ export default function WalletPage() {
               <div className="text-center py-12">
                 <History className="w-12 h-12 text-(--text-muted) mx-auto mb-3" />
                 <p className="text-(--text-secondary) font-medium">
-                  No transactions yet
+                  {t('PatientWallet.transactions.emptyTitle')}
                 </p>
                 <p className="text-sm text-(--text-muted) mt-1">
-                  Top up your wallet to get started
+                  {t('PatientWallet.transactions.emptyDescription')}
                 </p>
               </div>
             )}
@@ -398,12 +417,7 @@ export default function WalletPage() {
                         <div>
                           <p className="text-(--text-primary) font-medium">
                             {transaction.description ||
-                              TRANSACTION_TYPE_MAP[transaction.transactionType]
-                                ?.charAt(0)
-                                .toUpperCase() +
-                                TRANSACTION_TYPE_MAP[
-                                  transaction.transactionType
-                                ]?.slice(1)}
+                              getTransactionLabel(transaction.transactionType)}
                           </p>
                           <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
                             <Calendar className="w-3 h-3" />
@@ -428,7 +442,8 @@ export default function WalletPage() {
                           })}
                         </p>
                         <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
-                          <CheckCircle className="w-3 h-3" /> Completed
+                          <CheckCircle className="w-3 h-3" />
+                          {t('PatientWallet.transactionStatus.completed')}
                         </span>
                       </div>
                     </div>
@@ -444,12 +459,14 @@ export default function WalletPage() {
                       className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <ChevronLeft className="w-4 h-4" />
-                      Previous
+                      {t('PatientWallet.pagination.previous')}
                     </button>
 
                     <span className="text-sm text-(--text-secondary)">
-                      Page {transactionsData.pageNumber} of{' '}
-                      {transactionsData.totalPages}
+                      {t('PatientWallet.pagination.pageOf', {
+                        page: transactionsData.pageNumber,
+                        total: transactionsData.totalPages,
+                      })}
                     </span>
 
                     <button
@@ -461,7 +478,7 @@ export default function WalletPage() {
                       disabled={!transactionsData.hasNext}
                       className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg bg-(--bg-secondary) hover:bg-(--bg-tertiary) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Next
+                      {t('PatientWallet.pagination.next')}
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -480,10 +497,10 @@ export default function WalletPage() {
               <div>
                 <h2 className="text-2xl font-bold text-(--text-primary) flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-brand" />
-                  Top Up Your Wallet
+                  {t('PatientWallet.deposit.title')}
                 </h2>
                 <p className="text-sm text-(--text-secondary) mt-1">
-                  Choose an amount and payment method
+                  {t('PatientWallet.deposit.subtitle')}
                 </p>
               </div>
               <button
@@ -497,7 +514,7 @@ export default function WalletPage() {
             {/* Amount Selection */}
             <div className="mb-6">
               <label className="text-sm font-semibold text-(--text-primary) mb-3 block">
-                Select Amount
+                {t('PatientWallet.deposit.selectAmount')}
               </label>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {DEPOSIT_AMOUNTS.map((amount) => (
@@ -521,7 +538,9 @@ export default function WalletPage() {
               <div className="relative">
                 <input
                   type="number"
-                  placeholder="Or enter custom amount (min 10,000)"
+                  placeholder={t(
+                    'PatientWallet.deposit.customAmountPlaceholder'
+                  )}
                   value={customAmount}
                   onChange={(e) => {
                     setCustomAmount(e.target.value);
@@ -532,19 +551,19 @@ export default function WalletPage() {
                   className="w-full px-4 py-3 bg-(--bg-secondary) border-2 border-(--border-color) rounded-xl text-(--text-primary) placeholder-(--text-muted) focus:outline-none focus:border-brand transition-colors"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-(--text-muted) font-medium">
-                  VND
+                  {t('PatientWallet.deposit.currency')}
                 </span>
               </div>
 
               {/* Validation hint */}
               {customAmount && parseInt(customAmount) < 10000 && (
                 <p className="text-xs text-red-500 mt-1">
-                  Minimum deposit amount is 10,000 VND
+                  {t('PatientWallet.deposit.minAmount')}
                 </p>
               )}
               {customAmount && parseInt(customAmount) > 50000000 && (
                 <p className="text-xs text-red-500 mt-1">
-                  Maximum deposit amount is 50,000,000 VND
+                  {t('PatientWallet.deposit.maxAmount')}
                 </p>
               )}
             </div>
@@ -552,7 +571,7 @@ export default function WalletPage() {
             {/* Payment Method */}
             <div className="mb-6">
               <label className="text-sm font-semibold text-(--text-primary) mb-3 block">
-                Payment Method
+                {t('PatientWallet.deposit.paymentMethod')}
               </label>
               <div className="space-y-3">
                 <button
@@ -569,7 +588,7 @@ export default function WalletPage() {
                   <div className="text-left flex-1">
                     <p className="text-(--text-primary) font-semibold">PayOS</p>
                     <p className="text-xs text-(--text-secondary)">
-                      Bank Transfer, QR Code
+                      {t('PatientWallet.paymentMethods.payosDescription')}
                     </p>
                   </div>
                   {selectedMethod === 'payos' && (
@@ -591,7 +610,7 @@ export default function WalletPage() {
                   <div className="text-left flex-1">
                     <p className="text-(--text-primary) font-semibold">VNPay</p>
                     <p className="text-xs text-(--text-secondary)">
-                      Credit/Debit Card, Bank Transfer
+                      {t('PatientWallet.paymentMethods.vnpayLongDescription')}
                     </p>
                   </div>
                   {selectedMethod === 'vnpay' && (
@@ -605,7 +624,7 @@ export default function WalletPage() {
             {createDepositMutation.isError && (
               <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                Failed to create deposit. Please try again.
+                {t('PatientWallet.deposit.createFailed')}
               </div>
             )}
 
@@ -616,7 +635,7 @@ export default function WalletPage() {
                 disabled={createDepositMutation.isPending}
                 className="flex-1 py-3 bg-(--bg-secondary) hover:bg-(--bg-tertiary) text-(--text-primary) border border-(--border-color) rounded-xl font-semibold transition-all active:scale-95 disabled:opacity-50"
               >
-                Cancel
+                {t('PatientWallet.actions.cancel')}
               </button>
               <button
                 onClick={handleDeposit}
@@ -633,10 +652,10 @@ export default function WalletPage() {
                 {createDepositMutation.isPending ? (
                   <>
                     <Spinner size={16} className="shrink-0" />
-                    Creating...
+                    {t('PatientWallet.deposit.creating')}
                   </>
                 ) : (
-                  'Proceed to Pay'
+                  t('PatientWallet.deposit.proceedToPay')
                 )}
               </button>
             </div>
