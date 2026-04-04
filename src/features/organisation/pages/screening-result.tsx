@@ -22,7 +22,7 @@ import OrganisationHeader from '../components/OrganisationHeader';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
-import { getDiseaseUrgency } from '@/features/patient/mock';
+import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
 import { toDisplayDiseaseName } from '@/features/patient/lib/disease-translation';
 
@@ -491,7 +491,8 @@ export default function OrganisationScreeningResultPage() {
                   Screening Results
                 </h1>
                 <p className="text-sm text-(--text-tertiary)">
-                  Session {screeningId?.slice(0, 8)}… ·{' '}
+                  Patient: {sessionData.patientId.slice(0, 8)}… · Session{' '}
+                  {screeningId?.slice(0, 8)}… ·{' '}
                   {new Date(sessionData.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -501,7 +502,7 @@ export default function OrganisationScreeningResultPage() {
                 onClick={() => navigate('/organisation/billing')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
               >
-                View History
+                Screening History
               </button>
               <button
                 onClick={() => window.print()}
