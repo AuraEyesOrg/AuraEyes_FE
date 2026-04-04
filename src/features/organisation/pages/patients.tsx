@@ -217,8 +217,7 @@ export default function PatientsPage() {
                                   {patient.name}
                                 </div>
                                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                                  {patient.id} • {patient.age}y •{' '}
-                                  {patient.gender}
+                                  {patient.age}y • {patient.gender}
                                 </div>
                               </div>
                             </div>
