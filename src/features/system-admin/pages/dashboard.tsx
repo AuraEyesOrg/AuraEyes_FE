@@ -548,8 +548,14 @@ export default function SystemAdminDashboard() {
                   </section>
 
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                    <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-3">
-                      System status
+                    <h3 className="text-sm font-bold mb-3">
+                      <Link
+                        to="/system-admin/status"
+                        className="inline-flex items-center gap-1 text-slate-900 dark:text-white hover:text-primary transition-colors"
+                      >
+                        System status
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between gap-2">

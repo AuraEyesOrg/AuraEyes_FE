@@ -91,6 +91,19 @@ export interface SystemAdminDashboardSystemStatus {
   databaseHealthy: boolean;
 }
 
+export interface SystemAdminBetterStackMonitor {
+  key: string;
+  name: string;
+  category: string;
+  configured: boolean;
+}
+
+export interface SystemAdminBetterStack {
+  enabled: boolean;
+  embedUrl: string | null;
+  monitors: SystemAdminBetterStackMonitor[];
+}
+
 export interface SystemAdminTopDoctor {
   ophthalmologistId: string;
   name: string;
@@ -125,6 +138,7 @@ export interface SystemAdminDashboardMetrics {
   monthlyNewPatientCounts: number[];
   pendingActions: SystemAdminDashboardPendingActions;
   systemStatus: SystemAdminDashboardSystemStatus;
+  betterStack: SystemAdminBetterStack;
   topDoctorsByConsultationRevenue: SystemAdminTopDoctor[];
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }

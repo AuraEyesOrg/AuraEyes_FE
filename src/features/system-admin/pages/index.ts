@@ -4,6 +4,7 @@
  */
 
 export { default as DashboardPage } from './dashboard';
+export { default as StatusPage } from './status';
 export { default as OrganisationsPage } from './organisations';
 export { default as PatientsPage } from './patients';
 export { default as OphthalmologistsPage } from './ophthalmologists';

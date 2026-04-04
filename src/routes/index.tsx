@@ -184,6 +184,9 @@ const OphthalmologistWalletPage = lazy(
 const SystemAdminDashboard = lazy(
   () => import('@/features/system-admin/pages/dashboard')
 );
+const SystemAdminStatus = lazy(
+  () => import('@/features/system-admin/pages/status')
+);
 const SystemAdminOrganisations = lazy(
   () => import('@/features/system-admin/pages/organisations')
 );
@@ -845,6 +848,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/system-admin/status"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminStatus />}
+            />
+          }
+        />
 
         <Route path="/:locale" element={<GuestLayout />}>
           <Route index element={<HomePage />} />
@@ -1284,6 +1296,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/status"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminStatus />
             </PrivateRoute>
           }
         />
