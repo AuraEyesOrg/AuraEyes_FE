@@ -638,21 +638,32 @@ export default function ContractPage() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Commission</span>
+                      <span className="text-sm text-slate-500">
+                        {t('Ophthalmologist.contract.commission', 'Commission')}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {contract.commissionRate != null
                           ? `${contract.commissionRate}%`
-                          : 'Pending deal'}
+                          : t(
+                              'Ophthalmologist.contract.pendingDeal',
+                              'Pending deal'
+                            )}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-slate-500">
-                        Actual salary
+                        {t(
+                          'Ophthalmologist.contract.actualSalary',
+                          'Actual salary'
+                        )}
                       </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {contract.actualMonthlySalary != null
                           ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
-                          : 'Pending deal'}
+                          : t(
+                              'Ophthalmologist.contract.pendingDeal',
+                              'Pending deal'
+                            )}
                       </span>
                     </div>
                   </div>
@@ -671,7 +682,9 @@ export default function ContractPage() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-slate-500">Email</span>
+                      <span className="text-sm text-slate-500">
+                        {t('Ophthalmologist.common.email', 'Email')}
+                      </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">
                         {contract.userEmail}
                       </span>

@@ -165,12 +165,12 @@ interface UploadAvatarResponse {
 
 const DEFAULT_PROFILE: OphthalmologistProfile = {
   id: '',
-  fullName: 'Unknown Doctor',
+  fullName: '',
   email: 'N/A',
   phone: 'N/A',
-  bio: 'No profile bio available.',
+  bio: '',
   yearsOfExperience: 0,
-  specialty: 'Ophthalmologist',
+  specialty: '',
   hospital: 'N/A',
   department: 'N/A',
   address: 'N/A',
@@ -222,6 +222,14 @@ const mapCertificateTypeFromApi = (
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const { i18n } = useTranslation();
+  const unknownDoctorLabel = t(
+    'Ophthalmologist.settings.defaults.unknownDoctor',
+    'Unknown Doctor'
+  );
+  const noBioLabel = t(
+    'Ophthalmologist.settings.defaults.noBio',
+    'No profile bio available.'
+  );
   const location = useLocation();
   const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
@@ -300,7 +308,12 @@ export default function SettingsPage() {
         }),
       ]);
       setShowEditProfileModal(false);
-      ophthalToast.success('Profile updated successfully.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.settings.toast.profileUpdated',
+          'Profile updated successfully.'
+        )
+      );
     },
     onError: (error: unknown) => {
       const err = error as {
@@ -309,7 +322,10 @@ export default function SettingsPage() {
       ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
-          'Unable to update profile right now. Please try again.'
+          t(
+            'Ophthalmologist.settings.toast.profileUpdateFailed',
+            'Unable to update profile right now. Please try again.'
+          )
       );
     },
   });
@@ -340,7 +356,12 @@ export default function SettingsPage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      ophthalToast.success('Avatar uploaded successfully.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.settings.toast.avatarUploaded',
+          'Avatar uploaded successfully.'
+        )
+      );
     },
     onError: (error: unknown) => {
       const err = error as {
@@ -350,7 +371,10 @@ export default function SettingsPage() {
       ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
-          'Unable to upload avatar right now. Please try again.'
+          t(
+            'Ophthalmologist.settings.toast.avatarUploadFailed',
+            'Unable to upload avatar right now. Please try again.'
+          )
       );
     },
   });
@@ -366,17 +390,10 @@ export default function SettingsPage() {
     return {
       id: profileData?.id ?? user?.roleId ?? user?.id ?? '',
       fullName:
-        profileData?.userFullName ??
-        user?.fullName ??
-        t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
+        profileData?.userFullName ?? user?.fullName ?? unknownDoctorLabel,
       email: profileData?.userEmail ?? user?.email ?? 'N/A',
       phone: profileData?.userPhoneNumber ?? 'N/A',
-      bio:
-        profileData?.bio?.trim() ||
-        t(
-          'Ophthalmologist.settings.defaults.noBio',
-          'No profile bio available.'
-        ),
+      bio: profileData?.bio?.trim() || noBioLabel,
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
       hospital: user?.organizationId ?? 'N/A',
@@ -405,7 +422,7 @@ export default function SettingsPage() {
         })),
       ],
     };
-  }, [profileQuery.data, t, user]);
+  }, [noBioLabel, profileQuery.data, t, unknownDoctorLabel, user]);
 
   const handleLanguageChange = (nextLocale: AppLocale) => {
     if (nextLocale === locale) return;
@@ -421,17 +438,22 @@ export default function SettingsPage() {
     if (!showEditProfileModal) return;
 
     setProfileForm({
-      fullName: profile.fullName === 'Unknown Doctor' ? '' : profile.fullName,
+      fullName: profile.fullName === unknownDoctorLabel ? '' : profile.fullName,
       phone: profile.phone === 'N/A' ? '' : profile.phone,
       address: profile.address === 'N/A' ? '' : profile.address,
-      bio: profile.bio === 'No profile bio available.' ? '' : profile.bio,
+      bio: profile.bio === noBioLabel ? '' : profile.bio,
       yearsOfExperience: profile.yearsOfExperience,
     });
-  }, [profile, showEditProfileModal]);
+  }, [noBioLabel, profile, showEditProfileModal, unknownDoctorLabel]);
 
   const handleUpdateProfile = () => {
     if (!profileForm.fullName.trim()) {
-      ophthalToast.error('Full name is required.');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.validation.fullNameRequired',
+          'Full name is required.'
+        )
+      );
       return;
     }
 
@@ -458,13 +480,23 @@ export default function SettingsPage() {
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      ophthalToast.error('Invalid file type. Supported: JPG, PNG, GIF, WebP');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.validation.avatarFileType',
+          'Invalid file type. Supported: JPG, PNG, GIF, WebP'
+        )
+      );
       event.target.value = '';
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      ophthalToast.error('File must be smaller than 5MB');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.validation.avatarFileSize',
+          'File must be smaller than 5MB'
+        )
+      );
       event.target.value = '';
       return;
     }
@@ -1365,7 +1397,10 @@ export default function SettingsPage() {
           <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-2xl mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Edit Profile Information
+                {t(
+                  'Ophthalmologist.settings.editModal.title',
+                  'Edit Profile Information'
+                )}
               </h3>
               <button
                 onClick={() => setShowEditProfileModal(false)}
@@ -1378,7 +1413,10 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name
+                  {t(
+                    'Ophthalmologist.settings.editModal.fullName',
+                    'Full Name'
+                  )}
                 </label>
                 <input
                   type="text"
@@ -1395,7 +1433,10 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number
+                  {t(
+                    'Ophthalmologist.settings.editModal.phoneNumber',
+                    'Phone Number'
+                  )}
                 </label>
                 <input
                   type="text"
@@ -1449,7 +1490,10 @@ export default function SettingsPage() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Bio / Description
+                {t(
+                  'Ophthalmologist.settings.editModal.bioDescription',
+                  'Bio / Description'
+                )}
               </label>
               <textarea
                 rows={4}
@@ -1469,14 +1513,19 @@ export default function SettingsPage() {
                 onClick={() => setShowEditProfileModal(false)}
                 className="px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleUpdateProfile}
                 disabled={updateProfileMutation.isPending}
                 className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors disabled:opacity-60"
               >
-                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateProfileMutation.isPending
+                  ? t('Ophthalmologist.common.saving', 'Saving...')
+                  : t(
+                      'Ophthalmologist.settings.editModal.saveChanges',
+                      'Save Changes'
+                    )}
               </button>
             </div>
           </div>
