@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "i18n:types": "node scripts/generate-i18n-types.mjs",
+    "i18n:audit:patient": "node scripts/audit-patient-i18n.mjs",
     "build": "tsc && vite build",
     "prebuild": "npm run i18n:types",
     "preview": "vite preview",
