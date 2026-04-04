@@ -1,4 +1,16 @@
-import { Patient } from '../types/organisation.types';
+// Inline type formerly from organisation.types.ts
+interface Patient {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  phoneNumber: string;
+  lastScreening: string;
+  aiPrediction: string;
+  confidence: number;
+  status: string;
+  priority: string;
+}
 import { Clock, AlertCircle } from 'lucide-react';
 
 interface RecentPatientsProps {

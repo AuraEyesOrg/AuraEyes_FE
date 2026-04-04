@@ -40,7 +40,7 @@ const navItems = [
   { icon: Settings, label: 'Settings', path: '/organisation/settings' },
 ];
 
-export default function Sidebar({ pendingCount = 23 }: SidebarProps) {
+export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
