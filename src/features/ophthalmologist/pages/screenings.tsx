@@ -170,6 +170,7 @@ function aiLabelForRow(row: OphthalmologistScreeningListItemDto): string {
 }
 
 type SortMode = 'priority' | 'date';
+const SCREENINGS_PAGE_SIZE = 8;
 
 /* ────────────────────── component ────────────────────── */
 
@@ -181,6 +182,7 @@ export default function ScreeningsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortMode, setSortMode] = useState<SortMode>('priority');
+  const [currentPage, setCurrentPage] = useState(1);
   const [items, setItems] = useState<OphthalmologistScreeningListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -287,6 +289,20 @@ export default function ScreeningsPage() {
 
     return filtered;
   }, [getEffectiveReviewStatus, items, searchQuery, selectedStatus, sortMode]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedStatus, sortMode]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredScreenings.length / SCREENINGS_PAGE_SIZE)
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedScreenings = useMemo(() => {
+    const start = (safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE;
+    return filteredScreenings.slice(start, start + SCREENINGS_PAGE_SIZE);
+  }, [filteredScreenings, safeCurrentPage]);
 
   const stats = useMemo(() => {
     const pending = items.filter(
@@ -462,7 +478,7 @@ export default function ScreeningsPage() {
               </div>
             ) : (
               <div className="divide-y divide-gray-50 dark:divide-[#1e3a5f]/50">
-                {filteredScreenings.map((screening) => {
+                {pagedScreenings.map((screening) => {
                   const effectiveReviewStatus =
                     getEffectiveReviewStatus(screening);
                   const statusCfg = getStatusConfig(effectiveReviewStatus);
@@ -634,6 +650,47 @@ export default function ScreeningsPage() {
               </div>
             )}
           </div>
+
+          {filteredScreenings.length > 0 && (
+            <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Showing {(safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE + 1}-
+                {Math.min(
+                  safeCurrentPage * SCREENINGS_PAGE_SIZE,
+                  filteredScreenings.length
+                )}{' '}
+                of {filteredScreenings.length}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={safeCurrentPage <= 1}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Previous
+                </button>
+
+                <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                  {safeCurrentPage} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={safeCurrentPage >= totalPages}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

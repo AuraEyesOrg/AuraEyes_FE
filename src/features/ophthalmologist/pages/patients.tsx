@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Search,
-  Eye,
   Calendar,
   Clock,
   MessageSquare,
@@ -9,8 +8,6 @@ import {
   UserCheck,
   AlertTriangle,
   UserX,
-  LayoutGrid,
-  List,
   ArrowRight,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -24,7 +21,7 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { DEFAULT_LOCALE, getLocaleFromPathname } from '@/i18n/locales';
 
 type PatientCardStatus = 'active' | 'urgent' | 'past';
-type ViewMode = 'grid' | 'table';
+const PATIENTS_PAGE_SIZE = 8;
 
 /* ────────────────────── helpers ────────────────────── */
 
@@ -206,7 +203,7 @@ export default function PatientsPage() {
   const dateLocale = locale === 'vi' ? 'vi-VN' : 'en-US';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { user } = useAuthStore();
   const ophthalmologistId = user?.roleId;
@@ -337,6 +334,20 @@ export default function PatientsPage() {
     return matchesSearch && matchesStatus;
   });
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedStatus]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredPatients.length / PATIENTS_PAGE_SIZE)
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedPatients = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PATIENTS_PAGE_SIZE;
+    return filteredPatients.slice(start, start + PATIENTS_PAGE_SIZE);
+  }, [filteredPatients, safeCurrentPage]);
+
   const totalPatients = patients.length;
   const activePatients = patients.filter((p) => p.status === 'active').length;
   const urgentPatients = patients.filter((p) => p.status === 'urgent').length;
@@ -465,7 +476,7 @@ export default function PatientsPage() {
             </div>
           </div>
 
-          {/* ── Search + Tabs + View Toggle ── */}
+          {/* ── Search + Tabs ── */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -506,32 +517,6 @@ export default function PatientsPage() {
                 </button>
               ))}
             </div>
-
-            {/* View toggle */}
-            <div className="flex items-center bg-gray-100 dark:bg-[#0a1929] rounded-xl p-1 gap-0.5">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
-                title="Grid view"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'table'
-                    ? 'bg-white dark:bg-[#0a1f44] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
-                title="Table view"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
           </div>
 
           {/* ── Empty state ── */}
@@ -555,235 +540,141 @@ export default function PatientsPage() {
                     )}
               </p>
             </div>
-          ) : viewMode === 'grid' ? (
-            /* ── Grid View ── */
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredPatients.map((patient) => {
-                const meta = getStatusMeta(patient.status);
-
-                return (
-                  <div
-                    key={patient.id}
-                    className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50 transition-all duration-300 group"
-                  >
-                    <div className="p-5">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-sm"
-                            style={{ backgroundColor: patient.avatarColor }}
-                          >
-                            {patient.initials}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-800 dark:text-white text-sm">
-                              {patient.name}
-                            </h3>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">
-                              {patient.id.slice(0, 8)} • {patient.totalVisits}{' '}
-                              {t(
-                                'Ophthalmologist.patients.sessionsSuffix',
-                                'sessions'
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.text}`}
-                        >
-                          <div
-                            className={`w-1.5 h-1.5 rounded-full ${meta.dot} ${
-                              meta.pulse ? 'animate-pulse' : ''
-                            }`}
-                          />
-                          {patient.statusLabel}
-                        </span>
-                      </div>
-
-                      {/* Last Diagnosis */}
-                      <div className="mb-3 px-3 py-2 bg-gray-50 dark:bg-[#0a1929] rounded-lg">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                          Last Diagnosis
-                        </span>
-                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                          {patient.lastDiagnosis}
-                        </p>
-                      </div>
-
-                      {/* Dates + Visit Chart */}
-                      <div className="flex items-end justify-between mb-4">
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                            <Calendar size={12} className="text-gray-400" />
-                            <span>
-                              {t(
-                                'Ophthalmologist.patients.nextAppointment',
-                                'Next'
-                              )}
-                              :{' '}
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
-                                {patient.nextAppointment}
-                              </span>
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                            <Clock size={12} className="text-gray-400" />
-                            <span>
-                              {t(
-                                'Ophthalmologist.patients.lastCompletedVisit',
-                                'Last visit'
-                              )}
-                              :{' '}
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
-                                {patient.lastVisit}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="shrink-0 ml-3">
-                          <MiniBarChart data={patient.visitHistory} />
-                        </div>
-                      </div>
-
-                      {/* Footer actions */}
-                      <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-[#1e3a5f]">
-                        <button
-                          type="button"
-                          onClick={() => goToPatient(patient.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
-                        >
-                          <Eye size={14} />
-                          {t(
-                            'Ophthalmologist.patients.viewRecords',
-                            'View Records'
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => goToPatient(patient.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
-                        >
-                          <MessageSquare size={14} />
-                          {t('Ophthalmologist.patients.message', 'Message')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           ) : (
-            /* ── Table View ── */
-            <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 dark:border-[#1e3a5f]">
-                      <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Patient
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Last Diagnosis
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Next Appt
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Last Visit
-                      </th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Visits
-                      </th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Activity
-                      </th>
-                      <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-[#1e3a5f]/50">
-                    {filteredPatients.map((patient) => {
-                      const meta = getStatusMeta(patient.status);
-                      return (
-                        <tr
-                          key={patient.id}
-                          className="hover:bg-gray-50/50 dark:hover:bg-[#0a1929]/30 transition-colors"
-                        >
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-semibold shrink-0"
-                                style={{
-                                  backgroundColor: patient.avatarColor,
-                                }}
-                              >
-                                {patient.initials}
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-800 dark:text-white text-sm">
-                                  {patient.name}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  {patient.id.slice(0, 8)}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.text}`}
+            <>
+              <div className="space-y-3">
+                {pagedPatients.map((patient) => {
+                  const meta = getStatusMeta(patient.status);
+
+                  return (
+                    <div
+                      key={patient.id}
+                      className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] transition-all duration-200 hover:border-cyan-200 dark:hover:border-cyan-800 hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-[#0a1929]/50"
+                    >
+                      <div className="p-5">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex items-start gap-4 min-w-0 flex-1">
+                            <div
+                              className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-sm shrink-0"
+                              style={{ backgroundColor: patient.avatarColor }}
                             >
-                              <div
-                                className={`w-1.5 h-1.5 rounded-full ${meta.dot} ${
-                                  meta.pulse ? 'animate-pulse' : ''
-                                }`}
-                              />
-                              {patient.statusLabel}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-xs text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
-                              {patient.lastDiagnosis}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
-                            {patient.nextAppointment}
-                          </td>
-                          <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
-                            {patient.lastVisit}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                              {patient.totalVisits}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex justify-center">
-                              <MiniBarChart data={patient.visitHistory} />
+                              {patient.initials}
                             </div>
-                          </td>
-                          <td className="px-5 py-3 text-right">
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                                  {patient.name}
+                                </h3>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.text}`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${meta.dot} ${
+                                      meta.pulse ? 'animate-pulse' : ''
+                                    }`}
+                                  />
+                                  {patient.statusLabel}
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <Users className="w-3.5 h-3.5" />
+                                  {patient.totalVisits}{' '}
+                                  {t(
+                                    'Ophthalmologist.patients.sessionsSuffix',
+                                    'sessions'
+                                  )}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  {t(
+                                    'Ophthalmologist.patients.nextAppointment',
+                                    'Next'
+                                  )}
+                                  : {patient.nextAppointment}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  {t(
+                                    'Ophthalmologist.patients.lastCompletedVisit',
+                                    'Last visit'
+                                  )}
+                                  : {patient.lastVisit}
+                                </span>
+                                <span className="text-xs text-gray-400 dark:text-gray-500">
+                                  {patient.id.slice(0, 8)}
+                                </span>
+                              </div>
+
+                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                                <span className="font-medium text-gray-700 dark:text-gray-200">
+                                  Last diagnosis:
+                                </span>{' '}
+                                {patient.lastDiagnosis}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <MiniBarChart data={patient.visitHistory} />
                             <button
                               type="button"
                               onClick={() => goToPatient(patient.id)}
-                              className="inline-flex items-center gap-1 text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-sm font-medium transition-all hover:shadow-md hover:shadow-cyan-500/25"
                             >
-                              View
+                              <MessageSquare className="w-4 h-4" />
+                              {t('Ophthalmologist.patients.message', 'Message')}
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+
+              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Showing {(safeCurrentPage - 1) * PATIENTS_PAGE_SIZE + 1}-
+                  {Math.min(
+                    safeCurrentPage * PATIENTS_PAGE_SIZE,
+                    filteredPatients.length
+                  )}{' '}
+                  of {filteredPatients.length}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={safeCurrentPage <= 1}
+                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                  >
+                    Previous
+                  </button>
+
+                  <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                    {safeCurrentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={safeCurrentPage >= totalPages}
+                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </main>
       </div>
