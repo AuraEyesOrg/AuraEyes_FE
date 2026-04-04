@@ -14,6 +14,7 @@ import {
   listOphthalmologistScreenings,
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type ActivityItem = {
   day: string;
@@ -72,15 +73,19 @@ const toChangeLabel = (change: number) =>
   `${change > 0 ? '+' : ''}${Math.abs(change)}%`;
 
 const getMostCommonModelVersion = (
-  screenings: OphthalmologistScreeningListItemDto[]
+  screenings: OphthalmologistScreeningListItemDto[],
+  notAvailableLabel: string
 ) => {
-  if (screenings.length === 0) return 'N/A';
+  if (screenings.length === 0) return notAvailableLabel;
   const counts = new Map<string, number>();
   for (const item of screenings) {
-    const key = item.modelVersion?.trim() || 'N/A';
+    const key = item.modelVersion?.trim() || notAvailableLabel;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
+  return (
+    [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ??
+    notAvailableLabel
+  );
 };
 
 const isReviewed = (status: string | null | undefined) =>
@@ -90,6 +95,7 @@ const isHighRisk = (riskLevel: string | null | undefined) =>
   HIGH_RISK_LEVELS.has((riskLevel ?? '').trim().toLowerCase());
 
 export default function AnalyticsPage() {
+  const { t } = useSafeTranslation();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
 
@@ -203,7 +209,21 @@ export default function AnalyticsPage() {
       day.setHours(0, 0, 0, 0);
       day.setDate(day.getDate() - i);
       const dayKey = toDateKey(day);
-      const dayLabel = day.toLocaleDateString('en-US', { weekday: 'short' });
+      const weekday = day.getDay();
+      const dayLabel =
+        weekday === 0
+          ? t('Ophthalmologist.analytics.weekday.sun', 'Sun')
+          : weekday === 1
+            ? t('Ophthalmologist.analytics.weekday.mon', 'Mon')
+            : weekday === 2
+              ? t('Ophthalmologist.analytics.weekday.tue', 'Tue')
+              : weekday === 3
+                ? t('Ophthalmologist.analytics.weekday.wed', 'Wed')
+                : weekday === 4
+                  ? t('Ophthalmologist.analytics.weekday.thu', 'Thu')
+                  : weekday === 5
+                    ? t('Ophthalmologist.analytics.weekday.fri', 'Fri')
+                    : t('Ophthalmologist.analytics.weekday.sat', 'Sat');
 
       const dayScreenings = screenings.filter(
         (s) => getDateKeyFromIso(s.createdAt) === dayKey
@@ -225,7 +245,9 @@ export default function AnalyticsPage() {
     const conditionCounter = new Map<string, number>();
     for (const s of screenings) {
       const label =
-        s.aiPrimaryLabel?.trim() || s.latestRiskLevel?.trim() || 'Unknown';
+        s.aiPrimaryLabel?.trim() ||
+        s.latestRiskLevel?.trim() ||
+        t('Ophthalmologist.analytics.unknown', 'Unknown');
       conditionCounter.set(label, (conditionCounter.get(label) ?? 0) + 1);
     }
 
@@ -263,10 +285,10 @@ export default function AnalyticsPage() {
             : 'text-blue-500';
 
         const message = reviewed
-          ? `Reviewed screening for ${item.patientName}`
+          ? `${t('Ophthalmologist.analytics.activity.reviewedScreeningFor', 'Reviewed screening for')} ${item.patientName}`
           : highRisk
-            ? `Flagged high-risk case for ${item.patientName}`
-            : `New screening received from ${item.patientName}`;
+            ? `${t('Ophthalmologist.analytics.activity.flaggedHighRiskFor', 'Flagged high-risk case for')} ${item.patientName}`
+            : `${t('Ophthalmologist.analytics.activity.newScreeningFrom', 'New screening received from')} ${item.patientName}`;
 
         return {
           message,
@@ -292,10 +314,13 @@ export default function AnalyticsPage() {
       conditionBreakdown: conditions,
       reviewedRate: toPercent(reviewedCount, screenings.length),
       highRiskRate: toPercent(highRiskCount, screenings.length),
-      modelVersion: getMostCommonModelVersion(screenings),
+      modelVersion: getMostCommonModelVersion(
+        screenings,
+        t('Ophthalmologist.analytics.notAvailable', 'N/A')
+      ),
       recentActivity: activityFeed,
     };
-  }, [screenings, sessions]);
+  }, [screenings, sessions, t]);
 
   const maxScreenings = Math.max(1, ...weeklyActivity.map((d) => d.screenings));
   const isLoading =
@@ -308,13 +333,18 @@ export default function AnalyticsPage() {
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
         <div className="flex-1 h-full overflow-y-auto">
-          <DoctorHeader pageName="Analytics" />
+          <DoctorHeader
+            pageName={t('Ophthalmologist.analytics.title', 'Analytics')}
+          />
           <main className="p-6">
             <div className="flex items-center justify-center h-[60vh]">
               <div className="text-center">
                 <Spinner size={40} className="mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400">
-                  Loading analytics...
+                  {t(
+                    'Ophthalmologist.analytics.loading',
+                    'Loading analytics...'
+                  )}
                 </p>
               </div>
             </div>
@@ -331,16 +361,21 @@ export default function AnalyticsPage() {
       <DoctorSidebar pendingCount={0} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <DoctorHeader pageName="Analytics" />
+        <DoctorHeader
+          pageName={t('Ophthalmologist.analytics.title', 'Analytics')}
+        />
 
         <main className="p-6">
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Analytics
+              {t('Ophthalmologist.analytics.title', 'Analytics')}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Performance metrics and insights
+              {t(
+                'Ophthalmologist.analytics.subtitle',
+                'Performance metrics and insights'
+              )}
             </p>
           </div>
 
@@ -352,7 +387,10 @@ export default function AnalyticsPage() {
                 {screeningsThisWeek}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Screenings This Week
+                {t(
+                  'Ophthalmologist.analytics.stats.screeningsThisWeek',
+                  'Screenings This Week'
+                )}
               </span>
               <span
                 className={`text-[11px] font-semibold ${getChangeClass(screeningsChange)}`}
@@ -366,7 +404,10 @@ export default function AnalyticsPage() {
                 {patientsThisWeek}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Patients Served
+                {t(
+                  'Ophthalmologist.analytics.stats.patientsServed',
+                  'Patients Served'
+                )}
               </span>
               <span
                 className={`text-[11px] font-semibold ${getChangeClass(patientsChange)}`}
@@ -380,7 +421,10 @@ export default function AnalyticsPage() {
                 {confidenceThisWeek}%
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Avg Confidence
+                {t(
+                  'Ophthalmologist.analytics.stats.avgConfidence',
+                  'Avg Confidence'
+                )}
               </span>
               <span
                 className={`text-[11px] font-semibold ${getChangeClass(confidenceChange)}`}
@@ -394,7 +438,10 @@ export default function AnalyticsPage() {
                 {metrics?.urgentCases ?? urgentThisWeek}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Urgent Cases
+                {t(
+                  'Ophthalmologist.analytics.stats.urgentCases',
+                  'Urgent Cases'
+                )}
               </span>
               <span
                 className={`text-[11px] font-semibold ${getChangeClass(urgentChange)}`}
@@ -409,7 +456,10 @@ export default function AnalyticsPage() {
             {/* Weekly Activity Chart */}
             <div className="col-span-2 bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-6 overflow-hidden">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Weekly Activity
+                {t(
+                  'Ophthalmologist.analytics.weeklyActivity',
+                  'Weekly Activity'
+                )}
               </h3>
               <div className="flex items-end justify-between gap-3 h-36">
                 {weeklyActivity.map((day) => (
@@ -423,14 +473,14 @@ export default function AnalyticsPage() {
                         style={{
                           height: `${Math.max((day.screenings / maxScreenings) * 100, 0)}px`,
                         }}
-                        title={`${day.screenings} screenings`}
+                        title={`${day.screenings} ${t('Ophthalmologist.analytics.screenings', 'screenings')}`}
                       />
                       <div
                         className="w-6 bg-cyan-200 rounded-b-sm transition-all"
                         style={{
                           height: `${Math.max((day.reviews / maxScreenings) * 100, 0)}px`,
                         }}
-                        title={`${day.reviews} reviews`}
+                        title={`${day.reviews} ${t('Ophthalmologist.analytics.reviews', 'reviews')}`}
                       />
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -443,13 +493,16 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-cyan-500 rounded" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Screenings
+                    {t('Ophthalmologist.analytics.screenings', 'Screenings')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-cyan-200 rounded" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Reviews Completed
+                    {t(
+                      'Ophthalmologist.analytics.reviewsCompleted',
+                      'Reviews Completed'
+                    )}
                   </span>
                 </div>
               </div>
@@ -458,7 +511,10 @@ export default function AnalyticsPage() {
             {/* Condition Breakdown */}
             <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6">
-                Condition Breakdown
+                {t(
+                  'Ophthalmologist.analytics.conditionBreakdown',
+                  'Condition Breakdown'
+                )}
               </h3>
               {conditionBreakdown.length > 0 ? (
                 <div className="space-y-4">
@@ -486,7 +542,10 @@ export default function AnalyticsPage() {
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No condition distribution data yet.
+                  {t(
+                    'Ophthalmologist.analytics.noConditionData',
+                    'No condition distribution data yet.'
+                  )}
                 </p>
               )}
             </div>
@@ -497,52 +556,81 @@ export default function AnalyticsPage() {
             {/* AI Performance */}
             <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                AI Model Performance
+                {t(
+                  'Ophthalmologist.analytics.aiModelPerformance',
+                  'AI Model Performance'
+                )}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    Avg Confidence
+                    {t(
+                      'Ophthalmologist.analytics.stats.avgConfidence',
+                      'Avg Confidence'
+                    )}
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
                     {confidenceThisWeek}%
                   </p>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
                     {confidenceChange >= 0 ? '+' : ''}
-                    {confidenceChange}% from last week
+                    {confidenceChange}%{' '}
+                    {t(
+                      'Ophthalmologist.analytics.fromLastWeek',
+                      'from last week'
+                    )}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    High Risk Ratio
+                    {t(
+                      'Ophthalmologist.analytics.highRiskRatio',
+                      'High Risk Ratio'
+                    )}
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
                     {highRiskRate}%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Based on reviewed screenings
+                    {t(
+                      'Ophthalmologist.analytics.basedOnReviewed',
+                      'Based on reviewed screenings'
+                    )}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    Reviewed Rate
+                    {t(
+                      'Ophthalmologist.analytics.reviewedRate',
+                      'Reviewed Rate'
+                    )}
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
                     {reviewedRate}%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {screenings.length} total screenings
+                    {screenings.length}{' '}
+                    {t(
+                      'Ophthalmologist.analytics.totalScreenings',
+                      'total screenings'
+                    )}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-[#0a1929] rounded-xl p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    Model Version
+                    {t(
+                      'Ophthalmologist.analytics.modelVersion',
+                      'Model Version'
+                    )}
                   </p>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white">
                     {modelVersion}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Most used in recent screenings
+                    {t(
+                      'Ophthalmologist.analytics.modelVersionHint',
+                      'Most used in recent screenings'
+                    )}
                   </p>
                 </div>
               </div>
@@ -551,7 +639,10 @@ export default function AnalyticsPage() {
             {/* Recent Activity */}
             <div className="bg-white dark:bg-[#0a1f44] rounded-2xl border border-gray-100 dark:border-[#1e3a5f] p-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Recent Activity
+                {t(
+                  'Ophthalmologist.analytics.recentActivity',
+                  'Recent Activity'
+                )}
               </h3>
               {recentActivity.length > 0 ? (
                 <div className="space-y-4">
@@ -575,7 +666,10 @@ export default function AnalyticsPage() {
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No recent screening activity.
+                  {t(
+                    'Ophthalmologist.analytics.noRecentActivity',
+                    'No recent screening activity.'
+                  )}
                 </p>
               )}
             </div>
@@ -583,7 +677,10 @@ export default function AnalyticsPage() {
 
           {!hasAnyData && (
             <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-300">
-              No analytics data available yet for this ophthalmologist.
+              {t(
+                'Ophthalmologist.analytics.noData',
+                'No analytics data available yet for this ophthalmologist.'
+              )}
             </div>
           )}
         </main>
