@@ -1460,6 +1460,76 @@
       "submitLabel": "Gửi đánh giá cơ sở"
     }
   },
+  "PatientDashboard": {
+    "greeting": {
+      "morning": "Chào buổi sáng",
+      "afternoon": "Chào buổi chiều",
+      "evening": "Chào buổi tối"
+    },
+    "fallback": {
+      "firstName": "bạn"
+    },
+    "risk": {
+      "low": "Nguy cơ thấp",
+      "medium": "Nguy cơ trung bình",
+      "high": "Nguy cơ cao",
+      "critical": "Nguy cơ nghiêm trọng",
+      "notAvailable": "N/A"
+    },
+    "detectedSummary": {
+      "low": "Phân tích AI không phát hiện bất thường đáng kể trong lần quét gần nhất. Hãy tiếp tục theo dõi định kỳ để duy trì sức khỏe võng mạc ổn định.",
+      "medium": "Phân tích AI phát hiện các dấu hiệu nguy cơ võng mạc mức trung bình. Vui lòng xem lại phiên này và cân nhắc đặt lịch tái khám với bác sĩ chuyên khoa.",
+      "high": "Phân tích AI phát hiện các dấu hiệu nguy cơ cao có thể cần bác sĩ chuyên khoa đánh giá sớm. Vui lòng mở phiên này để xem chi tiết.",
+      "default": "Phân tích AI phát hiện dấu hiệu từ lần quét gần nhất của bạn. Hãy mở phiên này để xem chi tiết và các bước được khuyến nghị."
+    },
+    "header": {
+      "retinalOverview": "Tổng quan sức khỏe võng mạc của bạn"
+    },
+    "stats": {
+      "latestAiRiskStatus": "Mức nguy cơ AI mới nhất",
+      "noScans": "Chưa có lượt quét",
+      "nextAppointment": "Lịch hẹn tiếp theo",
+      "noneScheduled": "Chưa có lịch",
+      "walletBalance": "Số dư ví",
+      "noWalletValue": "-"
+    },
+    "hero": {
+      "title": {
+        "specialistVerified": "Đã được bác sĩ xác minh",
+        "aiScreening": "Sàng lọc AI"
+      },
+      "awaitingAnalysis": "Đang chờ phân tích",
+      "latestRetinalScanAlt": "Ảnh quét võng mạc gần nhất",
+      "scanId": "Mã lượt quét: #{{id}}",
+      "latestAnalysisResult": "Kết quả phân tích gần nhất",
+      "dateScanned": "Ngày quét",
+      "nextScreening": "Lịch sàng lọc tiếp theo",
+      "processingTitle": "Phiên gần nhất đang xử lý",
+      "noResultsTitle": "Chưa có kết quả sàng lọc",
+      "processingDescription": "Phiên sàng lọc gần nhất của bạn đã sẵn sàng. Hãy mở phiên để tiếp tục phân tích và xem kết quả.",
+      "noResultsDescription": "Tải ảnh quét võng mạc đầu tiên để bắt đầu phân tích bằng AI."
+    },
+    "actions": {
+      "newScreening": "Sàng lọc mới",
+      "viewFullReport": "Xem báo cáo đầy đủ",
+      "openLatestSession": "Mở phiên gần nhất",
+      "uploadFirstScan": "Tải ảnh quét đầu tiên"
+    },
+    "history": {
+      "title": "Lịch sử sàng lọc",
+      "viewAll": "Xem tất cả",
+      "recentScreeningAlt": "Lần sàng lọc gần đây",
+      "sessionLabel": "Phiên sàng lọc",
+      "imagesSingle": "{{count}} ảnh",
+      "imagesMultiple": "{{count}} ảnh",
+      "empty": "Chưa có lịch sử sàng lọc."
+    },
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "messageSpecialist": "Nhắn chuyên gia",
+      "bookAppointment": "Đặt lịch khám"
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",

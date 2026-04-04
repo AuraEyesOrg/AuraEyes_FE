@@ -1459,5 +1459,75 @@
       "modalSubtitle": "Share your clinic visit experience.",
       "submitLabel": "Submit clinic feedback"
     }
+  },
+  "PatientDashboard": {
+    "greeting": {
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening"
+    },
+    "fallback": {
+      "firstName": "there"
+    },
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Moderate Risk",
+      "high": "High Risk",
+      "critical": "Critical Risk",
+      "notAvailable": "N/A"
+    },
+    "detectedSummary": {
+      "low": "The AI analysis detected no significant anomalies in this latest scan. Continue regular monitoring to maintain stable retinal health.",
+      "medium": "The AI analysis detected moderate retinal risk patterns. Please review this session and consider booking a follow-up with a specialist.",
+      "high": "The AI analysis detected high-risk retinal patterns that may need urgent specialist review. Please open this session for detailed findings.",
+      "default": "The AI analysis detected findings from your latest scan. Open this session to review details and recommended next steps."
+    },
+    "header": {
+      "retinalOverview": "Your Retinal Health Overview"
+    },
+    "stats": {
+      "latestAiRiskStatus": "Latest AI Risk Status",
+      "noScans": "No Scans",
+      "nextAppointment": "Next Appointment",
+      "noneScheduled": "None Scheduled",
+      "walletBalance": "Wallet Balance",
+      "noWalletValue": "-"
+    },
+    "hero": {
+      "title": {
+        "specialistVerified": "Specialist Verified",
+        "aiScreening": "AI Screening"
+      },
+      "awaitingAnalysis": "Awaiting Analysis",
+      "latestRetinalScanAlt": "Latest retinal scan",
+      "scanId": "Scan ID: #{{id}}",
+      "latestAnalysisResult": "Latest Analysis Result",
+      "dateScanned": "Date Scanned",
+      "nextScreening": "Next Screening",
+      "processingTitle": "Latest Session Is Processing",
+      "noResultsTitle": "No Screening Results Yet",
+      "processingDescription": "Your latest screening session is available. Open it to continue analysis and review results.",
+      "noResultsDescription": "Upload your first retinal scan to get started with AI-powered analysis."
+    },
+    "actions": {
+      "newScreening": "New Screening",
+      "viewFullReport": "View Full Report",
+      "openLatestSession": "Open Latest Session",
+      "uploadFirstScan": "Upload Your First Scan"
+    },
+    "history": {
+      "title": "Screening History",
+      "viewAll": "View All",
+      "recentScreeningAlt": "Recent screening",
+      "sessionLabel": "Screening Session",
+      "imagesSingle": "{{count}} image",
+      "imagesMultiple": "{{count}} images",
+      "empty": "No screening history yet."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "messageSpecialist": "Message Specialist",
+      "bookAppointment": "Book Appointment"
+    }
   }
 }

@@ -1463,6 +1463,76 @@ declare module 'i18next' {
         submitLabel: string;
       };
     };
+    PatientDashboard: {
+      greeting: {
+        morning: string;
+        afternoon: string;
+        evening: string;
+      };
+      fallback: {
+        firstName: string;
+      };
+      risk: {
+        low: string;
+        medium: string;
+        high: string;
+        critical: string;
+        notAvailable: string;
+      };
+      detectedSummary: {
+        low: string;
+        medium: string;
+        high: string;
+        default: string;
+      };
+      header: {
+        retinalOverview: string;
+      };
+      stats: {
+        latestAiRiskStatus: string;
+        noScans: string;
+        nextAppointment: string;
+        noneScheduled: string;
+        walletBalance: string;
+        noWalletValue: string;
+      };
+      hero: {
+        title: {
+          specialistVerified: string;
+          aiScreening: string;
+        };
+        awaitingAnalysis: string;
+        latestRetinalScanAlt: string;
+        scanId: string;
+        latestAnalysisResult: string;
+        dateScanned: string;
+        nextScreening: string;
+        processingTitle: string;
+        noResultsTitle: string;
+        processingDescription: string;
+        noResultsDescription: string;
+      };
+      actions: {
+        newScreening: string;
+        viewFullReport: string;
+        openLatestSession: string;
+        uploadFirstScan: string;
+      };
+      history: {
+        title: string;
+        viewAll: string;
+        recentScreeningAlt: string;
+        sessionLabel: string;
+        imagesSingle: string;
+        imagesMultiple: string;
+        empty: string;
+      };
+      quickActions: {
+        title: string;
+        messageSpecialist: string;
+        bookAppointment: string;
+      };
+    };
     notification: {
       types: {
         screening: string;
