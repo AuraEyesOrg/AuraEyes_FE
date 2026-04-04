@@ -1683,6 +1683,20 @@
       "invalidImage": "Invalid image. Please upload a valid retinal fundus image.",
       "analysisUnavailable": "AI analysis is unavailable. Please check that the AI service is running."
     },
+    "helper": {
+      "primaryFindingDescription": "{{disease}} detected as the primary finding ({{confidence}}% confidence).",
+      "secondaryFindingDescription": "{{disease}} - {{status}} ({{confidence}}% confidence).",
+      "confidenceDescription": "{{disease}} ({{confidence}}% confidence).",
+      "detectedByAi": "{{disease}} was detected by our AI screening.",
+      "detectedByAiWithReview": "{{disease}} was detected by our AI screening. Your specialist can evaluate this further.",
+      "detectedByAiTool": "Detected by our AI screening tool."
+    },
+    "persistedSummary": {
+      "high": "Findings need attention from an ophthalmologist.",
+      "moderate": "Some findings may need specialist review.",
+      "normal": "No major risk findings detected.",
+      "low": "Low-risk findings detected. Routine specialist follow-up is recommended."
+    },
     "disclaimer": {
       "importantLabel": "Important:",
       "message": "This AI screening assists but does not replace professional medical advice. Results should be reviewed by a qualified ophthalmologist."
@@ -1695,7 +1709,10 @@
       "inProgressLabel": "In Progress",
       "inProgressDescription": "Consultation is active. You can chat and join the video call.",
       "completedLabel": "Completed",
-      "completedDescription": "Consultation has been completed. Chat is now read-only."
+      "completedDescription": "Consultation has been completed. Chat is now read-only.",
+      "chatOpensIn": "Chat opens in",
+      "autoOpenAtScheduledTime": "Chat will automatically open at the scheduled appointment time",
+      "unlockAfterVerification": "Chat will unlock after your doctor verifies the session."
     },
     "schedule": {
       "pending": "Schedule pending",
@@ -1724,6 +1741,13 @@
     },
     "composer": {
       "initialSharedScanMessage": "Hi Doctor, I'd like to share my recent screening results for your review.",
+      "scanPreviewAlt": "Scan preview",
+      "readyToShareScan": "Ready to share: {{eyeLabel}}",
+      "findingsCount": " / {{count}} finding(s)",
+      "readyToShareImage": "Ready to share image",
+      "encrypted": "Encrypted",
+      "imageAttachedBadge": "Image attached",
+      "characterLimitReached": "Character limit reached.",
       "placeholder": {
         "scanContext": "Add context for the scan before sending it to your ophthalmologist...",
         "preVisit": "Share symptoms, scan notes, or questions before the consultation starts...",
@@ -1733,7 +1757,38 @@
     },
     "fallback": {
       "assignedOphthalmologist": "Assigned ophthalmologist",
-      "patient": "Patient"
+      "patient": "Patient",
+      "retinalScan": "Retinal Scan",
+      "notAvailable": "N/A",
+      "you": "You",
+      "sharedImage": "Shared image",
+      "pendingImage": "Pending image",
+      "riskLabelUnavailable": "Risk label unavailable",
+      "noSummaryAvailable": "No summary available"
+    },
+    "toast": {
+      "invalidImageFile": "Please select a valid image file.",
+      "imageTooLarge": "Image size must be 10MB or less.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "uploadFailedGeneric": "Unable to upload image. Please try again.",
+      "imageAttached": "Image attached.",
+      "sendMessageFailed": "Failed to send message. Please try again."
+    },
+    "sessionType": {
+      "verification": "Verification",
+      "videoCall": "Video Call",
+      "clinicBooking": "Clinic Booking"
+    },
+    "sessionStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "messageMeta": {
+      "savedPreVisit": "Saved as pre-visit note",
+      "deliveredToDoctor": "Delivered to your doctor",
+      "doctorNote": "Doctor note"
     },
     "loading": {
       "conversations": "Loading conversations..."
@@ -1748,7 +1803,17 @@
     },
     "empty": {
       "noSearchResultsTitle": "No sessions match your search",
-      "noSearchResultsDescription": "Try a doctor name, chat status, or consultation type."
+      "noSearchResultsDescription": "Try a doctor name, chat status, or consultation type.",
+      "preVisitTitle": "Leave a note for your doctor",
+      "completedTitle": "No messages in this session",
+      "preVisitDescription": "Start by sharing symptoms, concerns, or a brief note before your consultation begins.",
+      "inProgressDescription": "The consultation is active. Start the conversation when you are ready.",
+      "completedDescription": "This consultation has been completed.",
+      "selectSessionTitle": "Select a session",
+      "selectSessionDescription": "Choose a consultation from the left panel to review the full conversation."
+    },
+    "typing": {
+      "doctorIsTyping": "Doctor is typing..."
     },
     "chatStatus": {
       "title": "Chat status: {{status}}",
@@ -1757,15 +1822,19 @@
     "overview": {
       "show": "Show session overview",
       "hide": "Hide session overview",
+      "close": "Close session overview",
       "title": "Session Overview",
       "appointment": "Appointment",
       "lastActivity": "Last activity",
       "consultationFee": "Consultation fee",
-      "phase": "Phase"
+      "phase": "Phase",
+      "pendingScanShare": "Pending Scan Share",
+      "pendingScanAlt": "Pending scan"
     },
     "guidance": {
       "title": "Conversation Guidance",
-      "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster."
+      "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster.",
+      "sidebarDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier for your ophthalmologist to triage quickly."
     }
   }
 }

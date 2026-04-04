@@ -1686,6 +1686,20 @@ declare module 'i18next' {
         invalidImage: string;
         analysisUnavailable: string;
       };
+      helper: {
+        primaryFindingDescription: string;
+        secondaryFindingDescription: string;
+        confidenceDescription: string;
+        detectedByAi: string;
+        detectedByAiWithReview: string;
+        detectedByAiTool: string;
+      };
+      persistedSummary: {
+        high: string;
+        moderate: string;
+        normal: string;
+        low: string;
+      };
       disclaimer: {
         importantLabel: string;
         message: string;
@@ -1699,6 +1713,9 @@ declare module 'i18next' {
         inProgressDescription: string;
         completedLabel: string;
         completedDescription: string;
+        chatOpensIn: string;
+        autoOpenAtScheduledTime: string;
+        unlockAfterVerification: string;
       };
       schedule: {
         pending: string;
@@ -1727,6 +1744,13 @@ declare module 'i18next' {
       };
       composer: {
         initialSharedScanMessage: string;
+        scanPreviewAlt: string;
+        readyToShareScan: string;
+        findingsCount: string;
+        readyToShareImage: string;
+        encrypted: string;
+        imageAttachedBadge: string;
+        characterLimitReached: string;
         placeholder: {
           scanContext: string;
           preVisit: string;
@@ -1737,6 +1761,37 @@ declare module 'i18next' {
       fallback: {
         assignedOphthalmologist: string;
         patient: string;
+        retinalScan: string;
+        notAvailable: string;
+        you: string;
+        sharedImage: string;
+        pendingImage: string;
+        riskLabelUnavailable: string;
+        noSummaryAvailable: string;
+      };
+      toast: {
+        invalidImageFile: string;
+        imageTooLarge: string;
+        uploadFailed: string;
+        uploadFailedGeneric: string;
+        imageAttached: string;
+        sendMessageFailed: string;
+      };
+      sessionType: {
+        verification: string;
+        videoCall: string;
+        clinicBooking: string;
+      };
+      sessionStatus: {
+        pending: string;
+        confirmed: string;
+        completed: string;
+        cancelled: string;
+      };
+      messageMeta: {
+        savedPreVisit: string;
+        deliveredToDoctor: string;
+        doctorNote: string;
       };
       loading: {
         conversations: string;
@@ -1752,6 +1807,16 @@ declare module 'i18next' {
       empty: {
         noSearchResultsTitle: string;
         noSearchResultsDescription: string;
+        preVisitTitle: string;
+        completedTitle: string;
+        preVisitDescription: string;
+        inProgressDescription: string;
+        completedDescription: string;
+        selectSessionTitle: string;
+        selectSessionDescription: string;
+      };
+      typing: {
+        doctorIsTyping: string;
       };
       chatStatus: {
         title: string;
@@ -1760,15 +1825,19 @@ declare module 'i18next' {
       overview: {
         show: string;
         hide: string;
+        close: string;
         title: string;
         appointment: string;
         lastActivity: string;
         consultationFee: string;
         phase: string;
+        pendingScanShare: string;
+        pendingScanAlt: string;
       };
       guidance: {
         title: string;
         description: string;
+        sidebarDescription: string;
       };
     };
     notification: {

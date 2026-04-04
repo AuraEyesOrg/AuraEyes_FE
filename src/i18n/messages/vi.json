@@ -1683,6 +1683,20 @@
       "invalidImage": "Ảnh không hợp lệ. Vui lòng tải lên ảnh đáy mắt hợp lệ.",
       "analysisUnavailable": "Không thể phân tích AI lúc này. Vui lòng kiểm tra dịch vụ AI đang hoạt động."
     },
+    "helper": {
+      "primaryFindingDescription": "{{disease}} được phát hiện là dấu hiệu chính (độ tin cậy {{confidence}}%).",
+      "secondaryFindingDescription": "{{disease}} - {{status}} (độ tin cậy {{confidence}}%).",
+      "confidenceDescription": "{{disease}} (độ tin cậy {{confidence}}%).",
+      "detectedByAi": "{{disease}} được phát hiện bởi hệ thống sàng lọc AI.",
+      "detectedByAiWithReview": "{{disease}} được phát hiện bởi hệ thống sàng lọc AI. Bác sĩ chuyên khoa có thể đánh giá thêm cho bạn.",
+      "detectedByAiTool": "Được phát hiện bởi công cụ sàng lọc AI của chúng tôi."
+    },
+    "persistedSummary": {
+      "high": "Các dấu hiệu cần được bác sĩ nhãn khoa chú ý.",
+      "moderate": "Một số dấu hiệu có thể cần bác sĩ chuyên khoa xem xét thêm.",
+      "normal": "Không phát hiện dấu hiệu nguy cơ đáng kể.",
+      "low": "Phát hiện dấu hiệu nguy cơ thấp. Khuyến nghị theo dõi định kỳ với bác sĩ chuyên khoa."
+    },
     "disclaimer": {
       "importantLabel": "Quan trọng:",
       "message": "Sàng lọc AI hỗ trợ đánh giá, không thay thế tư vấn y khoa chuyên môn. Kết quả cần được bác sĩ nhãn khoa đủ chuyên môn xem xét."
@@ -1695,7 +1709,10 @@
       "inProgressLabel": "Đang tư vấn",
       "inProgressDescription": "Buổi tư vấn đang diễn ra. Bạn có thể nhắn tin và tham gia cuộc gọi video.",
       "completedLabel": "Hoàn tất",
-      "completedDescription": "Buổi tư vấn đã hoàn tất. Khung chat hiện ở chế độ chỉ đọc."
+      "completedDescription": "Buổi tư vấn đã hoàn tất. Khung chat hiện ở chế độ chỉ đọc.",
+      "chatOpensIn": "Chat sẽ mở sau",
+      "autoOpenAtScheduledTime": "Chat sẽ tự động mở vào thời gian hẹn",
+      "unlockAfterVerification": "Chat sẽ mở sau khi bác sĩ xác nhận phiên tư vấn."
     },
     "schedule": {
       "pending": "Chưa có lịch cụ thể",
@@ -1724,6 +1741,13 @@
     },
     "composer": {
       "initialSharedScanMessage": "Chào bác sĩ, em muốn chia sẻ kết quả sàng lọc gần nhất để bác sĩ xem giúp.",
+      "scanPreviewAlt": "Ảnh xem trước kết quả quét",
+      "readyToShareScan": "Sẵn sàng chia sẻ: {{eyeLabel}}",
+      "findingsCount": " / {{count}} phát hiện",
+      "readyToShareImage": "Sẵn sàng chia sẻ hình ảnh",
+      "encrypted": "Đã mã hóa",
+      "imageAttachedBadge": "Đã đính kèm ảnh",
+      "characterLimitReached": "Đã đạt giới hạn ký tự.",
       "placeholder": {
         "scanContext": "Thêm ngữ cảnh cho ảnh quét trước khi gửi cho bác sĩ...",
         "preVisit": "Chia sẻ triệu chứng, ghi chú ảnh quét hoặc câu hỏi trước buổi tư vấn...",
@@ -1733,7 +1757,38 @@
     },
     "fallback": {
       "assignedOphthalmologist": "Bác sĩ được phân công",
-      "patient": "Bệnh nhân"
+      "patient": "Bệnh nhân",
+      "retinalScan": "Kết quả quét võng mạc",
+      "notAvailable": "Không có",
+      "you": "Bạn",
+      "sharedImage": "Hình ảnh đã chia sẻ",
+      "pendingImage": "Hình ảnh chờ gửi",
+      "riskLabelUnavailable": "Chưa có nhãn rủi ro",
+      "noSummaryAvailable": "Chưa có tóm tắt"
+    },
+    "toast": {
+      "invalidImageFile": "Vui lòng chọn tệp hình ảnh hợp lệ.",
+      "imageTooLarge": "Kích thước ảnh phải từ 10MB trở xuống.",
+      "uploadFailed": "Tải ảnh thất bại. Vui lòng thử lại.",
+      "uploadFailedGeneric": "Không thể tải ảnh lên. Vui lòng thử lại.",
+      "imageAttached": "Đã đính kèm ảnh.",
+      "sendMessageFailed": "Gửi tin nhắn thất bại. Vui lòng thử lại."
+    },
+    "sessionType": {
+      "verification": "Xác minh",
+      "videoCall": "Gọi video",
+      "clinicBooking": "Đặt lịch phòng khám"
+    },
+    "sessionStatus": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "messageMeta": {
+      "savedPreVisit": "Đã lưu dưới dạng ghi chú trước buổi khám",
+      "deliveredToDoctor": "Đã gửi tới bác sĩ",
+      "doctorNote": "Ghi chú của bác sĩ"
     },
     "loading": {
       "conversations": "Đang tải cuộc trò chuyện..."
@@ -1748,7 +1803,17 @@
     },
     "empty": {
       "noSearchResultsTitle": "Không có phiên phù hợp với tìm kiếm",
-      "noSearchResultsDescription": "Hãy thử tìm theo tên bác sĩ, trạng thái chat hoặc loại tư vấn."
+      "noSearchResultsDescription": "Hãy thử tìm theo tên bác sĩ, trạng thái chat hoặc loại tư vấn.",
+      "preVisitTitle": "Để lại ghi chú cho bác sĩ",
+      "completedTitle": "Không có tin nhắn trong phiên này",
+      "preVisitDescription": "Bắt đầu bằng cách chia sẻ triệu chứng, mối lo hoặc ghi chú ngắn trước khi buổi tư vấn bắt đầu.",
+      "inProgressDescription": "Buổi tư vấn đang diễn ra. Hãy bắt đầu cuộc trò chuyện khi bạn sẵn sàng.",
+      "completedDescription": "Buổi tư vấn này đã hoàn tất.",
+      "selectSessionTitle": "Chọn một phiên tư vấn",
+      "selectSessionDescription": "Chọn cuộc tư vấn ở cột bên trái để xem toàn bộ cuộc trò chuyện."
+    },
+    "typing": {
+      "doctorIsTyping": "Bác sĩ đang nhập..."
     },
     "chatStatus": {
       "title": "Trạng thái chat: {{status}}",
@@ -1757,15 +1822,19 @@
     "overview": {
       "show": "Hiển thị tổng quan phiên",
       "hide": "Ẩn tổng quan phiên",
+      "close": "Đóng tổng quan phiên",
       "title": "Tổng quan phiên",
       "appointment": "Lịch hẹn",
       "lastActivity": "Hoạt động gần nhất",
       "consultationFee": "Phí tư vấn",
-      "phase": "Giai đoạn"
+      "phase": "Giai đoạn",
+      "pendingScanShare": "Kết quả quét chờ chia sẻ",
+      "pendingScanAlt": "Kết quả quét chờ gửi"
     },
     "guidance": {
       "title": "Hướng dẫn trao đổi",
-      "description": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn."
+      "description": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn.",
+      "sidebarDescription": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn."
     }
   },
   "notification": {

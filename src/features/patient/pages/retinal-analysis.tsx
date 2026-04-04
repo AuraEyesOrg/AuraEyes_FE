@@ -35,6 +35,9 @@ import {
   toDisplayDiseaseName,
 } from '@/features/patient/lib/disease-translation';
 
+const tRetinal = (key: string, options?: Record<string, unknown>) =>
+  i18n.t(key as never, options as never) as unknown as string;
+
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
   confidence: number
@@ -257,8 +260,18 @@ function mapStandardResponseToAnomalies(
       name: pred.class_name,
       confidence: Math.round(pred.confidence * 100),
       description: isPrimary
-        ? `${pred.class_name} detected as the primary finding (${Math.round(pred.confidence * 100)}% confidence).`
-        : `${pred.class_name} — ${pred.status.replace(/_/g, ' ')} (${Math.round(pred.confidence * 100)}% confidence).`,
+        ? tRetinal('PatientRetinalAnalysis.helper.primaryFindingDescription', {
+            disease: pred.class_name,
+            confidence: Math.round(pred.confidence * 100),
+          })
+        : tRetinal(
+            'PatientRetinalAnalysis.helper.secondaryFindingDescription',
+            {
+              disease: pred.class_name,
+              status: pred.status.replace(/_/g, ' '),
+              confidence: Math.round(pred.confidence * 100),
+            }
+          ),
       color: getColorClass(pred.confidence),
       type: mapDiagnosisType(pred.confidence),
       location,
@@ -267,7 +280,9 @@ function mapStandardResponseToAnomalies(
         : (friendly?.name ?? pred.class_name),
       friendlyDescription:
         friendly?.description ??
-        `${pred.class_name} was detected by our AI screening. Your specialist can evaluate this further.`,
+        tRetinal('PatientRetinalAnalysis.helper.detectedByAiWithReview', {
+          disease: pred.class_name,
+        }),
       isHighest: isPrimary,
     });
   }
@@ -411,13 +426,21 @@ async function mapSavedAnomaliesFromRaw(
         id: String(pred.rank ?? idx + 1),
         name: pred.class_name,
         confidence: Math.round((pred.confidence ?? 0) * 100),
-        description: `${pred.class_name} (${Math.round((pred.confidence ?? 0) * 100)}% confidence).`,
+        description: tRetinal(
+          'PatientRetinalAnalysis.helper.confidenceDescription',
+          {
+            disease: pred.class_name,
+            confidence: Math.round((pred.confidence ?? 0) * 100),
+          }
+        ),
         color: getColorClass(pred.confidence ?? 0),
         type: mapDiagnosisType(pred.confidence ?? 0),
         friendlyName: FRIENDLY_NAMES[pred.class_name]?.name ?? pred.class_name,
         friendlyDescription:
           FRIENDLY_NAMES[pred.class_name]?.description ??
-          `${pred.class_name} was detected by our AI screening.`,
+          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+            disease: pred.class_name,
+          }),
         isHighest: (pred.rank ?? 1) === 1,
       })) as Anomaly[];
 
@@ -440,7 +463,13 @@ async function mapSavedAnomaliesFromRaw(
         id: String(idx + 1),
         name: a.name,
         confidence: Number(a.confidence ?? 0),
-        description: `${a.name} (${Math.round(Number(a.confidence ?? 0))}% confidence).`,
+        description: tRetinal(
+          'PatientRetinalAnalysis.helper.confidenceDescription',
+          {
+            disease: a.name,
+            confidence: Math.round(Number(a.confidence ?? 0)),
+          }
+        ),
         color: getColorClass(
           Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
         ),
@@ -451,7 +480,9 @@ async function mapSavedAnomaliesFromRaw(
         friendlyName: FRIENDLY_NAMES[a.name]?.name ?? a.name,
         friendlyDescription:
           FRIENDLY_NAMES[a.name]?.description ??
-          `${a.name} was detected by our AI screening.`,
+          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+            disease: a.name,
+          }),
         isHighest: idx === 0,
       })) as Anomaly[];
 
@@ -482,7 +513,7 @@ function friendlyDescription(anomaly: Anomaly): string {
   return (
     anomaly.friendlyDescription ||
     anomaly.description ||
-    'Detected by our AI screening tool.'
+    tRetinal('PatientRetinalAnalysis.helper.detectedByAiTool')
   );
 }
 
@@ -949,12 +980,12 @@ export default function RetinalAnalysis() {
         confidenceScore: persistedConfidence,
         summary:
           mappedRiskLevel === 'High'
-            ? 'Findings need attention from an ophthalmologist.'
+            ? t('PatientRetinalAnalysis.persistedSummary.high')
             : mappedRiskLevel === 'Moderate'
-              ? 'Some findings may need specialist review.'
+              ? t('PatientRetinalAnalysis.persistedSummary.moderate')
               : persistedUrgency === 'normal'
-                ? 'No major risk findings detected.'
-                : 'Low-risk findings detected. Routine specialist follow-up is recommended.',
+                ? t('PatientRetinalAnalysis.persistedSummary.normal')
+                : t('PatientRetinalAnalysis.persistedSummary.low'),
         findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),
