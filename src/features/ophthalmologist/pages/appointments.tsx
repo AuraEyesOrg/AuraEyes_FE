@@ -761,12 +761,13 @@ export default function AppointmentsPage() {
           {activeList.length > 0 && (
             <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Showing {(safeCurrentPage - 1) * APPOINTMENTS_PAGE_SIZE + 1}-
+                {t('Ophthalmologist.common.showing', 'Showing')}{' '}
+                {(safeCurrentPage - 1) * APPOINTMENTS_PAGE_SIZE + 1}-
                 {Math.min(
                   safeCurrentPage * APPOINTMENTS_PAGE_SIZE,
                   activeList.length
                 )}{' '}
-                of {activeList.length}
+                {t('Ophthalmologist.common.of', 'of')} {activeList.length}
               </p>
 
               <div className="flex items-center gap-2">
@@ -778,7 +779,7 @@ export default function AppointmentsPage() {
                   disabled={safeCurrentPage <= 1}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  Previous
+                  {t('Ophthalmologist.common.previous', 'Previous')}
                 </button>
 
                 <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
@@ -793,7 +794,7 @@ export default function AppointmentsPage() {
                   disabled={safeCurrentPage >= totalPages}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  Next
+                  {t('Ophthalmologist.common.next', 'Next')}
                 </button>
               </div>
             </div>
