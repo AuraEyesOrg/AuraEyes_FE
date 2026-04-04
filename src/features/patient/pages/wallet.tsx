@@ -387,49 +387,53 @@ export default function WalletPage() {
                   {transactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-all hover:shadow-md"
+                      className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-5 hover:border-primary/30 transition-colors"
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTransactionBgClass(transaction.transactionType)}`}
-                        >
-                          {getTransactionIcon(transaction.transactionType)}
-                        </div>
-                        <div>
-                          <p className="text-(--text-primary) font-medium">
-                            {transaction.description ||
-                              TRANSACTION_TYPE_MAP[transaction.transactionType]
-                                ?.charAt(0)
-                                .toUpperCase() +
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex items-start gap-4 min-w-0">
+                          <div
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center ${getTransactionBgClass(transaction.transactionType)}`}
+                          >
+                            {getTransactionIcon(transaction.transactionType)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-(--text-primary) font-semibold line-clamp-1">
+                              {transaction.description ||
                                 TRANSACTION_TYPE_MAP[
                                   transaction.transactionType
-                                ]?.slice(1)}
-                          </p>
-                          <p className="text-sm text-(--text-secondary) mt-0.5 flex items-center gap-2">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(transaction.createdAt)}
-                          </p>
+                                ]
+                                  ?.charAt(0)
+                                  .toUpperCase() +
+                                  TRANSACTION_TYPE_MAP[
+                                    transaction.transactionType
+                                  ]?.slice(1)}
+                            </p>
+                            <p className="text-sm text-(--text-secondary) mt-1 flex items-center gap-2">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(transaction.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="text-right">
-                        <p
-                          className={`font-bold text-lg mb-1 ${
-                            isPositiveAmount(transaction.transactionType)
-                              ? 'text-green-600 dark:text-green-400'
-                              : 'text-red-500 dark:text-red-400'
-                          }`}
-                        >
-                          {isPositiveAmount(transaction.transactionType)
-                            ? '+'
-                            : '-'}
-                          {formatCurrency(transaction.amount, {
-                            absolute: true,
-                          })}
-                        </p>
-                        <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
-                          <CheckCircle className="w-3 h-3" /> Completed
-                        </span>
+                        <div className="text-left md:text-right shrink-0">
+                          <p
+                            className={`font-bold text-lg mb-1 ${
+                              isPositiveAmount(transaction.transactionType)
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-500 dark:text-red-400'
+                            }`}
+                          >
+                            {isPositiveAmount(transaction.transactionType)
+                              ? '+'
+                              : '-'}
+                            {formatCurrency(transaction.amount, {
+                              absolute: true,
+                            })}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                            <CheckCircle className="w-3 h-3" /> Completed
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}

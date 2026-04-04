@@ -14,6 +14,7 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
+import Spinner from '@/components/ui/spinner';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import { downloadReportPdf, getReport, getReports } from '../api/patient.api';
@@ -123,6 +124,8 @@ const ReportsPage = () => {
   const [downloadingReportId, setDownloadingReportId] = useState<string | null>(
     null
   );
+  const [reportPage, setReportPage] = useState(1);
+  const REPORTS_PAGE_SIZE = 6;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const reportsQuery = useQuery({
@@ -150,6 +153,24 @@ const ReportsPage = () => {
       return matchesSearch && matchesRisk;
     });
   }, [sortedReports, searchQuery, filterRisk]);
+
+  const totalReportPages = Math.max(
+    1,
+    Math.ceil(filteredReports.length / REPORTS_PAGE_SIZE)
+  );
+
+  const pagedReports = useMemo(() => {
+    const start = (reportPage - 1) * REPORTS_PAGE_SIZE;
+    return filteredReports.slice(start, start + REPORTS_PAGE_SIZE);
+  }, [filteredReports, reportPage]);
+
+  useEffect(() => {
+    setReportPage(1);
+  }, [searchQuery, filterRisk]);
+
+  useEffect(() => {
+    setReportPage((currentPage) => Math.min(currentPage, totalReportPages));
+  }, [totalReportPages]);
 
   const selectedReportQuery = useQuery({
     queryKey: ['patient', 'report', selectedReportId],
@@ -206,11 +227,11 @@ const ReportsPage = () => {
   if (reportsQuery.isLoading) {
     return (
       <PatientLayout>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-10 w-64 rounded-xl bg-(--bg-secondary)" />
-          <div className="h-24 rounded-2xl bg-(--bg-secondary)" />
-          <div className="h-24 rounded-2xl bg-(--bg-secondary)" />
-          <div className="h-24 rounded-2xl bg-(--bg-secondary)" />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <Spinner size={36} className="mx-auto mb-3" />
+            <p className="text-(--text-secondary)">Loading reports...</p>
+          </div>
         </div>
       </PatientLayout>
     );
@@ -358,7 +379,7 @@ const ReportsPage = () => {
       </div>
 
       <div className="space-y-4">
-        {filteredReports.map((report) => (
+        {pagedReports.map((report) => (
           <div
             key={report.id}
             className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-6 hover:border-primary/30 transition-colors"
@@ -421,6 +442,32 @@ const ReportsPage = () => {
           </div>
         ))}
       </div>
+
+      {filteredReports.length > REPORTS_PAGE_SIZE && (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setReportPage((page) => Math.max(1, page - 1))}
+            disabled={reportPage === 1}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-[#1e3a5f]/50 text-(--text-primary) disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <p className="text-sm text-(--text-secondary)">
+            Page {reportPage} / {totalReportPages}
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              setReportPage((page) => Math.min(totalReportPages, page + 1))
+            }
+            disabled={reportPage === totalReportPages}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-[#1e3a5f]/50 text-(--text-primary) disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {filteredReports.length === 0 && (
         <div className="text-center py-16">

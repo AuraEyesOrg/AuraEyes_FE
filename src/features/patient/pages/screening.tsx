@@ -1,21 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Eye,
   Plus,
   Search,
-  Filter,
   Clock,
   CheckCircle,
   AlertTriangle,
   Calendar,
   FileText,
-  MoreVertical,
-  Trash2,
   Download,
-  Share2,
-  ChevronRight,
 } from 'lucide-react';
 import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
@@ -23,6 +18,7 @@ import { screeningApi } from '../api/screening.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import i18n from '@/i18n/i18n';
 import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
+import Spinner from '@/components/ui/spinner';
 
 interface Scan {
   id: string;
@@ -57,7 +53,8 @@ export default function ScreeningPage() {
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [scanPage, setScanPage] = useState(1);
+  const SCANS_PAGE_SIZE = 6;
 
   const sessionsQuery = useQuery({
     queryKey: ['screening', 'recent', 'history'],
@@ -129,6 +126,24 @@ export default function ScreeningPage() {
       scan.eye.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalScanPages = Math.max(
+    1,
+    Math.ceil(filteredScans.length / SCANS_PAGE_SIZE)
+  );
+
+  const pagedScans = useMemo(() => {
+    const start = (scanPage - 1) * SCANS_PAGE_SIZE;
+    return filteredScans.slice(start, start + SCANS_PAGE_SIZE);
+  }, [filteredScans, scanPage]);
+
+  useEffect(() => {
+    setScanPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setScanPage((currentPage) => Math.min(currentPage, totalScanPages));
+  }, [totalScanPages]);
+
   const getStatusBadge = (scan: Scan) => {
     switch (scan.status) {
       case 'completed':
@@ -181,6 +196,19 @@ export default function ScreeningPage() {
 
   const completedScans = scans.filter((s) => s.status === 'completed').length;
   const processingScans = scans.filter((s) => s.status === 'processing').length;
+
+  if (sessionsQuery.isLoading) {
+    return (
+      <PatientLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <Spinner size={36} className="mx-auto mb-3" />
+            <p className="text-(--text-secondary)">Loading scans...</p>
+          </div>
+        </div>
+      </PatientLayout>
+    );
+  }
 
   return (
     <PatientLayout>
@@ -272,22 +300,18 @@ export default function ScreeningPage() {
               className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
-            <Filter className="w-4 h-4" />
-            Filter
-          </button>
         </div>
 
         {/* Scans List */}
-        <div className="medical-card flex-1 overflow-hidden">
-          <div className="p-4 border-b border-(--border-color)">
+        <div className="flex-1">
+          <div className="mb-4">
             <h2 className="text-sm font-bold text-(--text-primary)">
               Recent Scans ({filteredScans.length})
             </h2>
           </div>
 
           {filteredScans.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
+            <div className="medical-card flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center mb-4">
                 <Eye className="w-8 h-8 text-[var(--text-muted)]" />
               </div>
@@ -307,119 +331,112 @@ export default function ScreeningPage() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-[var(--border-color)]">
-              {filteredScans.map((scan) => (
+            <div className="space-y-4">
+              {pagedScans.map((scan) => (
                 <div
                   key={scan.id}
-                  className="flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)]/50 transition-colors cursor-pointer group"
+                  className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-6 hover:border-primary/30 transition-colors"
                   onClick={() => {
                     navigate('/patient/screening/review', {
                       state: { screeningId: scan.id },
                     });
                   }}
                 >
-                  {/* Thumbnail */}
-                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--bg-tertiary)] shrink-0">
-                    {scan.thumbnailUrl ? (
-                      <img
-                        src={scan.thumbnailUrl}
-                        alt={scan.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Eye className="w-6 h-6 text-[var(--text-muted)]" />
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-[var(--bg-tertiary)] shrink-0 border border-[var(--border-color)]">
+                        {scan.thumbnailUrl ? (
+                          <img
+                            src={scan.thumbnailUrl}
+                            alt={scan.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Eye className="w-6 h-6 text-[var(--text-muted)]" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-[var(--text-primary)] font-medium truncate">
-                        {scan.name}
-                      </p>
-                      {getRiskBadge(scan.riskLevel)}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {scan.eye}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatShortDate(scan.date)}
-                      </span>
-                      {scan.findings !== undefined && (
-                        <span>
-                          {scan.findings}{' '}
-                          {scan.findings === 1 ? 'finding' : 'findings'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <p className="text-lg font-bold text-(--text-primary) line-clamp-1">
+                            {scan.name}
+                          </p>
+                          {getRiskBadge(scan.riskLevel)}
+                          {getStatusBadge(scan)}
+                        </div>
 
-                  {/* Status */}
-                  {getStatusBadge(scan)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-2">
+                          <div className="flex items-center gap-2 text-(--text-secondary)">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatShortDate(scan.date)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-(--text-secondary)">
+                            <Eye className="w-4 h-4" />
+                            <span>{scan.eye}</span>
+                          </div>
+                        </div>
 
-                  {/* Actions */}
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveDropdown(
-                          activeDropdown === scan.id ? null : scan.id
-                        );
-                      }}
-                      className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-
-                    {activeDropdown === scan.id && (
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-lg z-10 py-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate('/patient/screening/review', {
-                              state: { screeningId: scan.id },
-                            });
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View Review
-                        </button>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download Report
-                        </button>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          Share with Doctor
-                        </button>
-                        <hr className="my-1 border-[var(--border-color)]" />
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
+                        <p className="text-sm text-(--text-secondary)">
+                          {scan.status === 'completed'
+                            ? 'Analysis completed. Tap to review full details.'
+                            : 'Scan is still being processed.'}
+                        </p>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Arrow */}
-                  <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-brand transition-colors" />
+                    <div className="flex flex-row lg:flex-col gap-2 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/patient/screening/review', {
+                            state: { screeningId: scan.id },
+                          });
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary hover:bg-primary/90 text-white"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Review
+                      </button>
+
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-500 text-white"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {filteredScans.length > SCANS_PAGE_SIZE && (
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setScanPage((page) => Math.max(1, page - 1))}
+                disabled={scanPage === 1}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-[#1e3a5f]/50 text-(--text-primary) disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <p className="text-sm text-(--text-secondary)">
+                Page {scanPage} / {totalScanPages}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setScanPage((page) => Math.min(totalScanPages, page + 1))
+                }
+                disabled={scanPage === totalScanPages}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-[#1e3a5f]/50 text-(--text-primary) disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>
