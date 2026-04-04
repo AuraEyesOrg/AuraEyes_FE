@@ -45,12 +45,6 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     icon: Users,
     items: [
       {
-        id: 'users',
-        label: 'Users',
-        path: '/system-admin/users',
-        icon: Users,
-      },
-      {
         id: 'organisations',
         label: 'Organisations',
         path: '/system-admin/organisations',

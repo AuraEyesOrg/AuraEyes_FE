@@ -46,6 +46,15 @@ const roleColors: Record<UserRole, string> = {
     'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
+const roleFilterOptions: Array<{ value: string; label: string }> = [
+  { value: 'all', label: 'All Roles' },
+  { value: 'system_admin', label: 'System Admin' },
+  { value: 'organisation_admin', label: 'Org Admin' },
+  { value: 'doctor', label: 'Doctor' },
+  { value: 'operator', label: 'Operator' },
+  { value: 'analyst', label: 'Analyst' },
+];
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -325,18 +334,26 @@ export default function UsersPage() {
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Role:
                   </span>
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="bg-transparent border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-0 cursor-pointer py-0 pl-1 pr-6"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="system_admin">System Admin</option>
-                    <option value="organisation_admin">Org Admin</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="operator">Operator</option>
-                    <option value="analyst">Analyst</option>
-                  </select>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {roleFilterOptions.map((option) => {
+                      const isActive = roleFilter === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setRoleFilter(option.value)}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
+                            isActive
+                              ? 'bg-primary/15 text-primary'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
