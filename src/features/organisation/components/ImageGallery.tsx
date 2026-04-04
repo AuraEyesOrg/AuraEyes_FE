@@ -1,24 +1,4 @@
 import React, { useState } from 'react';
-
-// Inline types formerly from retinal.types.ts
-interface Anomaly {
-  id: string;
-  name: string;
-  confidence: number;
-  description: string;
-  color: string;
-  type: 'warning' | 'priority_high' | 'info';
-  location: { x: number; y: number; width: number; height: number };
-}
-interface RetinalImage {
-  id: string;
-  url: string;
-  name: string;
-  eye: string;
-  uploadedAt: string;
-  analyzed: boolean;
-  anomalies: Anomaly[];
-}
 import {
   ChevronUp,
   Images,
@@ -31,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import type { RetinalImage } from '@/features/organisation/types/retinal.types';
 
 interface ImageGalleryProps {
   images: RetinalImage[];

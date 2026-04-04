@@ -499,7 +499,7 @@ export default function OrganisationScreeningResultPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/organisation/billing')}
+                onClick={() => navigate('/:locale/organisation/billing')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
               >
                 Screening History

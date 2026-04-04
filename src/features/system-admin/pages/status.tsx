@@ -138,6 +138,7 @@ export default function SystemAdminStatusPage() {
                         loading="lazy"
                         className="h-[620px] w-full"
                         referrerPolicy="no-referrer"
+                        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                       />
                     </div>
                   ) : (

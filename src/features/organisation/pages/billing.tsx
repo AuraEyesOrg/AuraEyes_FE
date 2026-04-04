@@ -208,7 +208,7 @@ export default function OrganisationBillingPage() {
                                 type="button"
                                 onClick={() =>
                                   navigate(
-                                    `/organisation/screening/result?id=${item.screeningId}`
+                                    `/:locale/organisation/screening/result?id=${item.screeningId}`
                                   )
                                 }
                                 disabled={

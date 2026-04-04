@@ -6,34 +6,11 @@ import ToolsSidebar from '../components/ToolsSidebar';
 import ImageViewer from '../components/ImageViewer';
 import AnalysisSidebar from '../components/AnalysisSidebar';
 import ImageGallery from '../components/ImageGallery';
-
-// Inline types formerly from retinal.types.ts
-interface ToggleState {
-  vesselSegmentation: boolean;
-  hemorrhages: boolean;
-  exudates: boolean;
-  opticDisc: boolean;
-}
-
-interface Anomaly {
-  id: string;
-  name: string;
-  confidence: number;
-  description: string;
-  color: string;
-  type: 'warning' | 'priority_high' | 'info';
-  location: { x: number; y: number; width: number; height: number };
-}
-
-interface RetinalImage {
-  id: string;
-  url: string;
-  name: string;
-  eye: string;
-  uploadedAt: string;
-  analyzed: boolean;
-  anomalies: Anomaly[];
-}
+import type {
+  Anomaly,
+  RetinalImage,
+  ToggleState,
+} from '@/features/organisation/types/retinal.types';
 
 // Default sample image for demo
 const DEFAULT_IMAGE: RetinalImage = {

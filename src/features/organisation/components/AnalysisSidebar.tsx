@@ -1,21 +1,4 @@
 import React from 'react';
-
-// Inline types formerly from retinal.types.ts
-interface ToggleState {
-  vesselSegmentation: boolean;
-  hemorrhages: boolean;
-  exudates: boolean;
-  opticDisc: boolean;
-}
-interface Anomaly {
-  id: string;
-  name: string;
-  confidence: number;
-  description: string;
-  color: string;
-  type: 'warning' | 'priority_high' | 'info';
-  location: { x: number; y: number; width: number; height: number };
-}
 import {
   Info,
   Sparkles,
@@ -26,6 +9,10 @@ import {
   FileText,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import type {
+  Anomaly,
+  ToggleState,
+} from '@/features/organisation/types/retinal.types';
 
 interface AnalysisSidebarProps {
   toggles: ToggleState;
