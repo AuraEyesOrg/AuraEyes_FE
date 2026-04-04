@@ -7,12 +7,14 @@ import {
   Loader2,
   BarChart3,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { orgBillingApi } from '../api/billing.api';
 import { orgScreeningApi } from '../api/screening.api';
 
 export default function OrganisationBillingPage() {
+  const navigate = useNavigate();
   const { data: billing, isLoading: loadingBilling } = useQuery({
     queryKey: ['org-billing-summary'],
     queryFn: () => orgBillingApi.getSummary(),
@@ -141,13 +143,16 @@ export default function OrganisationBillingPage() {
                         <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-(--border-primary)">
                       {(history ?? []).length === 0 ? (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="px-6 py-12 text-center text-(--text-tertiary)"
                           >
                             No screening records yet
@@ -197,6 +202,24 @@ export default function OrganisationBillingPage() {
                               >
                                 {item.status}
                               </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(
+                                    `/organisation/screening/result?id=${item.screeningId}`
+                                  )
+                                }
+                                disabled={
+                                  !item.screeningId ||
+                                  item.screeningId ===
+                                    '00000000-0000-0000-0000-000000000000'
+                                }
+                                className="inline-flex items-center rounded-lg border border-(--border-primary) px-3 py-1.5 text-xs font-semibold text-(--text-primary) hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                View Record
+                              </button>
                             </td>
                           </tr>
                         ))

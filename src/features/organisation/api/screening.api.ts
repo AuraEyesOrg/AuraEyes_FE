@@ -121,7 +121,7 @@ export const orgScreeningApi = {
           assessedAt: string;
         };
       }>
-    >(`/screenings/${screeningId}`);
+    >(API_ENDPOINTS.ORGANISATION.SCREENING.DETAIL(screeningId));
     return response.data;
   },
 };
