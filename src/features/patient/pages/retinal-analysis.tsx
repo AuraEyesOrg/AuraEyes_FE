@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { aiCoreClient } from '../../../lib/axios';
@@ -33,6 +34,9 @@ import {
   isNormalDisease,
   toDisplayDiseaseName,
 } from '@/features/patient/lib/disease-translation';
+
+const tRetinal = (key: string, options?: Record<string, unknown>) =>
+  i18n.t(key as never, options as never) as unknown as string;
 
 /** Map AI DiagnosisType → frontend Anomaly type */
 function mapDiagnosisType(
@@ -256,8 +260,18 @@ function mapStandardResponseToAnomalies(
       name: pred.class_name,
       confidence: Math.round(pred.confidence * 100),
       description: isPrimary
-        ? `${pred.class_name} detected as the primary finding (${Math.round(pred.confidence * 100)}% confidence).`
-        : `${pred.class_name} — ${pred.status.replace(/_/g, ' ')} (${Math.round(pred.confidence * 100)}% confidence).`,
+        ? tRetinal('PatientRetinalAnalysis.helper.primaryFindingDescription', {
+            disease: pred.class_name,
+            confidence: Math.round(pred.confidence * 100),
+          })
+        : tRetinal(
+            'PatientRetinalAnalysis.helper.secondaryFindingDescription',
+            {
+              disease: pred.class_name,
+              status: pred.status.replace(/_/g, ' '),
+              confidence: Math.round(pred.confidence * 100),
+            }
+          ),
       color: getColorClass(pred.confidence),
       type: mapDiagnosisType(pred.confidence),
       location,
@@ -266,7 +280,9 @@ function mapStandardResponseToAnomalies(
         : (friendly?.name ?? pred.class_name),
       friendlyDescription:
         friendly?.description ??
-        `${pred.class_name} was detected by our AI screening. Your specialist can evaluate this further.`,
+        tRetinal('PatientRetinalAnalysis.helper.detectedByAiWithReview', {
+          disease: pred.class_name,
+        }),
       isHighest: isPrimary,
     });
   }
@@ -410,13 +426,21 @@ async function mapSavedAnomaliesFromRaw(
         id: String(pred.rank ?? idx + 1),
         name: pred.class_name,
         confidence: Math.round((pred.confidence ?? 0) * 100),
-        description: `${pred.class_name} (${Math.round((pred.confidence ?? 0) * 100)}% confidence).`,
+        description: tRetinal(
+          'PatientRetinalAnalysis.helper.confidenceDescription',
+          {
+            disease: pred.class_name,
+            confidence: Math.round((pred.confidence ?? 0) * 100),
+          }
+        ),
         color: getColorClass(pred.confidence ?? 0),
         type: mapDiagnosisType(pred.confidence ?? 0),
         friendlyName: FRIENDLY_NAMES[pred.class_name]?.name ?? pred.class_name,
         friendlyDescription:
           FRIENDLY_NAMES[pred.class_name]?.description ??
-          `${pred.class_name} was detected by our AI screening.`,
+          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+            disease: pred.class_name,
+          }),
         isHighest: (pred.rank ?? 1) === 1,
       })) as Anomaly[];
 
@@ -439,7 +463,13 @@ async function mapSavedAnomaliesFromRaw(
         id: String(idx + 1),
         name: a.name,
         confidence: Number(a.confidence ?? 0),
-        description: `${a.name} (${Math.round(Number(a.confidence ?? 0))}% confidence).`,
+        description: tRetinal(
+          'PatientRetinalAnalysis.helper.confidenceDescription',
+          {
+            disease: a.name,
+            confidence: Math.round(Number(a.confidence ?? 0)),
+          }
+        ),
         color: getColorClass(
           Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
         ),
@@ -450,7 +480,9 @@ async function mapSavedAnomaliesFromRaw(
         friendlyName: FRIENDLY_NAMES[a.name]?.name ?? a.name,
         friendlyDescription:
           FRIENDLY_NAMES[a.name]?.description ??
-          `${a.name} was detected by our AI screening.`,
+          tRetinal('PatientRetinalAnalysis.helper.detectedByAi', {
+            disease: a.name,
+          }),
         isHighest: idx === 0,
       })) as Anomaly[];
 
@@ -481,7 +513,7 @@ function friendlyDescription(anomaly: Anomaly): string {
   return (
     anomaly.friendlyDescription ||
     anomaly.description ||
-    'Detected by our AI screening tool.'
+    tRetinal('PatientRetinalAnalysis.helper.detectedByAiTool')
   );
 }
 
@@ -503,6 +535,10 @@ function toRiskLevelFromUrgency(
 }
 
 export default function RetinalAnalysis() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -693,7 +729,7 @@ export default function RetinalAnalysis() {
         setResultsPersisted(Boolean(response.data?.latestResult));
 
         if (sessionImages.length === 0) {
-          setErrorMessage('No images found in this screening session.');
+          setErrorMessage(t('PatientRetinalAnalysis.errors.noImagesInSession'));
           return;
         }
 
@@ -722,7 +758,7 @@ export default function RetinalAnalysis() {
         setShowHighlights(restoredAnomalies.length > 0);
       } catch (error) {
         console.error('Failed to load screening session:', error);
-        setErrorMessage('Unable to load screening images. Please try again.');
+        setErrorMessage(t('PatientRetinalAnalysis.errors.loadScreeningFailed'));
       }
     };
 
@@ -768,42 +804,38 @@ export default function RetinalAnalysis() {
 
   const riskConfig = {
     low: {
-      label: 'Low Risk',
+      label: t('PatientRetinalAnalysis.risk.low.label'),
       color: 'text-emerald-700',
       bg: 'bg-emerald-50',
       border: 'border-emerald-200',
       icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
-      summary:
-        'Your scan shows low-risk findings. Keep regular follow-up to monitor your retinal health.',
+      summary: t('PatientRetinalAnalysis.risk.low.summary'),
     },
     moderate: {
-      label: 'Worth Reviewing',
+      label: t('PatientRetinalAnalysis.risk.moderate.label'),
       color: 'text-amber-700',
       bg: 'bg-amber-50',
       border: 'border-amber-200',
       icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
-      summary:
-        "Our AI noticed some areas that may benefit from a specialist\'s review. This doesn't mean there's a problem — it simply means a closer look could be helpful.",
+      summary: t('PatientRetinalAnalysis.risk.moderate.summary'),
     },
     high: {
-      label: 'Needs Attention',
+      label: t('PatientRetinalAnalysis.risk.high.label'),
       color: 'text-orange-700',
       bg: 'bg-orange-50',
       border: 'border-orange-200',
       icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
-      summary:
-        "We've found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision — your next step is to have these results reviewed by a doctor.",
+      summary: t('PatientRetinalAnalysis.risk.high.summary'),
     },
   };
 
   const healthyRisk = {
-    label: 'Looks Healthy',
+    label: t('PatientRetinalAnalysis.risk.healthy.label'),
     color: 'text-emerald-700',
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
     icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
-    summary:
-      'Great news — your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape.',
+    summary: t('PatientRetinalAnalysis.risk.healthy.summary'),
   };
 
   const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
@@ -820,7 +852,7 @@ export default function RetinalAnalysis() {
     try {
       const imageUrl = currentImage?.url;
       if (!imageUrl) {
-        setErrorMessage('No image available for analysis');
+        setErrorMessage(t('PatientRetinalAnalysis.errors.noImageForAnalysis'));
         setIsAnalyzing(false);
         return;
       }
@@ -834,8 +866,8 @@ export default function RetinalAnalysis() {
         const err = quotaErr as { response?: { status?: number } };
         const message =
           err.response?.status === 402
-            ? 'Bạn đã hết lượt AI. Vui lòng mua thêm lượt để tiếp tục.'
-            : 'Không thể trừ lượt AI. Vui lòng thử lại.';
+            ? t('PatientRetinalAnalysis.errors.quotaExceeded')
+            : t('PatientRetinalAnalysis.errors.quotaDeductFailed');
         setErrorMessage(message);
         setIsAnalyzing(false);
         return;
@@ -948,12 +980,12 @@ export default function RetinalAnalysis() {
         confidenceScore: persistedConfidence,
         summary:
           mappedRiskLevel === 'High'
-            ? 'Findings need attention from an ophthalmologist.'
+            ? t('PatientRetinalAnalysis.persistedSummary.high')
             : mappedRiskLevel === 'Moderate'
-              ? 'Some findings may need specialist review.'
+              ? t('PatientRetinalAnalysis.persistedSummary.moderate')
               : persistedUrgency === 'normal'
-                ? 'No major risk findings detected.'
-                : 'Low-risk findings detected. Routine specialist follow-up is recommended.',
+                ? t('PatientRetinalAnalysis.persistedSummary.normal')
+                : t('PatientRetinalAnalysis.persistedSummary.low'),
         findings: significantFindings
           .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
           .join(', '),
@@ -986,15 +1018,11 @@ export default function RetinalAnalysis() {
       const status = err.response?.status;
 
       if (status === 503) {
-        setErrorMessage('AI model is loading. Please try again in a moment.');
+        setErrorMessage(t('PatientRetinalAnalysis.errors.modelLoading'));
       } else if (status === 400) {
-        setErrorMessage(
-          'Invalid image. Please upload a valid retinal fundus image.'
-        );
+        setErrorMessage(t('PatientRetinalAnalysis.errors.invalidImage'));
       } else {
-        setErrorMessage(
-          'AI analysis unavailable. Please check that the AI service is running.'
-        );
+        setErrorMessage(t('PatientRetinalAnalysis.errors.analysisUnavailable'));
       }
       setIsFallback(true);
     } finally {
@@ -1016,7 +1044,7 @@ export default function RetinalAnalysis() {
   return (
     <FocusModeLayout
       currentStep="analysis"
-      title="Your Screening Results"
+      title={t('PatientRetinalAnalysis.page.title')}
       exitPath="/patient/screening/new"
       showBreadcrumb={false}
     >
@@ -1032,7 +1060,7 @@ export default function RetinalAnalysis() {
                 {/* Toggle bounding box */}
                 <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
                   <span className="text-sm font-medium text-slate-600">
-                    Show AI Highlights
+                    {t('PatientRetinalAnalysis.toggles.showHighlights')}
                   </span>
                   <button
                     role="switch"
@@ -1053,7 +1081,7 @@ export default function RetinalAnalysis() {
                 {heatmapUrl && (
                   <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
                     <span className="text-sm font-medium text-slate-600">
-                      Show Heatmap
+                      {t('PatientRetinalAnalysis.toggles.showHeatmap')}
                     </span>
                     <button
                       role="switch"
@@ -1107,7 +1135,7 @@ export default function RetinalAnalysis() {
                 <section>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
-                      Your Retinal Health Summary
+                      {t('PatientRetinalAnalysis.summary.title')}
                     </h1>
                     {analyzed && (
                       <span
@@ -1123,9 +1151,9 @@ export default function RetinalAnalysis() {
                   {!analyzed && !isAnalyzing ? (
                     <div className="space-y-4">
                       <p className="text-[15px] text-slate-500 leading-relaxed">
-                        Our AI will examine your retinal images for any signs
-                        that need attention. This usually takes just a few
-                        seconds.
+                        {t(
+                          'PatientRetinalAnalysis.summary.preAnalyzeDescription'
+                        )}
                       </p>
                       <button
                         onClick={handleAnalyze}
@@ -1134,15 +1162,16 @@ export default function RetinalAnalysis() {
                       >
                         <Sparkles className="w-5 h-5" />
                         {isPreparingSession
-                          ? 'Preparing session...'
+                          ? t('PatientRetinalAnalysis.actions.preparingSession')
                           : (quotaBalance?.remainingQuota ?? 0) <= 0
-                            ? 'Out of quota'
-                            : 'Start Screening'}
+                            ? t('PatientRetinalAnalysis.actions.outOfQuota')
+                            : t(
+                                'PatientRetinalAnalysis.actions.startScreening'
+                              )}
                       </button>
                       {(quotaBalance?.remainingQuota ?? 0) <= 0 && (
                         <p className="text-sm text-amber-600">
-                          Bạn đã dùng hết lượt AI hôm nay. Vui lòng mua thêm để
-                          tiếp tục.
+                          {t('PatientRetinalAnalysis.errors.quotaExceeded')}
                         </p>
                       )}
                     </div>
@@ -1150,7 +1179,7 @@ export default function RetinalAnalysis() {
                     <div className="flex items-center gap-4 py-2">
                       <Spinner size={40} className="flex-shrink-0" />
                       <p className="text-[15px] text-slate-500">
-                        Analyzing your retinal scan…
+                        {t('PatientRetinalAnalysis.summary.analyzing')}
                       </p>
                     </div>
                   ) : (
@@ -1200,7 +1229,7 @@ export default function RetinalAnalysis() {
                       }
                       className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl text-[15px] transition-colors shadow-md shadow-cyan-500/15"
                     >
-                      Continue to Review
+                      {t('PatientRetinalAnalysis.actions.continueToReview')}
                       <ArrowRight className="w-4 h-4" />
                     </button>
                     <button
@@ -1208,7 +1237,7 @@ export default function RetinalAnalysis() {
                       className="w-full inline-flex items-center justify-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors py-1"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
-                      Re-analyze scan
+                      {t('PatientRetinalAnalysis.actions.reanalyze')}
                     </button>
                   </section>
                 )}
@@ -1216,10 +1245,10 @@ export default function RetinalAnalysis() {
                 {/* ---- Disclaimer ---- */}
                 <section className="pt-4 border-t border-slate-100">
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    <strong className="text-slate-600">Important:</strong> This
-                    AI screening assists but does not replace professional
-                    medical advice. Results should be reviewed by a qualified
-                    ophthalmologist.
+                    <strong className="text-slate-600">
+                      {t('PatientRetinalAnalysis.disclaimer.importantLabel')}
+                    </strong>{' '}
+                    {t('PatientRetinalAnalysis.disclaimer.message')}
                   </p>
                 </section>
               </div>

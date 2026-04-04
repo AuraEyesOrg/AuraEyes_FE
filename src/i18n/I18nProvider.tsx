@@ -1,7 +1,11 @@
 import { type ReactNode, useEffect } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n/i18n';
-import { getDirectionByLocale, isSupportedLocale } from '@/i18n/locales';
+import {
+  DEFAULT_LOCALE,
+  getDirectionByLocale,
+  toSupportedLocale,
+} from '@/i18n/locales';
 
 interface I18nProviderProps {
   children: ReactNode;
@@ -10,7 +14,7 @@ interface I18nProviderProps {
 export const I18nProvider = ({ children }: I18nProviderProps) => {
   useEffect(() => {
     const applyDocumentLanguage = (language: string) => {
-      const locale = isSupportedLocale(language) ? language : 'vi';
+      const locale = toSupportedLocale(language) ?? DEFAULT_LOCALE;
       const direction = getDirectionByLocale(locale);
 
       document.documentElement.lang = locale;

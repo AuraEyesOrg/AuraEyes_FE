@@ -10,6 +10,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import {
   Activity,
@@ -56,8 +57,6 @@ import {
   ChatStatus,
   ConsultationSessionType,
   type ConsultationSessionListDto,
-  SESSION_TYPE_LABELS,
-  SESSION_STATUS_LABELS,
 } from '@/types/consultation';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
@@ -129,37 +128,44 @@ type MeetingAccessState = {
   helperText: string;
 };
 
-const phaseUIConfig: Record<ConsultationPhase, PhaseUIEntry> = {
+type ChatTranslateFn = (
+  key: string,
+  options?: Record<string, unknown>
+) => string;
+
+const getPhaseUIConfig = (
+  t: ChatTranslateFn
+): Record<ConsultationPhase, PhaseUIEntry> => ({
   PRE_VISIT: {
-    label: 'Pre-visit',
+    label: t('PatientChat.phase.preVisitLabel'),
     icon: FileText,
     color: 'text-amber-500',
     badgeBg: 'bg-amber-50 text-amber-700 ring-amber-200',
     bannerBg: 'bg-amber-50 dark:bg-amber-950/55',
-    description:
-      'Share symptoms, scan notes, or questions before the consultation starts. The doctor will review them at appointment time.',
+    description: t('PatientChat.phase.preVisitDescription'),
   },
   IN_PROGRESS: {
-    label: 'In Progress',
+    label: t('PatientChat.phase.inProgressLabel'),
     icon: Activity,
     color: 'text-emerald-500',
     badgeBg: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     bannerBg: 'bg-emerald-50 dark:bg-emerald-950/50',
-    description:
-      'Consultation is active. You can chat and join the video call.',
+    description: t('PatientChat.phase.inProgressDescription'),
   },
   COMPLETED: {
-    label: 'Completed',
+    label: t('PatientChat.phase.completedLabel'),
     icon: Archive,
     color: 'text-slate-500',
     badgeBg: 'bg-slate-100 text-slate-600 ring-slate-200',
     bannerBg: 'bg-slate-100 dark:bg-slate-900/90',
-    description: 'Consultation has been completed. Chat is now read-only.',
+    description: t('PatientChat.phase.completedDescription'),
   },
-};
+});
 
-const formatAppointmentSlotOrPending = (value: string | null) =>
-  value ? formatAppointmentSlot(value) : 'Schedule pending';
+const formatAppointmentSlotOrPending = (
+  value: string | null,
+  t: ChatTranslateFn
+) => (value ? formatAppointmentSlot(value) : t('PatientChat.schedule.pending'));
 
 const PREJOIN_OPEN_MINUTES = 15;
 const MEETING_ACTIVE_MINUTES = 30;
@@ -284,7 +290,10 @@ const getSessionPreviewFromPayload = (session: ConsultationSessionListDto) => {
   return normalized.length > 0 ? normalized : null;
 };
 
-const getSessionPreviewText = (session: ConsultationSessionListDto) => {
+const getSessionPreviewText = (
+  session: ConsultationSessionListDto,
+  t: ChatTranslateFn
+) => {
   const payloadPreview = getSessionPreviewFromPayload(session);
   if (payloadPreview) {
     return payloadPreview;
@@ -301,18 +310,18 @@ const getSessionPreviewText = (session: ConsultationSessionListDto) => {
   }
 
   if (session.chatStatus === ChatStatus.MemoOnly) {
-    return 'Leave a note for your doctor…';
+    return t('PatientChat.preview.memoOnly');
   }
 
   if (session.chatStatus === ChatStatus.Archived) {
-    return 'Session completed — no messages';
+    return t('PatientChat.preview.archived');
   }
 
   if (session.chatStatus === ChatStatus.Locked) {
-    return 'Chat opens at appointment time';
+    return t('PatientChat.preview.locked');
   }
 
-  return 'No messages yet';
+  return t('PatientChat.preview.empty');
 };
 
 const CharacterProgressArc = ({
@@ -409,13 +418,14 @@ const TrendIndicator = ({ trend }: { trend: TrendDirection }) => {
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
-  nowMs: number
+  nowMs: number,
+  t: ChatTranslateFn
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
       canJoin: false,
-      buttonLabel: 'Join Locked',
-      helperText: 'Schedule pending',
+      buttonLabel: t('PatientChat.meeting.joinLocked'),
+      helperText: t('PatientChat.schedule.pending'),
     };
   }
 
@@ -423,8 +433,8 @@ const getMeetingAccessState = (
   if (Number.isNaN(appointmentMs)) {
     return {
       canJoin: false,
-      buttonLabel: 'Join Locked',
-      helperText: 'Schedule is unavailable.',
+      buttonLabel: t('PatientChat.meeting.joinLocked'),
+      helperText: t('PatientChat.schedule.unavailable'),
     };
   }
 
@@ -436,29 +446,35 @@ const getMeetingAccessState = (
     if (minutesUntilStart > COUNTDOWN_VISIBILITY_MINUTES) {
       return {
         canJoin: false,
-        buttonLabel: 'Join Locked',
-        helperText: `Vào phòng trước ${PREJOIN_OPEN_MINUTES} phút`,
+        buttonLabel: t('PatientChat.meeting.joinLocked'),
+        helperText: t('PatientChat.meeting.joinBeforeMinutes', {
+          minutes: PREJOIN_OPEN_MINUTES,
+        }),
       };
     }
     return {
       canJoin: false,
-      buttonLabel: 'Join Locked',
-      helperText: `mở sau ${formatCountdown(secondsUntilUnlock)}`,
+      buttonLabel: t('PatientChat.meeting.joinLocked'),
+      helperText: t('PatientChat.meeting.unlockAfter', {
+        time: formatCountdown(secondsUntilUnlock),
+      }),
     };
   }
 
   if (minutesUntilStart >= -MEETING_ACTIVE_MINUTES) {
     return {
       canJoin: true,
-      buttonLabel: 'Join Meeting',
-      helperText: `Có thể vào trước ${PREJOIN_OPEN_MINUTES} phút`,
+      buttonLabel: t('PatientChat.meeting.joinMeeting'),
+      helperText: t('PatientChat.meeting.canJoinBeforeMinutes', {
+        minutes: PREJOIN_OPEN_MINUTES,
+      }),
     };
   }
 
   return {
     canJoin: false,
-    buttonLabel: 'Meeting Ended',
-    helperText: 'Cuộc hẹn đã qua thời gian tham gia',
+    buttonLabel: t('PatientChat.meeting.ended'),
+    helperText: t('PatientChat.meeting.sessionExpired'),
   };
 };
 
@@ -556,6 +572,10 @@ const AvatarBadge = ({
 };
 
 export default function ChatPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const location = useLocation();
   const queryClient = useQueryClient();
   const sharedScan =
@@ -566,9 +586,7 @@ export default function ChatPage() {
     null
   );
   const [newMessage, setNewMessage] = useState(
-    sharedScan
-      ? `Hi Doctor, I'd like to share my recent screening results for your review.`
-      : ''
+    sharedScan ? t('PatientChat.composer.initialSharedScanMessage') : ''
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchPending, startSearchTransition] = useTransition();
@@ -649,6 +667,7 @@ export default function ChatPage() {
     currentSession?.appointmentTime ?? null,
     currentTimeMs
   );
+  const phaseUIConfig = useMemo(() => getPhaseUIConfig(t), [t]);
   const currentPhaseUI = phaseUIConfig[phaseInfo.phase];
 
   const messageList = selectedSession?.messages ?? [];
@@ -831,10 +850,10 @@ export default function ChatPage() {
     const stripped = stripChatAttachments(latestMessage.message);
 
     const attachmentFallback = extractImageAttachment(latestMessage.message)
-      ? 'Image attachment shared'
+      ? t('PatientChat.preview.imageAttachmentShared')
       : extractScanAttachment(latestMessage.message)
-        ? 'Retinal scan shared'
-        : 'New message';
+        ? t('PatientChat.preview.scanShared')
+        : t('PatientChat.preview.newMessage');
 
     setSessionPreviewMap((previous) => ({
       ...previous,
@@ -995,12 +1014,12 @@ export default function ChatPage() {
     }
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file.');
+      toast.error(t('PatientChat.toast.invalidImageFile'));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image size must be 10MB or less.');
+      toast.error(t('PatientChat.toast.imageTooLarge'));
       return;
     }
 
@@ -1009,17 +1028,17 @@ export default function ChatPage() {
       const uploadedUrl = result.uploadedUrls[0];
 
       if (!uploadedUrl) {
-        toast.error('Upload failed. Please try again.');
+        toast.error(t('PatientChat.toast.uploadFailed'));
         return;
       }
 
       setPendingImageUrl(uploadedUrl);
       setPendingImageName(file.name);
-      toast.success('Image attached.');
+      toast.success(t('PatientChat.toast.imageAttached'));
     } catch (error) {
       const raw = extractApiErrorMessage(
         error,
-        'Unable to upload image. Please try again.'
+        t('PatientChat.toast.uploadFailedGeneric')
       );
       toast.error(raw);
     }
@@ -1043,7 +1062,7 @@ export default function ChatPage() {
 
     if (pendingScan) {
       messageParts.push(
-        `[Scan Attached: ${pendingScan.eyeLabel ?? 'Retinal Scan'} - ${pendingScan.riskLabel ?? 'N/A'}]`
+        `[Scan Attached: ${pendingScan.eyeLabel ?? t('PatientChat.fallback.retinalScan')} - ${pendingScan.riskLabel ?? t('PatientChat.fallback.notAvailable')}]`
       );
     }
 
@@ -1075,11 +1094,13 @@ export default function ChatPage() {
         onError: (error) => {
           const raw = extractApiErrorMessage(
             error,
-            'Failed to send message. Please try again.'
+            t('PatientChat.toast.sendMessageFailed')
           );
           if (/(archived|locked|memo\s*only|memoonly)/i.test(raw)) {
             toast.warning(raw);
             sendMessageMutation.reset();
+          } else {
+            toast.error(raw);
           }
           setNewMessage(draftText);
           setPendingScan(draftScan);
@@ -1116,27 +1137,59 @@ export default function ChatPage() {
 
   const getComposerPlaceholder = () => {
     if (pendingScan) {
-      return 'Add context for the scan before sending it to your ophthalmologist...';
+      return t('PatientChat.composer.placeholder.scanContext');
     }
 
     if (phaseInfo.phase === 'PRE_VISIT') {
-      return 'Share symptoms, scan notes, or questions before the consultation starts...';
+      return t('PatientChat.composer.placeholder.preVisit');
     }
 
     if (phaseInfo.phase === 'IN_PROGRESS') {
-      return 'Type a message...';
+      return t('PatientChat.composer.placeholder.inProgress');
     }
 
-    return 'Type your message here...';
+    return t('PatientChat.composer.placeholder.default');
+  };
+
+  const getSessionTypeLabel = (type: ConsultationSessionType) => {
+    switch (type) {
+      case ConsultationSessionType.Verification:
+        return t('PatientChat.sessionType.verification');
+      case ConsultationSessionType.VideoCall:
+        return t('PatientChat.sessionType.videoCall');
+      case ConsultationSessionType.ClinicBooking:
+        return t('PatientChat.sessionType.clinicBooking');
+      default:
+        return '';
+    }
+  };
+
+  const getSessionStatusLabel = (status: SessionStatus) => {
+    switch (status) {
+      case SessionStatus.Pending:
+        return t('PatientChat.sessionStatus.pending');
+      case SessionStatus.Confirmed:
+        return t('PatientChat.sessionStatus.confirmed');
+      case SessionStatus.Completed:
+        return t('PatientChat.sessionStatus.completed');
+      case SessionStatus.Cancelled:
+        return t('PatientChat.sessionStatus.cancelled');
+      default:
+        return '';
+    }
   };
 
   const doctorName =
-    currentSession?.ophthalmologistName ?? 'Assigned ophthalmologist';
+    currentSession?.ophthalmologistName ??
+    t('PatientChat.fallback.assignedOphthalmologist');
   const patientName =
-    user?.fullName ?? currentSession?.patientName ?? 'Patient';
+    user?.fullName ??
+    currentSession?.patientName ??
+    t('PatientChat.fallback.patient');
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
-    currentTimeMs
+    currentTimeMs,
+    t
   );
   const isMeetingClosedBySessionState =
     currentSession?.status === SessionStatus.Completed ||
@@ -1151,7 +1204,9 @@ export default function ChatPage() {
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
             <Spinner size={40} className="mx-auto mb-4" />
-            <p className="text-(--text-secondary)">Loading conversations...</p>
+            <p className="text-(--text-secondary)">
+              {t('PatientChat.loading.conversations')}
+            </p>
           </div>
         </div>
       </PatientLayout>
@@ -1169,7 +1224,7 @@ export default function ChatPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-gray-500" />
               <input
                 type="text"
-                placeholder="Search by doctor, status, or session type"
+                placeholder={t('PatientChat.search.placeholder')}
                 value={searchQuery}
                 onChange={(event) => {
                   const nextValue = event.target.value;
@@ -1197,7 +1252,9 @@ export default function ChatPage() {
                 <TrendIndicator trend={allSessionsTrend} />
               </div>
               <div className="mt-2 flex items-center justify-between gap-1">
-                <p className="uppercase tracking-[0.14em]">All</p>
+                <p className="uppercase tracking-[0.14em]">
+                  {t('PatientChat.stats.all')}
+                </p>
                 <MiniSparkline series={allSessionsSeries} stroke="#06b6d4" />
               </div>
             </div>
@@ -1210,7 +1267,9 @@ export default function ChatPage() {
                 <TrendIndicator trend={openSessionsTrend} />
               </div>
               <div className="mt-2 flex items-center justify-between gap-1">
-                <p className="uppercase tracking-[0.14em]">Open</p>
+                <p className="uppercase tracking-[0.14em]">
+                  {t('PatientChat.stats.open')}
+                </p>
                 <MiniSparkline series={openSessionsSeries} stroke="#10b981" />
               </div>
             </div>
@@ -1223,7 +1282,9 @@ export default function ChatPage() {
                 <TrendIndicator trend={upcomingSessionsTrend} />
               </div>
               <div className="mt-2 flex items-center justify-between gap-1">
-                <p className="uppercase tracking-[0.14em]">Upcoming</p>
+                <p className="uppercase tracking-[0.14em]">
+                  {t('PatientChat.stats.upcoming')}
+                </p>
                 <MiniSparkline
                   series={upcomingSessionsSeries}
                   stroke="#f59e0b"
@@ -1239,22 +1300,24 @@ export default function ChatPage() {
                   <Search className="h-6 w-6" />
                 </div>
                 <p className="text-sm font-medium text-slate-900 dark:text-white">
-                  No sessions match your search
+                  {t('PatientChat.empty.noSearchResultsTitle')}
                 </p>
                 <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
-                  Try a doctor name, chat status, or consultation type.
+                  {t('PatientChat.empty.noSearchResultsDescription')}
                 </p>
               </div>
             ) : (
               filteredSessions.map((session) => {
                 const displayDoctorName =
-                  session.ophthalmologistName ?? 'Assigned ophthalmologist';
+                  session.ophthalmologistName ??
+                  t('PatientChat.fallback.assignedOphthalmologist');
                 const appointmentTime = formatAppointmentSlotOrPending(
-                  session.appointmentTime
+                  session.appointmentTime,
+                  t
                 );
                 const previewText =
                   sessionPreviewMap[session.id] ??
-                  getSessionPreviewText(session);
+                  getSessionPreviewText(session, t);
                 const isUnread =
                   (sessionUnreadMap[session.id] ?? false) ||
                   getSessionUnreadCount(session) > 0;
@@ -1280,7 +1343,9 @@ export default function ChatPage() {
                         />
                         <div
                           className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-[#0a1f44] ${statusDotClass}`}
-                          title={`Chat status: ${session.chatStatusName}`}
+                          title={t('PatientChat.chatStatus.title', {
+                            status: session.chatStatusName,
+                          })}
                         >
                           <span className="sr-only">
                             {session.chatStatusName}
@@ -1297,7 +1362,9 @@ export default function ChatPage() {
                             {isUnread && (
                               <span
                                 className="h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
-                                title="Unread activity"
+                                title={t(
+                                  'PatientChat.chatStatus.unreadActivity'
+                                )}
                               />
                             )}
                             <p className="text-[11px] text-slate-400 dark:text-gray-500">
@@ -1311,7 +1378,7 @@ export default function ChatPage() {
                         </p>
 
                         <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-gray-400">
-                          <span>{SESSION_STATUS_LABELS[session.status]}</span>
+                          <span>{getSessionStatusLabel(session.status)}</span>
                           <span className="text-slate-300 dark:text-gray-600">
                             •
                           </span>
@@ -1376,19 +1443,20 @@ export default function ChatPage() {
                     </div>
 
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-gray-300">
-                      <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
+                      <span>{getSessionTypeLabel(currentSession.type)}</span>
                       <span className="text-slate-300 dark:text-gray-600">
                         •
                       </span>
                       <span>
-                        {SESSION_STATUS_LABELS[currentSession.status]}
+                        {getSessionStatusLabel(currentSession.status)}
                       </span>
                       <span className="text-slate-300 dark:text-gray-600">
                         •
                       </span>
                       <span className="truncate">
                         {formatAppointmentSlotOrPending(
-                          currentSession.appointmentTime
+                          currentSession.appointmentTime,
+                          t
                         )}
                       </span>
                     </div>
@@ -1406,8 +1474,12 @@ export default function ChatPage() {
                           className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
                         >
                           <Video className="h-4 w-4" />
-                          <span className="hidden sm:inline">Join Meeting</span>
-                          <span className="sm:hidden">Join</span>
+                          <span className="hidden sm:inline">
+                            {t('PatientChat.meeting.joinMeeting')}
+                          </span>
+                          <span className="sm:hidden">
+                            {t('PatientChat.meeting.join')}
+                          </span>
                         </a>
                       ) : (
                         <button
@@ -1416,7 +1488,7 @@ export default function ChatPage() {
                         >
                           <Video className="h-4 w-4" />
                           {isMeetingClosedBySessionState
-                            ? 'Ended'
+                            ? t('PatientChat.meeting.ended')
                             : meetingAccessState.buttonLabel}
                         </button>
                       )
@@ -1426,13 +1498,13 @@ export default function ChatPage() {
                         className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
                       >
                         <Video className="h-4 w-4" />
-                        Link Pending
+                        {t('PatientChat.meeting.linkPending')}
                       </button>
                     )}
                     {currentSession.meetingLink && (
                       <p className="hidden text-xs font-medium text-slate-500 md:block dark:text-gray-400">
                         {isMeetingClosedBySessionState
-                          ? 'Consultation completed'
+                          ? t('PatientChat.meeting.consultationCompleted')
                           : meetingAccessState.helperText}
                       </p>
                     )}
@@ -1444,8 +1516,8 @@ export default function ChatPage() {
                     }
                     aria-label={
                       isSessionOverviewOpen
-                        ? 'Hide session overview'
-                        : 'Show session overview'
+                        ? t('PatientChat.overview.hide')
+                        : t('PatientChat.overview.show')
                     }
                     className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                   >
@@ -1482,7 +1554,7 @@ export default function ChatPage() {
                           COUNTDOWN_VISIBILITY_MINUTES * 60 * 1000 ? (
                             <span className="inline-flex animate-pulse items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs ring-1 ring-amber-200 dark:bg-amber-900/30 dark:ring-amber-700/40">
                               <span className="h-2 w-2 rounded-full bg-amber-500" />
-                              Chat opens in{' '}
+                              {t('PatientChat.phase.chatOpensIn')}{' '}
                               {formatCountdown(
                                 Math.ceil(
                                   phaseInfo.msUntilNextTransition / 1000
@@ -1490,7 +1562,7 @@ export default function ChatPage() {
                               )}
                             </span>
                           ) : (
-                            'Chat will automatically open at the scheduled appointment time'
+                            t('PatientChat.phase.autoOpenAtScheduledTime')
                           )}
                         </p>
                       )}
@@ -1529,9 +1601,9 @@ export default function ChatPage() {
 
                     const bubbleMetaTitle = isPatientMessage
                       ? phaseInfo.phase === 'PRE_VISIT'
-                        ? 'Saved as pre-visit note'
-                        : 'Delivered to your doctor'
-                      : 'Doctor note';
+                        ? t('PatientChat.messageMeta.savedPreVisit')
+                        : t('PatientChat.messageMeta.deliveredToDoctor')
+                      : t('PatientChat.messageMeta.doctorNote');
                     const BubbleMetaIcon = isPatientMessage
                       ? phaseInfo.phase === 'PRE_VISIT'
                         ? FileText
@@ -1583,7 +1655,9 @@ export default function ChatPage() {
                                         : 'text-slate-500 dark:text-gray-300'
                                     }
                                   >
-                                    {isPatientMessage ? 'You' : doctorName}
+                                    {isPatientMessage
+                                      ? t('PatientChat.fallback.you')
+                                      : doctorName}
                                   </span>
                                   <span
                                     className={
@@ -1630,7 +1704,7 @@ export default function ChatPage() {
                                       src={imageAttachmentMeta.url}
                                       alt={
                                         imageAttachmentMeta.fileName ??
-                                        'Shared image'
+                                        t('PatientChat.fallback.sharedImage')
                                       }
                                       className="max-h-64 w-full rounded-xl object-cover"
                                       loading="lazy"
@@ -1740,17 +1814,17 @@ export default function ChatPage() {
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                       {phaseInfo.phase === 'PRE_VISIT'
-                        ? 'Leave a note for your doctor'
+                        ? t('PatientChat.empty.preVisitTitle')
                         : phaseInfo.phase === 'COMPLETED'
-                          ? 'No messages in this session'
-                          : 'No messages yet'}
+                          ? t('PatientChat.empty.completedTitle')
+                          : t('PatientChat.preview.empty')}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-gray-400">
                       {phaseInfo.phase === 'PRE_VISIT'
-                        ? 'Start by sharing symptoms, concerns, or a brief note before your consultation begins.'
+                        ? t('PatientChat.empty.preVisitDescription')
                         : phaseInfo.phase === 'IN_PROGRESS'
-                          ? 'The consultation is active. Start the conversation when you are ready.'
-                          : 'This consultation has been completed.'}
+                          ? t('PatientChat.empty.inProgressDescription')
+                          : t('PatientChat.empty.completedDescription')}
                     </p>
                   </div>
                 </div>
@@ -1765,7 +1839,7 @@ export default function ChatPage() {
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500 [animation-delay:-0.1s]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500" />
                   </div>
-                  <span>Doctor is typing...</span>
+                  <span>{t('PatientChat.typing.doctorIsTyping')}</span>
                 </div>
               )}
 
@@ -1774,7 +1848,7 @@ export default function ChatPage() {
                   {pendingScan.imageUrl ? (
                     <img
                       src={pendingScan.imageUrl}
-                      alt="Scan preview"
+                      alt={t('PatientChat.composer.scanPreviewAlt')}
                       className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-200 dark:ring-cyan-800/50"
                     />
                   ) : (
@@ -1784,12 +1858,19 @@ export default function ChatPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-cyan-900 dark:text-cyan-100">
-                      Ready to share: {pendingScan.eyeLabel ?? 'Retinal Scan'}
+                      {t('PatientChat.composer.readyToShareScan', {
+                        eyeLabel:
+                          pendingScan.eyeLabel ??
+                          t('PatientChat.fallback.retinalScan'),
+                      })}
                     </p>
                     <p className="mt-1 truncate text-xs text-cyan-700 dark:text-cyan-200">
-                      {pendingScan.riskLabel ?? 'Risk label unavailable'}
+                      {pendingScan.riskLabel ??
+                        t('PatientChat.fallback.riskLabelUnavailable')}
                       {pendingScan.anomalies?.length
-                        ? ` / ${pendingScan.anomalies.length} finding(s)`
+                        ? t('PatientChat.composer.findingsCount', {
+                            count: pendingScan.anomalies.length,
+                          })
                         : ''}
                     </p>
                   </div>
@@ -1806,12 +1887,14 @@ export default function ChatPage() {
                 <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-950/20">
                   <img
                     src={pendingImageUrl}
-                    alt={pendingImageName ?? 'Pending image'}
+                    alt={
+                      pendingImageName ?? t('PatientChat.fallback.pendingImage')
+                    }
                     className="h-14 w-14 rounded-2xl object-cover ring-1 ring-emerald-200 dark:ring-emerald-800/50"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                      Ready to share image
+                      {t('PatientChat.composer.readyToShareImage')}
                     </p>
                     <p className="mt-1 truncate text-xs text-emerald-700 dark:text-emerald-200">
                       {pendingImageName ?? pendingImageUrl}
@@ -1876,14 +1959,14 @@ export default function ChatPage() {
 
                           <span className="hidden items-center gap-1.5 text-xs text-slate-400 sm:inline-flex dark:text-gray-500">
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Encrypted
+                            {t('PatientChat.composer.encrypted')}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           {pendingImageUrl && (
                             <span className="hidden rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200 sm:inline-block dark:bg-emerald-900/25 dark:text-emerald-200 dark:ring-emerald-800/50">
-                              Image attached
+                              {t('PatientChat.composer.imageAttachedBadge')}
                             </span>
                           )}
 
@@ -1927,7 +2010,7 @@ export default function ChatPage() {
 
                       {messageCharacterCount >= MESSAGE_CHARACTER_LIMIT && (
                         <p className="mt-2 text-xs font-medium text-rose-500">
-                          Character limit reached.
+                          {t('PatientChat.composer.characterLimitReached')}
                         </p>
                       )}
                     </div>
@@ -1938,8 +2021,8 @@ export default function ChatPage() {
                   <currentPhaseUI.icon className="h-4 w-4" />
                   <span>
                     {phaseInfo.phase === 'COMPLETED'
-                      ? 'Consultation has been completed. Chat is now read-only.'
-                      : 'Chat will unlock after your doctor verifies the session.'}
+                      ? t('PatientChat.phase.completedDescription')
+                      : t('PatientChat.phase.unlockAfterVerification')}
                   </span>
                 </div>
               )}
@@ -1947,7 +2030,7 @@ export default function ChatPage() {
               {sendMessageMutation.isError && (
                 <div className="mt-3 flex items-center gap-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-600 ring-1 ring-rose-100 dark:bg-rose-950/20 dark:text-rose-200 dark:ring-rose-900/20">
                   <AlertCircle className="h-4 w-4" />
-                  <span>Failed to send message. Please try again.</span>
+                  <span>{t('PatientChat.toast.sendMessageFailed')}</span>
                 </div>
               )}
             </div>
@@ -1959,11 +2042,10 @@ export default function ChatPage() {
                 <MessageCircle className="h-9 w-9" />
               </div>
               <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                Select a session
+                {t('PatientChat.empty.selectSessionTitle')}
               </h3>
               <p className="mt-2 text-slate-500 dark:text-gray-400">
-                Choose a consultation from the left panel to review the full
-                conversation.
+                {t('PatientChat.empty.selectSessionDescription')}
               </p>
             </div>
           </div>
@@ -1973,7 +2055,7 @@ export default function ChatPage() {
           <>
             <button
               type="button"
-              aria-label="Close session overview"
+              aria-label={t('PatientChat.overview.close')}
               onClick={() => setIsSessionOverviewOpen(false)}
               className="fixed inset-0 z-30 bg-slate-900/35 backdrop-blur-[1px] xl:hidden"
             />
@@ -1991,7 +2073,7 @@ export default function ChatPage() {
                       {doctorName}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      {SESSION_TYPE_LABELS[currentSession.type]}
+                      {getSessionTypeLabel(currentSession.type)}
                     </p>
                   </div>
                 </div>
@@ -2011,11 +2093,12 @@ export default function ChatPage() {
                     <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Appointment
+                        {t('PatientChat.overview.appointment')}
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatAppointmentSlotOrPending(
-                          currentSession.appointmentTime
+                          currentSession.appointmentTime,
+                          t
                         )}
                       </p>
                     </div>
@@ -2025,7 +2108,7 @@ export default function ChatPage() {
                     <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Last activity
+                        {t('PatientChat.overview.lastActivity')}
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatRelativeTime(currentSession.lastActivityAt)}
@@ -2037,7 +2120,7 @@ export default function ChatPage() {
                     <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Consultation fee
+                        {t('PatientChat.overview.consultationFee')}
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {formatCurrency(currentSession.price)}
@@ -2049,7 +2132,7 @@ export default function ChatPage() {
                     <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-gray-400">
-                        Phase
+                        {t('PatientChat.overview.phase')}
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {currentPhaseUI.label}
@@ -2061,12 +2144,10 @@ export default function ChatPage() {
                 <div className="rounded-2xl bg-slate-900 p-4 text-white dark:bg-[#030712]">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
                     <Stethoscope className="h-4 w-4" />
-                    Conversation Guidance
+                    {t('PatientChat.guidance.title')}
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-200">
-                    Be specific about symptom timing, changes in vision, pain,
-                    and recent scan results. Short, structured notes help your
-                    ophthalmologist triage faster.
+                    {t('PatientChat.guidance.description')}
                   </p>
                 </div>
               </div>
@@ -2085,7 +2166,7 @@ export default function ChatPage() {
                       {doctorName}
                     </p>
                     <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
-                      {SESSION_TYPE_LABELS[currentSession.type]}
+                      {getSessionTypeLabel(currentSession.type)}
                     </p>
                   </div>
                 </div>
@@ -2094,18 +2175,19 @@ export default function ChatPage() {
               <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
                 <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                    Session Overview
+                    {t('PatientChat.overview.title')}
                   </p>
                   <div className="mt-4 space-y-4">
                     <div className="flex items-start gap-3">
                       <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">
-                          Appointment
+                          {t('PatientChat.overview.appointment')}
                         </p>
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {formatAppointmentSlotOrPending(
-                            currentSession.appointmentTime
+                            currentSession.appointmentTime,
+                            t
                           )}
                         </p>
                       </div>
@@ -2114,7 +2196,7 @@ export default function ChatPage() {
                       <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">
-                          Last activity
+                          {t('PatientChat.overview.lastActivity')}
                         </p>
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {formatRelativeTime(currentSession.lastActivityAt)}
@@ -2125,7 +2207,7 @@ export default function ChatPage() {
                       <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">
-                          Consultation fee
+                          {t('PatientChat.overview.consultationFee')}
                         </p>
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {formatCurrency(currentSession.price)}
@@ -2136,7 +2218,7 @@ export default function ChatPage() {
                       <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">
-                          Phase
+                          {t('PatientChat.overview.phase')}
                         </p>
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {currentPhaseUI.label}
@@ -2150,24 +2232,25 @@ export default function ChatPage() {
                   <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300">
                       <Sparkles className="h-4 w-4" />
-                      Pending Scan Share
+                      {t('PatientChat.overview.pendingScanShare')}
                     </div>
                     <div className="mt-4 space-y-4">
                       {pendingScan.imageUrl ? (
                         <img
                           src={pendingScan.imageUrl}
-                          alt="Pending scan"
+                          alt={t('PatientChat.overview.pendingScanAlt')}
                           className="h-40 w-full rounded-[24px] object-cover ring-1 ring-slate-200 dark:ring-[#1e3a5f]"
                         />
                       ) : null}
                       <div>
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {pendingScan.eyeLabel ?? 'Retinal Scan'}
+                          {pendingScan.eyeLabel ??
+                            t('PatientChat.fallback.retinalScan')}
                         </p>
                         <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
                           {pendingScan.summary ??
                             pendingScan.riskLabel ??
-                            'No summary available'}
+                            t('PatientChat.fallback.noSummaryAvailable')}
                         </p>
                       </div>
                       {pendingScan.anomalies?.length ? (
@@ -2189,12 +2272,10 @@ export default function ChatPage() {
                 <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
                     <Stethoscope className="h-4 w-4" />
-                    Conversation Guidance
+                    {t('PatientChat.guidance.title')}
                   </div>
                   <p className="mt-4 text-sm leading-6 text-slate-200">
-                    Be specific about symptom timing, changes in vision, pain,
-                    and recent scan results. Short, structured notes make it
-                    easier for your ophthalmologist to triage quickly.
+                    {t('PatientChat.guidance.sidebarDescription')}
                   </p>
                   <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
                     <div className="flex items-center gap-2">

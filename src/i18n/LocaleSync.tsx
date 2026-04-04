@@ -2,16 +2,18 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import i18n from '@/i18n/i18n';
 import { persistLocale } from '@/i18n/middleware';
-import { DEFAULT_LOCALE, isSupportedLocale } from '@/i18n/locales';
+import { DEFAULT_LOCALE, toSupportedLocale } from '@/i18n/locales';
 
 export const LocaleSync = () => {
   const { locale } = useParams();
 
   useEffect(() => {
-    const nextLocale =
-      locale && isSupportedLocale(locale) ? locale : DEFAULT_LOCALE;
+    const nextLocale = toSupportedLocale(locale) ?? DEFAULT_LOCALE;
+    const currentLocale =
+      toSupportedLocale(i18n.resolvedLanguage ?? i18n.language) ??
+      DEFAULT_LOCALE;
 
-    if (i18n.resolvedLanguage !== nextLocale) {
+    if (currentLocale !== nextLocale) {
       void i18n.changeLanguage(nextLocale);
     }
 

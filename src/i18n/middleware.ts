@@ -2,7 +2,7 @@ import {
   DEFAULT_LOCALE,
   type AppLocale,
   getLocaleFromPathname,
-  isSupportedLocale,
+  toSupportedLocale,
   withLocalePathname,
 } from '@/i18n/locales';
 
@@ -13,13 +13,7 @@ const getNavigatorLocale = (): AppLocale | null => {
     return null;
   }
 
-  const browserLocale = window.navigator.language.split('-')[0]?.toLowerCase();
-
-  if (!browserLocale) {
-    return null;
-  }
-
-  return isSupportedLocale(browserLocale) ? browserLocale : null;
+  return toSupportedLocale(window.navigator.language);
 };
 
 export const getStoredLocale = (): AppLocale | null => {
@@ -28,7 +22,7 @@ export const getStoredLocale = (): AppLocale | null => {
   }
 
   const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  return storedLocale && isSupportedLocale(storedLocale) ? storedLocale : null;
+  return toSupportedLocale(storedLocale);
 };
 
 export const persistLocale = (locale: AppLocale): void => {
@@ -45,7 +39,10 @@ export const detectPreferredLocale = (): AppLocale =>
 export const resolveLocaleFromPathname = (pathname: string): AppLocale =>
   getLocaleFromPathname(pathname) ?? detectPreferredLocale();
 
-export const resolvePathWithLocale = (pathname: string): string =>
-  getLocaleFromPathname(pathname)
-    ? pathname
-    : withLocalePathname(detectPreferredLocale(), pathname);
+export const resolvePathWithLocale = (pathname: string): string => {
+  const safePath = pathname?.trim() ? pathname : '/';
+
+  return getLocaleFromPathname(safePath)
+    ? safePath
+    : withLocalePathname(detectPreferredLocale(), safePath);
+};

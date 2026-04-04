@@ -560,7 +560,11 @@ export default function SlotManagementPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">
-                          {template.slotDuration} min slots
+                          {template.slotDuration}{' '}
+                          {t(
+                            'Ophthalmologist.slotManagement.template.minuteSlots',
+                            'min slots'
+                          )}
                         </span>
                         <span className="font-medium text-emerald-600 dark:text-emerald-400">
                           {formatTemplateCost(template.cost, t)}

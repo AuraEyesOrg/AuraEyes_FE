@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FileText,
   Download,
@@ -75,13 +76,86 @@ const mockReports: Report[] = [
 ];
 
 const ReportsPage = () => {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
 
+  const getReportResultLabel = (result: string) => {
+    switch (result) {
+      case 'Healthy':
+        return t('PatientReports.mock.result.healthy');
+      case 'Mild Signs Detected':
+        return t('PatientReports.mock.result.mildSignsDetected');
+      case 'Requires Attention':
+        return t('PatientReports.mock.result.requiresAttention');
+      default:
+        return result;
+    }
+  };
+
+  const getDoctorLabel = (doctor: string) => {
+    switch (doctor) {
+      case 'AI Analysis':
+        return t('PatientReports.mock.doctor.aiAnalysis');
+      default:
+        return doctor;
+    }
+  };
+
+  const getConditionLabel = (condition: string) => {
+    switch (condition) {
+      case 'Early AMD signs':
+        return t('PatientReports.mock.conditions.earlyAmdSigns');
+      case 'Monitor blood sugar':
+        return t('PatientReports.mock.conditions.monitorBloodSugar');
+      case 'Diabetic Retinopathy - Stage 1':
+        return t('PatientReports.mock.conditions.diabeticRetinopathyStage1');
+      default:
+        return condition;
+    }
+  };
+
+  const getRiskLabel = (risk: string) => {
+    switch (risk) {
+      case 'low':
+        return t('PatientReports.risk.low');
+      case 'medium':
+        return t('PatientReports.risk.medium');
+      case 'high':
+        return t('PatientReports.risk.high');
+      default:
+        return risk;
+    }
+  };
+
+  const getRiskFilterLabel = (risk: string) => {
+    if (risk === 'all') return t('PatientReports.filters.all');
+    return getRiskLabel(risk);
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'screening':
+        return t('PatientReports.type.screening');
+      case 'follow-up':
+        return t('PatientReports.type.followUp');
+      case 'verification':
+        return t('PatientReports.type.verification');
+      default:
+        return type;
+    }
+  };
+
   const filteredReports = mockReports.filter((report) => {
+    const localizedResult = getReportResultLabel(report.result).toLowerCase();
+    const localizedDoctor = getDoctorLabel(report.doctor).toLowerCase();
+
     const matchesSearch =
-      report.result.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.doctor.toLowerCase().includes(searchQuery.toLowerCase());
+      localizedResult.includes(searchQuery.toLowerCase()) ||
+      localizedDoctor.includes(searchQuery.toLowerCase());
     const matchesRisk = filterRisk === 'all' || report.riskLevel === filterRisk;
     return matchesSearch && matchesRisk;
   });
@@ -91,36 +165,24 @@ const ReportsPage = () => {
       case 'low':
         return (
           <span className="badge-risk-low flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" /> Low Risk
+            <CheckCircle className="w-3 h-3" /> {t('PatientReports.risk.low')}
           </span>
         );
       case 'medium':
         return (
           <span className="badge-risk-medium flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Medium Risk
+            <Clock className="w-3 h-3" /> {t('PatientReports.risk.medium')}
           </span>
         );
       case 'high':
         return (
           <span className="badge-risk-high flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> High Risk
+            <AlertTriangle className="w-3 h-3" />{' '}
+            {t('PatientReports.risk.high')}
           </span>
         );
       default:
         return null;
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'screening':
-        return 'Retinal Screening';
-      case 'follow-up':
-        return 'Follow-up Scan';
-      case 'verification':
-        return 'Verified Result';
-      default:
-        return type;
     }
   };
 
@@ -151,10 +213,10 @@ const ReportsPage = () => {
     <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-          Medical Reports
+          {t('PatientReports.page.title')}
         </h1>
         <p className="text-(--text-secondary)">
-          View, download, and track your screening results and heatmaps
+          {t('PatientReports.page.subtitle')}
         </p>
       </div>
 
@@ -169,7 +231,9 @@ const ReportsPage = () => {
               <p className="text-2xl font-bold text-(--text-primary)">
                 {mockReports.length}
               </p>
-              <p className="text-xs text-(--text-secondary)">Total Reports</p>
+              <p className="text-xs text-(--text-secondary)">
+                {t('PatientReports.stats.totalReports')}
+              </p>
             </div>
           </div>
         </div>
@@ -182,7 +246,9 @@ const ReportsPage = () => {
               <p className="text-2xl font-bold text-[var(--text-primary)]">
                 {mockReports.filter((r) => r.isVerified).length}
               </p>
-              <p className="text-xs text-[var(--text-secondary)]">Verified</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                {t('PatientReports.stats.verified')}
+              </p>
             </div>
           </div>
         </div>
@@ -196,7 +262,7 @@ const ReportsPage = () => {
                 {mockReports.filter((r) => r.hasHeatmap).length}
               </p>
               <p className="text-xs text-[var(--text-secondary)]">
-                With Heatmaps
+                {t('PatientReports.stats.withHeatmaps')}
               </p>
             </div>
           </div>
@@ -210,7 +276,9 @@ const ReportsPage = () => {
               <p className="text-2xl font-bold text-(--text-primary)">
                 {mockReports.filter((r) => r.riskLevel === 'low').length}
               </p>
-              <p className="text-xs text-(--text-secondary)">Healthy Results</p>
+              <p className="text-xs text-(--text-secondary)">
+                {t('PatientReports.stats.healthyResults')}
+              </p>
             </div>
           </div>
         </div>
@@ -222,7 +290,7 @@ const ReportsPage = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
-            placeholder="Search reports..."
+            placeholder={t('PatientReports.search.placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#2d4a6f] rounded-xl text-(--text-primary) placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -231,7 +299,7 @@ const ReportsPage = () => {
         <div className="flex gap-2">
           <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#2d4a6f] rounded-lg text-sm">
             <Filter className="w-4 h-4" />
-            Filter
+            {t('PatientReports.filters.label')}
           </button>
           {(['all', 'low', 'medium', 'high'] as const).map((risk) => (
             <button
@@ -243,9 +311,7 @@ const ReportsPage = () => {
                   : 'bg-gray-100 dark:bg-[#1e3a5f]/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#1e3a5f]'
               }`}
             >
-              {risk === 'all'
-                ? 'All'
-                : `${risk.charAt(0).toUpperCase() + risk.slice(1)} Risk`}
+              {getRiskFilterLabel(risk)}
             </button>
           ))}
         </div>
@@ -270,7 +336,8 @@ const ReportsPage = () => {
                     {getRiskBadge(report.riskLevel)}
                     {report.isVerified && (
                       <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
-                        <CheckCircle className="w-3 h-3" /> Verified
+                        <CheckCircle className="w-3 h-3" />{' '}
+                        {t('PatientReports.badges.verified')}
                       </span>
                     )}
                   </div>
@@ -282,21 +349,25 @@ const ReportsPage = () => {
                     </div>
                     <div className="flex items-center gap-2 text-(--text-secondary)">
                       <Eye className="w-4 h-4" />
-                      <span>Result: {report.result}</span>
+                      <span>
+                        {t('PatientReports.fields.result', {
+                          value: getReportResultLabel(report.result),
+                        })}
+                      </span>
                     </div>
                   </div>
 
                   <p className="text-sm text-(--text-secondary)">
-                    Analyzed by:{' '}
+                    {t('PatientReports.fields.analyzedBy')}{' '}
                     <span className="text-(--text-primary)">
-                      {report.doctor}
+                      {getDoctorLabel(report.doctor)}
                     </span>
                   </p>
 
                   {report.conditions && report.conditions.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-[#1e3a5f]">
                       <p className="text-xs text-gray-500 mb-2">
-                        Detected Conditions:
+                        {t('PatientReports.fields.detectedConditions')}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {report.conditions.map((condition, idx) => (
@@ -304,7 +375,7 @@ const ReportsPage = () => {
                             key={idx}
                             className="px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs"
                           >
-                            {condition}
+                            {getConditionLabel(condition)}
                           </span>
                         ))}
                       </div>
@@ -316,17 +387,17 @@ const ReportsPage = () => {
               <div className="flex flex-row lg:flex-col gap-2 shrink-0">
                 <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors">
                   <Eye className="w-4 h-4" />
-                  View Details
+                  {t('PatientReports.actions.viewDetails')}
                 </button>
                 {report.hasHeatmap && (
                   <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#1e3a5f] hover:bg-[#2d4a6f] text-white rounded-lg text-sm font-medium transition-colors">
                     <ExternalLink className="w-4 h-4" />
-                    View Heatmap
+                    {t('PatientReports.actions.viewHeatmap')}
                   </button>
                 )}
                 <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors">
                   <Download className="w-4 h-4" />
-                  Download PDF
+                  {t('PatientReports.actions.downloadPdf')}
                 </button>
               </div>
             </div>
@@ -338,18 +409,18 @@ const ReportsPage = () => {
         <div className="text-center py-16">
           <FileText className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-(--text-primary) mb-2">
-            No Reports Found
+            {t('PatientReports.empty.title')}
           </h3>
           <p className="text-(--text-secondary) mb-6">
             {searchQuery || filterRisk !== 'all'
-              ? 'Try adjusting your search or filters.'
-              : "You haven't completed any screenings yet."}
+              ? t('PatientReports.empty.adjustSearchOrFilters')
+              : t('PatientReports.empty.noScreenings')}
           </p>
           <Link
             to="/patient/screening/new"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors"
           >
-            Start Your First Screening
+            {t('PatientReports.actions.startFirstScreening')}
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
