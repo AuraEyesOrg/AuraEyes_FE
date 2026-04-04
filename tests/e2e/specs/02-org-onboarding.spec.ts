@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { injectAuthState } from '../helpers/auth.helper';
+import { resetAndSeed } from '../helpers/test-backdoor.helper';
 import { bypassRecaptcha, loginByUi } from '../helpers/ui-login.helper';
 
 const SYSTEM_ADMIN_EMAIL =
@@ -8,6 +10,10 @@ const ORG_ADMIN_EMAIL_FALLBACK =
 const DEFAULT_PASSWORD = 'Password123!';
 
 test.describe('Flow 02 - Organisation Onboarding and Contract Activation', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetAndSeed(request);
+  });
+
   test('system admin approves onboarding, organisation uploads contract, and contract is activated', async ({
     browser,
   }) => {
@@ -166,5 +172,25 @@ test.describe('Flow 02 - Organisation Onboarding and Contract Activation', () =>
     );
 
     await ctxOrg2.close();
+  });
+
+  test('should redirect organisation user to contract gate when contract is not active', async ({
+    page,
+  }) => {
+    await page.goto('/login');
+    await injectAuthState(page, 'OrgAdmin');
+
+    await page.evaluate(() => {
+      const rawUser = window.localStorage.getItem('user');
+      if (!rawUser) return;
+      const parsed = JSON.parse(rawUser) as {
+        contractStatus?: string | null;
+      };
+      parsed.contractStatus = 'PendingVerification';
+      window.localStorage.setItem('user', JSON.stringify(parsed));
+    });
+
+    await page.goto('/organisation/dashboard');
+    await expect(page).toHaveURL(/\/organisation\/contract/);
   });
 });

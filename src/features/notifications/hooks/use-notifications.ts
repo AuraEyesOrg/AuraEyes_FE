@@ -42,7 +42,14 @@ export const useNotifications = (
         const data = await getNotifications(params);
         // Sync with Zustand store for real-time updates
         if (params.pageNumber === 1 || !params.pageNumber) {
-          setNotifications(data.items);
+          const shouldSyncUnreadCount =
+            params.isRead === undefined &&
+            (!params.types || params.types.length === 0);
+
+          setNotifications(
+            data.items,
+            shouldSyncUnreadCount ? data.unreadCount : undefined
+          );
         }
         return data;
       } finally {
@@ -64,8 +71,13 @@ export const useUnreadCount = (options?: { enabled?: boolean }) => {
     queryKey: notificationKeys.unreadCount(),
     queryFn: async () => {
       const data = await getUnreadCount();
-      setUnreadCount(data.count);
-      return data;
+      const count =
+        typeof data.count === 'number'
+          ? data.count
+          : ((data as { unreadCount?: number }).unreadCount ?? 0);
+
+      setUnreadCount(count);
+      return { ...data, count };
     },
     staleTime: 60_000, // 1 minute - SignalR handles real-time updates
     refetchInterval: 5 * 60_000, // Poll every 5 minutes as fallback

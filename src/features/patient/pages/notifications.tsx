@@ -341,8 +341,8 @@ function NotificationListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors ${
-        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      className={`w-full text-left p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+        !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/35' : ''
       }`}
     >
       <div className="flex items-start gap-4">
@@ -367,7 +367,7 @@ function NotificationListItem({
             {!notification.isRead && (
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
             )}
-            <span className="text-xs text-gray-500 dark:text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-300">
               {formatRelativeTime(notification.createdAt)}
             </span>
           </div>
@@ -382,7 +382,7 @@ function NotificationListItem({
             {notification.title}
           </h3>
 
-          <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-200 leading-relaxed">
             {notification.message}
           </p>
 

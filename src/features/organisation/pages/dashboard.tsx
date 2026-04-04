@@ -36,9 +36,6 @@ export default function OrganisationDashboard() {
   const pendingWorkload =
     metrics.appointmentStatus.pending + metrics.appointmentStatus.confirmed;
   const displayName = user?.fullName || 'Organisation Admin';
-  const organisationHint = user?.organizationId
-    ? `Organisation ${user.organizationId.slice(0, 8)}`
-    : 'AURA Partner Clinic';
 
   const statusItems = [
     {
@@ -92,7 +89,7 @@ export default function OrganisationDashboard() {
               Welcome back, {displayName}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {organisationHint} • Live operations overview
+              Here's your live dashboard for <b>{displayName}</b>. Monitor key
             </p>
           </div>
 
@@ -217,18 +214,6 @@ export default function OrganisationDashboard() {
                 </div>
               </div>
             </section>
-          </div>
-
-          <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Dashboard Source of Truth
-            </h2>
-            <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
-              This dashboard now reads directly from organisation appointments,
-              schedule templates, appointment slots, and AI quota data. The
-              previous mock charts and sample records have been removed so the
-              page shows only live backend operational data.
-            </p>
           </div>
         </main>
       </div>

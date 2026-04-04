@@ -7,6 +7,7 @@ import {
   buildN8nChatRequest,
   normalizeN8nChatResponse,
 } from './n8n-chat.contract';
+import { useSystemSettings } from '@/features/system-admin/api/system-settings.api';
 
 export const openN8nChat = () => {
   window.dispatchEvent(new CustomEvent('aura-ai-chat:open'));
@@ -29,11 +30,18 @@ const QUICK_PROMPTS = [
   'Đặt lịch sớm nhất có thể giúp tôi',
 ];
 
+const splitMessageBlocks = (content: string): string[] =>
+  content
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0);
+
 export default function N8nChatWidget({
   consultationContext,
 }: N8nChatWidgetProps) {
   const user = useAuthStore((state) => state.user);
   const token = getItem<string>('token') ?? undefined;
+  const { data: systemSettings } = useSystemSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [input, setInput] = useState('');
@@ -42,29 +50,41 @@ export default function N8nChatWidget({
       id: 'welcome',
       role: 'assistant',
       content:
-        'Xin chao! Mình là AURA Medical Assistant. Bạn có thể nói nhu cầu như "Tìm cho tôi 1 lịch thứ 5 lúc 16h", mình sẽ hỗ trợ kiểm tra và đặt lịch nhanh.',
+        'Xin chào! Mình là AURA Medical Assistant. Bạn có thể nói nhu cầu như "Tìm cho tôi 1 lịch thứ 5 lúc 16h", mình sẽ hỗ trợ kiểm tra và đặt lịch nhanh.',
       createdAt: new Date().toISOString(),
     },
   ]);
   const listRef = useRef<HTMLDivElement | null>(null);
   const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
 
-  const patientMeta = useMemo(
-    () => ({
+  const patientMeta = useMemo(() => {
+    const advanceBookingSetting = systemSettings?.['MIN_ADVANCE_BOOKING_HOURS'];
+    let advanceBookingHours = advanceBookingSetting
+      ? parseFloat(advanceBookingSetting)
+      : 0.5;
+    if (isNaN(advanceBookingHours) || advanceBookingHours < 0.5)
+      advanceBookingHours = 0.5;
+    const minAdvanceBookingMs = advanceBookingHours * 60 * 60 * 1000;
+    const minBookingTime = new Date(
+      Date.now() + minAdvanceBookingMs
+    ).toISOString();
+
+    return {
       userId: user?.id,
       userEmail: user?.email,
       token,
       screeningId: consultationContext?.screeningId,
       riskLevel: consultationContext?.riskLevel,
-    }),
-    [
-      consultationContext?.riskLevel,
-      consultationContext?.screeningId,
-      token,
-      user?.email,
-      user?.id,
-    ]
-  );
+      minBookingTime,
+    };
+  }, [
+    consultationContext?.riskLevel,
+    consultationContext?.screeningId,
+    token,
+    user?.email,
+    user?.id,
+    systemSettings,
+  ]);
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -97,7 +117,7 @@ export default function N8nChatWidget({
           id: crypto.randomUUID(),
           role: 'assistant',
           content:
-            'Chua cau hinh webhook n8n. Vui long kiem tra bien moi truong VITE_N8N_WEBHOOK_URL.',
+            'Chưa cấu hình webhook n8n. Vui lòng kiểm tra biến môi trường VITE_N8N_WEBHOOK_URL.',
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -150,7 +170,7 @@ export default function N8nChatWidget({
           id: crypto.randomUUID(),
           role: 'assistant',
           content:
-            'Ket noi toi he thong dat lich tam thoi bi gian doan. Ban thu lai sau it phut hoac chon "Find a Specialist".',
+            'Kết nối tới hệ thống tạm thời bị gián đoạn. Bạn vui lòng thử lại sau ít phút nhé.',
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -185,7 +205,7 @@ export default function N8nChatWidget({
                   AURA Medical Assistant
                 </p>
                 <p className="text-xs text-(--text-muted)">
-                  Smart scheduling support via n8n workflow
+                  Trợ lý đặt lịch thông minh qua n8n
                 </p>
               </div>
             </div>
@@ -202,19 +222,40 @@ export default function N8nChatWidget({
         <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => {
             const isUser = message.role === 'user';
+            const messageBlocks = splitMessageBlocks(message.content);
             return (
               <div
                 key={message.id}
-                className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-end gap-2 ${
+                  isUser ? 'justify-end' : 'justify-start'
+                }`}
               >
+                {!isUser && (
+                  <span className="mb-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Bot className="h-3.5 w-3.5" />
+                  </span>
+                )}
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
                     isUser
-                      ? 'bg-primary text-white rounded-br-md'
+                      ? 'bg-primary text-white rounded-br-md shadow-sm'
                       : 'surface-secondary text-(--text-primary) rounded-bl-md border border-(--border-color)'
                   }`}
                 >
-                  {message.content}
+                  {messageBlocks.length > 0
+                    ? messageBlocks.map((block, index) => (
+                        <p
+                          key={`${message.id}-${index}`}
+                          className={
+                            index > 0
+                              ? 'mt-2.5 whitespace-pre-line'
+                              : 'whitespace-pre-line'
+                          }
+                        >
+                          {block}
+                        </p>
+                      ))
+                    : message.content}
                 </div>
               </div>
             );
@@ -223,7 +264,7 @@ export default function N8nChatWidget({
             <div className="flex justify-start">
               <div className="inline-flex items-center gap-2 rounded-2xl rounded-bl-md surface-secondary border border-(--border-color) px-3 py-2 text-sm text-(--text-secondary)">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Dang tim lich phu hop...
+                AURA đang phản hồi...
               </div>
             </div>
           )}
@@ -248,7 +289,7 @@ export default function N8nChatWidget({
               rows={2}
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Nhap nhu cau dat lich cua ban..."
+              placeholder="Nhập nhu cầu đặt lịch của bạn..."
               className="min-h-[44px] max-h-28 flex-1 resize-none rounded-xl border border-(--border-color) bg-[var(--bg-primary)] px-3 py-2 text-sm text-(--text-primary) outline-none ring-primary/30 focus:ring"
             />
             <button

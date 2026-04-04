@@ -32,6 +32,7 @@ import {
   FeedbackModal,
   FeedbackSubmittedBadge,
 } from '@/features/patient/components';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import useAuthStore from '@/store/auth-store';
 import {
   formatDate,
@@ -75,6 +76,7 @@ const AppointmentsPage = () => {
   const [filter, setFilter] = useState<FilterTab>('all');
   const [clinicFeedbackTarget, setClinicFeedbackTarget] =
     useState<ClinicAppointmentDto | null>(null);
+  const [cancelSessionId, setCancelSessionId] = useState<string | null>(null);
 
   const { user } = useAuthStore();
   const currentUserId = user?.id;
@@ -173,17 +175,30 @@ const AppointmentsPage = () => {
   }, [organisationFeedbackQueries]);
 
   const handleCancel = (sessionId: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.'
-      )
-    )
+    setCancelSessionId(sessionId);
+  };
+
+  const confirmCancelSession = () => {
+    if (!cancelSessionId) {
       return;
-    cancelMutation.mutate({
-      sessionId,
-      cancelledByUserId: currentUserId!,
-      reason: 'Cancelled by patient',
-    });
+    }
+
+    if (!currentUserId) {
+      toast.error('Unable to cancel appointment. Please sign in again.');
+      setCancelSessionId(null);
+      return;
+    }
+
+    cancelMutation.mutate(
+      {
+        sessionId: cancelSessionId,
+        cancelledByUserId: currentUserId,
+        reason: 'Cancelled by patient',
+      },
+      {
+        onSettled: () => setCancelSessionId(null),
+      }
+    );
   };
 
   const canCancelSession = (session: ConsultationSessionListDto): boolean => {
@@ -530,7 +545,11 @@ const AppointmentsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                             <Calendar className="w-4 h-4" />
-                            <span>{formatShortDate(session.createdAt)}</span>
+                            <span>
+                              {session.appointmentTime
+                                ? formatShortDate(session.appointmentTime)
+                                : 'Not scheduled yet'}
+                            </span>
                           </div>
                           {session.appointmentTime && (
                             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
@@ -641,6 +660,18 @@ const AppointmentsPage = () => {
             </Link>
           </div>
         )}
+
+      <ConfirmModal
+        open={!!cancelSessionId}
+        title="Cancel appointment?"
+        message="Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet."
+        confirmLabel="Yes, cancel appointment"
+        cancelLabel="Keep appointment"
+        tone="danger"
+        isLoading={cancelMutation.isPending}
+        onCancel={() => setCancelSessionId(null)}
+        onConfirm={confirmCancelSession}
+      />
 
       <FeedbackModal
         open={!!clinicFeedbackTarget}

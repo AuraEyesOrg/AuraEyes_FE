@@ -12,11 +12,13 @@ import {
 import {
   Activity,
   Archive,
+  ArrowDownRight,
   ArrowLeft,
+  ArrowUpRight,
   BadgeDollarSign,
   CalendarDays,
   CheckCheck,
-  ChevronRight,
+  Minus,
   Clock3,
   Eye,
   FileText,
@@ -24,10 +26,10 @@ import {
   Lock,
   MessageCircle,
   MoreHorizontal,
-  Paperclip,
   Search,
   Send,
   ShieldCheck,
+  Smile,
   Stethoscope,
   UserRound,
   Video,
@@ -43,9 +45,10 @@ import {
   useConsultationSession,
   useEndSession,
   useSendMessage,
+  useUploadChatImages,
   consultationKeys,
 } from '@/features/consultation/hooks';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import {
   ChatStatus,
@@ -57,9 +60,12 @@ import {
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
   SIGNALR_ROOM_STATE_CHANGED_EVENT,
+  SIGNALR_TYPING_INDICATOR_EVENT,
   type SignalRChatMessageEvent,
   type SignalRRoomStateChangedEvent,
+  type SignalRTypingIndicatorEvent,
 } from '@/types/chat-realtime';
+import { sendChatTypingIndicator } from '@/hooks/useSignalRChat';
 import {
   formatAppointmentSlot,
   formatCountdown,
@@ -131,8 +137,178 @@ const getPhaseUIConfig = (
 });
 
 const PREJOIN_OPEN_MINUTES = 15;
-const MEETING_ACTIVE_MINUTES = 60;
+const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
+const MESSAGE_CHARACTER_LIMIT = 1000;
+const SPARKLINE_WINDOW_DAYS = 7;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const CHARACTER_RING_RADIUS = 13;
+const CHARACTER_RING_CIRCUMFERENCE = 2 * Math.PI * CHARACTER_RING_RADIUS;
+const TYPING_EMIT_DEBOUNCE_MS = 280;
+const TYPING_AUTO_HIDE_MS = 2200;
+
+type TrendDirection = 'up' | 'down' | 'flat';
+
+type SessionOptionalMetadata = {
+  latestMessagePreview?: string | null;
+  unreadCount?: number | null;
+  caseSnapshot?: {
+    summary?: string | null;
+    findings?: string | null;
+  } | null;
+  chatStatus: ChatStatus;
+};
+
+const startOfDayMs = (value: number) => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+};
+
+const buildRecentSeries = <T,>(
+  items: T[],
+  dateSelector: (item: T) => string | null | undefined,
+  days = SPARKLINE_WINDOW_DAYS
+) => {
+  const todayStartMs = startOfDayMs(Date.now());
+  const buckets = Array.from({ length: days }, () => 0);
+
+  items.forEach((item) => {
+    const dateValue = dateSelector(item);
+    if (!dateValue) return;
+
+    const itemTimeMs = new Date(dateValue).getTime();
+    if (Number.isNaN(itemTimeMs)) return;
+
+    const diffDays = Math.floor(
+      (todayStartMs - startOfDayMs(itemTimeMs)) / DAY_IN_MS
+    );
+    const index = days - diffDays - 1;
+
+    if (index >= 0 && index < days) {
+      buckets[index] += 1;
+    }
+  });
+
+  return buckets;
+};
+
+const buildUpcomingSeries = <T,>(
+  items: T[],
+  dateSelector: (item: T) => string | null | undefined,
+  days = SPARKLINE_WINDOW_DAYS
+) => {
+  const todayStartMs = startOfDayMs(Date.now());
+  const buckets = Array.from({ length: days }, () => 0);
+
+  items.forEach((item) => {
+    const dateValue = dateSelector(item);
+    if (!dateValue) return;
+
+    const itemTimeMs = new Date(dateValue).getTime();
+    if (Number.isNaN(itemTimeMs)) return;
+
+    const diffDays = Math.floor(
+      (startOfDayMs(itemTimeMs) - todayStartMs) / DAY_IN_MS
+    );
+
+    if (diffDays >= 0 && diffDays < days) {
+      buckets[diffDays] += 1;
+    }
+  });
+
+  return buckets;
+};
+
+const getTrendDirection = (series: number[]): TrendDirection => {
+  if (series.length <= 1) return 'flat';
+
+  const first = series[0] ?? 0;
+  const last = series[series.length - 1] ?? 0;
+  if (last > first) return 'up';
+  if (last < first) return 'down';
+  return 'flat';
+};
+
+const getTrendClassName = (trend: TrendDirection) => {
+  if (trend === 'up') {
+    return 'text-emerald-600 dark:text-emerald-300';
+  }
+  if (trend === 'down') {
+    return 'text-rose-600 dark:text-rose-300';
+  }
+  return 'text-slate-400 dark:text-slate-500';
+};
+
+const getChatStatusDotClass = (chatStatus: ChatStatus) => {
+  switch (chatStatus) {
+    case ChatStatus.Open:
+      return 'bg-emerald-500';
+    case ChatStatus.MemoOnly:
+      return 'bg-amber-500';
+    case ChatStatus.Archived:
+      return 'bg-slate-400';
+    default:
+      return 'bg-rose-500';
+  }
+};
+
+const getSessionUnreadCount = (session: SessionOptionalMetadata) => {
+  return typeof session.unreadCount === 'number' ? session.unreadCount : 0;
+};
+
+const getSessionPreviewFromPayload = (session: SessionOptionalMetadata) => {
+  const preview = session.latestMessagePreview;
+  if (typeof preview !== 'string') return null;
+  const normalized = preview.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
+const getSessionPreviewText = (
+  session: SessionOptionalMetadata,
+  t: (key: string, fallback: string) => string
+) => {
+  const payloadPreview = getSessionPreviewFromPayload(session);
+  if (payloadPreview) {
+    return payloadPreview;
+  }
+
+  const caseSummary = session.caseSnapshot?.summary?.trim();
+  if (caseSummary) {
+    return caseSummary;
+  }
+
+  const findings = session.caseSnapshot?.findings?.trim();
+  if (findings) {
+    return findings;
+  }
+
+  if (session.chatStatus === ChatStatus.MemoOnly) {
+    return t(
+      'Ophthalmologist.consultations.chat.previewPreVisitEmpty',
+      'Awaiting patient pre-visit notes…'
+    );
+  }
+
+  if (session.chatStatus === ChatStatus.Archived) {
+    return t(
+      'Ophthalmologist.consultations.chat.previewCompletedEmpty',
+      'Session completed — no messages'
+    );
+  }
+
+  if (session.chatStatus === ChatStatus.Locked) {
+    return t(
+      'Ophthalmologist.consultations.chat.previewLocked',
+      'Chat opens at appointment time'
+    );
+  }
+
+  return t(
+    'Ophthalmologist.consultations.chat.previewUnavailable',
+    'No messages yet'
+  );
+};
 
 const getMeetingAccessState = (
   appointmentTime: string | null,
@@ -141,19 +317,33 @@ const getMeetingAccessState = (
 ): MeetingAccessState => {
   if (!appointmentTime) {
     return {
-      canJoin: true,
+      canJoin: false,
       buttonLabel: t(
-        'Ophthalmologist.consultations.chat.joinMeeting',
-        'Join Meeting'
+        'Ophthalmologist.consultations.chat.joinLocked',
+        'Join Locked'
       ),
       helperText: t(
-        'Ophthalmologist.consultations.chat.meetingLinkReady',
-        'Meeting link is ready.'
+        'Ophthalmologist.consultations.chat.schedulePending',
+        'Schedule pending'
       ),
     };
   }
 
   const appointmentMs = new Date(appointmentTime).getTime();
+  if (Number.isNaN(appointmentMs)) {
+    return {
+      canJoin: false,
+      buttonLabel: t(
+        'Ophthalmologist.consultations.chat.joinLocked',
+        'Join Locked'
+      ),
+      helperText: t(
+        'Ophthalmologist.consultations.chat.invalidSchedule',
+        'Schedule is unavailable'
+      ),
+    };
+  }
+
   const minutesUntilStart = Math.ceil((appointmentMs - nowMs) / 60000);
   const unlockMs = appointmentMs - PREJOIN_OPEN_MINUTES * 60000;
   const secondsUntilUnlock = Math.ceil((unlockMs - nowMs) / 1000);
@@ -202,14 +392,144 @@ const getMeetingAccessState = (
   };
 };
 
-const extractScanAttachment = (message: string) => {
-  const match = message.match(/\n\n\[Scan Attached: (.+?) - (.+?)\]$/);
+type ScanAttachmentMeta = {
+  title: string;
+  riskLabel: string;
+};
+
+const extractScanAttachment = (message: string): ScanAttachmentMeta | null => {
+  const match = message.match(/\[Scan Attached: (.+?) - (.+?)\]/);
   if (!match) return null;
   return { title: match[1], riskLabel: match[2] };
 };
 
-const stripScanAttachment = (message: string) =>
-  message.replace(/\n\n\[Scan Attached: .+? - .+?\]$/, '').trim();
+type ImageAttachmentMeta = {
+  url: string;
+  fileName?: string;
+};
+
+const QUICK_EMOJIS = ['👍', '🙏', '😊', '👀', '💬', '✅', '📌', '❤️'];
+
+const extractImageAttachment = (
+  message: string
+): ImageAttachmentMeta | null => {
+  const withNameMatch = message.match(
+    /\[Image Attached: (https?:\/\/[^\]\s]+) \| Name: ([^\]]+)\]/
+  );
+  if (withNameMatch) {
+    return {
+      url: withNameMatch[1],
+      fileName: withNameMatch[2],
+    };
+  }
+
+  const simpleMatch = message.match(
+    /\[Image Attached: (https?:\/\/[^\]\s]+)\]/
+  );
+  if (!simpleMatch) return null;
+  return { url: simpleMatch[1] };
+};
+
+const stripChatAttachments = (message: string) =>
+  message
+    .replace(/\n?\n?\[Scan Attached: .+? - .+?\]/g, '')
+    .replace(
+      /\n?\n?\[Image Attached: https?:\/\/[^\]\s]+(?: \| Name: [^\]]+)?\]/g,
+      ''
+    )
+    .trim();
+
+const CharacterProgressArc = ({
+  value,
+  limit,
+}: {
+  value: number;
+  limit: number;
+}) => {
+  const safeValue = Math.min(value, limit);
+  const ratio = safeValue / limit;
+  const strokeDashoffset = CHARACTER_RING_CIRCUMFERENCE * (1 - ratio);
+  const remaining = Math.max(limit - value, 0);
+
+  const progressStroke =
+    ratio >= 1 ? '#ef4444' : ratio >= 0.85 ? '#f59e0b' : '#06b6d4';
+
+  return (
+    <div className="relative flex h-10 w-10 items-center justify-center">
+      <svg className="h-10 w-10 -rotate-90" viewBox="0 0 32 32" aria-hidden>
+        <circle
+          cx="16"
+          cy="16"
+          r={CHARACTER_RING_RADIUS}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          className="text-slate-200 dark:text-slate-700"
+        />
+        <circle
+          cx="16"
+          cy="16"
+          r={CHARACTER_RING_RADIUS}
+          fill="none"
+          stroke={progressStroke}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={CHARACTER_RING_CIRCUMFERENCE}
+          strokeDashoffset={strokeDashoffset}
+        />
+      </svg>
+      <span className="absolute text-[10px] font-semibold tabular-nums text-slate-500 dark:text-slate-300">
+        {remaining}
+      </span>
+    </div>
+  );
+};
+
+const MiniSparkline = ({
+  series,
+  stroke,
+}: {
+  series: number[];
+  stroke: string;
+}) => {
+  const maxValue = Math.max(1, ...series);
+  const denominator = Math.max(1, series.length - 1);
+
+  const points = series
+    .map((value, index) => {
+      const x = (index / denominator) * 32;
+      const y = 14 - (value / maxValue) * 10;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox="0 0 32 16" className="h-4 w-14" aria-hidden>
+      <polyline
+        fill="none"
+        stroke={stroke}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+};
+
+const TrendIndicator = ({ trend }: { trend: TrendDirection }) => {
+  return (
+    <span className={`inline-flex items-center ${getTrendClassName(trend)}`}>
+      {trend === 'up' ? (
+        <ArrowUpRight className="h-3.5 w-3.5" />
+      ) : trend === 'down' ? (
+        <ArrowDownRight className="h-3.5 w-3.5" />
+      ) : (
+        <Minus className="h-3.5 w-3.5" />
+      )}
+    </span>
+  );
+};
 
 const formatAppointmentSlotOrPending = (
   value: string | null,
@@ -233,58 +553,6 @@ const getSessionTypeColor = (type: ConsultationSessionType) => {
     default:
       return 'from-brand to-accent';
   }
-};
-
-const getStatusBadgeClass = (status: SessionStatus) => {
-  switch (status) {
-    case SessionStatus.Pending:
-      return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
-    case SessionStatus.Confirmed:
-      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
-    case SessionStatus.Completed:
-      return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';
-    case SessionStatus.Cancelled:
-      return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
-    default:
-      return 'bg-slate-100 text-slate-700';
-  }
-};
-
-const getStatusAccentClass = (chatStatus: ChatStatus) => {
-  switch (chatStatus) {
-    case ChatStatus.Open:
-      return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
-    case ChatStatus.MemoOnly:
-      return 'bg-amber-50 text-amber-700 ring-amber-200';
-    case ChatStatus.Archived:
-      return 'bg-slate-100 text-slate-600 ring-slate-200';
-    default:
-      return 'bg-rose-50 text-rose-700 ring-rose-200';
-  }
-};
-
-const getListItemPhaseLabel = (
-  session: {
-    chatStatus: ChatStatus;
-    appointmentTime: string | null;
-  },
-  t: (key: string, fallback: string) => string
-) => {
-  if (session.chatStatus === ChatStatus.MemoOnly)
-    return t('Ophthalmologist.consultations.chat.phase.preVisit', 'Pre-visit');
-  if (session.chatStatus === ChatStatus.Archived)
-    return t('Ophthalmologist.consultations.chat.phase.completed', 'Completed');
-  if (session.chatStatus === ChatStatus.Locked)
-    return t('Ophthalmologist.consultations.chat.phase.locked', 'Locked');
-  if (!session.appointmentTime)
-    return t(
-      'Ophthalmologist.consultations.chat.phase.inProgress',
-      'In Progress'
-    );
-  const slotEnd = new Date(session.appointmentTime).getTime() + 60 * 60 * 1000;
-  return Date.now() >= slotEnd
-    ? t('Ophthalmologist.consultations.chat.phase.postVisit', 'Post-visit')
-    : t('Ophthalmologist.consultations.chat.phase.inProgress', 'In Progress');
 };
 
 const getPhase = (session: {
@@ -328,6 +596,133 @@ interface ConsultationsChatViewProps {
   sessionsLoading: boolean;
 }
 
+interface ShareCaseModalProps {
+  isOpen: boolean;
+  isSubmitting: boolean;
+  patientName: string;
+  content: string;
+  onChangeContent: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+  caseSnapshot: {
+    summary: string | null;
+    findings: string | null;
+    riskLevel: string | null;
+    confidenceScore: number | null;
+    originalImageUrls: string[];
+  };
+}
+
+function ShareCaseModal({
+  isOpen,
+  isSubmitting,
+  patientName,
+  content,
+  onChangeContent,
+  onClose,
+  onSubmit,
+  caseSnapshot,
+}: ShareCaseModalProps) {
+  if (!isOpen) return null;
+
+  const livePreview = [
+    'Bài đăng chia sẻ ca lâm sàng (ẩn danh)',
+    `Bệnh nhân: ${patientName}`,
+    `Mức độ nguy cơ: ${caseSnapshot.riskLevel ?? 'N/A'}`,
+    `Độ tin cậy AI: ${caseSnapshot.confidenceScore ?? '--'}%`,
+    '',
+    `Tóm tắt: ${caseSnapshot.summary ?? 'N/A'}`,
+    `Chẩn đoán cuối: ${caseSnapshot.findings ?? 'N/A'}`,
+    '',
+    `Bác sĩ nói rằng: ${content.trim() || '...'}`,
+  ].join('\n');
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Share Case To Network
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-[#0a1929]"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid gap-0 md:grid-cols-2">
+          <div className="border-b border-slate-200 p-5 dark:border-[#1e3a5f] md:border-b-0 md:border-r">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+              Nội dung từ bác sĩ
+            </p>
+            <textarea
+              value={content}
+              onChange={(event) => onChangeContent(event.target.value)}
+              placeholder="Nhập ghi chú chuyên môn để chia sẻ với mạng lưới bác sĩ..."
+              rows={7}
+              className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-100"
+            />
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+                Ảnh võng mạc ({caseSnapshot.originalImageUrls.length})
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {caseSnapshot.originalImageUrls
+                  .slice(0, 6)
+                  .map((url, index) => (
+                    <img
+                      key={`${url}-${index}`}
+                      src={url}
+                      alt={`retinal-${index + 1}`}
+                      className="h-20 w-full rounded-xl border border-slate-200 object-cover dark:border-[#1e3a5f]"
+                    />
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+              Xem trước bài đăng
+            </p>
+            <div className="mt-3 h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-200">
+              <pre className="whitespace-pre-wrap font-sans">{livePreview}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 dark:border-[#1e3a5f]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#1e3a5f] dark:text-slate-200 dark:hover:bg-[#0a1929]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting || !content.trim()}
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+            {isSubmitting ? 'Sharing case...' : 'Share Case To Network'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ConsultationsChatView({
   sessions,
   sessionsLoading,
@@ -341,17 +736,39 @@ export default function ConsultationsChatView({
     null
   );
   const [newMessage, setNewMessage] = useState('');
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pendingImageName, setPendingImageName] = useState<string | null>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchPending, startSearchTransition] = useTransition();
   const [isSessionOverviewOpen, setIsSessionOverviewOpen] = useState(false);
+  const [sessionUnreadMap, setSessionUnreadMap] = useState<
+    Record<string, boolean>
+  >({});
+  const [sessionPreviewMap, setSessionPreviewMap] = useState<
+    Record<string, string>
+  >({});
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
+  const [isPeerTyping, setIsPeerTyping] = useState(false);
+  const [isShareCaseModalOpen, setIsShareCaseModalOpen] = useState(false);
+  const [shareCaseContent, setShareCaseContent] = useState('');
+  const [sessionActionTarget, setSessionActionTarget] = useState<{
+    type: 'cancel' | 'complete';
+    sessionId: string;
+  } | null>(null);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const processedChatEventIdRef = useRef<string | null>(null);
+  const typingEmitTimerRef = useRef<number | null>(null);
+  const typingHideTimerRef = useRef<number | null>(null);
+  const activeTypingSessionIdRef = useRef<string | null>(null);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  const chatSessions = sessions.filter(
-    (s) => s.status !== SessionStatus.Cancelled
+  const chatSessions = useMemo(
+    () => sessions.filter((s) => s.status !== SessionStatus.Cancelled),
+    [sessions]
   );
 
   const filteredSessions = useMemo(() => {
@@ -377,14 +794,81 @@ export default function ConsultationsChatView({
     });
 
   const sendMessageMutation = useSendMessage();
+  const uploadChatImagesMutation = useUploadChatImages();
   const cancelSessionMutation = useCancelSession();
   const endSessionMutation = useEndSession();
+
+  const buildInternalCasePostContent = (
+    aiSummary: string,
+    finalDiagnosis: string,
+    doctorNote: string
+  ) => {
+    return [
+      '[CASE_RESULT]',
+      `AI Summary: ${aiSummary || 'N/A'}`,
+      `Final Diagnosis: ${finalDiagnosis || 'N/A'}`,
+      '[/CASE_RESULT]',
+      '',
+      '[DOCTOR_NOTE]',
+      `Bác sĩ nói rằng: ${doctorNote}`,
+      '[/DOCTOR_NOTE]',
+    ].join('\n');
+  };
+
+  const shareConsultationMutation = useMutation({
+    mutationFn: async ({
+      consultationSessionId,
+      aiSummary,
+      finalDiagnosis,
+      doctorNote,
+    }: {
+      consultationSessionId: string;
+      aiSummary: string;
+      finalDiagnosis: string;
+      doctorNote: string;
+    }) => {
+      const formData = new FormData();
+      formData.append('authorType', 'Ophthalmologist');
+      formData.append('category', 'CasePresentation');
+      formData.append('visibility', 'Public');
+      formData.append('allowComments', 'true');
+      formData.append('isInternalCase', 'true');
+      formData.append('consultationSessionId', consultationSessionId);
+      formData.append('isAnonymizationConfirmed', 'true');
+      formData.append(
+        'content',
+        buildInternalCasePostContent(aiSummary, finalDiagnosis, doctorNote)
+      );
+      return postsApi.createPost(formData);
+    },
+    onSuccess: () => {
+      toast.success('Case shared to professional network');
+      queryClient.invalidateQueries({ queryKey: ['network'] });
+      setShareCaseContent('');
+      setIsShareCaseModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(error, 'Failed to share consultation case')
+      );
+    },
+  });
 
   const phase = currentSession ? getPhase(currentSession) : 'PRE_VISIT';
   const phaseUIConfig = getPhaseUIConfig(t);
   const phaseUI = phaseUIConfig[phase];
 
   const messageList = selectedSession?.messages ?? [];
+  const parsedMessages = useMemo(
+    () =>
+      messageList.map((message) => ({
+        ...message,
+        scanMeta: extractScanAttachment(message.message),
+        imageMeta: extractImageAttachment(message.message),
+        body: stripChatAttachments(message.message),
+      })),
+    [messageList]
+  );
   const canSendMessage = currentSession?.chatStatus === ChatStatus.Open;
 
   const totalOpenSessions = chatSessions.filter(
@@ -394,6 +878,47 @@ export default function ConsultationsChatView({
     (session) =>
       session.appointmentTime && new Date(session.appointmentTime) > new Date()
   ).length;
+
+  const allSessionsSeries = useMemo(
+    () => buildRecentSeries(chatSessions, (session) => session.lastActivityAt),
+    [chatSessions]
+  );
+  const openSessionsSeries = useMemo(
+    () =>
+      buildRecentSeries(
+        chatSessions.filter(
+          (session) => session.chatStatus === ChatStatus.Open
+        ),
+        (session) => session.lastActivityAt
+      ),
+    [chatSessions]
+  );
+  const upcomingSessionsSeries = useMemo(
+    () =>
+      buildUpcomingSeries(chatSessions, (session) => session.appointmentTime),
+    [chatSessions]
+  );
+
+  const allSessionsTrend = useMemo(
+    () => getTrendDirection(allSessionsSeries),
+    [allSessionsSeries]
+  );
+  const openSessionsTrend = useMemo(
+    () => getTrendDirection(openSessionsSeries),
+    [openSessionsSeries]
+  );
+  const upcomingSessionsTrend = useMemo(
+    () => getTrendDirection(upcomingSessionsSeries),
+    [upcomingSessionsSeries]
+  );
+
+  const messageCharacterCount = newMessage.length;
+  const hasComposerPayload = !!newMessage.trim() || !!pendingImageUrl;
+  const isSendReady =
+    canSendMessage &&
+    hasComposerPayload &&
+    !sendMessageMutation.isPending &&
+    !uploadChatImagesMutation.isPending;
 
   useEffect(() => {
     if (
@@ -408,21 +933,160 @@ export default function ConsultationsChatView({
     }
   }, [chatSessions, selectedSessionId]);
 
+  useEffect(() => {
+    setSessionUnreadMap((previous) => {
+      const next: Record<string, boolean> = {};
+
+      chatSessions.forEach((session) => {
+        next[session.id] =
+          previous[session.id] ?? getSessionUnreadCount(session) > 0;
+      });
+
+      if (selectedSessionId) {
+        next[selectedSessionId] = false;
+      }
+
+      return next;
+    });
+  }, [chatSessions, selectedSessionId]);
+
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }
   }, []);
+
+  const clearTypingEmitTimer = useCallback(() => {
+    if (typingEmitTimerRef.current) {
+      window.clearTimeout(typingEmitTimerRef.current);
+      typingEmitTimerRef.current = null;
+    }
+  }, []);
+
+  const clearTypingHideTimer = useCallback(() => {
+    if (typingHideTimerRef.current) {
+      window.clearTimeout(typingHideTimerRef.current);
+      typingHideTimerRef.current = null;
+    }
+  }, []);
+
+  const stopOwnTyping = useCallback(() => {
+    clearTypingEmitTimer();
+
+    const activeSessionId = activeTypingSessionIdRef.current;
+    if (!activeSessionId) {
+      return;
+    }
+
+    activeTypingSessionIdRef.current = null;
+    void sendChatTypingIndicator({
+      sessionId: activeSessionId,
+      isTyping: false,
+    });
+  }, [clearTypingEmitTimer]);
+
+  const scheduleOwnTyping = useCallback(() => {
+    if (!selectedSessionId || !canSendMessage) {
+      return;
+    }
+
+    clearTypingEmitTimer();
+    typingEmitTimerRef.current = window.setTimeout(() => {
+      activeTypingSessionIdRef.current = selectedSessionId;
+      void sendChatTypingIndicator({
+        sessionId: selectedSessionId,
+        isTyping: true,
+      });
+    }, TYPING_EMIT_DEBOUNCE_MS);
+  }, [canSendMessage, clearTypingEmitTimer, selectedSessionId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [selectedSession, scrollToBottom]);
 
   useEffect(() => {
+    if (!canSendMessage) {
+      stopOwnTyping();
+    }
+  }, [canSendMessage, stopOwnTyping]);
+
+  useEffect(() => {
+    stopOwnTyping();
+    clearTypingHideTimer();
+    setIsPeerTyping(false);
+  }, [clearTypingHideTimer, selectedSessionId, stopOwnTyping]);
+
+  useEffect(() => {
+    return () => {
+      stopOwnTyping();
+      clearTypingHideTimer();
+    };
+  }, [clearTypingHideTimer, stopOwnTyping]);
+
+  useEffect(() => {
+    if (pendingImageUrl) {
+      scrollToBottom();
+    }
+  }, [pendingImageUrl, scrollToBottom]);
+
+  useEffect(() => {
+    if (!selectedSession?.id || selectedSession.messages.length === 0) {
+      return;
+    }
+
+    const latestMessage =
+      selectedSession.messages[selectedSession.messages.length - 1];
+    const stripped = stripChatAttachments(latestMessage.message);
+
+    const attachmentFallback = extractImageAttachment(latestMessage.message)
+      ? t(
+          'Ophthalmologist.consultations.chat.previewImageAttachment',
+          'Image attachment shared'
+        )
+      : extractScanAttachment(latestMessage.message)
+        ? t(
+            'Ophthalmologist.consultations.chat.previewScanAttachment',
+            'Retinal scan shared'
+          )
+        : t(
+            'Ophthalmologist.consultations.chat.previewNewMessage',
+            'New message'
+          );
+
+    setSessionPreviewMap((previous) => ({
+      ...previous,
+      [selectedSession.id]: stripped || attachmentFallback,
+    }));
+  }, [selectedSession, t]);
+
+  useEffect(() => {
+    setIsSessionOverviewOpen(false);
+  }, [selectedSessionId]);
+
+  useEffect(() => {
     if (!selectedSessionId) return;
-    const timerId = window.setInterval(
-      () => setCurrentTimeMs(Date.now()),
-      1000
-    );
-    return () => window.clearInterval(timerId);
+
+    let timerId: number;
+    const start = () => {
+      timerId = window.setInterval(() => setCurrentTimeMs(Date.now()), 1000);
+    };
+    const stop = () => window.clearInterval(timerId);
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    start();
+
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [selectedSessionId]);
 
   useEffect(() => {
@@ -434,6 +1098,23 @@ export default function ConsultationsChatView({
       // guard against duplicate delivery (reconnect) while still allowing bursts
       if (processedChatEventIdRef.current === chatEvent.messageId) return;
       processedChatEventIdRef.current = chatEvent.messageId;
+
+      if (chatEvent.sessionId === selectedSessionId) {
+        setSessionUnreadMap((previous) => ({
+          ...previous,
+          [chatEvent.sessionId]: false,
+        }));
+
+        if (chatEvent.senderProfileId !== currentDoctorId) {
+          clearTypingHideTimer();
+          setIsPeerTyping(false);
+        }
+      } else if (chatEvent.senderProfileId !== currentDoctorId) {
+        setSessionUnreadMap((previous) => ({
+          ...previous,
+          [chatEvent.sessionId]: true,
+        }));
+      }
 
       queryClient.invalidateQueries({
         queryKey: consultationKeys.detail(chatEvent.sessionId),
@@ -455,10 +1136,38 @@ export default function ConsultationsChatView({
       });
     };
 
+    const handleTypingIndicatorChanged = (event: Event) => {
+      const { detail } = event as CustomEvent<SignalRTypingIndicatorEvent>;
+      if (!detail?.sessionId || detail.sessionId !== selectedSessionId) {
+        return;
+      }
+
+      if (detail.senderProfileId === currentDoctorId) {
+        return;
+      }
+
+      if (detail.isTyping) {
+        setIsPeerTyping(true);
+        clearTypingHideTimer();
+        typingHideTimerRef.current = window.setTimeout(() => {
+          setIsPeerTyping(false);
+          typingHideTimerRef.current = null;
+        }, TYPING_AUTO_HIDE_MS);
+        return;
+      }
+
+      clearTypingHideTimer();
+      setIsPeerTyping(false);
+    };
+
     window.addEventListener(SIGNALR_CHAT_MESSAGE_EVENT, handleChatRealtime);
     window.addEventListener(
       SIGNALR_ROOM_STATE_CHANGED_EVENT,
       handleRoomStateChanged
+    );
+    window.addEventListener(
+      SIGNALR_TYPING_INDICATOR_EVENT,
+      handleTypingIndicatorChanged
     );
     return () => {
       window.removeEventListener(
@@ -469,8 +1178,12 @@ export default function ConsultationsChatView({
         SIGNALR_ROOM_STATE_CHANGED_EVENT,
         handleRoomStateChanged
       );
+      window.removeEventListener(
+        SIGNALR_TYPING_INDICATOR_EVENT,
+        handleTypingIndicatorChanged
+      );
     };
-  }, [queryClient]);
+  }, [clearTypingHideTimer, currentDoctorId, queryClient, selectedSessionId]);
 
   const canCancelCurrentSession = useMemo(() => {
     if (!currentSession || currentSession.status !== SessionStatus.Confirmed)
@@ -497,14 +1210,34 @@ export default function ConsultationsChatView({
     if (!confirmed) {
       return;
     }
-    cancelSessionMutation.mutate({
-      sessionId,
-      cancelledByUserId: currentDoctorId,
-      reason: t(
-        'Ophthalmologist.consultations.chat.cancelReason',
-        'Cancelled by doctor'
-      ),
-    });
+
+    if (sessionActionTarget.type === 'cancel') {
+      cancelSessionMutation.mutate(
+        {
+          sessionId: sessionActionTarget.sessionId,
+          cancelledByUserId: currentDoctorId,
+          reason: t(
+            'Ophthalmologist.consultations.chat.cancelReason',
+            'Cancelled by doctor'
+          ),
+        },
+        {
+          onSettled: () => setSessionActionTarget(null),
+        }
+      );
+
+      return;
+    }
+
+    endSessionMutation.mutate(
+      {
+        sessionId: sessionActionTarget.sessionId,
+        doctorId: currentDoctorId,
+      },
+      {
+        onSettled: () => setSessionActionTarget(null),
+      }
+    );
   };
 
   const handleEndSession = async (sessionId: string) => {
@@ -522,21 +1255,40 @@ export default function ConsultationsChatView({
     if (!confirmed) {
       return;
     }
-    endSessionMutation.mutate({
-      sessionId,
-      doctorId: currentDoctorId,
-    });
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedSessionId) return;
+    if ((!newMessage.trim() && !pendingImageUrl) || !selectedSessionId) return;
 
+    stopOwnTyping();
+
+    const messageParts: string[] = [];
+    const trimmedMessage = newMessage.trim();
+
+    if (trimmedMessage) {
+      messageParts.push(trimmedMessage);
+    }
+
+    if (pendingImageUrl) {
+      messageParts.push(
+        pendingImageName
+          ? `[Image Attached: ${pendingImageUrl} | Name: ${pendingImageName}]`
+          : `[Image Attached: ${pendingImageUrl}]`
+      );
+    }
+
+    const messageContent = messageParts.join('\n\n');
     const draftText = newMessage;
+    const draftImageUrl = pendingImageUrl;
+    const draftImageName = pendingImageName;
     // Optimistic clear: prevent accidental "abc + xyz" when sending rapidly.
     setNewMessage('');
+    setPendingImageUrl(null);
+    setPendingImageName(null);
+    setIsEmojiPickerOpen(false);
 
     sendMessageMutation.mutate(
-      { sessionId: selectedSessionId, message: draftText },
+      { sessionId: selectedSessionId, message: messageContent },
       {
         onError: (error) => {
           const raw = extractApiErrorMessage(
@@ -554,9 +1306,15 @@ export default function ConsultationsChatView({
           }
           // Restore the draft so the user doesn't lose content on failure.
           setNewMessage(draftText);
+          setPendingImageUrl(draftImageUrl);
+          setPendingImageName(draftImageName);
         },
       }
     );
+  };
+
+  const handleComposerBlur = () => {
+    stopOwnTyping();
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -564,6 +1322,27 @@ export default function ConsultationsChatView({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const getComposerPlaceholder = () => {
+    if (phase === 'PRE_VISIT') {
+      return t(
+        'Ophthalmologist.consultations.chat.preVisitPlaceholder',
+        'Review patient notes and leave guidance before session opens...'
+      );
+    }
+
+    if (phase === 'IN_PROGRESS') {
+      return t(
+        'Ophthalmologist.consultations.chat.typeMessage',
+        'Type a message...'
+      );
+    }
+
+    return t(
+      'Ophthalmologist.consultations.chat.completedPlaceholder',
+      'Consultation completed. Messages are read-only.'
+    );
   };
 
   const patientName =
@@ -579,6 +1358,9 @@ export default function ConsultationsChatView({
     currentTimeMs,
     t
   );
+  const isMeetingClosedBySessionState = phase === 'COMPLETED';
+  const canJoinMeeting =
+    meetingAccessState.canJoin && !isMeetingClosedBySessionState;
 
   if (sessionsLoading) {
     return (
@@ -682,15 +1464,20 @@ export default function ConsultationsChatView({
             </div>
           ) : (
             filteredSessions.map((session) => {
-              const itemPhaseLabel = getListItemPhaseLabel(session, t);
               const displayPatientName =
                 session.patientName ??
                 t('Ophthalmologist.consultations.chat.patient', 'Patient');
-              const displayType = SESSION_TYPE_LABELS[session.type];
               const appointmentTime = formatAppointmentSlotOrPending(
                 session.appointmentTime,
                 t
               );
+              const previewText =
+                sessionPreviewMap[session.id] ??
+                getSessionPreviewText(session, t);
+              const isUnread =
+                (sessionUnreadMap[session.id] ?? false) ||
+                getSessionUnreadCount(session) > 0;
+              const statusDotClass = getChatStatusDotClass(session.chatStatus);
 
               return (
                 <button
@@ -709,56 +1496,50 @@ export default function ConsultationsChatView({
                         avatarUrl={session.patientAvatarUrl}
                       />
                       <div
-                        className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(session.type)} p-1 text-white shadow-sm`}
+                        className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-[#0a1f44] ${statusDotClass}`}
+                        title={session.chatStatusName}
                       >
-                        {session.type ===
-                        ConsultationSessionType.Verification ? (
-                          <Eye className="h-3 w-3" />
-                        ) : (
-                          <Video className="h-3 w-3" />
-                        )}
+                        <span className="sr-only">
+                          {session.chatStatusName}
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <div>
-                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                            {displayPatientName}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
-                            {displayType}
-                          </p>
-                        </div>
-                        <div className="text-right text-[11px] text-slate-400 dark:text-gray-500">
-                          <p className="mt-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                          {displayPatientName}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {isUnread && (
+                            <span
+                              className="h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
+                              title={t(
+                                'Ophthalmologist.consultations.chat.unreadActivity',
+                                'Unread activity'
+                              )}
+                            />
+                          )}
+                          <p className="text-[11px] text-slate-400 dark:text-gray-500">
                             {formatRelativeTime(session.lastActivityAt)}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClass(session.status)}`}
-                        >
-                          {SESSION_STATUS_LABELS[session.status]}
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${getStatusAccentClass(session.chatStatus)}`}
-                        >
-                          {itemPhaseLabel}
-                        </span>
-                      </div>
+                      <p className="mt-1 overflow-hidden text-sm leading-5 text-slate-500 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] dark:text-gray-300">
+                        {previewText}
+                      </p>
 
-                      <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-[#0a1929]/40 dark:text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{appointmentTime}</span>
-                        </div>
+                      <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-gray-400">
+                        <span>{SESSION_STATUS_LABELS[session.status]}</span>
+                        <span className="text-slate-300 dark:text-gray-600">
+                          •
+                        </span>
+                        <span className="truncate" title={appointmentTime}>
+                          {appointmentTime}
+                        </span>
                       </div>
                     </div>
-
-                    <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-slate-300 dark:text-gray-600" />
                   </div>
                 </button>
               );
@@ -771,12 +1552,12 @@ export default function ConsultationsChatView({
         <main
           className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_55%,_#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.10),_transparent_28%),linear-gradient(180deg,_#0a1f44_0%,_#0a1929_55%,_#0a1f44_100%)]`}
         >
-          <div className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-3">
+          <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/85">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <button
                   onClick={() => setSelectedSessionId(null)}
-                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm md:hidden dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
@@ -785,23 +1566,23 @@ export default function ConsultationsChatView({
                   <AvatarBadge
                     name={patientName}
                     avatarUrl={patientAvatarUrl}
-                    size="lg"
+                    size="md"
                   />
                   <div
-                    className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} p-1.5 text-white shadow-sm`}
+                    className={`absolute -bottom-1 -right-1 rounded-full bg-gradient-to-br ${getSessionTypeColor(currentSession.type)} p-1 text-white shadow-sm`}
                   >
                     {currentSession.type ===
                     ConsultationSessionType.Verification ? (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5" />
                     ) : (
-                      <Video className="h-4 w-4" />
+                      <Video className="h-3.5 w-3.5" />
                     )}
                   </div>
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate text-xl font-semibold text-slate-900 dark:text-white">
+                    <h2 className="truncate text-base font-semibold text-slate-900 md:text-lg dark:text-white">
                       {patientName}
                     </h2>
                     <span
@@ -814,40 +1595,38 @@ export default function ConsultationsChatView({
                     </span>
                   </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-gray-300">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-gray-300">
                     <span>{SESSION_TYPE_LABELS[currentSession.type]}</span>
-                    <span className="text-slate-300 dark:text-gray-600">/</span>
+                    <span className="text-slate-300 dark:text-gray-600">•</span>
                     <span>{SESSION_STATUS_LABELS[currentSession.status]}</span>
-                    <span className="text-slate-300 dark:text-gray-600">/</span>
-                    <span>
+                    <span className="text-slate-300 dark:text-gray-600">•</span>
+                    <span className="truncate">
                       {formatAppointmentSlotOrPending(
                         currentSession.appointmentTime,
                         t
                       )}
                     </span>
                   </div>
-
-                  <p className="mt-3 max-w-2xl text-sm text-slate-500 dark:text-gray-400">
-                    {phaseUI.description}
-                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-start gap-2 sm:items-end">
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="flex flex-col items-start gap-1 sm:items-end">
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {canCancelCurrentSession && (
                       <button
                         onClick={() => handleCancelSession(currentSession.id)}
                         disabled={cancelSessionMutation.isPending}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-800/40 dark:bg-rose-950/20 dark:text-rose-200"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 disabled:opacity-60 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm dark:border-rose-800/40 dark:bg-rose-950/20 dark:text-rose-200"
                       >
                         {cancelSessionMutation.isPending ? (
-                          <Spinner size={16} />
+                          <Spinner size={14} />
                         ) : (
                           <XCircle className="h-4 w-4" />
                         )}
-                        {t('Ophthalmologist.common.cancel', 'Cancel')}
+                        <span className="hidden sm:inline">
+                          {t('Ophthalmologist.common.cancel', 'Cancel')}
+                        </span>
                       </button>
                     )}
 
@@ -855,41 +1634,46 @@ export default function ConsultationsChatView({
                       <button
                         onClick={() => handleEndSession(currentSession.id)}
                         disabled={endSessionMutation.isPending}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                       >
                         {endSessionMutation.isPending ? (
-                          <Spinner size={16} />
+                          <Spinner size={14} />
                         ) : (
                           <CheckCircle2 className="h-4 w-4" />
                         )}
-                        {t(
-                          'Ophthalmologist.consultations.chat.complete',
-                          'Complete'
-                        )}
+                        <span className="hidden sm:inline">
+                          {t(
+                            'Ophthalmologist.consultations.chat.complete',
+                            'Complete'
+                          )}
+                        </span>
                       </button>
                     )}
 
                     {currentSession.meetingLink ? (
-                      meetingAccessState.canJoin ? (
+                      canJoinMeeting ? (
                         <a
                           href={currentSession.meetingLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
                         >
                           <Video className="h-4 w-4" />
-                          {t(
-                            'Ophthalmologist.consultations.chat.joinMeeting',
-                            'Join Meeting'
-                          )}
+                          <span className="hidden sm:inline">
+                            {t(
+                              'Ophthalmologist.consultations.chat.joinMeeting',
+                              'Join Meeting'
+                            )}
+                          </span>
+                          <span className="sm:hidden">Join</span>
                         </a>
                       ) : (
                         <button
                           disabled
-                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
                         >
                           <Video className="h-4 w-4" />
-                          {phase === 'COMPLETED'
+                          {isMeetingClosedBySessionState
                             ? t(
                                 'Ophthalmologist.consultations.chat.meetingEnded',
                                 'Meeting Ended'
@@ -900,7 +1684,7 @@ export default function ConsultationsChatView({
                     ) : (
                       <button
                         disabled
-                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm"
                       >
                         <Video className="h-4 w-4" />
                         {t(
@@ -912,8 +1696,13 @@ export default function ConsultationsChatView({
                   </div>
 
                   {currentSession.meetingLink && (
-                    <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                      {meetingAccessState.helperText}
+                    <p className="hidden text-xs font-medium text-slate-500 md:block dark:text-gray-400">
+                      {isMeetingClosedBySessionState
+                        ? t(
+                            'Ophthalmologist.consultations.chat.meetingWindowClosed',
+                            'Appointment has passed the meeting window'
+                          )
+                        : meetingAccessState.helperText}
                     </p>
                   )}
                 </div>
@@ -933,7 +1722,7 @@ export default function ConsultationsChatView({
                           'Show session overview'
                         )
                   }
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                 >
                   {isSessionOverviewOpen ? (
                     <X className="h-4 w-4" />
@@ -983,11 +1772,14 @@ export default function ConsultationsChatView({
                       }
                       return (
                         <p className="mt-2 font-medium text-amber-700 dark:text-amber-200">
-                          {t(
-                            'Ophthalmologist.consultations.chat.opensIn',
-                            'Chat opens in'
-                          )}{' '}
-                          {formatCountdown(Math.ceil(msUntilStart / 1000))}
+                          <span className="inline-flex animate-pulse items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs ring-1 ring-amber-200 dark:bg-amber-900/30 dark:ring-amber-700/40">
+                            <span className="h-2 w-2 rounded-full bg-amber-500" />
+                            {t(
+                              'Ophthalmologist.consultations.chat.opensIn',
+                              'Chat opens in'
+                            )}{' '}
+                            {formatCountdown(Math.ceil(msUntilStart / 1000))}
+                          </span>
                         </p>
                       );
                     })()}
@@ -996,23 +1788,58 @@ export default function ConsultationsChatView({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto px-4 py-6 md:px-6"
+          >
             {sessionLoading ? (
               <div className="flex h-full items-center justify-center">
                 <Spinner size={32} />
               </div>
-            ) : messageList.length > 0 ? (
+            ) : parsedMessages.length > 0 ? (
               <div className="space-y-4">
-                {messageList.map((message, index) => {
+                {parsedMessages.map((message, index) => {
                   const isDoctorMessage =
                     message.senderUserId === currentDoctorId;
-                  const attachmentMeta = extractScanAttachment(message.message);
-                  const messageBody = stripScanAttachment(message.message);
-                  const previousMessage = messageList[index - 1];
+                  const scanAttachmentMeta = message.scanMeta;
+                  const imageAttachmentMeta = message.imageMeta;
+                  const messageBody = message.body;
+                  const previousMessage = parsedMessages[index - 1];
+                  const nextMessage = parsedMessages[index + 1];
+                  const isPreviousSameSender =
+                    previousMessage?.senderUserId === message.senderUserId;
+                  const isNextSameSender =
+                    nextMessage?.senderUserId === message.senderUserId;
+                  const showAvatar = !isPreviousSameSender || !isNextSameSender;
                   const showDateDivider =
                     !previousMessage ||
                     formatFullDate(previousMessage.sentAt) !==
                       formatFullDate(message.sentAt);
+
+                  const bubbleMetaTitle = isDoctorMessage
+                    ? phase === 'PRE_VISIT'
+                      ? t(
+                          'Ophthalmologist.consultations.chat.savedAsDoctorNote',
+                          'Saved as doctor note'
+                        )
+                      : t(
+                          'Ophthalmologist.consultations.chat.deliveredToPatient',
+                          'Delivered to patient'
+                        )
+                    : phase === 'PRE_VISIT'
+                      ? t(
+                          'Ophthalmologist.consultations.chat.patientPreVisitNote',
+                          'Patient pre-visit note'
+                        )
+                      : t(
+                          'Ophthalmologist.consultations.chat.patientMessage',
+                          'Patient message'
+                        );
+                  const BubbleMetaIcon = isDoctorMessage
+                    ? phase === 'PRE_VISIT'
+                      ? FileText
+                      : CheckCheck
+                    : UserRound;
 
                   return (
                     <Fragment key={message.id}>
@@ -1025,22 +1852,21 @@ export default function ConsultationsChatView({
                       )}
 
                       <div
-                        className={`flex items-end gap-3 ${
-                          isDoctorMessage ? 'justify-end' : 'justify-start'
-                        }`}
+                        className={`flex items-end gap-3 ${isDoctorMessage ? 'justify-end' : 'justify-start'} ${isPreviousSameSender ? 'mt-1' : ''}`}
                       >
-                        {!isDoctorMessage && (
-                          <AvatarBadge
-                            name={patientName}
-                            avatarUrl={patientAvatarUrl}
-                            size="sm"
-                          />
-                        )}
+                        {!isDoctorMessage &&
+                          (showAvatar ? (
+                            <AvatarBadge
+                              name={patientName}
+                              avatarUrl={patientAvatarUrl}
+                              size="sm"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 shrink-0" aria-hidden />
+                          ))}
 
                         <div
-                          className={`max-w-[78%] ${
-                            isDoctorMessage ? 'items-end' : 'items-start'
-                          } flex flex-col gap-2`}
+                          className={`max-w-[78%] ${isDoctorMessage ? 'items-end' : 'items-start'} flex flex-col gap-2`}
                         >
                           <div
                             className={`rounded-[24px] px-4 py-3 shadow-sm ${
@@ -1049,40 +1875,42 @@ export default function ConsultationsChatView({
                                 : 'rounded-bl-md border border-slate-200 bg-white text-slate-900 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-white'
                             }`}
                           >
-                            <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
-                              <span
-                                className={
-                                  isDoctorMessage
-                                    ? 'text-white/80'
-                                    : 'text-slate-500 dark:text-gray-300'
-                                }
-                              >
-                                {isDoctorMessage
-                                  ? t(
-                                      'Ophthalmologist.consultations.chat.you',
-                                      'You'
-                                    )
-                                  : patientName}
-                              </span>
-                              <span
-                                className={
-                                  isDoctorMessage
-                                    ? 'text-white/50'
-                                    : 'text-slate-300 dark:text-gray-600'
-                                }
-                              >
-                                /
-                              </span>
-                              <span
-                                className={
-                                  isDoctorMessage
-                                    ? 'text-white/80'
-                                    : 'text-slate-500 dark:text-gray-300'
-                                }
-                              >
-                                {formatMessageTime(message.sentAt)}
-                              </span>
-                            </div>
+                            {!isPreviousSameSender && (
+                              <div className="mb-2 flex items-center gap-2 text-[11px] font-medium">
+                                <span
+                                  className={
+                                    isDoctorMessage
+                                      ? 'text-white/80'
+                                      : 'text-slate-500 dark:text-gray-300'
+                                  }
+                                >
+                                  {isDoctorMessage
+                                    ? t(
+                                        'Ophthalmologist.consultations.chat.you',
+                                        'You'
+                                      )
+                                    : patientName}
+                                </span>
+                                <span
+                                  className={
+                                    isDoctorMessage
+                                      ? 'text-white/50'
+                                      : 'text-slate-300 dark:text-gray-600'
+                                  }
+                                >
+                                  /
+                                </span>
+                                <span
+                                  className={
+                                    isDoctorMessage
+                                      ? 'text-white/80'
+                                      : 'text-slate-500 dark:text-gray-300'
+                                  }
+                                >
+                                  {formatMessageTime(message.sentAt)}
+                                </span>
+                              </div>
+                            )}
 
                             {messageBody && (
                               <p className="whitespace-pre-wrap text-sm leading-6">
@@ -1090,7 +1918,45 @@ export default function ConsultationsChatView({
                               </p>
                             )}
 
-                            {attachmentMeta && (
+                            {imageAttachmentMeta && (
+                              <div
+                                className={`mt-3 rounded-2xl border p-2 ${
+                                  isDoctorMessage
+                                    ? 'border-white/20 bg-white/10'
+                                    : 'border-cyan-100 bg-cyan-50 dark:border-cyan-800/40 dark:bg-cyan-950/20'
+                                }`}
+                              >
+                                <a
+                                  href={imageAttachmentMeta.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block"
+                                >
+                                  <img
+                                    src={imageAttachmentMeta.url}
+                                    alt={
+                                      imageAttachmentMeta.fileName ??
+                                      'Shared image'
+                                    }
+                                    className="max-h-64 w-full rounded-xl object-cover"
+                                    loading="lazy"
+                                  />
+                                </a>
+                                {imageAttachmentMeta.fileName && (
+                                  <p
+                                    className={`mt-2 truncate text-xs ${
+                                      isDoctorMessage
+                                        ? 'text-white/80'
+                                        : 'text-cyan-700 dark:text-cyan-200'
+                                    }`}
+                                  >
+                                    {imageAttachmentMeta.fileName}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {scanAttachmentMeta && (
                               <div
                                 className={`mt-3 rounded-2xl border px-3 py-3 ${
                                   isDoctorMessage
@@ -1110,7 +1976,7 @@ export default function ConsultationsChatView({
                                   </div>
                                   <div>
                                     <p className="text-sm font-semibold">
-                                      {attachmentMeta.title}
+                                      {scanAttachmentMeta.title}
                                     </p>
                                     <p
                                       className={`mt-1 text-xs ${
@@ -1119,7 +1985,7 @@ export default function ConsultationsChatView({
                                           : 'text-cyan-700 dark:text-cyan-200'
                                       }`}
                                     >
-                                      {attachmentMeta.riskLabel}
+                                      {scanAttachmentMeta.riskLabel}
                                     </p>
                                   </div>
                                 </div>
@@ -1128,57 +1994,51 @@ export default function ConsultationsChatView({
                           </div>
 
                           <div
-                            className={`flex items-center gap-1 px-1 text-[11px] ${
-                              isDoctorMessage
-                                ? 'text-slate-400'
-                                : 'text-slate-500 dark:text-gray-400'
-                            }`}
+                            className={`flex items-center gap-1 px-1 text-[11px] ${isDoctorMessage ? 'text-slate-400 dark:text-gray-500' : 'text-slate-500 dark:text-gray-400'}`}
                           >
-                            {isDoctorMessage && phase !== 'PRE_VISIT' && (
-                              <CheckCheck className="h-3.5 w-3.5 text-cyan-500" />
-                            )}
-                            <span>
-                              {isDoctorMessage
-                                ? phase === 'PRE_VISIT'
-                                  ? t(
-                                      'Ophthalmologist.consultations.chat.savedAsDoctorNote',
-                                      'Saved as doctor note'
-                                    )
-                                  : t(
-                                      'Ophthalmologist.consultations.chat.deliveredToPatient',
-                                      'Delivered to patient'
-                                    )
-                                : phase === 'PRE_VISIT'
-                                  ? t(
-                                      'Ophthalmologist.consultations.chat.patientPreVisitNote',
-                                      'Patient pre-visit note'
-                                    )
-                                  : t(
-                                      'Ophthalmologist.consultations.chat.patientMessage',
-                                      'Patient message'
-                                    )}
+                            <span
+                              className="group relative inline-flex items-center"
+                              title={bubbleMetaTitle}
+                              aria-label={bubbleMetaTitle}
+                              tabIndex={0}
+                            >
+                              <BubbleMetaIcon
+                                className={`h-3.5 w-3.5 ${
+                                  isDoctorMessage
+                                    ? 'text-cyan-500'
+                                    : 'text-slate-400 dark:text-gray-500'
+                                }`}
+                                aria-hidden="true"
+                              />
+                              <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-100 dark:text-slate-900">
+                                {bubbleMetaTitle}
+                              </span>
                             </span>
                           </div>
                         </div>
 
-                        {isDoctorMessage && (
-                          <AvatarBadge
-                            name={doctorName}
-                            avatarUrl={user?.avatarUrl}
-                            size="sm"
-                          />
-                        )}
+                        {isDoctorMessage &&
+                          (showAvatar ? (
+                            <AvatarBadge
+                              name={doctorName}
+                              avatarUrl={user?.avatarUrl}
+                              size="sm"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 shrink-0" aria-hidden />
+                          ))}
                       </div>
                     </Fragment>
                   );
                 })}
+
                 <div ref={messagesEndRef} />
               </div>
             ) : (
               <div className="flex h-full items-center justify-center">
                 <div className="max-w-md rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-8 py-10 text-center shadow-sm dark:bg-[#0a1f44]/60 dark:border-[#1e3a5f]">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-200">
-                    <phaseUI.icon className="h-7 w-7" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border-2 border-dashed border-cyan-300 bg-cyan-50 text-cyan-600 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-200">
+                    <MessageCircle className="h-7 w-7" />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                     {phase === 'PRE_VISIT'
@@ -1218,57 +2078,170 @@ export default function ConsultationsChatView({
           </div>
 
           <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 backdrop-blur md:px-6 dark:border-[#1e3a5f] dark:bg-[#0a1f44]/70">
+            {isPeerTyping && (
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50/90 px-3 py-1.5 text-xs font-medium text-cyan-700 dark:border-cyan-800/40 dark:bg-cyan-950/30 dark:text-cyan-200">
+                <div className="flex items-center gap-1" aria-hidden="true">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500 [animation-delay:-0.2s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500 [animation-delay:-0.1s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500" />
+                </div>
+                <span>
+                  {t(
+                    'Ophthalmologist.consultations.chat.patientTyping',
+                    'Patient is typing...'
+                  )}
+                </span>
+              </div>
+            )}
+
+            {pendingImageUrl && (
+              <div className="mb-4 flex items-center gap-3 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-950/20">
+                <img
+                  src={pendingImageUrl}
+                  alt={
+                    pendingImageName ??
+                    t(
+                      'Ophthalmologist.consultations.chat.pendingImage',
+                      'Pending image'
+                    )
+                  }
+                  className="h-14 w-14 rounded-2xl object-cover ring-1 ring-emerald-200 dark:ring-emerald-800/50"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                    {t(
+                      'Ophthalmologist.consultations.chat.readyToShareImage',
+                      'Ready to share image'
+                    )}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-emerald-700 dark:text-emerald-200">
+                    {pendingImageName ?? pendingImageUrl}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingImageUrl(null);
+                    setPendingImageName(null);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-emerald-600 ring-1 ring-emerald-200 transition hover:bg-emerald-100 dark:bg-[#0a1f44] dark:text-emerald-300 dark:ring-emerald-800/50 dark:hover:bg-emerald-950/40"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             {canSendMessage ? (
               <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-3 shadow-sm dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-                <div className="flex items-end gap-3">
-                  <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                    <Paperclip className="h-4 w-4" />
-                  </button>
-                  <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:bg-[#0a1f44] dark:text-gray-300 dark:ring-[#1e3a5f]">
-                    <ImageIcon className="h-4 w-4" />
-                  </button>
-                  <div className="min-w-0 flex-1 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-inner shadow-slate-100/70 dark:bg-[#0a1f44] dark:border-[#1e3a5f]">
-                    <textarea
-                      value={newMessage}
-                      onChange={(event) => setNewMessage(event.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder={t(
-                        'Ophthalmologist.consultations.chat.typeMessage',
-                        'Type a message...'
-                      )}
-                      className="min-h-[52px] w-full resize-none bg-transparent text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
-                      rows={2}
-                    />
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                <div className="rounded-[24px] border border-slate-200 bg-white shadow-inner shadow-slate-100/70 dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+                  <textarea
+                    value={newMessage}
+                    onChange={handleMessageChange}
+                    onBlur={handleComposerBlur}
+                    onKeyDown={handleKeyPress}
+                    placeholder={getComposerPlaceholder()}
+                    className="min-h-[72px] w-full resize-none bg-transparent px-4 pt-3 text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder-gray-500"
+                    rows={2}
+                  />
+
+                  <div className="border-t border-slate-200 px-3 py-2 dark:border-[#1e3a5f]">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {t(
-                          'Ophthalmologist.consultations.chat.encryptionNotice',
-                          'Messages are encrypted and visible only to your care team.'
-                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIsEmojiPickerOpen((previous) => !previous)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 dark:text-gray-300 dark:ring-[#1e3a5f]"
+                        >
+                          <Smile className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleImageButtonClick}
+                          disabled={uploadChatImagesMutation.isPending}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 ring-1 ring-slate-200 transition hover:text-cyan-600 disabled:cursor-not-allowed disabled:text-slate-300 dark:text-gray-300 dark:ring-[#1e3a5f]"
+                        >
+                          {uploadChatImagesMutation.isPending ? (
+                            <Spinner size={14} className="text-cyan-500" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4" />
+                          )}
+                        </button>
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageSelected}
+                        />
+
+                        <span className="hidden items-center gap-1.5 text-xs text-slate-400 sm:inline-flex dark:text-gray-500">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          {t(
+                            'Ophthalmologist.consultations.chat.encryptionNoticeShort',
+                            'Encrypted'
+                          )}
+                        </span>
                       </div>
-                      <div>
-                        {newMessage.trim().length}{' '}
-                        {t(
-                          'Ophthalmologist.consultations.chat.characters',
-                          'characters'
+
+                      <div className="flex items-center gap-2">
+                        {pendingImageUrl && (
+                          <span className="hidden rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200 sm:inline-block dark:bg-emerald-900/25 dark:text-emerald-200 dark:ring-emerald-800/50">
+                            {t(
+                              'Ophthalmologist.consultations.chat.imageAttached',
+                              'image attached'
+                            )}
+                          </span>
                         )}
+
+                        <CharacterProgressArc
+                          value={messageCharacterCount}
+                          limit={MESSAGE_CHARACTER_LIMIT}
+                        />
+
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={!isSendReady}
+                          className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300 ${
+                            isSendReady
+                              ? 'scale-105 animate-pulse shadow-[0_0_0_4px_rgba(6,182,212,0.16)] hover:scale-110 hover:from-emerald-600 hover:to-cyan-600'
+                              : ''
+                          }`}
+                        >
+                          {sendMessageMutation.isPending ? (
+                            <Spinner size={18} className="text-white" />
+                          ) : (
+                            <Send className="h-5 w-5" />
+                          )}
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={
-                      !newMessage.trim() || sendMessageMutation.isPending
-                    }
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm transition hover:from-emerald-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
-                  >
-                    {sendMessageMutation.isPending ? (
-                      <Spinner size={18} className="text-white" />
-                    ) : (
-                      <Send className="h-5 w-5" />
+
+                    {isEmojiPickerOpen && (
+                      <div className="mt-2 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-[#1e3a5f] dark:bg-[#0a1929]/50">
+                        {QUICK_EMOJIS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => appendEmoji(emoji)}
+                            className="rounded-xl bg-white px-2.5 py-1.5 text-base shadow-sm ring-1 ring-slate-200 transition hover:scale-105 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                  </button>
+
+                    {messageCharacterCount >= MESSAGE_CHARACTER_LIMIT && (
+                      <p className="mt-2 text-xs font-medium text-rose-500">
+                        {t(
+                          'Ophthalmologist.consultations.chat.characterLimitReached',
+                          'Character limit reached.'
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -1312,34 +2285,46 @@ export default function ConsultationsChatView({
       )}
 
       {currentSession && isSessionOverviewOpen && (
-        <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
-          <div className="border-b border-slate-200/80 px-6 py-6 dark:border-[#1e3a5f]">
-            <div className="flex items-center gap-4">
-              <AvatarBadge
-                name={patientName}
-                avatarUrl={patientAvatarUrl}
-                size="lg"
-              />
-              <div>
-                <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                  {patientName}
-                </p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
-                  {SESSION_TYPE_LABELS[currentSession.type]}
-                </p>
-              </div>
-            </div>
-          </div>
+        <>
+          <button
+            type="button"
+            aria-label={t(
+              'Ophthalmologist.consultations.chat.closeSessionOverview',
+              'Close session overview'
+            )}
+            onClick={() => setIsSessionOverviewOpen(false)}
+            className="fixed inset-0 z-30 bg-slate-900/35 backdrop-blur-[1px] xl:hidden"
+          />
 
-          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-            <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                {t(
-                  'Ophthalmologist.consultations.chat.sessionOverview',
-                  'Session Overview'
-                )}
-              </p>
-              <div className="mt-4 space-y-4">
+          <section className="fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-y-auto rounded-t-[28px] border border-slate-200 bg-white p-5 shadow-2xl xl:hidden dark:border-[#1e3a5f] dark:bg-[#0a1f44]">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AvatarBadge
+                  name={patientName}
+                  avatarUrl={patientAvatarUrl}
+                  size="md"
+                />
+                <div>
+                  <p className="text-base font-semibold text-slate-900 dark:text-white">
+                    {patientName}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    {SESSION_TYPE_LABELS[currentSession.type]}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSessionOverviewOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 dark:border-[#1e3a5f] dark:text-gray-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 dark:bg-[#0a1929]/50 dark:ring-[#1e3a5f]">
                 <div className="flex items-start gap-3">
                   <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
@@ -1357,7 +2342,8 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+
+                <div className="mt-3 flex items-start gap-3">
                   <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
@@ -1371,7 +2357,8 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+
+                <div className="mt-3 flex items-start gap-3">
                   <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
@@ -1389,7 +2376,8 @@ export default function ConsultationsChatView({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+
+                <div className="mt-3 flex items-start gap-3">
                   <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
                   <div>
                     <p className="text-xs text-slate-500 dark:text-gray-400">
@@ -1404,100 +2392,334 @@ export default function ConsultationsChatView({
                   </div>
                 </div>
               </div>
-            </div>
 
-            {selectedSession?.caseSnapshot && (
-              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
-                  AI Case Snapshot
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
+                  Share Case To Network
                 </p>
                 <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
-                  Screening #
-                  {selectedSession.caseSnapshot.screeningId.slice(0, 8)}
+                  Chia sẻ ca đã ẩn danh lên Aura Network với bố cục bài đăng y
+                  khoa.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setIsShareCaseModalOpen(true)}
+                  disabled={
+                    !currentSession?.id ||
+                    !selectedSession?.caseSnapshot ||
+                    shareConsultationMutation.isPending
+                  }
+                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {shareConsultationMutation.isPending
+                    ? 'Sharing case...'
+                    : 'Share Case To Network'}
+                </button>
+              </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
-                    {selectedSession.caseSnapshot.originalImageUrls[0] ? (
-                      <img
-                        src={selectedSession.caseSnapshot.originalImageUrls[0]}
-                        alt="Original retinal image"
-                        className="h-24 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
-                        No original image
-                      </div>
-                    )}
-                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
-                      Original
-                    </p>
-                  </div>
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
-                    <CaseSnapshotAiThumbnail
-                      snapshot={selectedSession.caseSnapshot}
-                    />
-                    <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
-                      AI Annotated
-                    </p>
-                  </div>
+              <div className="rounded-2xl bg-slate-900 p-4 text-white dark:bg-[#030712]">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
+                  <Stethoscope className="h-4 w-4" />
+                  {t(
+                    'Ophthalmologist.consultations.chat.conversationGuidance',
+                    'Conversation Guidance'
+                  )}
                 </div>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
+                  {t(
+                    'Ophthalmologist.consultations.chat.guidanceDescription',
+                    'Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier to triage quickly.'
+                  )}
+                </p>
+              </div>
+            </div>
+          </section>
 
-                <ScreeningReviewLink
-                  screeningId={selectedSession.caseSnapshot.screeningId}
+          <aside className="hidden w-[320px] shrink-0 border-l border-slate-200/80 bg-slate-50/70 xl:flex xl:flex-col dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+            <div className="border-b border-slate-200/80 px-6 py-6 dark:border-[#1e3a5f]">
+              <div className="flex items-center gap-4">
+                <AvatarBadge
+                  name={patientName}
+                  avatarUrl={patientAvatarUrl}
+                  size="lg"
                 />
-
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs text-slate-500 dark:text-gray-400">
-                    Risk: {selectedSession.caseSnapshot.riskLevel ?? 'Unknown'}{' '}
-                    | Confidence:{' '}
-                    {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
+                <div>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {patientName}
                   </p>
-                  {selectedSession.caseSnapshot.summary && (
-                    <p className="text-sm text-slate-700 dark:text-gray-300">
-                      {selectedSession.caseSnapshot.summary}
-                    </p>
-                  )}
-                  {selectedSession.caseSnapshot.symptoms.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedSession.caseSnapshot.symptoms.map((symptom) => (
-                        <span
-                          key={symptom}
-                          className="rounded-full bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 px-2 py-1 text-[11px] font-medium border border-cyan-200 dark:border-cyan-800"
-                        >
-                          {symptom}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                <Stethoscope className="h-4 w-4" />
-                {t(
-                  'Ophthalmologist.consultations.chat.conversationGuidance',
-                  'Conversation Guidance'
-                )}
-              </div>
-              <p className="mt-4 text-sm leading-6 text-slate-200">
-                {t(
-                  'Ophthalmologist.consultations.chat.guidanceDescription',
-                  'Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier to triage quickly.'
-                )}
-              </p>
-              <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
-                <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4 text-cyan-300" />
-                  <span>{doctorName}</span>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
+                    {SESSION_TYPE_LABELS[currentSession.type]}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
-        </aside>
+
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+              <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                  {t(
+                    'Ophthalmologist.consultations.chat.sessionOverview',
+                    'Session Overview'
+                  )}
+                </p>
+                <div className="mt-4 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CalendarDays className="mt-0.5 h-4 w-4 text-cyan-500" />
+                    <div>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {t(
+                          'Ophthalmologist.consultations.chat.appointment',
+                          'Appointment'
+                        )}
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {formatAppointmentSlotOrPending(
+                          currentSession.appointmentTime,
+                          t
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock3 className="mt-0.5 h-4 w-4 text-cyan-500" />
+                    <div>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {t(
+                          'Ophthalmologist.consultations.chat.lastActivity',
+                          'Last activity'
+                        )}
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {formatRelativeTime(currentSession.lastActivityAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <BadgeDollarSign className="mt-0.5 h-4 w-4 text-cyan-500" />
+                    <div>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {t(
+                          'Ophthalmologist.consultations.chat.consultationFee',
+                          'Consultation fee'
+                        )}
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {formatCurrency(currentSession.price, {
+                          locale: 'vi-VN',
+                          currency: 'VND',
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Activity className="mt-0.5 h-4 w-4 text-cyan-500" />
+                    <div>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {t(
+                          'Ophthalmologist.consultations.chat.phaseLabel',
+                          'Phase'
+                        )}
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {phaseUI.label}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                    Share Case To Network
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                    Chia sẻ ca đã ẩn danh lên Aura Network với bố cục bài đăng y
+                    khoa.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsShareCaseModalOpen(true)}
+                    disabled={
+                      !currentSession?.id ||
+                      !selectedSession?.caseSnapshot ||
+                      shareConsultationMutation.isPending
+                    }
+                    className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {shareConsultationMutation.isPending
+                      ? 'Sharing case...'
+                      : 'Share Case To Network'}
+                  </button>
+                  {!selectedSession?.caseSnapshot && (
+                    <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-300">
+                      This consultation has no retinal snapshot / final
+                      diagnosis data yet, so it cannot be shared.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {selectedSession?.caseSnapshot && (
+                <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
+                    AI Case Snapshot
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
+                    Screening #
+                    {selectedSession.caseSnapshot.screeningId.slice(0, 8)}
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                      {selectedSession.caseSnapshot.originalImageUrls[0] ? (
+                        <img
+                          src={
+                            selectedSession.caseSnapshot.originalImageUrls[0]
+                          }
+                          alt="Original retinal image"
+                          className="h-24 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
+                          No original image
+                        </div>
+                      )}
+                      <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                        Original
+                      </p>
+                    </div>
+                    <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1e3a5f] bg-slate-50 dark:bg-[#0a1929]/40">
+                      <CaseSnapshotAiThumbnail
+                        snapshot={selectedSession.caseSnapshot}
+                      />
+                      <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
+                        AI Annotated
+                      </p>
+                    </div>
+                  </div>
+
+                  <ScreeningReviewLink
+                    screeningId={selectedSession.caseSnapshot.screeningId}
+                  />
+
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Risk:{' '}
+                      {selectedSession.caseSnapshot.riskLevel ?? 'Unknown'} |
+                      Confidence:{' '}
+                      {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
+                    </p>
+                    {selectedSession.caseSnapshot.summary && (
+                      <p className="text-sm text-slate-700 dark:text-gray-300">
+                        {selectedSession.caseSnapshot.summary}
+                      </p>
+                    )}
+                    {selectedSession.caseSnapshot.symptoms.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedSession.caseSnapshot.symptoms.map(
+                          (symptom) => (
+                            <span
+                              key={symptom}
+                              className="rounded-full bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-200 px-2 py-1 text-[11px] font-medium border border-cyan-200 dark:border-cyan-800"
+                            >
+                              {symptom}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-[28px] bg-slate-900 p-5 text-white shadow-sm dark:bg-[#030712]">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                  <Stethoscope className="h-4 w-4" />
+                  {t(
+                    'Ophthalmologist.consultations.chat.conversationGuidance',
+                    'Conversation Guidance'
+                  )}
+                </div>
+                <p className="mt-4 text-sm leading-6 text-slate-200">
+                  {t(
+                    'Ophthalmologist.consultations.chat.guidanceDescription',
+                    'Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier to triage quickly.'
+                  )}
+                </p>
+                <div className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-100">
+                  <div className="flex items-center gap-2">
+                    <UserRound className="h-4 w-4 text-cyan-300" />
+                    <span>{doctorName}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </>
       )}
+
+      {currentSession && selectedSession?.caseSnapshot && (
+        <ShareCaseModal
+          isOpen={isShareCaseModalOpen}
+          isSubmitting={shareConsultationMutation.isPending}
+          patientName={patientName}
+          content={shareCaseContent}
+          onChangeContent={setShareCaseContent}
+          onClose={() => setIsShareCaseModalOpen(false)}
+          onSubmit={() =>
+            shareConsultationMutation.mutate({
+              consultationSessionId: currentSession.id,
+              aiSummary: selectedSession.caseSnapshot?.summary ?? '',
+              finalDiagnosis:
+                selectedSession.caseSnapshot?.findings ??
+                selectedSession.caseSnapshot?.summary ??
+                '',
+              doctorNote: shareCaseContent.trim(),
+            })
+          }
+          caseSnapshot={{
+            summary: selectedSession.caseSnapshot.summary,
+            findings: selectedSession.caseSnapshot.findings,
+            riskLevel: selectedSession.caseSnapshot.riskLevel,
+            confidenceScore: selectedSession.caseSnapshot.confidenceScore,
+            originalImageUrls: selectedSession.caseSnapshot.originalImageUrls,
+          }}
+        />
+      )}
+
+      <ConfirmModal
+        open={!!sessionActionTarget}
+        title={
+          sessionActionTarget?.type === 'cancel'
+            ? 'Cancel session?'
+            : 'Complete consultation?'
+        }
+        message={
+          sessionActionTarget?.type === 'cancel'
+            ? t(
+                'Ophthalmologist.consultations.chat.confirmCancelSession',
+                'Cancel this session? The slot will be burned and the patient will be refunded.'
+              )
+            : t(
+                'Ophthalmologist.consultations.chat.confirmCompleteSession',
+                'Complete this consultation? The patient will be charged and the chat will be locked.'
+              )
+        }
+        confirmLabel={
+          sessionActionTarget?.type === 'cancel'
+            ? t('Ophthalmologist.common.cancel', 'Cancel')
+            : t('Ophthalmologist.consultations.chat.complete', 'Complete')
+        }
+        cancelLabel="Back"
+        tone={sessionActionTarget?.type === 'cancel' ? 'danger' : 'default'}
+        isLoading={
+          sessionActionTarget?.type === 'cancel'
+            ? cancelSessionMutation.isPending
+            : endSessionMutation.isPending
+        }
+        onCancel={() => setSessionActionTarget(null)}
+        onConfirm={confirmSessionAction}
+      />
     </div>
   );
 }

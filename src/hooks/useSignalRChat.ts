@@ -6,19 +6,51 @@ import {
   LogLevel,
 } from '@microsoft/signalr';
 import useAuthStore from '@/store/auth-store';
+import { api } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/endpoints';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
   SIGNALR_ROOM_STATE_CHANGED_EVENT,
+  SIGNALR_TYPING_INDICATOR_EVENT,
   type SignalRChatMessageEvent,
+  type SignalRSendTypingPayload,
   type SignalRRoomStateChangedEvent,
+  type SignalRTypingIndicatorEvent,
 } from '@/types/chat-realtime';
 
 const CHAT_HUB_URL =
   (import.meta.env.VITE_API_END_POINT as string) + '/hubs/chat';
 const RECONNECT_DELAYS = [0, 2000, 5000, 10000, 30000];
+const TOKEN_EXPIRY_BUFFER_MS = 15_000;
+
+let activeChatConnection: HubConnection | null = null;
 
 const sanitizeToken = (value: string | null): string =>
   value?.replace(/['"]+/g, '') || '';
+
+export const sendChatTypingIndicator = async (
+  payload: SignalRSendTypingPayload
+): Promise<void> => {
+  if (!payload.sessionId) {
+    return;
+  }
+
+  if (activeChatConnection?.state !== HubConnectionState.Connected) {
+    return;
+  }
+
+  try {
+    await activeChatConnection.invoke(
+      'SendTyping',
+      payload.sessionId,
+      payload.isTyping
+    );
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[ChatHub] Failed to send typing event:', error);
+    }
+  }
+};
 
 /**
  * Manages dedicated ChatHub connection for realtime chat events.
@@ -27,8 +59,35 @@ export function useSignalRChat(): void {
   const connectionRef = useRef<HubConnection | null>(null);
   const { isAuthenticated } = useAuthStore();
 
-  const getAccessToken = useCallback((): string => {
-    return sanitizeToken(localStorage.getItem('token'));
+  const getAccessToken = useCallback(async (): Promise<string> => {
+    const currentToken = sanitizeToken(localStorage.getItem('token'));
+    if (!currentToken) return '';
+
+    try {
+      const segments = currentToken.split('.');
+      if (segments.length >= 2) {
+        const base64 = segments[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+        const payload = JSON.parse(atob(padded)) as { exp?: unknown };
+        const exp = typeof payload.exp === 'number' ? payload.exp : null;
+
+        if (
+          typeof exp === 'number' &&
+          exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS
+        ) {
+          try {
+            await api.get(API_ENDPOINTS.AUTH.ME);
+          } catch {
+            // Interceptor handles the refresh and updates localStorage.
+          }
+          return sanitizeToken(localStorage.getItem('token'));
+        }
+      }
+    } catch {
+      // Malformed token — fall through to return current value.
+    }
+
+    return currentToken;
   }, []);
 
   const handleChatMessageReceived = useCallback(
@@ -49,6 +108,18 @@ export function useSignalRChat(): void {
       window.dispatchEvent(
         new CustomEvent<SignalRRoomStateChangedEvent>(
           SIGNALR_ROOM_STATE_CHANGED_EVENT,
+          { detail: payload }
+        )
+      );
+    },
+    []
+  );
+
+  const handleTypingIndicatorChanged = useCallback(
+    (payload: SignalRTypingIndicatorEvent) => {
+      window.dispatchEvent(
+        new CustomEvent<SignalRTypingIndicatorEvent>(
+          SIGNALR_TYPING_INDICATOR_EVENT,
           { detail: payload }
         )
       );
@@ -77,20 +148,27 @@ export function useSignalRChat(): void {
 
     connection.onclose((error) => {
       console.log('[ChatHub] Connection closed:', error);
+      activeChatConnection = null;
     });
 
     connection.on('ReceiveChatMessage', handleChatMessageReceived);
     connection.on('RoomStateChanged', handleRoomStateChanged);
+    connection.on('TypingIndicatorChanged', handleTypingIndicatorChanged);
 
     return connection;
-  }, [getAccessToken, handleChatMessageReceived, handleRoomStateChanged]);
+  }, [
+    getAccessToken,
+    handleChatMessageReceived,
+    handleRoomStateChanged,
+    handleTypingIndicatorChanged,
+  ]);
 
   const startConnection = useCallback(async (): Promise<void> => {
     if (!isAuthenticated) {
       return;
     }
 
-    const token = getAccessToken();
+    const token = await getAccessToken();
     if (!token) {
       console.log('[ChatHub] No token, skipping connection');
       return;
@@ -109,9 +187,11 @@ export function useSignalRChat(): void {
       }
 
       await connectionRef.current.start();
+      activeChatConnection = connectionRef.current;
       console.log('[ChatHub] Connected successfully');
     } catch (error) {
       console.error('[ChatHub] Connection failed:', error);
+      activeChatConnection = null;
       connectionRef.current = null;
     }
   }, [buildConnection, getAccessToken, isAuthenticated]);
@@ -127,6 +207,7 @@ export function useSignalRChat(): void {
     } catch (error) {
       console.error('[ChatHub] Error stopping connection:', error);
     } finally {
+      activeChatConnection = null;
       connectionRef.current = null;
     }
   }, []);

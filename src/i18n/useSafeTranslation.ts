@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n, { resources } from '@/i18n/i18n';
 
@@ -30,28 +31,31 @@ const resolveLocaleCandidates = (): Array<'vi' | 'en'> => {
 export const useSafeTranslation = () => {
   const { t: baseT } = useTranslation();
 
-  const t = (key: string, fallback = '') => {
-    const translated = baseT(key, { defaultValue: '' });
+  const t = useCallback(
+    (key: string, fallback = '') => {
+      const translated = baseT(key, { defaultValue: '' });
 
-    if (translated && translated !== key) {
-      return translated;
-    }
-
-    const locales = resolveLocaleCandidates();
-
-    for (const locale of locales) {
-      const resourceValue = resolveResourceValue(locale, key);
-
-      if (
-        typeof resourceValue === 'string' &&
-        resourceValue.trim().length > 0
-      ) {
-        return resourceValue;
+      if (translated && translated !== key) {
+        return translated;
       }
-    }
 
-    return fallback || key;
-  };
+      const locales = resolveLocaleCandidates();
+
+      for (const locale of locales) {
+        const resourceValue = resolveResourceValue(locale, key);
+
+        if (
+          typeof resourceValue === 'string' &&
+          resourceValue.trim().length > 0
+        ) {
+          return resourceValue;
+        }
+      }
+
+      return fallback || key;
+    },
+    [baseT]
+  );
 
   return { t };
 };
