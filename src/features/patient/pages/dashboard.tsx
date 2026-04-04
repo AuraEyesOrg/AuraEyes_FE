@@ -577,7 +577,7 @@ export default function PatientDashboard() {
 
               <Link
                 to="/patient/chat"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <MessageCircle className="w-5 h-5 text-brand" />
@@ -590,7 +590,7 @@ export default function PatientDashboard() {
 
               <Link
                 to="/patient/clinics"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-purple-600" />
