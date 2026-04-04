@@ -542,6 +542,22 @@ interface ScreeningSessionDetail {
     findings?: string;
     assessedAt: string;
   };
+  latestDiagnosis?: {
+    diagnosisCode?: string;
+    codingSystem?: string;
+    clinicalFindings?: string;
+    severityLevel?: string;
+    confidenceLevel?: number;
+    treatmentPlan?: string;
+    recommendations?: string;
+    lifestyleAdvice?: string;
+    isUrgent: boolean;
+    status?: string;
+    followUpDate?: string;
+    isReferralNeeded: boolean;
+    finalizedAt?: string;
+    confirmedAt?: string;
+  };
 }
 
 const normalizeReportRiskLevel = (
@@ -613,6 +629,18 @@ const parseFindingItems = (
     }));
 };
 
+const parseRecommendationItems = (value?: string): string[] => {
+  if (!value?.trim()) return [];
+
+  const normalized = value
+    .split(/[\n\r;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (normalized.length > 0) return normalized;
+  return [value.trim()];
+};
+
 const mapSessionSummaryToReport = (
   session: ScreeningSessionSummary
 ): ScreeningReport => {
@@ -643,6 +671,9 @@ const mapSessionDetailToReport = (
     riskLevel,
     confidenceScore
   );
+  const diagnosisRecommendations = parseRecommendationItems(
+    detail.latestDiagnosis?.recommendations
+  );
 
   return {
     id: detail.screeningId,
@@ -657,8 +688,29 @@ const mapSessionDetailToReport = (
       detail.latestResult?.findings?.trim() ||
       'AI retinal screening result is available.',
     findings,
-    recommendations: inferReportRecommendations(riskLevel),
+    recommendations:
+      diagnosisRecommendations.length > 0
+        ? diagnosisRecommendations
+        : inferReportRecommendations(riskLevel),
     createdAt: detail.latestResult?.assessedAt ?? detail.createdAt,
+    medicalDiagnosis: detail.latestDiagnosis
+      ? {
+          diagnosisCode: detail.latestDiagnosis.diagnosisCode,
+          codingSystem: detail.latestDiagnosis.codingSystem,
+          clinicalFindings: detail.latestDiagnosis.clinicalFindings,
+          severityLevel: detail.latestDiagnosis.severityLevel,
+          confidenceLevel: detail.latestDiagnosis.confidenceLevel,
+          treatmentPlan: detail.latestDiagnosis.treatmentPlan,
+          recommendations: detail.latestDiagnosis.recommendations,
+          lifestyleAdvice: detail.latestDiagnosis.lifestyleAdvice,
+          isUrgent: detail.latestDiagnosis.isUrgent,
+          status: detail.latestDiagnosis.status,
+          followUpDate: detail.latestDiagnosis.followUpDate,
+          isReferralNeeded: detail.latestDiagnosis.isReferralNeeded,
+          finalizedAt: detail.latestDiagnosis.finalizedAt,
+          confirmedAt: detail.latestDiagnosis.confirmedAt,
+        }
+      : undefined,
   };
 };
 

@@ -489,14 +489,6 @@ const ReportsPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl border border-(--border-color) p-3 bg-(--bg-secondary)">
                       <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                        Report ID
-                      </p>
-                      <p className="text-(--text-primary) font-semibold mt-1">
-                        {selectedReport.id}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-(--border-color) p-3 bg-(--bg-secondary)">
-                      <p className="text-(--text-muted) text-xs uppercase tracking-wide">
                         Created At
                       </p>
                       <p className="text-(--text-primary) font-semibold mt-1">
@@ -504,6 +496,110 @@ const ReportsPage = () => {
                       </p>
                     </div>
                   </div>
+
+                  {selectedReport.medicalDiagnosis && (
+                    <section className="rounded-xl border border-(--border-color) p-4">
+                      <h4 className="text-sm font-semibold text-(--text-primary) mb-3">
+                        Medical Diagnosis Details
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Diagnosis Code
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.diagnosisCode ||
+                              'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Coding System
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.codingSystem ||
+                              'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Severity Level
+                          </p>
+                          <p className="text-(--text-primary) mt-1 capitalize">
+                            {selectedReport.medicalDiagnosis?.severityLevel ||
+                              'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Confidence Level
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.confidenceLevel !=
+                            null
+                              ? `${selectedReport.medicalDiagnosis.confidenceLevel}%`
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Clinical Status
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.status || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Urgent Case
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis
+                              ? selectedReport.medicalDiagnosis.isUrgent
+                                ? 'Yes'
+                                : 'No'
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Referral Needed
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis
+                              ? selectedReport.medicalDiagnosis.isReferralNeeded
+                                ? 'Yes'
+                                : 'No'
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Follow-up Date
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.followUpDate
+                              ? formatShortDate(
+                                  selectedReport.medicalDiagnosis.followUpDate
+                                )
+                              : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
+                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
+                            Finalized At
+                          </p>
+                          <p className="text-(--text-primary) mt-1">
+                            {selectedReport.medicalDiagnosis?.finalizedAt
+                              ? formatShortDate(
+                                  selectedReport.medicalDiagnosis.finalizedAt
+                                )
+                              : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+                  )}
 
                   <section className="rounded-xl border border-(--border-color) p-4">
                     <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
@@ -518,22 +614,50 @@ const ReportsPage = () => {
                     <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
                       Findings
                     </h4>
-                    <ul className="space-y-2">
-                      {selectedReport.findings.map((finding) => (
-                        <li
-                          key={finding.id}
-                          className="text-sm text-(--text-secondary)"
-                        >
-                          • {finding.description}
-                        </li>
-                      ))}
-                      {selectedReport.findings.length === 0 && (
-                        <li className="text-sm text-(--text-muted)">
-                          No detailed findings available.
-                        </li>
-                      )}
-                    </ul>
+                    {selectedReport.medicalDiagnosis?.clinicalFindings ? (
+                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
+                        {selectedReport.medicalDiagnosis.clinicalFindings}
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {selectedReport.findings.map((finding) => (
+                          <li
+                            key={finding.id}
+                            className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word"
+                          >
+                            • {finding.description}
+                          </li>
+                        ))}
+                        {selectedReport.findings.length === 0 && (
+                          <li className="text-sm text-(--text-muted)">
+                            No detailed findings available.
+                          </li>
+                        )}
+                      </ul>
+                    )}
                   </section>
+
+                  {selectedReport.medicalDiagnosis?.treatmentPlan && (
+                    <section className="rounded-xl border border-(--border-color) p-4">
+                      <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
+                        Treatment Plan
+                      </h4>
+                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
+                        {selectedReport.medicalDiagnosis.treatmentPlan}
+                      </p>
+                    </section>
+                  )}
+
+                  {selectedReport.medicalDiagnosis?.lifestyleAdvice && (
+                    <section className="rounded-xl border border-(--border-color) p-4">
+                      <h4 className="text-sm font-semibold text-(--text-primary) mb-2">
+                        Lifestyle Advice
+                      </h4>
+                      <p className="text-sm text-(--text-secondary) whitespace-pre-wrap wrap-break-word leading-relaxed">
+                        {selectedReport.medicalDiagnosis.lifestyleAdvice}
+                      </p>
+                    </section>
+                  )}
 
                   <section className="rounded-xl border border-(--border-color) p-4">
                     <h4 className="text-sm font-semibold text-(--text-primary) mb-2">

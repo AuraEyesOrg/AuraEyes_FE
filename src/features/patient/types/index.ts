@@ -90,6 +90,24 @@ export interface ScreeningReport {
   createdAt: string;
   verifiedAt?: string;
   verifiedBy?: OphthalmologistInfo;
+  medicalDiagnosis?: MedicalDiagnosisDetails;
+}
+
+export interface MedicalDiagnosisDetails {
+  diagnosisCode?: string;
+  codingSystem?: string;
+  clinicalFindings?: string;
+  severityLevel?: string;
+  confidenceLevel?: number;
+  treatmentPlan?: string;
+  recommendations?: string;
+  lifestyleAdvice?: string;
+  isUrgent: boolean;
+  status?: string;
+  followUpDate?: string;
+  isReferralNeeded: boolean;
+  finalizedAt?: string;
+  confirmedAt?: string;
 }
 
 // ============ CLINIC & HOSPITAL TYPES ============
