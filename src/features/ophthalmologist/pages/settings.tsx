@@ -177,6 +177,15 @@ export default function SettingsPage() {
       bio: '',
       yearsOfExperience: 0,
     });
+  const unknownDoctorLabel = t(
+    'Ophthalmologist.settings.defaults.unknownDoctor',
+    'Unknown Doctor'
+  );
+  const notAvailableLabel = t('Ophthalmologist.common.notAvailable', 'N/A');
+  const noBioLabel = t(
+    'Ophthalmologist.settings.defaults.noBio',
+    'No profile bio available.'
+  );
 
   const profileQuery = useQuery({
     queryKey: ['ophthalmologist', 'me', 'profile'],
@@ -203,7 +212,12 @@ export default function SettingsPage() {
         }),
       ]);
       setShowEditProfileModal(false);
-      ophthalToast.success('Profile updated successfully.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.settings.toast.profileUpdated',
+          'Profile updated successfully.'
+        )
+      );
     },
     onError: (error: unknown) => {
       const err = error as {
@@ -212,7 +226,10 @@ export default function SettingsPage() {
       ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
-          'Unable to update profile right now. Please try again.'
+          t(
+            'Ophthalmologist.settings.toast.profileUpdateFailed',
+            'Unable to update profile right now. Please try again.'
+          )
       );
     },
   });
@@ -243,7 +260,12 @@ export default function SettingsPage() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      ophthalToast.success('Avatar uploaded successfully.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.settings.toast.avatarUploaded',
+          'Avatar uploaded successfully.'
+        )
+      );
     },
     onError: (error: unknown) => {
       const err = error as {
@@ -253,7 +275,10 @@ export default function SettingsPage() {
       ophthalToast.error(
         err.response?.data?.message ||
           err.response?.data?.errors?.join(', ') ||
-          'Unable to upload avatar right now. Please try again.'
+          t(
+            'Ophthalmologist.settings.toast.avatarUploadFailed',
+            'Unable to upload avatar right now. Please try again.'
+          )
       );
     },
   });
@@ -264,27 +289,30 @@ export default function SettingsPage() {
   const profile = useMemo<OphthalmologistProfile>(() => {
     const profileData = profileQuery.data;
 
-    if (!user && !profileData) return DEFAULT_PROFILE;
+    if (!user && !profileData)
+      return {
+        ...DEFAULT_PROFILE,
+        fullName: unknownDoctorLabel,
+        email: notAvailableLabel,
+        phone: notAvailableLabel,
+        bio: noBioLabel,
+        hospital: notAvailableLabel,
+        department: notAvailableLabel,
+        address: notAvailableLabel,
+      };
 
     return {
       id: profileData?.id ?? user?.roleId ?? user?.id ?? '',
       fullName:
-        profileData?.userFullName ??
-        user?.fullName ??
-        t('Ophthalmologist.settings.defaults.unknownDoctor', 'Unknown Doctor'),
-      email: profileData?.userEmail ?? user?.email ?? 'N/A',
-      phone: profileData?.userPhoneNumber ?? 'N/A',
-      bio:
-        profileData?.bio?.trim() ||
-        t(
-          'Ophthalmologist.settings.defaults.noBio',
-          'No profile bio available.'
-        ),
+        profileData?.userFullName ?? user?.fullName ?? unknownDoctorLabel,
+      email: profileData?.userEmail ?? user?.email ?? notAvailableLabel,
+      phone: profileData?.userPhoneNumber ?? notAvailableLabel,
+      bio: profileData?.bio?.trim() || noBioLabel,
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
-      hospital: user?.organizationId ?? 'N/A',
-      department: 'N/A',
-      address: profileData?.userAddress ?? 'N/A',
+      hospital: user?.organizationId ?? notAvailableLabel,
+      department: notAvailableLabel,
+      address: profileData?.userAddress ?? notAvailableLabel,
       isVerified: profileData?.isVerified ?? Boolean(user?.isVerified),
       createdAt: profileData?.createdAt ?? new Date().toISOString(),
       certificates: [
@@ -292,7 +320,7 @@ export default function SettingsPage() {
           id: degree.id,
           name: degree.name,
           type: 'degree' as const,
-          issuedBy: degree.issuingAuthority ?? 'N/A',
+          issuedBy: degree.issuingAuthority ?? notAvailableLabel,
           issuedDate: degree.issuedDate,
           status: 'verified' as const,
           fileUrl: degree.degreeUrl ?? undefined,
@@ -301,14 +329,21 @@ export default function SettingsPage() {
           id: cert.id,
           name: cert.name,
           type: mapCertificateTypeFromApi(cert.type ?? cert.name),
-          issuedBy: cert.issuingAuthority ?? 'N/A',
+          issuedBy: cert.issuingAuthority ?? notAvailableLabel,
           issuedDate: cert.issuedDate,
           expiryDate: cert.expiryDate ?? undefined,
           status: cert.isExpired ? ('expired' as const) : ('verified' as const),
         })),
       ],
     };
-  }, [profileQuery.data, t, user]);
+  }, [
+    noBioLabel,
+    notAvailableLabel,
+    profileQuery.data,
+    t,
+    unknownDoctorLabel,
+    user,
+  ]);
 
   const handleLanguageChange = (nextLocale: AppLocale) => {
     if (nextLocale === locale) return;
@@ -324,17 +359,28 @@ export default function SettingsPage() {
     if (!showEditProfileModal) return;
 
     setProfileForm({
-      fullName: profile.fullName === 'Unknown Doctor' ? '' : profile.fullName,
-      phone: profile.phone === 'N/A' ? '' : profile.phone,
-      address: profile.address === 'N/A' ? '' : profile.address,
-      bio: profile.bio === 'No profile bio available.' ? '' : profile.bio,
+      fullName: profile.fullName === unknownDoctorLabel ? '' : profile.fullName,
+      phone: profile.phone === notAvailableLabel ? '' : profile.phone,
+      address: profile.address === notAvailableLabel ? '' : profile.address,
+      bio: profile.bio === noBioLabel ? '' : profile.bio,
       yearsOfExperience: profile.yearsOfExperience,
     });
-  }, [profile, showEditProfileModal]);
+  }, [
+    noBioLabel,
+    notAvailableLabel,
+    profile,
+    showEditProfileModal,
+    unknownDoctorLabel,
+  ]);
 
   const handleUpdateProfile = () => {
     if (!profileForm.fullName.trim()) {
-      ophthalToast.error('Full name is required.');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.toast.fullNameRequired',
+          'Full name is required.'
+        )
+      );
       return;
     }
 
