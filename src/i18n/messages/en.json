@@ -1367,5 +1367,97 @@
     "findingsDetected": "Detected findings include:",
     "backToDashboard": "Back to Dashboard",
     "sessionLabel": "Session"
+  },
+  "PatientAppointments": {
+    "page": {
+      "title": "Appointments",
+      "subtitle": "Manage your doctor and organisation appointments"
+    },
+    "loading": {
+      "appointments": "Loading appointments...",
+      "clinicAppointments": "Loading clinic appointments..."
+    },
+    "stats": {
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "total": "Total",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "label": "Filter",
+      "all": "All",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sections": {
+      "organisationSlots": "Organisation Slots",
+      "doctorSlots": "Doctor Slots"
+    },
+    "actions": {
+      "bookMoreSlot": "Book More Slot",
+      "rateClinic": "Rate Clinic",
+      "viewChat": "View Chat",
+      "joinCall": "Join Call",
+      "cancel": "Cancel",
+      "viewDetails": "View Details",
+      "bookFirstAppointment": "Book Your First Appointment"
+    },
+    "labels": {
+      "clinicVisit": "Clinic Visit",
+      "organisationAppointment": "Organisation appointment",
+      "reason": "Reason: {{reason}}",
+      "notScheduledYet": "Not scheduled yet",
+      "doctorName": "Doctor: {{name}}",
+      "videoConsultation": "Video consultation",
+      "videoConsultationReady": "Video consultation (link ready)"
+    },
+    "sessionType": {
+      "verification": "Verification",
+      "videoCall": "Video Call",
+      "clinicBooking": "Clinic Booking"
+    },
+    "sessionStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "clinicStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked In",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show"
+    },
+    "empty": {
+      "clinicAll": "No clinic appointments yet.",
+      "clinicByFilter": "No {{filter}} clinic appointments.",
+      "doctorAll": "No doctor appointments yet.",
+      "doctorByFilter": "No {{filter}} doctor appointments.",
+      "noAppointmentsTitle": "No Appointments Found",
+      "noAppointmentsAll": "You haven't created any appointments yet.",
+      "noAppointmentsByFilter": "No {{filter}} appointments."
+    },
+    "toast": {
+      "cancelSigninRequired": "Unable to cancel appointment. Please sign in again.",
+      "feedbackSubmitted": "Feedback submitted",
+      "feedbackAlreadyExists": "Feedback already exists for this appointment.",
+      "feedbackSubmitFailed": "Unable to submit feedback right now. Please try again."
+    },
+    "cancelModal": {
+      "title": "Cancel appointment?",
+      "message": "Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.",
+      "confirmLabel": "Yes, cancel appointment",
+      "cancelLabel": "Keep appointment"
+    },
+    "feedback": {
+      "submittedBadge": "Feedback submitted",
+      "modalTitle": "Clinic feedback",
+      "modalSubtitle": "Share your clinic visit experience.",
+      "submitLabel": "Submit clinic feedback"
+    }
   }
 }

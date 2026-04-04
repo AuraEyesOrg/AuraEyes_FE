@@ -1371,6 +1371,98 @@ declare module 'i18next' {
       backToDashboard: string;
       sessionLabel: string;
     };
+    PatientAppointments: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      loading: {
+        appointments: string;
+        clinicAppointments: string;
+      };
+      stats: {
+        upcoming: string;
+        completed: string;
+        total: string;
+        cancelled: string;
+      };
+      filters: {
+        label: string;
+        all: string;
+        upcoming: string;
+        completed: string;
+        cancelled: string;
+      };
+      sections: {
+        organisationSlots: string;
+        doctorSlots: string;
+      };
+      actions: {
+        bookMoreSlot: string;
+        rateClinic: string;
+        viewChat: string;
+        joinCall: string;
+        cancel: string;
+        viewDetails: string;
+        bookFirstAppointment: string;
+      };
+      labels: {
+        clinicVisit: string;
+        organisationAppointment: string;
+        reason: string;
+        notScheduledYet: string;
+        doctorName: string;
+        videoConsultation: string;
+        videoConsultationReady: string;
+      };
+      sessionType: {
+        verification: string;
+        videoCall: string;
+        clinicBooking: string;
+      };
+      sessionStatus: {
+        pending: string;
+        confirmed: string;
+        completed: string;
+        cancelled: string;
+      };
+      clinicStatus: {
+        pending: string;
+        confirmed: string;
+        checkedIn: string;
+        inProgress: string;
+        completed: string;
+        cancelled: string;
+        noShow: string;
+      };
+      empty: {
+        clinicAll: string;
+        clinicByFilter: string;
+        doctorAll: string;
+        doctorByFilter: string;
+        noAppointmentsTitle: string;
+        noAppointmentsAll: string;
+        noAppointmentsByFilter: string;
+      };
+      toast: {
+        cancelSigninRequired: string;
+        feedbackSubmitted: string;
+        feedbackAlreadyExists: string;
+        feedbackSubmitFailed: string;
+      };
+      cancelModal: {
+        title: string;
+        message: string;
+        confirmLabel: string;
+        cancelLabel: string;
+      };
+      feedback: {
+        submittedBadge: string;
+        modalTitle: string;
+        modalSubtitle: string;
+        submitLabel: string;
+      };
+    };
     notification: {
       types: {
         screening: string;

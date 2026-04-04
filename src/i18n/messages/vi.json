@@ -1368,6 +1368,98 @@
     "backToDashboard": "Về Dashboard",
     "sessionLabel": "Phiên"
   },
+  "PatientAppointments": {
+    "page": {
+      "title": "Lịch hẹn",
+      "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
+    },
+    "loading": {
+      "appointments": "Đang tải lịch hẹn...",
+      "clinicAppointments": "Đang tải lịch hẹn cơ sở y tế..."
+    },
+    "stats": {
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "total": "Tổng",
+      "cancelled": "Đã hủy"
+    },
+    "filters": {
+      "label": "Bộ lọc",
+      "all": "Tất cả",
+      "upcoming": "Sắp tới",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "sections": {
+      "organisationSlots": "Lịch cơ sở y tế",
+      "doctorSlots": "Lịch bác sĩ"
+    },
+    "actions": {
+      "bookMoreSlot": "Đặt thêm lịch",
+      "rateClinic": "Đánh giá cơ sở",
+      "viewChat": "Xem chat",
+      "joinCall": "Tham gia gọi",
+      "cancel": "Hủy",
+      "viewDetails": "Xem chi tiết",
+      "bookFirstAppointment": "Đặt lịch hẹn đầu tiên"
+    },
+    "labels": {
+      "clinicVisit": "Lịch khám cơ sở",
+      "organisationAppointment": "Lịch hẹn tại cơ sở y tế",
+      "reason": "Lý do: {{reason}}",
+      "notScheduledYet": "Chưa lên lịch",
+      "doctorName": "Bác sĩ: {{name}}",
+      "videoConsultation": "Tư vấn video",
+      "videoConsultationReady": "Tư vấn video (đã có link)"
+    },
+    "sessionType": {
+      "verification": "Xác minh",
+      "videoCall": "Gọi video",
+      "clinicBooking": "Đặt lịch cơ sở"
+    },
+    "sessionStatus": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "clinicStatus": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "checkedIn": "Đã check-in",
+      "inProgress": "Đang khám",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy",
+      "noShow": "Vắng mặt"
+    },
+    "empty": {
+      "clinicAll": "Chưa có lịch hẹn cơ sở y tế.",
+      "clinicByFilter": "Không có lịch hẹn cơ sở y tế {{filter}}.",
+      "doctorAll": "Chưa có lịch hẹn bác sĩ.",
+      "doctorByFilter": "Không có lịch hẹn bác sĩ {{filter}}.",
+      "noAppointmentsTitle": "Không tìm thấy lịch hẹn",
+      "noAppointmentsAll": "Bạn chưa tạo lịch hẹn nào.",
+      "noAppointmentsByFilter": "Không có lịch hẹn {{filter}}."
+    },
+    "toast": {
+      "cancelSigninRequired": "Không thể hủy lịch hẹn. Vui lòng đăng nhập lại.",
+      "feedbackSubmitted": "Gửi đánh giá thành công",
+      "feedbackAlreadyExists": "Bạn đã gửi đánh giá cho lịch hẹn này.",
+      "feedbackSubmitFailed": "Không thể gửi đánh giá lúc này. Vui lòng thử lại."
+    },
+    "cancelModal": {
+      "title": "Hủy lịch hẹn?",
+      "message": "Bạn có chắc muốn hủy lịch hẹn này không? Phí tư vấn sẽ được hoàn về ví của bạn.",
+      "confirmLabel": "Có, hủy lịch hẹn",
+      "cancelLabel": "Giữ lịch hẹn"
+    },
+    "feedback": {
+      "submittedBadge": "Đã gửi đánh giá",
+      "modalTitle": "Đánh giá cơ sở",
+      "modalSubtitle": "Chia sẻ trải nghiệm khám tại cơ sở của bạn.",
+      "submitLabel": "Gửi đánh giá cơ sở"
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",
