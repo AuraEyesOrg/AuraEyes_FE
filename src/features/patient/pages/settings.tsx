@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   User,
   Shield,
@@ -18,6 +19,13 @@ import {
   type Language,
 } from '@/store/useLanguageStore';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n/i18n';
+import { persistLocale } from '@/i18n/middleware';
+import {
+  getLocaleFromPathname,
+  toSupportedLocale,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface SettingItem {
   icon: React.ElementType;
@@ -32,11 +40,40 @@ interface SettingSection {
 }
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { locale } = useParams();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguageStore();
   const { t: i18nT } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
+
+  const currentLocale =
+    toSupportedLocale(locale) ??
+    toSupportedLocale(i18n.resolvedLanguage ?? i18n.language) ??
+    language;
+
+  useEffect(() => {
+    if (language !== currentLocale) {
+      setLanguage(currentLocale);
+    }
+  }, [currentLocale, language, setLanguage]);
+
+  const handleLanguageChange = (nextLocale: Language) => {
+    setLanguage(nextLocale);
+    persistLocale(nextLocale);
+    void i18n.changeLanguage(nextLocale);
+
+    const localizedPath = withLocalePathname(nextLocale, location.pathname);
+    const targetUrl = `${localizedPath}${location.search}${location.hash}`;
+    const currentUrl = `${location.pathname}${location.search}${location.hash}`;
+    const pathHasLocale = Boolean(getLocaleFromPathname(location.pathname));
+
+    if (!pathHasLocale || targetUrl !== currentUrl) {
+      navigate(targetUrl, { replace: true });
+    }
+  };
 
   const settingSections: SettingSection[] = [
     {
@@ -182,11 +219,13 @@ export default function SettingsPage() {
               </div>
               <div className="flex gap-3 flex-1">
                 {LANGUAGE_OPTIONS.map((opt) => {
-                  const isSelected = language === opt.code;
+                  const isSelected = currentLocale === opt.code;
                   return (
                     <button
+                      type="button"
                       key={opt.code}
-                      onClick={() => setLanguage(opt.code as Language)}
+                      onClick={() => handleLanguageChange(opt.code)}
+                      aria-pressed={isSelected}
                       className={`flex-1 flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
                         isSelected
                           ? 'border-brand bg-brand-soft'

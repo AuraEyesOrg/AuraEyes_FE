@@ -309,11 +309,17 @@ export default function ScreeningsPage() {
     // Sort
     if (sortMode === 'priority') {
       filtered.sort((a, b) => {
-        const statusA = getStatusConfig(getEffectiveReviewStatus(a)).priority;
-        const statusB = getStatusConfig(getEffectiveReviewStatus(b)).priority;
+        const statusA = getStatusConfig(
+          getEffectiveReviewStatus(a),
+          t
+        ).priority;
+        const statusB = getStatusConfig(
+          getEffectiveReviewStatus(b),
+          t
+        ).priority;
         if (statusA !== statusB) return statusA - statusB;
-        const riskA = getRiskLevel(a).priority;
-        const riskB = getRiskLevel(b).priority;
+        const riskA = getRiskLevel(a, t).priority;
+        const riskB = getRiskLevel(b, t).priority;
         if (riskA !== riskB) return riskA - riskB;
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

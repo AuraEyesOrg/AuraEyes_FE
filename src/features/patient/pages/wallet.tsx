@@ -56,9 +56,7 @@ export default function WalletPage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<
-    'payos' | 'vnpay' | null
-  >(null);
+  const [selectedMethod, setSelectedMethod] = useState<'payos' | null>(null);
   const [txPage, setTxPage] = useState(1);
   const TX_PAGE_SIZE = 10;
 
@@ -136,8 +134,7 @@ export default function WalletPage() {
     const amount = selectedAmount || parseInt(customAmount);
     if (!amount || amount < 10000 || !selectedMethod) return;
 
-    const paymentMethod =
-      selectedMethod === 'payos' ? PaymentMethod.PayOS : PaymentMethod.VNPay;
+    const paymentMethod = PaymentMethod.PayOS;
 
     const returnUrl = `${window.location.origin}/patient/wallet/payment-callback`;
     const cancelUrl = `${window.location.origin}/patient/wallet`;
@@ -147,7 +144,7 @@ export default function WalletPage() {
         amountVnd: amount,
         paymentMethod,
         description: t('PatientWallet.deposit.description', {
-          method: selectedMethod === 'payos' ? 'PayOS' : 'VNPay',
+          method: 'PayOS',
         }),
         returnUrl,
         cancelUrl,
@@ -319,21 +316,6 @@ export default function WalletPage() {
             </h2>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-(--text-primary) font-medium">VNPay</p>
-                    <p className="text-xs text-(--text-secondary)">
-                      {t('PatientWallet.paymentMethods.vnpayDescription')}
-                    </p>
-                  </div>
-                </div>
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </div>
-
               <div className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
@@ -592,28 +574,6 @@ export default function WalletPage() {
                     </p>
                   </div>
                   {selectedMethod === 'payos' && (
-                    <CheckCircle className="w-5 h-5 text-brand" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setSelectedMethod('vnpay')}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                    selectedMethod === 'vnpay'
-                      ? 'bg-brand-soft border-brand shadow-brand'
-                      : 'bg-(--bg-secondary) border-(--border-color) hover:border-brand/30'
-                  }`}
-                >
-                  <div className="w-10 h-10 bg-(--bg-tertiary) rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-(--text-primary) font-semibold">VNPay</p>
-                    <p className="text-xs text-(--text-secondary)">
-                      {t('PatientWallet.paymentMethods.vnpayLongDescription')}
-                    </p>
-                  </div>
-                  {selectedMethod === 'vnpay' && (
                     <CheckCircle className="w-5 h-5 text-brand" />
                   )}
                 </button>
