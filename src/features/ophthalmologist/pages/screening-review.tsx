@@ -38,6 +38,7 @@ import type { Anomaly } from '@/features/patient/types/type';
 import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -61,6 +62,7 @@ interface DetectedFinding {
 }
 
 type BoxRect = { x: number; y: number; width: number; height: number };
+type TranslateFn = (key: string, fallback: string) => string;
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -123,24 +125,40 @@ function anomalyToFinding(a: Anomaly): DetectedFinding {
   };
 }
 
-const riskLevelConfig: Record<
-  RiskLevel,
-  { label: string; color: string; bg: string }
-> = {
-  None: { label: 'No Risk', color: 'text-gray-600', bg: 'bg-gray-100' },
-  Low: { label: 'Low Risk', color: 'text-green-600', bg: 'bg-green-100' },
+const getRiskLevelConfig = (
+  t: TranslateFn
+): Record<RiskLevel, { label: string; color: string; bg: string }> => ({
+  None: {
+    label: t('Ophthalmologist.screeningReview.risk.none', 'No Risk'),
+    color: 'text-gray-600',
+    bg: 'bg-gray-100',
+  },
+  Low: {
+    label: t('Ophthalmologist.screeningReview.risk.low', 'Low Risk'),
+    color: 'text-green-600',
+    bg: 'bg-green-100',
+  },
   Moderate: {
-    label: 'Moderate',
+    label: t('Ophthalmologist.screeningReview.risk.moderate', 'Moderate'),
     color: 'text-yellow-600',
     bg: 'bg-yellow-100',
   },
-  High: { label: 'High Risk', color: 'text-orange-600', bg: 'bg-orange-100' },
-  Critical: { label: 'Critical', color: 'text-red-600', bg: 'bg-red-100' },
-};
+  High: {
+    label: t('Ophthalmologist.screeningReview.risk.high', 'High Risk'),
+    color: 'text-orange-600',
+    bg: 'bg-orange-100',
+  },
+  Critical: {
+    label: t('Ophthalmologist.screeningReview.risk.critical', 'Critical'),
+    color: 'text-red-600',
+    bg: 'bg-red-100',
+  },
+});
 
 type SidebarTab = 'patient' | 'history' | 'exam' | 'reports';
 
 export default function ScreeningReviewPage() {
+  const { t } = useSafeTranslation();
   const { screeningId } = useParams<{ screeningId: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
@@ -171,6 +189,7 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -246,15 +265,29 @@ export default function ScreeningReviewPage() {
 
   const referralPillLabel =
     riskLevelUi === 'High' || riskLevelUi === 'Critical'
-      ? 'Referral Recommended'
+      ? t(
+          'Ophthalmologist.screeningReview.referral.recommended',
+          'Referral Recommended'
+        )
       : riskLevelUi === 'Moderate'
-        ? 'Monitor closely'
-        : 'Routine follow-up';
+        ? t(
+            'Ophthalmologist.screeningReview.referral.monitor',
+            'Monitor closely'
+          )
+        : t(
+            'Ophthalmologist.screeningReview.referral.routine',
+            'Routine follow-up'
+          );
 
   useEffect(() => {
     if (!screeningId || !isUuid(screeningId)) {
       setLoading(false);
-      setLoadError('Invalid screening identifier.');
+      setLoadError(
+        t(
+          'Ophthalmologist.screeningReview.invalidIdentifier',
+          'Invalid screening identifier.'
+        )
+      );
       setDetail(null);
       return;
     }
@@ -272,9 +305,19 @@ export default function ScreeningReviewPage() {
       } catch (e) {
         if (cancelled) return;
         if (isAxiosError(e) && e.response?.status === 404) {
-          setLoadError('Screening not found or you do not have access.');
+          setLoadError(
+            t(
+              'Ophthalmologist.screeningReview.notFound',
+              'Screening not found or you do not have access.'
+            )
+          );
         } else {
-          setLoadError('Could not load screening. Please try again.');
+          setLoadError(
+            t(
+              'Ophthalmologist.screeningReview.loadFailed',
+              'Could not load screening. Please try again.'
+            )
+          );
         }
         setDetail(null);
       } finally {
@@ -285,7 +328,7 @@ export default function ScreeningReviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [screeningId]);
+  }, [screeningId, t]);
 
   useEffect(() => {
     if (!detail?.rawJsonOutput || !selectedImage?.imageUrl) {
@@ -411,22 +454,36 @@ export default function ScreeningReviewPage() {
       consultationSessionsQuery.isLoading ||
       consultationSessionsQuery.isFetching
     ) {
-      const message =
-        'Still loading linked consultation session. Please retry in a moment.';
+      const message = t(
+        'Ophthalmologist.screeningReview.sessionLinkLoading',
+        'Still loading linked consultation session. Please retry in a moment.'
+      );
       ophthalToast.info(message);
       return;
     }
 
     if (!resolvedDoctorId) {
-      const message = 'Missing doctor identity.';
+      const message = t(
+        'Ophthalmologist.screeningReview.missingDoctorIdentity',
+        'Missing doctor identity.'
+      );
       ophthalToast.error(message);
       return;
     }
 
     if (!reportableSessionId) {
       const message = linkedSession
-        ? `Linked consultation exists but it is "${linkedSession.typeName}". Only Verification or VideoCall sessions can submit this report.`
-        : 'No linked Verification or VideoCall session was found for this screening.';
+        ? `${t(
+            'Ophthalmologist.screeningReview.linkedSessionUnsupportedPrefix',
+            'Linked consultation exists but it is'
+          )} "${linkedSession.typeName}". ${t(
+            'Ophthalmologist.screeningReview.linkedSessionUnsupportedSuffix',
+            'Only Verification or VideoCall sessions can submit this report.'
+          )}`
+        : t(
+            'Ophthalmologist.screeningReview.noLinkedSession',
+            'No linked Verification or VideoCall session was found for this screening.'
+          );
       ophthalToast.error(message);
       return;
     }
@@ -435,8 +492,10 @@ export default function ScreeningReviewPage() {
     const normalizedFindings = clinicalFindings.trim();
 
     if (!normalizedDiagnosisCode || !normalizedFindings) {
-      const message =
-        'Diagnosis code and clinical findings are required before saving.';
+      const message = t(
+        'Ophthalmologist.screeningReview.requiredFields',
+        'Diagnosis code and clinical findings are required before saving.'
+      );
       ophthalToast.error(message);
       return;
     }
@@ -450,7 +509,10 @@ export default function ScreeningReviewPage() {
         parsedConfidence < 0 ||
         parsedConfidence > 100)
     ) {
-      const message = 'Confidence level must be between 0 and 100.';
+      const message = t(
+        'Ophthalmologist.screeningReview.confidenceRange',
+        'Confidence level must be between 0 and 100.'
+      );
       ophthalToast.error(message);
       return;
     }
@@ -480,27 +542,59 @@ export default function ScreeningReviewPage() {
             : undefined,
       });
 
-      ophthalToast.success('Diagnosis report saved successfully.');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.saveSuccess',
+          'Diagnosis report saved successfully.'
+        )
+      );
       setShowDiagnosisModal(false);
     } catch (error) {
       const message =
         isAxiosError(error) && typeof error.response?.data?.message === 'string'
           ? error.response.data.message
-          : 'Failed to submit diagnosis report. Please try again.';
+          : t(
+              'Ophthalmologist.screeningReview.saveFailed',
+              'Failed to submit diagnosis report. Please try again.'
+            );
 
       ophthalToast.error(message);
     }
   };
 
   const sidebarTabs = [
-    { id: 'patient' as SidebarTab, icon: User, label: 'Patient Summary' },
+    {
+      id: 'patient' as SidebarTab,
+      icon: User,
+      label: t(
+        'Ophthalmologist.screeningReview.tabs.patientSummary',
+        'Patient Summary'
+      ),
+    },
     {
       id: 'history' as SidebarTab,
       icon: Stethoscope,
-      label: 'Medical History',
+      label: t(
+        'Ophthalmologist.screeningReview.tabs.medicalHistory',
+        'Medical History'
+      ),
     },
-    { id: 'exam' as SidebarTab, icon: Eye, label: 'Current Exam' },
-    { id: 'reports' as SidebarTab, icon: FileText, label: 'Previous Reports' },
+    {
+      id: 'exam' as SidebarTab,
+      icon: Eye,
+      label: t(
+        'Ophthalmologist.screeningReview.tabs.currentExam',
+        'Current Exam'
+      ),
+    },
+    {
+      id: 'reports' as SidebarTab,
+      icon: FileText,
+      label: t(
+        'Ophthalmologist.screeningReview.tabs.previousReports',
+        'Previous Reports'
+      ),
+    },
   ];
 
   return (
@@ -519,7 +613,10 @@ export default function ScreeningReviewPage() {
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
               <Spinner size={40} />
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Loading screening…
+                {t(
+                  'Ophthalmologist.screeningReview.loading',
+                  'Loading screening...'
+                )}
               </p>
             </div>
           ) : loadError ? (
@@ -530,7 +627,10 @@ export default function ScreeningReviewPage() {
                 onClick={() => navigate('/ophthalmologist/screenings')}
                 className="mt-4 text-sm text-cyan-600 dark:text-cyan-400 underline"
               >
-                Back to screenings
+                {t(
+                  'Ophthalmologist.screeningReview.backToScreenings',
+                  'Back to screenings'
+                )}
               </button>
             </div>
           ) : detail ? (
@@ -547,20 +647,29 @@ export default function ScreeningReviewPage() {
                   </button>
                   <div>
                     <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                      Screening Review
+                      {t(
+                        'Ophthalmologist.screeningReview.title',
+                        'Screening Review'
+                      )}
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Case details and AI findings
+                      {t(
+                        'Ophthalmologist.screeningReview.subtitle',
+                        'Case details and AI findings'
+                      )}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
-                    AI Model:{' '}
+                    {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
                       ? detail.modelVersion
-                      : 'Screening AI'}
+                      : t(
+                          'Ophthalmologist.screeningReview.screeningAi',
+                          'Screening AI'
+                        )}
                   </span>
                   <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                     <Calendar className="w-4 h-4" />
@@ -645,11 +754,17 @@ export default function ScreeningReviewPage() {
                       <div className="space-y-4">
                         <div>
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            Select Eye
+                            {t(
+                              'Ophthalmologist.screeningReview.selectEye',
+                              'Select Eye'
+                            )}
                           </p>
                           {retinalImages.length === 0 ? (
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              No fundus images for this screening.
+                              {t(
+                                'Ophthalmologist.screeningReview.noFundusImages',
+                                'No fundus images for this screening.'
+                              )}
                             </p>
                           ) : (
                             <div className="grid grid-cols-2 gap-2">
@@ -678,7 +793,11 @@ export default function ScreeningReviewPage() {
                                         : 'text-gray-600 dark:text-gray-400'
                                     }`}
                                   >
-                                    {img.eyeSide} Eye
+                                    {img.eyeSide}{' '}
+                                    {t(
+                                      'Ophthalmologist.screeningReview.eye',
+                                      'Eye'
+                                    )}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-500">
                                     Q:{' '}
@@ -694,13 +813,19 @@ export default function ScreeningReviewPage() {
 
                         <div>
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            Image Details
+                            {t(
+                              'Ophthalmologist.screeningReview.imageDetails',
+                              'Image Details'
+                            )}
                           </p>
                           {selectedImage ? (
                             <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg p-3 space-y-2">
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-500 dark:text-gray-400">
-                                  Device
+                                  {t(
+                                    'Ophthalmologist.screeningReview.device',
+                                    'Device'
+                                  )}
                                 </span>
                                 <span className="text-gray-900 dark:text-white font-medium">
                                   {selectedImage.deviceName ?? '—'}
@@ -708,7 +833,10 @@ export default function ScreeningReviewPage() {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-500 dark:text-gray-400">
-                                  Captured
+                                  {t(
+                                    'Ophthalmologist.screeningReview.captured',
+                                    'Captured'
+                                  )}
                                 </span>
                                 <span className="text-gray-900 dark:text-white font-medium">
                                   {new Date(
@@ -721,7 +849,10 @@ export default function ScreeningReviewPage() {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-500 dark:text-gray-400">
-                                  Quality
+                                  {t(
+                                    'Ophthalmologist.screeningReview.quality',
+                                    'Quality'
+                                  )}
                                 </span>
                                 <span
                                   className={`font-medium ${
@@ -735,18 +866,33 @@ export default function ScreeningReviewPage() {
                                   }`}
                                 >
                                   {selectedImage.qualityScore >= 90
-                                    ? 'Optimal'
+                                    ? t(
+                                        'Ophthalmologist.screeningReview.qualityOptimal',
+                                        'Optimal'
+                                      )
                                     : selectedImage.qualityScore >= 70
-                                      ? 'Good'
+                                      ? t(
+                                          'Ophthalmologist.screeningReview.qualityGood',
+                                          'Good'
+                                        )
                                       : selectedImage.qualityScore > 0
-                                        ? 'Poor'
-                                        : 'Unknown'}
+                                        ? t(
+                                            'Ophthalmologist.screeningReview.qualityPoor',
+                                            'Poor'
+                                          )
+                                        : t(
+                                            'Ophthalmologist.screeningReview.unknown',
+                                            'Unknown'
+                                          )}
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Select an image to see capture details.
+                              {t(
+                                'Ophthalmologist.screeningReview.selectImageHint',
+                                'Select an image to see capture details.'
+                              )}
                             </p>
                           )}
                         </div>
@@ -757,12 +903,18 @@ export default function ScreeningReviewPage() {
                       <div className="space-y-4">
                         <div>
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            Demographics
+                            {t(
+                              'Ophthalmologist.screeningReview.demographics',
+                              'Demographics'
+                            )}
                           </p>
                           <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg p-3 space-y-2">
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-500 dark:text-gray-400">
-                                Full Name
+                                {t(
+                                  'Ophthalmologist.screeningReview.fullName',
+                                  'Full Name'
+                                )}
                               </span>
                               <span className="text-gray-900 dark:text-white font-medium">
                                 {detail.patientFullName}
@@ -777,12 +929,16 @@ export default function ScreeningReviewPage() {
                       <div className="space-y-4">
                         <div>
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            Medical Conditions
+                            {t(
+                              'Ophthalmologist.screeningReview.medicalConditions',
+                              'Medical Conditions'
+                            )}
                           </p>
                           <p className="text-sm text-gray-700 dark:text-gray-300">
-                            Full medical history is available from the patient
-                            chart. This screening view only includes AI summary
-                            text when present.
+                            {t(
+                              'Ophthalmologist.screeningReview.medicalHistoryHint',
+                              'Full medical history is available from the patient chart. This screening view only includes AI summary text when present.'
+                            )}
                           </p>
                           {detail.latestResult?.summary ? (
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
@@ -796,10 +952,16 @@ export default function ScreeningReviewPage() {
                     {activeTab === 'reports' && (
                       <div className="space-y-3">
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                          Previous Scans
+                          {t(
+                            'Ophthalmologist.screeningReview.previousScans',
+                            'Previous Scans'
+                          )}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Prior screenings are not listed in this view yet.
+                          {t(
+                            'Ophthalmologist.screeningReview.previousScansHint',
+                            'Prior screenings are not listed in this view yet.'
+                          )}
                         </p>
                       </div>
                     )}
@@ -814,34 +976,49 @@ export default function ScreeningReviewPage() {
                       <button
                         onClick={handleZoomIn}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Zoom In"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.zoomIn',
+                          'Zoom In'
+                        )}
                       >
                         <ZoomIn className="w-5 h-5" />
                       </button>
                       <button
                         onClick={handleZoomOut}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Zoom Out"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.zoomOut',
+                          'Zoom Out'
+                        )}
                       >
                         <ZoomOut className="w-5 h-5" />
                       </button>
                       <div className="w-px h-6 bg-gray-700 mx-1" />
                       <button
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Pan"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.pan',
+                          'Pan'
+                        )}
                       >
                         <Move className="w-5 h-5" />
                       </button>
                       <button
                         onClick={handleResetZoom}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Reset"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.reset',
+                          'Reset'
+                        )}
                       >
                         <RotateCcw className="w-5 h-5" />
                       </button>
                       <button
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Fullscreen"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.fullscreen',
+                          'Fullscreen'
+                        )}
                       >
                         <Maximize2 className="w-5 h-5" />
                       </button>
@@ -856,8 +1033,14 @@ export default function ScreeningReviewPage() {
                         }`}
                         title={
                           overlayEditMode
-                            ? 'Exit overlay edit (drag / resize handles)'
-                            : 'Edit AI boxes: drag to move, drag corner to resize'
+                            ? t(
+                                'Ophthalmologist.screeningReview.toolbar.exitOverlayEdit',
+                                'Exit overlay edit (drag / resize handles)'
+                              )
+                            : t(
+                                'Ophthalmologist.screeningReview.toolbar.editOverlay',
+                                'Edit AI boxes: drag to move, drag corner to resize'
+                              )
                         }
                       >
                         <Pencil className="w-5 h-5" />
@@ -867,14 +1050,20 @@ export default function ScreeningReviewPage() {
                           type="button"
                           onClick={resetOverlayBoxes}
                           className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                          title="Reset boxes to AI positions (this image)"
+                          title={t(
+                            'Ophthalmologist.screeningReview.toolbar.resetBoxes',
+                            'Reset boxes to AI positions (this image)'
+                          )}
                         >
                           <RotateCcw className="w-5 h-5" />
                         </button>
                       ) : null}
                       <button
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Measure"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.measure',
+                          'Measure'
+                        )}
                       >
                         <Settings2 className="w-5 h-5" />
                       </button>
@@ -909,9 +1098,10 @@ export default function ScreeningReviewPage() {
                           />
                           {overlayEditMode ? (
                             <p className="absolute bottom-1 left-1 right-1 z-20 mx-auto max-w-md rounded bg-black/75 px-2 py-1 text-center text-[11px] text-white/90">
-                              Kéo khung để di chuyển · Kéo ô vuông góc phải dưới
-                              để phóng to/thu nhỏ. Chỉnh sửa chỉ lưu trên trình
-                              duyệt (chưa gửi server).
+                              {t(
+                                'Ophthalmologist.screeningReview.overlayEditHint',
+                                'Kéo khung để di chuyển · Kéo ô vuông góc phải dưới để phóng to/thu nhỏ. Chỉnh sửa chỉ lưu trên trình duyệt (chưa gửi server).'
+                              )}
                             </p>
                           ) : null}
                           {showOverlay &&
@@ -976,8 +1166,10 @@ export default function ScreeningReviewPage() {
                         </div>
                       ) : (
                         <p className="text-gray-500 text-sm text-center max-w-xs">
-                          No fundus image selected. Uploads attached to this
-                          screening will appear here.
+                          {t(
+                            'Ophthalmologist.screeningReview.noSelectedFundusImage',
+                            'No fundus image selected. Uploads attached to this screening will appear here.'
+                          )}
                         </p>
                       )}
                     </div>
@@ -1000,7 +1192,10 @@ export default function ScreeningReviewPage() {
                     {selectedImage && showAttentionBadge ? (
                       <div className="absolute top-4 right-4">
                         <span className="px-3 py-1.5 bg-red-500/90 backdrop-blur rounded-lg text-white text-sm font-semibold">
-                          ATTENTION NEEDED
+                          {t(
+                            'Ophthalmologist.screeningReview.attentionNeeded',
+                            'ATTENTION NEEDED'
+                          )}
                         </span>
                       </div>
                     ) : null}
@@ -1009,10 +1204,30 @@ export default function ScreeningReviewPage() {
                   {/* Bottom Bar */}
                   <div className="flex items-center justify-between p-3 border-t border-gray-800">
                     <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>Magnification: {zoom.toFixed(1)}x</span>
-                      <span>Modality: Color Fundus</span>
                       <span>
-                        Quality:{' '}
+                        {t(
+                          'Ophthalmologist.screeningReview.magnification',
+                          'Magnification'
+                        )}
+                        : {zoom.toFixed(1)}x
+                      </span>
+                      <span>
+                        {t(
+                          'Ophthalmologist.screeningReview.modality',
+                          'Modality'
+                        )}
+                        :{' '}
+                        {t(
+                          'Ophthalmologist.screeningReview.colorFundus',
+                          'Color Fundus'
+                        )}
+                      </span>
+                      <span>
+                        {t(
+                          'Ophthalmologist.screeningReview.quality',
+                          'Quality'
+                        )}
+                        :{' '}
                         <span
                           className={
                             !selectedImage || selectedImage.qualityScore <= 0
@@ -1025,12 +1240,24 @@ export default function ScreeningReviewPage() {
                           }
                         >
                           {!selectedImage || selectedImage.qualityScore <= 0
-                            ? 'Unknown'
+                            ? t(
+                                'Ophthalmologist.screeningReview.unknown',
+                                'Unknown'
+                              )
                             : selectedImage.qualityScore >= 90
-                              ? 'Optimal'
+                              ? t(
+                                  'Ophthalmologist.screeningReview.qualityOptimal',
+                                  'Optimal'
+                                )
                               : selectedImage.qualityScore >= 70
-                                ? 'Good'
-                                : 'Poor'}
+                                ? t(
+                                    'Ophthalmologist.screeningReview.qualityGood',
+                                    'Good'
+                                  )
+                                : t(
+                                    'Ophthalmologist.screeningReview.qualityPoor',
+                                    'Poor'
+                                  )}
                         </span>
                       </span>
                     </div>
@@ -1045,7 +1272,10 @@ export default function ScreeningReviewPage() {
                             : 'bg-gray-800 text-gray-400 hover:text-white'
                         }`}
                       >
-                        AI Overlay
+                        {t(
+                          'Ophthalmologist.screeningReview.aiOverlay',
+                          'AI Overlay'
+                        )}
                       </button>
                       <button
                         onClick={() => setShowOverlay(false)}
@@ -1055,7 +1285,10 @@ export default function ScreeningReviewPage() {
                             : 'bg-gray-800 text-gray-400 hover:text-white'
                         }`}
                       >
-                        Original
+                        {t(
+                          'Ophthalmologist.screeningReview.original',
+                          'Original'
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1065,7 +1298,10 @@ export default function ScreeningReviewPage() {
                 <div className="col-span-3 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
                   <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      Kết quả đã lưu (AI)
+                      {t(
+                        'Ophthalmologist.screeningReview.savedAiResult',
+                        'Kết quả đã lưu (AI)'
+                      )}
                     </h3>
 
                     <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-3">
@@ -1092,7 +1328,11 @@ export default function ScreeningReviewPage() {
                               {detail.latestResult.riskLevel}
                             </span>
                             <span className="text-sm text-gray-600 dark:text-gray-300">
-                              Độ tin cậy mô hình:{' '}
+                              {t(
+                                'Ophthalmologist.screeningReview.modelConfidence',
+                                'Độ tin cậy mô hình'
+                              )}
+                              :{' '}
                               <strong className="text-gray-900 dark:text-white">
                                 {aiConfidencePct}%
                               </strong>
@@ -1104,7 +1344,10 @@ export default function ScreeningReviewPage() {
                         </div>
                       ) : (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Chưa có kết quả screening đã lưu cho ca này.
+                          {t(
+                            'Ophthalmologist.screeningReview.noSavedResult',
+                            'Chưa có kết quả screening đã lưu cho ca này.'
+                          )}
                         </p>
                       )}
                     </div>
@@ -1113,14 +1356,19 @@ export default function ScreeningReviewPage() {
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      Detected Findings ({findings.length})
+                      {t(
+                        'Ophthalmologist.screeningReview.detectedFindings',
+                        'Detected Findings'
+                      )}{' '}
+                      ({findings.length})
                     </p>
                     <div className="space-y-3">
                       {findings.length === 0 ? (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          No structured findings for this image. If AI raw
-                          output exists, try another eye image or confirm
-                          results were saved for this screening.
+                          {t(
+                            'Ophthalmologist.screeningReview.noStructuredFindings',
+                            'No structured findings for this image. If AI raw output exists, try another eye image or confirm results were saved for this screening.'
+                          )}
                         </p>
                       ) : null}
                       {findings.map((finding) => (
@@ -1141,7 +1389,11 @@ export default function ScreeningReviewPage() {
                                     : 'text-yellow-600 dark:text-yellow-400'
                               }`}
                             >
-                              {finding.confidence}% Conf.
+                              {finding.confidence}%{' '}
+                              {t(
+                                'Ophthalmologist.screeningReview.confAbbr',
+                                'Conf.'
+                              )}
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
@@ -1152,7 +1404,10 @@ export default function ScreeningReviewPage() {
                             className="flex items-center gap-1 text-xs text-cyan-600 dark:text-cyan-400 hover:underline"
                           >
                             <SearchIcon className="w-3 h-3" />
-                            CLICK TO FOCUS
+                            {t(
+                              'Ophthalmologist.screeningReview.clickToFocus',
+                              'CLICK TO FOCUS'
+                            )}
                           </button>
                         </div>
                       ))}
@@ -1163,9 +1418,13 @@ export default function ScreeningReviewPage() {
                       <div className="flex items-start gap-2">
                         <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                         <p className="text-xs text-blue-700 dark:text-blue-300">
-                          <span className="font-semibold">Note:</span> AI
-                          generated insights are screening aids only. Final
-                          diagnosis requires physician review.
+                          <span className="font-semibold">
+                            {t('Ophthalmologist.screeningReview.note', 'Note')}:
+                          </span>{' '}
+                          {t(
+                            'Ophthalmologist.screeningReview.aiDisclaimer',
+                            'AI generated insights are screening aids only. Final diagnosis requires physician review.'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -1176,14 +1435,20 @@ export default function ScreeningReviewPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors">
                         <Flag className="w-4 h-4" />
-                        Flag for Review
+                        {t(
+                          'Ophthalmologist.screeningReview.flagForReview',
+                          'Flag for Review'
+                        )}
                       </button>
                       <button
                         onClick={() => setShowDiagnosisModal(true)}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors"
                       >
                         <FileText className="w-4 h-4" />
-                        Generate Report
+                        {t(
+                          'Ophthalmologist.screeningReview.generateReport',
+                          'Generate Report'
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1202,7 +1467,10 @@ export default function ScreeningReviewPage() {
             <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Complete Diagnosis
+                  {t(
+                    'Ophthalmologist.screeningReview.completeDiagnosis',
+                    'Complete Diagnosis'
+                  )}
                 </h2>
                 <button
                   onClick={() => setShowDiagnosisModal(false)}
@@ -1212,7 +1480,10 @@ export default function ScreeningReviewPage() {
                 </button>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Review AI findings and provide your clinical assessment
+                {t(
+                  'Ophthalmologist.screeningReview.completeDiagnosisHint',
+                  'Review AI findings and provide your clinical assessment'
+                )}
               </p>
             </div>
 
@@ -1221,21 +1492,35 @@ export default function ScreeningReviewPage() {
               {/* AI Summary */}
               <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-cyan-800 dark:text-cyan-300 mb-2">
-                  AI Analysis Summary
+                  {t(
+                    'Ophthalmologist.screeningReview.aiAnalysisSummary',
+                    'AI Analysis Summary'
+                  )}
                 </h3>
                 <p className="text-sm text-cyan-700 dark:text-cyan-400">
                   {detail?.latestResult?.summary?.trim() ||
-                    'No AI summary stored for this screening.'}
+                    t(
+                      'Ophthalmologist.screeningReview.noAiSummaryStored',
+                      'No AI summary stored for this screening.'
+                    )}
                 </p>
                 <div className="flex items-center gap-4 mt-3">
                   <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                    Risk Level:{' '}
+                    {t(
+                      'Ophthalmologist.screeningReview.riskLevel',
+                      'Risk Level'
+                    )}
+                    :{' '}
                     <strong>
                       {detail?.latestResult?.riskLevel ?? riskLevelUi}
                     </strong>
                   </span>
                   <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                    Confidence: <strong>{aiConfidencePct}%</strong>
+                    {t(
+                      'Ophthalmologist.screeningReview.confidence',
+                      'Confidence'
+                    )}
+                    : <strong>{aiConfidencePct}%</strong>
                   </span>
                 </div>
               </div>
@@ -1243,14 +1528,20 @@ export default function ScreeningReviewPage() {
               {/* Diagnosis core */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  Diagnosis Core
+                  {t(
+                    'Ophthalmologist.screeningReview.diagnosisCore',
+                    'Diagnosis Core'
+                  )}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <input
                     type="text"
                     value={diagnosisCode}
                     onChange={(e) => setDiagnosisCode(e.target.value)}
-                    placeholder="Diagnosis code"
+                    placeholder={t(
+                      'Ophthalmologist.screeningReview.diagnosisCodePlaceholder',
+                      'Diagnosis code'
+                    )}
                     className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   />
                   <select
@@ -1268,21 +1559,39 @@ export default function ScreeningReviewPage() {
                   onChange={(e) => setDiagnosisStatus(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 >
-                  <option value="Draft">Draft</option>
-                  <option value="Reviewed">Reviewed</option>
-                  <option value="Finalized">Finalized</option>
+                  <option value="Draft">
+                    {t('Ophthalmologist.screeningReview.status.draft', 'Draft')}
+                  </option>
+                  <option value="Reviewed">
+                    {t(
+                      'Ophthalmologist.screeningReview.status.reviewed',
+                      'Reviewed'
+                    )}
+                  </option>
+                  <option value="Finalized">
+                    {t(
+                      'Ophthalmologist.screeningReview.status.finalized',
+                      'Finalized'
+                    )}
+                  </option>
                 </select>
               </div>
 
               {/* Clinical findings */}
               <div>
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                  Clinical Findings
+                  {t(
+                    'Ophthalmologist.screeningReview.clinicalFindings',
+                    'Clinical Findings'
+                  )}
                 </h4>
                 <textarea
                   value={clinicalFindings}
                   onChange={(e) => setClinicalFindings(e.target.value)}
-                  placeholder="Document physician findings and interpretation..."
+                  placeholder={t(
+                    'Ophthalmologist.screeningReview.clinicalFindingsPlaceholder',
+                    'Document physician findings and interpretation...'
+                  )}
                   rows={4}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
@@ -1292,17 +1601,40 @@ export default function ScreeningReviewPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-2">
                   <p className="font-medium text-gray-900 dark:text-white">
-                    Severity Level
+                    {t(
+                      'Ophthalmologist.screeningReview.severityLevel',
+                      'Severity Level'
+                    )}
                   </p>
                   <select
                     value={severityLevel}
                     onChange={(e) => setSeverityLevel(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   >
-                    <option value="Mild">Mild</option>
-                    <option value="Moderate">Moderate</option>
-                    <option value="Severe">Severe</option>
-                    <option value="Critical">Critical</option>
+                    <option value="Mild">
+                      {t(
+                        'Ophthalmologist.screeningReview.severity.mild',
+                        'Mild'
+                      )}
+                    </option>
+                    <option value="Moderate">
+                      {t(
+                        'Ophthalmologist.screeningReview.severity.moderate',
+                        'Moderate'
+                      )}
+                    </option>
+                    <option value="Severe">
+                      {t(
+                        'Ophthalmologist.screeningReview.severity.severe',
+                        'Severe'
+                      )}
+                    </option>
+                    <option value="Critical">
+                      {t(
+                        'Ophthalmologist.screeningReview.severity.critical',
+                        'Critical'
+                      )}
+                    </option>
                   </select>
                 </div>
 
@@ -1310,10 +1642,16 @@ export default function ScreeningReviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        Urgent Case
+                        {t(
+                          'Ophthalmologist.screeningReview.urgentCase',
+                          'Urgent Case'
+                        )}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Mark if immediate attention is required
+                        {t(
+                          'Ophthalmologist.screeningReview.urgentCaseHint',
+                          'Mark if immediate attention is required'
+                        )}
                       </p>
                     </div>
                     <button
@@ -1335,7 +1673,10 @@ export default function ScreeningReviewPage() {
               {/* Confidence */}
               <div>
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                  Confidence Level (0 - 100)
+                  {t(
+                    'Ophthalmologist.screeningReview.confidenceLevelRange',
+                    'Confidence Level (0 - 100)'
+                  )}
                 </h4>
                 <input
                   type="number"
@@ -1351,19 +1692,28 @@ export default function ScreeningReviewPage() {
               {/* Treatment and recommendations */}
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  Treatment and Advice
+                  {t(
+                    'Ophthalmologist.screeningReview.treatmentAndAdvice',
+                    'Treatment and Advice'
+                  )}
                 </h4>
                 <textarea
                   value={treatmentPlan}
                   onChange={(e) => setTreatmentPlan(e.target.value)}
-                  placeholder="Treatment plan..."
+                  placeholder={t(
+                    'Ophthalmologist.screeningReview.treatmentPlanPlaceholder',
+                    'Treatment plan...'
+                  )}
                   rows={3}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
                 <textarea
                   value={recommendations}
                   onChange={(e) => setRecommendations(e.target.value)}
-                  placeholder="Recommendations for patient and follow-up care..."
+                  placeholder={t(
+                    'Ophthalmologist.screeningReview.recommendationsPlaceholder',
+                    'Recommendations for patient and follow-up care...'
+                  )}
                   rows={3}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
@@ -1375,10 +1725,16 @@ export default function ScreeningReviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        Referral Required
+                        {t(
+                          'Ophthalmologist.screeningReview.referralRequired',
+                          'Referral Required'
+                        )}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Recommend specialist consultation
+                        {t(
+                          'Ophthalmologist.screeningReview.referralRequiredHint',
+                          'Recommend specialist consultation'
+                        )}
                       </p>
                     </div>
                     <button
@@ -1400,7 +1756,10 @@ export default function ScreeningReviewPage() {
 
                 <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4">
                   <p className="font-medium text-gray-900 dark:text-white mb-2">
-                    Follow-up Date
+                    {t(
+                      'Ophthalmologist.screeningReview.followUpDate',
+                      'Follow-up Date'
+                    )}
                   </p>
                   <input
                     type="date"
@@ -1418,12 +1777,12 @@ export default function ScreeningReviewPage() {
                 onClick={() => setShowDiagnosisModal(false)}
                 className="px-6 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
               >
-                Cancel
+                {t('Ophthalmologist.screeningReview.cancel', 'Cancel')}
               </button>
               <div className="flex items-center gap-3">
                 <button className="px-6 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-xl font-medium transition-colors flex items-center gap-2">
                   <Download className="w-4 h-4" />
-                  Export PDF
+                  {t('Ophthalmologist.screeningReview.exportPdf', 'Export PDF')}
                 </button>
                 <button
                   onClick={handleSubmitDiagnosis}
@@ -1436,11 +1795,17 @@ export default function ScreeningReviewPage() {
                 >
                   <Save className="w-4 h-4" />
                   {submitVerificationReportMutation.isPending
-                    ? 'Saving...'
+                    ? t('Ophthalmologist.screeningReview.saving', 'Saving...')
                     : consultationSessionsQuery.isLoading ||
                         consultationSessionsQuery.isFetching
-                      ? 'Linking session...'
-                      : 'Confirm & Save'}
+                      ? t(
+                          'Ophthalmologist.screeningReview.linkingSession',
+                          'Linking session...'
+                        )
+                      : t(
+                          'Ophthalmologist.screeningReview.confirmAndSave',
+                          'Confirm & Save'
+                        )}
                 </button>
               </div>
             </div>
