@@ -1530,6 +1530,69 @@
       "bookAppointment": "Đặt lịch khám"
     }
   },
+  "PatientReports": {
+    "page": {
+      "title": "Báo cáo y tế",
+      "subtitle": "Xem, tải xuống và theo dõi kết quả sàng lọc cùng heatmap của bạn"
+    },
+    "stats": {
+      "totalReports": "Tổng báo cáo",
+      "verified": "Đã xác minh",
+      "withHeatmaps": "Có heatmap",
+      "healthyResults": "Kết quả khỏe mạnh"
+    },
+    "search": {
+      "placeholder": "Tìm kiếm báo cáo..."
+    },
+    "filters": {
+      "label": "Bộ lọc",
+      "all": "Tất cả"
+    },
+    "risk": {
+      "low": "Nguy cơ thấp",
+      "medium": "Nguy cơ trung bình",
+      "high": "Nguy cơ cao"
+    },
+    "type": {
+      "screening": "Sàng lọc võng mạc",
+      "followUp": "Lần quét tái khám",
+      "verification": "Kết quả đã xác minh"
+    },
+    "badges": {
+      "verified": "Đã xác minh"
+    },
+    "fields": {
+      "result": "Kết quả: {{value}}",
+      "analyzedBy": "Phân tích bởi:",
+      "detectedConditions": "Các dấu hiệu phát hiện:"
+    },
+    "actions": {
+      "viewDetails": "Xem chi tiết",
+      "viewHeatmap": "Xem heatmap",
+      "downloadPdf": "Tải PDF",
+      "startFirstScreening": "Bắt đầu lần sàng lọc đầu tiên"
+    },
+    "empty": {
+      "title": "Không tìm thấy báo cáo",
+      "adjustSearchOrFilters": "Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.",
+      "noScreenings": "Bạn chưa hoàn tất lần sàng lọc nào."
+    },
+    "mock": {
+      "result": {
+        "healthy": "Khỏe mạnh",
+        "mildSignsDetected": "Phát hiện dấu hiệu nhẹ",
+        "requiresAttention": "Cần chú ý"
+      },
+      "doctor": {
+        "aiAnalysis": "Phân tích AI"
+      },
+      "conditions": {
+        "earlyAmdSigns": "Dấu hiệu AMD sớm",
+        "monitorBloodSugar": "Theo dõi đường huyết",
+        "diabeticRetinopathyStage1": "Bệnh võng mạc đái tháo đường - Giai đoạn 1"
+      }
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",

@@ -1529,5 +1529,68 @@
       "messageSpecialist": "Message Specialist",
       "bookAppointment": "Book Appointment"
     }
+  },
+  "PatientReports": {
+    "page": {
+      "title": "Medical Reports",
+      "subtitle": "View, download, and track your screening results and heatmaps"
+    },
+    "stats": {
+      "totalReports": "Total Reports",
+      "verified": "Verified",
+      "withHeatmaps": "With Heatmaps",
+      "healthyResults": "Healthy Results"
+    },
+    "search": {
+      "placeholder": "Search reports..."
+    },
+    "filters": {
+      "label": "Filter",
+      "all": "All"
+    },
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Medium Risk",
+      "high": "High Risk"
+    },
+    "type": {
+      "screening": "Retinal Screening",
+      "followUp": "Follow-up Scan",
+      "verification": "Verified Result"
+    },
+    "badges": {
+      "verified": "Verified"
+    },
+    "fields": {
+      "result": "Result: {{value}}",
+      "analyzedBy": "Analyzed by:",
+      "detectedConditions": "Detected Conditions:"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "viewHeatmap": "View Heatmap",
+      "downloadPdf": "Download PDF",
+      "startFirstScreening": "Start Your First Screening"
+    },
+    "empty": {
+      "title": "No Reports Found",
+      "adjustSearchOrFilters": "Try adjusting your search or filters.",
+      "noScreenings": "You haven't completed any screenings yet."
+    },
+    "mock": {
+      "result": {
+        "healthy": "Healthy",
+        "mildSignsDetected": "Mild Signs Detected",
+        "requiresAttention": "Requires Attention"
+      },
+      "doctor": {
+        "aiAnalysis": "AI Analysis"
+      },
+      "conditions": {
+        "earlyAmdSigns": "Early AMD signs",
+        "monitorBloodSugar": "Monitor blood sugar",
+        "diabeticRetinopathyStage1": "Diabetic Retinopathy - Stage 1"
+      }
+    }
   }
 }

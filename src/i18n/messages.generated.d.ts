@@ -1533,6 +1533,69 @@ declare module 'i18next' {
         bookAppointment: string;
       };
     };
+    PatientReports: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      stats: {
+        totalReports: string;
+        verified: string;
+        withHeatmaps: string;
+        healthyResults: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      filters: {
+        label: string;
+        all: string;
+      };
+      risk: {
+        low: string;
+        medium: string;
+        high: string;
+      };
+      type: {
+        screening: string;
+        followUp: string;
+        verification: string;
+      };
+      badges: {
+        verified: string;
+      };
+      fields: {
+        result: string;
+        analyzedBy: string;
+        detectedConditions: string;
+      };
+      actions: {
+        viewDetails: string;
+        viewHeatmap: string;
+        downloadPdf: string;
+        startFirstScreening: string;
+      };
+      empty: {
+        title: string;
+        adjustSearchOrFilters: string;
+        noScreenings: string;
+      };
+      mock: {
+        result: {
+          healthy: string;
+          mildSignsDetected: string;
+          requiresAttention: string;
+        };
+        doctor: {
+          aiAnalysis: string;
+        };
+        conditions: {
+          earlyAmdSigns: string;
+          monitorBloodSugar: string;
+          diabeticRetinopathyStage1: string;
+        };
+      };
+    };
     notification: {
       types: {
         screening: string;
