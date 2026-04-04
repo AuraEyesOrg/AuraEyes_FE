@@ -86,7 +86,6 @@ export default function SettingsPage() {
     maintenanceMode: false,
     minAdvanceBookingHours: 0.5,
     aiQuotaUnitPrice: 10000,
-    defaultPlatformCommission: 0.05,
     freeAiQuota: 3,
   });
 
@@ -106,9 +105,6 @@ export default function SettingsPage() {
         aiQuotaUnitPrice: systemSettings['AI_QUOTA_UNIT_PRICE']
           ? parseFloat(systemSettings['AI_QUOTA_UNIT_PRICE'])
           : 10000,
-        defaultPlatformCommission: systemSettings['DEFAULT_PLATFORM_COMMISSION']
-          ? parseFloat(systemSettings['DEFAULT_PLATFORM_COMMISSION'])
-          : 0.05,
         freeAiQuota: systemSettings['FREE_AI_QUOTA']
           ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
           : 3,
@@ -153,10 +149,6 @@ export default function SettingsPage() {
         AI_QUOTA_UNIT_PRICE: Math.max(
           1,
           generalSettings.aiQuotaUnitPrice
-        ).toString(),
-        DEFAULT_PLATFORM_COMMISSION: Math.max(
-          0,
-          generalSettings.defaultPlatformCommission
         ).toString(),
         FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
@@ -304,25 +296,6 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Total purchase cost = quantity x unit price.
           </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Default Platform Commission Rate
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={1}
-            step={0.01}
-            value={generalSettings.defaultPlatformCommission}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                defaultPlatformCommission: parseFloat(e.target.value) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">

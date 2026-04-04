@@ -151,6 +151,11 @@ export const API_ENDPOINTS = {
       TERMINATE: (id: string) => `/system-admin/contracts/${id}/terminate`,
       CANCEL: (id: string) => `/system-admin/contracts/${id}/cancel`,
     },
+
+    // Cashflow Ledger
+    CASHFLOW: {
+      TRANSACTIONS: '/system-admin/cashflow/transactions',
+    },
   },
 
   // Patient features

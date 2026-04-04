@@ -223,6 +223,9 @@ const SystemAdminContractTemplateEditor = lazy(
 const SystemAdminContracts = lazy(
   () => import('@/features/system-admin/pages/contracts')
 );
+const SystemAdminCashflow = lazy(
+  () => import('@/features/system-admin/pages/cashflow')
+);
 
 // Professional Network pages
 const NetworkLayout = lazy(() =>
@@ -857,6 +860,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/system-admin/cashflow"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminCashflow />}
+            />
+          }
+        />
 
         <Route path="/:locale" element={<GuestLayout />}>
           <Route index element={<HomePage />} />
@@ -1344,6 +1356,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminWithdrawalRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/cashflow"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminCashflow />
             </PrivateRoute>
           }
         />

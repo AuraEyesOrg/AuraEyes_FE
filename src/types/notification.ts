@@ -241,10 +241,18 @@ function readString(
   payload: Record<string, unknown>,
   ...keys: string[]
 ): string {
+  const normalize = (value: string) => value.replace(/[_-]/g, '').toLowerCase();
+
+  const normalizedPayload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    normalizedPayload[normalize(key)] = value;
+  }
+
   for (const key of keys) {
-    const value = payload[key];
+    const value = normalizedPayload[normalize(key)];
     if (typeof value === 'string' && value.length > 0) return value;
   }
+
   return '';
 }
 
@@ -273,14 +281,15 @@ function containsAny(text: string, keywords: string[]): boolean {
 }
 
 function getRoleHome(roles: string[]): string {
-  if (hasRole(roles, ['systemadmin'])) return '/system-admin/dashboard';
+  if (hasRole(roles, ['systemadmin', 'admin']))
+    return '/system-admin/dashboard';
   if (hasRole(roles, ['orgadmin', 'organization', 'clinic']))
     return '/organisation/dashboard';
   if (hasRole(roles, ['ophthalmologist', 'doctor']))
     return '/ophthalmologist/dashboard';
   if (hasRole(roles, ['patient'])) return '/patient/notifications';
 
-  return '/notifications';
+  return '/notifications/view-all';
 }
 
 /**
@@ -302,21 +311,28 @@ export function getNotificationRoute(
   const screeningId =
     readString(payload, 'screeningId', 'aiScreeningId') || fallbackReferenceId;
   const consultationId =
-    readString(payload, 'sessionId', 'consultationId') || fallbackReferenceId;
+    readString(
+      payload,
+      'sessionId',
+      'consultationId',
+      'consultationSessionId'
+    ) || fallbackReferenceId;
   const appointmentId =
-    readString(payload, 'appointmentId', 'slotId') || fallbackReferenceId;
+    readString(payload, 'appointmentId', 'slotId', 'appointmentSlotId') ||
+    fallbackReferenceId;
   const transactionId =
     readString(payload, 'transactionId') || fallbackReferenceId;
 
-  const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin']);
+  const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin', 'admin']);
   const isOrgAdmin = hasRole(normalizedRoles, [
     'orgadmin',
     'organization',
     'clinic',
   ]);
   const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
-  const isPatient =
-    hasRole(normalizedRoles, ['patient']) || normalizedRoles.length === 0;
+  const isPatient = hasRole(normalizedRoles, ['patient']);
+
+  const fallbackHome = getRoleHome(normalizedRoles);
 
   switch (notification.type) {
     case NotificationType.AiScreeningCompleted: {
@@ -326,7 +342,9 @@ export function getNotificationRoute(
           ? '/ophthalmologist/screenings'
           : isOrgAdmin
             ? '/organisation/patients'
-            : '/system-admin/dashboard';
+            : isSystemAdmin
+              ? '/system-admin/dashboard'
+              : fallbackHome;
       return appendIdQuery(base, 'screeningId', screeningId);
     }
 
@@ -340,7 +358,9 @@ export function getNotificationRoute(
           ? '/patient/chat'
           : isOrgAdmin
             ? '/organisation/calendar'
-            : '/system-admin/verifications';
+            : isSystemAdmin
+              ? '/system-admin/verifications'
+              : fallbackHome;
       return appendIdQuery(base, 'sessionId', consultationId);
     }
 
@@ -373,7 +393,9 @@ export function getNotificationRoute(
           ? '/organisation/calendar'
           : isPatient
             ? '/patient/appointments'
-            : '/system-admin/dashboard';
+            : isSystemAdmin
+              ? '/system-admin/dashboard'
+              : fallbackHome;
       return appendIdQuery(
         base,
         notification.type === NotificationType.NewAppointmentBooked
@@ -391,7 +413,9 @@ export function getNotificationRoute(
           ? '/organisation/dashboard'
           : isDoctor
             ? '/ophthalmologist/dashboard'
-            : '/system-admin/dashboard';
+            : isSystemAdmin
+              ? '/system-admin/dashboard'
+              : fallbackHome;
       return appendIdQuery(base, 'transactionId', transactionId);
     }
 

@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -9,9 +8,6 @@ import {
   MapPin,
   Calendar,
   Camera,
-  Shield,
-  Bell,
-  Key,
   Save,
   Edit3,
   CheckCircle,
@@ -28,14 +24,8 @@ import {
   useProfile,
   useUpdateProfile,
   useUploadAvatar,
-  useChangePassword,
 } from '../hooks/useProfile';
-import {
-  profileSchema,
-  changePasswordSchema,
-  type ProfileFormData,
-  type ChangePasswordFormData,
-} from '../schemas/profile.schema';
+import { profileSchema, type ProfileFormData } from '../schemas/profile.schema';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
@@ -47,7 +37,6 @@ export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const uploadAvatarMutation = useUploadAvatar();
-  const changePasswordMutation = useChangePassword();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -58,9 +47,6 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
-
-  // Change password modal state
-  const [showChangePassword, setShowChangePassword] = useState(false);
 
   // Profile form
   const {
@@ -77,16 +63,6 @@ export default function ProfilePage() {
       gender: '',
       address: '',
     },
-  });
-
-  // Change password form
-  const {
-    register: registerPw,
-    handleSubmit: handleSubmitPw,
-    reset: resetPw,
-    formState: { errors: pwErrors },
-  } = useForm<ChangePasswordFormData>({
-    resolver: yupResolver(changePasswordSchema),
   });
 
   // Reset form when profile data loads or editing starts
@@ -268,21 +244,6 @@ export default function ProfilePage() {
     setPreviewUrl(null);
     setAvatarFile(null);
     setIsDragging(false);
-  };
-
-  // ============ CHANGE PASSWORD HANDLERS ============
-
-  const onPasswordSubmit = (data: ChangePasswordFormData) => {
-    changePasswordMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success(t('PatientProfile.toast.passwordChanged'));
-        setShowChangePassword(false);
-        resetPw();
-      },
-      onError: (_err) => {
-        toast.error(t('PatientProfile.toast.passwordChangeFailed'));
-      },
-    });
   };
 
   // ============ LOADING / ERROR STATES ============
@@ -764,226 +725,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </form>
-
-          {/* Security Settings */}
-          <div className="medical-card">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">
-              {t('PatientProfile.sections.securitySettings')}
-            </h2>
-
-            <div className="space-y-4">
-              {/* Change Password */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center">
-                    <Key className="w-5 h-5 text-brand" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      {t('PatientProfile.security.passwordTitle')}
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {t('PatientProfile.security.passwordDescription')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowChangePassword(true)}
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  {t('PatientProfile.actions.change')}
-                </button>
-              </div>
-
-              {/* Two-Factor Auth */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      profile.isTwoFactorEnabled
-                        ? 'bg-green-50'
-                        : 'bg-yellow-50'
-                    }`}
-                  >
-                    <Shield
-                      className={`w-5 h-5 ${
-                        profile.isTwoFactorEnabled
-                          ? 'text-green-600'
-                          : 'text-yellow-600'
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      {t('PatientProfile.security.twoFactorTitle')}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        profile.isTwoFactorEnabled
-                          ? 'text-green-600'
-                          : 'text-yellow-600'
-                      }`}
-                    >
-                      {profile.isTwoFactorEnabled
-                        ? t('PatientProfile.labels.enabled')
-                        : t('PatientProfile.labels.disabled')}
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/patient/security"
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  {t('PatientProfile.actions.manage')}
-                </Link>
-              </div>
-
-              {/* Notifications */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      {t('PatientProfile.security.notificationTitle')}
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {t('PatientProfile.security.notificationDescription')}
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/patient/notifications"
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  {t('PatientProfile.actions.configure')}
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Change Password Modal */}
-      {showChangePassword && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                {t('PatientProfile.security.changePasswordModalTitle')}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowChangePassword(false);
-                  resetPw();
-                  changePasswordMutation.reset();
-                }}
-                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-[var(--text-secondary)]" />
-              </button>
-            </div>
-
-            {changePasswordMutation.isError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                {changePasswordMutation.error?.message ||
-                  t('PatientProfile.toast.passwordChangeFailed')}
-              </div>
-            )}
-
-            {changePasswordMutation.isSuccess && (
-              <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                {t('PatientProfile.toast.passwordChanged')}
-              </div>
-            )}
-
-            <form
-              onSubmit={handleSubmitPw(onPasswordSubmit)}
-              className="space-y-4"
-            >
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  {t('PatientProfile.security.currentPassword')}
-                </label>
-                <input
-                  {...registerPw('currentPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.currentPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.currentPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  {t('PatientProfile.security.newPassword')}
-                </label>
-                <input
-                  {...registerPw('newPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.newPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.newPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  {t('PatientProfile.security.confirmNewPassword')}
-                </label>
-                <input
-                  {...registerPw('confirmNewPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.confirmNewPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.confirmNewPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowChangePassword(false);
-                    resetPw();
-                    changePasswordMutation.reset();
-                  }}
-                  className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
-                >
-                  {t('PatientProfile.actions.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={changePasswordMutation.isPending}
-                  className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {changePasswordMutation.isPending ? (
-                    <>
-                      <Spinner size={16} />
-                      {t('PatientProfile.security.changingPassword')}
-                    </>
-                  ) : (
-                    <>
-                      <Key className="w-4 h-4" />
-                      {t('PatientProfile.actions.changePassword')}
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </PatientLayout>
   );
 }
