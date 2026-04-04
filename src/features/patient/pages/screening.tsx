@@ -107,7 +107,10 @@ export default function ScreeningPage() {
         ? `${t('PatientReview.sessionLabel', 'Session')} - ${finding}`
         : `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt)}`;
     })(),
-    eye: 'Both Eyes',
+    eye: t('PatientScreening.labels.bothEyes', 'Both Eyes') as
+      | 'Left Eye (OS)'
+      | 'Right Eye (OD)'
+      | 'Both Eyes',
     date: session.createdAt,
     status: session.processedAt ? 'completed' : 'processing',
     riskLevel:
@@ -135,28 +138,28 @@ export default function ScreeningPage() {
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
             <CheckCircle className="w-3 h-3" />
-            Completed
+            {t('PatientScreening.status.completed', 'Completed')}
           </span>
         );
       case 'processing':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
             <Clock className="w-3 h-3 animate-pulse" />
-            Processing
+            {t('PatientScreening.status.processing', 'Processing')}
           </span>
         );
       case 'pending':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-full border border-amber-500/30">
             <Clock className="w-3 h-3" />
-            Pending
+            {t('PatientScreening.status.pending', 'Pending')}
           </span>
         );
       case 'failed':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">
             <AlertTriangle className="w-3 h-3" />
-            Failed
+            {t('PatientScreening.status.failed', 'Failed')}
           </span>
         );
     }
@@ -174,7 +177,7 @@ export default function ScreeningPage() {
       <span
         className={`px-2 py-0.5 text-xs font-medium rounded border capitalize ${colors[riskLevel as keyof typeof colors]}`}
       >
-        {riskLevel} risk
+        {t(`PatientScreening.risk.${riskLevel}`, `${riskLevel}`)}
       </span>
     );
   };
@@ -189,10 +192,13 @@ export default function ScreeningPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-(--text-primary) mb-1">
-              My Scans
+              {t('PatientScreening.page.title', 'My Scans')}
             </h1>
             <p className="text-(--text-secondary) text-sm">
-              View and manage your retinal screening history
+              {t(
+                'PatientScreening.page.subtitle',
+                'View and manage your retinal screening history'
+              )}
             </p>
           </div>
           <button
@@ -200,7 +206,7 @@ export default function ScreeningPage() {
             className="btn-primary flex items-center gap-2 self-start md:self-auto"
           >
             <Plus className="w-4 h-4" />
-            New Screening
+            {t('PatientScreening.actions.newScreening', 'New Screening')}
           </button>
         </div>
 
@@ -215,7 +221,9 @@ export default function ScreeningPage() {
                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                   {scans.length}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Total Scans</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {t('PatientScreening.stats.totalScans', 'Total Scans')}
+                </p>
               </div>
             </div>
           </div>
@@ -228,7 +236,9 @@ export default function ScreeningPage() {
                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                   {completedScans}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Completed</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {t('PatientScreening.stats.completed', 'Completed')}
+                </p>
               </div>
             </div>
           </div>
@@ -241,7 +251,9 @@ export default function ScreeningPage() {
                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                   {processingScans}
                 </p>
-                <p className="text-xs text-[var(--text-muted)]">Processing</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {t('PatientScreening.stats.processing', 'Processing')}
+                </p>
               </div>
             </div>
           </div>
@@ -254,7 +266,9 @@ export default function ScreeningPage() {
                 <p className="text-2xl font-bold text-(--text-primary)">
                   {scans.reduce((acc, s) => acc + (s.findings || 0), 0)}
                 </p>
-                <p className="text-xs text-(--text-muted)">Findings</p>
+                <p className="text-xs text-(--text-muted)">
+                  {t('PatientScreening.stats.findings', 'Findings')}
+                </p>
               </div>
             </div>
           </div>
@@ -266,7 +280,10 @@ export default function ScreeningPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
             <input
               type="text"
-              placeholder="Search scans..."
+              placeholder={t(
+                'PatientScreening.search.placeholder',
+                'Search scans...'
+              )}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-(--bg-secondary) border border-(--border-color) rounded-xl text-(--text-primary) placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-brand/50"
@@ -274,7 +291,7 @@ export default function ScreeningPage() {
           </div>
           <button className="flex items-center gap-2 px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors">
             <Filter className="w-4 h-4" />
-            Filter
+            {t('PatientScreening.actions.filter', 'Filter')}
           </button>
         </div>
 
@@ -282,7 +299,9 @@ export default function ScreeningPage() {
         <div className="medical-card flex-1 overflow-hidden">
           <div className="p-4 border-b border-(--border-color)">
             <h2 className="text-sm font-bold text-(--text-primary)">
-              Recent Scans ({filteredScans.length})
+              {t('PatientScreening.list.recentScans', {
+                count: filteredScans.length,
+              })}
             </h2>
           </div>
 
@@ -292,18 +311,20 @@ export default function ScreeningPage() {
                 <Eye className="w-8 h-8 text-[var(--text-muted)]" />
               </div>
               <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-                No scans yet
+                {t('PatientScreening.empty.title', 'No scans yet')}
               </h3>
               <p className="text-[var(--text-secondary)] text-sm mb-6">
-                Start your first retinal screening to detect potential issues
-                early
+                {t(
+                  'PatientScreening.empty.description',
+                  'Start your first retinal screening to detect potential issues early'
+                )}
               </p>
               <button
                 onClick={() => navigate('/patient/screening/new')}
                 className="btn-primary flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                New Screening
+                {t('PatientScreening.actions.newScreening', 'New Screening')}
               </button>
             </div>
           ) : (
@@ -353,7 +374,9 @@ export default function ScreeningPage() {
                       {scan.findings !== undefined && (
                         <span>
                           {scan.findings}{' '}
-                          {scan.findings === 1 ? 'finding' : 'findings'}
+                          {scan.findings === 1
+                            ? t('PatientScreening.labels.finding', 'finding')
+                            : t('PatientScreening.labels.findings', 'findings')}
                         </span>
                       )}
                     </div>
@@ -388,21 +411,30 @@ export default function ScreeningPage() {
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
                           <Eye className="w-4 h-4" />
-                          View Review
+                          {t(
+                            'PatientScreening.actions.viewReview',
+                            'View Review'
+                          )}
                         </button>
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
                           <Download className="w-4 h-4" />
-                          Download Report
+                          {t(
+                            'PatientScreening.actions.downloadReport',
+                            'Download Report'
+                          )}
                         </button>
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                         >
                           <Share2 className="w-4 h-4" />
-                          Share with Doctor
+                          {t(
+                            'PatientScreening.actions.shareWithDoctor',
+                            'Share with Doctor'
+                          )}
                         </button>
                         <hr className="my-1 border-[var(--border-color)]" />
                         <button
@@ -410,7 +442,7 @@ export default function ScreeningPage() {
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete
+                          {t('PatientScreening.actions.delete', 'Delete')}
                         </button>
                       </div>
                     )}
