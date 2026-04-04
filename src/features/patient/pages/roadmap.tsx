@@ -1,45 +1,102 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CalendarClock,
   ClipboardList,
+  FileDown,
+  FileSearch,
   HeartPulse,
-  ShieldAlert,
+  ShieldCheck,
   Sparkles,
+  Stethoscope,
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
 import { getRoadmaps } from '../api/patient.api';
 import type { HealthRoadmap } from '../types';
+import { getLocaleFromPathname, withLocalePathname } from '@/i18n/locales';
 
-const riskLevelStyle: Record<HealthRoadmap['riskLevel'], string> = {
-  LOW: 'bg-green-500/15 text-green-400 border-green-500/30',
-  MEDIUM: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-  HIGH: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
-  CRITICAL: 'bg-red-500/15 text-red-400 border-red-500/30',
+const riskLevelStyle: Record<
+  HealthRoadmap['riskLevel'],
+  {
+    badge: string;
+    panel: string;
+    dot: string;
+    label: string;
+  }
+> = {
+  LOW: {
+    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    panel: 'border-emerald-200 bg-emerald-50/70',
+    dot: 'bg-emerald-600',
+    label: 'Low Risk',
+  },
+  MEDIUM: {
+    badge: 'bg-amber-50 text-amber-700 border-amber-200',
+    panel: 'border-amber-200 bg-amber-50/70',
+    dot: 'bg-amber-500',
+    label: 'Medium Risk',
+  },
+  HIGH: {
+    badge: 'bg-orange-50 text-orange-700 border-orange-200',
+    panel: 'border-orange-200 bg-orange-50/70',
+    dot: 'bg-orange-500',
+    label: 'High Risk',
+  },
+  CRITICAL: {
+    badge: 'bg-red-50 text-red-700 border-red-200',
+    panel: 'border-red-200 bg-red-50/70',
+    dot: 'bg-red-600',
+    label: 'Critical Risk',
+  },
 };
 
-const renderGuidanceList = (items: string[], emptyText: string) => {
-  if (items.length === 0) {
-    return <p className="text-sm text-(--text-muted)">{emptyText}</p>;
-  }
+const warningKeywords = [
+  'blurred vision',
+  'vision loss',
+  'dark spots',
+  'severe pain',
+  'flashes',
+  'floaters',
+  'redness',
+  'sudden',
+  'headache',
+  'double vision',
+];
 
-  return (
-    <ul className="space-y-2">
-      {items.map((item, index) => (
-        <li
-          key={`${item}-${index}`}
-          className="text-sm text-(--text-secondary) bg-(--bg-secondary) border border-(--border-color) rounded-xl px-3 py-2"
-        >
-          {item}
-        </li>
-      ))}
-    </ul>
+const highlightMedicalKeywords = (text: string) => {
+  const escaped = warningKeywords.map((keyword) =>
+    keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   );
+  const pattern = new RegExp(`(${escaped.join('|')})`, 'ig');
+  const segments = text.split(pattern);
+
+  return segments.map((segment, index) => {
+    const isKeyword = warningKeywords.some(
+      (keyword) => segment.toLowerCase() === keyword.toLowerCase()
+    );
+
+    if (!isKeyword) {
+      return <Fragment key={`${segment}-${index}`}>{segment}</Fragment>;
+    }
+
+    return (
+      <mark
+        key={`${segment}-${index}`}
+        className="bg-red-100 text-red-800 font-semibold rounded px-1"
+      >
+        {segment}
+      </mark>
+    );
+  });
 };
 
 export default function RoadmapPage() {
+  const location = useLocation();
+  const currentLocale = getLocaleFromPathname(location.pathname) ?? 'vi';
+
   const roadmapQuery = useQuery({
     queryKey: ['patient', 'roadmaps'],
     queryFn: getRoadmaps,
@@ -50,16 +107,63 @@ export default function RoadmapPage() {
     [roadmapQuery.data]
   );
 
+  const localizedPath = (pathname: string) =>
+    withLocalePathname(currentLocale, pathname);
+
+  const ctaLinks = useMemo(
+    () => ({
+      bookConsultation: localizedPath('/patient/book-appointment'),
+      viewDiagnosis: localizedPath('/patient/reports'),
+      downloadReport: `${localizedPath('/patient/reports')}?diagnosisId=${latestRoadmap?.medicalDiagnosisId ?? ''}`,
+    }),
+    [currentLocale, latestRoadmap?.medicalDiagnosisId]
+  );
+
+  const timelineItems = useMemo(() => {
+    if (!latestRoadmap) {
+      return [];
+    }
+
+    return [
+      {
+        phase: 'TODAY',
+        title: 'Immediate Actions',
+        bullets:
+          latestRoadmap.nextSteps.length > 0
+            ? latestRoadmap.nextSteps.slice(0, 2)
+            : ['Review your roadmap summary and monitor symptoms closely.'],
+      },
+      {
+        phase: latestRoadmap.followUp.needed
+          ? latestRoadmap.followUp.timeframe || 'IN 2 WEEKS'
+          : 'FOLLOW-UP OPTIONAL',
+        title: 'Follow-up Plan',
+        bullets: latestRoadmap.followUp.needed
+          ? [
+              latestRoadmap.followUp.timeframe ||
+                'Schedule follow-up based on your doctor instructions.',
+            ]
+          : ['No urgent follow-up required unless symptoms worsen.'],
+      },
+      {
+        phase: 'ONGOING',
+        title: 'Lifestyle Routine',
+        bullets:
+          latestRoadmap.lifestyleAdvice.length > 0
+            ? latestRoadmap.lifestyleAdvice.slice(0, 2)
+            : ['Continue healthy eye-care habits and regular rest.'],
+      },
+    ];
+  }, [latestRoadmap]);
+
   if (roadmapQuery.isLoading) {
     return (
       <PatientLayout>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-10 w-72 rounded-xl bg-(--bg-secondary)" />
-          <div className="h-40 rounded-2xl bg-(--bg-secondary)" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="h-64 rounded-2xl bg-(--bg-secondary)" />
-            <div className="h-64 rounded-2xl bg-(--bg-secondary)" />
-            <div className="h-64 rounded-2xl bg-(--bg-secondary)" />
+        <div className="space-y-5 animate-pulse">
+          <div className="h-32 rounded-2xl bg-(--bg-secondary)" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div className="h-96 lg:col-span-8 rounded-2xl bg-(--bg-secondary)" />
+            <div className="h-96 lg:col-span-4 rounded-2xl bg-(--bg-secondary)" />
           </div>
         </div>
       </PatientLayout>
@@ -89,117 +193,261 @@ export default function RoadmapPage() {
   if (!latestRoadmap) {
     return (
       <PatientLayout>
-        <div className="medical-card">
-          <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
+        <div className="medical-card space-y-3">
+          <h1 className="text-2xl font-bold text-(--text-primary)">
             Health Roadmap
           </h1>
           <p className="text-(--text-secondary)">
             Your personalized roadmap will appear after your doctor finalizes a
             diagnosis.
           </p>
+          <Link
+            to={localizedPath('/patient/book-appointment')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            <Stethoscope className="w-4 h-4" />
+            Book Consultation
+          </Link>
         </div>
       </PatientLayout>
     );
   }
 
+  const sourceBadge =
+    latestRoadmap.source === 'DOCTOR_OVERRIDE'
+      ? {
+          label: 'Doctor Reviewed',
+          icon: <ShieldCheck className="w-4.5 h-4.5 text-emerald-600" />,
+          className: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        }
+      : {
+          label: 'AI Generated',
+          icon: <Sparkles className="w-4.5 h-4.5 text-brand" />,
+          className:
+            'border-(--border-color) bg-(--bg-secondary) text-(--text-secondary)',
+        };
+
+  const riskStyle = riskLevelStyle[latestRoadmap.riskLevel];
+
   return (
     <PatientLayout>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
-          Health Roadmap
-        </h1>
-        <p className="text-(--text-secondary)">
-          Personalized guidance generated from your doctor diagnosis and AI
-          screening context.
-        </p>
-      </div>
+      <div className="space-y-6">
+        <section className={`medical-card border-2 ${riskStyle.panel}`}>
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-4 max-w-3xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <div
+                  className={`px-5 py-2 border rounded-2xl text-lg font-bold tracking-wide ${riskStyle.badge}`}
+                >
+                  {riskStyle.label.toUpperCase()}
+                </div>
+                <div className={`w-2.5 h-2.5 rounded-full ${riskStyle.dot}`} />
+                <span className="text-sm text-(--text-secondary)">
+                  Generated on {formatShortDate(latestRoadmap.generatedAt)}
+                </span>
+              </div>
 
-      <div className="medical-card bg-brand-soft border-brand/20 mb-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-brand" />
-              <span
-                className={`px-2.5 py-1 text-xs font-semibold border rounded-full ${riskLevelStyle[latestRoadmap.riskLevel]}`}
+              <h1 className="text-3xl font-bold text-(--text-primary)">
+                Health Roadmap
+              </h1>
+
+              <p className="text-base text-(--text-secondary) leading-relaxed line-clamp-2">
+                {latestRoadmap.summary}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 border rounded-xl ${sourceBadge.className}`}
+                >
+                  {sourceBadge.icon}
+                  <span className="text-xs font-semibold tracking-wide uppercase">
+                    {sourceBadge.label}
+                  </span>
+                </div>
+                {latestRoadmap.source === 'DOCTOR_OVERRIDE' && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                    <ShieldCheck className="w-4 h-4" />
+                    Doctor Verified
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3 min-w-60">
+              <Link
+                to={ctaLinks.bookConsultation}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                {latestRoadmap.riskLevel} RISK
-              </span>
+                <Stethoscope className="w-4.5 h-4.5" />
+                Book Consultation
+              </Link>
+              <Link
+                to={ctaLinks.viewDiagnosis}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-white text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
+              >
+                <FileSearch className="w-4.5 h-4.5" />
+                View Diagnosis
+              </Link>
+              <Link
+                to={ctaLinks.downloadReport}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-white text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
+              >
+                <FileDown className="w-4.5 h-4.5" />
+                Download Report
+              </Link>
             </div>
-            <p className="text-(--text-primary) text-lg font-semibold">
-              {latestRoadmap.summary}
-            </p>
-            <div className="text-sm text-(--text-muted)">
-              Generated on {formatShortDate(latestRoadmap.generatedAt)}
-            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 space-y-6">
+            <article className="medical-card border-2 border-brand/25 bg-white">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardList className="w-4.5 h-4.5 text-brand" />
+                <h2 className="text-xl font-semibold text-(--text-primary)">
+                  Next Steps
+                </h2>
+              </div>
+              {latestRoadmap.nextSteps.length === 0 ? (
+                <p className="text-sm text-(--text-muted)">
+                  No immediate next steps were generated.
+                </p>
+              ) : (
+                <ol className="space-y-3">
+                  {latestRoadmap.nextSteps.map((step, index) => (
+                    <li
+                      key={`${step}-${index}`}
+                      className="flex gap-3 p-3 rounded-xl bg-(--bg-secondary) border border-(--border-color)"
+                    >
+                      <span className="mt-0.5 inline-flex w-7 h-7 items-center justify-center rounded-full bg-brand-soft text-brand text-sm font-bold">
+                        {index + 1}
+                      </span>
+                      <p className="text-sm text-(--text-primary) leading-relaxed">
+                        {step}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </article>
+
+            <article className="medical-card border border-(--border-color)">
+              <div className="flex items-center gap-2 mb-4">
+                <HeartPulse className="w-4.5 h-4.5 text-(--text-secondary)" />
+                <h2 className="text-lg font-semibold text-(--text-primary)">
+                  Lifestyle Advice
+                </h2>
+              </div>
+              {latestRoadmap.lifestyleAdvice.length === 0 ? (
+                <p className="text-sm text-(--text-muted)">
+                  No lifestyle guidance was generated.
+                </p>
+              ) : (
+                <ul className="space-y-2.5">
+                  {latestRoadmap.lifestyleAdvice.map((advice, index) => (
+                    <li
+                      key={`${advice}-${index}`}
+                      className="text-sm text-(--text-secondary) leading-relaxed"
+                    >
+                      • {advice}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-2 bg-(--bg-secondary) border border-(--border-color) rounded-xl">
-            <ShieldAlert className="w-4 h-4 text-brand" />
-            <span className="text-xs font-medium text-(--text-secondary)">
-              Source: {latestRoadmap.source}
-            </span>
+          <aside className="lg:col-span-5 space-y-6">
+            <article className="medical-card border border-red-200 bg-red-50/70">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="w-4.5 h-4.5 text-red-600" />
+                <h2 className="text-lg font-semibold text-red-800">
+                  Warning Signs
+                </h2>
+              </div>
+              {latestRoadmap.warningSigns.length === 0 ? (
+                <p className="text-sm text-red-700/80">
+                  No warning signs were listed.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {latestRoadmap.warningSigns.map((sign, index) => (
+                    <li
+                      key={`${sign}-${index}`}
+                      className="rounded-xl border border-red-100 bg-white px-3 py-2 text-sm text-red-900 leading-relaxed"
+                    >
+                      {highlightMedicalKeywords(sign)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </article>
+
+            <article className="medical-card border-brand/20 bg-brand-soft/40">
+              <div className="flex items-start gap-3">
+                <CalendarClock className="w-4.5 h-4.5 text-brand mt-1" />
+                <div>
+                  <h2 className="text-base font-semibold text-(--text-primary)">
+                    Follow-up Recommendation
+                  </h2>
+                  <p className="text-sm text-(--text-secondary) mt-1">
+                    {latestRoadmap.followUp.needed
+                      ? `Follow-up is recommended: ${latestRoadmap.followUp.timeframe || 'Please contact your doctor for schedule details.'}`
+                      : 'No immediate follow-up is required.'}
+                  </p>
+                </div>
+              </div>
+            </article>
+          </aside>
+        </section>
+
+        <section className="medical-card">
+          <div className="flex items-center gap-2 mb-5">
+            <CalendarClock className="w-4.5 h-4.5 text-brand" />
+            <h2 className="text-xl font-semibold text-(--text-primary)">
+              Care Timeline
+            </h2>
           </div>
-        </div>
+
+          <div className="space-y-4">
+            {timelineItems.map((item, index) => (
+              <div key={`${item.phase}-${index}`} className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand mt-2" />
+                  {index < timelineItems.length - 1 && (
+                    <span className="mt-2 w-px h-full bg-(--border-color)" />
+                  )}
+                </div>
+                <div className="flex-1 pb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-xs font-bold tracking-wide uppercase text-brand">
+                      {item.phase}
+                    </span>
+                    <h3 className="text-sm font-semibold text-(--text-primary)">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <ul className="space-y-1">
+                    {item.bullets.map((bullet) => (
+                      <li
+                        key={bullet}
+                        className="text-sm text-(--text-secondary)"
+                      >
+                        • {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-(--text-muted) mt-4">
+            Clinical diagnosis and treatment decisions remain under doctor
+            responsibility. This roadmap is patient-facing guidance.
+          </p>
+        </section>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <section className="medical-card space-y-4">
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-brand" />
-            <h2 className="font-semibold text-(--text-primary)">Next Steps</h2>
-          </div>
-          {renderGuidanceList(
-            latestRoadmap.nextSteps,
-            'No immediate next steps were generated.'
-          )}
-        </section>
-
-        <section className="medical-card space-y-4">
-          <div className="flex items-center gap-2">
-            <HeartPulse className="w-5 h-5 text-brand" />
-            <h2 className="font-semibold text-(--text-primary)">
-              Lifestyle Advice
-            </h2>
-          </div>
-          {renderGuidanceList(
-            latestRoadmap.lifestyleAdvice,
-            'No lifestyle guidance was generated.'
-          )}
-        </section>
-
-        <section className="medical-card space-y-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-brand" />
-            <h2 className="font-semibold text-(--text-primary)">
-              Warning Signs
-            </h2>
-          </div>
-          {renderGuidanceList(
-            latestRoadmap.warningSigns,
-            'No warning signs were listed.'
-          )}
-        </section>
-      </div>
-
-      <section className="medical-card border-brand/20 bg-brand-soft/40">
-        <div className="flex items-start gap-3">
-          <CalendarClock className="w-5 h-5 text-brand mt-0.5" />
-          <div>
-            <h2 className="font-semibold text-(--text-primary)">
-              Follow-up Recommendation
-            </h2>
-            <p className="text-sm text-(--text-secondary) mt-1">
-              {latestRoadmap.followUp.needed
-                ? `Follow-up is recommended: ${latestRoadmap.followUp.timeframe || 'Please contact your doctor for schedule details.'}`
-                : 'No immediate follow-up is required.'}
-            </p>
-            <p className="text-xs text-(--text-muted) mt-3">
-              Clinical diagnosis and treatment decisions remain under doctor
-              responsibility. This roadmap is patient-facing guidance.
-            </p>
-          </div>
-        </div>
-      </section>
     </PatientLayout>
   );
 }

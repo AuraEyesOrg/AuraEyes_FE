@@ -530,6 +530,8 @@ declare module 'i18next' {
         generating: string;
         blockReason: string;
         confirmDeleteTemplate: string;
+        confirmDeleteTemplateMessage: string;
+        confirmDeleteTemplateAction: string;
         blockThisSlot: string;
         unblockThisSlot: string;
         stats: {
