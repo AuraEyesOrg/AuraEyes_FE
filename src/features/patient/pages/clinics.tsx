@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Calendar,
   Clock,
@@ -31,6 +32,10 @@ const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
 };
 
 export default function ClinicsPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
 
@@ -92,10 +97,8 @@ export default function ClinicsPage() {
         slotId,
         visitReason: visitReason.trim() || undefined,
       });
-      toast.success('Bạn đã đặt lịch thành công!');
-      setSuccessMessage(
-        'Đặt lịch thành công. Vui lòng theo dõi trạng thái ở Appointments.'
-      );
+      toast.success(t('PatientClinics.toast.bookSuccess'));
+      setSuccessMessage(t('PatientClinics.messages.bookSuccess'));
     } catch (error) {
       setErrorMessage(mapClinicPatientErrorMessage(error));
     }
@@ -107,10 +110,10 @@ export default function ClinicsPage() {
         <section>
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-(--text-primary)">
-              Book At Organisation Clinic
+              {t('PatientClinics.page.title')}
             </h1>
             <p className="mt-2 text-(--text-secondary)">
-              Pick a clinic, choose a date, and reserve an in-person visit slot.
+              {t('PatientClinics.page.subtitle')}
             </p>
           </div>
 
@@ -142,7 +145,7 @@ export default function ClinicsPage() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-muted)" />
               <input
                 className="w-full rounded-xl border border-(--border-color) bg-(--bg-secondary) py-2.5 pl-10 pr-3 text-(--text-primary) outline-none ring-brand/40 placeholder:text-(--text-muted) focus:ring-2"
-                placeholder="Search organisation by name, city, or address"
+                placeholder={t('PatientClinics.search.placeholder')}
                 value={searchText}
                 onChange={(event) => setSearchText(event.target.value)}
               />
@@ -151,7 +154,7 @@ export default function ClinicsPage() {
             {loadingOrganisations ? (
               <div className="flex items-center gap-3 py-8 text-(--text-secondary)">
                 <Spinner />
-                <span>Loading organisations...</span>
+                <span>{t('PatientClinics.loading.organisations')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -181,7 +184,8 @@ export default function ClinicsPage() {
                           </p>
                           <div className="mt-1 flex items-center gap-2 text-xs text-(--text-secondary)">
                             <span className="inline-flex items-center rounded-full bg-cyan-100 px-2 py-0.5 font-medium text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
-                              {organisation.orgType ?? 'Organisation'}
+                              {organisation.orgType ??
+                                t('PatientClinics.labels.organisation')}
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <Star className="h-3.5 w-3.5 text-amber-500" />
@@ -196,7 +200,8 @@ export default function ClinicsPage() {
                             <span className="truncate">
                               {[organisation.address, organisation.city]
                                 .filter(Boolean)
-                                .join(', ') || 'No address'}
+                                .join(', ') ||
+                                t('PatientClinics.labels.noAddress')}
                             </span>
                           </p>
                         </div>
@@ -207,7 +212,7 @@ export default function ClinicsPage() {
 
                 {filteredOrganisations.length === 0 && (
                   <div className="rounded-xl border border-dashed border-(--border-color) p-6 text-center text-(--text-secondary) md:col-span-2">
-                    No organisation found.
+                    {t('PatientClinics.empty.organisations')}
                   </div>
                 )}
               </div>
@@ -218,19 +223,21 @@ export default function ClinicsPage() {
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  Available Slots
+                  {t('PatientClinics.slots.title')}
                 </h2>
                 <p className="text-sm text-(--text-secondary)">
                   {selectedOrganisation
-                    ? `Organisation: ${selectedOrganisation.name}`
-                    : 'Select an organisation to load available slots.'}
+                    ? t('PatientClinics.slots.organisation', {
+                        name: selectedOrganisation.name,
+                      })
+                    : t('PatientClinics.slots.selectOrganisation')}
                 </p>
               </div>
 
               <div className="flex gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                    Visit Date
+                    {t('PatientClinics.fields.visitDate')}
                   </label>
                   <input
                     type="date"
@@ -241,12 +248,14 @@ export default function ClinicsPage() {
                 </div>
                 <div className="min-w-55">
                   <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                    Visit Reason
+                    {t('PatientClinics.fields.visitReason')}
                   </label>
                   <input
                     value={visitReason}
                     onChange={(event) => setVisitReason(event.target.value)}
-                    placeholder="Blurred vision, routine follow-up..."
+                    placeholder={t(
+                      'PatientClinics.fields.visitReasonPlaceholder'
+                    )}
                     className="w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                   />
                 </div>
@@ -255,12 +264,12 @@ export default function ClinicsPage() {
 
             {!selectedOrganisationId ? (
               <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary)">
-                Please select an organisation first.
+                {t('PatientClinics.empty.selectOrganisationFirst')}
               </div>
             ) : loadingSlots ? (
               <div className="flex items-center gap-3 py-8 text-(--text-secondary)">
                 <Spinner />
-                <span>Loading slots...</span>
+                <span>{t('PatientClinics.loading.slots')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -279,7 +288,10 @@ export default function ClinicsPage() {
                       {formatSlotTime(slot.endTime)}
                     </div>
                     <div className="mt-2 text-xs text-(--text-secondary)">
-                      Remaining capacity: {slot.remaining}/{slot.maxCapacity}
+                      {t('PatientClinics.slots.remainingCapacity', {
+                        remaining: slot.remaining,
+                        max: slot.maxCapacity,
+                      })}
                     </div>
 
                     <button
@@ -292,14 +304,14 @@ export default function ClinicsPage() {
                       className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Stethoscope className="h-4 w-4" />
-                      Book Clinic Visit
+                      {t('PatientClinics.actions.bookClinicVisit')}
                     </button>
                   </div>
                 ))}
 
                 {visibleSlots.length === 0 && (
                   <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary) md:col-span-2 xl:col-span-3">
-                    No available slots for selected date.
+                    {t('PatientClinics.empty.noSlotsForDate')}
                   </div>
                 )}
               </div>

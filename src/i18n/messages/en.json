@@ -1592,5 +1592,47 @@
         "diabeticRetinopathyStage1": "Diabetic Retinopathy - Stage 1"
       }
     }
+  },
+  "PatientClinics": {
+    "page": {
+      "title": "Book At Organisation Clinic",
+      "subtitle": "Pick a clinic, choose a date, and reserve an in-person visit slot."
+    },
+    "search": {
+      "placeholder": "Search organisation by name, city, or address"
+    },
+    "loading": {
+      "organisations": "Loading organisations...",
+      "slots": "Loading slots..."
+    },
+    "labels": {
+      "organisation": "Organisation",
+      "noAddress": "No address"
+    },
+    "fields": {
+      "visitDate": "Visit Date",
+      "visitReason": "Visit Reason",
+      "visitReasonPlaceholder": "Blurred vision, routine follow-up..."
+    },
+    "slots": {
+      "title": "Available Slots",
+      "organisation": "Organisation: {{name}}",
+      "selectOrganisation": "Select an organisation to load available slots.",
+      "remainingCapacity": "Remaining capacity: {{remaining}}/{{max}}"
+    },
+    "actions": {
+      "bookClinicVisit": "Book Clinic Visit"
+    },
+    "empty": {
+      "organisations": "No organisation found.",
+      "selectOrganisationFirst": "Please select an organisation first.",
+      "noSlotsForDate": "No available slots for selected date."
+    },
+    "messages": {
+      "bookSuccess": "Appointment booked successfully. Please check status in Appointments."
+    },
+    "toast": {
+      "bookSuccess": "Clinic booking completed successfully!"
+    }
   }
 }

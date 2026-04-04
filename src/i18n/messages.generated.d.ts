@@ -1596,6 +1596,48 @@ declare module 'i18next' {
         };
       };
     };
+    PatientClinics: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      loading: {
+        organisations: string;
+        slots: string;
+      };
+      labels: {
+        organisation: string;
+        noAddress: string;
+      };
+      fields: {
+        visitDate: string;
+        visitReason: string;
+        visitReasonPlaceholder: string;
+      };
+      slots: {
+        title: string;
+        organisation: string;
+        selectOrganisation: string;
+        remainingCapacity: string;
+      };
+      actions: {
+        bookClinicVisit: string;
+      };
+      empty: {
+        organisations: string;
+        selectOrganisationFirst: string;
+        noSlotsForDate: string;
+      };
+      messages: {
+        bookSuccess: string;
+      };
+      toast: {
+        bookSuccess: string;
+      };
+    };
     notification: {
       types: {
         screening: string;

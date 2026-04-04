@@ -1593,6 +1593,48 @@
       }
     }
   },
+  "PatientClinics": {
+    "page": {
+      "title": "Đặt lịch tại cơ sở y tế",
+      "subtitle": "Chọn cơ sở, chọn ngày và đặt lịch khám trực tiếp."
+    },
+    "search": {
+      "placeholder": "Tìm cơ sở theo tên, thành phố hoặc địa chỉ"
+    },
+    "loading": {
+      "organisations": "Đang tải danh sách cơ sở...",
+      "slots": "Đang tải khung giờ..."
+    },
+    "labels": {
+      "organisation": "Cơ sở y tế",
+      "noAddress": "Chưa có địa chỉ"
+    },
+    "fields": {
+      "visitDate": "Ngày khám",
+      "visitReason": "Lý do khám",
+      "visitReasonPlaceholder": "Nhìn mờ, tái khám định kỳ..."
+    },
+    "slots": {
+      "title": "Khung giờ khả dụng",
+      "organisation": "Cơ sở: {{name}}",
+      "selectOrganisation": "Hãy chọn một cơ sở để tải khung giờ khả dụng.",
+      "remainingCapacity": "Sức chứa còn lại: {{remaining}}/{{max}}"
+    },
+    "actions": {
+      "bookClinicVisit": "Đặt lịch khám tại cơ sở"
+    },
+    "empty": {
+      "organisations": "Không tìm thấy cơ sở phù hợp.",
+      "selectOrganisationFirst": "Vui lòng chọn cơ sở trước.",
+      "noSlotsForDate": "Không có khung giờ khả dụng cho ngày đã chọn."
+    },
+    "messages": {
+      "bookSuccess": "Đặt lịch thành công. Vui lòng theo dõi trạng thái tại trang Lịch hẹn."
+    },
+    "toast": {
+      "bookSuccess": "Bạn đã đặt lịch thành công!"
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",
