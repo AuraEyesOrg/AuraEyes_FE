@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Plus,
   X,
+  Check,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
@@ -68,6 +69,21 @@ const DEFAULT_TRUSTED_DOMAINS = [
   'medlatec.vn',
   'hellobacsi.com',
 ];
+
+const SYSTEM_LANGUAGE_OPTIONS = [
+  {
+    code: 'en',
+    nativeLabel: 'English',
+    label: 'English',
+    flag: 'US',
+  },
+  {
+    code: 'vi',
+    nativeLabel: 'Tiếng Việt',
+    label: 'Vietnamese',
+    flag: 'VN',
+  },
+] as const;
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
@@ -241,21 +257,42 @@ export default function SettingsPage() {
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Default Language
           </label>
-          <select
-            value={generalSettings.language}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                language: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          >
-            <option value="en">English</option>
-            <option value="vi">Vietnamese</option>
-            <option value="fr">French</option>
-            <option value="es">Spanish</option>
-          </select>
+          <div className="flex gap-2">
+            {SYSTEM_LANGUAGE_OPTIONS.map((option) => {
+              const isSelected = generalSettings.language === option.code;
+
+              return (
+                <button
+                  key={option.code}
+                  type="button"
+                  onClick={() =>
+                    setGeneralSettings({
+                      ...generalSettings,
+                      language: option.code,
+                    })
+                  }
+                  className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-sm ${
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold leading-none">
+                      {option.flag}
+                    </span>
+                    <div className="text-left">
+                      <p className="font-semibold">{option.nativeLabel}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {option.label}
+                      </p>
+                    </div>
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
