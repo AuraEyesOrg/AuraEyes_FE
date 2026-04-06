@@ -204,3 +204,37 @@ export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
     },
   ]);
 };
+
+export const mapWalkInPatientErrorMessage = (error: unknown): string => {
+  const raw = extractApiErrorMessage(
+    error,
+    'Không thể tạo hồ sơ bệnh nhân mới.'
+  );
+
+  return mapByKeywords(raw, [
+    {
+      pattern: /Phone\s+number\s+already\s+exists/i,
+      mappedMessage: 'Số điện thoại này đã tồn tại trong hệ thống.',
+    },
+    {
+      pattern: /Citizen\s+ID\s+already\s+exists/i,
+      mappedMessage: 'Căn cước công dân (CCCD) này đã lập hồ sơ tại tổ chức.',
+    },
+    {
+      pattern: /(Email|UserName).*already/i,
+      mappedMessage: 'Email này đã được sử dụng.',
+    },
+    {
+      pattern: /User\s+not\s+authenticated/i,
+      mappedMessage: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+    },
+    {
+      pattern: /Organisation\s+not\s+found/i,
+      mappedMessage: 'Không tìm thấy thông tin tổ chức. Vui lòng thử lại.',
+    },
+    {
+      pattern: /(timeout|network|ECONNABORTED)/i,
+      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+    },
+  ]);
+};

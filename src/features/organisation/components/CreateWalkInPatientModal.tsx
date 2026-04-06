@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, UserPlus, Loader2, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { extractApiErrorMessage } from '@/lib/api-error';
+import { mapWalkInPatientErrorMessage } from '@/lib/api-error';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {
   CreateWalkInPatientRequest,
@@ -41,9 +41,7 @@ export default function CreateWalkInPatientModal({
     },
     onError: (error) => {
       console.error('Failed to create walk-in patient', error);
-      toast.error(
-        extractApiErrorMessage(error, 'Failed to create walk-in patient.')
-      );
+      toast.error(mapWalkInPatientErrorMessage(error));
     },
   });
 
