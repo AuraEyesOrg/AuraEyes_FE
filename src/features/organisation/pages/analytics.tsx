@@ -259,7 +259,7 @@ export default function AnalyticsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Analytics" />
 
         <main className="p-6">
           {/* Page Title */}

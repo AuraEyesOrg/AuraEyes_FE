@@ -220,7 +220,7 @@ export default function OrganisationScreeningPage() {
     <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Screening" />
         <main className="flex-1 overflow-y-auto p-6">
           {/* Page Title */}
           <div className="mb-8">
