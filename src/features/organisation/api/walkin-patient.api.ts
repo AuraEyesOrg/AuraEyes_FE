@@ -8,6 +8,7 @@ export interface CreateWalkInPatientRequest {
   dateOfBirth: string;
   phoneNumber?: string;
   email?: string;
+  citizenId?: string;
 }
 
 export const orgWalkInPatientApi = {
