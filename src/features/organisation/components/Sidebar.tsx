@@ -8,7 +8,6 @@ import {
   FileText,
   Users,
   Globe,
-  ScanEye,
   Receipt,
   FileBarChart,
 } from 'lucide-react';
@@ -30,7 +29,6 @@ const navItems = [
     path: '/organisation/patients',
     hasBadge: true,
   },
-  { icon: ScanEye, label: 'Screening', path: '/organisation/screening' },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
   { icon: Receipt, label: 'Billing', path: '/organisation/billing' },
   { icon: FileBarChart, label: 'Reports', path: '/organisation/reports' },
