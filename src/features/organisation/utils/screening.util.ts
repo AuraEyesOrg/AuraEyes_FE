@@ -81,7 +81,11 @@ export async function analyzeImageQuality(file: File): Promise<{
       status: 'ready',
       quality: data.quality === 'high' ? 'high' : 'medium',
       message:
-        data.quality === 'high' ? 'Optimal quality' : 'Acceptable quality',
+        data.quality === 'high'
+          ? 'Optimal quality'
+          : data.quality === 'medium'
+            ? 'Acceptable quality'
+            : 'Poor quality',
     };
   } catch {
     return {
