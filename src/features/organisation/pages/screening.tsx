@@ -4,17 +4,19 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ScanEye,
   Upload,
-  CheckCircle2,
   X,
   ArrowRight,
   ArrowLeft,
   Loader2,
   AlertTriangle,
   Sparkles,
-  User,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import {
+  OrganisationScreeningStepper,
+  type ScreeningFlowStep,
+} from '../components/OrganisationScreeningStepper';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import { getOrganisationRecentPatients } from '../api/patients.api';
 import type { OrganisationRecentPatientDto } from '../api/patients.api';
@@ -24,16 +26,10 @@ import { toast } from 'react-toastify';
 import { isAxiosError } from 'axios';
 import { UploadedImage, analyzeImageQuality } from '../utils/screening.util';
 
-/* ═══════════════════════════════════════════════════════════════════════
-   STEP DEFINITIONS
-   ═══════════════════════════════════════════════════════════════════════ */
-type Step = 'select-patient' | 'upload-images' | 'confirm-launch';
-
-const STEPS: { key: Step; label: string; icon: any }[] = [
-  { key: 'select-patient', label: 'Patient Verification', icon: User },
-  { key: 'upload-images', label: 'Upload Images', icon: Upload },
-  { key: 'confirm-launch', label: 'Launch AI', icon: Sparkles },
-];
+type ScreeningCreationStep = Extract<
+  ScreeningFlowStep,
+  'upload-images' | 'launch-ai'
+>;
 
 /* ═══════════════════════════════════════════════════════════════════════
    COMPONENT
@@ -44,7 +40,8 @@ export default function OrganisationScreeningPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Wizard state
-  const [currentStep, setCurrentStep] = useState<Step>('upload-images');
+  const [currentStep, setCurrentStep] =
+    useState<ScreeningCreationStep>('upload-images');
   const [selectedPatient, setSelectedPatient] =
     useState<OrganisationRecentPatientDto | null>(null);
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -73,16 +70,14 @@ export default function OrganisationScreeningPage() {
   }, [preSelectedPatientId, patients, selectedPatient, navigate]);
 
   // ── Step Navigation ──
-  const stepIndex = STEPS.findIndex((s) => s.key === currentStep);
-
   const goNext = () => {
-    if (stepIndex < STEPS.length - 1) setCurrentStep(STEPS[stepIndex + 1].key);
+    setCurrentStep('launch-ai');
   };
   const goBack = () => {
     if (currentStep === 'upload-images') {
       navigate('/organisation/patients');
-    } else if (stepIndex > 1) {
-      setCurrentStep(STEPS[stepIndex - 1].key);
+    } else {
+      setCurrentStep('upload-images');
     }
   };
 
@@ -325,54 +320,10 @@ export default function OrganisationScreeningPage() {
               )}
             </div>
 
-            {/* Stepper (Clinical/Tab Style) */}
-            <div className="flex items-center mb-8 w-full">
-              {STEPS.map((step, i) => {
-                const isActive = i === stepIndex;
-                const isCompleted = i < stepIndex;
-                const StepIcon = step.icon;
-                return (
-                  <div
-                    key={step.key}
-                    className="flex items-center flex-1 last:flex-none"
-                  >
-                    <div
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${
-                        isActive
-                          ? 'bg-primary/5 border-primary shadow-sm text-primary'
-                          : isCompleted
-                            ? 'bg-white border-slate-200 text-slate-700'
-                            : 'bg-slate-50 border-slate-100 text-slate-400'
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
-                          isActive
-                            ? 'bg-primary text-white'
-                            : isCompleted
-                              ? 'bg-emerald-100 text-emerald-600'
-                              : 'bg-slate-200 text-slate-500'
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        ) : (
-                          <StepIcon className="w-3.5 h-3.5" />
-                        )}
-                      </div>
-                      <span className="text-sm font-medium whitespace-nowrap">
-                        {step.label}
-                      </span>
-                    </div>
-                    {i < STEPS.length - 1 && (
-                      <div
-                        className={`flex-1 mx-2 h-[2px] transition-all rounded-full ${isCompleted ? 'bg-primary/30' : 'bg-slate-200'}`}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <OrganisationScreeningStepper
+              activeStep={currentStep}
+              className="mb-8"
+            />
 
             {/* Content Area - Professional Clinical Container */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-10">
@@ -506,7 +457,7 @@ export default function OrganisationScreeningPage() {
               )}
 
               {/* Step 2: Confirm */}
-              {currentStep === 'confirm-launch' && (
+              {currentStep === 'launch-ai' && (
                 <div className="max-w-3xl mx-auto space-y-8 py-4 animate-in fade-in duration-300">
                   <div className="text-center mb-8 border-b border-slate-100 pb-8">
                     <div className="w-12 h-12 mx-auto rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
