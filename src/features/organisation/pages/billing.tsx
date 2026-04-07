@@ -1,12 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  Receipt,
-  CreditCard,
-  TrendingUp,
-  Zap,
-  Loader2,
-  BarChart3,
-} from 'lucide-react';
+import { CreditCard, TrendingUp, Zap, Loader2, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
@@ -66,13 +59,10 @@ export default function OrganisationBillingPage() {
     <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Billing" />
         <main className="flex-1 overflow-y-auto p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Receipt className="w-5 h-5 text-primary" />
-            </div>
             <div>
               <h1 className="text-2xl font-bold text-(--text-primary)">
                 Billing & Usage

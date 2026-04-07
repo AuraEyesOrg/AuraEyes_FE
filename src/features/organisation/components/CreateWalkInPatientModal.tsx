@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, UserPlus, Loader2 } from 'lucide-react';
+import { X, UserPlus, Loader2, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { isAxiosError } from 'axios';
+import { mapWalkInPatientErrorMessage } from '@/lib/api-error';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import {
   CreateWalkInPatientRequest,
   orgWalkInPatientApi,
@@ -20,10 +21,13 @@ export default function CreateWalkInPatientModal({
   onSuccess,
 }: CreateWalkInPatientModalProps) {
   const queryClient = useQueryClient();
+  const [isScanning, setIsScanning] = useState(false);
   const [formData, setFormData] = useState({
+    citizenId: '',
     fullName: '',
     gender: 'Male',
     dateOfBirth: '',
+    address: '',
     phoneNumber: '',
     email: '',
   });
@@ -38,25 +42,89 @@ export default function CreateWalkInPatientModal({
     },
     onError: (error) => {
       console.error('Failed to create walk-in patient', error);
-      let errorMessage =
-        'Failed to create walk-in patient. Please check the details and try again.';
-      if (isAxiosError(error) && error.response?.data) {
-        const data = error.response.data as any;
-        if (data.message) {
-          errorMessage = data.message;
-        } else if (
-          Array.isArray(data.errors) &&
-          data.errors.length > 0 &&
-          data.errors[0]?.error
-        ) {
-          errorMessage = data.errors.map((e: any) => e.error).join(', ');
-        } else if (data.detail) {
-          errorMessage = data.detail;
-        }
-      }
-      toast.error(errorMessage);
+      toast.error(mapWalkInPatientErrorMessage(error));
     },
   });
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsScanning(false);
+      setFormData({
+        citizenId: '',
+        fullName: '',
+        gender: 'Male',
+        dateOfBirth: '',
+        address: '',
+        phoneNumber: '',
+        email: '',
+      });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isScanning) {
+      const scanner = new Html5QrcodeScanner(
+        'reader',
+        {
+          qrbox: {
+            width: 250,
+            height: 250,
+          },
+          fps: 5,
+        },
+        false
+      );
+
+      scanner.render(
+        (result) => {
+          scanner.clear();
+          setIsScanning(false);
+          // VNeID format: CCCD|CMND|FullName|DOB(DDMMYYYY)|Gender|Address|Date of Issue
+          const parts = result.split('|');
+          if (parts.length >= 6) {
+            const cccd = parts[0];
+            const fullName = parts[2];
+            const dobRaw = parts[3]; // e.g. 10051990
+            let dob = '';
+            if (dobRaw.length === 8) {
+              const day = dobRaw.substring(0, 2);
+              const month = dobRaw.substring(2, 4);
+              const year = dobRaw.substring(4, 8);
+              dob = `${year}-${month}-${day}`;
+            }
+            const genderRaw = parts[4]; // Nam or Nữ
+            const gender = genderRaw.toLowerCase().includes('nữ')
+              ? 'Female'
+              : 'Male';
+            const address = parts[5]?.trim() ?? '';
+
+            setFormData((prev) => ({
+              ...prev,
+              citizenId: cccd,
+              fullName,
+              dateOfBirth: dob,
+              gender,
+              address,
+            }));
+            toast.success('Hồ sơ công dân được trích xuất thành công!');
+          } else {
+            toast.error(
+              'Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID'
+            );
+          }
+        },
+        (error) => {
+          // ignore scan errors (happens every frame with no QR)
+        }
+      );
+
+      return () => {
+        scanner
+          .clear()
+          .catch((e) => console.error('Failed to clear scanner', e));
+      };
+    }
+  }, [isScanning]);
 
   if (!isOpen) return null;
 
@@ -64,14 +132,15 @@ export default function CreateWalkInPatientModal({
     e.preventDefault();
     mutation.mutate({
       ...formData,
+      address: formData.address.trim() || undefined,
       dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-(--bg-primary) w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-(--border-primary)">
+      <div className="bg-(--bg-primary) w-full max-w-md rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-5 border-b border-(--border-primary) sticky top-0 bg-(--bg-primary) z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <UserPlus className="w-5 h-5 text-primary" />
@@ -94,6 +163,48 @@ export default function CreateWalkInPatientModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {!isScanning ? (
+            <button
+              type="button"
+              onClick={() => setIsScanning(true)}
+              className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-(--border-primary) text-(--text-secondary) hover:text-primary hover:border-primary hover:bg-primary/5 transition flex flex-col items-center justify-center gap-2"
+            >
+              <QrCode className="w-6 h-6" />
+              <span className="font-medium text-sm">
+                Scan VNeID / CCCD QR Code
+              </span>
+              <span className="text-xs text-(--text-tertiary)">
+                Autofill patient details accurately
+              </span>
+            </button>
+          ) : (
+            <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-black">
+              <div id="reader" className="w-full"></div>
+              <button
+                type="button"
+                onClick={() => setIsScanning(false)}
+                className="w-full py-2 bg-(--bg-secondary) text-sm font-medium hover:bg-(--bg-tertiary)"
+              >
+                Cancel Scanning
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-(--text-secondary)">
+              Citizen ID (CCCD)
+            </label>
+            <input
+              type="text"
+              value={formData.citizenId}
+              onChange={(e) =>
+                setFormData({ ...formData, citizenId: e.target.value })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              placeholder="e.g. 001099000000"
+            />
+          </div>
+
           <div className="space-y-1">
             <label className="text-sm font-medium text-(--text-secondary)">
               Full Name *
@@ -147,6 +258,21 @@ export default function CreateWalkInPatientModal({
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-(--text-secondary)">
+              Address
+            </label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              placeholder="Street, ward, district, city"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-(--text-secondary)">
               Phone Number
             </label>
             <input
@@ -162,7 +288,7 @@ export default function CreateWalkInPatientModal({
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-(--text-secondary)">
-              Email Address
+              Email
             </label>
             <input
               type="email"
@@ -175,7 +301,7 @@ export default function CreateWalkInPatientModal({
             />
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
+          <div className="pt-4 flex justify-end gap-3 sticky bottom-0 bg-(--bg-primary)">
             <button
               type="button"
               onClick={onClose}

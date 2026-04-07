@@ -1,4 +1,24 @@
 {
+  "Validation": {
+    "Required": "This field is required",
+    "MaxLength": {
+      "FullName": "Full name must not exceed 200 characters",
+      "Phone": "Phone number must not exceed 20 characters",
+      "Address": "Address must not exceed 500 characters",
+      "CitizenId": "Citizen ID must not exceed 20 characters"
+    },
+    "MinLength": {
+      "Password": "Password must be at least 8 characters"
+    },
+    "Invalid": {
+      "Gender": "Invalid gender",
+      "CitizenId": "Citizen ID must be exactly 12 digits"
+    },
+    "Password": {
+      "MustBeDifferent": "New password must be different from current password",
+      "Mismatch": "Passwords do not match"
+    }
+  },
   "Navigation": {
     "home": "Home",
     "about": "About Us",

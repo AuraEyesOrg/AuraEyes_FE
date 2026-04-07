@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, XCircle, Plus, ScanEye, Eye } from 'lucide-react';
+import { Search, XCircle, Plus, ScanEye, Pencil } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
 import {
   getOrganisationRecentPatients,
   type OrganisationRecentPatientDto,
@@ -29,6 +32,8 @@ export default function PatientsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+  const [editingPatient, setEditingPatient] =
+    useState<OrganisationRecentPatientDto | null>(null);
 
   const patientsQuery = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -50,6 +55,12 @@ export default function PatientsPage() {
 
   const clearDisabled = searchTerm.trim() === '';
 
+  useEffect(() => {
+    if (patientsQuery.isError) {
+      toast.error('Unable to load patients.');
+    }
+  }, [patientsQuery.isError]);
+
   if (patientsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -61,12 +72,12 @@ export default function PatientsPage() {
   if (patientsQuery.isError) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          <div className="font-medium">Unable to load patients.</div>
+        <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+          <div className="font-medium mb-3">Unable to load patients</div>
           <button
             type="button"
             onClick={() => patientsQuery.refetch()}
-            className="mt-3 text-sm font-medium underline"
+            className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
             Retry
           </button>
@@ -84,15 +95,12 @@ export default function PatientsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Patients" />
 
         <main className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Eye className="w-5 h-5 text-primary" />
-              </div>
               <div>
                 <h1 className="text-2xl font-bold text-(--text-primary)">
                   Patients
@@ -241,14 +249,24 @@ export default function PatientsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleScreenPatient(patient.id)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition"
-                            >
-                              <ScanEye className="w-3.5 h-3.5" />
-                              Screen Now
-                            </button>
+                            <div className="inline-flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setEditingPatient(patient)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--bg-tertiary) px-3.5 py-1.5 text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit Contact
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleScreenPatient(patient.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                              >
+                                <ScanEye className="h-3.5 w-3.5" />
+                                Screen Now
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -264,6 +282,16 @@ export default function PatientsPage() {
             onClose={() => setIsWalkInModalOpen(false)}
             onSuccess={() => {
               setIsWalkInModalOpen(false);
+              patientsQuery.refetch();
+            }}
+          />
+
+          <UpdatePatientContactModal
+            isOpen={editingPatient !== null}
+            patient={editingPatient}
+            onClose={() => setEditingPatient(null)}
+            onSuccess={() => {
+              setEditingPatient(null);
               patientsQuery.refetch();
             }}
           />

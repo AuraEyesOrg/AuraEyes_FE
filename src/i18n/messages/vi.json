@@ -1,4 +1,24 @@
 {
+  "Validation": {
+    "Required": "Trường này là bắt buộc",
+    "MaxLength": {
+      "FullName": "Họ và tên không được vượt quá 200 ký tự",
+      "Phone": "Số điện thoại không được vượt quá 20 ký tự",
+      "Address": "Địa chỉ không được vượt quá 500 ký tự",
+      "CitizenId": "CCCD không được vượt quá 20 ký tự"
+    },
+    "MinLength": {
+      "Password": "Mật khẩu phải có ít nhất 8 ký tự"
+    },
+    "Invalid": {
+      "Gender": "Giới tính không hợp lệ",
+      "CitizenId": "CCCD/VNeID bắt buộc phải nhập đúng 12 chữ số"
+    },
+    "Password": {
+      "MustBeDifferent": "Mật khẩu mới phải khác mật khẩu hiện tại",
+      "Mismatch": "Mật khẩu xác nhận không khớp"
+    }
+  },
   "Navigation": {
     "home": "Trang chủ",
     "about": "Về chúng tôi",

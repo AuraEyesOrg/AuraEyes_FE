@@ -23,7 +23,7 @@ export default function SettingsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Settings" />
 
         <main className="p-6">
           <div className="mb-6">

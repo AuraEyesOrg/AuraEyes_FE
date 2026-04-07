@@ -432,7 +432,7 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader />
+          <OrganisationHeader pageName="Screening Results" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
@@ -451,7 +451,7 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader />
+          <OrganisationHeader pageName="Screening Results" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
@@ -475,7 +475,7 @@ export default function OrganisationScreeningResultPage() {
     <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Screening Results" />
         <main className="flex-1 overflow-y-auto p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">

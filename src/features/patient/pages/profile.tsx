@@ -38,6 +38,7 @@ import {
 } from '../schemas/profile.schema';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 export default function ProfilePage() {
   const { t: i18nT } = useTranslation();
@@ -76,6 +77,7 @@ export default function ProfilePage() {
       dateOfBirth: '',
       gender: '',
       address: '',
+      citizenId: '',
     },
   });
 
@@ -100,6 +102,7 @@ export default function ProfilePage() {
           : '',
         gender: profile.gender ?? '',
         address: profile.address ?? '',
+        citizenId: profile.citizenId ?? '',
       });
     }
   }, [profile, reset]);
@@ -114,14 +117,20 @@ export default function ProfilePage() {
         dateOfBirth: data.dateOfBirth || undefined,
         gender: (data.gender as 'male' | 'female' | 'other') || undefined,
         address: data.address || undefined,
+        citizenId: data.citizenId || undefined,
       },
       {
         onSuccess: () => {
           toast.success(t('PatientProfile.toast.profileUpdated'));
           setIsEditing(false);
         },
-        onError: (_err) => {
-          toast.error(t('PatientProfile.toast.profileUpdateFailed'));
+        onError: (error) => {
+          toast.error(
+            extractApiErrorMessage(
+              error,
+              t('PatientProfile.toast.profileUpdateFailed')
+            )
+          );
         },
       }
     );
@@ -137,6 +146,7 @@ export default function ProfilePage() {
           : '',
         gender: profile.gender ?? '',
         address: profile.address ?? '',
+        citizenId: profile.citizenId ?? '',
       });
     }
     setIsEditing(false);
@@ -581,20 +591,13 @@ export default function ProfilePage() {
                     ) : (
                       <Save className="w-4 h-4" />
                     )}
-                    Save
                     {t('PatientProfile.actions.save')}
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Update error */}
-            {updateProfileMutation.isError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                {updateProfileMutation.error?.message ||
-                  t('PatientProfile.toast.profileUpdateFailed')}
-              </div>
-            )}
+            {/* Update error is handled via Toast */}
 
             {/* Update success */}
             {updateProfileMutation.isSuccess && !isEditing && (
@@ -619,7 +622,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.fullName && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.fullName.message}
+                        {t(formErrors.fullName.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -660,7 +663,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.phone && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.phone.message}
+                        {t(formErrors.phone.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -686,7 +689,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.dateOfBirth && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.dateOfBirth.message}
+                        {t(formErrors.dateOfBirth.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -726,7 +729,7 @@ export default function ProfilePage() {
                     </select>
                     {formErrors.gender && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.gender.message}
+                        {t(formErrors.gender.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -737,8 +740,35 @@ export default function ProfilePage() {
                 )}
               </div>
 
+              {/* Citizen ID */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
+                  <Shield className="w-4 h-4" />
+                  Citizen ID (CCCD)
+                </label>
+                {isEditing ? (
+                  <div>
+                    <input
+                      {...register('citizenId')}
+                      type="text"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                      placeholder="Enter CCCD"
+                    />
+                    {formErrors.citizenId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {t(formErrors.citizenId.message ?? '')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.citizenId || '\u2014'}
+                  </p>
+                )}
+              </div>
+
               {/* Address */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <MapPin className="w-4 h-4" />
                   {t('PatientProfile.fields.address')}
@@ -752,7 +782,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.address && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.address.message}
+                        {t(formErrors.address.message ?? '')}
                       </p>
                     )}
                   </div>
