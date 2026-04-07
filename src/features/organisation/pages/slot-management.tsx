@@ -314,7 +314,7 @@ export default function OrganisationSlotManagementPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="h-full flex-1 overflow-y-auto">
         <OrganisationHeader pageName="Slot Management" />

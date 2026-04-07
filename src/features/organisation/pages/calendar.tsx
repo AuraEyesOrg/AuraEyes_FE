@@ -236,7 +236,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
 
       <div className="flex-1 h-full overflow-y-auto">
