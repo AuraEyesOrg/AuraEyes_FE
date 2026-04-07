@@ -36,7 +36,9 @@ export default function CreateWalkInPatientModal({
     mutationFn: orgWalkInPatientApi.createWalkInPatient,
     onSuccess: (data: string) => {
       // Invalidate the recent patients query so the new one shows up
-      queryClient.invalidateQueries({ queryKey: ['org-patients'] });
+      queryClient.invalidateQueries({
+        queryKey: ['organisation-patients', 'recent'],
+      });
       toast.success('Walk-in patient created successfully!');
       onSuccess(data);
     },

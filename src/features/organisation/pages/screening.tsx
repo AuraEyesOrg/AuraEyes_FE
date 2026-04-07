@@ -131,7 +131,7 @@ export default function OrganisationScreeningPage() {
       const file = files[i];
       if (!file.type.startsWith('image/')) continue;
       newImages.push({
-        id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         file,
         preview: URL.createObjectURL(file),
         eyeSide: i % 2 === 0 ? 'Left' : 'Right',
