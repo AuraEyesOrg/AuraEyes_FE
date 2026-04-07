@@ -240,7 +240,16 @@ function mapV2ResponseToAnomalies(
 
   for (const pred of data.prediction.top_k) {
     const isPrimary = pred.rank === 1;
-    const urgency = getDiseaseUrgency(pred.code);
+    let urgency = getDiseaseUrgency(pred.code);
+    // Keep UX consistent: low-confidence primary "status/artifact" findings
+    // should be shown as caution instead of pure info/normal.
+    if (
+      isPrimary &&
+      data.model_note?.status === 'LOW_CONFIDENCE' &&
+      (urgency === 'info' || urgency === 'normal')
+    ) {
+      urgency = 'caution';
+    }
 
     const lesion = lesions[pred.rank - 1];
     const location =
@@ -394,7 +403,14 @@ async function mapSavedAnomaliesFromRaw(
       );
       const mapped = v2.prediction.top_k.map((pred, idx) => {
         const isPrimary = (pred.rank ?? idx + 1) === 1;
-        const urgency = getDiseaseUrgency(pred.code);
+        let urgency = getDiseaseUrgency(pred.code);
+        if (
+          isPrimary &&
+          v2.model_note?.status === 'LOW_CONFIDENCE' &&
+          (urgency === 'info' || urgency === 'normal')
+        ) {
+          urgency = 'caution';
+        }
         return {
           id: String(pred.rank ?? idx + 1),
           name: pred.code,
@@ -911,6 +927,24 @@ export default function RetinalAnalysis() {
       const mapped = mapV2ResponseToAnomalies(data, imgWidth, imgHeight);
       const rawOutput = JSON.stringify(data);
       setRawJsonOutput(rawOutput);
+      // Show result immediately for faster UX; persistence continues below.
+      setAnomalies(mapped);
+      setShowHighlights(mapped.some((a) => Boolean(a.location)));
+      if (currentImage) {
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === currentImage.id
+              ? {
+                  ...img,
+                  analyzed: true,
+                  anomalies: mapped,
+                  heatmapUrl: resolvedHeatmapUrl,
+                }
+              : img
+          )
+        );
+      }
+      setAnalyzed(true);
 
       let ensuredScreeningId = screeningId;
 
@@ -1015,25 +1049,6 @@ export default function RetinalAnalysis() {
       });
 
       setResultsPersisted(true);
-
-      setAnomalies(mapped);
-      setShowHighlights(mapped.some((a) => Boolean(a.location)));
-
-      if (currentImage) {
-        setImages((prev) =>
-          prev.map((img) =>
-            img.id === currentImage.id
-              ? {
-                  ...img,
-                  analyzed: true,
-                  anomalies: mapped,
-                  heatmapUrl: resolvedHeatmapUrl,
-                }
-              : img
-          )
-        );
-      }
-      setAnalyzed(true);
     } catch (error) {
       console.error('AI Analysis failed:', error);
 

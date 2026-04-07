@@ -254,12 +254,6 @@ export default function ReviewPage() {
     hydratedSession?.resultsPersisted ??
     Boolean(rawJsonForAnalysis);
 
-  const primaryAiConfidence = useMemo(() => {
-    if (anomalies.length === 0) return null;
-    const primary = anomalies.find((a) => a.isHighest);
-    if (primary != null) return primary.confidence;
-    return Math.max(...anomalies.map((a) => a.confidence));
-  }, [anomalies]);
   const patientFriendlyFindings = useMemo(() => {
     const isVietnamese = currentLanguage.toLowerCase().startsWith('vi');
     const labels = anomalies
@@ -500,16 +494,6 @@ export default function ReviewPage() {
                   <ArrowLeft className="w-4 h-4" />
                   {t('PatientReview.actions.viewFullAnalysisDetails')}
                 </button>
-                {primaryAiConfidence != null && (
-                  <>
-                    <span className="text-(--border-color)">|</span>
-                    <span className="text-xs text-(--text-muted)">
-                      {t('PatientReview.labels.aiConfidence', {
-                        confidence: primaryAiConfidence,
-                      })}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>
