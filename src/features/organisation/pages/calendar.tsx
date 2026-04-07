@@ -193,6 +193,48 @@ export default function CalendarPage() {
     }
   };
 
+  const getPrimaryActionConfig = (
+    appointment: (typeof appointments)[number]
+  ) => {
+    if (appointment.status === 'Pending') {
+      return {
+        label: 'Check-in',
+        icon: UserCheck,
+        successMessage: 'Check-in thành công.',
+        buttonClass:
+          'bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-cyan-400/80',
+        action: () => checkInMutation.mutateAsync(appointment.id),
+      };
+    }
+
+    if (appointment.status === 'CheckedIn') {
+      return {
+        label: 'Start consultation',
+        icon: Play,
+        successMessage: 'Đã chuyển lịch khám sang trạng thái In Progress.',
+        buttonClass:
+          'bg-violet-600 text-white hover:bg-violet-700 disabled:bg-violet-400/80',
+        action: () => startMutation.mutateAsync(appointment.id),
+      };
+    }
+
+    if (appointment.status === 'InProgress') {
+      return {
+        label: 'Complete visit',
+        icon: Calendar,
+        successMessage: 'Đã hoàn thành lịch khám.',
+        buttonClass:
+          'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-400/80',
+        action: () =>
+          completeMutation.mutateAsync({
+            appointmentId: appointment.id,
+          }),
+      };
+    }
+
+    return null;
+  };
+
   return (
     <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
@@ -360,114 +402,89 @@ export default function CalendarPage() {
                       <th className="px-3 py-2 font-medium">Patient</th>
                       <th className="px-3 py-2 font-medium">Reason</th>
                       <th className="px-3 py-2 font-medium">Status</th>
-                      <th className="px-3 py-2 font-medium">Actions</th>
+                      <th className="px-3 py-2 font-medium">Workflow</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {appointments.map((appointment) => (
-                      <tr
-                        key={appointment.id}
-                        className="border-b border-gray-100 align-top dark:border-[#2d4a6f]"
-                      >
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
-                            <Clock className="h-3.5 w-3.5" />
-                            {formatSlotTime(appointment.startTime)} -{' '}
-                            {formatSlotTime(appointment.endTime)}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-gray-900 dark:text-white">
-                          {appointment.patientId.slice(0, 8)}...
-                        </td>
-                        <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
-                          {appointment.visitReason || '-'}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
-                          >
-                            {appointment.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              disabled={
-                                appointment.status !== 'Pending' || isMutating
-                              }
-                              onClick={() =>
-                                void runAction(
-                                  () =>
-                                    checkInMutation.mutateAsync(appointment.id),
-                                  'Check-in thành công.'
-                                )
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                    {appointments.map((appointment) => {
+                      const primaryAction = getPrimaryActionConfig(appointment);
+                      const canMarkNoShow =
+                        appointment.status !== 'Completed' &&
+                        appointment.status !== 'Cancelled' &&
+                        appointment.status !== 'NoShow';
+
+                      return (
+                        <tr
+                          key={appointment.id}
+                          className="border-b border-gray-100 align-top dark:border-[#2d4a6f]"
+                        >
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatSlotTime(appointment.startTime)} -{' '}
+                              {formatSlotTime(appointment.endTime)}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-gray-900 dark:text-white">
+                            {appointment.patientId.slice(0, 8)}...
+                          </td>
+                          <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
+                            {appointment.visitReason || '-'}
+                          </td>
+                          <td className="px-3 py-3">
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
                             >
-                              <UserCheck className="h-3.5 w-3.5" />
-                              Check-in
-                            </button>
-                            <button
-                              type="button"
-                              disabled={
-                                appointment.status !== 'CheckedIn' || isMutating
-                              }
-                              onClick={() =>
-                                void runAction(
-                                  () =>
-                                    startMutation.mutateAsync(appointment.id),
-                                  'Đã chuyển lịch khám sang trạng thái In Progress.'
-                                )
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-violet-300 px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-50 disabled:opacity-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/20"
-                            >
-                              <Play className="h-3.5 w-3.5" />
-                              Start
-                            </button>
-                            <button
-                              type="button"
-                              disabled={
-                                appointment.status !== 'InProgress' ||
-                                isMutating
-                              }
-                              onClick={() =>
-                                void runAction(
-                                  () =>
-                                    completeMutation.mutateAsync({
-                                      appointmentId: appointment.id,
-                                    }),
-                                  'Đã hoàn thành lịch khám.'
-                                )
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
-                            >
-                              <Calendar className="h-3.5 w-3.5" />
-                              Complete
-                            </button>
-                            <button
-                              type="button"
-                              disabled={
-                                isMutating ||
-                                appointment.status === 'Completed' ||
-                                appointment.status === 'Cancelled'
-                              }
-                              onClick={() =>
-                                void runAction(
-                                  () =>
-                                    noShowMutation.mutateAsync(appointment.id),
-                                  'Đã đánh dấu no-show cho lịch khám.'
-                                )
-                              }
-                              className="inline-flex items-center gap-1 rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-900/20"
-                            >
-                              <UserX className="h-3.5 w-3.5" />
-                              No-show
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              {appointment.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {primaryAction ? (
+                                <button
+                                  type="button"
+                                  disabled={isMutating}
+                                  onClick={() =>
+                                    void runAction(
+                                      primaryAction.action,
+                                      primaryAction.successMessage
+                                    )
+                                  }
+                                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition-all active:scale-[0.99] disabled:cursor-not-allowed ${primaryAction.buttonClass}`}
+                                >
+                                  <primaryAction.icon className="h-4 w-4" />
+                                  {primaryAction.label}
+                                </button>
+                              ) : (
+                                <span className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                  No primary action
+                                </span>
+                              )}
+
+                              {canMarkNoShow ? (
+                                <button
+                                  type="button"
+                                  disabled={isMutating}
+                                  onClick={() =>
+                                    void runAction(
+                                      () =>
+                                        noShowMutation.mutateAsync(
+                                          appointment.id
+                                        ),
+                                      'Đã đánh dấu no-show cho lịch khám.'
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-2 rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                                >
+                                  <UserX className="h-4 w-4" />
+                                  Mark no-show
+                                </button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
