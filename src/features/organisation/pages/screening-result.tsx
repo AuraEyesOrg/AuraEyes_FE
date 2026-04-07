@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Bot,
-  ArrowLeft,
   Printer,
   RefreshCw,
   Sparkles,
@@ -354,7 +353,7 @@ export default function OrganisationScreeningResultPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[100dvh] overflow-hidden bg-(--bg-primary)">
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <OrganisationHeader pageName="Screening Results" />
@@ -373,7 +372,7 @@ export default function OrganisationScreeningResultPage() {
 
   if (!sessionData) {
     return (
-      <div className="flex min-h-[100dvh] overflow-hidden bg-(--bg-primary)">
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <OrganisationHeader pageName="Screening Results" />
@@ -397,7 +396,7 @@ export default function OrganisationScreeningResultPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] overflow-hidden bg-(--bg-primary)">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <OrganisationHeader pageName="Screening Results" />
@@ -407,12 +406,6 @@ export default function OrganisationScreeningResultPage() {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/organisation/screening')}
-                      className="w-10 h-10 rounded-xl bg-(--bg-primary) border border-(--border-primary) flex items-center justify-center hover:bg-(--bg-tertiary) transition"
-                    >
-                      <ArrowLeft className="w-5 h-5 text-(--text-secondary)" />
-                    </button>
                     <div>
                       <h1 className="text-2xl font-bold text-(--text-primary)">
                         Screening Results
@@ -427,12 +420,6 @@ export default function OrganisationScreeningResultPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <button
-                    onClick={() => navigate('/organisation/screening')}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
-                  >
-                    Screening History
-                  </button>
                   <button
                     onClick={() => window.print()}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
