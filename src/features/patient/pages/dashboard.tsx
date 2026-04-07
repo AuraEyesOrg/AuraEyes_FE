@@ -195,9 +195,10 @@ export default function PatientDashboard() {
     latestSession?.thumbnailUrl,
     latestSessionImageUrl,
   ]);
-  const [failedHeroImageUrls, setFailedHeroImageUrls] = useState<string[]>([]);
+  const [heroImageCandidateIndex, setHeroImageCandidateIndex] = useState(0);
   const heroImageUrl =
-    heroImageCandidates.find((url) => !failedHeroImageUrls.includes(url)) ??
+    heroImageCandidates[heroImageCandidateIndex] ??
+    heroImageCandidates[0] ??
     undefined;
   const heroTitle =
     latestSession != null
@@ -226,7 +227,7 @@ export default function PatientDashboard() {
   const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
 
   useEffect(() => {
-    setFailedHeroImageUrls([]);
+    setHeroImageCandidateIndex(0);
   }, [heroImageCandidates.join('|')]);
 
   useEffect(() => {
@@ -334,13 +335,11 @@ export default function PatientDashboard() {
                       onError={() => {
                         setIsHeroImageErrored(true);
                         setIsHeroImageLoaded(true);
-                        if (heroImageUrl) {
-                          setFailedHeroImageUrls((previous) =>
-                            previous.includes(heroImageUrl)
-                              ? previous
-                              : [...previous, heroImageUrl]
-                          );
-                        }
+                        setHeroImageCandidateIndex((prev) =>
+                          prev < heroImageCandidates.length - 1
+                            ? prev + 1
+                            : prev
+                        );
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
