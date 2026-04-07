@@ -1,19 +1,60 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Calendar, Clock, Play, UserCheck, UserX } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Play,
+  UserCheck,
+  UserX,
+} from 'lucide-react';
+import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import useAuthStore from '@/store/auth-store';
+import { getOrganisationAppointments } from '../api/organisation-clinic-booking.api';
 import {
+  organisationClinicBookingKeys,
   useCheckInClinicAppointment,
   useCompleteClinicAppointment,
   useMarkNoShowClinicAppointment,
-  useOrganisationAppointments,
   useStartClinicAppointment,
 } from '../hooks/use-organisation-clinic-booking';
 import { mapClinicStaffErrorMessage } from '@/lib/api-error';
-import { formatSlotTime, toLocalDateKey } from '@/lib/date-utils';
+import {
+  formatDate,
+  formatSlotTime,
+  formatWeekDayLabel,
+  formatWeekRange,
+  toLocalDateKey,
+} from '@/lib/date-utils';
+
+const DAYS_PER_WEEK = 7;
+const DAY_IN_MS = 86_400_000;
+const WEEK_IN_MS = DAYS_PER_WEEK * DAY_IN_MS;
+
+const parseDateKey = (dateKey: string) => new Date(`${dateKey}T00:00:00`);
+
+const getStartOfWeekMonday = (baseDate: Date): Date => {
+  const date = new Date(baseDate);
+  date.setHours(0, 0, 0, 0);
+
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+
+const getWeekOffsetFromDateKey = (dateKey: string): number => {
+  const currentWeekStart = getStartOfWeekMonday(new Date());
+  const targetWeekStart = getStartOfWeekMonday(parseDateKey(dateKey));
+  return Math.round(
+    (targetWeekStart.getTime() - currentWeekStart.getTime()) / WEEK_IN_MS
+  );
+};
 
 const statusStyles: Record<string, string> = {
   Pending:
@@ -32,18 +73,68 @@ export default function CalendarPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
 
-  const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
+  const todayKey = toLocalDateKey(new Date());
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(todayKey);
 
-  const {
-    data: appointments = [],
-    isLoading,
-    isFetching,
-    error: appointmentsError,
-  } = useOrganisationAppointments(
-    organisationId,
-    selectedDate,
-    !!organisationId
+  const weekWindow = useMemo(() => {
+    const weekStart = getStartOfWeekMonday(new Date());
+    weekStart.setDate(weekStart.getDate() + currentWeekOffset * DAYS_PER_WEEK);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + DAYS_PER_WEEK - 1);
+
+    const days = Array.from({ length: DAYS_PER_WEEK }, (_, index) => {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + index);
+
+      const dateKey = toLocalDateKey(day);
+      return {
+        dateKey,
+        dayLabel: formatWeekDayLabel(day),
+        dayNumber: day.getDate(),
+        isToday: dateKey === todayKey,
+      };
+    });
+
+    return {
+      label: formatWeekRange(weekStart, weekEnd),
+      days,
+    };
+  }, [currentWeekOffset, todayKey]);
+
+  const weekAppointmentQueries = useQueries({
+    queries: weekWindow.days.map((day) => ({
+      queryKey: organisationClinicBookingKeys.appointments(
+        organisationId,
+        day.dateKey
+      ),
+      queryFn: () => getOrganisationAppointments(organisationId, day.dateKey),
+      enabled: !!organisationId,
+      staleTime: 10_000,
+    })),
+  });
+
+  const selectedDayIndex = weekWindow.days.findIndex(
+    (day) => day.dateKey === selectedDate
   );
+
+  const selectedDayQuery =
+    selectedDayIndex >= 0 ? weekAppointmentQueries[selectedDayIndex] : null;
+  const appointments = selectedDayQuery?.data ?? [];
+  const isLoading = selectedDayQuery?.isLoading ?? false;
+  const isFetching = selectedDayQuery?.isFetching ?? false;
+  const appointmentsError = selectedDayQuery?.error;
+
+  const weekDaySummaries = weekWindow.days.map((day, index) => {
+    const dayAppointments = weekAppointmentQueries[index]?.data ?? [];
+    return {
+      ...day,
+      total: dayAppointments.length,
+      pending: dayAppointments.filter((item) => item.status === 'Pending')
+        .length,
+    };
+  });
 
   const checkInMutation = useCheckInClinicAppointment();
   const startMutation = useStartClinicAppointment();
@@ -68,10 +159,30 @@ export default function CalendarPage() {
     noShowMutation.isPending;
 
   useEffect(() => {
+    const inCurrentWeek = weekWindow.days.some(
+      (day) => day.dateKey === selectedDate
+    );
+
+    if (!inCurrentWeek && weekWindow.days[0]) {
+      setSelectedDate(weekWindow.days[0].dateKey);
+    }
+  }, [selectedDate, weekWindow.days]);
+
+  useEffect(() => {
     if (appointmentsError) {
       toast.error(mapClinicStaffErrorMessage(appointmentsError));
     }
   }, [appointmentsError]);
+
+  const handleDateSelect = (dateKey: string) => {
+    setSelectedDate(dateKey);
+    setCurrentWeekOffset(getWeekOffsetFromDateKey(dateKey));
+  };
+
+  const handleGoToday = () => {
+    setCurrentWeekOffset(0);
+    setSelectedDate(todayKey);
+  };
 
   const runAction = async (action: () => Promise<unknown>, message: string) => {
     try {
@@ -83,39 +194,111 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-(--bg-primary)">
+    <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
 
       <div className="flex-1 h-full overflow-y-auto">
         <OrganisationHeader pageName="Calendar" />
 
         <main className="p-6">
-          {' '}
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Organisation Clinic Appointments
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Manage check-in and consultation progress.
+                Weekly-first workflow for faster check-in and consultation flow.
               </p>
             </div>
 
-            <div className="flex items-end gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
-                  Visit Date
-                </label>
+            {isFetching && (
+              <div className="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-medium text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300">
+                <Spinner /> Updating day data
+              </div>
+            )}
+          </div>
+
+          <section className="mb-6 rounded-xl border border-cyan-100 bg-white p-4 shadow-sm dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
+              >
+                <ChevronLeft className="h-4 w-4" /> Prev week
+              </button>
+              <p className="min-w-[180px] flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                {weekWindow.label}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
+              >
+                Next week <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleGoToday}
+                className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/40"
+              >
+                Today
+              </button>
+              <label className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-300">
+                Jump date
                 <input
                   type="date"
                   value={selectedDate}
-                  onChange={(event) => setSelectedDate(event.target.value)}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-[#2d4a6f] dark:bg-[#1e3a5f] dark:text-white"
+                  onChange={(event) => handleDateSelect(event.target.value)}
+                  className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-white"
                 />
-              </div>
-              {isFetching && <Spinner />}
+              </label>
             </div>
-          </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+              {weekDaySummaries.map((day) => {
+                const isSelected = day.dateKey === selectedDate;
+
+                return (
+                  <button
+                    key={day.dateKey}
+                    type="button"
+                    onClick={() => setSelectedDate(day.dateKey)}
+                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                      isSelected
+                        ? 'border-cyan-300 bg-cyan-50 shadow-sm dark:border-cyan-600 dark:bg-cyan-900/20'
+                        : 'border-gray-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/70 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:hover:border-cyan-700/60 dark:hover:bg-cyan-900/10'
+                    }`}
+                  >
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      {day.dayLabel}
+                    </p>
+                    <p
+                      className={`mt-1 text-lg font-semibold ${
+                        isSelected
+                          ? 'text-cyan-700 dark:text-cyan-300'
+                          : 'text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      {day.dayNumber}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                      {day.total} appointments
+                    </p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                      {day.pending} pending
+                    </p>
+                    {day.isToday ? (
+                      <span className="mt-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-medium text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">
+                        Today
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
               <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
@@ -149,6 +332,15 @@ export default function CalendarPage() {
             </div>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Appointments on {formatDate(selectedDate, 'long')}
+              </h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                {appointments.length} records
+              </span>
+            </div>
+
             {isLoading ? (
               <div className="flex items-center gap-3 py-10 text-gray-600 dark:text-gray-400">
                 <Spinner />
@@ -156,7 +348,8 @@ export default function CalendarPage() {
               </div>
             ) : appointments.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-600 dark:border-[#2d4a6f] dark:text-gray-400">
-                No clinic appointments for selected date.
+                No clinic appointments on this day. Choose another day in the
+                weekly strip above.
               </div>
             ) : (
               <div className="overflow-x-auto">

@@ -44,7 +44,6 @@ export default function ClinicsPage() {
   const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
   const [visitReason, setVisitReason] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
 
   const {
     data: organisations = [],
@@ -89,8 +88,6 @@ export default function ClinicsPage() {
     if (!selectedOrganisationId || !patientId) return;
 
     setErrorMessage('');
-    setSuccessMessage('');
-
     try {
       await createAppointmentMutation.mutateAsync({
         organisationId: selectedOrganisationId,
@@ -98,7 +95,6 @@ export default function ClinicsPage() {
         visitReason: visitReason.trim() || undefined,
       });
       toast.success(t('PatientClinics.toast.bookSuccess'));
-      setSuccessMessage(t('PatientClinics.messages.bookSuccess'));
     } catch (error) {
       setErrorMessage(mapClinicPatientErrorMessage(error));
     }
@@ -116,21 +112,6 @@ export default function ClinicsPage() {
               {t('PatientClinics.page.subtitle')}
             </p>
           </div>
-
-          {(errorMessage || successMessage) && (
-            <div className="mb-4 space-y-2">
-              {errorMessage && (
-                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                  {errorMessage}
-                </div>
-              )}
-              {successMessage && (
-                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  {successMessage}
-                </div>
-              )}
-            </div>
-          )}
 
           {(organisationsError || availableSlotsError) && (
             <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">

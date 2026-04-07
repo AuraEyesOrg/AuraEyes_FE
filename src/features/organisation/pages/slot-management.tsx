@@ -1,18 +1,27 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  Ban,
   Calendar,
   CalendarPlus,
-  Clock,
-  Ban,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   UserX,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Sidebar from '../components/Sidebar';
-import OrganisationHeader from '../components/OrganisationHeader';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import Spinner from '@/components/ui/spinner';
+import {
+  formatDate,
+  formatSlotTimeShort,
+  formatWeekDayLabel,
+  formatWeekRange,
+  toLocalDateKey,
+} from '@/lib/date-utils';
 import useAuthStore from '@/store/auth-store';
-import { formatSlotTimeShort, toLocalDateKey } from '@/lib/date-utils';
+import OrganisationHeader from '../components/OrganisationHeader';
+import Sidebar from '../components/Sidebar';
 import {
   useCreateOrganisationTemplate,
   useDeleteOrganisationTemplate,
@@ -21,6 +30,31 @@ import {
   useOrganisationTemplates,
   useUpdateOrganisationSlotStatus,
 } from '../hooks/use-organisation-booking';
+
+const DAYS_PER_WEEK = 7;
+const DAY_IN_MS = 86_400_000;
+const WEEK_IN_MS = DAYS_PER_WEEK * DAY_IN_MS;
+
+const parseDateKey = (dateKey: string) => new Date(`${dateKey}T00:00:00`);
+
+const getStartOfWeekMonday = (baseDate: Date): Date => {
+  const date = new Date(baseDate);
+  date.setHours(0, 0, 0, 0);
+
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+
+const getWeekOffsetFromDateKey = (dateKey: string): number => {
+  const currentWeekStart = getStartOfWeekMonday(new Date());
+  const targetWeekStart = getStartOfWeekMonday(parseDateKey(dateKey));
+  return Math.round(
+    (targetWeekStart.getTime() - currentWeekStart.getTime()) / WEEK_IN_MS
+  );
+};
 
 const dayOptions = [
   { value: 1, label: 'Monday' },
@@ -51,15 +85,48 @@ export default function OrganisationSlotManagementPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
 
-  const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
+  const todayKey = toLocalDateKey(new Date());
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(todayKey);
   const [templateId, setTemplateId] = useState('');
-  const [fromDate, setFromDate] = useState(toLocalDateKey(new Date()));
-  const [toDate, setToDate] = useState(toLocalDateKey(new Date()));
+  const [fromDate, setFromDate] = useState(todayKey);
+  const [toDate, setToDate] = useState(todayKey);
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('12:00');
   const [slotDuration, setSlotDuration] = useState(30);
   const [maxCapacity, setMaxCapacity] = useState(5);
+  const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(
+    null
+  );
+
+  const weekWindow = useMemo(() => {
+    const weekStart = getStartOfWeekMonday(new Date());
+    weekStart.setDate(weekStart.getDate() + currentWeekOffset * DAYS_PER_WEEK);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + DAYS_PER_WEEK - 1);
+
+    const days = Array.from({ length: DAYS_PER_WEEK }, (_, index) => {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + index);
+
+      const dateKey = toLocalDateKey(day);
+      return {
+        dateKey,
+        dayLabel: formatWeekDayLabel(day),
+        dayNumber: day.getDate(),
+        isToday: dateKey === todayKey,
+      };
+    });
+
+    return {
+      from: toLocalDateKey(weekStart),
+      to: toLocalDateKey(weekEnd),
+      label: formatWeekRange(weekStart, weekEnd),
+      days,
+    };
+  }, [currentWeekOffset, todayKey]);
 
   const { data: templates = [], isLoading: templatesLoading } =
     useOrganisationTemplates(organisationId, !!organisationId);
@@ -67,8 +134,8 @@ export default function OrganisationSlotManagementPage() {
   const { data: slotsPage, isLoading: slotsLoading } = useOrganisationSlots(
     {
       orgId: organisationId,
-      fromDate: selectedDate,
-      toDate: selectedDate,
+      fromDate: weekWindow.from,
+      toDate: weekWindow.to,
       pageSize: 200,
     },
     !!organisationId
@@ -80,6 +147,33 @@ export default function OrganisationSlotManagementPage() {
   const updateSlotStatusMutation = useUpdateOrganisationSlotStatus();
 
   const slots = slotsPage?.items ?? [];
+  const slotsByDate = useMemo(() => {
+    const grouped: Record<string, typeof slots> = {};
+
+    slots.forEach((slot) => {
+      if (!grouped[slot.date]) {
+        grouped[slot.date] = [];
+      }
+      grouped[slot.date].push(slot);
+    });
+
+    Object.values(grouped).forEach((daySlots) => {
+      daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    });
+
+    return grouped;
+  }, [slots]);
+
+  const daySlots = slotsByDate[selectedDate] ?? [];
+
+  const weekDaySummaries = weekWindow.days.map((day) => {
+    const items = slotsByDate[day.dateKey] ?? [];
+    return {
+      ...day,
+      total: items.length,
+      booked: items.filter((slot) => slot.status === 'Booked').length,
+    };
+  });
 
   const stats = useMemo(
     () => ({
@@ -91,8 +185,34 @@ export default function OrganisationSlotManagementPage() {
     [slots]
   );
 
+  useEffect(() => {
+    const inCurrentWeek = weekWindow.days.some(
+      (day) => day.dateKey === selectedDate
+    );
+
+    if (!inCurrentWeek && weekWindow.days[0]) {
+      setSelectedDate(weekWindow.days[0].dateKey);
+    }
+  }, [selectedDate, weekWindow.days]);
+
   const handleCreateTemplate = async () => {
     if (!organisationId) return;
+
+    if (startTime >= endTime) {
+      toast.error('End time must be later than start time.');
+      return;
+    }
+
+    if (slotDuration < 5 || slotDuration % 5 !== 0) {
+      toast.error('Slot duration must be a multiple of 5 minutes.');
+      return;
+    }
+
+    if (maxCapacity < 1) {
+      toast.error('Max capacity must be at least 1.');
+      return;
+    }
+
     try {
       await createTemplateMutation.mutateAsync({
         orgId: organisationId,
@@ -116,6 +236,11 @@ export default function OrganisationSlotManagementPage() {
       return;
     }
 
+    if (fromDate > toDate) {
+      toast.error('From date cannot be later than to date.');
+      return;
+    }
+
     try {
       const count = await generateSlotsMutation.mutateAsync({
         scheduleTemplateId: templateId,
@@ -129,14 +254,16 @@ export default function OrganisationSlotManagementPage() {
     }
   };
 
-  const handleDeleteTemplate = async (id: string) => {
-    if (!organisationId) return;
+  const confirmDeleteTemplate = async () => {
+    if (!organisationId || !templateToDeleteId) return;
+
     try {
       await deleteTemplateMutation.mutateAsync({
-        templateId: id,
+        templateId: templateToDeleteId,
         orgId: organisationId,
       });
       toast.success('Template deleted.');
+      setTemplateToDeleteId(null);
     } catch {
       toast.error('Failed to delete template.');
     }
@@ -151,8 +278,18 @@ export default function OrganisationSlotManagementPage() {
     }
   };
 
+  const handleDateSelect = (dateKey: string) => {
+    setSelectedDate(dateKey);
+    setCurrentWeekOffset(getWeekOffsetFromDateKey(dateKey));
+  };
+
+  const handleGoToday = () => {
+    setCurrentWeekOffset(0);
+    setSelectedDate(todayKey);
+  };
+
   return (
-    <div className="flex h-screen w-full bg-(--bg-primary)">
+    <div className="flex min-h-[100dvh] w-full bg-(--bg-primary)">
       <Sidebar />
       <div className="h-full flex-1 overflow-y-auto">
         <OrganisationHeader pageName="Slot Management" />
@@ -164,10 +301,91 @@ export default function OrganisationSlotManagementPage() {
             </div>
           )}
 
+          <section className="rounded-xl border border-cyan-100 bg-white p-4 shadow-sm dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
+              >
+                <ChevronLeft className="h-4 w-4" /> Prev week
+              </button>
+              <p className="min-w-[180px] flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                {weekWindow.label}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
+              >
+                Next week <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleGoToday}
+                className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/40"
+              >
+                Today
+              </button>
+              <label className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-300">
+                Jump date
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(event) => handleDateSelect(event.target.value)}
+                  className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-white"
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+              {weekDaySummaries.map((day) => {
+                const isSelected = day.dateKey === selectedDate;
+
+                return (
+                  <button
+                    key={day.dateKey}
+                    type="button"
+                    onClick={() => setSelectedDate(day.dateKey)}
+                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                      isSelected
+                        ? 'border-cyan-300 bg-cyan-50 shadow-sm dark:border-cyan-600 dark:bg-cyan-900/20'
+                        : 'border-gray-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/70 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:hover:border-cyan-700/60 dark:hover:bg-cyan-900/10'
+                    }`}
+                  >
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      {day.dayLabel}
+                    </p>
+                    <p
+                      className={`mt-1 text-lg font-semibold ${
+                        isSelected
+                          ? 'text-cyan-700 dark:text-cyan-300'
+                          : 'text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      {day.dayNumber}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                      {day.total} slots
+                    </p>
+                    <p className="text-[11px] text-blue-700 dark:text-blue-300">
+                      {day.booked} booked
+                    </p>
+                    {day.isToday ? (
+                      <span className="mt-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-medium text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">
+                        Today
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Total Slots
+                Total Slots (Week)
               </p>
               <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
                 {stats.total}
@@ -372,9 +590,7 @@ export default function OrganisationSlotManagementPage() {
                         <td className="px-3 py-2">
                           <button
                             type="button"
-                            onClick={() =>
-                              void handleDeleteTemplate(template.id)
-                            }
+                            onClick={() => setTemplateToDeleteId(template.id)}
                             className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
                           >
                             <Ban className="h-3.5 w-3.5" /> Delete
@@ -389,28 +605,23 @@ export default function OrganisationSlotManagementPage() {
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Slots by Date
               </h2>
-              <label className="text-sm text-gray-700 dark:text-gray-300">
-                Visit date
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-[#2d4a6f] dark:bg-[#17324f]"
-                />
-              </label>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                {formatDate(selectedDate, 'long')}
+              </span>
             </div>
 
             {slotsLoading ? (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <Spinner /> Loading slots...
               </div>
-            ) : slots.length === 0 ? (
+            ) : daySlots.length === 0 ? (
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                No slots for selected date.
+                No slots on this day. Pick another day from the weekly strip
+                above or generate new slots.
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -425,7 +636,7 @@ export default function OrganisationSlotManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {slots.map((slot) => (
+                    {daySlots.map((slot) => (
                       <tr
                         key={slot.id}
                         className="border-b border-gray-100 dark:border-[#2d4a6f]"
@@ -495,6 +706,22 @@ export default function OrganisationSlotManagementPage() {
               </div>
             )}
           </section>
+
+          <ConfirmModal
+            open={!!templateToDeleteId}
+            title="Delete template"
+            message="This template will be removed permanently. Existing generated slots are not deleted."
+            confirmLabel="Delete template"
+            cancelLabel="Keep template"
+            tone="danger"
+            isLoading={deleteTemplateMutation.isPending}
+            onCancel={() => {
+              if (!deleteTemplateMutation.isPending) {
+                setTemplateToDeleteId(null);
+              }
+            }}
+            onConfirm={() => void confirmDeleteTemplate()}
+          />
         </main>
       </div>
     </div>
