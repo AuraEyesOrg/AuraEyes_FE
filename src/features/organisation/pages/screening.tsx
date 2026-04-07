@@ -22,6 +22,7 @@ import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { toast } from 'react-toastify';
 import { isAxiosError } from 'axios';
+import { UploadedImage, analyzeImageQuality } from '../utils/screening.util';
 
 /* ═══════════════════════════════════════════════════════════════════════
    STEP DEFINITIONS
@@ -33,13 +34,6 @@ const STEPS: { key: Step; label: string; icon: any }[] = [
   { key: 'upload-images', label: 'Upload Images', icon: Upload },
   { key: 'confirm-launch', label: 'Launch AI', icon: Sparkles },
 ];
-
-interface UploadedImage {
-  file: File;
-  preview: string;
-  eyeSide: 'Left' | 'Right' | 'Both';
-  url?: string;
-}
 
 /* ═══════════════════════════════════════════════════════════════════════
    COMPONENT
@@ -93,18 +87,68 @@ export default function OrganisationScreeningPage() {
   };
 
   // ── Image Handling ──
+  const validateUploadedImage = async (imageId: string, file: File) => {
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              status: 'validating',
+              progress: 30,
+              message: 'Analyzing image quality...',
+            }
+          : img
+      )
+    );
+
+    let animatedProgress = 30;
+    const progressTimer = window.setInterval(() => {
+      animatedProgress = Math.min(animatedProgress + 7, 92);
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === imageId ? { ...img, progress: animatedProgress } : img
+        )
+      );
+    }, 100);
+
+    const qualityResult = await analyzeImageQuality(file);
+
+    window.clearInterval(progressTimer);
+
+    setImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              status: qualityResult.status,
+              quality: qualityResult.quality,
+              message: qualityResult.message,
+              progress: 100,
+            }
+          : img
+      )
+    );
+  };
+
   const processFiles = useCallback((files: FileList | File[]) => {
     const newImages: UploadedImage[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!file.type.startsWith('image/')) continue;
       newImages.push({
+        id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         file,
         preview: URL.createObjectURL(file),
         eyeSide: i % 2 === 0 ? 'Left' : 'Right',
+        status: 'validating',
+        progress: 0,
       });
     }
     setImages((prev) => [...prev, ...newImages]);
+
+    newImages.forEach((img) => {
+      void validateUploadedImage(img.id, img.file);
+    });
   }, []);
 
   const handleFileSelect = useCallback(
@@ -142,22 +186,28 @@ export default function OrganisationScreeningPage() {
     [processFiles]
   );
 
-  const removeImage = (index: number) => {
+  const removeImage = (imageId: string) => {
     setImages((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
+      const target = prev.find((img) => img.id === imageId);
+      if (target?.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(target.preview);
+      }
+      return prev.filter((img) => img.id !== imageId);
     });
   };
 
-  const updateEyeSide = (index: number, side: 'Left' | 'Right' | 'Both') => {
+  const updateEyeSide = (imageId: string, side: 'Left' | 'Right' | 'Both') => {
     setImages((prev) =>
-      prev.map((img, i) => (i === index ? { ...img, eyeSide: side } : img))
+      prev.map((img) => (img.id === imageId ? { ...img, eyeSide: side } : img))
     );
   };
 
   // ── Launch Screening ──
   const handleLaunchScreening = async () => {
-    if (!selectedPatient || images.length === 0) return;
+    const validImages = images.filter(
+      (img) => img.status === 'ready' || img.status === 'warning'
+    );
+    if (!selectedPatient || validImages.length === 0) return;
 
     try {
       setIsCreating(true);
@@ -165,7 +215,7 @@ export default function OrganisationScreeningPage() {
       // Step 1: Upload images to storage
       setIsUploading(true);
       const uploadResponse = await orgScreeningApi.uploadImages(
-        images.map((img) => img.file)
+        validImages.map((img) => img.file)
       );
       const uploadData = unwrapApiData<{
         uploadedUrls: string[];
@@ -176,7 +226,7 @@ export default function OrganisationScreeningPage() {
       // Step 2: Create screening session
       const retinalImages = (uploadData?.uploadedUrls ?? []).map((url, i) => ({
         imageUrl: url,
-        eyeSide: images[i]?.eyeSide ?? ('Both' as const),
+        eyeSide: validImages[i]?.eyeSide ?? ('Both' as const),
       }));
 
       const sessionResponse = await orgScreeningApi.createSession({
@@ -219,7 +269,10 @@ export default function OrganisationScreeningPage() {
   };
 
   // ── Can proceed checks ──
-  const canProceed = !!selectedPatient && images.length > 0;
+  const readyImages = images.filter(
+    (img) => img.status === 'ready' || img.status === 'warning'
+  );
+  const canProceed = !!selectedPatient && readyImages.length > 0;
 
   /* ═══════════════════════════════════════════════════════════════════════
      RENDER
@@ -379,31 +432,58 @@ export default function OrganisationScreeningPage() {
                           </span>
                         </div>
                         <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
-                          {images.map((img, i) => (
+                          {images.map((img) => (
                             <div
-                              key={i}
-                              className="group relative rounded-lg border border-slate-200 bg-white p-2.5 flex gap-3 transition-all hover:border-slate-300 shadow-sm"
+                              key={img.id}
+                              className={`group relative rounded-lg border bg-white p-2.5 flex gap-3 transition-all shadow-sm ${
+                                img.status === 'warning'
+                                  ? 'border-amber-300 bg-amber-50/50'
+                                  : img.status === 'error'
+                                    ? 'border-red-300 bg-red-50/50'
+                                    : 'border-slate-200 hover:border-slate-300'
+                              }`}
                             >
-                              <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                              <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 border border-slate-200 bg-slate-100 relative">
                                 <img
                                   src={img.preview}
                                   alt=""
                                   className="w-full h-full object-cover"
                                 />
+                                {img.status === 'validating' && (
+                                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                  </div>
+                                )}
                               </div>
                               <div className="flex-1 py-0.5 pr-6 min-w-0 flex flex-col justify-between">
-                                <p
-                                  className="text-xs font-medium text-slate-800 truncate"
-                                  title={img.file.name}
-                                >
-                                  {img.file.name}
-                                </p>
+                                <div>
+                                  <p
+                                    className="text-xs font-medium text-slate-800 truncate"
+                                    title={img.file.name}
+                                  >
+                                    {img.file.name}
+                                  </p>
+                                  {img.message && (
+                                    <p
+                                      className={`text-[10px] mt-0.5 font-medium ${
+                                        img.status === 'error'
+                                          ? 'text-red-600'
+                                          : img.status === 'warning'
+                                            ? 'text-amber-600'
+                                            : 'text-green-600'
+                                      }`}
+                                    >
+                                      {img.message}
+                                    </p>
+                                  )}
+                                </div>
                                 <select
+                                  disabled={img.status === 'validating'}
                                   value={img.eyeSide}
                                   onChange={(e) =>
-                                    updateEyeSide(i, e.target.value as any)
+                                    updateEyeSide(img.id, e.target.value as any)
                                   }
-                                  className="w-full text-xs py-1 px-2 rounded-md bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-1"
+                                  className="w-full text-xs py-1 px-2 rounded-md bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-1 disabled:opacity-50"
                                 >
                                   <option value="Left">Left Eye (OS)</option>
                                   <option value="Right">Right Eye (OD)</option>
@@ -411,7 +491,7 @@ export default function OrganisationScreeningPage() {
                                 </select>
                               </div>
                               <button
-                                onClick={() => removeImage(i)}
+                                onClick={() => removeImage(img.id)}
                                 className="absolute top-2 right-2 w-6 h-6 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md flex items-center justify-center transition-all"
                               >
                                 <X className="w-4 h-4" />
@@ -436,9 +516,9 @@ export default function OrganisationScreeningPage() {
                       Launch Diagnostic Model
                     </h2>
                     <p className="text-slate-500 mt-2 text-sm">
-                      System is ready to process {images.length} scan
-                      {images.length > 1 ? 's' : ''}. This will consume 1 AI
-                      screening credit.
+                      System is ready to process {readyImages.length} scan
+                      {readyImages.length > 1 ? 's' : ''}. This will consume 1
+                      AI screening credit.
                     </p>
                   </div>
 
@@ -463,8 +543,8 @@ export default function OrganisationScreeningPage() {
                       Included Scans
                     </h3>
                     <div className="flex gap-4 items-center flex-wrap">
-                      {images.map((img, i) => (
-                        <div key={i} className="relative group">
+                      {readyImages.map((img) => (
+                        <div key={img.id} className="relative group">
                           <div className="w-20 h-20 rounded-md overflow-hidden border border-slate-200 bg-white shadow-sm">
                             <img
                               src={img.preview}
