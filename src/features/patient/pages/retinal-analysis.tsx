@@ -560,6 +560,7 @@ export default function RetinalAnalysis() {
   const [resultsPersisted, setResultsPersisted] = useState<boolean>(
     Boolean(routeState?.resultsPersisted)
   );
+  const [isEnhancingResults, setIsEnhancingResults] = useState(false);
   const [isPreparingSession, setIsPreparingSession] = useState(false);
   const sessionCreationPromiseRef = useRef<Promise<string> | null>(null);
 
@@ -758,7 +759,7 @@ export default function RetinalAnalysis() {
         setSelectedImageId(hydratedImages[0].id);
         setAnalyzed(isSessionAnalyzed);
         setAnomalies(hydratedAnomalies);
-        setShowHighlights(hydratedAnomalies.some((a) => Boolean(a.location)));
+        setShowHighlights(false);
       } catch (error) {
         console.error('Failed to load screening session:', error);
         setErrorMessage(t('PatientRetinalAnalysis.errors.loadScreeningFailed'));
@@ -779,7 +780,7 @@ export default function RetinalAnalysis() {
       setAnalyzed(selectedImg.analyzed);
       setIsFallback(false);
       setErrorMessage(null);
-      setShowHighlights(selectedImg.anomalies.some((a) => Boolean(a.location)));
+      setShowHighlights(false);
 
       if (!selectedImg.heatmapUrl) {
         setShowHeatmap(false);
@@ -907,29 +908,24 @@ export default function RetinalAnalysis() {
         type: blob.type || 'image/jpeg',
       });
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('threshold', '0.55');
-      formData.append('topk', '5');
+      const fastFormData = new FormData();
+      fastFormData.append('file', file);
+      fastFormData.append('topk', '5');
 
-      const { data } = await aiCoreClient.post<AIV2Response>(
-        '/api/v2/diagnosis/v2/analyze',
-        formData,
+      // Phase 1: fast classification first for responsive UX.
+      const { data: fastData } = await aiCoreClient.post<AIV2Response>(
+        '/api/v2/diagnosis/v2/analyze/fast',
+        fastFormData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
 
-      const resolvedHeatmapUrl = resolveAiAssetUrl(
-        data.heatmap_url ?? undefined
-      );
-
-      const mapped = mapV2ResponseToAnomalies(data, imgWidth, imgHeight);
-      const rawOutput = JSON.stringify(data);
+      let mapped = mapV2ResponseToAnomalies(fastData, imgWidth, imgHeight);
+      let rawOutput = JSON.stringify(fastData);
       setRawJsonOutput(rawOutput);
-      // Show result immediately for faster UX; persistence continues below.
       setAnomalies(mapped);
-      setShowHighlights(mapped.some((a) => Boolean(a.location)));
+      setShowHighlights(false);
       if (currentImage) {
         setImages((prev) =>
           prev.map((img) =>
@@ -938,13 +934,61 @@ export default function RetinalAnalysis() {
                   ...img,
                   analyzed: true,
                   anomalies: mapped,
-                  heatmapUrl: resolvedHeatmapUrl,
+                  heatmapUrl: undefined,
                 }
               : img
           )
         );
       }
       setAnalyzed(true);
+      setIsAnalyzing(false);
+
+      // Phase 2: full analysis to fetch bbox + heatmap.
+      setIsEnhancingResults(true);
+      try {
+        const fullFormData = new FormData();
+        fullFormData.append('file', file);
+        fullFormData.append('threshold', '0.55');
+        fullFormData.append('topk', '5');
+
+        const { data: fullData } = await aiCoreClient.post<AIV2Response>(
+          '/api/v2/diagnosis/v2/analyze',
+          fullFormData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+
+        mapped = mapV2ResponseToAnomalies(fullData, imgWidth, imgHeight);
+        rawOutput = JSON.stringify(fullData);
+        const resolvedHeatmapUrl = resolveAiAssetUrl(
+          fullData.heatmap_url ?? undefined
+        );
+        setRawJsonOutput(rawOutput);
+        setAnomalies(mapped);
+        setShowHighlights(false);
+        if (currentImage) {
+          setImages((prev) =>
+            prev.map((img) =>
+              img.id === currentImage.id
+                ? {
+                    ...img,
+                    analyzed: true,
+                    anomalies: mapped,
+                    heatmapUrl: resolvedHeatmapUrl,
+                  }
+                : img
+            )
+          );
+        }
+      } catch (fullError) {
+        console.warn(
+          'Full analyze (with heatmap) failed, keeping fast result:',
+          fullError
+        );
+      } finally {
+        setIsEnhancingResults(false);
+      }
 
       let ensuredScreeningId = screeningId;
 
@@ -1070,9 +1114,13 @@ export default function RetinalAnalysis() {
 
   const [showHeatmap, setShowHeatmap] = useState(false);
   const heatmapUrl = currentImage?.heatmapUrl;
+  const hasBoundingBoxes = anomalies.some((a) => Boolean(a.location));
+  const canShowOverlayControls =
+    analyzed && hasBoundingBoxes && Boolean(heatmapUrl) && !isEnhancingResults;
   useEffect(() => {
     if (!heatmapUrl) {
       setShowHeatmap(false);
+      return;
     }
   }, [heatmapUrl]);
   if (images.length === 0) {
@@ -1093,7 +1141,7 @@ export default function RetinalAnalysis() {
           {/* LEFT — Image Viewer                                          */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Toggle — above image, aligned right */}
-            {analyzed && (
+            {canShowOverlayControls && (
               <div className="flex-shrink-0 flex justify-end px-4 py-2">
                 {/* Toggle bounding box */}
                 <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
@@ -1103,9 +1151,17 @@ export default function RetinalAnalysis() {
                   <button
                     role="switch"
                     aria-checked={showHighlights}
-                    onClick={() => setShowHighlights(!showHighlights)}
+                    onClick={() => {
+                      if (!hasBoundingBoxes) return;
+                      setShowHighlights(!showHighlights);
+                    }}
+                    disabled={!hasBoundingBoxes}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      showHighlights ? 'bg-cyan-300' : 'bg-slate-300'
+                      !hasBoundingBoxes
+                        ? 'bg-slate-200 cursor-not-allowed'
+                        : showHighlights
+                          ? 'bg-cyan-300'
+                          : 'bg-slate-300'
                     }`}
                   >
                     <span
@@ -1124,9 +1180,17 @@ export default function RetinalAnalysis() {
                     <button
                       role="switch"
                       aria-checked={showHeatmap}
-                      onClick={() => setShowHeatmap(!showHeatmap)}
+                      onClick={() => {
+                        if (!heatmapUrl) return;
+                        setShowHeatmap(!showHeatmap);
+                      }}
+                      disabled={!heatmapUrl}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        showHeatmap ? 'bg-orange-400' : 'bg-slate-300'
+                        !heatmapUrl
+                          ? 'bg-slate-200 cursor-not-allowed'
+                          : showHeatmap
+                            ? 'bg-orange-400'
+                            : 'bg-slate-300'
                       }`}
                     >
                       <span
@@ -1225,6 +1289,14 @@ export default function RetinalAnalysis() {
                       <p className="text-[15px] text-slate-600 leading-relaxed">
                         {risk.summary}
                       </p>
+                      {isEnhancingResults && (
+                        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                          {t('PatientRetinalAnalysis.summary.waitingOverlay', {
+                            defaultValue:
+                              'Primary diagnosis is ready. Detailed overlay (bbox/heatmap) is still processing...',
+                          })}
+                        </p>
+                      )}
                       {isFallback && errorMessage && (
                         <span className="text-xs text-amber-600 flex items-center gap-1">
                           <Info className="w-3 h-3" />
