@@ -44,22 +44,23 @@ export default function FocusModeLayout({
       number: 3,
     },
   ];
-  const resolvedBreadcrumbItems = showBreadcrumb
-    ? (breadcrumbItems?.length ?? 0) > 0
-      ? breadcrumbItems
-      : [
-          {
-            label: t('FocusModeLayout.breadcrumb.home', 'Home'),
-            path: '/patient/dashboard',
-          },
-          {
-            label: t(
-              'FocusModeLayout.breadcrumb.newScreening',
-              'New Screening'
-            ),
-          },
-        ]
-    : [];
+  const resolvedBreadcrumbItems: { label: string; path?: string }[] =
+    showBreadcrumb
+      ? (breadcrumbItems?.length ?? 0) > 0
+        ? (breadcrumbItems ?? [])
+        : [
+            {
+              label: t('FocusModeLayout.breadcrumb.home', 'Home'),
+              path: '/patient/dashboard',
+            },
+            {
+              label: t(
+                'FocusModeLayout.breadcrumb.newScreening',
+                'New Screening'
+              ),
+            },
+          ]
+      : [];
 
   const handleExit = () => {
     if (onExit) {

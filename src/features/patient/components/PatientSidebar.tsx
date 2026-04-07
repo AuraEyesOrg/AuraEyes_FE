@@ -18,8 +18,17 @@ import { useTranslation } from 'react-i18next';
 
 export default function PatientSidebar() {
   const { t: i18nT } = useTranslation();
-  const t = (key: string, options?: Record<string, unknown>) =>
-    i18nT(key as never, options as never) as unknown as string;
+  const t = (
+    key: string,
+    defaultValueOrOptions?: string | Record<string, unknown>
+  ) => {
+    const options =
+      typeof defaultValueOrOptions === 'string'
+        ? ({ defaultValue: defaultValueOrOptions } as Record<string, unknown>)
+        : defaultValueOrOptions;
+
+    return i18nT(key as never, options as never) as unknown as string;
+  };
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const navItems = [
