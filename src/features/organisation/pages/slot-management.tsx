@@ -15,6 +15,8 @@ import Spinner from '@/components/ui/spinner';
 import {
   formatDate,
   formatSlotTimeShort,
+  getStartOfWeekMonday,
+  getWeekOffsetFromDateKey,
   formatWeekDayLabel,
   formatWeekRange,
   toLocalDateKey,
@@ -32,29 +34,6 @@ import {
 } from '../hooks/use-organisation-booking';
 
 const DAYS_PER_WEEK = 7;
-const DAY_IN_MS = 86_400_000;
-const WEEK_IN_MS = DAYS_PER_WEEK * DAY_IN_MS;
-
-const parseDateKey = (dateKey: string) => new Date(`${dateKey}T00:00:00`);
-
-const getStartOfWeekMonday = (baseDate: Date): Date => {
-  const date = new Date(baseDate);
-  date.setHours(0, 0, 0, 0);
-
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
-};
-
-const getWeekOffsetFromDateKey = (dateKey: string): number => {
-  const currentWeekStart = getStartOfWeekMonday(new Date());
-  const targetWeekStart = getStartOfWeekMonday(parseDateKey(dateKey));
-  return Math.round(
-    (targetWeekStart.getTime() - currentWeekStart.getTime()) / WEEK_IN_MS
-  );
-};
 
 const dayOptions = [
   { value: 1, label: 'Monday' },

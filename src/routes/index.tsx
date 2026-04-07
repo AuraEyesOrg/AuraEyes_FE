@@ -117,6 +117,9 @@ const OrganisationDashboard = lazy(
 const OrganisationPatientsPage = lazy(
   () => import('@/features/organisation/pages/patients')
 );
+const OrganisationPatientHistoryPage = lazy(
+  () => import('@/features/organisation/pages/patient-history')
+);
 const OrganisationCalendarPage = lazy(
   () => import('@/features/organisation/pages/calendar')
 );
@@ -758,6 +761,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/organisation/patients/:patientId/history"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<OrganisationPatientHistoryPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/organisation/analytics"
           element={
             <LocalizedPrivateRoute
@@ -1156,6 +1168,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
               <OrganisationPatientsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/organisation/patients/:patientId/history"
+          element={
+            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+              <OrganisationPatientHistoryPage />
             </PrivateRoute>
           }
         />

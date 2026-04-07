@@ -15,6 +15,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 interface SidebarProps {
   pendingCount?: number;
@@ -77,7 +78,7 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
         {visibleNavItems.map((item) => (
           <NavLink
             key={item.path}
-            to={item.path}
+            to={resolvePathWithLocale(item.path)}
             className={({ isActive }) =>
               `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                 isActive

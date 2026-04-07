@@ -360,7 +360,51 @@ export function formatRequestDate(isoString: string): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. WEEK RANGE LABEL  (calendar / schedule headers)
+// 7. WEEK HELPERS  (calendar / schedule calculations)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DAYS_IN_WEEK = 7;
+const DAY_IN_MS = 86_400_000;
+
+const parseDateKey = (dateKey: string) => new Date(`${dateKey}T00:00:00`);
+
+const toUtcDateNumber = (date: Date) =>
+  Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+
+/**
+ * Returns the Monday of the week for a given date in local timezone.
+ */
+export function getStartOfWeekMonday(baseDate: Date): Date {
+  const date = new Date(baseDate);
+  date.setHours(0, 0, 0, 0);
+
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+}
+
+/**
+ * Returns week offset from current week (0 = current week, -1 = previous, 1 = next).
+ * Uses UTC calendar-day arithmetic to avoid DST-related off-by-one issues.
+ */
+export function getWeekOffsetFromDateKey(
+  dateKey: string,
+  referenceDate: Date = new Date()
+): number {
+  const currentWeekStart = getStartOfWeekMonday(referenceDate);
+  const targetWeekStart = getStartOfWeekMonday(parseDateKey(dateKey));
+  const dayDifference = Math.round(
+    (toUtcDateNumber(targetWeekStart) - toUtcDateNumber(currentWeekStart)) /
+      DAY_IN_MS
+  );
+
+  return Math.trunc(dayDifference / DAYS_IN_WEEK);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. WEEK RANGE LABEL  (calendar / schedule headers)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -394,7 +438,7 @@ export function formatWeekDayLabel(date: Date, locale: string = EN_US): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. COUNTDOWN TIMER  (seconds → "MM:SS" or "H:MM:SS")
+// 9. COUNTDOWN TIMER  (seconds → "MM:SS" or "H:MM:SS")
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -414,7 +458,7 @@ export function formatCountdown(totalSeconds: number): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. TODAY CHECK  (safe replacement for `.toDateString()` comparisons)
+// 10. TODAY CHECK  (safe replacement for `.toDateString()` comparisons)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
