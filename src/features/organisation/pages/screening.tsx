@@ -24,6 +24,7 @@ import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { toast } from 'react-toastify';
 import { isAxiosError } from 'axios';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { UploadedImage, analyzeImageQuality } from '../utils/screening.util';
 
 type ScreeningCreationStep = Extract<
@@ -58,7 +59,7 @@ export default function OrganisationScreeningPage() {
   useEffect(() => {
     if (!preSelectedPatientId) {
       toast.error('No patient selected', { toastId: 'no-patient' });
-      navigate('/organisation/patients');
+      navigate(resolvePathWithLocale('/organisation/patients'));
       return;
     }
     if (patients.length > 0 && !selectedPatient) {
@@ -75,7 +76,7 @@ export default function OrganisationScreeningPage() {
   };
   const goBack = () => {
     if (currentStep === 'upload-images') {
-      navigate('/organisation/patients');
+      navigate(resolvePathWithLocale('/organisation/patients'));
     } else {
       setCurrentStep('upload-images');
     }
@@ -235,7 +236,9 @@ export default function OrganisationScreeningPage() {
 
       if (sessionData?.screeningId) {
         navigate(
-          `/organisation/screening/result?id=${sessionData.screeningId}`
+          resolvePathWithLocale(
+            `/organisation/screening/result?id=${sessionData.screeningId}`
+          )
         );
       }
     } catch (err) {

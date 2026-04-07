@@ -1,9 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, XCircle, Plus, ScanEye, Pencil } from 'lucide-react';
+import { Search, XCircle, Plus, ScanEye, Pencil, History } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
@@ -86,7 +87,15 @@ export default function PatientsPage() {
   }
 
   const handleScreenPatient = (patientId: string) => {
-    navigate(`/organisation/screening?patientId=${patientId}`);
+    navigate(
+      resolvePathWithLocale(`/organisation/screening?patientId=${patientId}`)
+    );
+  };
+
+  const handleViewPatientHistory = (patientId: string) => {
+    navigate(
+      resolvePathWithLocale(`/organisation/patients/${patientId}/history`)
+    );
   };
 
   return (
@@ -256,6 +265,16 @@ export default function PatientsPage() {
                               >
                                 <Pencil className="h-3.5 w-3.5" />
                                 Edit Contact
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleViewPatientHistory(patient.id)
+                                }
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--bg-tertiary) px-3.5 py-1.5 text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                              >
+                                <History className="h-3.5 w-3.5" />
+                                View History
                               </button>
                               <button
                                 type="button"

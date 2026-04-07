@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Bot,
   Printer,
   RefreshCw,
   Sparkles,
   Save,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   Activity,
@@ -16,9 +15,11 @@ import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { OrganisationScreeningStepper } from '../components/OrganisationScreeningStepper';
 import { OrganisationRetinalViewerCard } from '../components/OrganisationRetinalViewerCard';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
 import type {
@@ -34,20 +35,28 @@ import {
   buildFindingsText,
   buildSummary,
   clampConfidence,
+  composeFindingsWithNote,
   extractTopKFromRaw,
   extractVisualArtifactsFromRaw,
   getErrorMessage,
   mapAiFindings,
   normalizeRiskLevel,
   riskConfig,
+  splitFindingsAndNote,
   toRiskLevelFromUrgency,
 } from '@/features/organisation/utils/screening-result.util';
+
+const HISTORY_BACK_INTENT = '__history_back__';
+const HISTORY_GUARD_MARKER = '__screening_result_leave_guard__';
 
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const screeningId = searchParams.get('id');
   const autoAnalysisTriggeredRef = useRef(false);
+  const currentPathRef = useRef('');
+  const allowNextPopRef = useRef(false);
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
@@ -57,11 +66,17 @@ export default function OrganisationScreeningResultPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<
+    string | null
+  >(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
   const [rawJsonOutput, setRawJsonOutput] = useState<string | undefined>();
   const [draft, setDraft] = useState<ResultDraft | null>(null);
+  const [consultationNote, setConsultationNote] = useState('');
   const [aiFindings, setAiFindings] = useState<AiFindingItem[]>([]);
   const [detectedBoxes, setDetectedBoxes] = useState<DetectionBox[]>([]);
   const [showHighlights, setShowHighlights] = useState(true);
@@ -74,6 +89,8 @@ export default function OrganisationScreeningResultPage() {
 
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
+  const isViewOnly = Boolean(sessionData?.latestResult);
+  const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
 
   const hydrateVisualArtifacts = useCallback(
     (imageWidth: number, imageHeight: number) => {
@@ -139,6 +156,7 @@ export default function OrganisationScreeningResultPage() {
       setRawJsonOutput(detail.rawJsonOutput);
 
       if (detail.latestResult) {
+        const parsed = splitFindingsAndNote(detail.latestResult.findings);
         setDraft({
           riskLevel: normalizeRiskLevel(detail.latestResult.riskLevel),
           confidenceScore: clampConfidence(detail.latestResult.confidenceScore),
@@ -148,9 +166,9 @@ export default function OrganisationScreeningResultPage() {
               normalizeRiskLevel(detail.latestResult.riskLevel),
               mappedFindings[0]?.localizedName
             ),
-          findings:
-            detail.latestResult.findings ?? buildFindingsText(mappedFindings),
+          findings: parsed.findings || buildFindingsText(mappedFindings),
         });
+        setConsultationNote(parsed.note);
         setSaved(true);
         return;
       }
@@ -172,6 +190,7 @@ export default function OrganisationScreeningResultPage() {
         setDraft(null);
       }
 
+      setConsultationNote('');
       setSaved(false);
     },
     [currentLanguage]
@@ -209,6 +228,10 @@ export default function OrganisationScreeningResultPage() {
   }, [screeningId, loadSessionDetail]);
 
   useEffect(() => {
+    currentPathRef.current = `${location.pathname}${location.search}${location.hash}`;
+  }, [location.hash, location.pathname, location.search]);
+
+  useEffect(() => {
     window.addEventListener('resize', updateImageLayout);
     return () => window.removeEventListener('resize', updateImageLayout);
   }, [updateImageLayout]);
@@ -219,17 +242,36 @@ export default function OrganisationScreeningResultPage() {
 
   const updateDraft = useCallback(
     <K extends keyof ResultDraft>(key: K, value: ResultDraft[K]) => {
+      if (isViewOnly) {
+        return;
+      }
+
       setDraft((current) => {
         if (!current) return current;
         return { ...current, [key]: value };
       });
       setSaved(false);
     },
-    []
+    [isViewOnly]
   );
 
+  const handleNoteChange = (value: string) => {
+    if (isViewOnly) {
+      return;
+    }
+
+    setConsultationNote(value);
+    setSaved(false);
+  };
+
   const handleAnalyze = useCallback(async () => {
-    if (!sessionData || sessionData.images.length === 0 || analyzing) return;
+    if (
+      isViewOnly ||
+      !sessionData ||
+      sessionData.images.length === 0 ||
+      analyzing
+    )
+      return;
 
     const targetImage =
       sessionData.images[selectedImageIndex] ?? sessionData.images[0];
@@ -286,6 +328,7 @@ export default function OrganisationScreeningResultPage() {
         summary: buildSummary(nextRiskLevel, primary.localizedName),
         findings: buildFindingsText(mappedFindings),
       });
+      setConsultationNote('');
       setSaved(false);
 
       toast.success(
@@ -302,7 +345,7 @@ export default function OrganisationScreeningResultPage() {
     } finally {
       setAnalyzing(false);
     }
-  }, [sessionData, selectedImageIndex, analyzing, currentLanguage]);
+  }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
   useEffect(() => {
     if (!sessionData || sessionData.latestResult) return;
@@ -314,8 +357,16 @@ export default function OrganisationScreeningResultPage() {
     void handleAnalyze();
   }, [sessionData, analyzing, draft, handleAnalyze]);
 
-  const handleSaveResults = async () => {
-    if (!screeningId || !sessionData || !draft) return;
+  const executeSaveResults = async () => {
+    if (isViewOnly || !screeningId || !sessionData || !draft) return;
+
+    const note = consultationNote.trim();
+    if (!note) {
+      toast.error(
+        'Please add an organisation consultation note before saving.'
+      );
+      return;
+    }
 
     const jsonOutput = rawJsonOutput ?? sessionData.rawJsonOutput;
     if (!jsonOutput) {
@@ -323,6 +374,7 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
+    setSaveConfirmOpen(false);
     setSaving(true);
 
     try {
@@ -331,7 +383,7 @@ export default function OrganisationScreeningResultPage() {
         riskLevel: draft.riskLevel,
         confidenceScore: clampConfidence(draft.confidenceScore),
         summary: draft.summary,
-        findings: draft.findings,
+        findings: composeFindingsWithNote(draft.findings, note),
       });
 
       setSaved(true);
@@ -346,6 +398,171 @@ export default function OrganisationScreeningResultPage() {
       setSaving(false);
     }
   };
+
+  const requestSaveResults = () => {
+    if (!screeningId || !sessionData || !draft || isViewOnly) return;
+
+    const note = consultationNote.trim();
+    if (!note) {
+      toast.error(
+        'Please add an organisation consultation note before saving.'
+      );
+      return;
+    }
+
+    if (!(rawJsonOutput ?? sessionData.rawJsonOutput)) {
+      toast.error('Please run AI analysis before saving this record.');
+      return;
+    }
+
+    setSaveConfirmOpen(true);
+  };
+
+  const confirmExit = () => {
+    const fallbackPath = resolvePathWithLocale('/organisation/patients');
+    const targetPath = pendingNavigationPath ?? fallbackPath;
+
+    setExitConfirmOpen(false);
+    setPendingNavigationPath(null);
+
+    if (targetPath === HISTORY_BACK_INTENT) {
+      if (window.history.length >= 3) {
+        allowNextPopRef.current = true;
+        window.history.go(-2);
+        return;
+      }
+
+      navigate(fallbackPath);
+      return;
+    }
+
+    navigate(targetPath);
+  };
+
+  const cancelExit = () => {
+    setExitConfirmOpen(false);
+    setPendingNavigationPath(null);
+  };
+
+  useEffect(() => {
+    if (!hasUnsavedRecord) {
+      return;
+    }
+
+    window.history.pushState(
+      { ...(window.history.state ?? {}), [HISTORY_GUARD_MARKER]: true },
+      '',
+      currentPathRef.current || window.location.href
+    );
+  }, [hasUnsavedRecord]);
+
+  useEffect(() => {
+    if (!hasUnsavedRecord) {
+      return;
+    }
+
+    const handleHistoryNavigation = () => {
+      if (allowNextPopRef.current) {
+        allowNextPopRef.current = false;
+        return;
+      }
+
+      const currentPath = currentPathRef.current || window.location.href;
+      window.history.pushState(
+        { ...(window.history.state ?? {}), [HISTORY_GUARD_MARKER]: true },
+        '',
+        currentPath
+      );
+
+      setPendingNavigationPath(HISTORY_BACK_INTENT);
+      setExitConfirmOpen(true);
+    };
+
+    window.addEventListener('popstate', handleHistoryNavigation);
+    return () =>
+      window.removeEventListener('popstate', handleHistoryNavigation);
+  }, [hasUnsavedRecord]);
+
+  useEffect(() => {
+    if (!hasUnsavedRecord) {
+      return;
+    }
+
+    const handleDocumentNavigation = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) {
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const anchor = target.closest('a[href]');
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      if (anchor.hasAttribute('download')) {
+        return;
+      }
+
+      if (anchor.target && anchor.target !== '_self') {
+        return;
+      }
+
+      const href = anchor.getAttribute('href');
+      if (
+        !href ||
+        href.startsWith('#') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:')
+      ) {
+        return;
+      }
+
+      const nextUrl = new URL(anchor.href, window.location.origin);
+      const currentUrl = new URL(window.location.href);
+
+      if (nextUrl.origin !== currentUrl.origin) {
+        return;
+      }
+
+      const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      const currentPath = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+
+      if (nextPath === currentPath) {
+        return;
+      }
+
+      event.preventDefault();
+      setPendingNavigationPath(nextPath);
+      setExitConfirmOpen(true);
+    };
+
+    window.addEventListener('click', handleDocumentNavigation, true);
+    return () =>
+      window.removeEventListener('click', handleDocumentNavigation, true);
+  }, [hasUnsavedRecord]);
+
+  useEffect(() => {
+    if (!hasUnsavedRecord) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue =
+        'Toan bo thay doi chua luu se mat. Ban co chac muon thoat?';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedRecord]);
 
   const riskLevel = draft?.riskLevel ?? 'Low';
   const risk = riskConfig[riskLevel] || riskConfig.Low;
@@ -383,7 +600,9 @@ export default function OrganisationScreeningResultPage() {
                 Screening not found
               </p>
               <button
-                onClick={() => navigate('/organisation/screening')}
+                onClick={() =>
+                  navigate(resolvePathWithLocale('/organisation/screening'))
+                }
                 className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
               >
                 Go back to screening
@@ -426,42 +645,54 @@ export default function OrganisationScreeningResultPage() {
                   >
                     <Printer className="w-4 h-4" /> Print
                   </button>
-                  <button
-                    onClick={handleAnalyze}
-                    disabled={
-                      analyzing || loading || !sessionData.images.length
-                    }
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
-                  >
-                    {analyzing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                    {analyzing ? 'Analyzing…' : 'Re-analyze'}
-                  </button>
-                  <button
-                    onClick={handleSaveResults}
-                    disabled={saving || analyzing || !draft}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg ${
-                      saved && !saving
-                        ? 'bg-emerald-600 text-white shadow-emerald-600/25'
-                        : 'bg-primary text-white shadow-primary/25 hover:bg-primary/90 disabled:opacity-50'
-                    }`}
-                  >
-                    {saving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : saved ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
-                    {saved && !saving
-                      ? 'Saved'
-                      : saving
-                        ? 'Saving…'
-                        : 'Save Record'}
-                  </button>
+
+                  {isViewOnly ? (
+                    <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                      View-only mode: record already saved
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={
+                          analyzing || loading || !sessionData.images.length
+                        }
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
+                      >
+                        {analyzing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                        {analyzing ? 'Analyzing…' : 'Re-analyze'}
+                      </button>
+                      <button
+                        onClick={requestSaveResults}
+                        disabled={
+                          saving ||
+                          analyzing ||
+                          !draft ||
+                          consultationNote.trim().length === 0
+                        }
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg ${
+                          saved && !saving
+                            ? 'bg-emerald-600 text-white shadow-emerald-600/25'
+                            : 'bg-primary text-white shadow-primary/25 hover:bg-primary/90 disabled:opacity-50'
+                        }`}
+                      >
+                        {saving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        {saved && !saving
+                          ? 'Saved'
+                          : saving
+                            ? 'Saving…'
+                            : 'Save Record'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </section>
@@ -572,11 +803,12 @@ export default function OrganisationScreeningResultPage() {
                             <button
                               key={item}
                               onClick={() => updateDraft('riskLevel', item)}
+                              disabled={isViewOnly}
                               className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${
                                 draft.riskLevel === item
                                   ? 'border-primary bg-primary/10 text-primary'
                                   : 'border-(--border-primary) text-(--text-secondary) hover:bg-(--bg-tertiary)'
-                              }`}
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               {item}
                             </button>
@@ -594,6 +826,7 @@ export default function OrganisationScreeningResultPage() {
                           max={100}
                           step={0.1}
                           value={draft.confidenceScore}
+                          disabled={isViewOnly}
                           onChange={(event) =>
                             updateDraft(
                               'confidenceScore',
@@ -615,11 +848,32 @@ export default function OrganisationScreeningResultPage() {
                     </h3>
                     <textarea
                       value={draft.summary}
+                      readOnly={isViewOnly}
                       onChange={(event) =>
                         updateDraft('summary', event.target.value)
                       }
                       rows={4}
                       className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                    />
+                  </div>
+                )}
+
+                {draft && (
+                  <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-(--text-primary) mb-1">
+                      Organisation Consultation Note (Required)
+                    </h3>
+                    <p className="text-xs text-(--text-tertiary)">
+                      This note is mandatory and will be stored with the saved
+                      record.
+                    </p>
+                    <textarea
+                      value={consultationNote}
+                      readOnly={isViewOnly}
+                      onChange={(event) => handleNoteChange(event.target.value)}
+                      rows={4}
+                      className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                      placeholder="Write the consultation note for this screening session..."
                     />
                   </div>
                 )}
@@ -632,6 +886,7 @@ export default function OrganisationScreeningResultPage() {
                     </h3>
                     <textarea
                       value={draft.findings}
+                      readOnly={isViewOnly}
                       onChange={(event) =>
                         updateDraft('findings', event.target.value)
                       }
@@ -698,6 +953,35 @@ export default function OrganisationScreeningResultPage() {
             </div>
           </div>
         </main>
+
+        <ConfirmModal
+          open={saveConfirmOpen}
+          title="Xac nhan luu ket qua"
+          message="Ban co chac muon luu ket qua screening nay khong? Sau khi luu, phien nay se chuyen sang che do chi xem."
+          confirmLabel="Luu ket qua"
+          cancelLabel="Kiem tra lai"
+          tone="default"
+          isLoading={saving}
+          onCancel={() => {
+            if (!saving) {
+              setSaveConfirmOpen(false);
+            }
+          }}
+          onConfirm={() => {
+            void executeSaveResults();
+          }}
+        />
+
+        <ConfirmModal
+          open={exitConfirmOpen}
+          title="Xac nhan thoat"
+          message="Toan bo thay doi chua luu se mat. Ban co chac muon thoat khong?"
+          confirmLabel="Thoat"
+          cancelLabel="O lai"
+          tone="danger"
+          onCancel={cancelExit}
+          onConfirm={confirmExit}
+        />
       </div>
     </div>
   );
