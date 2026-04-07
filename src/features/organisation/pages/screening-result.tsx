@@ -46,17 +46,12 @@ import {
   toRiskLevelFromUrgency,
 } from '@/features/organisation/utils/screening-result.util';
 
-const HISTORY_BACK_INTENT = '__history_back__';
-const HISTORY_GUARD_MARKER = '__screening_result_leave_guard__';
-
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const screeningId = searchParams.get('id');
   const autoAnalysisTriggeredRef = useRef(false);
-  const currentPathRef = useRef('');
-  const allowNextPopRef = useRef(false);
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
@@ -67,10 +62,6 @@ export default function OrganisationScreeningResultPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
-  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
-  const [pendingNavigationPath, setPendingNavigationPath] = useState<
-    string | null
-  >(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
@@ -91,6 +82,24 @@ export default function OrganisationScreeningResultPage() {
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
+
+  // ─── Navigation Guard ────────────────────────────────────────────────────────
+
+  // Xử lý beforeunload (F5, đóng tab) — vẫn cần vì nằm ngoài React Router
+  useEffect(() => {
+    if (!hasUnsavedRecord) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Nội dung returnValue bị browser bỏ qua hoàn toàn (spec mới),
+      // nhưng vẫn cần set để kích hoạt dialog mặc định của browser.
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedRecord]);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const hydrateVisualArtifacts = useCallback(
     (imageWidth: number, imageHeight: number) => {
@@ -209,7 +218,7 @@ export default function OrganisationScreeningResultPage() {
       } catch (error) {
         console.error('Failed to load organization screening detail:', error);
         setSessionData(null);
-        toast.error(getErrorMessage(error, 'Unable to load screening detail.'));
+        toast.error(getErrorMessage(error, 'Không thể tải kết quả khám.'));
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -228,10 +237,6 @@ export default function OrganisationScreeningResultPage() {
   }, [screeningId, loadSessionDetail]);
 
   useEffect(() => {
-    currentPathRef.current = `${location.pathname}${location.search}${location.hash}`;
-  }, [location.hash, location.pathname, location.search]);
-
-  useEffect(() => {
     window.addEventListener('resize', updateImageLayout);
     return () => window.removeEventListener('resize', updateImageLayout);
   }, [updateImageLayout]);
@@ -242,9 +247,7 @@ export default function OrganisationScreeningResultPage() {
 
   const updateDraft = useCallback(
     <K extends keyof ResultDraft>(key: K, value: ResultDraft[K]) => {
-      if (isViewOnly) {
-        return;
-      }
+      if (isViewOnly) return;
 
       setDraft((current) => {
         if (!current) return current;
@@ -256,10 +259,7 @@ export default function OrganisationScreeningResultPage() {
   );
 
   const handleNoteChange = (value: string) => {
-    if (isViewOnly) {
-      return;
-    }
-
+    if (isViewOnly) return;
     setConsultationNote(value);
     setSaved(false);
   };
@@ -332,14 +332,14 @@ export default function OrganisationScreeningResultPage() {
       setSaved(false);
 
       toast.success(
-        'AI analysis completed. You can edit the result before saving.'
+        'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.'
       );
     } catch (error) {
       console.error('Organisation AI analysis failed:', error);
       toast.error(
         getErrorMessage(
           error,
-          'AI analysis failed. Please check AI service and try again.'
+          'Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.'
         )
       );
     } finally {
@@ -362,15 +362,13 @@ export default function OrganisationScreeningResultPage() {
 
     const note = consultationNote.trim();
     if (!note) {
-      toast.error(
-        'Please add an organisation consultation note before saving.'
-      );
+      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
       return;
     }
 
     const jsonOutput = rawJsonOutput ?? sessionData.rawJsonOutput;
     if (!jsonOutput) {
-      toast.error('Please run AI analysis before saving this record.');
+      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
       return;
     }
 
@@ -387,12 +385,12 @@ export default function OrganisationScreeningResultPage() {
       });
 
       setSaved(true);
-      toast.success('Screening result saved successfully.');
+      toast.success('Lưu kết quả khám thành công.');
       await loadSessionDetail(false);
     } catch (err) {
       console.error('Save failed:', err);
       toast.error(
-        getErrorMessage(err, 'Unable to save screening result. Please retry.')
+        getErrorMessage(err, 'Không thể lưu kết quả. Vui lòng thử lại.')
       );
     } finally {
       setSaving(false);
@@ -404,165 +402,17 @@ export default function OrganisationScreeningResultPage() {
 
     const note = consultationNote.trim();
     if (!note) {
-      toast.error(
-        'Please add an organisation consultation note before saving.'
-      );
+      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
       return;
     }
 
     if (!(rawJsonOutput ?? sessionData.rawJsonOutput)) {
-      toast.error('Please run AI analysis before saving this record.');
+      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
       return;
     }
 
     setSaveConfirmOpen(true);
   };
-
-  const confirmExit = () => {
-    const fallbackPath = resolvePathWithLocale('/organisation/patients');
-    const targetPath = pendingNavigationPath ?? fallbackPath;
-
-    setExitConfirmOpen(false);
-    setPendingNavigationPath(null);
-
-    if (targetPath === HISTORY_BACK_INTENT) {
-      if (window.history.length >= 3) {
-        allowNextPopRef.current = true;
-        window.history.go(-2);
-        return;
-      }
-
-      navigate(fallbackPath);
-      return;
-    }
-
-    navigate(targetPath);
-  };
-
-  const cancelExit = () => {
-    setExitConfirmOpen(false);
-    setPendingNavigationPath(null);
-  };
-
-  useEffect(() => {
-    if (!hasUnsavedRecord) {
-      return;
-    }
-
-    window.history.pushState(
-      { ...(window.history.state ?? {}), [HISTORY_GUARD_MARKER]: true },
-      '',
-      currentPathRef.current || window.location.href
-    );
-  }, [hasUnsavedRecord]);
-
-  useEffect(() => {
-    if (!hasUnsavedRecord) {
-      return;
-    }
-
-    const handleHistoryNavigation = () => {
-      if (allowNextPopRef.current) {
-        allowNextPopRef.current = false;
-        return;
-      }
-
-      const currentPath = currentPathRef.current || window.location.href;
-      window.history.pushState(
-        { ...(window.history.state ?? {}), [HISTORY_GUARD_MARKER]: true },
-        '',
-        currentPath
-      );
-
-      setPendingNavigationPath(HISTORY_BACK_INTENT);
-      setExitConfirmOpen(true);
-    };
-
-    window.addEventListener('popstate', handleHistoryNavigation);
-    return () =>
-      window.removeEventListener('popstate', handleHistoryNavigation);
-  }, [hasUnsavedRecord]);
-
-  useEffect(() => {
-    if (!hasUnsavedRecord) {
-      return;
-    }
-
-    const handleDocumentNavigation = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0) {
-        return;
-      }
-
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-        return;
-      }
-
-      const target = event.target;
-      if (!(target instanceof Element)) {
-        return;
-      }
-
-      const anchor = target.closest('a[href]');
-      if (!(anchor instanceof HTMLAnchorElement)) {
-        return;
-      }
-
-      if (anchor.hasAttribute('download')) {
-        return;
-      }
-
-      if (anchor.target && anchor.target !== '_self') {
-        return;
-      }
-
-      const href = anchor.getAttribute('href');
-      if (
-        !href ||
-        href.startsWith('#') ||
-        href.startsWith('mailto:') ||
-        href.startsWith('tel:')
-      ) {
-        return;
-      }
-
-      const nextUrl = new URL(anchor.href, window.location.origin);
-      const currentUrl = new URL(window.location.href);
-
-      if (nextUrl.origin !== currentUrl.origin) {
-        return;
-      }
-
-      const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-      const currentPath = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
-
-      if (nextPath === currentPath) {
-        return;
-      }
-
-      event.preventDefault();
-      setPendingNavigationPath(nextPath);
-      setExitConfirmOpen(true);
-    };
-
-    window.addEventListener('click', handleDocumentNavigation, true);
-    return () =>
-      window.removeEventListener('click', handleDocumentNavigation, true);
-  }, [hasUnsavedRecord]);
-
-  useEffect(() => {
-    if (!hasUnsavedRecord) {
-      return;
-    }
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue =
-        'Toan bo thay doi chua luu se mat. Ban co chac muon thoat?';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedRecord]);
 
   const riskLevel = draft?.riskLevel ?? 'Low';
   const risk = riskConfig[riskLevel] || riskConfig.Low;
@@ -573,13 +423,11 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader pageName="Screening Results" />
+          <OrganisationHeader pageName="Kết quả khám" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-(--text-secondary)">
-                Loading screening results…
-              </p>
+              <p className="text-(--text-secondary)">Đang tải kết quả khám…</p>
             </div>
           </main>
         </div>
@@ -592,12 +440,12 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader pageName="Screening Results" />
+          <OrganisationHeader pageName="Kết quả khám" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
               <p className="text-(--text-primary) font-semibold">
-                Screening not found
+                Không tìm thấy phiên khám
               </p>
               <button
                 onClick={() =>
@@ -605,7 +453,7 @@ export default function OrganisationScreeningResultPage() {
                 }
                 className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
               >
-                Go back to screening
+                Quay lại danh sách khám
               </button>
             </div>
           </main>
@@ -618,7 +466,7 @@ export default function OrganisationScreeningResultPage() {
     <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader pageName="Screening Results" />
+        <OrganisationHeader pageName="Kết quả khám" />
         <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6">
           <div className="mx-auto w-full max-w-[1400px] space-y-6">
             <section className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) px-5 py-5 md:px-6">
@@ -627,12 +475,14 @@ export default function OrganisationScreeningResultPage() {
                   <div className="flex items-center gap-3">
                     <div>
                       <h1 className="text-2xl font-bold text-(--text-primary)">
-                        Screening Results
+                        Kết quả khám
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
-                        Patient: {sessionData.patientId.slice(0, 8)}… · Session{' '}
+                        Bệnh nhân: {sessionData.patientId.slice(0, 8)}… · Phiên{' '}
                         {screeningId?.slice(0, 8)}… ·{' '}
-                        {new Date(sessionData.createdAt).toLocaleString()}
+                        {new Date(sessionData.createdAt).toLocaleString(
+                          'vi-VN'
+                        )}
                       </p>
                     </div>
                   </div>
@@ -643,12 +493,12 @@ export default function OrganisationScreeningResultPage() {
                     onClick={() => window.print()}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
                   >
-                    <Printer className="w-4 h-4" /> Print
+                    <Printer className="w-4 h-4" /> In
                   </button>
 
                   {isViewOnly ? (
                     <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-                      View-only mode: record already saved
+                      Chế độ xem — hồ sơ đã được lưu
                     </span>
                   ) : (
                     <>
@@ -664,7 +514,7 @@ export default function OrganisationScreeningResultPage() {
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Analyzing…' : 'Re-analyze'}
+                        {analyzing ? 'Đang phân tích…' : 'Phân tích lại'}
                       </button>
                       <button
                         onClick={requestSaveResults}
@@ -686,10 +536,10 @@ export default function OrganisationScreeningResultPage() {
                           <Save className="w-4 h-4" />
                         )}
                         {saved && !saving
-                          ? 'Saved'
+                          ? 'Đã lưu'
                           : saving
-                            ? 'Saving…'
-                            : 'Save Record'}
+                            ? 'Đang lưu…'
+                            : 'Lưu hồ sơ'}
                       </button>
                     </>
                   )}
@@ -724,7 +574,7 @@ export default function OrganisationScreeningResultPage() {
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
                     <Bot className="w-4 h-4 text-primary" />
-                    AI Candidate Findings
+                    Kết quả phân tích AI
                   </h3>
 
                   {aiFindings.length > 0 ? (
@@ -750,7 +600,7 @@ export default function OrganisationScreeningResultPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-(--text-secondary)">
-                      Candidate findings will appear here after AI analysis.
+                      Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.
                     </p>
                   )}
                 </div>
@@ -768,7 +618,7 @@ export default function OrganisationScreeningResultPage() {
                     </div>
                     <div>
                       <p className="text-sm text-(--text-tertiary)">
-                        Risk Level
+                        Mức độ rủi ro
                       </p>
                       <p className={`text-2xl font-bold ${risk.color}`}>
                         {riskLevel}
@@ -781,7 +631,7 @@ export default function OrganisationScreeningResultPage() {
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-(--text-secondary)">
-                            Confidence
+                            Độ tin cậy
                           </span>
                           <span className="font-semibold text-(--text-primary)">
                             {clampConfidence(draft.confidenceScore)}%
@@ -818,7 +668,7 @@ export default function OrganisationScreeningResultPage() {
 
                       <div>
                         <label className="text-xs font-semibold text-(--text-tertiary)">
-                          Confidence Score (0-100)
+                          Điểm tin cậy (0–100)
                         </label>
                         <input
                           type="number"
@@ -844,7 +694,7 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-primary" />
-                      AI Summary (Editable)
+                      Tóm tắt AI (có thể chỉnh sửa)
                     </h3>
                     <textarea
                       value={draft.summary}
@@ -861,11 +711,10 @@ export default function OrganisationScreeningResultPage() {
                 {draft && (
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-1">
-                      Organisation Consultation Note (Required)
+                      Ghi chú tư vấn tổ chức (bắt buộc)
                     </h3>
                     <p className="text-xs text-(--text-tertiary)">
-                      This note is mandatory and will be stored with the saved
-                      record.
+                      Ghi chú này là bắt buộc và sẽ được lưu cùng hồ sơ.
                     </p>
                     <textarea
                       value={consultationNote}
@@ -873,7 +722,7 @@ export default function OrganisationScreeningResultPage() {
                       onChange={(event) => handleNoteChange(event.target.value)}
                       rows={4}
                       className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                      placeholder="Write the consultation note for this screening session..."
+                      placeholder="Nhập ghi chú tư vấn cho phiên khám này…"
                     />
                   </div>
                 )}
@@ -882,7 +731,7 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
                       <Bot className="w-4 h-4 text-primary" />
-                      Findings (Editable)
+                      Kết quả chẩn đoán (có thể chỉnh sửa)
                     </h3>
                     <textarea
                       value={draft.findings}
@@ -900,51 +749,53 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl border border-dashed border-(--border-primary) bg-(--bg-secondary) p-5">
                     <p className="text-sm text-(--text-secondary)">
                       <Sparkles className="inline w-4 h-4 mr-1" />
-                      AI result is not generated yet. Click Analyze/Re-analyze
-                      to run AI and prepare editable output.
+                      Chưa có kết quả AI. Nhấn "Phân tích lại" để chạy AI và
+                      chuẩn bị kết quả có thể chỉnh sửa.
                     </p>
                   </div>
                 )}
 
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary)">
-                    Session Info
+                    Thông tin phiên khám
                   </h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Model</span>
+                      <span className="text-(--text-tertiary)">Mô hình</span>
                       <span className="text-(--text-primary) font-medium">
                         {sessionData.modelVersion}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Images</span>
+                      <span className="text-(--text-tertiary)">Số ảnh</span>
                       <span className="text-(--text-primary) font-medium">
                         {sessionData.images.length}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Created</span>
+                      <span className="text-(--text-tertiary)">Ngày tạo</span>
                       <span className="text-(--text-primary) font-medium">
-                        {new Date(sessionData.createdAt).toLocaleDateString()}
+                        {new Date(sessionData.createdAt).toLocaleDateString(
+                          'vi-VN'
+                        )}
                       </span>
                     </div>
                     {sessionData.latestResult?.assessedAt && (
                       <div className="flex justify-between">
                         <span className="text-(--text-tertiary)">
-                          Last assessed
+                          Đánh giá lần cuối
                         </span>
                         <span className="text-(--text-primary) font-medium">
                           {new Date(
                             sessionData.latestResult.assessedAt
-                          ).toLocaleDateString()}
+                          ).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Session ID</span>
+                      <span className="text-(--text-tertiary)">Mã phiên</span>
                       <span className="text-(--text-primary) font-medium text-xs">
-                        {sessionData.screeningId.slice(0, 8)}...
+                        {sessionData.screeningId.slice(0, 8)}…
                       </span>
                     </div>
                   </div>
@@ -954,33 +805,21 @@ export default function OrganisationScreeningResultPage() {
           </div>
         </main>
 
+        {/* Modal xác nhận lưu kết quả */}
         <ConfirmModal
           open={saveConfirmOpen}
-          title="Xac nhan luu ket qua"
-          message="Ban co chac muon luu ket qua screening nay khong? Sau khi luu, phien nay se chuyen sang che do chi xem."
-          confirmLabel="Luu ket qua"
-          cancelLabel="Kiem tra lai"
+          title="Xác nhận lưu kết quả"
+          message="Bạn có chắc muốn lưu kết quả khám này không? Sau khi lưu, phiên này sẽ chuyển sang chế độ chỉ xem và không thể chỉnh sửa."
+          confirmLabel="Lưu kết quả"
+          cancelLabel="Kiểm tra lại"
           tone="default"
           isLoading={saving}
           onCancel={() => {
-            if (!saving) {
-              setSaveConfirmOpen(false);
-            }
+            if (!saving) setSaveConfirmOpen(false);
           }}
           onConfirm={() => {
             void executeSaveResults();
           }}
-        />
-
-        <ConfirmModal
-          open={exitConfirmOpen}
-          title="Xac nhan thoat"
-          message="Toan bo thay doi chua luu se mat. Ban co chac muon thoat khong?"
-          confirmLabel="Thoat"
-          cancelLabel="O lai"
-          tone="danger"
-          onCancel={cancelExit}
-          onConfirm={confirmExit}
         />
       </div>
     </div>
