@@ -167,17 +167,21 @@ export default function ScreeningPage() {
 
   const getRiskBadge = (riskLevel?: string) => {
     if (!riskLevel) return null;
-    const colors = {
-      low: 'bg-green-500/20 text-green-400 border-green-500/30',
-      medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-      high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-      critical: 'bg-red-500/20 text-red-400 border-red-500/30',
-    };
+    const normalized = riskLevel.toLowerCase();
+    const isHealthy = normalized === 'low';
+    const isCritical = normalized === 'critical' || normalized === 'high';
+    const style = isHealthy
+      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+      : isCritical
+        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+        : 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    const label = isHealthy ? 'Looks Healthy' : 'Needs Attention';
+
     return (
       <span
-        className={`px-2 py-0.5 text-xs font-medium rounded border capitalize ${colors[riskLevel as keyof typeof colors]}`}
+        className={`px-2 py-0.5 text-xs font-medium rounded border ${style}`}
       >
-        {t(`PatientScreening.risk.${riskLevel}`, `${riskLevel}`)}
+        {label}
       </span>
     );
   };

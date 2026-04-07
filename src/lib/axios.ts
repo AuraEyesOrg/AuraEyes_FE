@@ -7,8 +7,8 @@ import axios from 'axios';
 const aiCoreClient = axios.create({
   baseURL:
     (import.meta.env.VITE_API_END_AI_POINT as string) ||
-    'http://localhost:8000/api/v1',
-  timeout: 120000, // Score-CAM localization can take ~35s on CPU
+    'http://localhost:8000',
+  timeout: 120000,
 });
 
 export default aiCoreClient;

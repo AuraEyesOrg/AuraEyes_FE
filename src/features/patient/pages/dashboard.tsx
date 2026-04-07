@@ -34,18 +34,9 @@ const getGreeting = (t: TranslateFn) => {
 };
 
 const getRiskLabel = (risk: string | undefined, t: TranslateFn) => {
-  switch (normalizeRiskLevel(risk)) {
-    case 'low':
-      return t('PatientDashboard.risk.low');
-    case 'medium':
-      return t('PatientDashboard.risk.medium');
-    case 'high':
-      return t('PatientDashboard.risk.high');
-    case 'critical':
-      return t('PatientDashboard.risk.critical');
-    default:
-      return t('PatientDashboard.risk.notAvailable');
-  }
+  const normalized = normalizeRiskLevel(risk);
+  if (!normalized) return t('PatientDashboard.risk.notAvailable');
+  return normalized === 'low' ? 'Looks Healthy' : 'Needs Attention';
 };
 
 const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {

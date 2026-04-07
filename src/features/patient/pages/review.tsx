@@ -221,11 +221,7 @@ export default function ReviewPage() {
   const riskStyle = RISK_STYLE_CONFIG[effectiveRiskLevel];
   const riskLabel = showHealthyStatus
     ? t('PatientReview.status.healthy', 'Looks Healthy')
-    : effectiveRiskLevel === 'high'
-      ? t('PatientReview.status.high', 'Needs Attention')
-      : effectiveRiskLevel === 'moderate'
-        ? t('PatientReview.status.moderate', 'Needs Review')
-        : t('PatientReview.status.low', 'Low Risk');
+    : t('PatientReview.status.high', 'Needs Attention');
   const riskSummary = showHealthyStatus
     ? t(
         'PatientReview.summary.healthy',

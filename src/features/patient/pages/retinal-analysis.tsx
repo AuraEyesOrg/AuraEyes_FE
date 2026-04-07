@@ -13,12 +13,7 @@ import FocusModeLayout from '../components/FocusModeLayout';
 import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
 import PatientImageStrip from '../components/ReadOnlyImageGallery';
-import {
-  ToggleState,
-  Anomaly,
-  RetinalImage,
-  Location as AnomalyBox,
-} from '../types/type';
+import { ToggleState, Anomaly, RetinalImage } from '../types/type';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -38,81 +33,25 @@ import {
 const tRetinal = (key: string, options?: Record<string, unknown>) =>
   i18n.t(key as never, options as never) as unknown as string;
 
-/** Map AI DiagnosisType → frontend Anomaly type */
-function mapDiagnosisType(
-  confidence: number
+/** Map urgency level → Anomaly type for visual styling */
+function urgencyToAnomalyType(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
 ): 'warning' | 'priority_high' | 'info' {
-  if (confidence >= 0.6) return 'warning';
-  if (confidence >= 0.3) return 'priority_high';
+  if (urgency === 'critical' || urgency === 'warning') return 'warning';
+  if (urgency === 'caution') return 'priority_high';
   return 'info';
 }
 
-/** Get Tailwind color class based on confidence */
-function getColorClass(confidence: number): string {
-  if (confidence >= 0.8) return 'bg-red-600';
-  if (confidence >= 0.6) return 'bg-red-500';
-  if (confidence >= 0.4) return 'bg-orange-500';
-  return 'bg-yellow-500';
+/** Map urgency level → Tailwind color class */
+function urgencyToColorClass(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
+): string {
+  if (urgency === 'critical') return 'bg-red-600';
+  if (urgency === 'warning') return 'bg-orange-500';
+  if (urgency === 'caution') return 'bg-amber-500';
+  if (urgency === 'info') return 'bg-blue-500';
+  return 'bg-emerald-500';
 }
-
-/** Patient-friendly name mapping for common retinal disease classes */
-const FRIENDLY_NAMES: Record<string, { name: string; description: string }> = {
-  CRVO: {
-    name: 'Retinal vein blockage',
-    description:
-      'A blood flow issue was detected in one of the veins in your retina. An eye specialist can help determine the best course of action.',
-  },
-  BRVO: {
-    name: 'Branch vein blockage',
-    description:
-      'A partial blood flow issue was found in a branch vein of your retina. Early monitoring can help manage this condition.',
-  },
-  DR2: {
-    name: 'Moderate diabetic eye changes',
-    description:
-      'Moderate changes related to diabetes were noticed. Regular specialist visits can help protect your vision.',
-  },
-  DR3: {
-    name: 'Signs of diabetic eye changes',
-    description:
-      'Some changes related to diabetes were noticed in your retina. Regular specialist visits can help protect your vision.',
-  },
-  CSCR: {
-    name: 'Fluid under the retina',
-    description:
-      'There appears to be some fluid build-up under your retina. This is often manageable with proper care.',
-  },
-  Normal: {
-    name: 'Healthy retina',
-    description:
-      'Your retinal scan looks normal. Keep up with regular eye check-ups to maintain good eye health.',
-  },
-  Glaucoma: {
-    name: 'Eye pressure concern',
-    description:
-      'Signs suggest possible elevated eye pressure. An eye specialist can perform additional tests to confirm.',
-  },
-  Maculopathy: {
-    name: 'Macular area changes',
-    description:
-      'Some changes were detected in the macular region of your retina. A specialist can advise on monitoring.',
-  },
-  'Preretinal hemorrhage': {
-    name: 'Bleeding near the retina',
-    description:
-      'Some bleeding was detected near the surface of your retina. An eye specialist can evaluate this further.',
-  },
-  'Macular hole': {
-    name: 'Small gap in the macula',
-    description:
-      'A small gap was detected in the central area of your retina. A specialist can advise on the best approach.',
-  },
-  'Cotton-wool spots': {
-    name: 'Nerve fiber changes',
-    description:
-      'Some changes in the nerve fibers of your retina were detected. This may warrant further evaluation.',
-  },
-};
 
 /**
  * Convert AI pixel-based bbox to percentage-based location relative to original image.
@@ -132,7 +71,29 @@ function toPercentLocation(
   };
 }
 
-// --- Standard /analyze response types ---
+function scaleBbox(
+  bbox: { x: number; y: number; width: number; height: number },
+  imgWidth: number,
+  imgHeight: number,
+  scale: number
+) {
+  const cx = bbox.x + bbox.width / 2;
+  const cy = bbox.y + bbox.height / 2;
+  const width = bbox.width * scale;
+  const height = bbox.height * scale;
+
+  const x = Math.max(0, Math.min(cx - width / 2, imgWidth - width));
+  const y = Math.max(0, Math.min(cy - height / 2, imgHeight - height));
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(Math.min(width, imgWidth)),
+    height: Math.round(Math.min(height, imgHeight)),
+  };
+}
+
+// --- V2 /diagnosis/v2/analyze response types ---
 interface AICentroid {
   x: number;
   y: number;
@@ -149,26 +110,44 @@ interface AILesionLocation {
   area: number;
   confidence: number;
 }
-interface AIPredictionItem {
+interface AIV2TopKItem {
   rank: number;
-  class_name: string;
-  class_index: number;
+  code: string;
+  name_en: string;
+  name_vi: string;
   confidence: number;
-  status: string; // "primary" | "possible_co_occurrence" | "low_probability"
+  class_index: number;
 }
-interface AIStandardResponse {
+interface AIV2GroupPrediction {
+  code: string;
+  display: string;
+  description: string;
+  confidence: number;
+}
+interface AIV2ModelNote {
+  status: string;
+  notes: string[];
+  possible_conditions: AIV2TopKItem[];
+  disclaimer: string;
+}
+interface AIV2Response {
   image_id: string;
   filename: string;
-  prediction: {
-    primary: { class_name: string; class_index: number; confidence: number };
-    top_k: AIPredictionItem[];
-    multi_disease_analysis: {
-      likely_multi_disease: boolean;
-      num_candidates: number;
-      threshold: number;
-      candidates: string[];
-    };
+  model: {
+    checkpoint: string;
+    epoch: number;
+    val_acc: number;
   };
+  prediction: {
+    code: string;
+    name_en: string;
+    name_vi: string;
+    confidence: number;
+    class_index: number;
+    top_k: AIV2TopKItem[];
+    group: AIV2GroupPrediction | null;
+  };
+  model_note: AIV2ModelNote;
   localization: {
     primary: AICentroid | null;
     method: string;
@@ -176,8 +155,9 @@ interface AIStandardResponse {
     threshold: number;
     num_lesions: number;
     all_lesions: AILesionLocation[];
+    error: string | null;
   } | null;
-  heatmap_colormap_url?: string;
+  heatmap_url: string | null;
 }
 
 /** Get the natural dimensions of an image from its URL */
@@ -218,100 +198,59 @@ function extractHeatmapUrlFromRaw(rawJsonOutput?: string): string | undefined {
   if (!rawJsonOutput) return undefined;
 
   try {
-    const parsed = JSON.parse(rawJsonOutput) as Partial<AIStandardResponse>;
-    return resolveAiAssetUrl(parsed.heatmap_colormap_url);
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const url =
+      (parsed.heatmap_url as string | undefined) ??
+      (parsed.heatmap_colormap_url as string | undefined);
+    return resolveAiAssetUrl(url);
   } catch {
     return undefined;
   }
 }
+
 /**
- * Map AI standard response → Anomaly[] for the frontend.
- * Faithfully reflects the API top_k predictions.
- * The primary prediction gets the best Score-CAM lesion bbox.
+ * Map V2 AI response → Anomaly[] for the frontend.
+ * Uses name_vi for friendly display, disease code for urgency lookup.
  */
-function mapStandardResponseToAnomalies(
-  data: AIStandardResponse,
+function mapV2ResponseToAnomalies(
+  data: AIV2Response,
   imgWidth: number,
   imgHeight: number
 ): Anomaly[] {
-  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
-  const preferVietnamese = currentLanguage.toLowerCase().startsWith('vi');
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
-  const bestLesion = lesions.length > 0 ? lesions[0] : null;
+  const groupDisplay = data.prediction.group?.display ?? '';
+  const isPrimaryNormal = isNormalDisease(data.prediction.code);
+  const BOX_SCALE = 1.35;
 
-  // Map each top_k prediction → one Anomaly card
   for (const pred of data.prediction.top_k) {
     const isPrimary = pred.rank === 1;
-    const friendly = FRIENDLY_NAMES[pred.class_name];
-    const localizedDiseaseName = toDisplayDiseaseName(
-      pred.class_name,
-      currentLanguage
-    );
+    const urgency = getDiseaseUrgency(pred.code);
 
-    // Primary gets the best lesion bbox, others get no location
+    const lesion = lesions[pred.rank - 1];
     const location =
-      isPrimary && bestLesion
-        ? toPercentLocation(bestLesion.bbox, imgWidth, imgHeight)
+      !isPrimaryNormal && lesion
+        ? toPercentLocation(
+            scaleBbox(lesion.bbox, imgWidth, imgHeight, BOX_SCALE),
+            imgWidth,
+            imgHeight
+          )
         : undefined;
 
     anomalies.push({
       id: String(pred.rank),
-      name: pred.class_name,
+      name: pred.code,
+      code: pred.code,
       confidence: Math.round(pred.confidence * 100),
-      description: isPrimary
-        ? tRetinal(
-            'PatientRetinalAnalysis.analysis.helper.primaryFindingDescription',
-            {
-              disease: pred.class_name,
-              confidence: Math.round(pred.confidence * 100),
-            }
-          )
-        : tRetinal(
-            'PatientRetinalAnalysis.analysis.helper.secondaryFindingDescription',
-            {
-              disease: pred.class_name,
-              status: pred.status.replace(/_/g, ' '),
-              confidence: Math.round(pred.confidence * 100),
-            }
-          ),
-      color: getColorClass(pred.confidence),
-      type: mapDiagnosisType(pred.confidence),
+      description: pred.name_vi,
+      color: urgencyToColorClass(urgency),
+      type: urgencyToAnomalyType(urgency),
       location,
-      friendlyName: preferVietnamese
-        ? localizedDiseaseName
-        : (friendly?.name ?? pred.class_name),
-      friendlyDescription:
-        friendly?.description ??
-        tRetinal(
-          'PatientRetinalAnalysis.analysis.helper.detectedByAiWithReview',
-          {
-            disease: pred.class_name,
-          }
-        ),
+      friendlyName: pred.name_vi,
+      friendlyDescription: pred.name_en,
       isHighest: isPrimary,
+      groupDisplay: isPrimary ? groupDisplay : undefined,
     });
-  }
-
-  // Additionally, if there are extra lesion regions from Score-CAM,
-  // distribute them among the top candidates that don't already have a location
-  if (lesions.length > 1) {
-    const extraLesions = lesions.slice(1);
-    let lesionIdx = 0;
-    for (const anomaly of anomalies) {
-      if (
-        anomaly.isHighest ||
-        anomaly.location ||
-        lesionIdx >= extraLesions.length
-      )
-        continue;
-      anomaly.location = toPercentLocation(
-        extraLesions[lesionIdx].bbox,
-        imgWidth,
-        imgHeight
-      );
-      lesionIdx++;
-    }
   }
 
   return anomalies;
@@ -395,9 +334,8 @@ function inferEyeSideFromName(
 }
 
 /**
- * Restore anomalies from persisted raw JSON. When the payload matches the
- * standard /diagnosis/analyze shape and we have an image URL, bbox locations
- * are recomputed with the same mapping as live analysis.
+ * Restore anomalies from persisted raw JSON.
+ * Handles both V2 format (code/name_vi) and legacy V1 format (class_name).
  */
 async function mapSavedAnomaliesFromRaw(
   rawJsonOutput?: string,
@@ -407,98 +345,79 @@ async function mapSavedAnomaliesFromRaw(
 
   try {
     const parsed = JSON.parse(rawJsonOutput) as unknown;
+    if (!parsed || typeof parsed !== 'object' || !('prediction' in parsed))
+      return { anomalies: [] };
 
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      'prediction' in parsed &&
-      (parsed as AIStandardResponse).prediction?.top_k
-    ) {
-      const standard = parsed as AIStandardResponse;
-      let w = 0;
-      let h = 0;
-      if (imageUrl) {
-        const size = await getImageNaturalSize(imageUrl);
-        w = size.w;
-        h = size.h;
-      }
-      if (w > 0 && h > 0 && standard.localization?.all_lesions?.length) {
+    let w = 0;
+    let h = 0;
+    if (imageUrl) {
+      const size = await getImageNaturalSize(imageUrl);
+      w = size.w;
+      h = size.h;
+    }
+
+    const obj = parsed as Record<string, unknown>;
+    const prediction = obj.prediction as Record<string, unknown> | undefined;
+    const topK = (prediction?.top_k ?? []) as Array<Record<string, unknown>>;
+    if (topK.length === 0) return { anomalies: [] };
+
+    const isV2 = 'code' in topK[0];
+
+    if (isV2) {
+      const v2 = parsed as AIV2Response;
+      if (w > 0 && h > 0 && v2.localization?.all_lesions?.length) {
         return {
-          anomalies: mapStandardResponseToAnomalies(standard, w, h),
+          anomalies: mapV2ResponseToAnomalies(v2, w, h),
           rawJsonOutput,
         };
       }
-      const mapped = standard.prediction.top_k.map((pred, idx) => ({
+      const groupDisplay = v2.prediction.group?.display ?? '';
+      const mapped = v2.prediction.top_k.map((pred, idx) => {
+        const isPrimary = (pred.rank ?? idx + 1) === 1;
+        const urgency = getDiseaseUrgency(pred.code);
+        return {
+          id: String(pred.rank ?? idx + 1),
+          name: pred.code,
+          code: pred.code,
+          confidence: Math.round((pred.confidence ?? 0) * 100),
+          description: pred.name_vi,
+          color: urgencyToColorClass(urgency),
+          type: urgencyToAnomalyType(urgency),
+          friendlyName: pred.name_vi,
+          friendlyDescription: pred.name_en,
+          isHighest: isPrimary,
+          groupDisplay: isPrimary ? groupDisplay : undefined,
+        } as Anomaly;
+      });
+      return { anomalies: mapped, rawJsonOutput };
+    }
+
+    // Legacy V1 format fallback
+    const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+    const v1TopK = topK as Array<{
+      rank: number;
+      class_name: string;
+      confidence: number;
+      status?: string;
+    }>;
+    const mapped = v1TopK.map((pred, idx) => {
+      const urgency = getDiseaseUrgency(pred.class_name);
+      return {
         id: String(pred.rank ?? idx + 1),
         name: pred.class_name,
         confidence: Math.round((pred.confidence ?? 0) * 100),
-        description: tRetinal(
-          'PatientRetinalAnalysis.analysis.helper.confidenceDescription',
-          {
-            disease: pred.class_name,
-            confidence: Math.round((pred.confidence ?? 0) * 100),
-          }
-        ),
-        color: getColorClass(pred.confidence ?? 0),
-        type: mapDiagnosisType(pred.confidence ?? 0),
-        friendlyName: FRIENDLY_NAMES[pred.class_name]?.name ?? pred.class_name,
-        friendlyDescription:
-          FRIENDLY_NAMES[pred.class_name]?.description ??
-          tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAi', {
-            disease: pred.class_name,
-          }),
+        description: pred.class_name,
+        color: urgencyToColorClass(urgency),
+        type: urgencyToAnomalyType(urgency),
+        friendlyName: toDisplayDiseaseName(pred.class_name, currentLanguage),
+        friendlyDescription: pred.class_name,
         isHighest: (pred.rank ?? 1) === 1,
-      })) as Anomaly[];
-
-      return { anomalies: mapped, rawJsonOutput };
-    }
-
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      Array.isArray((parsed as { anomalies?: unknown }).anomalies)
-    ) {
-      const withAnomalies = parsed as {
-        anomalies: Array<{
-          name: string;
-          confidence?: number;
-          location?: AnomalyBox;
-        }>;
-      };
-      const mapped = withAnomalies.anomalies.map((a, idx) => ({
-        id: String(idx + 1),
-        name: a.name,
-        confidence: Number(a.confidence ?? 0),
-        description: tRetinal(
-          'PatientRetinalAnalysis.analysis.helper.confidenceDescription',
-          {
-            disease: a.name,
-            confidence: Math.round(Number(a.confidence ?? 0)),
-          }
-        ),
-        color: getColorClass(
-          Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
-        ),
-        type: mapDiagnosisType(
-          Math.min(1, Math.max(0, Number(a.confidence ?? 0) / 100))
-        ),
-        location: a.location,
-        friendlyName: FRIENDLY_NAMES[a.name]?.name ?? a.name,
-        friendlyDescription:
-          FRIENDLY_NAMES[a.name]?.description ??
-          tRetinal('PatientRetinalAnalysis.analysis.helper.detectedByAi', {
-            disease: a.name,
-          }),
-        isHighest: idx === 0,
-      })) as Anomaly[];
-
-      return { anomalies: mapped, rawJsonOutput };
-    }
+      } as Anomaly;
+    });
+    return { anomalies: mapped, rawJsonOutput };
   } catch {
-    // Ignore parse errors and fallback to empty anomalies.
+    return { anomalies: [] };
   }
-
-  return { anomalies: [] };
 }
 
 export async function hydrateConsultationPreviewAnomalies(
@@ -538,6 +457,16 @@ function toRiskLevelFromUrgency(
   }
 
   return 'low';
+}
+
+function urgencyRank(
+  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal'
+): number {
+  if (urgency === 'critical') return 5;
+  if (urgency === 'warning') return 4;
+  if (urgency === 'caution') return 3;
+  if (urgency === 'info') return 2;
+  return 1;
 }
 
 export default function RetinalAnalysis() {
@@ -761,7 +690,7 @@ export default function RetinalAnalysis() {
         setSelectedImageId(hydratedImages[0].id);
         setAnalyzed(restoredAnomalies.length > 0);
         setAnomalies(restoredAnomalies);
-        setShowHighlights(restoredAnomalies.length > 0);
+        setShowHighlights(restoredAnomalies.some((a) => Boolean(a.location)));
       } catch (error) {
         console.error('Failed to load screening session:', error);
         setErrorMessage(t('PatientRetinalAnalysis.errors.loadScreeningFailed'));
@@ -782,6 +711,7 @@ export default function RetinalAnalysis() {
       setAnalyzed(selectedImg.analyzed);
       setIsFallback(false);
       setErrorMessage(null);
+      setShowHighlights(selectedImg.anomalies.some((a) => Boolean(a.location)));
 
       if (!selectedImg.heatmapUrl) {
         setShowHeatmap(false);
@@ -797,6 +727,18 @@ export default function RetinalAnalysis() {
       : null);
   const primaryConfidence = primaryAnomaly?.confidence ?? 0;
   const primaryUrgency = getDiseaseUrgency(primaryAnomaly?.name ?? 'Normal');
+  const dominantAnomaly =
+    anomalies.length > 0
+      ? [...anomalies].sort((a, b) => {
+          const urgencyDiff =
+            urgencyRank(getDiseaseUrgency(b.code ?? b.name)) -
+            urgencyRank(getDiseaseUrgency(a.code ?? a.name));
+          if (urgencyDiff !== 0) return urgencyDiff;
+          return (b.confidence ?? 0) - (a.confidence ?? 0);
+        })[0]
+      : null;
+  const dominantUrgency = getDiseaseUrgency(dominantAnomaly?.code ?? 'WNL');
+  const dominantConfidence = dominantAnomaly?.confidence ?? primaryConfidence;
   const isPrimaryNormal =
     primaryAnomaly != null
       ? isNormalDisease(primaryAnomaly.name)
@@ -804,8 +746,8 @@ export default function RetinalAnalysis() {
 
   const riskScore = Math.round(primaryConfidence / 10);
   const riskLevel: 'low' | 'moderate' | 'high' = toRiskLevelFromUrgency(
-    primaryUrgency,
-    primaryConfidence
+    dominantUrgency,
+    dominantConfidence
   );
 
   const riskConfig = {
@@ -845,6 +787,7 @@ export default function RetinalAnalysis() {
   };
 
   const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
+  const riskTagLabel = isPrimaryNormal ? 'Looks Healthy' : 'Needs Attention';
 
   // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {
@@ -892,21 +835,22 @@ export default function RetinalAnalysis() {
 
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('threshold', '0.55');
+      formData.append('topk', '5');
 
-      // Call AURA AI standard /diagnosis/analyze endpoint (includes Score-CAM + top_k)
-      const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/diagnosis/analyze',
+      const { data } = await aiCoreClient.post<AIV2Response>(
+        '/api/v2/diagnosis/v2/analyze',
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
-          params: { threshold: 0.6, localization: true },
         }
       );
 
-      const resolvedHeatmapUrl = resolveAiAssetUrl(data.heatmap_colormap_url);
+      const resolvedHeatmapUrl = resolveAiAssetUrl(
+        data.heatmap_url ?? undefined
+      );
 
-      // Map AI response → deduplicated Anomaly[] with correct image-relative coords
-      const mapped = mapStandardResponseToAnomalies(data, imgWidth, imgHeight);
+      const mapped = mapV2ResponseToAnomalies(data, imgWidth, imgHeight);
       const rawOutput = JSON.stringify(data);
       setRawJsonOutput(rawOutput);
 
@@ -965,14 +909,29 @@ export default function RetinalAnalysis() {
           ? [...mapped].sort((a, b) => b.confidence - a.confidence)[0]
           : null);
       const persistedConfidence = primaryMapped?.confidence ?? 0;
+      const dominantMapped =
+        mapped.length > 0
+          ? [...mapped].sort((a, b) => {
+              const urgencyDiff =
+                urgencyRank(getDiseaseUrgency(b.code ?? b.name)) -
+                urgencyRank(getDiseaseUrgency(a.code ?? a.name));
+              if (urgencyDiff !== 0) return urgencyDiff;
+              return (b.confidence ?? 0) - (a.confidence ?? 0);
+            })[0]
+          : primaryMapped;
       const persistedUrgency = getDiseaseUrgency(
-        primaryMapped?.name ?? 'Normal'
+        dominantMapped?.code ?? dominantMapped?.name ?? 'WNL'
       );
+      const persistedRiskConfidence =
+        dominantMapped?.confidence ?? persistedConfidence;
       const mappedRiskLevel: 'Low' | 'Moderate' | 'High' =
-        toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) === 'high'
+        toRiskLevelFromUrgency(persistedUrgency, persistedRiskConfidence) ===
+        'high'
           ? 'High'
-          : toRiskLevelFromUrgency(persistedUrgency, persistedConfidence) ===
-              'moderate'
+          : toRiskLevelFromUrgency(
+                persistedUrgency,
+                persistedRiskConfidence
+              ) === 'moderate'
             ? 'Moderate'
             : 'Low';
 
@@ -993,14 +952,14 @@ export default function RetinalAnalysis() {
                 ? t('PatientRetinalAnalysis.analysis.persistedSummary.normal')
                 : t('PatientRetinalAnalysis.analysis.persistedSummary.low'),
         findings: significantFindings
-          .map((a) => `${a.name} (${Math.round(a.confidence)}%)`)
+          .map((a) => a.friendlyName ?? a.name)
           .join(', '),
       });
 
       setResultsPersisted(true);
 
       setAnomalies(mapped);
-      setShowHighlights(true);
+      setShowHighlights(mapped.some((a) => Boolean(a.location)));
 
       if (currentImage) {
         setImages((prev) =>
@@ -1148,7 +1107,7 @@ export default function RetinalAnalysis() {
                         className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${risk.color} ${risk.bg} border ${risk.border}`}
                       >
                         {risk.icon}
-                        {risk.label}
+                        {riskTagLabel}
                       </span>
                     )}
                   </div>

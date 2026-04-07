@@ -97,7 +97,7 @@ async function analyzeImageQuality(file: File): Promise<{
 
   try {
     const { data } = await aiCoreClient.post<FundusValidationApiResponse>(
-      '/diagnosis/validate-fundus',
+      '/api/v1/diagnosis/validate-fundus',
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },

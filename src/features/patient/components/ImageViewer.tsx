@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ToggleState, Anomaly, RetinalImage } from '../types/type';
-import { AlertTriangle, Info } from 'lucide-react';
 
 interface ImageViewerProps {
   toggles: ToggleState;
@@ -69,31 +68,23 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       return {
         border: 'rgba(239, 68, 68, 0.9)',
         bg: 'rgba(239, 68, 68, 0.15)',
-        labelBg: 'rgba(220, 38, 38, 0.92)',
-        icon: <AlertTriangle className="w-3 h-3 text-white" />,
         glow: true,
       };
     if (type === 'warning')
       return {
         border: 'rgba(239, 68, 68, 0.7)',
         bg: 'rgba(239, 68, 68, 0.12)',
-        labelBg: 'rgba(30, 30, 30, 0.85)',
-        icon: <AlertTriangle className="w-3 h-3 text-red-400" />,
         glow: false,
       };
     if (type === 'priority_high')
       return {
         border: 'rgba(251, 191, 36, 0.7)',
         bg: 'rgba(251, 191, 36, 0.1)',
-        labelBg: 'rgba(30, 30, 30, 0.85)',
-        icon: <Info className="w-3 h-3 text-amber-400" />,
         glow: false,
       };
     return {
       border: 'rgba(96, 165, 250, 0.6)',
       bg: 'rgba(96, 165, 250, 0.08)',
-      labelBg: 'rgba(30, 30, 30, 0.85)',
-      icon: <Info className="w-3 h-3 text-blue-400" />,
       glow: false,
     };
   };
@@ -173,13 +164,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                       : {}),
                   }}
                 />
-                <div
-                  className="absolute left-0 bottom-full mb-1.5 flex items-center gap-1 px-2 py-1 rounded-md text-white text-xs font-medium whitespace-nowrap shadow-md"
-                  style={{ backgroundColor: style.labelBg }}
-                >
-                  {style.icon}
-                  <span>{anomaly.friendlyName || anomaly.name}</span>
-                </div>
               </div>
             );
           })}
