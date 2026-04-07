@@ -7,6 +7,7 @@ import {
   CheckCircle,
   UserX,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import Spinner from '@/components/ui/spinner';
@@ -59,8 +60,6 @@ export default function OrganisationSlotManagementPage() {
   const [endTime, setEndTime] = useState('12:00');
   const [slotDuration, setSlotDuration] = useState(30);
   const [maxCapacity, setMaxCapacity] = useState(5);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   const { data: templates = [], isLoading: templatesLoading } =
     useOrganisationTemplates(organisationId, !!organisationId);
@@ -92,14 +91,8 @@ export default function OrganisationSlotManagementPage() {
     [slots]
   );
 
-  const resetMessages = () => {
-    setMessage('');
-    setError('');
-  };
-
   const handleCreateTemplate = async () => {
     if (!organisationId) return;
-    resetMessages();
     try {
       await createTemplateMutation.mutateAsync({
         orgId: organisationId,
@@ -111,19 +104,18 @@ export default function OrganisationSlotManagementPage() {
           maxCapacity,
         },
       });
-      setMessage('Template created successfully.');
+      toast.success('Template created successfully.');
     } catch {
-      setError('Failed to create template.');
+      toast.error('Failed to create template.');
     }
   };
 
   const handleGenerateSlots = async () => {
     if (!templateId) {
-      setError('Please select a template before generating slots.');
+      toast.error('Please select a template before generating slots.');
       return;
     }
 
-    resetMessages();
     try {
       const count = await generateSlotsMutation.mutateAsync({
         scheduleTemplateId: templateId,
@@ -131,33 +123,31 @@ export default function OrganisationSlotManagementPage() {
         toDate,
         skipExistingDates: true,
       });
-      setMessage(`Generated ${count} slots.`);
+      toast.success(`Generated ${count} slots.`);
     } catch {
-      setError('Failed to generate slots.');
+      toast.error('Failed to generate slots.');
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
     if (!organisationId) return;
-    resetMessages();
     try {
       await deleteTemplateMutation.mutateAsync({
         templateId: id,
         orgId: organisationId,
       });
-      setMessage('Template deleted.');
+      toast.success('Template deleted.');
     } catch {
-      setError('Failed to delete template.');
+      toast.error('Failed to delete template.');
     }
   };
 
   const updateSlotStatus = async (slotId: string, newStatus: number) => {
-    resetMessages();
     try {
       await updateSlotStatusMutation.mutateAsync({ slotId, newStatus });
-      setMessage('Slot status updated.');
+      toast.success('Slot status updated.');
     } catch {
-      setError('Failed to update slot status.');
+      toast.error('Failed to update slot status.');
     }
   };
 
@@ -171,21 +161,6 @@ export default function OrganisationSlotManagementPage() {
           {!organisationId && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               Tài khoản chưa có organisationId, chưa thể quản lý lịch tổ chức.
-            </div>
-          )}
-
-          {(message || error) && (
-            <div className="space-y-2">
-              {message && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {message}
-                </div>
-              )}
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
             </div>
           )}
 

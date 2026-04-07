@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, XCircle, Plus, ScanEye, Pencil } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
@@ -53,6 +55,12 @@ export default function PatientsPage() {
 
   const clearDisabled = searchTerm.trim() === '';
 
+  useEffect(() => {
+    if (patientsQuery.isError) {
+      toast.error('Unable to load patients.');
+    }
+  }, [patientsQuery.isError]);
+
   if (patientsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -64,12 +72,12 @@ export default function PatientsPage() {
   if (patientsQuery.isError) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          <div className="font-medium">Unable to load patients.</div>
+        <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+          <div className="font-medium mb-3">Unable to load patients</div>
           <button
             type="button"
             onClick={() => patientsQuery.refetch()}
-            className="mt-3 text-sm font-medium underline"
+            className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
             Retry
           </button>

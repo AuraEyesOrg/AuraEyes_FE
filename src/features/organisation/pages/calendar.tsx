@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Calendar, Clock, Play, UserCheck, UserX } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
@@ -32,8 +33,6 @@ export default function CalendarPage() {
   const organisationId = user?.organizationId ?? '';
 
   const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
 
   const {
     data: appointments = [],
@@ -68,15 +67,18 @@ export default function CalendarPage() {
     completeMutation.isPending ||
     noShowMutation.isPending;
 
-  const runAction = async (action: () => Promise<unknown>, message: string) => {
-    setErrorMessage('');
-    setSuccessMessage('');
+  useEffect(() => {
+    if (appointmentsError) {
+      toast.error(mapClinicStaffErrorMessage(appointmentsError));
+    }
+  }, [appointmentsError]);
 
+  const runAction = async (action: () => Promise<unknown>, message: string) => {
     try {
       await action();
-      setSuccessMessage(message);
+      toast.success(message);
     } catch (error) {
-      setErrorMessage(mapClinicStaffErrorMessage(error));
+      toast.error(mapClinicStaffErrorMessage(error));
     }
   };
 
@@ -88,26 +90,7 @@ export default function CalendarPage() {
         <OrganisationHeader pageName="Calendar" />
 
         <main className="p-6">
-          {(errorMessage || successMessage || appointmentsError) && (
-            <div className="mb-4 space-y-2">
-              {appointmentsError && (
-                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                  {mapClinicStaffErrorMessage(appointmentsError)}
-                </div>
-              )}
-              {errorMessage && (
-                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                  {errorMessage}
-                </div>
-              )}
-              {successMessage && (
-                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  {successMessage}
-                </div>
-              )}
-            </div>
-          )}
-
+          {' '}
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -133,7 +116,6 @@ export default function CalendarPage() {
               {isFetching && <Spinner />}
             </div>
           </div>
-
           <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
               <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
@@ -166,7 +148,6 @@ export default function CalendarPage() {
               </p>
             </div>
           </div>
-
           <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
             {isLoading ? (
               <div className="flex items-center gap-3 py-10 text-gray-600 dark:text-gray-400">
