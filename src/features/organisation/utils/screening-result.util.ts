@@ -24,6 +24,8 @@ interface RiskConfigItem {
   icon: LucideIcon;
 }
 
+const ORGANISATION_NOTE_MARKER = '[Organisation Note]';
+
 export const riskConfig: Record<RiskLevel, RiskConfigItem> = {
   Low: {
     color: 'text-emerald-600 dark:text-emerald-400',
@@ -96,6 +98,50 @@ export function buildFindingsText(items: AiFindingItem[]): string {
     .slice(0, 4)
     .map((item) => `${item.localizedName} (${item.confidence}%)`)
     .join(', ');
+}
+
+export function splitFindingsAndNote(content?: string): {
+  findings: string;
+  note: string;
+} {
+  if (!content) {
+    return { findings: '', note: '' };
+  }
+
+  const marker = `${ORGANISATION_NOTE_MARKER}\n`;
+  const markerIndex = content.lastIndexOf(marker);
+
+  if (markerIndex === -1) {
+    return { findings: content, note: '' };
+  }
+
+  const note = content.slice(markerIndex + marker.length).trim();
+  if (!note) {
+    return { findings: content, note: '' };
+  }
+
+  return {
+    findings: content.slice(0, markerIndex).trimEnd(),
+    note,
+  };
+}
+
+export function composeFindingsWithNote(
+  findings: string,
+  note?: string
+): string {
+  const cleanFindings = findings?.trim() ?? '';
+  const cleanNote = note?.trim() ?? '';
+
+  if (!cleanNote) {
+    return cleanFindings;
+  }
+
+  if (!cleanFindings) {
+    return `${ORGANISATION_NOTE_MARKER}\n${cleanNote}`;
+  }
+
+  return `${cleanFindings}\n\n${ORGANISATION_NOTE_MARKER}\n${cleanNote}`;
 }
 
 export function mapAiFindings(
