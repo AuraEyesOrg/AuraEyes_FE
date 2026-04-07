@@ -261,12 +261,21 @@ export default function ReviewPage() {
     return Math.max(...anomalies.map((a) => a.confidence));
   }, [anomalies]);
   const patientFriendlyFindings = useMemo(() => {
+    const isVietnamese = currentLanguage.toLowerCase().startsWith('vi');
     const labels = anomalies
       .filter((a) => !isNormalDisease(a.code ?? a.name))
       .map((a) => {
-        const friendly = a.friendlyName?.trim();
-        if (friendly) return friendly;
-        return toDisplayDiseaseName(a.name, currentLanguage).trim();
+        if (isVietnamese) {
+          const friendlyVi = a.friendlyName?.trim();
+          if (friendlyVi) return friendlyVi;
+          return toDisplayDiseaseName(a.name, currentLanguage).trim();
+        }
+
+        const friendlyEn = a.friendlyDescription?.trim();
+        if (friendlyEn) return friendlyEn;
+
+        const fallback = a.name?.trim();
+        return fallback ?? '';
       })
       .filter(Boolean);
 

@@ -2466,6 +2466,17 @@
       "sidebarDescription": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn."
     }
   },
+  "FocusModeLayout": {
+    "steps": {
+      "upload": "Tải ảnh & kiểm tra",
+      "analysis": "Phân tích",
+      "review": "Đánh giá"
+    },
+    "breadcrumb": {
+      "home": "Trang chủ",
+      "newScreening": "Sàng lọc mới"
+    }
+  },
   "notification": {
     "types": {
       "screening": "Sàng lọc",

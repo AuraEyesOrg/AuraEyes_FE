@@ -2465,5 +2465,16 @@
       "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster.",
       "sidebarDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier for your ophthalmologist to triage quickly."
     }
+  },
+  "FocusModeLayout": {
+    "steps": {
+      "upload": "Upload & Validate",
+      "analysis": "Analysis",
+      "review": "Review"
+    },
+    "breadcrumb": {
+      "home": "Home",
+      "newScreening": "New Screening"
+    }
   }
 }
