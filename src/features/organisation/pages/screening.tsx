@@ -58,13 +58,11 @@ export default function OrganisationScreeningPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
 
-  // Fetch patients — use consistent query key with patients page
   const { data: patients = [] } = useQuery({
     queryKey: ['organisation-patients', 'recent'],
     queryFn: getOrganisationRecentPatients,
   });
 
-  // Ensure patient is selected
   const preSelectedPatientId = searchParams.get('patientId');
   useEffect(() => {
     if (!preSelectedPatientId) {

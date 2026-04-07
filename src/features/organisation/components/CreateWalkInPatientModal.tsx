@@ -27,6 +27,7 @@ export default function CreateWalkInPatientModal({
     fullName: '',
     gender: 'Male',
     dateOfBirth: '',
+    address: '',
     phoneNumber: '',
     email: '',
   });
@@ -53,6 +54,7 @@ export default function CreateWalkInPatientModal({
         fullName: '',
         gender: 'Male',
         dateOfBirth: '',
+        address: '',
         phoneNumber: '',
         email: '',
       });
@@ -94,6 +96,7 @@ export default function CreateWalkInPatientModal({
             const gender = genderRaw.toLowerCase().includes('nữ')
               ? 'Female'
               : 'Male';
+            const address = parts[5]?.trim() ?? '';
 
             setFormData((prev) => ({
               ...prev,
@@ -101,6 +104,7 @@ export default function CreateWalkInPatientModal({
               fullName,
               dateOfBirth: dob,
               gender,
+              address,
             }));
             toast.success('Hồ sơ công dân được trích xuất thành công!');
           } else {
@@ -128,6 +132,7 @@ export default function CreateWalkInPatientModal({
     e.preventDefault();
     mutation.mutate({
       ...formData,
+      address: formData.address.trim() || undefined,
       dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
     });
   };
@@ -253,6 +258,21 @@ export default function CreateWalkInPatientModal({
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-(--text-secondary)">
+              Address
+            </label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
+              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
+              placeholder="Street, ward, district, city"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-(--text-secondary)">
               Phone Number
             </label>
             <input
@@ -268,7 +288,7 @@ export default function CreateWalkInPatientModal({
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-(--text-secondary)">
-              Email Address
+              Email
             </label>
             <input
               type="email"
