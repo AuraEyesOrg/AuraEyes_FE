@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, TrendingUp, Zap, Loader2, BarChart3 } from 'lucide-react';
+import {
+  BarChart3,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Loader2,
+  Users,
+  Zap,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { orgBillingApi } from '../api/billing.api';
-import { orgScreeningApi } from '../api/screening.api';
 
 export default function OrganisationBillingPage() {
   const navigate = useNavigate();
@@ -13,35 +21,27 @@ export default function OrganisationBillingPage() {
     queryFn: () => orgBillingApi.getSummary(),
   });
 
-  const { data: history = [], isLoading: loadingHistory } = useQuery({
-    queryKey: ['org-screening-history'],
-    queryFn: () => orgScreeningApi.getHistory(50),
-  });
-
-  const isLoading = loadingBilling || loadingHistory;
+  const isLoading = loadingBilling;
+  const purchasedQuota = billing?.purchasedQuota ?? 0;
+  const remainingQuota = billing?.remainingQuota ?? 0;
+  const consumedQuota = Math.max(0, purchasedQuota - remainingQuota);
+  const usagePercent =
+    purchasedQuota > 0
+      ? Math.min(100, Math.round((consumedQuota / purchasedQuota) * 100))
+      : 0;
 
   const summaryCards = [
     {
       icon: BarChart3,
       label: 'Screenings This Month',
       value: billing?.totalScreeningsThisMonth ?? 0,
-      color: 'from-blue-500 to-blue-600',
       iconBg: 'bg-blue-500/10',
       iconColor: 'text-blue-500',
-    },
-    {
-      icon: TrendingUp,
-      label: 'All-Time Screenings',
-      value: billing?.totalScreeningsAllTime ?? 0,
-      color: 'from-emerald-500 to-emerald-600',
-      iconBg: 'bg-emerald-500/10',
-      iconColor: 'text-emerald-500',
     },
     {
       icon: Zap,
       label: 'Remaining Quota',
       value: billing?.remainingQuota ?? 0,
-      color: 'from-amber-500 to-amber-600',
       iconBg: 'bg-amber-500/10',
       iconColor: 'text-amber-500',
     },
@@ -49,9 +49,15 @@ export default function OrganisationBillingPage() {
       icon: CreditCard,
       label: 'Used Today',
       value: billing?.usedQuotaToday ?? 0,
-      color: 'from-purple-500 to-purple-600',
-      iconBg: 'bg-purple-500/10',
-      iconColor: 'text-purple-500',
+      iconBg: 'bg-rose-500/10',
+      iconColor: 'text-rose-500',
+    },
+    {
+      icon: CalendarDays,
+      label: 'Purchased Quota',
+      value: purchasedQuota,
+      iconBg: 'bg-emerald-500/10',
+      iconColor: 'text-emerald-500',
     },
   ];
 
@@ -68,7 +74,8 @@ export default function OrganisationBillingPage() {
                 Billing & Usage
               </h1>
               <p className="text-sm text-(--text-secondary)">
-                Track your AI screening quota and usage history
+                Track quota consumption and monthly billing usage for your
+                organisation.
               </p>
             </div>
           </div>
@@ -103,120 +110,112 @@ export default function OrganisationBillingPage() {
                 ))}
               </div>
 
-              {/* Transaction History */}
-              <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) overflow-hidden">
-                <div className="px-6 py-4 border-b border-(--border-primary) flex items-center justify-between">
+              <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-6">
+                <section className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6">
                   <h2 className="text-lg font-bold text-(--text-primary)">
-                    Screening History
+                    Quota Utilization
                   </h2>
-                  <span className="text-sm text-(--text-tertiary)">
-                    {(history ?? []).length} records
-                  </span>
-                </div>
+                  <p className="text-sm text-(--text-tertiary) mt-1">
+                    Current package usage for the active billing cycle.
+                  </p>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-(--border-primary)">
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Patient
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Risk Level
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Confidence
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-(--border-primary)">
-                      {(history ?? []).length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-6 py-12 text-center text-(--text-tertiary)"
-                          >
-                            No screening records yet
-                          </td>
-                        </tr>
-                      ) : (
-                        (history ?? []).map((item) => (
-                          <tr
-                            key={item.screeningId}
-                            className="hover:bg-(--bg-tertiary) transition-colors"
-                          >
-                            <td className="px-6 py-4">
-                              <p className="text-sm font-medium text-(--text-primary)">
-                                {item.patientName}
-                              </p>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-(--text-secondary)">
-                              {new Date(item.createdAt).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                  item.latestRiskLevel === 'High'
-                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                    : item.latestRiskLevel === 'Moderate'
-                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                                      : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                }`}
-                              >
-                                {item.latestRiskLevel || 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-(--text-secondary)">
-                              {item.confidenceScore
-                                ? `${item.confidenceScore}%`
-                                : '—'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                  item.status === 'completed'
-                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                    : item.status === 'saved'
-                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                                }`}
-                              >
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  navigate(
-                                    `/:locale/organisation/screening/result?id=${item.screeningId}`
-                                  )
-                                }
-                                disabled={
-                                  !item.screeningId ||
-                                  item.screeningId ===
-                                    '00000000-0000-0000-0000-000000000000'
-                                }
-                                className="inline-flex items-center rounded-lg border border-(--border-primary) px-3 py-1.5 text-xs font-semibold text-(--text-primary) hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                View Record
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                  <div className="mt-6 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-(--text-secondary)">
+                        Consumed quota
+                      </span>
+                      <span className="font-semibold text-(--text-primary)">
+                        {consumedQuota} / {purchasedQuota}
+                      </span>
+                    </div>
+                    <div className="mt-3 h-3 w-full rounded-full bg-(--bg-tertiary) overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{
+                          width: `${Math.max(usagePercent, purchasedQuota ? 2 : 0)}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="mt-2 text-xs text-(--text-tertiary)">
+                      {usagePercent}% of purchased quota has been used.
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3.5">
+                      <p className="text-xs text-(--text-tertiary)">
+                        All-time screenings
+                      </p>
+                      <p className="mt-1 text-xl font-bold text-(--text-primary)">
+                        {billing?.totalScreeningsAllTime ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3.5">
+                      <p className="text-xs text-(--text-tertiary)">
+                        Available now
+                      </p>
+                      <p className="mt-1 text-xl font-bold text-(--text-primary)">
+                        {remainingQuota}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6">
+                  <h2 className="text-lg font-bold text-(--text-primary)">
+                    Workflow Guidance
+                  </h2>
+                  <p className="text-sm text-(--text-tertiary) mt-1">
+                    Billing is for quota and payment reporting. Screening
+                    timeline is managed in patient records.
+                  </p>
+
+                  <div className="mt-5 space-y-3">
+                    <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-3">
+                      <p className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" /> Patients &
+                        History
+                      </p>
+                      <p className="mt-1 text-xs text-(--text-tertiary)">
+                        Open a patient profile to view all screening sessions,
+                        retinal images, and saved records.
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-3">
+                      <p className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" /> Reports
+                      </p>
+                      <p className="mt-1 text-xs text-(--text-tertiary)">
+                        Use reports for monthly aggregate analytics and
+                        accounting exports.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          resolvePathWithLocale('/organisation/patients')
+                        )
+                      }
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition"
+                    >
+                      <Users className="h-3.5 w-3.5" /> Open Patients
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(resolvePathWithLocale('/organisation/reports'))
+                      }
+                      className="inline-flex items-center gap-2 rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3.5 py-2 text-xs font-semibold text-(--text-primary) hover:bg-(--bg-tertiary) transition"
+                    >
+                      <FileText className="h-3.5 w-3.5" /> Open Reports
+                    </button>
+                  </div>
+                </section>
               </div>
             </>
           )}
