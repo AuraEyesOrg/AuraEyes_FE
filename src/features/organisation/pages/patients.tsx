@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, XCircle, Plus, ScanEye } from 'lucide-react';
+import { Search, XCircle, Plus, ScanEye, Pencil } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
 import {
   getOrganisationRecentPatients,
   type OrganisationRecentPatientDto,
@@ -29,6 +30,8 @@ export default function PatientsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+  const [editingPatient, setEditingPatient] =
+    useState<OrganisationRecentPatientDto | null>(null);
 
   const patientsQuery = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -238,14 +241,24 @@ export default function PatientsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleScreenPatient(patient.id)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition"
-                            >
-                              <ScanEye className="w-3.5 h-3.5" />
-                              Screen Now
-                            </button>
+                            <div className="inline-flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setEditingPatient(patient)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--bg-tertiary) px-3.5 py-1.5 text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit Contact
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleScreenPatient(patient.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                              >
+                                <ScanEye className="h-3.5 w-3.5" />
+                                Screen Now
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -261,6 +274,16 @@ export default function PatientsPage() {
             onClose={() => setIsWalkInModalOpen(false)}
             onSuccess={() => {
               setIsWalkInModalOpen(false);
+              patientsQuery.refetch();
+            }}
+          />
+
+          <UpdatePatientContactModal
+            isOpen={editingPatient !== null}
+            patient={editingPatient}
+            onClose={() => setEditingPatient(null)}
+            onSuccess={() => {
+              setEditingPatient(null);
               patientsQuery.refetch();
             }}
           />

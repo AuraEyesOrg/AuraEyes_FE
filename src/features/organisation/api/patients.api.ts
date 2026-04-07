@@ -8,12 +8,22 @@ export interface OrganisationRecentPatientDto {
   name: string;
   age: number;
   gender: 'M' | 'F';
+  dateOfBirth?: string;
+  citizenId?: string;
+  address?: string;
+  email?: string;
   phoneNumber?: string;
   lastScreening: string;
   aiPrediction: string;
   confidence: number; // 0-100
   status: 'pending-review' | 'reviewed' | 'archived';
   priority: 'low' | 'medium' | 'high';
+}
+
+export interface UpdateOrganisationPatientContactRequest {
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
 }
 
 export const getOrganisationRecentPatients = async (): Promise<
@@ -24,4 +34,16 @@ export const getOrganisationRecentPatients = async (): Promise<
   );
 
   return unwrapApiData<OrganisationRecentPatientDto[]>(response.data);
+};
+
+export const updateOrganisationPatientContact = async (
+  patientId: string,
+  request: UpdateOrganisationPatientContactRequest
+): Promise<string> => {
+  const response = await api.put<ApiResponse<string>>(
+    `${API_ENDPOINTS.ORGANISATION.PATIENTS}/${patientId}/contact`,
+    request
+  );
+
+  return unwrapApiData<string>(response.data);
 };
