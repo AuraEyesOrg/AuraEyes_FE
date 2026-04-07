@@ -149,13 +149,22 @@ export function mapAiFindings(
   language: string,
   maxItems = 6
 ): AiFindingItem[] {
-  return predictions.slice(0, maxItems).map((item) => ({
-    id: `${item.rank}-${item.class_name}`,
-    name: item.class_name,
-    localizedName: toDisplayDiseaseName(item.class_name, language),
-    confidence: clampConfidence((item.confidence ?? 0) * 100),
-    status: item.status,
-  }));
+  const isVietnamese = language.toLowerCase().startsWith('vi');
+  return predictions.slice(0, maxItems).map((item) => {
+    const displayName =
+      item.code && item.name_vi
+        ? isVietnamese
+          ? item.name_vi
+          : (item.name_en ?? item.code)
+        : toDisplayDiseaseName(item.class_name ?? item.code ?? '', language);
+    return {
+      id: `${item.rank}-${item.code ?? item.class_name ?? ''}`,
+      name: item.code ?? item.class_name ?? '',
+      localizedName: displayName,
+      confidence: clampConfidence((item.confidence ?? 0) * 100),
+      status: item.status ?? 'primary',
+    };
+  });
 }
 
 function toPercentLocation(
@@ -252,7 +261,9 @@ export function extractVisualArtifactsFromRaw(
       }>;
     };
 
-    const heatmapUrl = resolveAiAssetUrl(parsed.heatmap_colormap_url);
+    const heatmapUrl = resolveAiAssetUrl(
+      parsed.heatmap_url ?? parsed.heatmap_colormap_url
+    );
 
     const topK = [...(parsed.prediction?.top_k ?? [])].sort(
       (a, b) => a.rank - b.rank
@@ -277,13 +288,19 @@ export function extractVisualArtifactsFromRaw(
             (prediction.confidence ?? 0) * 100
           );
 
+          const predName = prediction.code ?? prediction.class_name ?? '';
+          const isVietnamese = language.toLowerCase().startsWith('vi');
+          const localizedName =
+            prediction.code && prediction.name_vi
+              ? isVietnamese
+                ? prediction.name_vi
+                : (prediction.name_en ?? prediction.code)
+              : toDisplayDiseaseName(predName, language);
+
           return {
-            id: `${prediction.rank}-${prediction.class_name}`,
-            name: prediction.class_name,
-            localizedName: toDisplayDiseaseName(
-              prediction.class_name,
-              language
-            ),
+            id: `${prediction.rank}-${predName}`,
+            name: predName,
+            localizedName,
             confidence,
             type: toDetectionType(confidence, prediction.status),
             location,

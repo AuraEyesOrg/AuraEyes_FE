@@ -14,29 +14,70 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
-
-const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/patient/dashboard' },
-  { icon: Eye, label: 'My Scans', path: '/patient/screening' },
-  { icon: FileText, label: 'Reports', path: '/patient/reports' },
-  { icon: Calendar, label: 'Appointments', path: '/patient/appointments' },
-  { icon: MapPin, label: 'Find Clinics', path: '/patient/clinics' },
-  { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
-  { icon: MessageCircle, label: 'Chat', path: '/patient/chat', badge: true },
-  { icon: Wallet, label: 'Wallet', path: '/patient/wallet' },
-  {
-    icon: MessageSquareHeart,
-    label: 'Help & Feedback',
-    path: '/patient/help-feedback',
-  },
-  { icon: Settings, label: 'Settings', path: '/patient/settings' },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function PatientSidebar() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const navItems = [
+    {
+      icon: Home,
+      label: t('PatientSidebar.nav.dashboard', 'Dashboard'),
+      path: '/patient/dashboard',
+    },
+    {
+      icon: Eye,
+      label: t('PatientSidebar.nav.myScans', 'My Scans'),
+      path: '/patient/screening',
+    },
+    {
+      icon: FileText,
+      label: t('PatientSidebar.nav.reports', 'Reports'),
+      path: '/patient/reports',
+    },
+    {
+      icon: Calendar,
+      label: t('PatientSidebar.nav.appointments', 'Appointments'),
+      path: '/patient/appointments',
+    },
+    {
+      icon: MapPin,
+      label: t('PatientSidebar.nav.findClinics', 'Find Clinics'),
+      path: '/patient/clinics',
+    },
+    {
+      icon: Milestone,
+      label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
+      path: '/patient/roadmap',
+    },
+    {
+      icon: MessageCircle,
+      label: t('PatientSidebar.nav.chat', 'Chat'),
+      path: '/patient/chat',
+      badge: true,
+    },
+    {
+      icon: Wallet,
+      label: t('PatientSidebar.nav.wallet', 'Wallet'),
+      path: '/patient/wallet',
+    },
+    {
+      icon: MessageSquareHeart,
+      label: t('PatientSidebar.nav.helpFeedback', 'Help & Feedback'),
+      path: '/patient/help-feedback',
+    },
+    {
+      icon: Settings,
+      label: t('PatientSidebar.nav.settings', 'Settings'),
+      path: '/patient/settings',
+    },
+  ];
 
-  const userName = user?.fullName ?? 'Patient';
+  const userName =
+    user?.fullName ?? t('PatientSidebar.user.defaultName', 'Patient');
   const userAvatar = user?.avatarUrl;
   const userId = user?.email ?? '';
 
@@ -52,7 +93,7 @@ export default function PatientSidebar() {
         <div className="mb-10 px-2">
           <AuraLogo
             size="md"
-            subtitle="Patient Portal"
+            subtitle={t('PatientSidebar.portalSubtitle', 'Patient Portal')}
             to="/patient/dashboard"
           />
         </div>
@@ -117,7 +158,7 @@ export default function PatientSidebar() {
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-              title="Logout"
+              title={t('PatientSidebar.actions.logout', 'Logout')}
             >
               <LogOut className="w-5 h-5" />
             </button>

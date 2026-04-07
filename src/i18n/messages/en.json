@@ -1537,6 +1537,10 @@
       "critical": "Critical Risk",
       "notAvailable": "N/A"
     },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
     "detectedSummary": {
       "low": "The AI analysis detected no significant anomalies in this latest scan. Continue regular monitoring to maintain stable retinal health.",
       "medium": "The AI analysis detected moderate retinal risk patterns. Please review this session and consider booking a follow-up with a specialist.",
@@ -1831,6 +1835,10 @@
       "medium": "Medium risk",
       "high": "High risk",
       "critical": "Critical risk"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
     },
     "stats": {
       "totalScans": "Total Scans",
@@ -2190,6 +2198,39 @@
       "continueToReview": "Continue to Review",
       "reanalyze": "Re-analyze scan"
     },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
+    "findings": {
+      "empty": {
+        "title": "No abnormalities detected",
+        "description": "AI did not detect abnormal signs in the fundus image. Please continue regular eye check-ups."
+      },
+      "normal": {
+        "title": "Normal result",
+        "description": "No disease signs were detected in your fundus image. Continue regular eye check-ups to protect your vision."
+      },
+      "primaryTitle": "Primary Finding",
+      "relatedTitle": "Related Findings",
+      "criticalHint": "A critical finding is present in this list. Please prioritize seeing an ophthalmologist soon.",
+      "nextStepLabel": "Next step:",
+      "nextStepDescription": "Continue to Review so a specialist can confirm the results and advise an appropriate care plan.",
+      "urgency": {
+        "critical": "Urgent",
+        "warning": "Needs Follow-up",
+        "caution": "Caution",
+        "info": "Info",
+        "normal": "Normal"
+      },
+      "suggestion": {
+        "critical": "Please see an ophthalmologist immediately.",
+        "warning": "You should consult an ophthalmologist.",
+        "caution": "Regular follow-up is recommended.",
+        "info": "No immediate action is required.",
+        "normal": "Continue regular eye check-ups."
+      }
+    },
     "risk": {
       "low": {
         "label": "Low Risk",
@@ -2237,6 +2278,53 @@
     "disclaimer": {
       "importantLabel": "Important:",
       "message": "This AI screening assists but does not replace professional medical advice. Results should be reviewed by a qualified ophthalmologist."
+    }
+  },
+  "PatientSidebar": {
+    "portalSubtitle": "Patient Portal",
+    "user": {
+      "defaultName": "Patient"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "myScans": "My Scans",
+      "reports": "Reports",
+      "appointments": "Appointments",
+      "findClinics": "Find Clinics",
+      "healthRoadmap": "Health Roadmap",
+      "chat": "Chat",
+      "wallet": "Wallet",
+      "helpFeedback": "Help & Feedback",
+      "settings": "Settings"
+    },
+    "actions": {
+      "logout": "Logout"
+    }
+  },
+  "PatientHeader": {
+    "breadcrumb": {
+      "home": "Home"
+    },
+    "search": {
+      "placeholder": "Search reports, appointments..."
+    },
+    "actions": {
+      "toggleTheme": "Toggle theme"
+    },
+    "pages": {
+      "dashboard": "Dashboard",
+      "screening": "My Scans",
+      "reports": "Reports",
+      "appointments": "Appointments",
+      "doctors": "Find Doctors",
+      "clinics": "Find Clinics",
+      "roadmap": "Health Roadmap",
+      "chat": "Chat",
+      "wallet": "Wallet",
+      "profile": "My Profile",
+      "settings": "Settings",
+      "security": "Security",
+      "notifications": "Notifications"
     }
   },
   "PatientChat": {
@@ -2376,6 +2464,17 @@
       "title": "Conversation Guidance",
       "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster.",
       "sidebarDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier for your ophthalmologist to triage quickly."
+    }
+  },
+  "FocusModeLayout": {
+    "steps": {
+      "upload": "Upload & Validate",
+      "analysis": "Analysis",
+      "review": "Review"
+    },
+    "breadcrumb": {
+      "home": "Home",
+      "newScreening": "New Screening"
     }
   }
 }

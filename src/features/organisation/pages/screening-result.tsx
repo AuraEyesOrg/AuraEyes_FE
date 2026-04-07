@@ -294,11 +294,10 @@ export default function OrganisationScreeningResultPage() {
       formData.append('file', file);
 
       const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/diagnosis/analyze',
+        '/api/v2/diagnosis/v2/analyze',
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
-          params: { threshold: 0.6, localization: true },
         }
       );
 

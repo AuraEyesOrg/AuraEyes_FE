@@ -149,13 +149,88 @@ export const DISEASE_DESCRIPTIONS: Record<string, string> = {
     'Media opacity with concern for proliferative DR. Urgent B-scan and evaluation needed.',
 };
 
+export const V2_DISEASE_URGENCY: Record<
+  string,
+  'critical' | 'warning' | 'caution' | 'info' | 'normal'
+> = {
+  CRVO: 'critical',
+  CRAO: 'critical',
+  BRAO: 'critical',
+  RD: 'critical',
+  GRT: 'critical',
+  VKH: 'critical',
+  HR: 'critical',
+  BFD: 'critical',
+
+  DR: 'warning',
+  BRVO: 'warning',
+  GLC: 'warning',
+  ODC: 'warning',
+  ODP: 'warning',
+  ODE: 'warning',
+  MYA: 'warning',
+  PRH: 'warning',
+  VH: 'warning',
+  MHE: 'warning',
+  PRDB: 'warning',
+  FN: 'warning',
+  AION: 'warning',
+  IIH: 'warning',
+
+  AMD: 'caution',
+  CSR: 'caution',
+  MH: 'caution',
+  CME: 'caution',
+  ME: 'caution',
+  CNV: 'caution',
+  ERM: 'caution',
+  RP: 'caution',
+  BCD: 'caution',
+  DN: 'caution',
+  CWS: 'caution',
+  RS: 'caution',
+  TV: 'caution',
+  EDN: 'caution',
+  RHL: 'caution',
+  MCA: 'caution',
+  MS: 'caution',
+  RT: 'caution',
+  HPED: 'caution',
+
+  TSLN: 'info',
+  MNF: 'info',
+  ON: 'info',
+  TD: 'info',
+  AH: 'info',
+  PLQ: 'info',
+  OPDM: 'info',
+  RPEC: 'info',
+  CF: 'info',
+  CL: 'info',
+
+  WNL: 'normal',
+  LS: 'normal',
+  SOFE: 'normal',
+  CDA: 'normal',
+  DD: 'normal',
+  VS: 'normal',
+  FIB: 'normal',
+  CRS: 'normal',
+  ST: 'normal',
+  CB: 'normal',
+};
+
 /**
- * Get urgency level for a disease
+ * Get urgency level for a disease (supports V2 codes and V1 names)
  */
 export function getDiseaseUrgency(
   diseaseName: string
 ): 'critical' | 'warning' | 'caution' | 'info' | 'normal' {
-  return DISEASE_URGENCY_LEVELS[diseaseName] || 'info';
+  return (
+    V2_DISEASE_URGENCY[diseaseName] ??
+    DISEASE_URGENCY_LEVELS[diseaseName] ??
+    'info'
+  );
 }
 
 /**
@@ -237,6 +312,7 @@ export function getDiseaseCount(): number {
 
 export default {
   DISEASE_URGENCY_LEVELS,
+  V2_DISEASE_URGENCY,
   DISEASE_DESCRIPTIONS,
   getDiseaseUrgency,
   getDiseaseDescription,

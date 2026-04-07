@@ -27,14 +27,32 @@ export interface OrgScreeningSessionDetail {
 
 export interface AIStandardPrediction {
   rank: number;
-  class_name: string;
+  class_name?: string;
+  code?: string;
+  name_en?: string;
+  name_vi?: string;
   confidence: number;
-  status: string;
+  status?: string;
+  class_index?: number;
 }
 
 export interface AIStandardResponse {
   prediction: {
+    code?: string;
+    name_en?: string;
+    name_vi?: string;
     top_k: AIStandardPrediction[];
+    group?: {
+      code: string;
+      display: string;
+      description?: string;
+      confidence: number;
+    } | null;
+  };
+  model_note?: {
+    status: string;
+    notes: string[];
+    disclaimer: string;
   };
   localization?: {
     all_lesions: Array<{
@@ -48,6 +66,7 @@ export interface AIStandardResponse {
     }>;
   } | null;
   heatmap_colormap_url?: string;
+  heatmap_url?: string | null;
 }
 
 export interface DetectionBoxLocation {
