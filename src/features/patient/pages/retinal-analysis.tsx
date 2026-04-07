@@ -160,6 +160,16 @@ interface AIV2Response {
   heatmap_url: string | null;
 }
 
+function localizeGroupDisplay(display: string, useVietnamese: boolean): string {
+  const trimmed = display?.trim();
+  if (!trimmed) return '';
+  const match = trimmed.match(/^(.+?)\s*\((.+)\)$/);
+  if (!match) return trimmed;
+  const vi = match[1]?.trim() ?? '';
+  const en = match[2]?.trim() ?? '';
+  return useVietnamese ? vi || en : en || vi;
+}
+
 /** Get the natural dimensions of an image from its URL */
 function getImageNaturalSize(url: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve) => {
@@ -219,9 +229,14 @@ function mapV2ResponseToAnomalies(
 ): Anomaly[] {
   const anomalies: Anomaly[] = [];
   const lesions = data.localization?.all_lesions ?? [];
-  const groupDisplay = data.prediction.group?.display ?? '';
   const isPrimaryNormal = isNormalDisease(data.prediction.code);
   const BOX_SCALE = 1.35;
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
+  const useVietnamese = currentLanguage.toLowerCase().startsWith('vi');
+  const groupDisplay = localizeGroupDisplay(
+    data.prediction.group?.display ?? '',
+    useVietnamese
+  );
 
   for (const pred of data.prediction.top_k) {
     const isPrimary = pred.rank === 1;
@@ -242,12 +257,12 @@ function mapV2ResponseToAnomalies(
       name: pred.code,
       code: pred.code,
       confidence: Math.round(pred.confidence * 100),
-      description: pred.name_vi,
+      description: useVietnamese ? pred.name_vi : pred.name_en,
       color: urgencyToColorClass(urgency),
       type: urgencyToAnomalyType(urgency),
       location,
-      friendlyName: pred.name_vi,
-      friendlyDescription: pred.name_en,
+      friendlyName: useVietnamese ? pred.name_vi : pred.name_en,
+      friendlyDescription: useVietnamese ? pred.name_vi : pred.name_en,
       isHighest: isPrimary,
       groupDisplay: isPrimary ? groupDisplay : undefined,
     });
@@ -344,6 +359,7 @@ async function mapSavedAnomaliesFromRaw(
   if (!rawJsonOutput) return { anomalies: [] };
 
   try {
+    const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
     const parsed = JSON.parse(rawJsonOutput) as unknown;
     if (!parsed || typeof parsed !== 'object' || !('prediction' in parsed))
       return { anomalies: [] };
@@ -365,13 +381,17 @@ async function mapSavedAnomaliesFromRaw(
 
     if (isV2) {
       const v2 = parsed as AIV2Response;
+      const useVietnamese = currentLanguage.toLowerCase().startsWith('vi');
       if (w > 0 && h > 0 && v2.localization?.all_lesions?.length) {
         return {
           anomalies: mapV2ResponseToAnomalies(v2, w, h),
           rawJsonOutput,
         };
       }
-      const groupDisplay = v2.prediction.group?.display ?? '';
+      const groupDisplay = localizeGroupDisplay(
+        v2.prediction.group?.display ?? '',
+        useVietnamese
+      );
       const mapped = v2.prediction.top_k.map((pred, idx) => {
         const isPrimary = (pred.rank ?? idx + 1) === 1;
         const urgency = getDiseaseUrgency(pred.code);
@@ -380,11 +400,11 @@ async function mapSavedAnomaliesFromRaw(
           name: pred.code,
           code: pred.code,
           confidence: Math.round((pred.confidence ?? 0) * 100),
-          description: pred.name_vi,
+          description: useVietnamese ? pred.name_vi : pred.name_en,
           color: urgencyToColorClass(urgency),
           type: urgencyToAnomalyType(urgency),
-          friendlyName: pred.name_vi,
-          friendlyDescription: pred.name_en,
+          friendlyName: useVietnamese ? pred.name_vi : pred.name_en,
+          friendlyDescription: useVietnamese ? pred.name_vi : pred.name_en,
           isHighest: isPrimary,
           groupDisplay: isPrimary ? groupDisplay : undefined,
         } as Anomaly;
@@ -393,7 +413,6 @@ async function mapSavedAnomaliesFromRaw(
     }
 
     // Legacy V1 format fallback
-    const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
     const v1TopK = topK as Array<{
       rank: number;
       class_name: string;
@@ -418,6 +437,30 @@ async function mapSavedAnomaliesFromRaw(
   } catch {
     return { anomalies: [] };
   }
+}
+
+function mapPersistedFindingsToAnomalies(findings?: string): Anomaly[] {
+  if (!findings) return [];
+  const items = findings
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return items.map((item, idx) => {
+    const urgency = getDiseaseUrgency(item);
+    return {
+      id: `persisted-${idx + 1}`,
+      name: item,
+      code: undefined,
+      confidence: 0,
+      description: item,
+      color: urgencyToColorClass(urgency),
+      type: urgencyToAnomalyType(urgency),
+      friendlyName: item,
+      friendlyDescription: item,
+      isHighest: idx === 0,
+    } as Anomaly;
+  });
 }
 
 export async function hydrateConsultationPreviewAnomalies(
@@ -643,6 +686,8 @@ export default function RetinalAnalysis() {
       try {
         const response = await screeningApi.getSessionById(incomingScreeningId);
         const persisted = response.data?.images ?? [];
+        const hasPersistedResult = Boolean(response.data?.latestResult);
+        const persistedFindings = response.data?.latestResult?.findings;
 
         const mappedPersisted: RetinalImage[] = persisted.map((img) => ({
           id: img.id,
@@ -674,13 +719,20 @@ export default function RetinalAnalysis() {
           restoreUrl
         );
         const restoredAnomalies = restored.anomalies;
+        const fallbackAnomalies =
+          restoredAnomalies.length > 0
+            ? restoredAnomalies
+            : mapPersistedFindingsToAnomalies(persistedFindings);
+        const hydratedAnomalies = fallbackAnomalies;
+        const isSessionAnalyzed =
+          hasPersistedResult || hydratedAnomalies.length > 0;
 
         const hydratedImages = sessionImages.map((img, idx) =>
           idx === 0
             ? {
                 ...img,
-                analyzed: restoredAnomalies.length > 0,
-                anomalies: restoredAnomalies,
+                analyzed: isSessionAnalyzed,
+                anomalies: hydratedAnomalies,
                 heatmapUrl: restoredHeatmapUrl,
               }
             : img
@@ -688,9 +740,9 @@ export default function RetinalAnalysis() {
 
         setImages(hydratedImages);
         setSelectedImageId(hydratedImages[0].id);
-        setAnalyzed(restoredAnomalies.length > 0);
-        setAnomalies(restoredAnomalies);
-        setShowHighlights(restoredAnomalies.some((a) => Boolean(a.location)));
+        setAnalyzed(isSessionAnalyzed);
+        setAnomalies(hydratedAnomalies);
+        setShowHighlights(hydratedAnomalies.some((a) => Boolean(a.location)));
       } catch (error) {
         console.error('Failed to load screening session:', error);
         setErrorMessage(t('PatientRetinalAnalysis.errors.loadScreeningFailed'));
@@ -787,7 +839,13 @@ export default function RetinalAnalysis() {
   };
 
   const risk = isPrimaryNormal ? healthyRisk : riskConfig[riskLevel];
-  const riskTagLabel = isPrimaryNormal ? 'Looks Healthy' : 'Needs Attention';
+  const riskTagLabel = isPrimaryNormal
+    ? t('PatientRetinalAnalysis.badge.looksHealthy', {
+        defaultValue: 'Looks Healthy',
+      })
+    : t('PatientRetinalAnalysis.badge.needsAttention', {
+        defaultValue: 'Needs Attention',
+      });
 
   // --- AI Analysis Handler (AURA AI /analyze endpoint) ---
   const handleAnalyze = async () => {

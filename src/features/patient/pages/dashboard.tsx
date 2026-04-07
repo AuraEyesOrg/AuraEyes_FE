@@ -36,7 +36,13 @@ const getGreeting = (t: TranslateFn) => {
 const getRiskLabel = (risk: string | undefined, t: TranslateFn) => {
   const normalized = normalizeRiskLevel(risk);
   if (!normalized) return t('PatientDashboard.risk.notAvailable');
-  return normalized === 'low' ? 'Looks Healthy' : 'Needs Attention';
+  return normalized === 'low'
+    ? t('PatientDashboard.badge.looksHealthy', {
+        defaultValue: 'Looks Healthy',
+      })
+    : t('PatientDashboard.badge.needsAttention', {
+        defaultValue: 'Needs Attention',
+      });
 };
 
 const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {
@@ -56,6 +62,13 @@ const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {
 const normalizeRiskLevel = (risk?: string) => {
   if (!risk) return undefined;
   return risk.toLowerCase();
+};
+
+const looksLikeI18nKey = (value?: string) => {
+  if (!value) return false;
+  return /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*){2,}$/.test(
+    value.trim()
+  );
 };
 
 export default function PatientDashboard() {
@@ -145,9 +158,17 @@ export default function PatientDashboard() {
     ? getRiskLabel(effectiveLatestRisk, t)
     : t('PatientDashboard.hero.awaitingAnalysis');
   const heroSummary =
-    latestReport?.summary || getDetectedSummary(effectiveLatestRisk, t);
+    latestReport?.summary && !looksLikeI18nKey(latestReport.summary)
+      ? latestReport.summary
+      : getDetectedSummary(effectiveLatestRisk, t);
   const heroDate = latestReport?.createdAt ?? latestSession?.createdAt;
   const heroScanId = latestReport?.id ?? latestSession?.screeningId;
+  const latestSessionHasResult = Boolean(latestSession?.latestRiskLevel);
+  const latestSessionTargetPath = latestSessionHasResult
+    ? '/patient/screening/review'
+    : latestSession?.screeningId
+      ? `/patient/analysis?screeningId=${latestSession.screeningId}`
+      : '/patient/analysis';
   const [isHeroImageLoaded, setIsHeroImageLoaded] = useState(false);
   const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
 
@@ -329,7 +350,9 @@ export default function PatientDashboard() {
                   <div className="ml-auto">
                     <Link
                       to={
-                        latestSession ? '/patient/analysis' : '/patient/reports'
+                        latestSession
+                          ? latestSessionTargetPath
+                          : '/patient/reports'
                       }
                       state={
                         latestSession

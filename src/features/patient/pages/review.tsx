@@ -260,6 +260,26 @@ export default function ReviewPage() {
     if (primary != null) return primary.confidence;
     return Math.max(...anomalies.map((a) => a.confidence));
   }, [anomalies]);
+  const patientFriendlyFindings = useMemo(() => {
+    const labels = anomalies
+      .filter((a) => !isNormalDisease(a.code ?? a.name))
+      .map((a) => {
+        const friendly = a.friendlyName?.trim();
+        if (friendly) return friendly;
+        return toDisplayDiseaseName(a.name, currentLanguage).trim();
+      })
+      .filter(Boolean);
+
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const label of labels) {
+      const key = label.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(label);
+    }
+    return deduped;
+  }, [anomalies, currentLanguage]);
 
   const consultationContext =
     useMemo<ScreeningConsultationContext | null>(() => {
@@ -420,7 +440,7 @@ export default function ReviewPage() {
                 </h3>
                 <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
                   {riskSummary}
-                  {anomalies.length > 0 && (
+                  {patientFriendlyFindings.length > 0 && (
                     <>
                       {' '}
                       {t(
@@ -428,11 +448,17 @@ export default function ReviewPage() {
                         'Detected findings include:'
                       )}{' '}
                       <strong className="text-(--text-primary)">
-                        {anomalies
-                          .map((a) =>
-                            toDisplayDiseaseName(a.name, currentLanguage)
-                          )
-                          .join(', ')}
+                        {patientFriendlyFindings.slice(0, 4).join(', ')}
+                        {patientFriendlyFindings.length > 4
+                          ? t('PatientReview.findingsMore', {
+                              count: patientFriendlyFindings.length - 4,
+                              defaultValue: currentLanguage
+                                .toLowerCase()
+                                .startsWith('vi')
+                                ? ' và {{count}} dấu hiệu khác'
+                                : ' and {{count}} more findings',
+                            })
+                          : ''}
                       </strong>
                       .
                     </>
