@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
   ApiResponse,
   SystemAdminDashboardMetrics,
+  SystemAdminPartTimeSlotQuotaUsage,
 } from '../types/system-admin.types';
 
 interface AdminUserGrowthMetricDto {
@@ -75,6 +76,13 @@ interface AdminMetricsDto {
   systemStatus: AdminSystemStatusDto;
   topDoctorsByConsultationRevenue: AdminTopDoctorDto[];
   topOrganisationsByRating: AdminTopOrganisationDto[];
+}
+
+interface AdminPartTimeSlotQuotaUsageDto {
+  date: string;
+  usedSlots: number;
+  quota: number;
+  remainingSlots: number;
 }
 
 export const dashboardApi = {
@@ -157,6 +165,33 @@ export const dashboardApi = {
       };
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
+      throw error;
+    }
+  },
+
+  async getPartTimeSlotUsage(
+    fromDate: string,
+    toDate: string
+  ): Promise<SystemAdminPartTimeSlotQuotaUsage[]> {
+    try {
+      const response = await api.get<
+        ApiResponse<AdminPartTimeSlotQuotaUsageDto[]>
+      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.PART_TIME_SLOT_USAGE, {
+        params: {
+          fromDate,
+          toDate,
+        },
+      });
+
+      const rows = response.data.data ?? [];
+      return rows.map((item) => ({
+        date: item.date,
+        usedSlots: Number(item.usedSlots ?? 0),
+        quota: Number(item.quota ?? 0),
+        remainingSlots: Number(item.remainingSlots ?? 0),
+      }));
+    } catch (error) {
+      console.error('Failed to fetch part-time slot quota usage:', error);
       throw error;
     }
   },

@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   SYSTEM_ADMIN: {
     DASHBOARD: {
       STATS: '/system-admin/dashboard/metrics',
+      PART_TIME_SLOT_USAGE: '/system-admin/dashboard/part-time-slot-usage',
       SCREENING_VOLUME: '/system-admin/dashboard/screening-trends',
       RECENT_SCREENINGS: '/system-admin/dashboard/recent-screenings',
       SYSTEM_HEALTH: '/system-admin/dashboard/system-health',

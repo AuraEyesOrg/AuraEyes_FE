@@ -88,6 +88,8 @@ export default function SettingsPage() {
     aiQuotaUnitPrice: 10000,
     defaultPlatformCommission: 0.05,
     freeAiQuota: 3,
+    partTimeMaxSlotsPerDay: 100,
+    fullTimeSlotWindowDays: 30,
   });
 
   // Trusted medical domains for AI resource search
@@ -112,6 +114,12 @@ export default function SettingsPage() {
         freeAiQuota: systemSettings['FREE_AI_QUOTA']
           ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
           : 3,
+        partTimeMaxSlotsPerDay: systemSettings['PART_TIME_MAX_SLOTS_PER_DAY']
+          ? parseInt(systemSettings['PART_TIME_MAX_SLOTS_PER_DAY'], 10)
+          : 100,
+        fullTimeSlotWindowDays: systemSettings['FULLTIME_SLOT_WINDOW_DAYS']
+          ? parseInt(systemSettings['FULLTIME_SLOT_WINDOW_DAYS'], 10)
+          : 30,
       }));
 
       if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
@@ -159,6 +167,14 @@ export default function SettingsPage() {
           generalSettings.defaultPlatformCommission
         ).toString(),
         FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
+        PART_TIME_MAX_SLOTS_PER_DAY: Math.max(
+          1,
+          generalSettings.partTimeMaxSlotsPerDay
+        ).toString(),
+        FULLTIME_SLOT_WINDOW_DAYS: Math.max(
+          1,
+          generalSettings.fullTimeSlotWindowDays
+        ).toString(),
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
@@ -341,6 +357,49 @@ export default function SettingsPage() {
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Part-time max slots per day
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.partTimeMaxSlotsPerDay}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                partTimeMaxSlotsPerDay: parseInt(e.target.value, 10) || 1,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Global daily quota for all part-time ophthalmologist slots.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time generation window (days)
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.fullTimeSlotWindowDays}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeSlotWindowDays: parseInt(e.target.value, 10) || 1,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Number of forward days Hangfire keeps generated for full-time
+            schedules.
+          </p>
         </div>
         <div className="md:col-span-2">
           <p className="text-xs text-slate-500 dark:text-slate-400">
