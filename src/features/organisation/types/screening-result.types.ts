@@ -18,6 +18,7 @@ export interface OrgScreeningLatestResult {
 export interface OrgScreeningSessionDetail {
   screeningId: string;
   patientId: string;
+  patientName?: string;
   modelVersion: string;
   createdAt: string;
   rawJsonOutput?: string;

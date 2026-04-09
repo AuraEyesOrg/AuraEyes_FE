@@ -51,6 +51,10 @@ export default function OrganisationScreeningResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const screeningId = searchParams.get('id');
+
+  const locationState = location.state as { patientName?: string } | null;
+  const locationPatientName = locationState?.patientName?.trim() ?? '';
+
   const autoAnalysisTriggeredRef = useRef(false);
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
@@ -82,6 +86,8 @@ export default function OrganisationScreeningResultPage() {
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
+  const patientDisplayName =
+    sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
 
   // ─── Navigation Guard ────────────────────────────────────────────────────────
 
@@ -90,10 +96,8 @@ export default function OrganisationScreeningResultPage() {
     if (!hasUnsavedRecord) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Browser hien dai chi can preventDefault de mo dialog mac dinh.
       event.preventDefault();
-      // Nội dung returnValue bị browser bỏ qua hoàn toàn (spec mới),
-      // nhưng vẫn cần set để kích hoạt dialog mặc định của browser.
-      event.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -478,7 +482,7 @@ export default function OrganisationScreeningResultPage() {
                         Kết quả khám
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
-                        Bệnh nhân: {sessionData.patientId.slice(0, 8)}… · Phiên{' '}
+                        Bệnh nhân: {patientDisplayName} · Phiên{' '}
                         {screeningId?.slice(0, 8)}… ·{' '}
                         {new Date(sessionData.createdAt).toLocaleString(
                           'vi-VN'

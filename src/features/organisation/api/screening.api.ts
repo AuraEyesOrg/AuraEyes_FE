@@ -99,6 +99,7 @@ export const orgScreeningApi = {
       ApiResponse<{
         screeningId: string;
         patientId: string;
+        patientName?: string;
         modelVersion: string;
         createdAt: string;
         processedAt?: string;

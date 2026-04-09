@@ -238,7 +238,12 @@ export default function OrganisationScreeningPage() {
         navigate(
           resolvePathWithLocale(
             `/organisation/screening/result?id=${sessionData.screeningId}`
-          )
+          ),
+          {
+            state: {
+              patientName: selectedPatient.name,
+            },
+          }
         );
       }
     } catch (err) {

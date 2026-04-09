@@ -139,10 +139,20 @@ export default function OrganisationPatientHistoryPage() {
 
   const openScreeningResult = () => {
     if (!selectedScreeningId) return;
+
+    const patientName = patient?.name || selectedHistoryItem?.patientName;
+
     navigate(
       resolvePathWithLocale(
         `/organisation/screening/result?id=${selectedScreeningId}`
-      )
+      ),
+      patientName
+        ? {
+            state: {
+              patientName,
+            },
+          }
+        : undefined
     );
   };
 

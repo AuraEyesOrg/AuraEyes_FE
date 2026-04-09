@@ -1,7 +1,15 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, XCircle, Plus, ScanEye, Pencil, History } from 'lucide-react';
+import {
+  Search,
+  XCircle,
+  Plus,
+  ScanEye,
+  Pencil,
+  History,
+  MoreHorizontal,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
 import { resolvePathWithLocale } from '@/i18n/middleware';
@@ -34,6 +42,10 @@ export default function PatientsPage() {
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] =
     useState<OrganisationRecentPatientDto | null>(null);
+  const [openActionMenuPatientId, setOpenActionMenuPatientId] = useState<
+    string | null
+  >(null);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
 
   const patientsQuery = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -60,6 +72,35 @@ export default function PatientsPage() {
       toast.error('Unable to load patients.');
     }
   }, [patientsQuery.isError]);
+
+  useEffect(() => {
+    if (!openActionMenuPatientId) {
+      return;
+    }
+
+    const handlePointerDownOutside = (event: MouseEvent) => {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setOpenActionMenuPatientId(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenActionMenuPatientId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDownOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openActionMenuPatientId]);
 
   if (patientsQuery.isLoading) {
     return (
@@ -96,6 +137,16 @@ export default function PatientsPage() {
     navigate(
       resolvePathWithLocale(`/organisation/patients/${patientId}/history`)
     );
+  };
+
+  const handleOpenEditContact = (patient: OrganisationRecentPatientDto) => {
+    setEditingPatient(patient);
+    setOpenActionMenuPatientId(null);
+  };
+
+  const handleOpenPatientHistory = (patientId: string) => {
+    handleViewPatientHistory(patientId);
+    setOpenActionMenuPatientId(null);
   };
 
   return (
@@ -257,25 +308,14 @@ export default function PatientsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="inline-flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setEditingPatient(patient)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--bg-tertiary) px-3.5 py-1.5 text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-primary)"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit Contact
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleViewPatientHistory(patient.id)
-                                }
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--bg-tertiary) px-3.5 py-1.5 text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-primary)"
-                              >
-                                <History className="h-3.5 w-3.5" />
-                                View History
-                              </button>
+                            <div
+                              className="relative inline-flex items-center gap-2"
+                              ref={
+                                openActionMenuPatientId === patient.id
+                                  ? actionMenuRef
+                                  : null
+                              }
+                            >
                               <button
                                 type="button"
                                 onClick={() => handleScreenPatient(patient.id)}
@@ -284,6 +324,53 @@ export default function PatientsPage() {
                                 <ScanEye className="h-3.5 w-3.5" />
                                 Screen Now
                               </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenActionMenuPatientId((currentId) =>
+                                    currentId === patient.id ? null : patient.id
+                                  )
+                                }
+                                className="inline-flex items-center justify-center rounded-lg border border-(--border-primary) bg-(--bg-tertiary) p-1.5 text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                                aria-label={`More actions for ${patient.name}`}
+                                aria-haspopup="menu"
+                                aria-expanded={
+                                  openActionMenuPatientId === patient.id
+                                }
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </button>
+
+                              {openActionMenuPatientId === patient.id && (
+                                <div
+                                  role="menu"
+                                  className="absolute right-0 top-full z-20 mt-2 w-44 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-1.5 shadow-lg"
+                                >
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenPatientHistory(patient.id)
+                                    }
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                                  >
+                                    <History className="h-3.5 w-3.5" />
+                                    View History
+                                  </button>
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenEditContact(patient)
+                                    }
+                                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    Edit Contact
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
