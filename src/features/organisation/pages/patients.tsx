@@ -1,12 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, XCircle, Plus, ScanEye, Eye } from 'lucide-react';
+import {
+  Search,
+  XCircle,
+  Plus,
+  ScanEye,
+  Pencil,
+  History,
+  MoreHorizontal,
+} from 'lucide-react';
+import { toast } from 'react-toastify';
 import Spinner from '@/components/ui/spinner';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
+import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
 import {
   getOrganisationRecentPatients,
   type OrganisationRecentPatientDto,
@@ -29,6 +40,12 @@ export default function PatientsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+  const [editingPatient, setEditingPatient] =
+    useState<OrganisationRecentPatientDto | null>(null);
+  const [openActionMenuPatientId, setOpenActionMenuPatientId] = useState<
+    string | null
+  >(null);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
 
   const patientsQuery = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -50,6 +67,41 @@ export default function PatientsPage() {
 
   const clearDisabled = searchTerm.trim() === '';
 
+  useEffect(() => {
+    if (patientsQuery.isError) {
+      toast.error('Unable to load patients.');
+    }
+  }, [patientsQuery.isError]);
+
+  useEffect(() => {
+    if (!openActionMenuPatientId) {
+      return;
+    }
+
+    const handlePointerDownOutside = (event: MouseEvent) => {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setOpenActionMenuPatientId(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenActionMenuPatientId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDownOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openActionMenuPatientId]);
+
   if (patientsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -61,12 +113,12 @@ export default function PatientsPage() {
   if (patientsQuery.isError) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          <div className="font-medium">Unable to load patients.</div>
+        <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+          <div className="font-medium mb-3">Unable to load patients</div>
           <button
             type="button"
             onClick={() => patientsQuery.refetch()}
-            className="mt-3 text-sm font-medium underline"
+            className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
             Retry
           </button>
@@ -76,7 +128,25 @@ export default function PatientsPage() {
   }
 
   const handleScreenPatient = (patientId: string) => {
-    navigate(`/organisation/screening?patientId=${patientId}`);
+    navigate(
+      resolvePathWithLocale(`/organisation/screening?patientId=${patientId}`)
+    );
+  };
+
+  const handleViewPatientHistory = (patientId: string) => {
+    navigate(
+      resolvePathWithLocale(`/organisation/patients/${patientId}/history`)
+    );
+  };
+
+  const handleOpenEditContact = (patient: OrganisationRecentPatientDto) => {
+    setEditingPatient(patient);
+    setOpenActionMenuPatientId(null);
+  };
+
+  const handleOpenPatientHistory = (patientId: string) => {
+    handleViewPatientHistory(patientId);
+    setOpenActionMenuPatientId(null);
   };
 
   return (
@@ -84,15 +154,12 @@ export default function PatientsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Patients" />
 
         <main className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Eye className="w-5 h-5 text-primary" />
-              </div>
               <div>
                 <h1 className="text-2xl font-bold text-(--text-primary)">
                   Patients
@@ -241,14 +308,70 @@ export default function PatientsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleScreenPatient(patient.id)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition"
+                            <div
+                              className="relative inline-flex items-center gap-2"
+                              ref={
+                                openActionMenuPatientId === patient.id
+                                  ? actionMenuRef
+                                  : null
+                              }
                             >
-                              <ScanEye className="w-3.5 h-3.5" />
-                              Screen Now
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => handleScreenPatient(patient.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                              >
+                                <ScanEye className="h-3.5 w-3.5" />
+                                Screen Now
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenActionMenuPatientId((currentId) =>
+                                    currentId === patient.id ? null : patient.id
+                                  )
+                                }
+                                className="inline-flex items-center justify-center rounded-lg border border-(--border-primary) bg-(--bg-tertiary) p-1.5 text-(--text-secondary) transition hover:bg-(--bg-primary)"
+                                aria-label={`More actions for ${patient.name}`}
+                                aria-haspopup="menu"
+                                aria-expanded={
+                                  openActionMenuPatientId === patient.id
+                                }
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </button>
+
+                              {openActionMenuPatientId === patient.id && (
+                                <div
+                                  role="menu"
+                                  className="absolute right-0 top-full z-20 mt-2 w-44 rounded-xl border border-(--border-primary) bg-(--bg-primary) p-1.5 shadow-lg"
+                                >
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenPatientHistory(patient.id)
+                                    }
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                                  >
+                                    <History className="h-3.5 w-3.5" />
+                                    View History
+                                  </button>
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() =>
+                                      handleOpenEditContact(patient)
+                                    }
+                                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    Edit Contact
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )
@@ -264,6 +387,16 @@ export default function PatientsPage() {
             onClose={() => setIsWalkInModalOpen(false)}
             onSuccess={() => {
               setIsWalkInModalOpen(false);
+              patientsQuery.refetch();
+            }}
+          />
+
+          <UpdatePatientContactModal
+            isOpen={editingPatient !== null}
+            patient={editingPatient}
+            onClose={() => setEditingPatient(null)}
+            onSuccess={() => {
+              setEditingPatient(null);
               patientsQuery.refetch();
             }}
           />

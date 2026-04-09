@@ -11,7 +11,7 @@ import {
   History,
   AlertCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -34,18 +34,15 @@ const getGreeting = (t: TranslateFn) => {
 };
 
 const getRiskLabel = (risk: string | undefined, t: TranslateFn) => {
-  switch (normalizeRiskLevel(risk)) {
-    case 'low':
-      return t('PatientDashboard.risk.low');
-    case 'medium':
-      return t('PatientDashboard.risk.medium');
-    case 'high':
-      return t('PatientDashboard.risk.high');
-    case 'critical':
-      return t('PatientDashboard.risk.critical');
-    default:
-      return t('PatientDashboard.risk.notAvailable');
-  }
+  const normalized = normalizeRiskLevel(risk);
+  if (!normalized) return t('PatientDashboard.risk.notAvailable');
+  return normalized === 'low'
+    ? t('PatientDashboard.badge.looksHealthy', {
+        defaultValue: 'Looks Healthy',
+      })
+    : t('PatientDashboard.badge.needsAttention', {
+        defaultValue: 'Needs Attention',
+      });
 };
 
 const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {
@@ -65,6 +62,13 @@ const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {
 const normalizeRiskLevel = (risk?: string) => {
   if (!risk) return undefined;
   return risk.toLowerCase();
+};
+
+const looksLikeI18nKey = (value?: string) => {
+  if (!value) return false;
+  return /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*){2,}$/.test(
+    value.trim()
+  );
 };
 
 export default function PatientDashboard() {
@@ -92,11 +96,42 @@ export default function PatientDashboard() {
       const response = await screeningApi.getRecentSessions(5);
       return response.data ?? [];
     },
+    staleTime: 60_000,
+    gcTime: 15 * 60_000,
+    // Always re-validate this query when returning to dashboard
+    // so hero card reflects the newest screening session.
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: 30_000,
+    placeholderData: [],
   });
 
   const recentSessions = recentSessionsQuery.data ?? [];
   const latestSession = recentSessions[0];
   const latestSessionRisk = normalizeRiskLevel(latestSession?.latestRiskLevel);
+  const latestSessionDetailQuery = useQuery({
+    queryKey: [
+      'screening',
+      'latest-session-detail',
+      latestSession?.screeningId,
+    ],
+    enabled: Boolean(latestSession?.screeningId),
+    queryFn: async () => {
+      if (!latestSession?.screeningId) return null;
+      const response = await screeningApi.getSessionById(
+        latestSession.screeningId
+      );
+      return response.data ?? null;
+    },
+    staleTime: 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  });
+  const latestSessionImageUrl =
+    latestSessionDetailQuery.data?.images?.[0]?.imageUrl;
 
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
@@ -142,23 +177,58 @@ export default function PatientDashboard() {
 
   const currentDate = formatShortDate(new Date().toISOString());
   const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
-  const effectiveLatestRisk = latestReportRisk ?? latestSessionRisk;
+  const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
   const hasHeroResult = Boolean(latestReport || latestSession);
-  const heroImageUrl = latestReport?.heatmapUrl ?? latestSession?.thumbnailUrl;
+  const heroImageCandidates = useMemo(() => {
+    // Prefer session thumbnail (retinal photo) over heatmap to avoid dark/blank-looking hero images.
+    const candidates = [
+      latestSessionImageUrl,
+      latestSession?.thumbnailUrl,
+      latestReport?.heatmapUrl,
+    ]
+      .filter((url): url is string => Boolean(url && url.trim().length > 0))
+      .map((url) => url.trim());
+    return [...new Set(candidates)];
+  }, [
+    latestReport?.heatmapUrl,
+    latestSession?.thumbnailUrl,
+    latestSessionImageUrl,
+  ]);
+  const [heroImageCandidateIndex, setHeroImageCandidateIndex] = useState(0);
+  const heroImageUrl =
+    heroImageCandidates[heroImageCandidateIndex] ??
+    heroImageCandidates[0] ??
+    undefined;
   const heroTitle =
-    latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
-      ? t('PatientDashboard.hero.title.specialistVerified')
-      : t('PatientDashboard.hero.title.aiScreening');
+    latestSession != null
+      ? t('PatientDashboard.hero.title.aiScreening')
+      : latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
+        ? t('PatientDashboard.hero.title.specialistVerified')
+        : t('PatientDashboard.hero.title.aiScreening');
   const heroRiskLabel = effectiveLatestRisk
     ? getRiskLabel(effectiveLatestRisk, t)
     : t('PatientDashboard.hero.awaitingAnalysis');
   const heroSummary =
-    latestReport?.summary || getDetectedSummary(effectiveLatestRisk, t);
-  const heroDate = latestReport?.createdAt ?? latestSession?.createdAt;
-  const heroScanId = latestReport?.id ?? latestSession?.screeningId;
+    latestSession != null
+      ? getDetectedSummary(effectiveLatestRisk, t)
+      : latestReport?.summary && !looksLikeI18nKey(latestReport.summary)
+        ? latestReport.summary
+        : getDetectedSummary(effectiveLatestRisk, t);
+  const heroDate = latestSession?.createdAt ?? latestReport?.createdAt;
+  const heroScanId = latestSession?.screeningId ?? latestReport?.id;
+  const latestSessionHasResult = Boolean(latestSession?.latestRiskLevel);
+  const latestSessionTargetPath = latestSessionHasResult
+    ? '/patient/screening/review'
+    : latestSession?.screeningId
+      ? `/patient/analysis?screeningId=${latestSession.screeningId}`
+      : '/patient/analysis';
   const [isHeroImageLoaded, setIsHeroImageLoaded] = useState(false);
   const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
+
+  useEffect(() => {
+    setHeroImageCandidateIndex(0);
+  }, [heroImageCandidates.join('|')]);
 
   useEffect(() => {
     setIsHeroImageLoaded(false);
@@ -265,6 +335,11 @@ export default function PatientDashboard() {
                       onError={() => {
                         setIsHeroImageErrored(true);
                         setIsHeroImageLoaded(true);
+                        setHeroImageCandidateIndex((prev) =>
+                          prev < heroImageCandidates.length - 1
+                            ? prev + 1
+                            : prev
+                        );
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -338,7 +413,9 @@ export default function PatientDashboard() {
                   <div className="ml-auto">
                     <Link
                       to={
-                        latestSession ? '/patient/analysis' : '/patient/reports'
+                        latestSession
+                          ? latestSessionTargetPath
+                          : '/patient/reports'
                       }
                       state={
                         latestSession

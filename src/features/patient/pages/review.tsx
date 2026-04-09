@@ -221,11 +221,7 @@ export default function ReviewPage() {
   const riskStyle = RISK_STYLE_CONFIG[effectiveRiskLevel];
   const riskLabel = showHealthyStatus
     ? t('PatientReview.status.healthy', 'Looks Healthy')
-    : effectiveRiskLevel === 'high'
-      ? t('PatientReview.status.high', 'Needs Attention')
-      : effectiveRiskLevel === 'moderate'
-        ? t('PatientReview.status.moderate', 'Needs Review')
-        : t('PatientReview.status.low', 'Low Risk');
+    : t('PatientReview.status.high', 'Needs Attention');
   const riskSummary = showHealthyStatus
     ? t(
         'PatientReview.summary.healthy',
@@ -258,12 +254,35 @@ export default function ReviewPage() {
     hydratedSession?.resultsPersisted ??
     Boolean(rawJsonForAnalysis);
 
-  const primaryAiConfidence = useMemo(() => {
-    if (anomalies.length === 0) return null;
-    const primary = anomalies.find((a) => a.isHighest);
-    if (primary != null) return primary.confidence;
-    return Math.max(...anomalies.map((a) => a.confidence));
-  }, [anomalies]);
+  const patientFriendlyFindings = useMemo(() => {
+    const isVietnamese = currentLanguage.toLowerCase().startsWith('vi');
+    const labels = anomalies
+      .filter((a) => !isNormalDisease(a.code ?? a.name))
+      .map((a) => {
+        if (isVietnamese) {
+          const friendlyVi = a.friendlyName?.trim();
+          if (friendlyVi) return friendlyVi;
+          return toDisplayDiseaseName(a.name, currentLanguage).trim();
+        }
+
+        const friendlyEn = a.friendlyDescription?.trim();
+        if (friendlyEn) return friendlyEn;
+
+        const fallback = a.name?.trim();
+        return fallback ?? '';
+      })
+      .filter(Boolean);
+
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const label of labels) {
+      const key = label.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(label);
+    }
+    return deduped;
+  }, [anomalies, currentLanguage]);
 
   const consultationContext =
     useMemo<ScreeningConsultationContext | null>(() => {
@@ -424,7 +443,7 @@ export default function ReviewPage() {
                 </h3>
                 <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
                   {riskSummary}
-                  {anomalies.length > 0 && (
+                  {patientFriendlyFindings.length > 0 && (
                     <>
                       {' '}
                       {t(
@@ -432,11 +451,17 @@ export default function ReviewPage() {
                         'Detected findings include:'
                       )}{' '}
                       <strong className="text-(--text-primary)">
-                        {anomalies
-                          .map((a) =>
-                            toDisplayDiseaseName(a.name, currentLanguage)
-                          )
-                          .join(', ')}
+                        {patientFriendlyFindings.slice(0, 4).join(', ')}
+                        {patientFriendlyFindings.length > 4
+                          ? t('PatientReview.findingsMore', {
+                              count: patientFriendlyFindings.length - 4,
+                              defaultValue: currentLanguage
+                                .toLowerCase()
+                                .startsWith('vi')
+                                ? ' và {{count}} dấu hiệu khác'
+                                : ' and {{count}} more findings',
+                            })
+                          : ''}
                       </strong>
                       .
                     </>
@@ -469,16 +494,6 @@ export default function ReviewPage() {
                   <ArrowLeft className="w-4 h-4" />
                   {t('PatientReview.actions.viewFullAnalysisDetails')}
                 </button>
-                {primaryAiConfidence != null && (
-                  <>
-                    <span className="text-(--border-color)">|</span>
-                    <span className="text-xs text-(--text-muted)">
-                      {t('PatientReview.labels.aiConfidence', {
-                        confidence: primaryAiConfidence,
-                      })}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  FileBarChart,
   TrendingUp,
   AlertTriangle,
   ShieldCheck,
@@ -48,14 +47,11 @@ export default function OrganisationReportsPage() {
     <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Reports" />
         <main className="flex-1 overflow-y-auto p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <FileBarChart className="w-5 h-5 text-primary" />
-              </div>
               <div>
                 <h1 className="text-2xl font-bold text-(--text-primary)">
                   Screening Reports

@@ -21,8 +21,6 @@ import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
 import { screeningApi } from '../api/screening.api';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import i18n from '@/i18n/i18n';
-import { localizeFindingsText } from '@/features/patient/lib/disease-translation';
 
 interface Scan {
   id: string;
@@ -35,26 +33,9 @@ interface Scan {
   findings?: number;
 }
 
-function extractPrimaryFinding(
-  findings: string | undefined,
-  language: string
-): string | undefined {
-  if (!findings) return undefined;
-
-  const first = localizeFindingsText(findings, language)
-    .split(',')
-    .map((item) => item.trim())
-    .find(Boolean);
-
-  if (!first) return undefined;
-
-  return first.replace(/\s*\([^)]*\)\s*$/, '').trim();
-}
-
 export default function ScreeningPage() {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
-  const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -98,15 +79,7 @@ export default function ScreeningPage() {
 
   const scans: Scan[] = (sessionsQuery.data ?? []).map((session) => ({
     id: session.screeningId,
-    name: (() => {
-      const finding = extractPrimaryFinding(
-        sessionDetailsQuery.data?.[session.screeningId],
-        currentLanguage
-      );
-      return finding
-        ? `${t('PatientReview.sessionLabel', 'Session')} - ${finding}`
-        : `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt)}`;
-    })(),
+    name: `${t('PatientReview.sessionLabel', 'Session')} - ${formatShortDate(session.createdAt)}`,
     eye: t('PatientScreening.labels.bothEyes', 'Both Eyes') as
       | 'Left Eye (OS)'
       | 'Right Eye (OD)'
@@ -167,17 +140,23 @@ export default function ScreeningPage() {
 
   const getRiskBadge = (riskLevel?: string) => {
     if (!riskLevel) return null;
-    const colors = {
-      low: 'bg-green-500/20 text-green-400 border-green-500/30',
-      medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-      high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-      critical: 'bg-red-500/20 text-red-400 border-red-500/30',
-    };
+    const normalized = riskLevel.toLowerCase();
+    const isHealthy = normalized === 'low';
+    const isCritical = normalized === 'critical' || normalized === 'high';
+    const style = isHealthy
+      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+      : isCritical
+        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+        : 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    const label = isHealthy
+      ? t('PatientScreening.badge.looksHealthy')
+      : t('PatientScreening.badge.needsAttention');
+
     return (
       <span
-        className={`px-2 py-0.5 text-xs font-medium rounded border capitalize ${colors[riskLevel as keyof typeof colors]}`}
+        className={`px-2 py-0.5 text-xs font-medium rounded border ${style}`}
       >
-        {t(`PatientScreening.risk.${riskLevel}`, `${riskLevel}`)}
+        {label}
       </span>
     );
   };

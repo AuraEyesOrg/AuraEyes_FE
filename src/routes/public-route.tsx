@@ -17,6 +17,11 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     return children;
   }
 
+  // Confirm-email route must remain accessible even when user is already logged in.
+  if (normalizedPath === '/confirm-email') {
+    return children;
+  }
+
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
   const isPendingVerification =
     user?.verificationStatus === 'PendingVerification' ||

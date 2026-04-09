@@ -3,8 +3,21 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
 import { NotificationDropdown } from '@/components/ui/notification';
+import { useTranslation } from 'react-i18next';
 
 export default function PatientHeader() {
+  const { t: i18nT } = useTranslation();
+  const t = (
+    key: string,
+    defaultValueOrOptions?: string | Record<string, unknown>
+  ) => {
+    const options =
+      typeof defaultValueOrOptions === 'string'
+        ? ({ defaultValue: defaultValueOrOptions } as Record<string, unknown>)
+        : defaultValueOrOptions;
+
+    return i18nT(key as never, options as never) as unknown as string;
+  };
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuthStore();
   const location = useLocation();
@@ -16,19 +29,19 @@ export default function PatientHeader() {
     const last = segments[segments.length - 1] || 'dashboard';
 
     const pageNameMap: Record<string, string> = {
-      dashboard: 'Dashboard',
-      screening: 'My Scans',
-      reports: 'Reports',
-      appointments: 'Appointments',
-      doctors: 'Find Doctors',
-      clinics: 'Find Clinics',
-      roadmap: 'Health Roadmap',
-      chat: 'Chat',
-      wallet: 'Wallet',
-      profile: 'My Profile',
-      settings: 'Settings',
-      security: 'Security',
-      notifications: 'Notifications',
+      dashboard: t('PatientHeader.pages.dashboard', 'Dashboard'),
+      screening: t('PatientHeader.pages.screening', 'My Scans'),
+      reports: t('PatientHeader.pages.reports', 'Reports'),
+      appointments: t('PatientHeader.pages.appointments', 'Appointments'),
+      doctors: t('PatientHeader.pages.doctors', 'Find Doctors'),
+      clinics: t('PatientHeader.pages.clinics', 'Find Clinics'),
+      roadmap: t('PatientHeader.pages.roadmap', 'Health Roadmap'),
+      chat: t('PatientHeader.pages.chat', 'Chat'),
+      wallet: t('PatientHeader.pages.wallet', 'Wallet'),
+      profile: t('PatientHeader.pages.profile', 'My Profile'),
+      settings: t('PatientHeader.pages.settings', 'Settings'),
+      security: t('PatientHeader.pages.security', 'Security'),
+      notifications: t('PatientHeader.pages.notifications', 'Notifications'),
     };
 
     return (
@@ -43,7 +56,7 @@ export default function PatientHeader() {
         {/* Breadcrumb */}
         <div className="breadcrumb-text flex items-center gap-2">
           <Home size={14} />
-          <span>Home</span>
+          <span>{t('PatientHeader.breadcrumb.home', 'Home')}</span>
           <span className="text-[var(--border-color)]">/</span>
           <span className="breadcrumb-active">{pageName}</span>
         </div>
@@ -58,7 +71,10 @@ export default function PatientHeader() {
             />
             <input
               type="text"
-              placeholder="Search reports, appointments..."
+              placeholder={t(
+                'PatientHeader.search.placeholder',
+                'Search reports, appointments...'
+              )}
               className="header-search-input w-64"
             />
           </div>
@@ -67,7 +83,7 @@ export default function PatientHeader() {
           <button
             onClick={toggleTheme}
             className="header-action-btn"
-            aria-label="Toggle theme"
+            aria-label={t('PatientHeader.actions.toggleTheme', 'Toggle theme')}
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>

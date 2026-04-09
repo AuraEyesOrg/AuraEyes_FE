@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import { AuthLayout } from '@/components/layouts';
 import {
   Mail,
@@ -15,13 +20,15 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
-import { confirmEmail, resendConfirmation } from '../api';
+import { confirmEmail, getCurrentUser, resendConfirmation } from '../api';
+import useAuthStore from '@/store/auth-store';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
 
 const ConfirmEmailPage = () => {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
   const token = searchParams.get('token');
@@ -32,19 +39,108 @@ const ConfirmEmailPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [resendEmail, setResendEmail] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const { user, setUser } = useAuthStore((state) => ({
+    user: state.user,
+    setUser: state.setUser,
+  }));
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
   const didVerify = useRef(false);
 
+  const isPendingVerification = useCallback(
+    (currentUser: typeof user) =>
+      currentUser?.verificationStatus === 'PendingVerification' ||
+      (currentUser?.isVerified === false &&
+        (!currentUser?.verificationStatus ||
+          currentUser?.verificationStatus === 'PendingVerification')),
+    []
+  );
+
+  const resolveNextPath = useCallback(
+    (currentUser: NonNullable<typeof user>) => {
+      const roles = currentUser.roles ?? [];
+
+      if (roles.includes('SystemAdmin')) {
+        return '/system-admin/dashboard';
+      }
+
+      if (roles.includes('OrgAdmin')) {
+        return currentUser.contractStatus !== 'Active'
+          ? '/organisation/contract'
+          : '/organisation/dashboard';
+      }
+
+      if (roles.includes('Ophthalmologist')) {
+        if (isPendingVerification(currentUser)) {
+          return '/ophthalmologist/pending-approval';
+        }
+
+        return currentUser.contractStatus !== 'Active'
+          ? '/ophthalmologist/contract'
+          : '/ophthalmologist/dashboard';
+      }
+
+      if (roles.includes('Patient')) {
+        return '/patient/dashboard';
+      }
+
+      return '/';
+    },
+    [isPendingVerification]
+  );
+
+  const refreshSessionAndContinue = useCallback(async () => {
+    try {
+      setIsRefreshingSession(true);
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+
+      navigate(withLocalePathname(locale, resolveNextPath(currentUser)), {
+        replace: true,
+      });
+
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setIsRefreshingSession(false);
+    }
+  }, [locale, navigate, resolveNextPath, setUser]);
+
+  useEffect(() => {
+    if (!resendEmail && user?.email) {
+      setResendEmail(user.email);
+    }
+  }, [resendEmail, user?.email]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [resendCooldown]);
+
   useEffect(() => {
     if (!userId || !token || didVerify.current) return;
     didVerify.current = true;
 
     confirmEmail({ userId, token })
-      .then(() => setState('success'))
+      .then(async () => {
+        setState('success');
+        await refreshSessionAndContinue();
+      })
       .catch((err) => {
         const msg =
           err?.response?.data?.message ||
@@ -53,14 +149,15 @@ const ConfirmEmailPage = () => {
         setErrorMessage(msg);
         setState('error');
       });
-  }, [userId, token]);
+  }, [refreshSessionAndContinue, t, token, userId]);
 
   const handleResend = async () => {
-    if (!resendEmail) return;
+    if (!resendEmail || resendCooldown > 0) return;
     setResendLoading(true);
     try {
       await resendConfirmation({ email: resendEmail });
       setResendSent(true);
+      setResendCooldown(30);
     } finally {
       setResendLoading(false);
     }
@@ -91,6 +188,22 @@ const ConfirmEmailPage = () => {
           <p className="text-gray-500 text-sm mb-8">
             {t('AuthPages.confirmEmail.success.description')}
           </p>
+          <button
+            type="button"
+            onClick={() => void refreshSessionAndContinue()}
+            disabled={isRefreshingSession}
+            className="mb-4 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isRefreshingSession ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {t(
+              'AuthPages.confirmEmail.success.refreshAndContinue',
+              'Refresh and continue'
+            )}
+          </button>
           <Link
             to={toLocalizedAuthPath('/login')}
             className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-background-dark font-semibold py-3 px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(19,236,236,0.39)] hover:shadow-[0_6px_20px_rgba(19,236,236,0.23)] hover:-translate-y-0.5"
@@ -172,14 +285,20 @@ const ConfirmEmailPage = () => {
               <button
                 type="button"
                 onClick={handleResend}
-                disabled={resendLoading || !resendEmail}
+                disabled={resendLoading || !resendEmail || resendCooldown > 0}
                 className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-background-dark font-semibold py-3 px-4 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(19,236,236,0.39)] hover:shadow-[0_6px_20px_rgba(19,236,236,0.23)] hover:-translate-y-0.5"
               >
                 {resendLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {t('AuthPages.confirmEmail.resend.button')}
+                    {resendCooldown > 0
+                      ? t(
+                          'AuthPages.confirmEmail.resend.cooldown',
+                          'Resend in {{seconds}}s',
+                          { seconds: resendCooldown }
+                        )
+                      : t('AuthPages.confirmEmail.resend.button')}
                     <RefreshCw className="h-4 w-4" />
                   </>
                 )}

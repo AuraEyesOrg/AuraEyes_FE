@@ -7,11 +7,15 @@ import {
   Home,
   RefreshCw,
   CheckCircle2,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import DoctorSidebar from '@/features/ophthalmologist/components/DoctorSidebar';
 import DoctorHeader from '@/features/ophthalmologist/components/DoctorHeader';
-import { getCurrentUser } from '@/features/auth/api/auth.api';
+import {
+  getCurrentUser,
+  resendConfirmation,
+} from '@/features/auth/api/auth.api';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -25,6 +29,8 @@ const PendingApprovalPage = () => {
     setUser: state.setUser,
   }));
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const hasRedirectedRef = useRef(false);
 
   const isPendingVerification = useCallback(
@@ -98,6 +104,20 @@ const PendingApprovalPage = () => {
     };
   }, [isPendingVerification, navigate, syncApprovalStatus, user]);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [resendCooldown]);
+
   const handleGoHome = () => {
     navigate(resolvePathWithLocale('/'));
   };
@@ -105,6 +125,35 @@ const PendingApprovalPage = () => {
   const handleLogout = () => {
     logout();
     navigate(resolvePathWithLocale('/login'));
+  };
+
+  const handleResendConfirmationEmail = async () => {
+    if (!user?.email || isResendingEmail || resendCooldown > 0) {
+      return;
+    }
+
+    try {
+      setIsResendingEmail(true);
+      await resendConfirmation({ email: user.email });
+      setResendCooldown(30);
+      toast.success(
+        t(
+          'AuthPages.pendingApproval.resendSuccess',
+          'A new confirmation email has been sent.'
+        )
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t(
+              'AuthPages.pendingApproval.resendError',
+              'Unable to resend confirmation email. Please try again.'
+            );
+      toast.error(message);
+    } finally {
+      setIsResendingEmail(false);
+    }
   };
 
   return (
@@ -167,6 +216,41 @@ const PendingApprovalPage = () => {
                     'This page auto-checks your approval status every 30 seconds and redirects you once approved.'
                   )}
                 </p>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-900/20">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    {t(
+                      'AuthPages.pendingApproval.resendHint',
+                      'Did not receive the confirmation email?'
+                    )}
+                  </p>
+                </div>
+                <button
+                  onClick={() => void handleResendConfirmationEmail()}
+                  disabled={
+                    !user?.email || isResendingEmail || resendCooldown > 0
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-900/50"
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isResendingEmail ? 'animate-spin' : ''}`}
+                  />
+                  {resendCooldown > 0
+                    ? t(
+                        'AuthPages.pendingApproval.resendCountdown',
+                        'Resend in {{seconds}}s',
+                        { seconds: resendCooldown }
+                      )
+                    : t(
+                        'AuthPages.pendingApproval.resendButton',
+                        'Resend confirmation email'
+                      )}
+                </button>
               </div>
             </div>
 

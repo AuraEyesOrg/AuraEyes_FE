@@ -1,4 +1,24 @@
 {
+  "Validation": {
+    "Required": "Trường này là bắt buộc",
+    "MaxLength": {
+      "FullName": "Họ và tên không được vượt quá 200 ký tự",
+      "Phone": "Số điện thoại không được vượt quá 20 ký tự",
+      "Address": "Địa chỉ không được vượt quá 500 ký tự",
+      "CitizenId": "CCCD không được vượt quá 20 ký tự"
+    },
+    "MinLength": {
+      "Password": "Mật khẩu phải có ít nhất 8 ký tự"
+    },
+    "Invalid": {
+      "Gender": "Giới tính không hợp lệ",
+      "CitizenId": "CCCD/VNeID bắt buộc phải nhập đúng 12 chữ số"
+    },
+    "Password": {
+      "MustBeDifferent": "Mật khẩu mới phải khác mật khẩu hiện tại",
+      "Mismatch": "Mật khẩu xác nhận không khớp"
+    }
+  },
   "Navigation": {
     "home": "Trang chủ",
     "about": "Về chúng tôi",
@@ -1517,6 +1537,10 @@
       "critical": "Nguy cơ nghiêm trọng",
       "notAvailable": "N/A"
     },
+    "badge": {
+      "looksHealthy": "Trông khỏe mạnh",
+      "needsAttention": "Cần chú ý"
+    },
     "detectedSummary": {
       "low": "Phân tích AI không phát hiện bất thường đáng kể trong lần quét gần nhất. Hãy tiếp tục theo dõi định kỳ để duy trì sức khỏe võng mạc ổn định.",
       "medium": "Phân tích AI phát hiện các dấu hiệu nguy cơ võng mạc mức trung bình. Vui lòng xem lại phiên này và cân nhắc đặt lịch tái khám với bác sĩ chuyên khoa.",
@@ -1811,6 +1835,10 @@
       "medium": "Nguy cơ trung bình",
       "high": "Nguy cơ cao",
       "critical": "Nguy cơ nghiêm trọng"
+    },
+    "badge": {
+      "looksHealthy": "Trông khỏe mạnh",
+      "needsAttention": "Cần chú ý"
     },
     "stats": {
       "totalScans": "Tổng lượt quét",
@@ -2170,6 +2198,39 @@
       "continueToReview": "Tiếp tục tới bước đánh giá",
       "reanalyze": "Phân tích lại"
     },
+    "badge": {
+      "looksHealthy": "Trông khỏe mạnh",
+      "needsAttention": "Cần chú ý"
+    },
+    "findings": {
+      "empty": {
+        "title": "Không phát hiện bất thường",
+        "description": "AI không ghi nhận dấu hiệu bất thường trên ảnh đáy mắt. Hãy tiếp tục khám mắt định kỳ."
+      },
+      "normal": {
+        "title": "Kết quả bình thường",
+        "description": "Ảnh đáy mắt không cho thấy dấu hiệu bệnh lý. Hãy tiếp tục khám mắt định kỳ để bảo vệ sức khỏe thị lực."
+      },
+      "primaryTitle": "Phát hiện chính",
+      "relatedTitle": "Bệnh liên quan",
+      "criticalHint": "Có dấu hiệu khẩn cấp trong danh sách. Vui lòng ưu tiên khám bác sĩ sớm.",
+      "nextStepLabel": "Bước tiếp theo:",
+      "nextStepDescription": "Tiếp tục đến phần Xem lại để bác sĩ chuyên khoa xác nhận kết quả và tư vấn hướng xử trí phù hợp.",
+      "urgency": {
+        "critical": "Cần khẩn cấp",
+        "warning": "Cần theo dõi",
+        "caution": "Lưu ý",
+        "info": "Thông tin",
+        "normal": "Bình thường"
+      },
+      "suggestion": {
+        "critical": "Cần đến bác sĩ nhãn khoa ngay.",
+        "warning": "Nên tham khảo ý kiến bác sĩ nhãn khoa.",
+        "caution": "Nên theo dõi định kỳ.",
+        "info": "Không cần xử lý ngay.",
+        "normal": "Tiếp tục khám mắt định kỳ."
+      }
+    },
     "risk": {
       "low": {
         "label": "Nguy cơ thấp",
@@ -2217,6 +2278,53 @@
     "disclaimer": {
       "importantLabel": "Quan trọng:",
       "message": "Sàng lọc AI hỗ trợ đánh giá, không thay thế tư vấn y khoa chuyên môn. Kết quả cần được bác sĩ nhãn khoa đủ chuyên môn xem xét."
+    }
+  },
+  "PatientSidebar": {
+    "portalSubtitle": "Cổng bệnh nhân",
+    "user": {
+      "defaultName": "Bệnh nhân"
+    },
+    "nav": {
+      "dashboard": "Tổng quan",
+      "myScans": "Lượt quét của tôi",
+      "reports": "Báo cáo",
+      "appointments": "Lịch hẹn",
+      "findClinics": "Tìm phòng khám",
+      "healthRoadmap": "Lộ trình sức khỏe",
+      "chat": "Trò chuyện",
+      "wallet": "Ví",
+      "helpFeedback": "Hỗ trợ & Phản hồi",
+      "settings": "Cài đặt"
+    },
+    "actions": {
+      "logout": "Đăng xuất"
+    }
+  },
+  "PatientHeader": {
+    "breadcrumb": {
+      "home": "Trang chủ"
+    },
+    "search": {
+      "placeholder": "Tìm báo cáo, lịch hẹn..."
+    },
+    "actions": {
+      "toggleTheme": "Chuyển giao diện"
+    },
+    "pages": {
+      "dashboard": "Tổng quan",
+      "screening": "Lượt quét của tôi",
+      "reports": "Báo cáo",
+      "appointments": "Lịch hẹn",
+      "doctors": "Tìm bác sĩ",
+      "clinics": "Tìm phòng khám",
+      "roadmap": "Lộ trình sức khỏe",
+      "chat": "Trò chuyện",
+      "wallet": "Ví",
+      "profile": "Hồ sơ của tôi",
+      "settings": "Cài đặt",
+      "security": "Bảo mật",
+      "notifications": "Thông báo"
     }
   },
   "PatientChat": {
@@ -2356,6 +2464,17 @@
       "title": "Hướng dẫn trao đổi",
       "description": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn.",
       "sidebarDescription": "Hãy mô tả rõ thời điểm xuất hiện triệu chứng, thay đổi thị lực, mức độ đau và kết quả ảnh quét gần đây. Ghi chú ngắn gọn, có cấu trúc sẽ giúp bác sĩ phân loại nhanh hơn."
+    }
+  },
+  "FocusModeLayout": {
+    "steps": {
+      "upload": "Tải ảnh & kiểm tra",
+      "analysis": "Phân tích",
+      "review": "Đánh giá"
+    },
+    "breadcrumb": {
+      "home": "Trang chủ",
+      "newScreening": "Sàng lọc mới"
     }
   },
   "notification": {

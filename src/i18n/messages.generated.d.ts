@@ -2,6 +2,26 @@ import 'i18next';
 
 declare module 'i18next' {
   interface TranslationSchema {
+    Validation: {
+      Required: string;
+      MaxLength: {
+        FullName: string;
+        Phone: string;
+        Address: string;
+        CitizenId: string;
+      };
+      MinLength: {
+        Password: string;
+      };
+      Invalid: {
+        Gender: string;
+        CitizenId: string;
+      };
+      Password: {
+        MustBeDifferent: string;
+        Mismatch: string;
+      };
+    };
     Navigation: {
       home: string;
       about: string;
@@ -1520,6 +1540,10 @@ declare module 'i18next' {
         critical: string;
         notAvailable: string;
       };
+      badge: {
+        looksHealthy: string;
+        needsAttention: string;
+      };
       detectedSummary: {
         low: string;
         medium: string;
@@ -1814,6 +1838,10 @@ declare module 'i18next' {
         medium: string;
         high: string;
         critical: string;
+      };
+      badge: {
+        looksHealthy: string;
+        needsAttention: string;
       };
       stats: {
         totalScans: string;
@@ -2173,6 +2201,39 @@ declare module 'i18next' {
         continueToReview: string;
         reanalyze: string;
       };
+      badge: {
+        looksHealthy: string;
+        needsAttention: string;
+      };
+      findings: {
+        empty: {
+          title: string;
+          description: string;
+        };
+        normal: {
+          title: string;
+          description: string;
+        };
+        primaryTitle: string;
+        relatedTitle: string;
+        criticalHint: string;
+        nextStepLabel: string;
+        nextStepDescription: string;
+        urgency: {
+          critical: string;
+          warning: string;
+          caution: string;
+          info: string;
+          normal: string;
+        };
+        suggestion: {
+          critical: string;
+          warning: string;
+          caution: string;
+          info: string;
+          normal: string;
+        };
+      };
       risk: {
         low: {
           label: string;
@@ -2220,6 +2281,53 @@ declare module 'i18next' {
       disclaimer: {
         importantLabel: string;
         message: string;
+      };
+    };
+    PatientSidebar: {
+      portalSubtitle: string;
+      user: {
+        defaultName: string;
+      };
+      nav: {
+        dashboard: string;
+        myScans: string;
+        reports: string;
+        appointments: string;
+        findClinics: string;
+        healthRoadmap: string;
+        chat: string;
+        wallet: string;
+        helpFeedback: string;
+        settings: string;
+      };
+      actions: {
+        logout: string;
+      };
+    };
+    PatientHeader: {
+      breadcrumb: {
+        home: string;
+      };
+      search: {
+        placeholder: string;
+      };
+      actions: {
+        toggleTheme: string;
+      };
+      pages: {
+        dashboard: string;
+        screening: string;
+        reports: string;
+        appointments: string;
+        doctors: string;
+        clinics: string;
+        roadmap: string;
+        chat: string;
+        wallet: string;
+        profile: string;
+        settings: string;
+        security: string;
+        notifications: string;
       };
     };
     PatientChat: {
@@ -2359,6 +2467,17 @@ declare module 'i18next' {
         title: string;
         description: string;
         sidebarDescription: string;
+      };
+    };
+    FocusModeLayout: {
+      steps: {
+        upload: string;
+        analysis: string;
+        review: string;
+      };
+      breadcrumb: {
+        home: string;
+        newScreening: string;
       };
     };
     notification: {

@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Activity, CalendarDays, Clock3, Cpu, ShieldCheck } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import Sidebar from '../components/Sidebar';
@@ -14,6 +16,12 @@ export default function OrganisationDashboard() {
     queryFn: getOrganisationDashboardMetrics,
   });
 
+  useEffect(() => {
+    if (metricsQuery.isError) {
+      toast.error('Unable to load the live organisation dashboard.');
+    }
+  }, [metricsQuery.isError]);
+
   if (metricsQuery.isLoading || !metricsQuery.data) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -24,9 +32,9 @@ export default function OrganisationDashboard() {
 
   if (metricsQuery.isError) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          Unable to load the live organisation dashboard.
+      <div className="flex flex-col items-center justify-center h-screen w-full bg-(--bg-primary)">
+        <div className="text-slate-500 font-medium dark:text-slate-400">
+          Dashboard data is currently unavailable.
         </div>
       </div>
     );
@@ -81,7 +89,7 @@ export default function OrganisationDashboard() {
       <Sidebar pendingCount={pendingWorkload} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Dashboard" />
 
         <main className="p-6">
           <div className="mb-6">
