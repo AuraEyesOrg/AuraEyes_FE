@@ -19,6 +19,10 @@ import ConfirmModal from '@/components/ui/confirm-modal';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
+import {
+  downloadBlobFile,
+  getFileNameFromContentDisposition,
+} from '@/lib/file-export';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
@@ -51,7 +55,10 @@ export default function OrganisationScreeningResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const screeningId = searchParams.get('id');
-  const autoAnalysisTriggeredRef = useRef(false);
+
+  const locationState = location.state as { patientName?: string } | null;
+  const locationPatientName = locationState?.patientName?.trim() ?? '';
+
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
@@ -59,6 +66,7 @@ export default function OrganisationScreeningResultPage() {
 
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
@@ -81,7 +89,10 @@ export default function OrganisationScreeningResultPage() {
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
+  const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
+  const patientDisplayName =
+    sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
 
   // ─── Navigation Guard ────────────────────────────────────────────────────────
 
@@ -91,9 +102,6 @@ export default function OrganisationScreeningResultPage() {
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      // Nội dung returnValue bị browser bỏ qua hoàn toàn (spec mới),
-      // nhưng vẫn cần set để kích hoạt dialog mặc định của browser.
-      event.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -232,7 +240,6 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
-    autoAnalysisTriggeredRef.current = false;
     void loadSessionDetail(true);
   }, [screeningId, loadSessionDetail]);
 
@@ -346,15 +353,31 @@ export default function OrganisationScreeningResultPage() {
     }
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
-  useEffect(() => {
-    if (!sessionData || sessionData.latestResult) return;
-    if (sessionData.images.length === 0 || analyzing) return;
-    if (draft) return;
-    if (autoAnalysisTriggeredRef.current) return;
+  const handleDownloadPdf = useCallback(async () => {
+    if (downloadingPdf || !screeningId) return;
+    if (!canDownloadPdf) {
+      toast.info('Vui lòng lưu hồ sơ trước khi in PDF.');
+      return;
+    }
 
-    autoAnalysisTriggeredRef.current = true;
-    void handleAnalyze();
-  }, [sessionData, analyzing, draft, handleAnalyze]);
+    setDownloadingPdf(true);
+    try {
+      const { blob, contentDisposition } =
+        await orgScreeningApi.downloadSessionReportPdf(screeningId);
+
+      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
+      const fileName =
+        getFileNameFromContentDisposition(contentDisposition) ||
+        fallbackFileName;
+
+      downloadBlobFile(blob, fileName);
+      toast.success('Đã tải báo cáo PDF.');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Không thể tải báo cáo PDF.'));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [screeningId, downloadingPdf, canDownloadPdf]);
 
   const executeSaveResults = async () => {
     if (isViewOnly || !screeningId || !sessionData || !draft) return;
@@ -477,7 +500,7 @@ export default function OrganisationScreeningResultPage() {
                         Kết quả khám
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
-                        Bệnh nhân: {sessionData.patientId.slice(0, 8)}… · Phiên{' '}
+                        Bệnh nhân: {patientDisplayName} · Phiên{' '}
                         {screeningId?.slice(0, 8)}… ·{' '}
                         {new Date(sessionData.createdAt).toLocaleString(
                           'vi-VN'
@@ -489,10 +512,30 @@ export default function OrganisationScreeningResultPage() {
 
                 <div className="flex flex-wrap items-center gap-2.5">
                   <button
-                    onClick={() => window.print()}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
+                    onClick={handleDownloadPdf}
+                    disabled={
+                      downloadingPdf ||
+                      loading ||
+                      !screeningId ||
+                      !canDownloadPdf
+                    }
+                    title={
+                      canDownloadPdf
+                        ? 'Tải báo cáo PDF'
+                        : 'Vui lòng lưu hồ sơ trước khi in PDF.'
+                    }
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
-                    <Printer className="w-4 h-4" /> In
+                    {downloadingPdf ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Printer className="w-4 h-4" />
+                    )}
+                    {downloadingPdf
+                      ? 'Đang tạo PDF…'
+                      : canDownloadPdf
+                        ? 'Tải PDF'
+                        : 'Lưu hồ sơ để in PDF'}
                   </button>
 
                   {isViewOnly ? (
@@ -513,7 +556,7 @@ export default function OrganisationScreeningResultPage() {
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Đang phân tích…' : 'Phân tích lại'}
+                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
                       </button>
                       <button
                         onClick={requestSaveResults}

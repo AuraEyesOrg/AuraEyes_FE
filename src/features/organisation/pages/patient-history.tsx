@@ -9,8 +9,8 @@ import {
   FileText,
   Loader2,
   ScanEye,
-  UserRound,
 } from 'lucide-react';
+import AvatarFallback from '@/components/ui/avatar-fallback';
 import Spinner from '@/components/ui/spinner';
 import { unwrapApiData } from '@/types/api-response';
 import { resolvePathWithLocale } from '@/i18n/middleware';
@@ -139,10 +139,20 @@ export default function OrganisationPatientHistoryPage() {
 
   const openScreeningResult = () => {
     if (!selectedScreeningId) return;
+
+    const patientName = patient?.name || selectedHistoryItem?.patientName;
+
     navigate(
       resolvePathWithLocale(
         `/organisation/screening/result?id=${selectedScreeningId}`
-      )
+      ),
+      patientName
+        ? {
+            state: {
+              patientName,
+            },
+          }
+        : undefined
     );
   };
 
@@ -188,9 +198,11 @@ export default function OrganisationPatientHistoryPage() {
             {patient && (
               <div className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) px-5 py-4 min-w-[280px]">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <UserRound className="h-5 w-5" />
-                  </div>
+                  <AvatarFallback
+                    fullName={patient.name}
+                    avatarUrl={`${import.meta.env.VITE_AVATAR_FALLBACK_URL}${encodeURIComponent(patient.id.slice(0, 8))}`}
+                    size="w-10 h-10"
+                  />
                   <div>
                     <p className="text-sm font-semibold text-(--text-primary)">
                       {patient.name}
