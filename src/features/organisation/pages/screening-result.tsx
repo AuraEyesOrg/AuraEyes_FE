@@ -96,7 +96,6 @@ export default function OrganisationScreeningResultPage() {
     if (!hasUnsavedRecord) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Browser hien dai chi can preventDefault de mo dialog mac dinh.
       event.preventDefault();
     };
 
