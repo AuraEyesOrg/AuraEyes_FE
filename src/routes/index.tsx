@@ -617,7 +617,6 @@ const Router = () => (
                 'SystemAdmin',
                 'Admin',
                 'OrgAdmin',
-                'Organization',
                 'Ophthalmologist',
               ]}
               element={<ViewAllNotificationsPage />}
@@ -746,7 +745,7 @@ const Router = () => (
           path="/:locale/organisation/dashboard"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationDashboard />}
             />
           }
@@ -755,7 +754,7 @@ const Router = () => (
           path="/:locale/organisation/patients"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationPatientsPage />}
             />
           }
@@ -764,7 +763,7 @@ const Router = () => (
           path="/:locale/organisation/analytics"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationAnalyticsPage />}
             />
           }
@@ -773,7 +772,7 @@ const Router = () => (
           path="/:locale/organisation/screening"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationScreeningPage />}
             />
           }
@@ -782,7 +781,7 @@ const Router = () => (
           path="/:locale/organisation/screening/result"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationScreeningResultPage />}
             />
           }
@@ -791,7 +790,7 @@ const Router = () => (
           path="/:locale/organisation/billing"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationBillingPage />}
             />
           }
@@ -800,7 +799,7 @@ const Router = () => (
           path="/:locale/organisation/reports"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationReportsPage />}
             />
           }
@@ -809,7 +808,7 @@ const Router = () => (
           path="/:locale/organisation/calendar"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationCalendarPage />}
             />
           }
@@ -818,7 +817,7 @@ const Router = () => (
           path="/:locale/organisation/slots"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationSlotManagementPage />}
             />
           }
@@ -827,7 +826,7 @@ const Router = () => (
           path="/:locale/organisation/contract"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationContractPage />}
             />
           }
@@ -836,7 +835,7 @@ const Router = () => (
           path="/:locale/organisation/settings"
           element={
             <LocalizedPrivateRoute
-              allowedRoles={['OrgAdmin', 'Organization']}
+              allowedRoles={['OrgAdmin']}
               element={<OrganisationSettingsPage />}
             />
           }
@@ -1041,7 +1040,6 @@ const Router = () => (
                 'SystemAdmin',
                 'Admin',
                 'OrgAdmin',
-                'Organization',
                 'Ophthalmologist',
               ]}
             >
@@ -1158,7 +1156,7 @@ const Router = () => (
         <Route
           path="/organisation/dashboard"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationDashboard />
             </PrivateRoute>
           }
@@ -1166,7 +1164,7 @@ const Router = () => (
         <Route
           path="/organisation/patients"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationPatientsPage />
             </PrivateRoute>
           }
@@ -1174,7 +1172,7 @@ const Router = () => (
         <Route
           path="/organisation/analytics"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationAnalyticsPage />
             </PrivateRoute>
           }
@@ -1182,7 +1180,7 @@ const Router = () => (
         <Route
           path="/organisation/calendar"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationCalendarPage />
             </PrivateRoute>
           }
@@ -1190,7 +1188,7 @@ const Router = () => (
         <Route
           path="/organisation/slots"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationSlotManagementPage />
             </PrivateRoute>
           }
@@ -1198,7 +1196,7 @@ const Router = () => (
         <Route
           path="/organisation/contract"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationContractPage />
             </PrivateRoute>
           }
@@ -1206,7 +1204,7 @@ const Router = () => (
         <Route
           path="/organisation/settings"
           element={
-            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationSettingsPage />
             </PrivateRoute>
           }
@@ -1441,7 +1439,6 @@ const Router = () => (
                 'SystemAdmin',
                 'Admin',
                 'OrgAdmin',
-                'Organization',
                 'Ophthalmologist',
               ]}
             >

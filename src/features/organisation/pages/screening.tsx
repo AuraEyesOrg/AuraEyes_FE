@@ -23,6 +23,7 @@ import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import { getOrganisationRecentPatients } from '../api/patients.api';
 import type { OrganisationRecentPatientDto } from '../api/patients.api';
 import { orgScreeningApi } from '../api/screening.api';
+import { orgBillingApi } from '../api/billing.api';
 import { unwrapApiData } from '@/types/api-response';
 import { toast } from 'react-toastify';
 import { isAxiosError } from 'axios';
@@ -69,6 +70,13 @@ export default function OrganisationScreeningPage() {
     queryKey: ['organisation-patients', 'recent'],
     queryFn: getOrganisationRecentPatients,
   });
+
+  const { data: billingSummary } = useQuery({
+    queryKey: ['org-billing-summary'],
+    queryFn: () => orgBillingApi.getSummary(),
+  });
+
+  const remainingQuota = billingSummary?.remainingQuota ?? 0;
 
   // Pre-select patient from URL params (from "Screen Now" on Patients page)
   const preSelectedPatientId = searchParams.get('patientId');
@@ -139,6 +147,12 @@ export default function OrganisationScreeningPage() {
   const handleLaunchScreening = async () => {
     if (!selectedPatient || images.length === 0) return;
 
+    if (remainingQuota <= 0) {
+      toast.error('Your organisation has no remaining quota. Please top up.');
+      navigate('/organisation/billing');
+      return;
+    }
+
     try {
       setIsCreating(true);
 
@@ -207,7 +221,7 @@ export default function OrganisationScreeningPage() {
         : !!selectedPatient && images.length > 0;
 
   // ── Walk-in success handler ──
-  const handleWalkInSuccess = (patientId: string) => {
+  const handleWalkInSuccess = (_patientId: string) => {
     setIsWalkInModalOpen(false);
     queryClient.invalidateQueries({ queryKey: ['organisation-patients'] });
     // After walk-in created, patient list will refresh, user can then select
@@ -234,6 +248,14 @@ export default function OrganisationScreeningPage() {
                 </h1>
                 <p className="text-sm text-(--text-secondary)">
                   Perform retinal screening on behalf of a patient
+                </p>
+              </div>
+              <div className="ml-auto rounded-xl border border-(--border-primary) bg-(--bg-secondary) px-3 py-2 text-right">
+                <p className="text-xs text-(--text-tertiary)">
+                  Remaining quota
+                </p>
+                <p className="text-lg font-bold text-(--text-primary)">
+                  {remainingQuota}
                 </p>
               </div>
             </div>
@@ -526,6 +548,27 @@ export default function OrganisationScreeningPage() {
                     </p>
                   </div>
                 </div>
+
+                {remainingQuota <= 0 && (
+                  <div className="flex items-start justify-between gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40">
+                    <div>
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                        Quota exhausted
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        You need to purchase more quota before starting a new
+                        screening.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/organisation/billing')}
+                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                    >
+                      Go to Billing
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -542,7 +585,7 @@ export default function OrganisationScreeningPage() {
               {currentStep === 'confirm-launch' ? (
                 <button
                   onClick={handleLaunchScreening}
-                  disabled={!canProceed || isCreating}
+                  disabled={!canProceed || isCreating || remainingQuota <= 0}
                   className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-primary/25"
                 >
                   {isCreating ? (

@@ -523,6 +523,7 @@ export interface ContractDto {
   userFullName: string;
   userEmail: string;
   aiQuotaLimit: number;
+  monthlyQuotaLimit: number;
   platformCommissionRate: number;
   commissionRate?: number | null;
   actualMonthlySalary?: number | null;
@@ -547,12 +548,14 @@ export interface CreateContractPayload {
 export interface UpdateContractPayload {
   templateId: string;
   aiQuotaLimit: number;
+  monthlyQuotaLimit: number;
   platformCommissionRate: number;
 }
 
 export interface SignContractPayload {
   commissionRate: number;
   actualMonthlySalary: number;
+  confirmedMonthlyQuotaLimit?: number;
   signedContent?: string;
   scannedDocumentUrl?: string;
 }

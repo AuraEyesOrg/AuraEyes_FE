@@ -157,10 +157,7 @@ const LoginPage = () => {
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
-        } else if (
-          roles.includes('OrgAdmin') ||
-          roles.includes('Organization')
-        ) {
+        } else if (roles.includes('OrgAdmin')) {
           if (response.user?.contractStatus !== 'Active') {
             navigate('/organisation/contract');
           } else {
@@ -294,10 +291,7 @@ const LoginPage = () => {
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
-        } else if (
-          roles.includes('OrgAdmin') ||
-          roles.includes('Organization')
-        ) {
+        } else if (roles.includes('OrgAdmin')) {
           if (response.user?.contractStatus !== 'Active') {
             navigate('/organisation/contract');
           } else {

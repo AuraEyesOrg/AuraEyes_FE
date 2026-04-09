@@ -283,8 +283,7 @@ function containsAny(text: string, keywords: string[]): boolean {
 function getRoleHome(roles: string[]): string {
   if (hasRole(roles, ['systemadmin', 'admin']))
     return '/system-admin/dashboard';
-  if (hasRole(roles, ['orgadmin', 'organization', 'clinic']))
-    return '/organisation/dashboard';
+  if (hasRole(roles, ['orgadmin'])) return '/organisation/dashboard';
   if (hasRole(roles, ['ophthalmologist', 'doctor']))
     return '/ophthalmologist/dashboard';
   if (hasRole(roles, ['patient'])) return '/patient/notifications';
@@ -324,11 +323,7 @@ export function getNotificationRoute(
     readString(payload, 'transactionId') || fallbackReferenceId;
 
   const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin', 'admin']);
-  const isOrgAdmin = hasRole(normalizedRoles, [
-    'orgadmin',
-    'organization',
-    'clinic',
-  ]);
+  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin']);
   const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
   const isPatient = hasRole(normalizedRoles, ['patient']);
 

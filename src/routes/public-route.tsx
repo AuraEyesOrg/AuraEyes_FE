@@ -40,7 +40,7 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
   const roles = user?.roles ?? [];
   const dashboardPath = roles.includes('SystemAdmin')
     ? '/system-admin/dashboard'
-    : roles.includes('OrgAdmin') || roles.includes('Organization')
+    : roles.includes('OrgAdmin')
       ? '/organisation/dashboard'
       : roles.includes('Ophthalmologist')
         ? '/ophthalmologist/dashboard'

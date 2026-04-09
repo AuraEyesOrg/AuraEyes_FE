@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
   Receipt,
   CreditCard,
@@ -6,8 +7,12 @@ import {
   Zap,
   Loader2,
   BarChart3,
+  ShoppingCart,
+  Coins,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { isAxiosError } from 'axios';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { orgBillingApi } from '../api/billing.api';
@@ -15,6 +20,8 @@ import { orgScreeningApi } from '../api/screening.api';
 
 export default function OrganisationBillingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [customQuotaAmount, setCustomQuotaAmount] = useState('100');
   const { data: billing, isLoading: loadingBilling } = useQuery({
     queryKey: ['org-billing-summary'],
     queryFn: () => orgBillingApi.getSummary(),
@@ -25,7 +32,41 @@ export default function OrganisationBillingPage() {
     queryFn: () => orgScreeningApi.getHistory(50),
   });
 
+  const buyQuotaMutation = useMutation({
+    mutationFn: (quotaAmount: number) =>
+      orgBillingApi.buyQuota({ quotaAmount }),
+    onSuccess: (data, quotaAmount) => {
+      toast.success(
+        `Purchased ${quotaAmount} credits successfully. Wallet balance: ${data.walletBalance.toLocaleString('vi-VN')} VND`
+      );
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['org-screening-history'] });
+      queryClient.invalidateQueries({ queryKey: ['quotaBalance'] });
+    },
+    onError: (error) => {
+      let message = 'Unable to purchase quota. Please try again.';
+      if (isAxiosError(error)) {
+        const payload = error.response?.data as
+          | { message?: string; detail?: string }
+          | undefined;
+        message = payload?.message || payload?.detail || message;
+      }
+      toast.error(message);
+    },
+  });
+
+  const packageOptions = [50, 100, 500] as const;
+
   const isLoading = loadingBilling || loadingHistory;
+
+  const handleBuyQuota = (amount: number) => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Please provide a valid quota amount.');
+      return;
+    }
+
+    buyQuotaMutation.mutate(amount);
+  };
 
   const summaryCards = [
     {
@@ -54,8 +95,8 @@ export default function OrganisationBillingPage() {
     },
     {
       icon: CreditCard,
-      label: 'Used Today',
-      value: billing?.usedQuotaToday ?? 0,
+      label: 'Monthly Used',
+      value: billing?.monthlyQuotaUsed ?? 0,
       color: 'from-purple-500 to-purple-600',
       iconBg: 'bg-purple-500/10',
       iconColor: 'text-purple-500',
@@ -111,6 +152,114 @@ export default function OrganisationBillingPage() {
                     </p>
                   </div>
                 ))}
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+                <div className="xl:col-span-2 rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShoppingCart className="w-4 h-4 text-primary" />
+                    <h2 className="text-lg font-bold text-(--text-primary)">
+                      Buy Screening Quota
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    {packageOptions.map((amount) => {
+                      const totalCost =
+                        (billing?.organisationUnitPrice ?? 0) * amount;
+                      return (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => handleBuyQuota(amount)}
+                          disabled={buyQuotaMutation.isPending}
+                          className="rounded-xl border border-(--border-primary) p-4 text-left hover:border-primary/60 hover:bg-(--bg-tertiary) transition disabled:opacity-60"
+                        >
+                          <p className="text-lg font-bold text-(--text-primary)">
+                            {amount} credits
+                          </p>
+                          <p className="text-xs text-(--text-tertiary) mt-1">
+                            {totalCost.toLocaleString('vi-VN')} VND
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-xl border border-(--border-primary) p-4">
+                    <p className="text-sm font-semibold text-(--text-primary) mb-2">
+                      Custom package (10 - 5000)
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min={10}
+                        max={5000}
+                        value={customQuotaAmount}
+                        onChange={(event) =>
+                          setCustomQuotaAmount(event.target.value)
+                        }
+                        className="flex-1 rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const parsed = Number(customQuotaAmount);
+                          if (parsed < 10 || parsed > 5000) {
+                            toast.error(
+                              'Custom quota must be between 10 and 5000.'
+                            );
+                            return;
+                          }
+                          handleBuyQuota(parsed);
+                        }}
+                        disabled={buyQuotaMutation.isPending}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                      >
+                        {buyQuotaMutation.isPending ? 'Processing…' : 'Buy'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Coins className="w-4 h-4 text-primary" />
+                    <h2 className="text-lg font-bold text-(--text-primary)">
+                      Quota Sources
+                    </h2>
+                  </div>
+
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">
+                        Monthly contract
+                      </span>
+                      <span className="font-semibold text-(--text-primary)">
+                        {billing?.monthlyQuotaRemaining ?? 0}/
+                        {billing?.monthlyQuotaLimit ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">Purchased</span>
+                      <span className="font-semibold text-(--text-primary)">
+                        {billing?.purchasedQuota ?? 0}
+                      </span>
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-(--border-primary) flex justify-between">
+                      <span className="text-(--text-tertiary)">Unit Price</span>
+                      <span className="font-semibold text-(--text-primary)">
+                        {(billing?.organisationUnitPrice ?? 0).toLocaleString(
+                          'vi-VN'
+                        )}{' '}
+                        VND
+                      </span>
+                    </div>
+                    <p className="text-xs text-(--text-tertiary)">
+                      Organisation pricing is 60% of patient unit price.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Transaction History */}
@@ -208,7 +357,7 @@ export default function OrganisationBillingPage() {
                                 type="button"
                                 onClick={() =>
                                   navigate(
-                                    `/:locale/organisation/screening/result?id=${item.screeningId}`
+                                    `/organisation/screening/result?id=${item.screeningId}`
                                   )
                                 }
                                 disabled={

@@ -19,6 +19,7 @@ export interface OrganisationContractDetailDto {
   userFullName: string;
   userEmail: string;
   aiQuotaLimit: number;
+  monthlyQuotaLimit: number;
   platformCommissionRate: number;
   commissionRate?: number | null;
   actualMonthlySalary?: number | null;

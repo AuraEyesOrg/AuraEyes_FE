@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Sparkles,
   Save,
+  Share2,
   CheckCircle2,
   AlertTriangle,
   AlertCircle,
@@ -25,6 +26,7 @@ import { aiCoreClient } from '@/lib/axios';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
 import { toDisplayDiseaseName } from '@/features/patient/lib/disease-translation';
+import { postsApi } from '@/features/professional-network/api/network.api';
 
 type RiskLevel = 'Low' | 'Moderate' | 'High';
 
@@ -184,6 +186,40 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function buildNetworkShareContent(
+  patientId: string,
+  screeningId: string,
+  draft: ResultDraft,
+  aiFindings: AiFindingItem[]
+): string {
+  const lines: string[] = [
+    'Organisation screening case shared for professional discussion.',
+    `Case reference: ${screeningId.slice(0, 8)}-${patientId.slice(0, 8)}`,
+    `Risk level: ${draft.riskLevel}`,
+    `Confidence score: ${clampConfidence(draft.confidenceScore)}%`,
+  ];
+
+  if (draft.summary.trim()) {
+    lines.push(`Summary: ${draft.summary.trim()}`);
+  }
+
+  if (draft.findings.trim()) {
+    lines.push(`Medical diagnosis: ${draft.findings.trim()}`);
+  }
+
+  if (aiFindings.length > 0) {
+    const topFindings = aiFindings
+      .slice(0, 3)
+      .map((item) => `${item.localizedName} (${item.confidence}%)`)
+      .join(', ');
+    lines.push(`Top AI findings: ${topFindings}`);
+  }
+
+  lines.push('Patient identity has been masked before sharing.');
+
+  return lines.join('\n\n');
+}
+
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -197,6 +233,7 @@ export default function OrganisationScreeningResultPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sessionData, setSessionData] =
@@ -423,6 +460,64 @@ export default function OrganisationScreeningResultPage() {
     }
   };
 
+  const handleShareToNetwork = useCallback(async () => {
+    if (!sessionData || !draft || sharing) return;
+
+    setSharing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('authorType', 'Organisation');
+      formData.append('category', 'CasePresentation');
+      formData.append('allowComments', 'true');
+      formData.append('isInternalCase', 'false');
+      formData.append('isAnonymizationConfirmed', 'true');
+      formData.append(
+        'content',
+        buildNetworkShareContent(
+          sessionData.patientId,
+          sessionData.screeningId,
+          draft,
+          aiFindings
+        )
+      );
+
+      const selectedImage =
+        sessionData.images[selectedImageIndex] ?? sessionData.images[0];
+
+      if (selectedImage?.imageUrl) {
+        try {
+          const imageResponse = await fetch(selectedImage.imageUrl);
+          if (imageResponse.ok) {
+            const imageBlob = await imageResponse.blob();
+            const extension =
+              imageBlob.type.split('/')[1]?.replace(/[^a-z0-9]/gi, '') || 'jpg';
+            const fileName = `org-screening-${sessionData.screeningId.slice(0, 8)}.${extension}`;
+            const imageFile = new File([imageBlob], fileName, {
+              type: imageBlob.type || 'image/jpeg',
+            });
+            formData.append('attachments', imageFile);
+          }
+        } catch (imageError) {
+          console.warn('Unable to attach selected retinal image:', imageError);
+        }
+      }
+
+      await postsApi.createPost(formData);
+      toast.success('Diagnosis shared to Professional Network successfully.');
+    } catch (error) {
+      console.error('Failed to share organisation screening case:', error);
+      toast.error(
+        getErrorMessage(
+          error,
+          'Unable to share diagnosis to Professional Network. Please retry.'
+        )
+      );
+    } finally {
+      setSharing(false);
+    }
+  }, [aiFindings, draft, selectedImageIndex, sessionData, sharing]);
+
   const riskLevel = draft?.riskLevel ?? 'Low';
   const risk = riskConfig[riskLevel] || riskConfig.Low;
   const RiskIcon = risk.icon;
@@ -499,7 +594,7 @@ export default function OrganisationScreeningResultPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/:locale/organisation/billing')}
+                onClick={() => navigate('/organisation/billing')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
               >
                 Screening History
@@ -521,6 +616,18 @@ export default function OrganisationScreeningResultPage() {
                   <RefreshCw className="w-4 h-4" />
                 )}
                 {analyzing ? 'Analyzing…' : 'Re-analyze'}
+              </button>
+              <button
+                onClick={() => void handleShareToNetwork()}
+                disabled={sharing || saving || analyzing || !draft}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
+              >
+                {sharing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
+                {sharing ? 'Sharing…' : 'Share to Network'}
               </button>
               <button
                 onClick={handleSaveResults}

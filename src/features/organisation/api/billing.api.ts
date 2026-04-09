@@ -9,8 +9,24 @@ export interface OrgBillingSummary {
   totalScreeningsThisMonth: number;
   totalScreeningsAllTime: number;
   remainingQuota: number;
-  usedQuotaToday: number;
   purchasedQuota: number;
+  monthlyQuotaLimit: number;
+  monthlyQuotaUsed: number;
+  monthlyQuotaRemaining: number;
+  patientUnitPrice: number;
+  organisationUnitPrice: number;
+}
+
+export interface BuyOrgQuotaRequest {
+  quotaAmount: number;
+}
+
+export interface BuyOrgQuotaResponse {
+  totalAiQuota: number;
+  usedAiQuota: number;
+  remainingQuota: number;
+  walletBalance: number;
+  amountDeducted: number;
 }
 
 export interface OrgScreeningReport {
@@ -36,6 +52,14 @@ export const orgBillingApi = {
       API_ENDPOINTS.ORGANISATION.BILLING_SUMMARY
     );
     return unwrapApiData<OrgBillingSummary>(response.data);
+  },
+
+  async buyQuota(request: BuyOrgQuotaRequest): Promise<BuyOrgQuotaResponse> {
+    const response = await api.post<ApiResponse<BuyOrgQuotaResponse>>(
+      API_ENDPOINTS.QUOTAS.BUY,
+      request
+    );
+    return unwrapApiData<BuyOrgQuotaResponse>(response.data);
   },
 };
 
