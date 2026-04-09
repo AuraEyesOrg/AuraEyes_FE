@@ -55,7 +55,6 @@ export default function OrganisationScreeningResultPage() {
   const locationState = location.state as { patientName?: string } | null;
   const locationPatientName = locationState?.patientName?.trim() ?? '';
 
-  const autoAnalysisTriggeredRef = useRef(false);
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
@@ -235,7 +234,6 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
-    autoAnalysisTriggeredRef.current = false;
     void loadSessionDetail(true);
   }, [screeningId, loadSessionDetail]);
 
@@ -349,16 +347,6 @@ export default function OrganisationScreeningResultPage() {
       setAnalyzing(false);
     }
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
-
-  useEffect(() => {
-    if (!sessionData || sessionData.latestResult) return;
-    if (sessionData.images.length === 0 || analyzing) return;
-    if (draft) return;
-    if (autoAnalysisTriggeredRef.current) return;
-
-    autoAnalysisTriggeredRef.current = true;
-    void handleAnalyze();
-  }, [sessionData, analyzing, draft, handleAnalyze]);
 
   const executeSaveResults = async () => {
     if (isViewOnly || !screeningId || !sessionData || !draft) return;
