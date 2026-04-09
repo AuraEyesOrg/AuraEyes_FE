@@ -284,6 +284,8 @@ export const API_ENDPOINTS = {
       CREATE_SESSION: '/organisations/screenings/create-session',
       DETAIL: (screeningId: string) =>
         `/organisations/screenings/${screeningId}`,
+      EXPORT_PDF: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}/report-pdf`,
       HISTORY: '/organisations/screenings/history',
     },
     BILLING_SUMMARY: '/organisations/billing/summary',

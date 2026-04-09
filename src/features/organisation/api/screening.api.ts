@@ -125,4 +125,21 @@ export const orgScreeningApi = {
     >(API_ENDPOINTS.ORGANISATION.SCREENING.DETAIL(screeningId));
     return response.data;
   },
+
+  /** Download organisation screening report PDF */
+  async downloadSessionReportPdf(screeningId: string) {
+    const response = await api.get<Blob>(
+      API_ENDPOINTS.ORGANISATION.SCREENING.EXPORT_PDF(screeningId),
+      {
+        responseType: 'blob',
+      }
+    );
+
+    return {
+      blob: response.data,
+      contentDisposition: response.headers?.['content-disposition'] as
+        | string
+        | undefined,
+    };
+  },
 };

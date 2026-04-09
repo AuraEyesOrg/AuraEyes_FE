@@ -19,6 +19,10 @@ import ConfirmModal from '@/components/ui/confirm-modal';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
+import {
+  downloadBlobFile,
+  getFileNameFromContentDisposition,
+} from '@/lib/file-export';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
@@ -62,6 +66,7 @@ export default function OrganisationScreeningResultPage() {
 
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
@@ -348,6 +353,28 @@ export default function OrganisationScreeningResultPage() {
     }
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
+  const handleDownloadPdf = useCallback(async () => {
+    if (!screeningId || downloadingPdf) return;
+
+    setDownloadingPdf(true);
+    try {
+      const { blob, contentDisposition } =
+        await orgScreeningApi.downloadSessionReportPdf(screeningId);
+
+      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
+      const fileName =
+        getFileNameFromContentDisposition(contentDisposition) ||
+        fallbackFileName;
+
+      downloadBlobFile(blob, fileName);
+      toast.success('Đã tải báo cáo PDF.');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Không thể tải báo cáo PDF.'));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [screeningId, downloadingPdf]);
+
   const executeSaveResults = async () => {
     if (isViewOnly || !screeningId || !sessionData || !draft) return;
 
@@ -481,10 +508,16 @@ export default function OrganisationScreeningResultPage() {
 
                 <div className="flex flex-wrap items-center gap-2.5">
                   <button
-                    onClick={() => window.print()}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
+                    onClick={handleDownloadPdf}
+                    disabled={downloadingPdf || loading || !screeningId}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
-                    <Printer className="w-4 h-4" /> In
+                    {downloadingPdf ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Printer className="w-4 h-4" />
+                    )}
+                    {downloadingPdf ? 'Đang tạo PDF…' : 'Tải PDF'}
                   </button>
 
                   {isViewOnly ? (
