@@ -89,6 +89,7 @@ export default function OrganisationScreeningResultPage() {
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
+  const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
@@ -354,7 +355,11 @@ export default function OrganisationScreeningResultPage() {
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
   const handleDownloadPdf = useCallback(async () => {
-    if (!screeningId || downloadingPdf) return;
+    if (downloadingPdf || !screeningId) return;
+    if (!canDownloadPdf) {
+      toast.info('Vui lòng lưu hồ sơ trước khi in PDF.');
+      return;
+    }
 
     setDownloadingPdf(true);
     try {
@@ -373,7 +378,7 @@ export default function OrganisationScreeningResultPage() {
     } finally {
       setDownloadingPdf(false);
     }
-  }, [screeningId, downloadingPdf]);
+  }, [screeningId, downloadingPdf, canDownloadPdf]);
 
   const executeSaveResults = async () => {
     if (isViewOnly || !screeningId || !sessionData || !draft) return;
@@ -509,7 +514,17 @@ export default function OrganisationScreeningResultPage() {
                 <div className="flex flex-wrap items-center gap-2.5">
                   <button
                     onClick={handleDownloadPdf}
-                    disabled={downloadingPdf || loading || !screeningId}
+                    disabled={
+                      downloadingPdf ||
+                      loading ||
+                      !screeningId ||
+                      !canDownloadPdf
+                    }
+                    title={
+                      canDownloadPdf
+                        ? 'Tải báo cáo PDF'
+                        : 'Vui lòng lưu hồ sơ trước khi in PDF.'
+                    }
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
                     {downloadingPdf ? (
@@ -517,7 +532,11 @@ export default function OrganisationScreeningResultPage() {
                     ) : (
                       <Printer className="w-4 h-4" />
                     )}
-                    {downloadingPdf ? 'Đang tạo PDF…' : 'Tải PDF'}
+                    {downloadingPdf
+                      ? 'Đang tạo PDF…'
+                      : canDownloadPdf
+                        ? 'Tải PDF'
+                        : 'Lưu hồ sơ để in PDF'}
                   </button>
 
                   {isViewOnly ? (
@@ -538,7 +557,7 @@ export default function OrganisationScreeningResultPage() {
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Đang phân tích…' : 'Phân tích lại'}
+                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
                       </button>
                       <button
                         onClick={requestSaveResults}
