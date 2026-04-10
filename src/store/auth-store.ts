@@ -13,6 +13,7 @@ export interface AuthUser {
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string | null;
+  employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
