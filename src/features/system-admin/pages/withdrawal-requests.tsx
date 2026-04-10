@@ -71,7 +71,7 @@ const getStatusChip = (status: WithdrawalRequestStatus) => {
 
 /** Color coding for PayOS approvalState values */
 const getPayOSStateBadgeClass = (state: string) => {
-  if (state === 'SUCCEEDED')
+  if (state === 'COMPLETED' || state === 'SUCCEEDED')
     return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
   if (state === 'FAILED')
     return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
