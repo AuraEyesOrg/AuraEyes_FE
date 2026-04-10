@@ -41,6 +41,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 
 interface ApiResponse<T> {
@@ -191,7 +192,7 @@ export default function SettingsPage() {
     queryKey: ['ophthalmologist', 'me', 'profile'],
     queryFn: async () => {
       const response = await api.get<ApiResponse<OphthalmologistProfileApi>>(
-        '/ophthalmologists/me'
+        '/ophthalmologist/profile'
       );
       return response.data.data;
     },
