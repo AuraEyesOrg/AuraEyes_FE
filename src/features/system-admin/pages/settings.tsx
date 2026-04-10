@@ -90,6 +90,8 @@ export default function SettingsPage() {
     freeAiQuota: 3,
     partTimeMaxSlotsPerDay: 100,
     fullTimeSlotWindowDays: 30,
+    fullTimeMinSlotCost: 100000,
+    fullTimeMaxSlotCost: 400000,
   });
 
   // Trusted medical domains for AI resource search
@@ -120,6 +122,12 @@ export default function SettingsPage() {
         fullTimeSlotWindowDays: systemSettings['FULLTIME_SLOT_WINDOW_DAYS']
           ? parseInt(systemSettings['FULLTIME_SLOT_WINDOW_DAYS'], 10)
           : 30,
+        fullTimeMinSlotCost: systemSettings['FULLTIME_MIN_SLOT_COST']
+          ? parseInt(systemSettings['FULLTIME_MIN_SLOT_COST'], 10)
+          : 100000,
+        fullTimeMaxSlotCost: systemSettings['FULLTIME_MAX_SLOT_COST']
+          ? parseInt(systemSettings['FULLTIME_MAX_SLOT_COST'], 10)
+          : 400000,
       }));
 
       if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
@@ -153,6 +161,15 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const normalizedFullTimeMinCost = Math.max(
+        0,
+        generalSettings.fullTimeMinSlotCost
+      );
+      const normalizedFullTimeMaxCost = Math.max(
+        normalizedFullTimeMinCost,
+        generalSettings.fullTimeMaxSlotCost
+      );
+
       const settingsToUpdate = {
         MIN_ADVANCE_BOOKING_HOURS: Math.max(
           0.5,
@@ -175,6 +192,8 @@ export default function SettingsPage() {
           1,
           generalSettings.fullTimeSlotWindowDays
         ).toString(),
+        FULLTIME_MIN_SLOT_COST: normalizedFullTimeMinCost.toString(),
+        FULLTIME_MAX_SLOT_COST: normalizedFullTimeMaxCost.toString(),
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
@@ -399,6 +418,45 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Number of forward days Hangfire keeps generated for full-time
             schedules.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time minimum slot cost (VND)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.fullTimeMinSlotCost}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeMinSlotCost: parseInt(e.target.value, 10) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time maximum slot cost (VND)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.fullTimeMaxSlotCost}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeMaxSlotCost: parseInt(e.target.value, 10) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Auto-generated full-time slot cost is clamped between min and max.
           </p>
         </div>
         <div className="md:col-span-2">
