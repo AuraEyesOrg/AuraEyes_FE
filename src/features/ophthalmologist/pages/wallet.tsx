@@ -512,24 +512,6 @@ export default function OphthalmologistWalletPage() {
                             {request.note}
                           </p>
                         ) : null}
-                        {request.externalPayoutId ? (
-                          <p className="font-mono text-indigo-600 dark:text-indigo-400">
-                            PayOS ID: {request.externalPayoutId}
-                            {request.payOSApprovalState ? (
-                              <span
-                                className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                  request.payOSApprovalState === 'SUCCEEDED'
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : request.payOSApprovalState === 'FAILED'
-                                      ? 'bg-rose-100 text-rose-700'
-                                      : 'bg-indigo-100 text-indigo-700'
-                                }`}
-                              >
-                                {request.payOSApprovalState}
-                              </span>
-                            ) : null}
-                          </p>
-                        ) : null}
                       </div>
                     </div>
                   );
