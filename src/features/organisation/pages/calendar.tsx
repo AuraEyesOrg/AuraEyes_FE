@@ -35,18 +35,70 @@ import {
 
 const DAYS_PER_WEEK = 7;
 
-const statusStyles: Record<string, string> = {
-  Pending:
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  CheckedIn: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-  InProgress:
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-  Completed:
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  NoShow: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+/** All states in order for the pipeline strip */
+const PIPELINE_STEPS = [
+  'Pending',
+  'Confirmed',
+  'CheckedIn',
+  'InProgress',
+  'Completed',
+] as const;
+
+const STATUS_STEP_INDEX: Record<string, number> = {
+  Pending: 0,
+  Confirmed: 1,
+  CheckedIn: 2,
+  InProgress: 3,
+  Completed: 4,
+  Cancelled: -1,
+  NoShow: -1,
 };
+
+const statusBadge: Record<string, string> = {
+  Pending:
+    'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  Confirmed: 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  CheckedIn:
+    'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+  InProgress:
+    'bg-violet-50 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+  Completed:
+    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+  Cancelled: 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  NoShow:
+    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+};
+
+/** Left accent stripe by active status */
+const cardAccent: Record<string, string> = {
+  Pending: 'border-l-amber-400',
+  Confirmed: 'border-l-blue-400',
+  CheckedIn: 'border-l-emerald-500',
+  InProgress: 'border-l-violet-500',
+  Completed: 'border-l-(--border-color)',
+  Cancelled: 'border-l-red-300',
+  NoShow: 'border-l-(--border-color)',
+};
+
+/** Avatar background by status */
+const avatarColors: Record<string, string> = {
+  Pending:
+    'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  Confirmed: 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  CheckedIn:
+    'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+  InProgress:
+    'bg-violet-50 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300',
+  Completed:
+    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+  Cancelled: 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  NoShow:
+    'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
+};
+
+function getInitials(id: string) {
+  return id.slice(0, 2).toUpperCase();
+}
 
 export default function CalendarPage() {
   const { user } = useAuthStore();
@@ -59,14 +111,11 @@ export default function CalendarPage() {
   const weekWindow = useMemo(() => {
     const weekStart = getStartOfWeekMonday(new Date());
     weekStart.setDate(weekStart.getDate() + currentWeekOffset * DAYS_PER_WEEK);
-
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + DAYS_PER_WEEK - 1);
-
-    const days = Array.from({ length: DAYS_PER_WEEK }, (_, index) => {
+    const days = Array.from({ length: DAYS_PER_WEEK }, (_, i) => {
       const day = new Date(weekStart);
-      day.setDate(weekStart.getDate() + index);
-
+      day.setDate(weekStart.getDate() + i);
       const dateKey = toLocalDateKey(day);
       return {
         dateKey,
@@ -75,11 +124,7 @@ export default function CalendarPage() {
         isToday: dateKey === todayKey,
       };
     });
-
-    return {
-      label: formatWeekRange(weekStart, weekEnd),
-      days,
-    };
+    return { label: formatWeekRange(weekStart, weekEnd), days };
   }, [currentWeekOffset, todayKey]);
 
   const weekAppointmentQueries = useQueries({
@@ -95,9 +140,8 @@ export default function CalendarPage() {
   });
 
   const selectedDayIndex = weekWindow.days.findIndex(
-    (day) => day.dateKey === selectedDate
+    (d) => d.dateKey === selectedDate
   );
-
   const selectedDayQuery =
     selectedDayIndex >= 0 ? weekAppointmentQueries[selectedDayIndex] : null;
   const appointments = selectedDayQuery?.data ?? [];
@@ -105,13 +149,12 @@ export default function CalendarPage() {
   const isFetching = selectedDayQuery?.isFetching ?? false;
   const appointmentsError = selectedDayQuery?.error;
 
-  const weekDaySummaries = weekWindow.days.map((day, index) => {
-    const dayAppointments = weekAppointmentQueries[index]?.data ?? [];
+  const weekDaySummaries = weekWindow.days.map((day, i) => {
+    const items = weekAppointmentQueries[i]?.data ?? [];
     return {
       ...day,
-      total: dayAppointments.length,
-      pending: dayAppointments.filter((item) => item.status === 'Pending')
-        .length,
+      total: items.length,
+      pending: items.filter((a) => a.status === 'Pending').length,
     };
   });
 
@@ -120,16 +163,15 @@ export default function CalendarPage() {
   const completeMutation = useCompleteClinicAppointment();
   const noShowMutation = useMarkNoShowClinicAppointment();
 
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       total: appointments.length,
-      pending: appointments.filter((item) => item.status === 'Pending').length,
-      checkedIn: appointments.filter((item) => item.status === 'CheckedIn')
-        .length,
-      inProgress: appointments.filter((item) => item.status === 'InProgress')
-        .length,
-    };
-  }, [appointments]);
+      pending: appointments.filter((a) => a.status === 'Pending').length,
+      checkedIn: appointments.filter((a) => a.status === 'CheckedIn').length,
+      inProgress: appointments.filter((a) => a.status === 'InProgress').length,
+    }),
+    [appointments]
+  );
 
   const isMutating =
     checkInMutation.isPending ||
@@ -138,29 +180,19 @@ export default function CalendarPage() {
     noShowMutation.isPending;
 
   useEffect(() => {
-    const inCurrentWeek = weekWindow.days.some(
-      (day) => day.dateKey === selectedDate
-    );
-
-    if (!inCurrentWeek && weekWindow.days[0]) {
+    const inWeek = weekWindow.days.some((d) => d.dateKey === selectedDate);
+    if (!inWeek && weekWindow.days[0])
       setSelectedDate(weekWindow.days[0].dateKey);
-    }
   }, [selectedDate, weekWindow.days]);
 
   useEffect(() => {
-    if (appointmentsError) {
+    if (appointmentsError)
       toast.error(mapClinicStaffErrorMessage(appointmentsError));
-    }
   }, [appointmentsError]);
 
   const handleDateSelect = (dateKey: string) => {
     setSelectedDate(dateKey);
     setCurrentWeekOffset(getWeekOffsetFromDateKey(dateKey));
-  };
-
-  const handleGoToday = () => {
-    setCurrentWeekOffset(0);
-    setSelectedDate(todayKey);
   };
 
   const runAction = async (action: () => Promise<unknown>, message: string) => {
@@ -172,302 +204,350 @@ export default function CalendarPage() {
     }
   };
 
-  const getPrimaryActionConfig = (
-    appointment: (typeof appointments)[number]
-  ) => {
-    if (appointment.status === 'Pending') {
+  const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
+    if (appointment.status === 'Pending')
       return {
         label: 'Check-in',
         icon: UserCheck,
-        successMessage: 'Check-in thành công.',
-        buttonClass:
-          'bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-cyan-400/80',
+        successMessage: 'Check-in successful.',
+        className:
+          'bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50',
         action: () => checkInMutation.mutateAsync(appointment.id),
       };
-    }
-
-    if (appointment.status === 'CheckedIn') {
+    if (appointment.status === 'CheckedIn')
       return {
         label: 'Start consultation',
         icon: Play,
-        successMessage: 'Đã chuyển lịch khám sang trạng thái In Progress.',
-        buttonClass:
-          'bg-violet-600 text-white hover:bg-violet-700 disabled:bg-violet-400/80',
+        successMessage: 'Consultation started.',
+        className:
+          'bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50',
         action: () => startMutation.mutateAsync(appointment.id),
       };
-    }
-
-    if (appointment.status === 'InProgress') {
+    if (appointment.status === 'InProgress')
       return {
         label: 'Complete visit',
         icon: Calendar,
-        successMessage: 'Đã hoàn thành lịch khám.',
-        buttonClass:
-          'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-400/80',
+        successMessage: 'Visit completed.',
+        className:
+          'bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-50',
         action: () =>
-          completeMutation.mutateAsync({
-            appointmentId: appointment.id,
-          }),
+          completeMutation.mutateAsync({ appointmentId: appointment.id }),
       };
-    }
-
     return null;
   };
+
+  const canMarkNoShow = (status: string) =>
+    !['Completed', 'Cancelled', 'NoShow'].includes(status);
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
 
-      <div className="flex-1 h-full overflow-y-auto">
+      <div className="h-full flex-1 overflow-y-auto">
         <OrganisationHeader pageName="Calendar" />
 
         <main className="p-6">
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Organisation Clinic Appointments
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Weekly-first workflow for faster check-in and consultation flow.
-              </p>
-            </div>
-
-            {isFetching && (
-              <div className="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-medium text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300">
-                <Spinner /> Updating day data
-              </div>
-            )}
-          </div>
-
-          <section className="mb-6 rounded-xl border border-cyan-100 bg-white p-4 shadow-sm dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
-              >
-                <ChevronLeft className="h-4 w-4" /> Prev week
-              </button>
-              <p className="min-w-[180px] flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                {weekWindow.label}
-              </p>
-              <button
-                type="button"
-                onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-gray-200 dark:hover:bg-[#1f3c60]"
-              >
-                Next week <ChevronRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleGoToday}
-                className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/40"
-              >
-                Today
-              </button>
-              <label className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-300">
-                Jump date
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(event) => handleDateSelect(event.target.value)}
-                  className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:text-white"
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
-              {weekDaySummaries.map((day) => {
-                const isSelected = day.dateKey === selectedDate;
-
-                return (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+            {/* ── Left column: week strip + stats ── */}
+            <div className="flex flex-col gap-3">
+              {/* Week navigator */}
+              <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-4">
+                <div className="mb-3 flex items-center justify-between">
                   <button
-                    key={day.dateKey}
                     type="button"
-                    onClick={() => setSelectedDate(day.dateKey)}
-                    className={`rounded-xl border px-3 py-2 text-left transition-all ${
-                      isSelected
-                        ? 'border-cyan-300 bg-cyan-50 shadow-sm dark:border-cyan-600 dark:bg-cyan-900/20'
-                        : 'border-gray-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/70 dark:border-[#2d4a6f] dark:bg-[#17324f] dark:hover:border-cyan-700/60 dark:hover:bg-cyan-900/10'
-                    }`}
+                    onClick={() => setCurrentWeekOffset((p) => p - 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
                   >
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {day.dayLabel}
-                    </p>
-                    <p
-                      className={`mt-1 text-lg font-semibold ${
-                        isSelected
-                          ? 'text-cyan-700 dark:text-cyan-300'
-                          : 'text-gray-900 dark:text-white'
-                      }`}
-                    >
-                      {day.dayNumber}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                      {day.total} appointments
-                    </p>
-                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                      {day.pending} pending
-                    </p>
-                    {day.isToday ? (
-                      <span className="mt-1 inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-medium text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">
-                        Today
-                      </span>
-                    ) : null}
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
-                );
-              })}
-            </div>
-          </section>
+                  <span className="text-xs font-medium text-(--text-primary)">
+                    {weekWindow.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentWeekOffset((p) => p + 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
 
-          <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4">
-            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-              <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.total}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Pending
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">
-                {stats.pending}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Checked In
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-cyan-600 dark:text-cyan-400">
-                {stats.checkedIn}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                In Progress
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-violet-600 dark:text-violet-400">
-                {stats.inProgress}
-              </p>
-            </div>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Appointments on {formatDate(selectedDate, 'long')}
-              </h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                {appointments.length} records
-              </span>
-            </div>
+                <div className="flex flex-col gap-0.5">
+                  {weekDaySummaries.map((day) => {
+                    const isSelected = day.dateKey === selectedDate;
+                    return (
+                      <button
+                        key={day.dateKey}
+                        type="button"
+                        onClick={() => setSelectedDate(day.dateKey)}
+                        className={[
+                          'flex items-center justify-between rounded-lg px-2.5 py-2 transition',
+                          isSelected
+                            ? 'bg-cyan-50 dark:bg-cyan-900/20'
+                            : 'hover:bg-(--bg-secondary)',
+                        ].join(' ')}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-6 text-center text-base font-medium ${isSelected ? 'text-cyan-700 dark:text-cyan-300' : 'text-(--text-primary)'}`}
+                          >
+                            {day.dayNumber}
+                          </span>
+                          <span
+                            className={`text-xs ${isSelected ? 'text-cyan-600 dark:text-cyan-400' : 'text-(--text-secondary)'}`}
+                          >
+                            {day.dayLabel}
+                          </span>
+                          {day.isToday && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                          )}
+                        </div>
+                        {day.pending > 0 ? (
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            {day.pending}
+                          </span>
+                        ) : day.total > 0 ? (
+                          <span className="rounded-full bg-(--bg-secondary) px-2 py-0.5 text-[10px] text-(--text-muted)">
+                            {day.total}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            {isLoading ? (
-              <div className="flex items-center gap-3 py-10 text-gray-600 dark:text-gray-400">
-                <Spinner />
-                <span>Loading appointments...</span>
+                <div className="mt-3 border-t border-(--border-color) pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentWeekOffset(0);
+                      setSelectedDate(todayKey);
+                    }}
+                    className="w-full rounded-lg border border-cyan-200 bg-cyan-50 py-1.5 text-xs font-medium text-cyan-700 transition hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300"
+                  >
+                    Go to today
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => handleDateSelect(e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-2 py-1.5 text-xs text-(--text-primary)"
+                  />
+                </div>
               </div>
-            ) : appointments.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-600 dark:border-[#2d4a6f] dark:text-gray-400">
-                No clinic appointments on this day. Choose another day in the
-                weekly strip above.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-left text-gray-500 dark:border-[#2d4a6f] dark:text-gray-400">
-                      <th className="px-3 py-2 font-medium">Time</th>
-                      <th className="px-3 py-2 font-medium">Patient</th>
-                      <th className="px-3 py-2 font-medium">Reason</th>
-                      <th className="px-3 py-2 font-medium">Status</th>
-                      <th className="px-3 py-2 font-medium">Workflow</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {appointments.map((appointment) => {
-                      const primaryAction = getPrimaryActionConfig(appointment);
-                      const canMarkNoShow =
-                        appointment.status !== 'Completed' &&
-                        appointment.status !== 'Cancelled' &&
-                        appointment.status !== 'NoShow';
 
-                      return (
-                        <tr
-                          key={appointment.id}
-                          className="border-b border-gray-100 align-top dark:border-[#2d4a6f]"
-                        >
-                          <td className="px-3 py-3">
-                            <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
-                              <Clock className="h-3.5 w-3.5" />
-                              {formatSlotTime(appointment.startTime)} -{' '}
-                              {formatSlotTime(appointment.endTime)}
-                            </div>
-                          </td>
-                          <td className="px-3 py-3 text-gray-900 dark:text-white">
-                            {appointment.patientId.slice(0, 8)}...
-                          </td>
-                          <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
-                            {appointment.visitReason || '-'}
-                          </td>
-                          <td className="px-3 py-3">
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[appointment.status] ?? statusStyles.Pending}`}
-                            >
-                              {appointment.status}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              {primaryAction ? (
-                                <button
-                                  type="button"
-                                  disabled={isMutating}
-                                  onClick={() =>
-                                    void runAction(
-                                      primaryAction.action,
-                                      primaryAction.successMessage
-                                    )
-                                  }
-                                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition-all active:scale-[0.99] disabled:cursor-not-allowed ${primaryAction.buttonClass}`}
+              {/* Day stats */}
+              <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                  {formatDate(selectedDate, 'short')}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    {
+                      label: 'Total',
+                      value: stats.total,
+                      color: 'text-(--text-primary)',
+                    },
+                    {
+                      label: 'Pending',
+                      value: stats.pending,
+                      color: 'text-amber-600 dark:text-amber-400',
+                    },
+                    {
+                      label: 'Checked in',
+                      value: stats.checkedIn,
+                      color: 'text-emerald-600 dark:text-emerald-400',
+                    },
+                    {
+                      label: 'In progress',
+                      value: stats.inProgress,
+                      color: 'text-violet-600 dark:text-violet-400',
+                    },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-lg bg-(--bg-secondary) p-2.5"
+                    >
+                      <p className="text-[10px] text-(--text-muted)">
+                        {s.label}
+                      </p>
+                      <p className={`mt-0.5 text-xl font-medium ${s.color}`}>
+                        {s.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right column: appointment cards ── */}
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-base font-medium text-(--text-primary)">
+                  {formatDate(selectedDate, 'long')}
+                </h2>
+                <div className="flex items-center gap-2">
+                  {isFetching && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300">
+                      <Spinner /> Updating…
+                    </span>
+                  )}
+                  <span className="text-xs text-(--text-muted)">
+                    {appointments.length} records
+                  </span>
+                </div>
+              </div>
+
+              {isLoading ? (
+                <div className="flex items-center gap-3 py-12 text-(--text-secondary)">
+                  <Spinner /> Loading appointments…
+                </div>
+              ) : appointments.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-(--border-color) py-14 text-center text-sm text-(--text-muted)">
+                  No appointments on this day.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {appointments.map((appt) => {
+                    const primaryAction = getPrimaryAction(appt);
+                    const stepIdx = STATUS_STEP_INDEX[appt.status] ?? 0;
+                    const isTerminal = [
+                      'Completed',
+                      'Cancelled',
+                      'NoShow',
+                    ].includes(appt.status);
+                    const initials = getInitials(appt.patientId);
+
+                    return (
+                      <div
+                        key={appt.id}
+                        className={[
+                          'rounded-xl border border-l-4 bg-(--bg-primary) p-4 transition hover:border-r-cyan-100',
+                          cardAccent[appt.status] ??
+                            'border-l-(--border-color)',
+                          'border-t border-r border-b border-(--border-color)',
+                        ].join(' ')}
+                      >
+                        {/* Pipeline strip */}
+                        {!isTerminal && (
+                          <div className="mb-3 flex items-center gap-1 overflow-x-auto pb-1">
+                            {PIPELINE_STEPS.map((step, i) => (
+                              <div
+                                key={step}
+                                className="flex shrink-0 items-center gap-1"
+                              >
+                                <span
+                                  className={[
+                                    'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                                    i < stepIdx
+                                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+                                      : i === stepIdx
+                                        ? 'bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300'
+                                        : 'bg-(--bg-secondary) text-(--text-muted)',
+                                  ].join(' ')}
                                 >
-                                  <primaryAction.icon className="h-4 w-4" />
-                                  {primaryAction.label}
-                                </button>
-                              ) : (
-                                <span className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                  No primary action
+                                  {step === 'CheckedIn'
+                                    ? 'Checked in'
+                                    : step === 'InProgress'
+                                      ? 'In progress'
+                                      : step}
                                 </span>
-                              )}
+                                {i < PIPELINE_STEPS.length - 1 && (
+                                  <span className="text-[10px] text-(--text-muted)">
+                                    ›
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                              {canMarkNoShow ? (
-                                <button
-                                  type="button"
-                                  disabled={isMutating}
-                                  onClick={() =>
-                                    void runAction(
-                                      () =>
-                                        noShowMutation.mutateAsync(
-                                          appointment.id
-                                        ),
-                                      'Đã đánh dấu no-show cho lịch khám.'
-                                    )
-                                  }
-                                  className="inline-flex items-center gap-2 rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50 disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-900/20"
-                                >
-                                  <UserX className="h-4 w-4" />
-                                  Mark no-show
-                                </button>
-                              ) : null}
+                        {/* Card header */}
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium ${avatarColors[appt.status] ?? avatarColors.Pending}`}
+                            >
+                              {initials}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                            <div>
+                              <p className="text-sm font-medium text-(--text-primary)">
+                                {appt.patientId.slice(0, 12)}…
+                              </p>
+                              <p className="mt-0.5 flex items-center gap-1 text-xs text-(--text-muted)">
+                                <Clock className="h-3 w-3" />
+                                {formatSlotTime(appt.startTime)} –{' '}
+                                {formatSlotTime(appt.endTime)}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadge[appt.status] ?? statusBadge.Pending}`}
+                          >
+                            {appt.status === 'CheckedIn'
+                              ? 'Checked in'
+                              : appt.status === 'InProgress'
+                                ? 'In progress'
+                                : appt.status}
+                          </span>
+                        </div>
+
+                        {/* Reason */}
+                        {appt.visitReason && (
+                          <p className="mb-3 text-xs italic text-(--text-secondary)">
+                            {appt.visitReason}
+                          </p>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {primaryAction ? (
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() =>
+                                void runAction(
+                                  primaryAction.action,
+                                  primaryAction.successMessage
+                                )
+                              }
+                              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${primaryAction.className}`}
+                            >
+                              <primaryAction.icon className="h-3.5 w-3.5" />
+                              {primaryAction.label}
+                            </button>
+                          ) : isTerminal ? (
+                            <span className="text-xs italic text-(--text-muted)">
+                              {appt.status === 'Completed' && 'Visit completed'}
+                              {appt.status === 'NoShow' && 'Marked as no-show'}
+                              {appt.status === 'Cancelled' &&
+                                'Appointment cancelled'}
+                            </span>
+                          ) : null}
+
+                          {canMarkNoShow(appt.status) && (
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() =>
+                                void runAction(
+                                  () => noShowMutation.mutateAsync(appt.id),
+                                  'Marked as no-show.'
+                                )
+                              }
+                              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-600 transition hover:bg-red-50 disabled:opacity-40 dark:border-red-800 dark:text-red-400"
+                            >
+                              <UserX className="h-3.5 w-3.5" />
+                              No-show
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
