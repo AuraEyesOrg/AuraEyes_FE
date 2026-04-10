@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
     OPHTHALMOLOGISTS: {
       LIST: '/system-admin/ophthalmologists',
       VERIFY: (id: string) => `/system-admin/ophthalmologists/${id}/verify`,
+      UPDATE_PROFILE: (id: string) => `/ophthalmologists/${id}`,
       PAY_SALARY: (id: string) =>
         `/system-admin/ophthalmologists/${id}/salary-payout`,
       WITHDRAWAL_REQUESTS: '/system-admin/ophthalmologists/withdrawal-requests',
