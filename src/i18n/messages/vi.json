@@ -2150,7 +2150,18 @@
     },
     "labels": {
       "organisation": "Cơ sở y tế",
-      "noAddress": "Chưa có địa chỉ"
+      "noAddress": "Chưa có địa chỉ",
+      "quickDates": "Ngày gợi ý",
+      "morning": "Buổi sáng",
+      "afternoon": "Buổi chiều",
+      "selectedSlot": "Khung giờ đã chọn"
+    },
+    "reasons": {
+      "routine": "Tái khám định kỳ",
+      "blurredVision": "Nhìn mờ",
+      "eyePressure": "Kiểm tra nhãn áp",
+      "eyePain": "Đau hoặc cộm mắt",
+      "firstVisit": "Khám lần đầu"
     },
     "fields": {
       "visitDate": "Ngày khám",
@@ -2161,15 +2172,19 @@
       "title": "Khung giờ khả dụng",
       "organisation": "Cơ sở: {{name}}",
       "selectOrganisation": "Hãy chọn một cơ sở để tải khung giờ khả dụng.",
-      "remainingCapacity": "Sức chứa còn lại: {{remaining}}/{{max}}"
+      "remainingCapacity": "Sức chứa còn lại: {{remaining}}/{{max}}",
+      "availableCount": "Còn {{count}} khung giờ khả dụng",
+      "full": "Đầy"
     },
     "actions": {
-      "bookClinicVisit": "Đặt lịch khám tại cơ sở"
+      "bookClinicVisit": "Đặt lịch khám tại cơ sở",
+      "jumpToFirstAvailable": "Đi tới ngày gần nhất còn chỗ"
     },
     "empty": {
       "organisations": "Không tìm thấy cơ sở phù hợp.",
       "selectOrganisationFirst": "Vui lòng chọn cơ sở trước.",
-      "noSlotsForDate": "Không có khung giờ khả dụng cho ngày đã chọn."
+      "noSlotsForDate": "Không có khung giờ khả dụng cho ngày đã chọn.",
+      "noUpcomingSlots": "Hiện chưa có khung giờ khả dụng sắp tới tại cơ sở này."
     },
     "messages": {
       "bookSuccess": "Đặt lịch thành công. Vui lòng theo dõi trạng thái tại trang Lịch hẹn."
