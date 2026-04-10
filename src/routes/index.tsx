@@ -49,6 +49,9 @@ const TwoFactorVerifyPage = lazy(
 const ConfirmEmailPage = lazy(
   () => import('@/features/auth/pages/confirm-email')
 );
+const EmailVerificationRequiredPage = lazy(
+  () => import('@/features/auth/pages/email-verification-required')
+);
 const ForgotPasswordPage = lazy(
   () => import('@/features/auth/pages/forgot-password')
 );
@@ -414,6 +417,12 @@ const Router = () => (
         <Route
           path="/:locale/confirm-email"
           element={<LocalizedPublicRoute element={<ConfirmEmailPage />} />}
+        />
+        <Route
+          path="/:locale/email-verification-required"
+          element={
+            <LocalizedPublicRoute element={<EmailVerificationRequiredPage />} />
+          }
         />
         <Route
           path="/:locale/two-factor-auth"
@@ -944,6 +953,14 @@ const Router = () => (
           element={
             <PublicRoute>
               <ConfirmEmailPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/email-verification-required"
+          element={
+            <PublicRoute>
+              <EmailVerificationRequiredPage />
             </PublicRoute>
           }
         />

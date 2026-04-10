@@ -84,6 +84,30 @@ const LoginPage = () => {
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
+  const hasUnverifiedEmailError = (message: string) => {
+    const normalized = message.toLowerCase();
+
+    return [
+      'confirm your email',
+      'verify your email',
+      'email has not been confirmed',
+      'please confirm your email before logging in',
+      'xác nhận email',
+      'chưa xác nhận email',
+      'chưa xác thực email',
+    ].some((keyword) => normalized.includes(keyword));
+  };
+
+  const redirectToEmailReminderScreen = (email: string) => {
+    navigate(
+      `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(email)}`
+    );
+  };
+
+  const redirectToEmailReminderWithoutPrefill = () => {
+    navigate(toLocalizedAuthPath('/email-verification-required'));
+  };
+
   const isPendingVerification = (user?: {
     isVerified?: boolean | null;
     verificationStatus?: string | null;
@@ -167,10 +191,16 @@ const LoginPage = () => {
           navigate(toLocalizedAuthPath('/'));
         }
       } else {
-        setError(
+        const resolvedError =
           response.errors?.join(', ') ||
-            t('AuthPages.login.messages.loginFailed')
-        );
+          t('AuthPages.login.messages.loginFailed');
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
+        setError(resolvedError);
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
@@ -181,14 +211,38 @@ const LoginPage = () => {
       // Check for axios error response
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
-          response?: { data?: { message?: string; errors?: string[] } };
+          response?: {
+            data?: {
+              message?: string;
+              errors?: string[] | Record<string, string[]>;
+            };
+          };
         };
-        setError(
+
+        const responseErrors = axiosError.response?.data?.errors;
+        const flattenedErrors = Array.isArray(responseErrors)
+          ? responseErrors
+          : responseErrors
+            ? Object.values(responseErrors).flat()
+            : [];
+
+        const resolvedError =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          flattenedErrors.join(', ') ||
+          errorMessage;
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
+        setError(resolvedError);
       } else {
+        if (hasUnverifiedEmailError(errorMessage)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
         setError(errorMessage);
       }
     } finally {
@@ -301,10 +355,16 @@ const LoginPage = () => {
           navigate(toLocalizedAuthPath('/'));
         }
       } else {
-        setError(
+        const resolvedError =
           response.errors?.join(', ') ||
-            t('AuthPages.login.messages.googleFailed')
-        );
+          t('AuthPages.login.messages.googleFailed');
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
+        setError(resolvedError);
       }
     } catch (err: unknown) {
       console.error('Google login error:', err);
@@ -314,14 +374,38 @@ const LoginPage = () => {
           : t('AuthPages.login.messages.googleError');
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
-          response?: { data?: { message?: string; errors?: string[] } };
+          response?: {
+            data?: {
+              message?: string;
+              errors?: string[] | Record<string, string[]>;
+            };
+          };
         };
-        setError(
+
+        const responseErrors = axiosError.response?.data?.errors;
+        const flattenedErrors = Array.isArray(responseErrors)
+          ? responseErrors
+          : responseErrors
+            ? Object.values(responseErrors).flat()
+            : [];
+
+        const resolvedError =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          flattenedErrors.join(', ') ||
+          errorMessage;
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
+        setError(resolvedError);
       } else {
+        if (hasUnverifiedEmailError(errorMessage)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
         setError(errorMessage);
       }
     } finally {
