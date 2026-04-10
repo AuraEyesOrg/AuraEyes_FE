@@ -7,7 +7,6 @@ export interface CreateWalkInPatientRequest {
   gender: string;
   dateOfBirth: string;
   phoneNumber?: string;
-  email?: string;
   citizenId?: string;
   address?: string;
 }
