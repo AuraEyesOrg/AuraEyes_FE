@@ -2142,7 +2142,18 @@
     },
     "labels": {
       "organisation": "Organisation",
-      "noAddress": "No address"
+      "noAddress": "No address",
+      "quickDates": "Quick Dates",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "selectedSlot": "Selected Slot"
+    },
+    "reasons": {
+      "routine": "Routine follow-up",
+      "blurredVision": "Blurred vision",
+      "eyePressure": "Eye pressure check",
+      "eyePain": "Eye pain or discomfort",
+      "firstVisit": "First-time visit"
     },
     "fields": {
       "visitDate": "Visit Date",
@@ -2153,15 +2164,19 @@
       "title": "Available Slots",
       "organisation": "Organisation: {{name}}",
       "selectOrganisation": "Select an organisation to load available slots.",
-      "remainingCapacity": "Remaining capacity: {{remaining}}/{{max}}"
+      "remainingCapacity": "Remaining capacity: {{remaining}}/{{max}}",
+      "availableCount": "{{count}} slot(s) available",
+      "full": "Full"
     },
     "actions": {
-      "bookClinicVisit": "Book Clinic Visit"
+      "bookClinicVisit": "Book Clinic Visit",
+      "jumpToFirstAvailable": "Go to First Available"
     },
     "empty": {
       "organisations": "No organisation found.",
       "selectOrganisationFirst": "Please select an organisation first.",
-      "noSlotsForDate": "No available slots for selected date."
+      "noSlotsForDate": "No available slots for selected date.",
+      "noUpcomingSlots": "No upcoming slots are available for this organisation."
     },
     "messages": {
       "bookSuccess": "Appointment booked successfully. Please check status in Appointments."

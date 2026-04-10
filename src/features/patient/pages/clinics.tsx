@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Calendar,
-  Clock,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   Search,
   Star,
@@ -25,16 +25,241 @@ import {
 } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 
+const DOW_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
 const isExpiredClinicSlot = (slot: { date: string; startTime: string }) => {
   const startAt = parseSlotDateTimeUtc(slot.date, slot.startTime).getTime();
   if (Number.isNaN(startAt)) return false;
   return startAt < Date.now();
 };
 
+function toYMD(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+interface SlotItem {
+  slotId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  remaining: number;
+  maxCapacity: number;
+}
+
+interface MiniCalendarProps {
+  availableDateKeys: Set<string>;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
+}
+
+function MiniCalendar({
+  availableDateKeys,
+  selectedDate,
+  onSelectDate,
+}: MiniCalendarProps) {
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const [viewYear, setViewYear] = useState(() => {
+    const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
+    return d.getFullYear();
+  });
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
+    return d.getMonth();
+  });
+
+  const monthLabel = useMemo(
+    () =>
+      new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      }),
+    [viewYear, viewMonth]
+  );
+
+  const cells = useMemo(() => {
+    const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const result: Array<{ day: number | null; dateStr: string | null }> = [];
+    for (let i = 0; i < firstDow; i++)
+      result.push({ day: null, dateStr: null });
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      result.push({ day: d, dateStr });
+    }
+    return result;
+  }, [viewYear, viewMonth]);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else setViewMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else setViewMonth((m) => m + 1);
+  };
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm font-medium text-(--text-primary)">
+          {monthLabel}
+        </span>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-0.5">
+        {DOW_LABELS.map((d) => (
+          <div
+            key={d}
+            className="py-1 text-center text-[11px] text-(--text-muted)"
+          >
+            {d}
+          </div>
+        ))}
+
+        {cells.map((cell, idx) => {
+          if (cell.day === null || cell.dateStr === null) {
+            return <div key={`empty-${idx}`} />;
+          }
+          const dateStr = cell.dateStr;
+          const cellDate = new Date(dateStr + 'T00:00:00');
+          const isPast = cellDate < today;
+          const isToday = toYMD(today) === dateStr;
+          const hasSlots = availableDateKeys.has(dateStr);
+          const isSelected = selectedDate === dateStr;
+
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              disabled={isPast || !hasSlots}
+              onClick={() => onSelectDate(dateStr)}
+              className={[
+                'relative flex aspect-square items-center justify-center rounded-lg text-[13px] transition',
+                isPast
+                  ? 'cursor-default text-(--text-muted) opacity-40'
+                  : !hasSlots
+                    ? 'cursor-default text-(--text-muted)'
+                    : isSelected
+                      ? 'bg-cyan-600 font-medium text-white'
+                      : 'cursor-pointer text-(--text-primary) hover:bg-cyan-50 dark:hover:bg-cyan-900/20',
+                isToday && !isSelected ? 'font-semibold' : '',
+              ].join(' ')}
+            >
+              {cell.day}
+              {hasSlots && !isSelected && (
+                <span className="absolute bottom-[3px] left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-cyan-500" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface SlotGroupProps {
+  label: string;
+  fullLabel: string;
+  slots: SlotItem[];
+  selectedSlotId: string;
+  bookingPending: boolean;
+  onSelect: (slotId: string) => void;
+}
+
+function SlotGroup({
+  label,
+  fullLabel,
+  slots,
+  selectedSlotId,
+  bookingPending,
+  onSelect,
+}: SlotGroupProps) {
+  if (slots.length === 0) return null;
+  return (
+    <div className="mb-4">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {slots.map((slot) => {
+          const isFull = slot.remaining <= 0;
+          const isLow = slot.remaining > 0 && slot.remaining <= 2;
+          const isSelected = selectedSlotId === slot.slotId;
+          return (
+            <button
+              key={slot.slotId}
+              type="button"
+              disabled={isFull || bookingPending}
+              onClick={() => onSelect(slot.slotId)}
+              className={[
+                'flex min-w-[76px] flex-col items-center gap-0.5 rounded-xl border px-3 py-2 transition',
+                isFull
+                  ? 'cursor-not-allowed border-(--border-color) opacity-40'
+                  : isSelected
+                    ? 'border-cyan-600 bg-cyan-600 text-white'
+                    : 'border-(--border-color) bg-(--bg-secondary) hover:border-cyan-400',
+              ].join(' ')}
+            >
+              <span
+                className={`text-[13px] font-medium ${isSelected ? 'text-white' : 'text-(--text-primary)'}`}
+              >
+                {formatSlotTime(slot.startTime)}
+              </span>
+              <span
+                className={`text-[11px] ${
+                  isSelected
+                    ? 'text-cyan-100'
+                    : isFull
+                      ? 'text-(--text-muted)'
+                      : isLow
+                        ? 'text-amber-500'
+                        : 'text-(--text-muted)'
+                }`}
+              >
+                {isFull ? fullLabel : `${slot.remaining}/${slot.maxCapacity}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function ClinicsPage() {
   const { t: i18nT } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
+  const visitReasonPresets = [
+    t('PatientClinics.reasons.routine'),
+    t('PatientClinics.reasons.blurredVision'),
+    t('PatientClinics.reasons.eyePressure'),
+    t('PatientClinics.reasons.eyePain'),
+    t('PatientClinics.reasons.firstVisit'),
+  ];
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
@@ -42,6 +267,7 @@ export default function ClinicsPage() {
   const [searchText, setSearchText] = useState('');
   const [selectedOrganisationId, setSelectedOrganisationId] = useState('');
   const [selectedDate, setSelectedDate] = useState(toLocalDateKey(new Date()));
+  const [selectedSlotId, setSelectedSlotId] = useState('');
   const [visitReason, setVisitReason] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -57,20 +283,67 @@ export default function ClinicsPage() {
     error: availableSlotsError,
   } = useOrganisationAvailableSlots(
     selectedOrganisationId,
-    selectedDate,
+    undefined,
     !!selectedOrganisationId
   );
 
   const createAppointmentMutation = useCreateClinicAppointment();
 
-  const visibleSlots = useMemo(
+  const upcomingSlots = useMemo(
     () => availableSlots.filter((slot) => !isExpiredClinicSlot(slot)),
     [availableSlots]
   );
 
+  const availableDateKeys = useMemo(
+    () => Array.from(new Set(upcomingSlots.map((slot) => slot.date))),
+    [upcomingSlots]
+  );
+
+  const availableDateSet = useMemo(
+    () => new Set(availableDateKeys),
+    [availableDateKeys]
+  );
+
+  // Auto-select first available date when org changes
+  useEffect(() => {
+    if (!selectedOrganisationId || availableDateKeys.length === 0) return;
+    if (!availableDateSet.has(selectedDate)) {
+      setSelectedDate(availableDateKeys[0]);
+      setSelectedSlotId('');
+    }
+  }, [
+    availableDateKeys,
+    availableDateSet,
+    selectedDate,
+    selectedOrganisationId,
+  ]);
+
+  // Reset selected slot when date changes
+  useEffect(() => {
+    setSelectedSlotId('');
+  }, [selectedDate]);
+
+  const slotsForDate = useMemo(
+    () => upcomingSlots.filter((slot) => slot.date === selectedDate),
+    [selectedDate, upcomingSlots]
+  );
+
+  const morningSlots = useMemo(
+    () => slotsForDate.filter((s) => parseInt(s.startTime) < 12),
+    [slotsForDate]
+  );
+  const afternoonSlots = useMemo(
+    () => slotsForDate.filter((s) => parseInt(s.startTime) >= 12),
+    [slotsForDate]
+  );
+
+  const selectedSlot = useMemo(
+    () => slotsForDate.find((s) => s.slotId === selectedSlotId),
+    [slotsForDate, selectedSlotId]
+  );
+
   const filteredOrganisations = useMemo(() => {
     if (!searchText.trim()) return organisations;
-
     const query = searchText.toLowerCase();
     return organisations.filter(
       (item) =>
@@ -84,26 +357,29 @@ export default function ClinicsPage() {
     (item) => item.id === selectedOrganisationId
   );
 
-  const handleBookSlot = async (slotId: string) => {
-    if (!selectedOrganisationId || !patientId) return;
-
+  const handleBookSlot = async () => {
+    if (!selectedOrganisationId || !patientId || !selectedSlotId) return;
     setErrorMessage('');
     try {
       await createAppointmentMutation.mutateAsync({
         organisationId: selectedOrganisationId,
-        slotId,
+        slotId: selectedSlotId,
         visitReason: visitReason.trim() || undefined,
       });
       toast.success(t('PatientClinics.toast.bookSuccess'));
+      setSelectedSlotId('');
     } catch (error) {
       setErrorMessage(mapClinicPatientErrorMessage(error));
     }
   };
 
+  const availableCount = slotsForDate.filter((s) => s.remaining > 0).length;
+
   return (
     <PatientLayout>
       <div>
         <section>
+          {/* Page header */}
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-(--text-primary)">
               {t('PatientClinics.page.title')}
@@ -121,6 +397,7 @@ export default function ClinicsPage() {
             </div>
           )}
 
+          {/* Organisation picker */}
           <div className="medical-card p-5">
             <div className="relative mb-4">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-muted)" />
@@ -128,7 +405,7 @@ export default function ClinicsPage() {
                 className="w-full rounded-xl border border-(--border-color) bg-(--bg-secondary) py-2.5 pl-10 pr-3 text-(--text-primary) outline-none ring-brand/40 placeholder:text-(--text-muted) focus:ring-2"
                 placeholder={t('PatientClinics.search.placeholder')}
                 value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
+                onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
 
@@ -141,12 +418,15 @@ export default function ClinicsPage() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {filteredOrganisations.map((organisation) => {
                   const isSelected = selectedOrganisationId === organisation.id;
-
                   return (
                     <button
                       key={organisation.id}
                       type="button"
-                      onClick={() => setSelectedOrganisationId(organisation.id)}
+                      onClick={() => {
+                        setSelectedOrganisationId(organisation.id);
+                        setSelectedSlotId('');
+                        setErrorMessage('');
+                      }}
                       className={`rounded-xl border p-4 text-left transition ${
                         isSelected
                           ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
@@ -190,7 +470,6 @@ export default function ClinicsPage() {
                     </button>
                   );
                 })}
-
                 {filteredOrganisations.length === 0 && (
                   <div className="rounded-xl border border-dashed border-(--border-color) p-6 text-center text-(--text-secondary) md:col-span-2">
                     {t('PatientClinics.empty.organisations')}
@@ -200,47 +479,20 @@ export default function ClinicsPage() {
             )}
           </div>
 
+          {/* ── Booking panel ── */}
           <div className="medical-card mt-6 p-5">
-            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-(--text-primary)">
-                  {t('PatientClinics.slots.title')}
-                </h2>
-                <p className="text-sm text-(--text-secondary)">
-                  {selectedOrganisation
-                    ? t('PatientClinics.slots.organisation', {
-                        name: selectedOrganisation.name,
-                      })
-                    : t('PatientClinics.slots.selectOrganisation')}
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                    {t('PatientClinics.fields.visitDate')}
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(event) => setSelectedDate(event.target.value)}
-                    className="rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
-                  />
-                </div>
-                <div className="min-w-55">
-                  <label className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                    {t('PatientClinics.fields.visitReason')}
-                  </label>
-                  <input
-                    value={visitReason}
-                    onChange={(event) => setVisitReason(event.target.value)}
-                    placeholder={t(
-                      'PatientClinics.fields.visitReasonPlaceholder'
-                    )}
-                    className="w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
-                  />
-                </div>
-              </div>
+            {/* Panel header */}
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold text-(--text-primary)">
+                {t('PatientClinics.slots.title')}
+              </h2>
+              <p className="text-sm text-(--text-secondary)">
+                {selectedOrganisation
+                  ? t('PatientClinics.slots.organisation', {
+                      name: selectedOrganisation.name,
+                    })
+                  : t('PatientClinics.slots.selectOrganisation')}
+              </p>
             </div>
 
             {!selectedOrganisationId ? (
@@ -253,48 +505,140 @@ export default function ClinicsPage() {
                 <span>{t('PatientClinics.loading.slots')}</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {visibleSlots.map((slot) => (
-                  <div
-                    key={slot.slotId}
-                    className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4"
-                  >
-                    <div className="flex items-center gap-2 text-sm font-medium text-(--text-primary)">
-                      <Calendar className="h-4 w-4 text-cyan-600" />
-                      {formatDate(slot.date)}
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-(--text-secondary)">
-                      <Clock className="h-4 w-4" />
-                      {formatSlotTime(slot.startTime)} -{' '}
-                      {formatSlotTime(slot.endTime)}
-                    </div>
-                    <div className="mt-2 text-xs text-(--text-secondary)">
-                      {t('PatientClinics.slots.remainingCapacity', {
-                        remaining: slot.remaining,
-                        max: slot.maxCapacity,
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+                {/* ── Left column: calendar + reason ── */}
+                <div className="flex flex-col gap-4">
+                  {/* Mini calendar */}
+                  <div className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4">
+                    <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                      {t('PatientClinics.fields.visitDate')}
+                    </p>
+                    <MiniCalendar
+                      availableDateKeys={availableDateSet}
+                      selectedDate={selectedDate}
+                      onSelectDate={setSelectedDate}
+                    />
+                    {availableDateKeys.length === 0 && (
+                      <p className="mt-3 text-center text-xs text-(--text-muted)">
+                        {t('PatientClinics.empty.noUpcomingSlots')}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Visit reason */}
+                  <div className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4">
+                    <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                      {t('PatientClinics.fields.visitReason')}
+                    </p>
+                    <input
+                      value={visitReason}
+                      onChange={(e) => setVisitReason(e.target.value)}
+                      placeholder={t(
+                        'PatientClinics.fields.visitReasonPlaceholder'
+                      )}
+                      className="w-full rounded-lg border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none focus:ring-2 focus:ring-cyan-400/40"
+                    />
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {visitReasonPresets.map((label) => {
+                        return (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={() => setVisitReason(label)}
+                            className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                              visitReason === label
+                                ? 'border-cyan-500 bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300'
+                                : 'border-(--border-color) text-(--text-secondary) hover:border-cyan-300'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
                       })}
                     </div>
-
-                    <button
-                      type="button"
-                      disabled={
-                        slot.remaining <= 0 ||
-                        createAppointmentMutation.isPending
-                      }
-                      onClick={() => void handleBookSlot(slot.slotId)}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Stethoscope className="h-4 w-4" />
-                      {t('PatientClinics.actions.bookClinicVisit')}
-                    </button>
                   </div>
-                ))}
+                </div>
 
-                {visibleSlots.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary) md:col-span-2 xl:col-span-3">
-                    {t('PatientClinics.empty.noSlotsForDate')}
+                {/* ── Right column: slots ── */}
+                <div className="flex flex-col">
+                  <div className="mb-3 flex items-baseline justify-between">
+                    <p className="font-medium text-(--text-primary)">
+                      {formatDate(selectedDate)}
+                    </p>
+                    {availableCount > 0 && (
+                      <span className="text-xs text-(--text-muted)">
+                        {t('PatientClinics.slots.availableCount', {
+                          count: availableCount,
+                        })}
+                      </span>
+                    )}
                   </div>
-                )}
+
+                  {slotsForDate.length === 0 ? (
+                    <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-(--border-color) p-8 text-center text-(--text-secondary)">
+                      {t('PatientClinics.empty.noSlotsForDate')}
+                    </div>
+                  ) : (
+                    <>
+                      <SlotGroup
+                        label={t('PatientClinics.labels.morning')}
+                        fullLabel={t('PatientClinics.slots.full')}
+                        slots={morningSlots}
+                        selectedSlotId={selectedSlotId}
+                        bookingPending={createAppointmentMutation.isPending}
+                        onSelect={setSelectedSlotId}
+                      />
+                      <SlotGroup
+                        label={t('PatientClinics.labels.afternoon')}
+                        fullLabel={t('PatientClinics.slots.full')}
+                        slots={afternoonSlots}
+                        selectedSlotId={selectedSlotId}
+                        bookingPending={createAppointmentMutation.isPending}
+                        onSelect={setSelectedSlotId}
+                      />
+                    </>
+                  )}
+
+                  {/* Error */}
+                  {errorMessage && (
+                    <div className="mt-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {/* Confirm bar */}
+                  {selectedSlot && (
+                    <div className="mt-auto pt-4">
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 dark:border-cyan-800/60 dark:bg-cyan-900/20">
+                        <div className="min-w-0">
+                          <p className="text-xs text-cyan-700 dark:text-cyan-300">
+                            {t('PatientClinics.labels.selectedSlot')}
+                          </p>
+                          <p className="truncate text-sm font-medium text-cyan-900 dark:text-cyan-100">
+                            {formatDate(selectedSlot.date)}
+                            {' · '}
+                            {formatSlotTime(selectedSlot.startTime)}
+                            {' – '}
+                            {formatSlotTime(selectedSlot.endTime)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={createAppointmentMutation.isPending}
+                          onClick={() => void handleBookSlot()}
+                          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {createAppointmentMutation.isPending ? (
+                            <Spinner />
+                          ) : (
+                            <Stethoscope className="h-4 w-4" />
+                          )}
+                          {t('PatientClinics.actions.bookClinicVisit')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
