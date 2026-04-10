@@ -266,18 +266,23 @@ function hasRole(roles: string[], roleCandidates: string[]): boolean {
   return roleCandidates.some((candidate) => roles.includes(candidate));
 }
 
-function normalizeForMatch(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
+function readBoolean(
+  payload: Record<string, unknown>,
+  ...keys: string[]
+): boolean {
+  const normalize = (value: string) => value.replace(/[_-]/g, '').toLowerCase();
 
-function containsAny(text: string, keywords: string[]): boolean {
-  const normalizedText = normalizeForMatch(text);
-  return keywords.some((keyword) =>
-    normalizedText.includes(normalizeForMatch(keyword))
-  );
+  const normalizedPayload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    normalizedPayload[normalize(key)] = value;
+  }
+
+  for (const key of keys) {
+    const value = normalizedPayload[normalize(key)];
+    if (typeof value === 'boolean') return value;
+  }
+
+  return false;
 }
 
 function getRoleHome(roles: string[]): string {
@@ -308,16 +313,16 @@ export function getNotificationRoute(
       : '';
 
   const screeningId =
-    readString(payload, 'screeningId', 'aiScreeningId') || fallbackReferenceId;
+    readString(payload, 'aiScreeningId', 'screeningId') || fallbackReferenceId;
   const consultationId =
     readString(
       payload,
+      'consultationSessionId',
       'sessionId',
-      'consultationId',
-      'consultationSessionId'
+      'consultationId'
     ) || fallbackReferenceId;
   const appointmentId =
-    readString(payload, 'appointmentId', 'slotId', 'appointmentSlotId') ||
+    readString(payload, 'appointmentId', 'appointmentSlotId', 'slotId') ||
     fallbackReferenceId;
   const transactionId =
     readString(payload, 'transactionId') || fallbackReferenceId;
@@ -361,26 +366,24 @@ export function getNotificationRoute(
 
     case NotificationType.NewAppointmentBooked:
     case NotificationType.ScheduleChanged: {
-      const aiScreeningId = readString(
-        payload,
-        'aiScreeningId',
-        'AiScreeningId'
-      );
-      const sharedMedicalData =
-        payload['sharedMedicalData'] === true ||
-        payload['SharedMedicalData'] === true;
+      const aiScreeningId = readString(payload, 'aiScreeningId', 'screeningId');
+      const sharedMedicalData = readBoolean(payload, 'sharedMedicalData');
 
       if (isDoctor && aiScreeningId && sharedMedicalData) {
-        return `/ophthalmologist/screenings/${aiScreeningId}/review`;
+        return `/ophthalmologist/screenings/${encodeURIComponent(aiScreeningId)}/review`;
       }
 
-      const sessionOrSlotId = readString(
+      const consultationSessionId = readString(
         payload,
         'consultationSessionId',
-        'ConsultationSessionId',
-        'appointmentId',
-        'AppointmentSlotId',
-        'slotId'
+        'consultationId',
+        'sessionId'
+      );
+      const appointmentSlotId = readString(
+        payload,
+        'appointmentSlotId',
+        'slotId',
+        'appointmentId'
       );
       const base = isDoctor
         ? '/ophthalmologist/appointments'
@@ -391,12 +394,18 @@ export function getNotificationRoute(
             : isSystemAdmin
               ? '/system-admin/dashboard'
               : fallbackHome;
+
+      const preferredId =
+        consultationSessionId || appointmentSlotId || appointmentId;
+
       return appendIdQuery(
         base,
         notification.type === NotificationType.NewAppointmentBooked
-          ? 'sessionId'
+          ? isPatient
+            ? 'appointmentId'
+            : 'sessionId'
           : 'appointmentId',
-        sessionOrSlotId || appointmentId
+        preferredId
       );
     }
 
@@ -415,62 +424,59 @@ export function getNotificationRoute(
     }
 
     case NotificationType.SystemAlert: {
-      const action = readString(
-        payload,
-        'action',
-        'event',
-        'eventName',
-        'notificationAction'
-      ).toLowerCase();
+      const routeHint = readString(payload, 'routeHint');
+      if (routeHint.startsWith('/')) {
+        return routeHint;
+      }
+
+      const action = readString(payload, 'action').toLowerCase();
       const flowType = readString(
         payload,
         'verificationFlowType',
         'reviewFlowType'
       ).toLowerCase();
 
-      const content = [
-        action,
-        flowType,
-        notification.title.toLowerCase(),
-        notification.message.toLowerCase(),
-      ].join(' ');
-
-      const isVerificationRelated = containsAny(content, [
-        'verification',
-        'verify',
-        'xác minh',
-        'chứng chỉ',
-        'credential',
-        'certificate',
-        'license',
-        'onboarding',
-      ]);
-
-      const isContractRelated = containsAny(content, ['contract', 'hợp đồng']);
-
-      if (isSystemAdmin) {
-        if (isContractRelated) return '/system-admin/contracts';
-        if (isVerificationRelated) return '/system-admin/verifications';
-        return '/system-admin/dashboard';
+      if (action === 'ophthalmologist_email_confirmed') {
+        return isSystemAdmin ? '/system-admin/contracts' : fallbackHome;
       }
 
-      if (isDoctor) {
-        if (isContractRelated) return '/ophthalmologist/contract';
-        if (isVerificationRelated) return '/ophthalmologist/settings';
-        return '/ophthalmologist/dashboard';
+      if (action === 'verification_request_submitted') {
+        return isSystemAdmin
+          ? '/system-admin/verifications'
+          : isDoctor
+            ? '/ophthalmologist/settings'
+            : isOrgAdmin
+              ? '/organisation/dashboard'
+              : fallbackHome;
       }
 
-      if (isOrgAdmin) {
-        if (isContractRelated) return '/organisation/contract';
-        if (isVerificationRelated) return '/organisation/dashboard';
-        return '/organisation/dashboard';
+      if (
+        action === 'verification_review_completed' ||
+        action === 'ophthalmologist_verification_approved'
+      ) {
+        return isDoctor
+          ? '/ophthalmologist/settings'
+          : isSystemAdmin
+            ? '/system-admin/verifications'
+            : fallbackHome;
+      }
+
+      if (
+        flowType === 'onboardingverification' ||
+        flowType === 'credentialupdatereview'
+      ) {
+        return isSystemAdmin
+          ? '/system-admin/verifications'
+          : isDoctor
+            ? '/ophthalmologist/settings'
+            : fallbackHome;
       }
 
       if (isPatient) {
         return '/patient/notifications';
       }
 
-      return getRoleHome(normalizedRoles);
+      return fallbackHome;
     }
 
     default:

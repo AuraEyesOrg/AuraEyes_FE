@@ -472,6 +472,7 @@ export default function OrganisationScreeningResultPage() {
       formData.append('allowComments', 'true');
       formData.append('isInternalCase', 'false');
       formData.append('isAnonymizationConfirmed', 'true');
+      formData.append('aiScreeningId', sessionData.screeningId);
       formData.append(
         'content',
         buildNetworkShareContent(

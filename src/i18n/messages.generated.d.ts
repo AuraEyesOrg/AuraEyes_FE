@@ -2154,6 +2154,17 @@ declare module 'i18next' {
       labels: {
         organisation: string;
         noAddress: string;
+        quickDates: string;
+        morning: string;
+        afternoon: string;
+        selectedSlot: string;
+      };
+      reasons: {
+        routine: string;
+        blurredVision: string;
+        eyePressure: string;
+        eyePain: string;
+        firstVisit: string;
       };
       fields: {
         visitDate: string;
@@ -2165,14 +2176,18 @@ declare module 'i18next' {
         organisation: string;
         selectOrganisation: string;
         remainingCapacity: string;
+        availableCount: string;
+        full: string;
       };
       actions: {
         bookClinicVisit: string;
+        jumpToFirstAvailable: string;
       };
       empty: {
         organisations: string;
         selectOrganisationFirst: string;
         noSlotsForDate: string;
+        noUpcomingSlots: string;
       };
       messages: {
         bookSuccess: string;
