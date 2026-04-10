@@ -71,6 +71,14 @@ export const API_ENDPOINTS = {
         `/system-admin/ophthalmologists/withdrawal-requests/${requestId}/reject`,
     },
 
+    // PayOS Payout Management (automated payout via PayOS API)
+    PAYOUTS: {
+      PROCESS: (withdrawalRequestId: string) =>
+        `/admin/payouts/withdrawal-requests/${withdrawalRequestId}/process`,
+      SYNC_STATUS: (withdrawalRequestId: string) =>
+        `/admin/payouts/withdrawal-requests/${withdrawalRequestId}/sync-status`,
+    },
+
     // Patient Management
     PATIENTS: {
       LIST: '/system-admin/patients',

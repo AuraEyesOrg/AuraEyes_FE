@@ -83,6 +83,8 @@ export interface WithdrawalRequestDto {
   bankName: string;
   bankAccountNumber: string;
   accountHolderName: string;
+  /** Mã BIN ngân hàng PayOS (ví dụ: "970415" = Vietinbank). */
+  bankBin?: string | null;
   contractNumber?: string | null;
   note?: string | null;
   adminNote?: string | null;
@@ -90,6 +92,12 @@ export interface WithdrawalRequestDto {
   processedByAdminId?: string | null;
   processedAt?: string | null;
   createdAt: string;
+  /** ID lệnh chi PayOS (externalPayoutId từ PayOS) */
+  externalPayoutId?: string | null;
+  /** Reference ID nội bộ gửi cho PayOS */
+  payOSReferenceId?: string | null;
+  /** Trạng thái từ PayOS: PENDING, PROCESSING, SUCCEEDED, FAILED */
+  payOSApprovalState?: string | null;
 }
 
 export interface CreateWithdrawalRequestInput {
@@ -97,14 +105,26 @@ export interface CreateWithdrawalRequestInput {
   bankName: string;
   bankAccountNumber: string;
   accountHolderName: string;
+  /** Mã BIN ngân hàng PayOS (ví dụ: "970415" = Vietinbank, "970436" = Vietcombank). */
+  bankBin: string;
   contractNumber?: string;
   note?: string;
+}
+
+export interface PayoutStatusResponse {
+  withdrawalRequestId: string;
+  externalPayoutId: string;
+  payOSReferenceId: string;
+  approvalState: string;
+  withdrawalStatus: string;
 }
 
 const EP = {
   WALLET: '/wallets',
   TRANSACTIONS: '/wallets/transactions',
   WITHDRAW_REQUESTS: '/wallets/withdraw-requests',
+  PAYOUT_STATUS: (id: string) =>
+    `/wallets/withdraw-requests/${id}/payout-status`,
 } as const;
 
 export const ophthalmologistWalletApi = {
@@ -133,5 +153,13 @@ export const ophthalmologistWalletApi = {
       input
     );
     return unwrapApiData<WithdrawalRequestDto>(response.data);
+  },
+
+  /** Lấy trạng thái PayOS của một withdrawal request (từ DB, không gọi PayOS API) */
+  async getPayoutStatus(withdrawalRequestId: string) {
+    const response = await api.get<ApiResponse<PayoutStatusResponse>>(
+      EP.PAYOUT_STATUS(withdrawalRequestId)
+    );
+    return unwrapApiData<PayoutStatusResponse>(response.data);
   },
 };

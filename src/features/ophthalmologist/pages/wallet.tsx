@@ -105,6 +105,7 @@ export default function OphthalmologistWalletPage() {
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
+  const [bankBin, setBankBin] = useState('');
   const [contractNumber, setContractNumber] = useState('');
   const [note, setNote] = useState('');
 
@@ -151,6 +152,7 @@ export default function OphthalmologistWalletPage() {
     setBankName('');
     setBankAccountNumber('');
     setAccountHolderName('');
+    setBankBin('');
     setContractNumber('');
     setNote('');
   };
@@ -229,12 +231,23 @@ export default function OphthalmologistWalletPage() {
       return;
     }
 
+    if (!bankBin.trim()) {
+      toast.error(
+        t(
+          'Ophthalmologist.wallet.toast.missingBankBin',
+          'Please provide the bank BIN code for automated PayOS payout.'
+        )
+      );
+      return;
+    }
+
     try {
       await createWithdrawalRequestMutation.mutateAsync({
         amountVnd: numericAmount,
         bankName: bankName.trim(),
         bankAccountNumber: bankAccountNumber.trim(),
         accountHolderName: accountHolderName.trim(),
+        bankBin: bankBin.trim(),
         contractNumber: contractNumber.trim() || undefined,
         note: note.trim() || undefined,
       });
@@ -499,6 +512,24 @@ export default function OphthalmologistWalletPage() {
                             {request.note}
                           </p>
                         ) : null}
+                        {request.externalPayoutId ? (
+                          <p className="font-mono text-indigo-600 dark:text-indigo-400">
+                            PayOS ID: {request.externalPayoutId}
+                            {request.payOSApprovalState ? (
+                              <span
+                                className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  request.payOSApprovalState === 'SUCCEEDED'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : request.payOSApprovalState === 'FAILED'
+                                      ? 'bg-rose-100 text-rose-700'
+                                      : 'bg-indigo-100 text-indigo-700'
+                                }`}
+                              >
+                                {request.payOSApprovalState}
+                              </span>
+                            ) : null}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                   );
@@ -747,6 +778,31 @@ export default function OphthalmologistWalletPage() {
                     )}
                     className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                   />
+                </label>
+
+                <label className="space-y-1 text-sm block">
+                  <span className="text-slate-600 dark:text-slate-300">
+                    {t(
+                      'Ophthalmologist.wallet.withdrawModal.bankBinLabel',
+                      'Bank BIN Code (for PayOS auto-payout)'
+                    )}
+                    <span className="text-rose-500 ml-1">*</span>
+                  </span>
+                  <input
+                    value={bankBin}
+                    onChange={(e) =>
+                      setBankBin(e.target.value.replace(/[^0-9]/g, ''))
+                    }
+                    placeholder="e.g. 970436 (Vietcombank), 970415 (Vietinbank)"
+                    maxLength={10}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {t(
+                      'Ophthalmologist.wallet.withdrawModal.bankBinHint',
+                      'Required for automatic PayOS payout. Find BIN at vietqr.io/danh-sach-ngan-hang'
+                    )}
+                  </p>
                 </label>
 
                 <label className="space-y-1 text-sm block">
