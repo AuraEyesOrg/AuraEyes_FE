@@ -96,8 +96,32 @@ const avatarColors: Record<string, string> = {
     'bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300',
 };
 
-function getInitials(id: string) {
-  return id.slice(0, 2).toUpperCase();
+function getInitials(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return 'PT';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  const first = parts[0][0] ?? '';
+  const last = parts[parts.length - 1][0] ?? '';
+  return `${first}${last}`.toUpperCase();
+}
+
+function getPatientDisplayName(appointment: {
+  patientId: string;
+  patientName?: string | null;
+}) {
+  const patientName = appointment.patientName?.trim();
+  if (patientName) return patientName;
+  return `Patient ${appointment.patientId.slice(0, 8)}`;
+}
+
+function getPatientInitials(appointment: {
+  patientId: string;
+  patientName?: string | null;
+}) {
+  const patientName = appointment.patientName?.trim();
+  return getInitials(patientName || appointment.patientId);
 }
 
 export default function CalendarPage() {
@@ -416,7 +440,10 @@ export default function CalendarPage() {
                       'Cancelled',
                       'NoShow',
                     ].includes(appt.status);
-                    const initials = getInitials(appt.patientId);
+                    const patientDisplayName = getPatientDisplayName(appt);
+                    const initials = getPatientInitials(appt);
+                    const patientAvatarUrl =
+                      appt.patientAvatarUrl?.trim() || '';
 
                     return (
                       <div
@@ -466,13 +493,23 @@ export default function CalendarPage() {
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium ${avatarColors[appt.status] ?? avatarColors.Pending}`}
+                              className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-medium ${avatarColors[appt.status] ?? avatarColors.Pending}`}
                             >
-                              {initials}
+                              <span>{initials}</span>
+                              {patientAvatarUrl && (
+                                <img
+                                  src={patientAvatarUrl}
+                                  alt={patientDisplayName}
+                                  className="absolute inset-0 h-full w-full object-cover"
+                                  onError={(event) => {
+                                    event.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              )}
                             </div>
                             <div>
                               <p className="text-sm font-medium text-(--text-primary)">
-                                {appt.patientId.slice(0, 12)}…
+                                {patientDisplayName}
                               </p>
                               <p className="mt-0.5 flex items-center gap-1 text-xs text-(--text-muted)">
                                 <Clock className="h-3 w-3" />

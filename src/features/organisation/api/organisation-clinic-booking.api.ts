@@ -6,6 +6,8 @@ import { unwrapApiData } from '@/types/api-response';
 export interface OrganisationClinicAppointmentDto {
   id: string;
   patientId: string;
+  patientName?: string | null;
+  patientAvatarUrl?: string | null;
   organisationId: string;
   organisationName?: string | null;
   slotId: string;
