@@ -286,6 +286,8 @@ export const API_ENDPOINTS = {
         `/organisations/screenings/${screeningId}`,
       EXPORT_PDF: (screeningId: string) =>
         `/organisations/screenings/${screeningId}/report-pdf`,
+      SHARE: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}/share`,
       HISTORY: '/organisations/screenings/history',
     },
     BILLING_SUMMARY: '/organisations/billing/summary',
