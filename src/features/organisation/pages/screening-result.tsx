@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Loader2,
   Activity,
+  Share2,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
@@ -68,8 +70,14 @@ export default function OrganisationScreeningResultPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareIncludePdf, setShareIncludePdf] = useState(true);
+  const [shareIncludeRetinalImages, setShareIncludeRetinalImages] =
+    useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
@@ -93,6 +101,7 @@ export default function OrganisationScreeningResultPage() {
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
+  const isWalkInPatient = sessionData?.isWalkIn ?? false;
 
   // ─── Navigation Guard ────────────────────────────────────────────────────────
 
@@ -252,6 +261,14 @@ export default function OrganisationScreeningResultPage() {
     updateImageLayout();
   }, [selectedImage?.imageUrl, rawJsonOutput, updateImageLayout]);
 
+  useEffect(() => {
+    if (!shareModalOpen || !sessionData) return;
+
+    setShareEmail(sessionData.isWalkIn ? '' : (sessionData.patientEmail ?? ''));
+    setShareIncludePdf(true);
+    setShareIncludeRetinalImages(false);
+  }, [shareModalOpen, sessionData]);
+
   const updateDraft = useCallback(
     <K extends keyof ResultDraft>(key: K, value: ResultDraft[K]) => {
       if (isViewOnly) return;
@@ -379,6 +396,46 @@ export default function OrganisationScreeningResultPage() {
       setDownloadingPdf(false);
     }
   }, [screeningId, downloadingPdf, canDownloadPdf]);
+
+  const handleShareResult = useCallback(async () => {
+    if (!screeningId || !sessionData || sharing) return;
+
+    if (!shareIncludePdf && !shareIncludeRetinalImages) {
+      toast.error('Vui lòng chọn ít nhất một nội dung để chia sẻ.');
+      return;
+    }
+
+    const trimmedEmail = shareEmail.trim();
+    if (isWalkInPatient && !trimmedEmail) {
+      toast.error('Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in.');
+      return;
+    }
+
+    setSharing(true);
+    try {
+      const response = await orgScreeningApi.shareSessionResult(screeningId, {
+        recipientEmail: trimmedEmail || undefined,
+        includePdf: shareIncludePdf,
+        includeRetinalImages: shareIncludeRetinalImages,
+      });
+
+      const shareResult = unwrapApiData(response);
+      toast.success(`Đã gửi kết quả đến ${shareResult.recipientEmail}.`);
+      setShareModalOpen(false);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Không thể chia sẻ kết quả lúc này.'));
+    } finally {
+      setSharing(false);
+    }
+  }, [
+    screeningId,
+    sessionData,
+    sharing,
+    shareIncludePdf,
+    shareIncludeRetinalImages,
+    shareEmail,
+    isWalkInPatient,
+  ]);
 
   const executeSaveResults = async () => {
     if (isViewOnly || !screeningId || !sessionData || !draft) return;
@@ -512,6 +569,19 @@ export default function OrganisationScreeningResultPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    onClick={() => setShareModalOpen(true)}
+                    disabled={!screeningId || sharing}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  >
+                    {sharing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    Chia sẻ
+                  </button>
+
                   <button
                     onClick={handleDownloadPdf}
                     disabled={
@@ -864,6 +934,87 @@ export default function OrganisationScreeningResultPage() {
             void executeSaveResults();
           }}
         />
+
+        {shareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+            <div className="w-full max-w-lg rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5 shadow-xl">
+              <h3 className="text-lg font-semibold text-(--text-primary)">
+                Chia sẻ kết quả khám
+              </h3>
+              <p className="mt-1 text-sm text-(--text-secondary)">
+                {isWalkInPatient
+                  ? 'Bệnh nhân walk-in: nhập email nhận kết quả.'
+                  : 'Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.'}
+              </p>
+
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-(--text-tertiary)">
+                    Email người nhận
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-tertiary)" />
+                    <input
+                      type="email"
+                      value={shareEmail}
+                      onChange={(event) => setShareEmail(event.target.value)}
+                      placeholder="patient@example.com"
+                      className="w-full rounded-xl border border-(--border-primary) bg-(--bg-primary) py-2 pl-10 pr-3 text-sm text-(--text-primary)"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm text-(--text-primary)">
+                    <input
+                      type="checkbox"
+                      checked={shareIncludePdf}
+                      onChange={(event) =>
+                        setShareIncludePdf(event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    Đính kèm báo cáo PDF
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm text-(--text-primary)">
+                    <input
+                      type="checkbox"
+                      checked={shareIncludeRetinalImages}
+                      onChange={(event) =>
+                        setShareIncludeRetinalImages(event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    Chia sẻ đường dẫn ảnh võng mạc
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!sharing) setShareModalOpen(false);
+                  }}
+                  className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary)"
+                  disabled={sharing}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareResult}
+                  disabled={sharing}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {sharing && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Gửi chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
