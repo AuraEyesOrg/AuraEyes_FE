@@ -72,6 +72,17 @@ function MiniCalendar({
     return d.getMonth();
   });
 
+  useEffect(() => {
+    const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
+    if (Number.isNaN(d.getTime())) return;
+
+    const nextYear = d.getFullYear();
+    const nextMonth = d.getMonth();
+
+    setViewYear((current) => (current === nextYear ? current : nextYear));
+    setViewMonth((current) => (current === nextMonth ? current : nextMonth));
+  }, [selectedDate]);
+
   const monthLabel = useMemo(
     () =>
       new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', {

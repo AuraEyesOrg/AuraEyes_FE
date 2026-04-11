@@ -109,7 +109,9 @@ export default function PatientsPage() {
       const triggerRect = triggerElement.getBoundingClientRect();
 
       const menuHeight = actionMenuRef.current?.offsetHeight ?? 104;
+      const menuWidth = actionMenuRef.current?.offsetWidth ?? 176;
       const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
 
       const preferredTop = triggerRect.bottom + 8;
       const flippedTop = triggerRect.top - 8 - menuHeight;
@@ -118,9 +120,14 @@ export default function PatientsPage() {
       const maxTop = Math.max(12, viewportHeight - 12 - menuHeight);
       const top = Math.min(Math.max(unclampedTop, 12), maxTop);
 
+      const preferredRight = triggerRect.right;
+      const maxRight = viewportWidth - 12;
+      const minRight = Math.min(12 + menuWidth, maxRight);
+      const left = Math.min(Math.max(preferredRight, minRight), maxRight);
+
       setActionMenuPosition({
         top,
-        left: triggerRect.right,
+        left,
       });
     };
 
