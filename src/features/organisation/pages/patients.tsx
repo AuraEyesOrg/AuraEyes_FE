@@ -37,6 +37,12 @@ function getRiskBadge(priority: string) {
   return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
 }
 
+function getPatientTypeBadge(isWalkIn: boolean) {
+  return isWalkIn
+    ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+    : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+}
+
 type ActionMenuPosition = {
   top: number;
   left: number;
@@ -72,7 +78,8 @@ export default function PatientsPage() {
     return patients.filter(
       (p) =>
         normalize(p.name).includes(q) ||
-        (p.phoneNumber && normalize(p.phoneNumber).includes(q))
+        (p.phoneNumber && normalize(p.phoneNumber).includes(q)) ||
+        (p.citizenId && normalize(p.citizenId).includes(q))
     );
   }, [patients, searchTerm]);
 
@@ -102,7 +109,9 @@ export default function PatientsPage() {
       const triggerRect = triggerElement.getBoundingClientRect();
 
       const menuHeight = actionMenuRef.current?.offsetHeight ?? 104;
+      const menuWidth = actionMenuRef.current?.offsetWidth ?? 176;
       const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
 
       const preferredTop = triggerRect.bottom + 8;
       const flippedTop = triggerRect.top - 8 - menuHeight;
@@ -111,9 +120,14 @@ export default function PatientsPage() {
       const maxTop = Math.max(12, viewportHeight - 12 - menuHeight);
       const top = Math.min(Math.max(unclampedTop, 12), maxTop);
 
+      const preferredRight = triggerRect.right;
+      const maxRight = viewportWidth - 12;
+      const minRight = Math.min(12 + menuWidth, maxRight);
+      const left = Math.min(Math.max(preferredRight, minRight), maxRight);
+
       setActionMenuPosition({
         top,
-        left: triggerRect.right,
+        left,
       });
     };
 
@@ -263,7 +277,7 @@ export default function PatientsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search by name or phone number..."
+                  placeholder="Search by name, phone number, or CCCD..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-xl pl-11 pr-4 py-2.5 text-sm text-(--text-primary) placeholder:text-(--text-tertiary) focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
@@ -301,7 +315,7 @@ export default function PatientsPage() {
                       Last Screening
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      AI Prediction
+                      Type
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
                       Risk
@@ -358,22 +372,11 @@ export default function PatientsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm text-(--text-secondary)">
-                              {patient.aiPrediction || '—'}
-                            </div>
-                            {patient.confidence > 0 && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <div className="w-16 h-1.5 bg-(--border-primary) rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-primary rounded-full"
-                                    style={{ width: `${patient.confidence}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-(--text-tertiary)">
-                                  {patient.confidence}%
-                                </span>
-                              </div>
-                            )}
+                            <span
+                              className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getPatientTypeBadge(patient.isWalkIn)}`}
+                            >
+                              {patient.isWalkIn ? 'Walk-in' : 'Aura Partner'}
+                            </span>
                           </td>
                           <td className="px-6 py-4">
                             <span

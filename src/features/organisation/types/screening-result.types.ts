@@ -19,6 +19,8 @@ export interface OrgScreeningSessionDetail {
   screeningId: string;
   patientId: string;
   patientName?: string;
+  patientEmail?: string;
+  isWalkIn: boolean;
   modelVersion: string;
   createdAt: string;
   rawJsonOutput?: string;

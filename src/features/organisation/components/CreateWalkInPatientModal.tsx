@@ -29,7 +29,6 @@ export default function CreateWalkInPatientModal({
     dateOfBirth: '',
     address: '',
     phoneNumber: '',
-    email: '',
   });
 
   const mutation = useMutation<string, Error, CreateWalkInPatientRequest>({
@@ -58,7 +57,6 @@ export default function CreateWalkInPatientModal({
         dateOfBirth: '',
         address: '',
         phoneNumber: '',
-        email: '',
       });
     }
   }, [isOpen]);
@@ -285,21 +283,6 @@ export default function CreateWalkInPatientModal({
               }
               className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
               placeholder="+1 (555) 000-0000"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-(--text-secondary)">
-              Email
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-              placeholder="Optional, to send reports"
             />
           </div>
 
