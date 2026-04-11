@@ -414,9 +414,9 @@ export function getNotificationRoute(
       const base = isPatient
         ? '/patient/wallet'
         : isOrgAdmin
-          ? '/organisation/dashboard'
+          ? '/organisation/wallet'
           : isDoctor
-            ? '/ophthalmologist/dashboard'
+            ? '/ophthalmologist/wallet'
             : isSystemAdmin
               ? '/system-admin/dashboard'
               : fallbackHome;

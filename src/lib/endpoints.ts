@@ -295,6 +295,10 @@ export const API_ENDPOINTS = {
     },
     BILLING_SUMMARY: '/organisations/billing/summary',
     SCREENING_REPORTS: '/organisations/screening-reports',
+    WALLET: {
+      GET: '/wallets',
+      TRANSACTIONS: '/wallets/transactions',
+    },
   },
 
   // AI Quota Management

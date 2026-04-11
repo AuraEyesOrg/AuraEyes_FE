@@ -8,7 +8,7 @@ import {
   FileText,
   Users,
   Globe,
-  Receipt,
+  Wallet,
   FileBarChart,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -32,7 +32,7 @@ const navItems = [
     hasBadge: true,
   },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
-  { icon: Receipt, label: 'Billing', path: '/organisation/billing' },
+  { icon: Wallet, label: 'Wallet', path: '/organisation/wallet' },
   { icon: FileBarChart, label: 'Reports', path: '/organisation/reports' },
   { icon: Globe, label: 'Aura Network', path: '/network' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },

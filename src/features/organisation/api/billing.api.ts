@@ -8,6 +8,7 @@ import { unwrapApiData } from '@/types/api-response';
 export interface OrgBillingSummary {
   totalScreeningsThisMonth: number;
   totalScreeningsAllTime: number;
+  walletBalance: number;
   remainingQuota: number;
   purchasedQuota: number;
   monthlyQuotaLimit: number;

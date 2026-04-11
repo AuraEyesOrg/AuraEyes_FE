@@ -78,6 +78,22 @@ describe('getNotificationRoute', () => {
     );
   });
 
+  it('routes wallet notification to organisation wallet for org admin', () => {
+    const txId = 'a2f8fd95-a55f-4f37-a10b-d8e932f6f47d';
+    const notification = buildNotification(
+      NotificationType.WalletPaymentProcessed,
+      {
+        transactionId: txId,
+      }
+    );
+
+    const route = getNotificationRoute(notification, ['OrgAdmin']);
+
+    expect(route).toBe(
+      `/organisation/wallet?transactionId=${encodeURIComponent(txId)}`
+    );
+  });
+
   it('routes org admin verification review completion to organisation contract', () => {
     const notification = buildNotification(NotificationType.SystemAlert, {
       action: 'verification_review_completed',

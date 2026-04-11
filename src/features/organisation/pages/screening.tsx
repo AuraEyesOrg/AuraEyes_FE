@@ -149,7 +149,7 @@ export default function OrganisationScreeningPage() {
 
     if (remainingQuota <= 0) {
       toast.error('Your organisation has no remaining quota. Please top up.');
-      navigate('/organisation/billing');
+      navigate('/organisation/wallet');
       return;
     }
 
@@ -562,10 +562,10 @@ export default function OrganisationScreeningPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => navigate('/organisation/billing')}
+                      onClick={() => navigate('/organisation/wallet')}
                       className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
                     >
-                      Go to Billing
+                      Go to Wallet
                     </button>
                   </div>
                 )}

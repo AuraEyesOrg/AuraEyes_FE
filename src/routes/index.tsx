@@ -147,6 +147,9 @@ const OrganisationScreeningResultPage = lazy(
 const OrganisationBillingPage = lazy(
   () => import('@/features/organisation/pages/billing')
 );
+const OrganisationWalletPage = lazy(
+  () => import('@/features/organisation/pages/wallet')
+);
 const OrganisationReportsPage = lazy(
   () => import('@/features/organisation/pages/reports')
 );
@@ -808,6 +811,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/organisation/wallet"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin']}
+              element={<OrganisationWalletPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/organisation/billing"
           element={
             <LocalizedPrivateRoute
@@ -1235,6 +1247,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['OrgAdmin']}>
               <OrganisationContractPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/organisation/wallet"
+          element={
+            <PrivateRoute allowedRoles={['OrgAdmin']}>
+              <OrganisationWalletPage />
             </PrivateRoute>
           }
         />
