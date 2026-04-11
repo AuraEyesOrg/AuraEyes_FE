@@ -765,7 +765,7 @@ export default function OphthalmologistWalletPage() {
                         }
                       >
                         {bankName
-                          ? `${bankName}${bankBin ? ` (BIN: ${bankBin})` : ''}`
+                          ? bankName
                           : t(
                               'Ophthalmologist.wallet.withdrawModal.bankPlaceholder',
                               'Search and select bank…'
@@ -851,13 +851,6 @@ export default function OphthalmologistWalletPage() {
                           )}
                         </ul>
                       </div>
-                    )}
-
-                    {/* Show selected BIN as read-only hint */}
-                    {bankBin && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        ✓ BIN {bankBin} — {bankName}
-                      </p>
                     )}
                   </div>
 
