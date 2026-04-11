@@ -839,12 +839,7 @@ export default function OphthalmologistWalletPage() {
                                       : 'text-slate-800 dark:text-slate-200'
                                   }`}
                                 >
-                                  <span className="font-medium">
-                                    {bank.shortName}
-                                  </span>
-                                  <span className="ml-2 text-xs text-slate-400">
-                                    BIN {bank.bin}
-                                  </span>
+                                  {bank.shortName}
                                 </button>
                               </li>
                             ))
