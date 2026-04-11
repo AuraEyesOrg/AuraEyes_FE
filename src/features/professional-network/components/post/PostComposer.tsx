@@ -21,6 +21,7 @@ import { useConsultationSession } from '@/features/consultation/hooks';
 import { getConsultationSessions } from '@/features/consultation/api/consultation.api';
 import { SessionStatus } from '@/types/consultation';
 import { ShareClinicCaseModal } from './ShareClinicCaseModal';
+import { resolveAuthorType } from '../../utils/authorType';
 
 const postTypes: {
   type: PostCategory;
@@ -177,7 +178,10 @@ export function PostComposer() {
     const formData = new FormData();
     const normalizedContent = content.trim();
 
-    formData.append('authorType', 'Ophthalmologist');
+    formData.append(
+      'authorType',
+      resolveAuthorType(user?.roles, 'Ophthalmologist')
+    );
     formData.append('content', normalizedContent);
     formData.append('category', selectedType);
     formData.append('visibility', 'Public');

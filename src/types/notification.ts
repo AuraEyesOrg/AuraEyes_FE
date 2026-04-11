@@ -435,6 +435,8 @@ export function getNotificationRoute(
         'verificationFlowType',
         'reviewFlowType'
       ).toLowerCase();
+      const isOrganisationVerificationFlow =
+        flowType.includes('organisation') || flowType.includes('organization');
 
       if (action === 'ophthalmologist_email_confirmed') {
         return isSystemAdmin ? '/system-admin/contracts' : fallbackHome;
@@ -446,7 +448,7 @@ export function getNotificationRoute(
           : isDoctor
             ? '/ophthalmologist/settings'
             : isOrgAdmin
-              ? '/organisation/dashboard'
+              ? '/organisation/contract'
               : fallbackHome;
       }
 
@@ -456,20 +458,33 @@ export function getNotificationRoute(
       ) {
         return isDoctor
           ? '/ophthalmologist/settings'
-          : isSystemAdmin
-            ? '/system-admin/verifications'
+          : isOrgAdmin
+            ? '/organisation/contract'
+            : isSystemAdmin
+              ? '/system-admin/verifications'
+              : fallbackHome;
+      }
+
+      if (action === 'contract_activated') {
+        return isDoctor
+          ? '/ophthalmologist/contract'
+          : isOrgAdmin
+            ? '/organisation/contract'
             : fallbackHome;
       }
 
       if (
         flowType === 'onboardingverification' ||
-        flowType === 'credentialupdatereview'
+        flowType === 'credentialupdatereview' ||
+        isOrganisationVerificationFlow
       ) {
         return isSystemAdmin
           ? '/system-admin/verifications'
           : isDoctor
             ? '/ophthalmologist/settings'
-            : fallbackHome;
+            : isOrgAdmin
+              ? '/organisation/contract'
+              : fallbackHome;
       }
 
       if (isPatient) {

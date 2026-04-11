@@ -20,6 +20,8 @@ const ContactPage = () => {
     organizationContactEmail: '',
     organizationPhone: '',
     organizationName: '',
+    organizationBusinessCode: '',
+    organizationTaxCode: '',
     organizationType: 'clinic',
     organizationLocation: '',
     estimatedVolume: '',
@@ -122,6 +124,12 @@ const ContactPage = () => {
         address: formData.organizationLocation.trim() || undefined,
         notes:
           [
+            formData.organizationBusinessCode.trim()
+              ? `Business code: ${formData.organizationBusinessCode.trim()}`
+              : null,
+            formData.organizationTaxCode.trim()
+              ? `Tax code: ${formData.organizationTaxCode.trim()}`
+              : null,
             `Role: ${formData.organizationContactRole.trim()}`,
             formData.estimatedVolume
               ? `Estimated monthly screenings: ${formData.estimatedVolume}`
@@ -140,6 +148,8 @@ const ContactPage = () => {
         organizationContactEmail: '',
         organizationPhone: '',
         organizationName: '',
+        organizationBusinessCode: '',
+        organizationTaxCode: '',
         organizationType: 'clinic',
         organizationLocation: '',
         estimatedVolume: '',
@@ -529,6 +539,34 @@ const ContactPage = () => {
                           value={formData.organizationLocation}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          {t('Contact.form.businessCode')}
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationBusinessCode"
+                          value={formData.organizationBusinessCode}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder={t(
+                            'Contact.form.businessCodePlaceholder'
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          {t('Contact.form.taxCode')}
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationTaxCode"
+                          value={formData.organizationTaxCode}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder={t('Contact.form.taxCodePlaceholder')}
                         />
                       </div>
                     </div>

@@ -77,4 +77,28 @@ describe('getNotificationRoute', () => {
       `/patient/wallet?transactionId=${encodeURIComponent(txId)}`
     );
   });
+
+  it('routes org admin verification review completion to organisation contract', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      action: 'verification_review_completed',
+      reviewFlowType: 'OrganisationVerification',
+    });
+
+    const route = getNotificationRoute(notification, ['OrgAdmin']);
+
+    expect(route).toBe('/organisation/contract');
+  });
+
+  it('routes contract activated action to role-specific contract page', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      action: 'contract_activated',
+    });
+
+    expect(getNotificationRoute(notification, ['Ophthalmologist'])).toBe(
+      '/ophthalmologist/contract'
+    );
+    expect(getNotificationRoute(notification, ['OrgAdmin'])).toBe(
+      '/organisation/contract'
+    );
+  });
 });

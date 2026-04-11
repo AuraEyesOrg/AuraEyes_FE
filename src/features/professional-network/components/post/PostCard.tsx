@@ -32,6 +32,7 @@ import { useRepostMutation } from '../../hooks/useRepostMutation';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { formatViCompactDate } from '@/lib/date-utils';
 import useAuthStore from '@/store/auth-store';
+import { resolveAuthorType } from '../../utils/authorType';
 
 interface Props {
   post: ProfessionalPost;
@@ -206,7 +207,7 @@ export function PostCard({
     repostMutation.mutate(
       {
         postId: post.id,
-        authorType: 'Ophthalmologist',
+        authorType: resolveAuthorType(user?.roles, 'Ophthalmologist'),
         repostComment: repostComment.trim() || undefined,
       },
       { onSuccess: handleCloseShareDialog }

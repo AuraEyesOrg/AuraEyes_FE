@@ -79,6 +79,7 @@
       "loginForm": {
         "heading": "Welcome Back",
         "description": "Sign in to your AuraEyes account to continue.",
+        "backHome": "Back to Home",
         "emailLabel": "Email Address",
         "emailPlaceholder": "your@email.com",
         "passwordLabel": "Password",
@@ -666,6 +667,7 @@
       "downloadFailed": "Unable to download contract template file.",
       "activeTitle": "Contract has been activated!",
       "activeDescription": "You can now start receiving cases and consulting on the AURA platform.",
+      "redirectCountdown": "Redirecting to dashboard in {{seconds}}s...",
       "status": {
         "uploadedPendingApproval": "Uploaded - Waiting for admin approval",
         "pendingSignature": "Waiting for signature",
@@ -1040,6 +1042,10 @@
       "organizationTypeClinic": "Clinic",
       "organizationTypeHospital": "Hospital",
       "cityLocation": "City / Location",
+      "businessCode": "Business Registration Code",
+      "businessCodePlaceholder": "1234567890",
+      "taxCode": "Tax Code",
+      "taxCodePlaceholder": "1234567890",
       "partnershipNeeds": "Partnership Needs",
       "estimatedMonthlyScreenings": "Estimated Monthly Screenings",
       "selectRange": "Select range",

@@ -27,6 +27,8 @@ import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
 import { toDisplayDiseaseName } from '@/features/patient/lib/disease-translation';
 import { postsApi } from '@/features/professional-network/api/network.api';
+import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
+import useAuthStore from '@/store/auth-store';
 
 type RiskLevel = 'Low' | 'Moderate' | 'High';
 
@@ -223,6 +225,7 @@ function buildNetworkShareContent(
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const screeningId = searchParams.get('id');
   const autoAnalysisTriggeredRef = useRef(false);
   const currentLanguage = useMemo(
@@ -467,7 +470,10 @@ export default function OrganisationScreeningResultPage() {
 
     try {
       const formData = new FormData();
-      formData.append('authorType', 'Organisation');
+      formData.append(
+        'authorType',
+        resolveAuthorType(user?.roles, 'Organisation')
+      );
       formData.append('category', 'CasePresentation');
       formData.append('allowComments', 'true');
       formData.append('isInternalCase', 'false');
@@ -517,7 +523,14 @@ export default function OrganisationScreeningResultPage() {
     } finally {
       setSharing(false);
     }
-  }, [aiFindings, draft, selectedImageIndex, sessionData, sharing]);
+  }, [
+    aiFindings,
+    draft,
+    selectedImageIndex,
+    sessionData,
+    sharing,
+    user?.roles,
+  ]);
 
   const riskLevel = draft?.riskLevel ?? 'Low';
   const risk = riskConfig[riskLevel] || riskConfig.Low;

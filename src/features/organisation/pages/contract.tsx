@@ -106,6 +106,7 @@ function UploadSection({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showReupload, setShowReupload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isActiveContract = contract.status === 'Active';
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
@@ -165,15 +166,27 @@ function UploadSection({
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-blue-600" />
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                isActiveContract ? 'bg-emerald-100' : 'bg-blue-100'
+              }`}
+            >
+              {isActiveContract ? (
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Clock className="w-4 h-4 text-blue-600" />
+              )}
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900">
-                Đang chờ admin xác nhận
+                {isActiveContract
+                  ? 'Hợp đồng đã được kích hoạt'
+                  : 'Đang chờ admin xác nhận'}
               </p>
               <p className="text-xs text-slate-500">
-                Hợp đồng của tổ chức đã được gửi đi
+                {isActiveContract
+                  ? 'Tổ chức có thể bắt đầu sử dụng đầy đủ tính năng trên AURA.'
+                  : 'Hợp đồng của tổ chức đã được gửi đi'}
               </p>
             </div>
           </div>
@@ -187,15 +200,30 @@ function UploadSection({
               <ExternalLink className="w-3.5 h-3.5" />
               Mở file gốc
             </a>
-            <button
-              onClick={() => setShowReupload(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Upload lại
-            </button>
+            {!isActiveContract ? (
+              <button
+                onClick={() => setShowReupload(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Upload lại
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 border border-emerald-200 bg-emerald-50">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Đang hiệu lực
+              </span>
+            )}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isActiveContract) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        Tổ chức đã hoàn tất ký kết và hợp đồng đang ở trạng thái hiệu lực.
       </div>
     );
   }
@@ -314,6 +342,7 @@ export default function OrganisationContractPage() {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
   const {
     data: contract,
@@ -331,9 +360,35 @@ export default function OrganisationContractPage() {
       user.contractStatus !== 'Active'
     ) {
       setUser({ ...user, contractStatus: 'Active' });
-      navigate('/organisation/dashboard', { replace: true });
     }
   }, [contract?.status, navigate, setUser, user]);
+
+  useEffect(() => {
+    if (contract?.status !== 'Active') {
+      setRedirectSeconds(null);
+      return;
+    }
+
+    setRedirectSeconds(5);
+
+    const timer = window.setInterval(() => {
+      setRedirectSeconds((current) => {
+        if (current === null) {
+          return 5;
+        }
+
+        if (current <= 1) {
+          window.clearInterval(timer);
+          navigate('/organisation/dashboard', { replace: true });
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [contract?.status, navigate]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
@@ -414,6 +469,12 @@ export default function OrganisationContractPage() {
                   <p className="text-xs opacity-80">
                     Mã hợp đồng: {contract.contractNumber}
                   </p>
+                  {contract.status === 'Active' && redirectSeconds !== null && (
+                    <p className="text-xs opacity-80 mt-1">
+                      Tự động chuyển tới bảng điều khiển sau {redirectSeconds}{' '}
+                      giây.
+                    </p>
+                  )}
                 </div>
               </div>
 

@@ -80,6 +80,7 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { postsApi } from '@/features/professional-network/api/network.api';
+import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -860,7 +861,10 @@ export default function ConsultationsChatView({
       doctorNote: string;
     }) => {
       const formData = new FormData();
-      formData.append('authorType', 'Ophthalmologist');
+      formData.append(
+        'authorType',
+        resolveAuthorType(user?.roles, 'Ophthalmologist')
+      );
       formData.append('category', 'CasePresentation');
       formData.append('visibility', 'Public');
       formData.append('allowComments', 'true');

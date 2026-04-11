@@ -5,6 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { formatViDate } from '@/lib/date-utils';
@@ -459,8 +460,10 @@ function UploadSection({
 // ─────────────────────────────────────────────
 export default function ContractPage() {
   const { t } = useSafeTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, setUser } = useAuthStore();
+  const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
   const {
     data: contract,
@@ -478,6 +481,33 @@ export default function ContractPage() {
       setUser({ ...user!, contractStatus: 'Active' });
     }
   }, [contract?.status, setUser, user]);
+
+  useEffect(() => {
+    if (contract?.status !== 'Active') {
+      setRedirectSeconds(null);
+      return;
+    }
+
+    setRedirectSeconds(5);
+
+    const timer = window.setInterval(() => {
+      setRedirectSeconds((current) => {
+        if (current === null) {
+          return 5;
+        }
+
+        if (current <= 1) {
+          window.clearInterval(timer);
+          navigate('/ophthalmologist/dashboard', { replace: true });
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [contract?.status, navigate]);
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
@@ -875,6 +905,14 @@ export default function ContractPage() {
                           'You can now start receiving cases and consulting on the AURA platform.'
                         )}
                       </p>
+                      {redirectSeconds !== null && (
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                          {t(
+                            'Ophthalmologist.contract.redirectCountdown',
+                            `Redirecting to dashboard in ${redirectSeconds}s...`
+                          ).replace('{{seconds}}', String(redirectSeconds))}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
