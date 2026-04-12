@@ -8,6 +8,8 @@ import {
   Clock3,
   RefreshCw,
   Search,
+  Send,
+  RotateCcw,
   XCircle,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
@@ -67,6 +69,15 @@ const getStatusChip = (status: WithdrawalRequestStatus) => {
   };
 };
 
+/** Color coding for PayOS approvalState values */
+const getPayOSStateBadgeClass = (state: string) => {
+  if (state === 'COMPLETED' || state === 'SUCCEEDED')
+    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+  if (state === 'FAILED')
+    return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
+  return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300';
+};
+
 export default function WithdrawalRequestsPage() {
   const queryClient = useQueryClient();
 
@@ -77,12 +88,18 @@ export default function WithdrawalRequestsPage() {
   );
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Manual confirm modal state
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
-
   const [transferReference, setTransferReference] = useState('');
   const [adminNote, setAdminNote] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+
+  // Track which request is being processed via PayOS or synced
+  const [payosProcessingId, setPayosProcessingId] = useState<string | null>(
+    null
+  );
+  const [payosSyncingId, setPayosSyncingId] = useState<string | null>(null);
 
   const listQuery = useQuery({
     queryKey: [
@@ -139,6 +156,69 @@ export default function WithdrawalRequestsPage() {
       toast.error(message);
     },
   });
+
+  /**
+   * PayOS Payout mutation — triggers automatic bank transfer via PayOS API.
+   * Requires the withdrawal request to have a valid BankBin set by the doctor.
+   */
+  const payosPayoutMutation = useMutation({
+    mutationFn: (requestId: string) =>
+      ophthalmologistApi.processPayoutViaPayOS(requestId),
+    onSuccess: (data) => {
+      const state = data.approvalState ?? 'UNKNOWN';
+      toast.success(
+        `Chi qua PayOS thành công. Trạng thái: ${state}. PayOS ID: ${data.externalPayoutId}`
+      );
+      setPayosProcessingId(null);
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'withdrawal-requests'],
+      });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Không thể thực hiện lệnh chi qua PayOS.';
+      toast.error(message);
+      setPayosProcessingId(null);
+    },
+  });
+
+  /**
+   * Sync PayOS payout status mutation — fetches latest state from PayOS and
+   * updates the WithdrawalRequest in the DB.
+   */
+  const syncPayoutStatusMutation = useMutation({
+    mutationFn: (requestId: string) =>
+      ophthalmologistApi.syncPayoutStatus(requestId),
+    onSuccess: (data) => {
+      toast.success(
+        `Đã đồng bộ trạng thái: ${data.approvalState} → Rút tiền: ${data.withdrawalStatus}`
+      );
+      setPayosSyncingId(null);
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'withdrawal-requests'],
+      });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Không thể đồng bộ trạng thái PayOS.';
+      toast.error(message);
+      setPayosSyncingId(null);
+    },
+  });
+
+  const handlePayOSPayout = (requestId: string) => {
+    setPayosProcessingId(requestId);
+    payosPayoutMutation.mutate(requestId);
+  };
+
+  const handleSyncPayoutStatus = (requestId: string) => {
+    setPayosSyncingId(requestId);
+    syncPayoutStatusMutation.mutate(requestId);
+  };
 
   const filteredItems = useMemo(() => {
     const items = listQuery.data?.items ?? [];
@@ -251,12 +331,20 @@ export default function WithdrawalRequestsPage() {
                   const StatusIcon = statusChip.icon;
                   const canProcess =
                     item.status === 'Pending' || item.status === 'Processing';
+                  const hasBankBin = Boolean(item.bankBin);
+                  const hasPayOSPayout = Boolean(item.externalPayoutId);
+                  const isPayOSProcessing = payosProcessingId === item.id;
+                  const isPayOSSyncing = payosSyncingId === item.id;
 
                   return (
                     <RequestCard
                       key={item.id}
                       item={item}
                       canProcess={canProcess}
+                      hasBankBin={hasBankBin}
+                      hasPayOSPayout={hasPayOSPayout}
+                      isPayOSProcessing={isPayOSProcessing}
+                      isPayOSSyncing={isPayOSSyncing}
                       statusLabel={statusChip.label}
                       statusClassName={statusChip.className}
                       StatusIcon={StatusIcon}
@@ -269,6 +357,8 @@ export default function WithdrawalRequestsPage() {
                         setRejectingId(item.id);
                         setRejectReason('');
                       }}
+                      onPayOSPayout={() => handlePayOSPayout(item.id)}
+                      onSyncPayoutStatus={() => handleSyncPayoutStatus(item.id)}
                     />
                   );
                 })}
@@ -306,6 +396,7 @@ export default function WithdrawalRequestsPage() {
         </main>
       </div>
 
+      {/* Manual confirm transfer modal */}
       {confirmingId ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -350,6 +441,7 @@ export default function WithdrawalRequestsPage() {
         </div>
       ) : null}
 
+      {/* Reject modal */}
       {rejectingId ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -392,21 +484,33 @@ export default function WithdrawalRequestsPage() {
 interface RequestCardProps {
   item: AdminWithdrawalRequestItem;
   canProcess: boolean;
+  hasBankBin: boolean;
+  hasPayOSPayout: boolean;
+  isPayOSProcessing: boolean;
+  isPayOSSyncing: boolean;
   statusLabel: string;
   statusClassName: string;
   StatusIcon: ComponentType<{ className?: string }>;
   onConfirm: () => void;
   onReject: () => void;
+  onPayOSPayout: () => void;
+  onSyncPayoutStatus: () => void;
 }
 
 function RequestCard({
   item,
   canProcess,
+  hasBankBin,
+  hasPayOSPayout,
+  isPayOSProcessing,
+  isPayOSSyncing,
   statusLabel,
   statusClassName,
   StatusIcon,
   onConfirm,
   onReject,
+  onPayOSPayout,
+  onSyncPayoutStatus,
 }: RequestCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
@@ -418,12 +522,23 @@ function RequestCard({
           <p className="text-xs text-slate-500">{item.doctorEmail}</p>
         </div>
 
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${statusClassName}`}
-        >
-          <StatusIcon className="w-3.5 h-3.5" />
-          {statusLabel}
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${statusClassName}`}
+          >
+            <StatusIcon className="w-3.5 h-3.5" />
+            {statusLabel}
+          </span>
+
+          {/* PayOS payout state badge */}
+          {item.payOSApprovalState ? (
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getPayOSStateBadgeClass(item.payOSApprovalState)}`}
+            >
+              PayOS: {item.payOSApprovalState}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
@@ -438,6 +553,11 @@ function RequestCard({
           <p className="text-slate-500">Ngân hàng / STK</p>
           <p className="font-semibold text-slate-900 dark:text-white mt-1">
             {item.bankName}
+            {item.bankBin ? (
+              <span className="ml-1 text-xs text-slate-400 font-mono">
+                (BIN: {item.bankBin})
+              </span>
+            ) : null}
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-300">
             {item.bankAccountNumber}
@@ -463,21 +583,85 @@ function RequestCard({
         {item.transferReference ? <p>Mã CK: {item.transferReference}</p> : null}
         {item.note ? <p>Ghi chú bác sĩ: {item.note}</p> : null}
         {item.adminNote ? <p>Ghi chú admin: {item.adminNote}</p> : null}
+        {item.externalPayoutId ? (
+          <p className="font-mono text-indigo-600 dark:text-indigo-400">
+            PayOS ID: {item.externalPayoutId}
+          </p>
+        ) : null}
+        {item.payOSReferenceId ? (
+          <p className="font-mono text-slate-400">
+            Ref: {item.payOSReferenceId}
+          </p>
+        ) : null}
       </div>
 
       {canProcess ? (
-        <div className="mt-4 flex items-center justify-end gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          {/* Left: PayOS auto-payout actions */}
+          <div className="flex items-center gap-2">
+            {/* "Chi qua PayOS" — only shown if BankBin is set and no payout yet */}
+            {hasBankBin && !hasPayOSPayout ? (
+              <button
+                onClick={onPayOSPayout}
+                disabled={isPayOSProcessing}
+                title="Tự động chuyển tiền qua PayOS Payout API"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold disabled:opacity-60"
+              >
+                <Send className="w-4 h-4" />
+                {isPayOSProcessing ? 'Đang chi...' : 'Chi qua PayOS'}
+              </button>
+            ) : null}
+
+            {/* "Sync" — shown if a PayOS payout exists */}
+            {hasPayOSPayout ? (
+              <button
+                onClick={onSyncPayoutStatus}
+                disabled={isPayOSSyncing}
+                title="Đồng bộ trạng thái lệnh chi từ PayOS"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-300 text-sm font-medium disabled:opacity-60"
+              >
+                <RotateCcw className="w-4 h-4" />
+                {isPayOSSyncing ? 'Đang đồng bộ...' : 'Sync PayOS'}
+              </button>
+            ) : null}
+
+            {/* Warn if no BankBin */}
+            {!hasBankBin && !hasPayOSPayout ? (
+              <span className="text-xs text-amber-600 dark:text-amber-400">
+                ⚠ Thiếu BankBIN — không thể chi tự động qua PayOS
+              </span>
+            ) : null}
+          </div>
+
+          {/* Right: Manual confirm / reject */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onReject}
+              className="px-3 py-2 rounded-lg border border-rose-300 text-rose-700 dark:text-rose-300 text-sm font-medium"
+            >
+              Từ chối
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold"
+            >
+              Xác nhận thủ công
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Sync button for completed/failed requests that have a PayOS ID */}
+      {!canProcess && hasPayOSPayout ? (
+        <div className="mt-3 flex justify-end">
           <button
-            onClick={onReject}
-            className="px-3 py-2 rounded-lg border border-rose-300 text-rose-700 dark:text-rose-300 text-sm font-medium"
+            onClick={onSyncPayoutStatus}
+            disabled={isPayOSSyncing}
+            title="Đồng bộ trạng thái lệnh chi từ PayOS"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-300 text-sm font-medium disabled:opacity-60"
           >
-            Từ chối
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold"
-          >
-            Xác nhận đã chuyển khoản
+            <RotateCcw className="w-4 h-4" />
+            {isPayOSSyncing ? 'Đang đồng bộ...' : 'Sync PayOS'}
           </button>
         </div>
       ) : null}
