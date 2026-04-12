@@ -23,6 +23,9 @@ import PageHeader from '../components/PageHeader';
 import {
   useSystemSettings,
   useUpdateSystemSettings,
+  useExperiencePricingRules,
+  useUpdateExperiencePricingRules,
+  type ExperiencePricingRule,
 } from '../api/system-settings.api';
 
 interface SettingSection {
@@ -75,7 +78,9 @@ export default function SettingsPage() {
   const domainInputRef = useRef<HTMLInputElement>(null);
 
   const { data: systemSettings } = useSystemSettings();
+  const { data: experiencePricingRules } = useExperiencePricingRules();
   const updateSettingsMutation = useUpdateSystemSettings();
+  const updatePricingRulesMutation = useUpdateExperiencePricingRules();
 
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
@@ -99,6 +104,7 @@ export default function SettingsPage() {
     DEFAULT_TRUSTED_DOMAINS
   );
   const [domainInput, setDomainInput] = useState('');
+  const [pricingBands, setPricingBands] = useState<ExperiencePricingRule[]>([]);
 
   useEffect(() => {
     if (systemSettings) {
@@ -139,6 +145,18 @@ export default function SettingsPage() {
       }
     }
   }, [systemSettings]);
+
+  useEffect(() => {
+    if (!experiencePricingRules) {
+      return;
+    }
+
+    setPricingBands(
+      [...experiencePricingRules].sort(
+        (a, b) => a.minYearsExperience - b.minYearsExperience
+      )
+    );
+  }, [experiencePricingRules]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -197,6 +215,20 @@ export default function SettingsPage() {
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
+
+      if (pricingBands.length > 0) {
+        await updatePricingRulesMutation.mutateAsync(
+          pricingBands.map((band) => ({
+            id: band.id,
+            minPrice: Math.max(1, Math.trunc(band.minPrice)),
+            maxPrice: Math.max(
+              Math.max(1, Math.trunc(band.minPrice)),
+              Math.trunc(band.maxPrice)
+            ),
+          }))
+        );
+      }
+
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error(error);
@@ -204,6 +236,26 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePricingBandChange = (
+    id: string,
+    field: 'minPrice' | 'maxPrice',
+    value: number
+  ) => {
+    setPricingBands((prev) =>
+      prev.map((band) => {
+        if (band.id !== id) {
+          return band;
+        }
+
+        const normalizedValue = Number.isFinite(value) ? value : 0;
+        return {
+          ...band,
+          [field]: normalizedValue,
+        };
+      })
+    );
   };
 
   const addDomain = () => {
@@ -458,6 +510,82 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Auto-generated full-time slot cost is clamped between min and max.
           </p>
+        </div>
+        <div className="md:col-span-2">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/60">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+              Part-time pricing bands by experience
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Update min/max price for each seeded experience band.
+            </p>
+
+            {pricingBands.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                No pricing bands found.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {pricingBands.map((band) => (
+                  <div
+                    key={band.id}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900"
+                  >
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Experience band
+                      </label>
+                      <input
+                        type="text"
+                        value={`${band.minYearsExperience} - ${band.maxYearsExperience} years`}
+                        readOnly
+                        disabled
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Min price (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1000}
+                        value={band.minPrice}
+                        onChange={(e) =>
+                          handlePricingBandChange(
+                            band.id,
+                            'minPrice',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Max price (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1000}
+                        value={band.maxPrice}
+                        onChange={(e) =>
+                          handlePricingBandChange(
+                            band.id,
+                            'maxPrice',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="md:col-span-2">
           <p className="text-xs text-slate-500 dark:text-slate-400">
