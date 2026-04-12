@@ -209,6 +209,8 @@ export const API_ENDPOINTS = {
     LIST: '/appointment-slots',
     BY_DOCTOR: (ophthalId: string) =>
       `/appointment-slots?ophthalId=${ophthalId}`,
+    PRICING_RANGE: (ophthalId: string) =>
+      `/appointment-slots/ophthalmologists/${ophthalId}/pricing-range`,
     DETAIL: (slotId: string) => `/appointment-slots/${slotId}`,
     UPDATE_STATUS: (slotId: string) => `/appointment-slots/${slotId}/status`,
     GENERATE: '/appointment-slots/generate',

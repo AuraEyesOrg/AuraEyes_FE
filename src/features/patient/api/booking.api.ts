@@ -21,6 +21,7 @@ import type {
   GenerateSlotsRequest,
   BlockSlotRequest,
   UnblockSlotRequest,
+  AllowedPriceRangeDto,
 } from '@/types/schedule';
 import type { PagedResult } from '@/features/patient/types';
 
@@ -176,6 +177,17 @@ export const unblockSlot = async (
   request: UnblockSlotRequest
 ): Promise<void> => {
   await api.post(API_ENDPOINTS.APPOINTMENT_SLOTS.UNBLOCK(slotId), request);
+};
+
+/** Get allowed pricing range for a doctor based on years of experience */
+export const getAllowedPriceRange = async (
+  ophthalId: string
+): Promise<AllowedPriceRangeDto> => {
+  const response = await api.get<ApiResponse<AllowedPriceRangeDto>>(
+    API_ENDPOINTS.APPOINTMENT_SLOTS.PRICING_RANGE(ophthalId)
+  );
+
+  return unwrapApiData<AllowedPriceRangeDto>(response.data);
 };
 
 // ============ SCHEDULE TEMPLATES API ============

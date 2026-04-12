@@ -284,6 +284,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
     : 0;
   if (advanceBookingHours < 0.5) advanceBookingHours = 0.5; // Enforce minimum 30 minutes
 
+  // const minAdvanceBookingMs = 0;
   const minAdvanceBookingMs = advanceBookingHours * 60 * 60 * 1000;
   const warningText =
     advanceBookingHours < 1
