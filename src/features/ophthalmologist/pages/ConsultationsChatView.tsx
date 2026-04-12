@@ -77,6 +77,7 @@ import {
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { postsApi } from '@/features/professional-network/api/network.api';
@@ -1442,8 +1443,14 @@ export default function ConsultationsChatView({
   const doctorName =
     user?.fullName?.trim() ||
     t('Ophthalmologist.consultations.chat.doctor', 'Doctor');
-  const patientAvatarUrl =
-    selectedSession?.patientAvatarUrl ?? currentSession?.patientAvatarUrl;
+  const patientAvatarUrl = resolveAvatarUrl(
+    selectedSession?.patientAvatarUrl,
+    currentSession?.patientAvatarUrl
+  );
+  const doctorAvatarUrl = resolveAvatarUrl(
+    user?.avatarUrl,
+    selectedSession?.ophthalmologistAvatarUrl
+  );
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
     currentTimeMs,
@@ -2117,7 +2124,7 @@ export default function ConsultationsChatView({
                           (showAvatar ? (
                             <AvatarBadge
                               name={doctorName}
-                              avatarUrl={user?.avatarUrl}
+                              avatarUrl={doctorAvatarUrl}
                               size="sm"
                             />
                           ) : (

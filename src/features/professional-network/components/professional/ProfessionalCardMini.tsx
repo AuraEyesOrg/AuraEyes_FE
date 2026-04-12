@@ -7,6 +7,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { InitialsAvatar } from './InitialsAvatar';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
@@ -30,10 +31,11 @@ export function ProfessionalCardMini({ professional }: Props) {
         to={toLocalizedPath(`/network/profile/${professional.id}`)}
         className="flex-shrink-0"
       >
-        <img
-          src={professional.avatarUrl}
-          alt={professional.fullName}
-          className="w-10 h-10 rounded-full object-cover hover:opacity-90 hover-animation"
+        <InitialsAvatar
+          fullName={professional.fullName}
+          avatarUrl={professional.avatarUrl}
+          size="md"
+          className="hover:opacity-90 hover-animation"
         />
       </Link>
 

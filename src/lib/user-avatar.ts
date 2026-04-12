@@ -3,6 +3,19 @@ export interface UserAvatarMeta {
   initials: string;
 }
 
+export function resolveAvatarUrl(
+  ...candidates: Array<string | null | undefined>
+): string | undefined {
+  for (const candidate of candidates) {
+    const normalized = (candidate ?? '').trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
+
 function normalizeWords(value: string): string[] {
   return value.trim().split(/\s+/).filter(Boolean);
 }

@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
+
 const getInitials = (value: string) =>
   value
     .trim()
@@ -15,6 +18,9 @@ const AvatarBadge = ({
   avatarUrl?: string | null;
   size?: 'sm' | 'md' | 'lg';
 }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+  const safeAvatarUrl = resolveAvatarUrl(avatarUrl);
+
   const sizeClass =
     size === 'sm'
       ? 'h-9 w-9 text-xs'
@@ -22,12 +28,13 @@ const AvatarBadge = ({
         ? 'h-16 w-16 text-lg'
         : 'h-11 w-11 text-sm';
 
-  if (avatarUrl) {
+  if (safeAvatarUrl && !hasImageError) {
     return (
       <img
-        src={avatarUrl}
+        src={safeAvatarUrl}
         alt={name}
         className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70`}
+        onError={() => setHasImageError(true)}
       />
     );
   }

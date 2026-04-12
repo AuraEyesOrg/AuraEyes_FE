@@ -78,6 +78,7 @@ import {
 import { formatCurrency } from '@/lib/helper';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 
 interface SharedScanData {
   imageUrl?: string;
@@ -542,6 +543,9 @@ const AvatarBadge = ({
   avatarUrl?: string | null;
   size?: 'sm' | 'md' | 'lg';
 }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+  const safeAvatarUrl = resolveAvatarUrl(avatarUrl);
+
   const sizeClass =
     size === 'sm'
       ? 'h-9 w-9 text-xs'
@@ -549,13 +553,14 @@ const AvatarBadge = ({
         ? 'h-16 w-16 text-lg'
         : 'h-11 w-11 text-sm';
 
-  if (avatarUrl) {
+  if (safeAvatarUrl && !hasImageError) {
     return (
       <img
-        src={avatarUrl}
+        src={safeAvatarUrl}
         alt={name}
         className={`${sizeClass} rounded-full object-cover shadow-sm ring-1 ring-slate-200/70 dark:ring-[#1e3a5f]`}
         loading="lazy"
+        onError={() => setHasImageError(true)}
       />
     );
   }
@@ -1186,6 +1191,15 @@ export default function ChatPage() {
     user?.fullName ??
     currentSession?.patientName ??
     t('PatientChat.fallback.patient');
+  const doctorAvatarUrl = resolveAvatarUrl(
+    currentSession?.ophthalmologistAvatarUrl,
+    selectedSession?.ophthalmologistAvatarUrl
+  );
+  const patientAvatarUrl = resolveAvatarUrl(
+    user?.avatarUrl,
+    currentSession?.patientAvatarUrl,
+    selectedSession?.patientAvatarUrl
+  );
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
     currentTimeMs,
@@ -1627,9 +1641,7 @@ export default function ChatPage() {
                             (showAvatar ? (
                               <AvatarBadge
                                 name={doctorName}
-                                avatarUrl={
-                                  currentSession.ophthalmologistAvatarUrl
-                                }
+                                avatarUrl={doctorAvatarUrl}
                                 size="sm"
                               />
                             ) : (
@@ -1793,7 +1805,7 @@ export default function ChatPage() {
                             (showAvatar ? (
                               <AvatarBadge
                                 name={patientName}
-                                avatarUrl={user?.avatarUrl}
+                                avatarUrl={patientAvatarUrl}
                                 size="sm"
                               />
                             ) : (

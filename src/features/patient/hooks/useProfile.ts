@@ -6,6 +6,7 @@ import {
   changePassword,
 } from '../api/patient.api';
 import type { PatientProfile, ProfileUpdateData } from '../types';
+import useAuthStore from '@/store/auth-store';
 
 // ============ QUERY KEYS ============
 
@@ -28,17 +29,26 @@ export const useProfile = () => {
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation<PatientProfile, Error, ProfileUpdateData>({
     mutationFn: updateProfile,
     onSuccess: (data) => {
       queryClient.setQueryData(profileKeys.detail(), data);
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        setUser({
+          ...currentUser,
+          fullName: data.fullName,
+        });
+      }
     },
   });
 };
 
 export const useUploadAvatar = () => {
   const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation<string, Error, File>({
     mutationFn: uploadAvatar,
@@ -47,6 +57,14 @@ export const useUploadAvatar = () => {
       queryClient.setQueryData<PatientProfile>(profileKeys.detail(), (old) =>
         old ? { ...old, avatarUrl } : old
       );
+
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        setUser({
+          ...currentUser,
+          avatarUrl,
+        });
+      }
     },
   });
 };

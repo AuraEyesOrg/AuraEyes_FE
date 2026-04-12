@@ -6,6 +6,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { InitialsAvatar } from './InitialsAvatar';
 import { formatRequestDate } from '@/lib/date-utils';
 import {
   DEFAULT_LOCALE,
@@ -32,10 +33,11 @@ export function ProfessionalAvatar({
   return (
     <div className="flex items-center gap-3">
       <Link to={toLocalizedPath(`/network/profile/${author.id}`)}>
-        <img
-          src={author.avatarUrl}
-          alt={author.fullName}
-          className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-brand-primary transition-all"
+        <InitialsAvatar
+          fullName={author.fullName}
+          avatarUrl={author.avatarUrl}
+          size="lg"
+          className="hover:ring-2 hover:ring-brand-primary transition-all"
         />
       </Link>
       <div>

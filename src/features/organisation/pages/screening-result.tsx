@@ -1,33 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  Activity,
+  AlertCircle,
   Bot,
+  Loader2,
+  Mail,
   Printer,
   RefreshCw,
-  Sparkles,
   Save,
-  AlertCircle,
-  Loader2,
-  Activity,
   Share2,
-  Mail,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
-import { OrganisationScreeningStepper } from '../components/OrganisationScreeningStepper';
 import { OrganisationRetinalViewerCard } from '../components/OrganisationRetinalViewerCard';
-import ConfirmModal from '@/components/ui/confirm-modal';
+import { OrganisationScreeningStepper } from '../components/OrganisationScreeningStepper';
 import { orgScreeningApi } from '../api/screening.api';
-import { unwrapApiData } from '@/types/api-response';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { aiCoreClient } from '@/lib/axios';
 import {
   downloadBlobFile,
   getFileNameFromContentDisposition,
 } from '@/lib/file-export';
-import { resolvePathWithLocale } from '@/i18n/middleware';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import { unwrapApiData } from '@/types/api-response';
 import type {
   AiFindingItem,
   AIStandardResponse,
@@ -51,12 +51,16 @@ import {
   splitFindingsAndNote,
   toRiskLevelFromUrgency,
 } from '@/features/organisation/utils/screening-result.util';
+import { postsApi } from '@/features/professional-network/api/network.api';
+import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
+import useAuthStore from '@/store/auth-store';
 
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const screeningId = searchParams.get('id');
+  const { user } = useAuthStore();
 
   const locationState = location.state as { patientName?: string } | null;
   const locationPatientName = locationState?.patientName?.trim() ?? '';
@@ -103,9 +107,6 @@ export default function OrganisationScreeningResultPage() {
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
   const isWalkInPatient = sessionData?.isWalkIn ?? false;
 
-  // ─── Navigation Guard ────────────────────────────────────────────────────────
-
-  // Xử lý beforeunload (F5, đóng tab) — vẫn cần vì nằm ngoài React Router
   useEffect(() => {
     if (!hasUnsavedRecord) return;
 
@@ -116,7 +117,6 @@ export default function OrganisationScreeningResultPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedRecord]);
-  // ─────────────────────────────────────────────────────────────────────────────
 
   const hydrateVisualArtifacts = useCallback(
     (imageWidth: number, imageHeight: number) => {
@@ -183,6 +183,7 @@ export default function OrganisationScreeningResultPage() {
 
       if (detail.latestResult) {
         const parsed = splitFindingsAndNote(detail.latestResult.findings);
+
         setDraft({
           riskLevel: normalizeRiskLevel(detail.latestResult.riskLevel),
           confidenceScore: clampConfidence(detail.latestResult.confidenceScore),
@@ -294,8 +295,9 @@ export default function OrganisationScreeningResultPage() {
       !sessionData ||
       sessionData.images.length === 0 ||
       analyzing
-    )
+    ) {
       return;
+    }
 
     const targetImage =
       sessionData.images[selectedImageIndex] ?? sessionData.images[0];
@@ -318,10 +320,11 @@ export default function OrganisationScreeningResultPage() {
       formData.append('file', file);
 
       const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/api/v2/diagnosis/v2/analyze',
+        '/diagnosis/analyze',
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
+          params: { threshold: 0.6, localization: true },
         }
       );
 
@@ -334,7 +337,6 @@ export default function OrganisationScreeningResultPage() {
       }
 
       const mappedFindings = mapAiFindings(topK, currentLanguage);
-
       const primary = mappedFindings[0];
       const nextRiskLevel = toRiskLevelFromUrgency(
         getDiseaseUrgency(primary.name),
@@ -378,6 +380,7 @@ export default function OrganisationScreeningResultPage() {
     }
 
     setDownloadingPdf(true);
+
     try {
       const { blob, contentDisposition } =
         await orgScreeningApi.downloadSessionReportPdf(screeningId);
@@ -396,6 +399,97 @@ export default function OrganisationScreeningResultPage() {
     }
   }, [screeningId, downloadingPdf, canDownloadPdf]);
 
+  const buildNetworkShareContent = useCallback(() => {
+    if (!sessionData || !draft) return '';
+
+    const topFindings = aiFindings.slice(0, 3);
+    const findingText =
+      topFindings.length > 0
+        ? topFindings
+            .map(
+              (item) =>
+                `- ${item.localizedName}: ${clampConfidence(item.confidence)}%`
+            )
+            .join('\n')
+        : '- No clear abnormal findings';
+
+    return [
+      'AI screening case shared by organisation',
+      `Session: ${sessionData.screeningId.slice(0, 8)}...`,
+      `Risk level: ${draft.riskLevel}`,
+      `Confidence: ${clampConfidence(draft.confidenceScore)}%`,
+      '',
+      'Summary:',
+      draft.summary,
+      '',
+      'Top findings:',
+      findingText,
+      '',
+      `Consultation note: ${consultationNote.trim() || 'Not provided yet'}`,
+    ].join('\n');
+  }, [aiFindings, consultationNote, draft, sessionData]);
+
+  const handleShareToNetwork = useCallback(async () => {
+    if (!sessionData || !draft || sharing) return;
+
+    setSharing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append(
+        'authorType',
+        resolveAuthorType(user?.roles, 'Organisation')
+      );
+      formData.append('category', 'CasePresentation');
+      formData.append('allowComments', 'true');
+      formData.append('isInternalCase', 'false');
+      formData.append('isAnonymizationConfirmed', 'true');
+      formData.append('aiScreeningId', sessionData.screeningId);
+      formData.append('content', buildNetworkShareContent());
+
+      const targetImage =
+        sessionData.images[selectedImageIndex] ?? sessionData.images[0];
+
+      if (targetImage?.imageUrl) {
+        try {
+          const imageResponse = await fetch(targetImage.imageUrl);
+          if (imageResponse.ok) {
+            const imageBlob = await imageResponse.blob();
+            const extension =
+              imageBlob.type.split('/')[1]?.replace(/[^a-z0-9]/gi, '') || 'jpg';
+            const fileName = `org-screening-${sessionData.screeningId.slice(0, 8)}.${extension}`;
+            const imageFile = new File([imageBlob], fileName, {
+              type: imageBlob.type || 'image/jpeg',
+            });
+            formData.append('attachments', imageFile);
+          }
+        } catch (imageError) {
+          console.warn('Unable to attach selected retinal image:', imageError);
+        }
+      }
+
+      await postsApi.createPost(formData);
+      toast.success('Diagnosis shared to Professional Network successfully.');
+    } catch (error) {
+      console.error('Failed to share organisation screening case:', error);
+      toast.error(
+        getErrorMessage(
+          error,
+          'Unable to share diagnosis to Professional Network. Please retry.'
+        )
+      );
+    } finally {
+      setSharing(false);
+    }
+  }, [
+    buildNetworkShareContent,
+    draft,
+    selectedImageIndex,
+    sessionData,
+    sharing,
+    user?.roles,
+  ]);
+
   const handleShareResult = useCallback(async () => {
     if (!screeningId || !sessionData || sharing) return;
 
@@ -411,6 +505,7 @@ export default function OrganisationScreeningResultPage() {
     }
 
     setSharing(true);
+
     try {
       const response = await orgScreeningApi.shareSessionResult(screeningId, {
         recipientEmail: trimmedEmail || undefined,
@@ -466,10 +561,10 @@ export default function OrganisationScreeningResultPage() {
       setSaved(true);
       toast.success('Lưu kết quả khám thành công.');
       await loadSessionDetail(false);
-    } catch (err) {
-      console.error('Save failed:', err);
+    } catch (error) {
+      console.error('Save failed:', error);
       toast.error(
-        getErrorMessage(err, 'Không thể lưu kết quả. Vui lòng thử lại.')
+        getErrorMessage(error, 'Không thể lưu kết quả. Vui lòng thử lại.')
       );
     } finally {
       setSaving(false);
@@ -506,7 +601,9 @@ export default function OrganisationScreeningResultPage() {
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-(--text-secondary)">Đang tải kết quả khám…</p>
+              <p className="text-(--text-secondary)">
+                Đang tải kết quả khám...
+              </p>
             </div>
           </main>
         </div>
@@ -558,7 +655,7 @@ export default function OrganisationScreeningResultPage() {
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
                         Bệnh nhân: {patientDisplayName} · Phiên{' '}
-                        {screeningId?.slice(0, 8)}… ·{' '}
+                        {screeningId?.slice(0, 8)}... ·{' '}
                         {new Date(sessionData.createdAt).toLocaleString(
                           'vi-VN'
                         )}
@@ -582,6 +679,19 @@ export default function OrganisationScreeningResultPage() {
                   </button>
 
                   <button
+                    onClick={handleShareToNetwork}
+                    disabled={!draft || sharing}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  >
+                    {sharing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    Đăng Network
+                  </button>
+
+                  <button
                     onClick={handleDownloadPdf}
                     disabled={
                       downloadingPdf ||
@@ -602,7 +712,7 @@ export default function OrganisationScreeningResultPage() {
                       <Printer className="w-4 h-4" />
                     )}
                     {downloadingPdf
-                      ? 'Đang tạo PDF…'
+                      ? 'Đang tạo PDF...'
                       : canDownloadPdf
                         ? 'Tải PDF'
                         : 'Lưu hồ sơ để in PDF'}
@@ -610,7 +720,7 @@ export default function OrganisationScreeningResultPage() {
 
                   {isViewOnly ? (
                     <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-                      Chế độ xem — hồ sơ đã được lưu
+                      Chế độ xem - hồ sơ đã được lưu
                     </span>
                   ) : (
                     <>
@@ -626,8 +736,9 @@ export default function OrganisationScreeningResultPage() {
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
+                        {analyzing ? 'Đang phân tích...' : 'Phân tích'}
                       </button>
+
                       <button
                         onClick={requestSaveResults}
                         disabled={
@@ -650,7 +761,7 @@ export default function OrganisationScreeningResultPage() {
                         {saved && !saving
                           ? 'Đã lưu'
                           : saving
-                            ? 'Đang lưu…'
+                            ? 'Đang lưu...'
                             : 'Lưu hồ sơ'}
                       </button>
                     </>
@@ -780,7 +891,7 @@ export default function OrganisationScreeningResultPage() {
 
                       <div>
                         <label className="text-xs font-semibold text-(--text-tertiary)">
-                          Điểm tin cậy (0–100)
+                          Điểm tin cậy (0-100)
                         </label>
                         <input
                           type="number"
@@ -834,7 +945,7 @@ export default function OrganisationScreeningResultPage() {
                       onChange={(event) => handleNoteChange(event.target.value)}
                       rows={4}
                       className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                      placeholder="Nhập ghi chú tư vấn cho phiên khám này…"
+                      placeholder="Nhập ghi chú tư vấn cho phiên khám này..."
                     />
                   </div>
                 )}
@@ -861,8 +972,8 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl border border-dashed border-(--border-primary) bg-(--bg-secondary) p-5">
                     <p className="text-sm text-(--text-secondary)">
                       <Sparkles className="inline w-4 h-4 mr-1" />
-                      Chưa có kết quả AI. Nhấn "Phân tích lại" để chạy AI và
-                      chuẩn bị kết quả có thể chỉnh sửa.
+                      Chưa có kết quả AI. Nhấn "Phân tích" để chạy AI và chuẩn
+                      bị kết quả có thể chỉnh sửa.
                     </p>
                   </div>
                 )}
@@ -907,7 +1018,7 @@ export default function OrganisationScreeningResultPage() {
                     <div className="flex justify-between">
                       <span className="text-(--text-tertiary)">Mã phiên</span>
                       <span className="text-(--text-primary) font-medium text-xs">
-                        {sessionData.screeningId.slice(0, 8)}…
+                        {sessionData.screeningId.slice(0, 8)}...
                       </span>
                     </div>
                   </div>
@@ -917,7 +1028,6 @@ export default function OrganisationScreeningResultPage() {
           </div>
         </main>
 
-        {/* Modal xác nhận lưu kết quả */}
         <ConfirmModal
           open={saveConfirmOpen}
           title="Xác nhận lưu kết quả"

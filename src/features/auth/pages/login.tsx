@@ -53,6 +53,32 @@ interface RegisterFormData {
   agreeTerms: boolean;
 }
 
+type GoogleJwtPayload = {
+  picture?: string;
+};
+
+const getGooglePictureFromCredential = (
+  credential: string | undefined
+): string | undefined => {
+  if (!credential) return undefined;
+
+  try {
+    const payloadBase64 = credential.split('.')[1];
+    if (!payloadBase64) return undefined;
+
+    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+    const payload = JSON.parse(
+      atob(`${normalized}${padding}`)
+    ) as GoogleJwtPayload;
+
+    const picture = (payload.picture ?? '').trim();
+    return picture.length > 0 ? picture : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const LoginPage = () => {
   const { t } = useSafeTranslation();
   const copyrightText = t('AuthPages.shared.copyright').replace(
@@ -328,25 +354,37 @@ const LoginPage = () => {
 
       // Login successful
       if (response.succeeded) {
-        if (response.user) {
-          authLogin(response.user);
+        let loggedInUser = response.user;
+        const googlePicture = getGooglePictureFromCredential(
+          credentialResponse.credential
+        );
+
+        if (loggedInUser && googlePicture) {
+          loggedInUser = {
+            ...loggedInUser,
+            avatarUrl: googlePicture,
+          };
         }
 
-        const roles = response.user?.roles || [];
+        if (loggedInUser) {
+          authLogin(loggedInUser);
+        }
+
+        const roles = loggedInUser?.roles || [];
         if (roles.includes('SystemAdmin')) {
           navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(response.user)) {
+          if (isPendingVerification(loggedInUser)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (response.user?.contractStatus !== 'Active') {
+          } else if (loggedInUser?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (response.user?.contractStatus !== 'Active') {
+          if (loggedInUser?.contractStatus !== 'Active') {
             navigate('/organisation/contract');
           } else {
             navigate('/organisation/dashboard');
