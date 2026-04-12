@@ -105,6 +105,17 @@ describe('getNotificationRoute', () => {
     expect(route).toBe('/organisation/contract');
   });
 
+  it('routes org admin verification rejection to organisation contract', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      action: 'verification_review_rejected',
+      reviewFlowType: 'OrganisationVerification',
+    });
+
+    const route = getNotificationRoute(notification, ['OrgAdmin']);
+
+    expect(route).toBe('/organisation/contract');
+  });
+
   it('routes contract activated action to role-specific contract page', () => {
     const notification = buildNotification(NotificationType.SystemAlert, {
       action: 'contract_activated',

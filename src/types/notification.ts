@@ -454,7 +454,9 @@ export function getNotificationRoute(
 
       if (
         action === 'verification_review_completed' ||
-        action === 'ophthalmologist_verification_approved'
+        action === 'ophthalmologist_verification_approved' ||
+        action === 'verification_review_rejected' ||
+        action === 'ophthalmologist_verification_rejected'
       ) {
         return isDoctor
           ? '/ophthalmologist/settings'
