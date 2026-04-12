@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Wallet,
   ArrowDownLeft,
@@ -10,6 +10,9 @@ import {
   BadgeCheck,
   XCircle,
   Clock3,
+  ChevronDown,
+  Search,
+  X,
 } from 'lucide-react';
 import { DoctorHeader, DoctorSidebar } from '../components';
 import Spinner from '@/components/ui/spinner';
@@ -17,6 +20,7 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { formatCurrency } from '@/lib/helper';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
+import { VIETNAMESE_BANKS } from '@/constants/vietnameseBanks';
 import {
   TransactionType,
   parseWalletTransactionType,
@@ -105,8 +109,38 @@ export default function OphthalmologistWalletPage() {
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
+  const [bankBin, setBankBin] = useState('');
   const [contractNumber, setContractNumber] = useState('');
   const [note, setNote] = useState('');
+
+  // Bank combobox state
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+  const bankDropdownRef = useRef<HTMLDivElement>(null);
+
+  const filteredBanks = useMemo(() => {
+    const q = bankSearch.toLowerCase();
+    return VIETNAMESE_BANKS.filter(
+      (b) =>
+        b.fullName.toLowerCase().includes(q) ||
+        b.shortName.toLowerCase().includes(q) ||
+        b.bin.includes(q)
+    );
+  }, [bankSearch]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        bankDropdownRef.current &&
+        !bankDropdownRef.current.contains(e.target as Node)
+      ) {
+        setBankDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const walletQuery = useOphthalmologistWallet();
   const transactionsQuery = useOphthalmologistWalletTransactions(
@@ -151,6 +185,7 @@ export default function OphthalmologistWalletPage() {
     setBankName('');
     setBankAccountNumber('');
     setAccountHolderName('');
+    setBankBin('');
     setContractNumber('');
     setNote('');
   };
@@ -229,12 +264,23 @@ export default function OphthalmologistWalletPage() {
       return;
     }
 
+    if (!bankBin.trim()) {
+      toast.error(
+        t(
+          'Ophthalmologist.wallet.toast.missingBankBin',
+          'Please provide the bank BIN code for automated PayOS payout.'
+        )
+      );
+      return;
+    }
+
     try {
       await createWithdrawalRequestMutation.mutateAsync({
         amountVnd: numericAmount,
         bankName: bankName.trim(),
         bankAccountNumber: bankAccountNumber.trim(),
         accountHolderName: accountHolderName.trim(),
+        bankBin: bankBin.trim(),
         contractNumber: contractNumber.trim() || undefined,
         note: note.trim() || undefined,
       });
@@ -692,23 +738,116 @@ export default function OphthalmologistWalletPage() {
                     />
                   </label>
 
-                  <label className="space-y-1 text-sm">
-                    <span className="text-slate-600 dark:text-slate-300">
+                  {/* Bank searchable combobox — spans both columns on md+ */}
+                  <div
+                    className="md:col-span-2 space-y-1 text-sm"
+                    ref={bankDropdownRef}
+                  >
+                    <span className="text-slate-600 dark:text-slate-300 block">
                       {t(
                         'Ophthalmologist.wallet.withdrawModal.bankLabel',
                         'Bank'
                       )}
+                      <span className="text-rose-500 ml-1">*</span>
                     </span>
-                    <input
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      placeholder={t(
-                        'Ophthalmologist.wallet.withdrawModal.bankPlaceholder',
-                        'e.g. Vietcombank'
-                      )}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                    />
-                  </label>
+
+                    {/* Trigger button */}
+                    <button
+                      type="button"
+                      onClick={() => setBankDropdownOpen((o) => !o)}
+                      className="w-full flex items-center justify-between rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-left"
+                    >
+                      <span
+                        className={
+                          bankName
+                            ? 'text-slate-900 dark:text-white'
+                            : 'text-slate-400'
+                        }
+                      >
+                        {bankName
+                          ? bankName
+                          : t(
+                              'Ophthalmologist.wallet.withdrawModal.bankPlaceholder',
+                              'Search and select bank…'
+                            )}
+                      </span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        {bankName && (
+                          <X
+                            className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBankName('');
+                              setBankBin('');
+                              setBankSearch('');
+                            }}
+                          />
+                        )}
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                      </span>
+                    </button>
+
+                    {/* Dropdown */}
+                    {bankDropdownOpen && (
+                      <div className="absolute z-20 mt-1 w-full max-w-[calc(100%-3rem)] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
+                        {/* Search input */}
+                        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                          <input
+                            autoFocus
+                            value={bankSearch}
+                            onChange={(e) => setBankSearch(e.target.value)}
+                            placeholder={t(
+                              'Ophthalmologist.wallet.withdrawModal.bankSearchPlaceholder',
+                              'Search bank name or BIN…'
+                            )}
+                            className="flex-1 bg-transparent text-sm outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                          />
+                          {bankSearch && (
+                            <button
+                              onClick={() => setBankSearch('')}
+                              type="button"
+                            >
+                              <X className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Bank list */}
+                        <ul className="max-h-52 overflow-y-auto py-1">
+                          {filteredBanks.length === 0 ? (
+                            <li className="px-4 py-2 text-xs text-slate-400">
+                              {t(
+                                'Ophthalmologist.wallet.withdrawModal.noBankFound',
+                                'No bank found.'
+                              )}
+                            </li>
+                          ) : (
+                            filteredBanks.map((bank) => (
+                              <li key={bank.bin}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBankName(bank.shortName);
+                                    setBankBin(bank.bin);
+                                    setBankSearch('');
+                                    setBankDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${
+                                    bankBin === bank.bin
+                                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium'
+                                      : 'text-slate-800 dark:text-slate-200'
+                                  }`}
+                                >
+                                  {bank.shortName}
+                                </button>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
                   <label className="space-y-1 text-sm">
                     <span className="text-slate-600 dark:text-slate-300">
