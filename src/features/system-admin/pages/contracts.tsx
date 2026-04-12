@@ -220,14 +220,16 @@ function ContractDetailDialog({
                   label="Hoa hồng"
                   value={`${(contract.commissionRate ?? contract.platformCommissionRate).toString()}%`}
                 />
-                <InfoRow
-                  label="Lương deal"
-                  value={
-                    contract.actualMonthlySalary != null
-                      ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
-                      : 'Chưa chốt'
-                  }
-                />
+                {!isOrganisationContract && (
+                  <InfoRow
+                    label="Lương deal"
+                    value={
+                      contract.actualMonthlySalary != null
+                        ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
+                        : 'Chưa chốt'
+                    }
+                  />
+                )}
               </div>
 
               {contract.status === 'PendingSignature' &&
@@ -364,14 +366,18 @@ function ContractDetailDialog({
               <button
                 onClick={() =>
                   onVerify(contractId, {
-                    commissionRate: Number.isFinite(commissionRateValue)
-                      ? commissionRateValue
-                      : 0,
-                    actualMonthlySalary: Number.isFinite(
-                      actualMonthlySalaryValue
-                    )
-                      ? actualMonthlySalaryValue
-                      : 0,
+                    commissionRate: isOrganisationContract
+                      ? (contract.commissionRate ??
+                        contract.platformCommissionRate ??
+                        0)
+                      : Number.isFinite(commissionRateValue)
+                        ? commissionRateValue
+                        : 0,
+                    actualMonthlySalary: isOrganisationContract
+                      ? 0
+                      : Number.isFinite(actualMonthlySalaryValue)
+                        ? actualMonthlySalaryValue
+                        : 0,
                     confirmedMonthlyQuotaLimit: isOrganisationContract
                       ? confirmedMonthlyQuotaValue
                       : undefined,
