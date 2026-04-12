@@ -36,6 +36,17 @@ export interface CreateOrgScreeningRequest {
   }>;
 }
 
+export interface ShareOrgScreeningResultRequest {
+  recipientEmail?: string;
+  includePdf: boolean;
+  includeRetinalImages: boolean;
+}
+
+export interface ShareOrgScreeningResultResponse {
+  recipientEmail: string;
+  sharedAt: string;
+}
+
 // ─── API calls ───────────────────────────────────────────────────────
 
 export const orgScreeningApi = {
@@ -100,6 +111,8 @@ export const orgScreeningApi = {
         screeningId: string;
         patientId: string;
         patientName?: string;
+        patientEmail?: string;
+        isWalkIn: boolean;
         modelVersion: string;
         createdAt: string;
         processedAt?: string;
@@ -123,6 +136,17 @@ export const orgScreeningApi = {
         };
       }>
     >(API_ENDPOINTS.ORGANISATION.SCREENING.DETAIL(screeningId));
+    return response.data;
+  },
+
+  /** Share organisation screening result via email */
+  async shareSessionResult(
+    screeningId: string,
+    payload: ShareOrgScreeningResultRequest
+  ) {
+    const response = await api.post<
+      ApiResponse<ShareOrgScreeningResultResponse>
+    >(API_ENDPOINTS.ORGANISATION.SCREENING.SHARE(screeningId), payload);
     return response.data;
   },
 

@@ -1,265 +1,188 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Bot,
-  ArrowLeft,
   Printer,
   RefreshCw,
   Sparkles,
   Save,
-  Share2,
-  CheckCircle2,
-  AlertTriangle,
   AlertCircle,
-  Eye,
   Loader2,
-  ShieldCheck,
   Activity,
+  Share2,
+  Mail,
 } from 'lucide-react';
-import { isAxiosError } from 'axios';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import { OrganisationScreeningStepper } from '../components/OrganisationScreeningStepper';
+import { OrganisationRetinalViewerCard } from '../components/OrganisationRetinalViewerCard';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { orgScreeningApi } from '../api/screening.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
+import {
+  downloadBlobFile,
+  getFileNameFromContentDisposition,
+} from '@/lib/file-export';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
-import { toDisplayDiseaseName } from '@/features/patient/lib/disease-translation';
-import { postsApi } from '@/features/professional-network/api/network.api';
-import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
-import useAuthStore from '@/store/auth-store';
-
-type RiskLevel = 'Low' | 'Moderate' | 'High';
-
-interface OrgScreeningSessionDetail {
-  screeningId: string;
-  patientId: string;
-  modelVersion: string;
-  createdAt: string;
-  rawJsonOutput?: string;
-  images: Array<{
-    id: string;
-    imageUrl: string;
-    eyeSide: string;
-  }>;
-  latestResult?: {
-    screeningResultId: string;
-    riskLevel: string;
-    confidenceScore: number;
-    summary?: string;
-    findings?: string;
-    assessedAt: string;
-  };
-}
-
-interface AIStandardPrediction {
-  rank: number;
-  class_name: string;
-  confidence: number;
-  status: string;
-}
-
-interface AIStandardResponse {
-  prediction: {
-    top_k: AIStandardPrediction[];
-  };
-}
-
-interface AiFindingItem {
-  id: string;
-  name: string;
-  localizedName: string;
-  confidence: number;
-  status: string;
-}
-
-interface ResultDraft {
-  riskLevel: RiskLevel;
-  confidenceScore: number;
-  summary: string;
-  findings: string;
-}
-
-const riskConfig: Record<
+import type {
+  AiFindingItem,
+  AIStandardResponse,
+  DetectionBox,
+  ImageLayout,
+  OrgScreeningSessionDetail,
+  ResultDraft,
   RiskLevel,
-  { color: string; bg: string; border: string; icon: typeof ShieldCheck }
-> = {
-  Low: {
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-    border: 'border-emerald-200 dark:border-emerald-800/40',
-    icon: ShieldCheck,
-  },
-  Moderate: {
-    color: 'text-amber-600 dark:text-amber-400',
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    border: 'border-amber-200 dark:border-amber-800/40',
-    icon: AlertTriangle,
-  },
-  High: {
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-50 dark:bg-red-900/20',
-    border: 'border-red-200 dark:border-red-800/40',
-    icon: AlertCircle,
-  },
-};
-
-function clampConfidence(value: number): number {
-  if (Number.isNaN(value)) return 0;
-  return Math.min(100, Math.max(0, Math.round(value * 10) / 10));
-}
-
-function normalizeRiskLevel(value?: string): RiskLevel {
-  const normalized = value?.toLowerCase();
-  if (normalized === 'high') return 'High';
-  if (normalized === 'moderate') return 'Moderate';
-  return 'Low';
-}
-
-function toRiskLevelFromUrgency(
-  urgency: 'critical' | 'warning' | 'caution' | 'info' | 'normal',
-  confidence: number
-): RiskLevel {
-  if (urgency === 'critical') return 'High';
-
-  if (urgency === 'warning') {
-    return confidence >= 70 ? 'High' : 'Moderate';
-  }
-
-  if (urgency === 'caution') {
-    return confidence >= 70 ? 'Moderate' : 'Low';
-  }
-
-  return 'Low';
-}
-
-function buildSummary(riskLevel: RiskLevel, primaryLabel?: string): string {
-  if (riskLevel === 'High') {
-    return `Findings need attention from an ophthalmologist${primaryLabel ? ` (${primaryLabel})` : ''}.`;
-  }
-
-  if (riskLevel === 'Moderate') {
-    return `Some findings may need specialist review${primaryLabel ? ` (${primaryLabel})` : ''}.`;
-  }
-
-  return primaryLabel
-    ? `Low-risk findings detected (${primaryLabel}). Routine specialist follow-up is recommended.`
-    : 'Low-risk findings detected. Routine specialist follow-up is recommended.';
-}
-
-function buildFindingsText(items: AiFindingItem[]): string {
-  return items
-    .slice(0, 4)
-    .map((item) => `${item.localizedName} (${item.confidence}%)`)
-    .join(', ');
-}
-
-function extractTopKFromRaw(rawJsonOutput?: string): AIStandardPrediction[] {
-  if (!rawJsonOutput) return [];
-
-  try {
-    const parsed = JSON.parse(rawJsonOutput) as Partial<AIStandardResponse>;
-    const topK = parsed.prediction?.top_k ?? [];
-    return [...topK].sort((a, b) => a.rank - b.rank);
-  } catch {
-    return [];
-  }
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (!isAxiosError(error) || !error.response?.data) return fallback;
-
-  const payload = error.response.data as {
-    message?: string;
-    detail?: string;
-    errors?: Array<{ error?: string }>;
-  };
-
-  if (payload.message) return payload.message;
-  if (payload.detail) return payload.detail;
-  if (Array.isArray(payload.errors) && payload.errors[0]?.error) {
-    return payload.errors
-      .map((item) => item.error)
-      .filter(Boolean)
-      .join(', ');
-  }
-
-  return fallback;
-}
-
-function buildNetworkShareContent(
-  patientId: string,
-  screeningId: string,
-  draft: ResultDraft,
-  aiFindings: AiFindingItem[]
-): string {
-  const lines: string[] = [
-    'Organisation screening case shared for professional discussion.',
-    `Case reference: ${screeningId.slice(0, 8)}-${patientId.slice(0, 8)}`,
-    `Risk level: ${draft.riskLevel}`,
-    `Confidence score: ${clampConfidence(draft.confidenceScore)}%`,
-  ];
-
-  if (draft.summary.trim()) {
-    lines.push(`Summary: ${draft.summary.trim()}`);
-  }
-
-  if (draft.findings.trim()) {
-    lines.push(`Medical diagnosis: ${draft.findings.trim()}`);
-  }
-
-  if (aiFindings.length > 0) {
-    const topFindings = aiFindings
-      .slice(0, 3)
-      .map((item) => `${item.localizedName} (${item.confidence}%)`)
-      .join(', ');
-    lines.push(`Top AI findings: ${topFindings}`);
-  }
-
-  lines.push('Patient identity has been masked before sharing.');
-
-  return lines.join('\n\n');
-}
+} from '@/features/organisation/types/screening-result.types';
+import {
+  buildFindingsText,
+  buildSummary,
+  clampConfidence,
+  composeFindingsWithNote,
+  extractTopKFromRaw,
+  extractVisualArtifactsFromRaw,
+  getErrorMessage,
+  mapAiFindings,
+  normalizeRiskLevel,
+  riskConfig,
+  splitFindingsAndNote,
+  toRiskLevelFromUrgency,
+} from '@/features/organisation/utils/screening-result.util';
 
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const location = useLocation();
   const screeningId = searchParams.get('id');
-  const autoAnalysisTriggeredRef = useRef(false);
+
+  const locationState = location.state as { patientName?: string } | null;
+  const locationPatientName = locationState?.patientName?.trim() ?? '';
+
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
-    []
+    [i18n.language, i18n.resolvedLanguage]
   );
 
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareIncludePdf, setShareIncludePdf] = useState(true);
+  const [shareIncludeRetinalImages, setShareIncludeRetinalImages] =
+    useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [sessionData, setSessionData] =
     useState<OrgScreeningSessionDetail | null>(null);
   const [rawJsonOutput, setRawJsonOutput] = useState<string | undefined>();
   const [draft, setDraft] = useState<ResultDraft | null>(null);
+  const [consultationNote, setConsultationNote] = useState('');
   const [aiFindings, setAiFindings] = useState<AiFindingItem[]>([]);
+  const [detectedBoxes, setDetectedBoxes] = useState<DetectionBox[]>([]);
+  const [showHighlights, setShowHighlights] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapUrl, setHeatmapUrl] = useState<string | undefined>();
+  const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
+
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  const selectedImage =
+    sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
+  const isViewOnly = Boolean(sessionData?.latestResult);
+  const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
+  const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
+  const patientDisplayName =
+    sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
+  const isWalkInPatient = sessionData?.isWalkIn ?? false;
+
+  // ─── Navigation Guard ────────────────────────────────────────────────────────
+
+  // Xử lý beforeunload (F5, đóng tab) — vẫn cần vì nằm ngoài React Router
+  useEffect(() => {
+    if (!hasUnsavedRecord) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedRecord]);
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const hydrateVisualArtifacts = useCallback(
+    (imageWidth: number, imageHeight: number) => {
+      const { boxes, heatmapUrl: nextHeatmapUrl } =
+        extractVisualArtifactsFromRaw(
+          rawJsonOutput,
+          imageWidth,
+          imageHeight,
+          currentLanguage
+        );
+
+      setDetectedBoxes(boxes);
+      setHeatmapUrl(nextHeatmapUrl);
+
+      if (!nextHeatmapUrl) {
+        setShowHeatmap(false);
+      }
+    },
+    [rawJsonOutput, currentLanguage]
+  );
+
+  const updateImageLayout = useCallback(() => {
+    const img = imageRef.current;
+    const container = imageContainerRef.current;
+
+    if (!img || !container) return;
+
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    if (naturalWidth <= 0 || naturalHeight <= 0) {
+      setImageLayout(null);
+      setDetectedBoxes([]);
+      return;
+    }
+
+    const scale = Math.min(
+      containerWidth / naturalWidth,
+      containerHeight / naturalHeight
+    );
+
+    const renderedWidth = naturalWidth * scale;
+    const renderedHeight = naturalHeight * scale;
+
+    setImageLayout({
+      offsetX: (containerWidth - renderedWidth) / 2,
+      offsetY: (containerHeight - renderedHeight) / 2,
+      width: renderedWidth,
+      height: renderedHeight,
+    });
+
+    hydrateVisualArtifacts(naturalWidth, naturalHeight);
+  }, [hydrateVisualArtifacts]);
 
   const hydrateStateFromSession = useCallback(
     (detail: OrgScreeningSessionDetail) => {
       const topK = extractTopKFromRaw(detail.rawJsonOutput);
-      const mappedFindings: AiFindingItem[] = topK.slice(0, 6).map((item) => ({
-        id: `${item.rank}-${item.class_name}`,
-        name: item.class_name,
-        localizedName: toDisplayDiseaseName(item.class_name, currentLanguage),
-        confidence: clampConfidence((item.confidence ?? 0) * 100),
-        status: item.status,
-      }));
+      const mappedFindings = mapAiFindings(topK, currentLanguage);
 
       setAiFindings(mappedFindings);
       setRawJsonOutput(detail.rawJsonOutput);
 
       if (detail.latestResult) {
+        const parsed = splitFindingsAndNote(detail.latestResult.findings);
         setDraft({
           riskLevel: normalizeRiskLevel(detail.latestResult.riskLevel),
           confidenceScore: clampConfidence(detail.latestResult.confidenceScore),
@@ -269,9 +192,9 @@ export default function OrganisationScreeningResultPage() {
               normalizeRiskLevel(detail.latestResult.riskLevel),
               mappedFindings[0]?.localizedName
             ),
-          findings:
-            detail.latestResult.findings ?? buildFindingsText(mappedFindings),
+          findings: parsed.findings || buildFindingsText(mappedFindings),
         });
+        setConsultationNote(parsed.note);
         setSaved(true);
         return;
       }
@@ -293,6 +216,7 @@ export default function OrganisationScreeningResultPage() {
         setDraft(null);
       }
 
+      setConsultationNote('');
       setSaved(false);
     },
     [currentLanguage]
@@ -311,7 +235,7 @@ export default function OrganisationScreeningResultPage() {
       } catch (error) {
         console.error('Failed to load organization screening detail:', error);
         setSessionData(null);
-        toast.error(getErrorMessage(error, 'Unable to load screening detail.'));
+        toast.error(getErrorMessage(error, 'Không thể tải kết quả khám.'));
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -325,23 +249,53 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
-    autoAnalysisTriggeredRef.current = false;
     void loadSessionDetail(true);
   }, [screeningId, loadSessionDetail]);
 
+  useEffect(() => {
+    window.addEventListener('resize', updateImageLayout);
+    return () => window.removeEventListener('resize', updateImageLayout);
+  }, [updateImageLayout]);
+
+  useEffect(() => {
+    updateImageLayout();
+  }, [selectedImage?.imageUrl, rawJsonOutput, updateImageLayout]);
+
+  useEffect(() => {
+    if (!shareModalOpen || !sessionData) return;
+
+    setShareEmail(sessionData.isWalkIn ? '' : (sessionData.patientEmail ?? ''));
+    setShareIncludePdf(true);
+    setShareIncludeRetinalImages(false);
+  }, [shareModalOpen, sessionData]);
+
   const updateDraft = useCallback(
     <K extends keyof ResultDraft>(key: K, value: ResultDraft[K]) => {
+      if (isViewOnly) return;
+
       setDraft((current) => {
         if (!current) return current;
         return { ...current, [key]: value };
       });
       setSaved(false);
     },
-    []
+    [isViewOnly]
   );
 
+  const handleNoteChange = (value: string) => {
+    if (isViewOnly) return;
+    setConsultationNote(value);
+    setSaved(false);
+  };
+
   const handleAnalyze = useCallback(async () => {
-    if (!sessionData || sessionData.images.length === 0 || analyzing) return;
+    if (
+      isViewOnly ||
+      !sessionData ||
+      sessionData.images.length === 0 ||
+      analyzing
+    )
+      return;
 
     const targetImage =
       sessionData.images[selectedImageIndex] ?? sessionData.images[0];
@@ -364,11 +318,10 @@ export default function OrganisationScreeningResultPage() {
       formData.append('file', file);
 
       const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/diagnosis/analyze',
+        '/api/v2/diagnosis/v2/analyze',
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
-          params: { threshold: 0.6, localization: true },
         }
       );
 
@@ -380,13 +333,7 @@ export default function OrganisationScreeningResultPage() {
         throw new Error('AI service returned no prediction data.');
       }
 
-      const mappedFindings: AiFindingItem[] = topK.map((item) => ({
-        id: `${item.rank}-${item.class_name}`,
-        name: item.class_name,
-        localizedName: toDisplayDiseaseName(item.class_name, currentLanguage),
-        confidence: clampConfidence((item.confidence ?? 0) * 100),
-        status: item.status,
-      }));
+      const mappedFindings = mapAiFindings(topK, currentLanguage);
 
       const primary = mappedFindings[0];
       const nextRiskLevel = toRiskLevelFromUrgency(
@@ -396,49 +343,115 @@ export default function OrganisationScreeningResultPage() {
 
       setAiFindings(mappedFindings);
       setRawJsonOutput(JSON.stringify(data));
+      setShowHighlights(true);
+      setShowHeatmap(false);
       setDraft({
         riskLevel: nextRiskLevel,
         confidenceScore: primary.confidence,
         summary: buildSummary(nextRiskLevel, primary.localizedName),
         findings: buildFindingsText(mappedFindings),
       });
+      setConsultationNote('');
       setSaved(false);
 
       toast.success(
-        'AI analysis completed. You can edit the result before saving.'
+        'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.'
       );
     } catch (error) {
       console.error('Organisation AI analysis failed:', error);
       toast.error(
         getErrorMessage(
           error,
-          'AI analysis failed. Please check AI service and try again.'
+          'Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.'
         )
       );
     } finally {
       setAnalyzing(false);
     }
-  }, [sessionData, selectedImageIndex, analyzing, currentLanguage]);
+  }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
-  useEffect(() => {
-    if (!sessionData || sessionData.latestResult) return;
-    if (sessionData.images.length === 0 || analyzing) return;
-    if (draft) return;
-    if (autoAnalysisTriggeredRef.current) return;
-
-    autoAnalysisTriggeredRef.current = true;
-    void handleAnalyze();
-  }, [sessionData, analyzing, draft, handleAnalyze]);
-
-  const handleSaveResults = async () => {
-    if (!screeningId || !sessionData || !draft) return;
-
-    const jsonOutput = rawJsonOutput ?? sessionData.rawJsonOutput;
-    if (!jsonOutput) {
-      toast.error('Please run AI analysis before saving this record.');
+  const handleDownloadPdf = useCallback(async () => {
+    if (downloadingPdf || !screeningId) return;
+    if (!canDownloadPdf) {
+      toast.info('Vui lòng lưu hồ sơ trước khi in PDF.');
       return;
     }
 
+    setDownloadingPdf(true);
+    try {
+      const { blob, contentDisposition } =
+        await orgScreeningApi.downloadSessionReportPdf(screeningId);
+
+      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
+      const fileName =
+        getFileNameFromContentDisposition(contentDisposition) ||
+        fallbackFileName;
+
+      downloadBlobFile(blob, fileName);
+      toast.success('Đã tải báo cáo PDF.');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Không thể tải báo cáo PDF.'));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [screeningId, downloadingPdf, canDownloadPdf]);
+
+  const handleShareResult = useCallback(async () => {
+    if (!screeningId || !sessionData || sharing) return;
+
+    if (!shareIncludePdf && !shareIncludeRetinalImages) {
+      toast.error('Vui lòng chọn ít nhất một nội dung để chia sẻ.');
+      return;
+    }
+
+    const trimmedEmail = shareEmail.trim();
+    if (isWalkInPatient && !trimmedEmail) {
+      toast.error('Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in.');
+      return;
+    }
+
+    setSharing(true);
+    try {
+      const response = await orgScreeningApi.shareSessionResult(screeningId, {
+        recipientEmail: trimmedEmail || undefined,
+        includePdf: shareIncludePdf,
+        includeRetinalImages: shareIncludeRetinalImages,
+      });
+
+      const shareResult = unwrapApiData(response);
+      toast.success(`Đã gửi kết quả đến ${shareResult.recipientEmail}.`);
+      setShareModalOpen(false);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Không thể chia sẻ kết quả lúc này.'));
+    } finally {
+      setSharing(false);
+    }
+  }, [
+    screeningId,
+    sessionData,
+    sharing,
+    shareIncludePdf,
+    shareIncludeRetinalImages,
+    shareEmail,
+    isWalkInPatient,
+  ]);
+
+  const executeSaveResults = async () => {
+    if (isViewOnly || !screeningId || !sessionData || !draft) return;
+
+    const note = consultationNote.trim();
+    if (!note) {
+      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
+      return;
+    }
+
+    const jsonOutput = rawJsonOutput ?? sessionData.rawJsonOutput;
+    if (!jsonOutput) {
+      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
+      return;
+    }
+
+    setSaveConfirmOpen(false);
     setSaving(true);
 
     try {
@@ -447,90 +460,38 @@ export default function OrganisationScreeningResultPage() {
         riskLevel: draft.riskLevel,
         confidenceScore: clampConfidence(draft.confidenceScore),
         summary: draft.summary,
-        findings: draft.findings,
+        findings: composeFindingsWithNote(draft.findings, note),
       });
 
       setSaved(true);
-      toast.success('Screening result saved successfully.');
+      toast.success('Lưu kết quả khám thành công.');
       await loadSessionDetail(false);
     } catch (err) {
       console.error('Save failed:', err);
       toast.error(
-        getErrorMessage(err, 'Unable to save screening result. Please retry.')
+        getErrorMessage(err, 'Không thể lưu kết quả. Vui lòng thử lại.')
       );
     } finally {
       setSaving(false);
     }
   };
 
-  const handleShareToNetwork = useCallback(async () => {
-    if (!sessionData || !draft || sharing) return;
+  const requestSaveResults = () => {
+    if (!screeningId || !sessionData || !draft || isViewOnly) return;
 
-    setSharing(true);
-
-    try {
-      const formData = new FormData();
-      formData.append(
-        'authorType',
-        resolveAuthorType(user?.roles, 'Organisation')
-      );
-      formData.append('category', 'CasePresentation');
-      formData.append('allowComments', 'true');
-      formData.append('isInternalCase', 'false');
-      formData.append('isAnonymizationConfirmed', 'true');
-      formData.append('aiScreeningId', sessionData.screeningId);
-      formData.append(
-        'content',
-        buildNetworkShareContent(
-          sessionData.patientId,
-          sessionData.screeningId,
-          draft,
-          aiFindings
-        )
-      );
-
-      const selectedImage =
-        sessionData.images[selectedImageIndex] ?? sessionData.images[0];
-
-      if (selectedImage?.imageUrl) {
-        try {
-          const imageResponse = await fetch(selectedImage.imageUrl);
-          if (imageResponse.ok) {
-            const imageBlob = await imageResponse.blob();
-            const extension =
-              imageBlob.type.split('/')[1]?.replace(/[^a-z0-9]/gi, '') || 'jpg';
-            const fileName = `org-screening-${sessionData.screeningId.slice(0, 8)}.${extension}`;
-            const imageFile = new File([imageBlob], fileName, {
-              type: imageBlob.type || 'image/jpeg',
-            });
-            formData.append('attachments', imageFile);
-          }
-        } catch (imageError) {
-          console.warn('Unable to attach selected retinal image:', imageError);
-        }
-      }
-
-      await postsApi.createPost(formData);
-      toast.success('Diagnosis shared to Professional Network successfully.');
-    } catch (error) {
-      console.error('Failed to share organisation screening case:', error);
-      toast.error(
-        getErrorMessage(
-          error,
-          'Unable to share diagnosis to Professional Network. Please retry.'
-        )
-      );
-    } finally {
-      setSharing(false);
+    const note = consultationNote.trim();
+    if (!note) {
+      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
+      return;
     }
-  }, [
-    aiFindings,
-    draft,
-    selectedImageIndex,
-    sessionData,
-    sharing,
-    user?.roles,
-  ]);
+
+    if (!(rawJsonOutput ?? sessionData.rawJsonOutput)) {
+      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
+      return;
+    }
+
+    setSaveConfirmOpen(true);
+  };
 
   const riskLevel = draft?.riskLevel ?? 'Low';
   const risk = riskConfig[riskLevel] || riskConfig.Low;
@@ -538,16 +499,14 @@ export default function OrganisationScreeningResultPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader />
+          <OrganisationHeader pageName="Kết quả khám" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-(--text-secondary)">
-                Loading screening results…
-              </p>
+              <p className="text-(--text-secondary)">Đang tải kết quả khám…</p>
             </div>
           </main>
         </div>
@@ -557,21 +516,23 @@ export default function OrganisationScreeningResultPage() {
 
   if (!sessionData) {
     return (
-      <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader />
+          <OrganisationHeader pageName="Kết quả khám" />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
               <p className="text-(--text-primary) font-semibold">
-                Screening not found
+                Không tìm thấy phiên khám
               </p>
               <button
-                onClick={() => navigate('/organisation/screening')}
+                onClick={() =>
+                  navigate(resolvePathWithLocale('/organisation/screening'))
+                }
                 className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
               >
-                Go back to screening
+                Quay lại danh sách khám
               </button>
             </div>
           </main>
@@ -581,334 +542,478 @@ export default function OrganisationScreeningResultPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader />
-        <main className="flex-1 overflow-y-auto p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/organisation/screening')}
-                className="w-10 h-10 rounded-xl bg-(--bg-secondary) border border-(--border-primary) flex items-center justify-center hover:bg-(--bg-tertiary) transition"
-              >
-                <ArrowLeft className="w-5 h-5 text-(--text-secondary)" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-(--text-primary)">
-                  Screening Results
-                </h1>
-                <p className="text-sm text-(--text-tertiary)">
-                  Patient: {sessionData.patientId.slice(0, 8)}… · Session{' '}
-                  {screeningId?.slice(0, 8)}… ·{' '}
-                  {new Date(sessionData.createdAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/organisation/wallet')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
-              >
-                Screening History
-              </button>
-              <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) transition"
-              >
-                <Printer className="w-4 h-4" /> Print
-              </button>
-              <button
-                onClick={handleAnalyze}
-                disabled={analyzing || loading || !sessionData?.images.length}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
-              >
-                {analyzing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                {analyzing ? 'Analyzing…' : 'Re-analyze'}
-              </button>
-              <button
-                onClick={() => void handleShareToNetwork()}
-                disabled={sharing || saving || analyzing || !draft}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-secondary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
-              >
-                {sharing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Share2 className="w-4 h-4" />
-                )}
-                {sharing ? 'Sharing…' : 'Share to Network'}
-              </button>
-              <button
-                onClick={handleSaveResults}
-                disabled={saving || analyzing || !draft}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg ${
-                  saved && !saving
-                    ? 'bg-emerald-600 text-white shadow-emerald-600/25'
-                    : 'bg-primary text-white shadow-primary/25 hover:bg-primary/90 disabled:opacity-50'
-                }`}
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : saved ? (
-                  <CheckCircle2 className="w-4 h-4" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                {saved && !saving
-                  ? 'Saved'
-                  : saving
-                    ? 'Saving…'
-                    : 'Save Record'}
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left: Image Viewer */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Main Image */}
-              <div className="rounded-2xl overflow-hidden bg-(--bg-secondary) border border-(--border-primary)">
-                {sessionData.images.length > 0 ? (
-                  <img
-                    src={sessionData.images[selectedImageIndex]?.imageUrl}
-                    alt="Retinal scan"
-                    className="w-full h-96 object-contain bg-black"
-                  />
-                ) : (
-                  <div className="w-full h-96 flex items-center justify-center bg-slate-900">
-                    <Eye className="w-16 h-16 text-slate-700" />
-                  </div>
-                )}
-              </div>
-
-              {/* Thumbnail strip */}
-              {sessionData.images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {sessionData.images.map((img, i) => (
-                    <button
-                      key={img.id}
-                      onClick={() => setSelectedImageIndex(i)}
-                      className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition ${
-                        i === selectedImageIndex
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-(--border-primary) opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <img
-                        src={img.imageUrl}
-                        alt={img.eyeSide}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right: Results Panel */}
-            <div className="space-y-4">
-              {/* Risk Level Card */}
-              <div
-                className={`rounded-2xl p-6 border ${risk.bg} ${risk.border}`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`w-12 h-12 rounded-xl ${risk.bg} flex items-center justify-center`}
-                  >
-                    <RiskIcon className={`w-6 h-6 ${risk.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-(--text-tertiary)">Risk Level</p>
-                    <p className={`text-2xl font-bold ${risk.color}`}>
-                      {riskLevel}
-                    </p>
-                  </div>
-                </div>
-
-                {draft && (
-                  <div className="space-y-3">
-                    {/* Confidence */}
+        <OrganisationHeader pageName="Kết quả khám" />
+        <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6">
+          <div className="mx-auto w-full max-w-[1400px] space-y-6">
+            <section className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) px-5 py-5 md:px-6">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-(--text-secondary)">
-                          Confidence
-                        </span>
-                        <span className="font-semibold text-(--text-primary)">
-                          {clampConfidence(draft.confidenceScore)}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{
-                            width: `${clampConfidence(draft.confidenceScore)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['Low', 'Moderate', 'High'] as RiskLevel[]).map(
-                        (item) => (
-                          <button
-                            key={item}
-                            onClick={() => updateDraft('riskLevel', item)}
-                            className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${
-                              draft.riskLevel === item
-                                ? 'border-primary bg-primary/10 text-primary'
-                                : 'border-(--border-primary) text-(--text-secondary) hover:bg-(--bg-tertiary)'
-                            }`}
-                          >
-                            {item}
-                          </button>
-                        )
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-(--text-tertiary)">
-                        Confidence Score (0-100)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        value={draft.confidenceScore}
-                        onChange={(event) =>
-                          updateDraft(
-                            'confidenceScore',
-                            clampConfidence(Number(event.target.value))
-                          )
-                        }
-                        className="mt-1 w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Summary */}
-              {draft && (
-                <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-primary" />
-                    AI Summary (Editable)
-                  </h3>
-                  <textarea
-                    value={draft.summary}
-                    onChange={(event) =>
-                      updateDraft('summary', event.target.value)
-                    }
-                    rows={4}
-                    className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                  />
-                </div>
-              )}
-
-              {/* Findings */}
-              {draft && (
-                <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-primary" />
-                    Findings (Editable)
-                  </h3>
-                  <textarea
-                    value={draft.findings}
-                    onChange={(event) =>
-                      updateDraft('findings', event.target.value)
-                    }
-                    rows={5}
-                    className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                  />
-
-                  {aiFindings.length > 0 && (
-                    <div className="space-y-2 border-t border-(--border-primary) pt-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-(--text-tertiary)">
-                        AI Candidate Findings
+                      <h1 className="text-2xl font-bold text-(--text-primary)">
+                        Kết quả khám
+                      </h1>
+                      <p className="text-sm text-(--text-tertiary)">
+                        Bệnh nhân: {patientDisplayName} · Phiên{' '}
+                        {screeningId?.slice(0, 8)}… ·{' '}
+                        {new Date(sessionData.createdAt).toLocaleString(
+                          'vi-VN'
+                        )}
                       </p>
-                      {aiFindings.slice(0, 5).map((item) => (
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    onClick={() => setShareModalOpen(true)}
+                    disabled={!screeningId || sharing}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  >
+                    {sharing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    Chia sẻ
+                  </button>
+
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={
+                      downloadingPdf ||
+                      loading ||
+                      !screeningId ||
+                      !canDownloadPdf
+                    }
+                    title={
+                      canDownloadPdf
+                        ? 'Tải báo cáo PDF'
+                        : 'Vui lòng lưu hồ sơ trước khi in PDF.'
+                    }
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  >
+                    {downloadingPdf ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Printer className="w-4 h-4" />
+                    )}
+                    {downloadingPdf
+                      ? 'Đang tạo PDF…'
+                      : canDownloadPdf
+                        ? 'Tải PDF'
+                        : 'Lưu hồ sơ để in PDF'}
+                  </button>
+
+                  {isViewOnly ? (
+                    <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                      Chế độ xem — hồ sơ đã được lưu
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={
+                          analyzing || loading || !sessionData.images.length
+                        }
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
+                      >
+                        {analyzing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
+                      </button>
+                      <button
+                        onClick={requestSaveResults}
+                        disabled={
+                          saving ||
+                          analyzing ||
+                          !draft ||
+                          consultationNote.trim().length === 0
+                        }
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg ${
+                          saved && !saving
+                            ? 'bg-emerald-600 text-white shadow-emerald-600/25'
+                            : 'bg-primary text-white shadow-primary/25 hover:bg-primary/90 disabled:opacity-50'
+                        }`}
+                      >
+                        {saving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        {saved && !saving
+                          ? 'Đã lưu'
+                          : saving
+                            ? 'Đang lưu…'
+                            : 'Lưu hồ sơ'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <OrganisationScreeningStepper activeStep="review-save" />
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,1fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
+              <div className="space-y-4">
+                <OrganisationRetinalViewerCard
+                  selectedImage={selectedImage}
+                  selectedImageIndex={selectedImageIndex}
+                  images={sessionData.images}
+                  analyzing={analyzing}
+                  detectedBoxes={detectedBoxes}
+                  showHighlights={showHighlights}
+                  showHeatmap={showHeatmap}
+                  heatmapUrl={heatmapUrl}
+                  imageLayout={imageLayout}
+                  imageContainerRef={imageContainerRef}
+                  imageRef={imageRef}
+                  onToggleHighlights={() =>
+                    setShowHighlights((current) => !current)
+                  }
+                  onToggleHeatmap={() => setShowHeatmap((current) => !current)}
+                  onImageLoad={updateImageLayout}
+                  onSelectImage={setSelectedImageIndex}
+                />
+
+                <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                  <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-primary" />
+                    Kết quả phân tích AI
+                  </h3>
+
+                  {aiFindings.length > 0 ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {aiFindings.slice(0, 6).map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between rounded-lg border border-(--border-primary) px-3 py-2 text-sm"
+                          className="rounded-xl border border-(--border-primary) px-3 py-2.5"
                         >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium text-(--text-primary)">
-                              {item.localizedName}
-                            </p>
-                            <p className="text-xs text-(--text-tertiary)">
+                          <p className="text-sm font-medium text-(--text-primary) truncate">
+                            {item.localizedName}
+                          </p>
+                          <div className="mt-1 flex items-center justify-between gap-2 text-xs">
+                            <span className="text-(--text-tertiary)">
                               {item.status.replace(/_/g, ' ')}
-                            </p>
+                            </span>
+                            <span className="font-semibold text-(--text-secondary)">
+                              {item.confidence}%
+                            </span>
                           </div>
-                          <span className="ml-3 font-semibold text-(--text-secondary)">
-                            {item.confidence}%
-                          </span>
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <p className="text-sm text-(--text-secondary)">
+                      Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.
+                    </p>
                   )}
                 </div>
-              )}
+              </div>
 
-              {!draft && (
-                <div className="rounded-2xl border border-dashed border-(--border-primary) bg-(--bg-secondary) p-5">
-                  <p className="text-sm text-(--text-secondary)">
-                    <Sparkles className="inline w-4 h-4 mr-1" />
-                    AI result is not generated yet. Click Analyze/Re-analyze to
-                    run AI and prepare editable output.
-                  </p>
+              <div className="space-y-4 xl:sticky xl:top-6">
+                <div
+                  className={`rounded-2xl p-6 border ${risk.bg} ${risk.border}`}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl ${risk.bg} flex items-center justify-center`}
+                    >
+                      <RiskIcon className={`w-6 h-6 ${risk.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-(--text-tertiary)">
+                        Mức độ rủi ro
+                      </p>
+                      <p className={`text-2xl font-bold ${risk.color}`}>
+                        {riskLevel}
+                      </p>
+                    </div>
+                  </div>
+
+                  {draft && (
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-(--text-secondary)">
+                            Độ tin cậy
+                          </span>
+                          <span className="font-semibold text-(--text-primary)">
+                            {clampConfidence(draft.confidenceScore)}%
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{
+                              width: `${clampConfidence(draft.confidenceScore)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['Low', 'Moderate', 'High'] as RiskLevel[]).map(
+                          (item) => (
+                            <button
+                              key={item}
+                              onClick={() => updateDraft('riskLevel', item)}
+                              disabled={isViewOnly}
+                              className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                                draft.riskLevel === item
+                                  ? 'border-primary bg-primary/10 text-primary'
+                                  : 'border-(--border-primary) text-(--text-secondary) hover:bg-(--bg-tertiary)'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {item}
+                            </button>
+                          )
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-(--text-tertiary)">
+                          Điểm tin cậy (0–100)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={draft.confidenceScore}
+                          disabled={isViewOnly}
+                          onChange={(event) =>
+                            updateDraft(
+                              'confidenceScore',
+                              clampConfidence(Number(event.target.value))
+                            )
+                          }
+                          className="mt-1 w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {analyzing && (
-                <div className="rounded-2xl bg-cyan-50 border border-cyan-200 p-4 flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-cyan-600" />
-                  <p className="text-sm text-cyan-700 font-medium">
-                    Running AI analysis on selected retinal image...
-                  </p>
-                </div>
-              )}
+                {draft && (
+                  <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-primary" />
+                      Tóm tắt AI (có thể chỉnh sửa)
+                    </h3>
+                    <textarea
+                      value={draft.summary}
+                      readOnly={isViewOnly}
+                      onChange={(event) =>
+                        updateDraft('summary', event.target.value)
+                      }
+                      rows={4}
+                      className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                    />
+                  </div>
+                )}
 
-              {/* Metadata */}
-              <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-(--text-primary)">
-                  Session Info
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Model</span>
-                    <span className="text-(--text-primary) font-medium">
-                      {sessionData.modelVersion}
-                    </span>
+                {draft && (
+                  <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-(--text-primary) mb-1">
+                      Ghi chú tư vấn tổ chức (bắt buộc)
+                    </h3>
+                    <p className="text-xs text-(--text-tertiary)">
+                      Ghi chú này là bắt buộc và sẽ được lưu cùng hồ sơ.
+                    </p>
+                    <textarea
+                      value={consultationNote}
+                      readOnly={isViewOnly}
+                      onChange={(event) => handleNoteChange(event.target.value)}
+                      rows={4}
+                      className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                      placeholder="Nhập ghi chú tư vấn cho phiên khám này…"
+                    />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Images</span>
-                    <span className="text-(--text-primary) font-medium">
-                      {sessionData.images.length}
-                    </span>
+                )}
+
+                {draft && (
+                  <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                    <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-primary" />
+                      Kết quả chẩn đoán (có thể chỉnh sửa)
+                    </h3>
+                    <textarea
+                      value={draft.findings}
+                      readOnly={isViewOnly}
+                      onChange={(event) =>
+                        updateDraft('findings', event.target.value)
+                      }
+                      rows={5}
+                      className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                    />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Created</span>
-                    <span className="text-(--text-primary) font-medium">
-                      {new Date(sessionData.createdAt).toLocaleDateString()}
-                    </span>
+                )}
+
+                {!draft && (
+                  <div className="rounded-2xl border border-dashed border-(--border-primary) bg-(--bg-secondary) p-5">
+                    <p className="text-sm text-(--text-secondary)">
+                      <Sparkles className="inline w-4 h-4 mr-1" />
+                      Chưa có kết quả AI. Nhấn "Phân tích lại" để chạy AI và
+                      chuẩn bị kết quả có thể chỉnh sửa.
+                    </p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Session ID</span>
-                    <span className="text-(--text-primary) font-medium text-xs">
-                      {sessionData.screeningId.slice(0, 8)}...
-                    </span>
+                )}
+
+                <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
+                  <h3 className="text-sm font-semibold text-(--text-primary)">
+                    Thông tin phiên khám
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">Mô hình</span>
+                      <span className="text-(--text-primary) font-medium">
+                        {sessionData.modelVersion}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">Số ảnh</span>
+                      <span className="text-(--text-primary) font-medium">
+                        {sessionData.images.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">Ngày tạo</span>
+                      <span className="text-(--text-primary) font-medium">
+                        {new Date(sessionData.createdAt).toLocaleDateString(
+                          'vi-VN'
+                        )}
+                      </span>
+                    </div>
+                    {sessionData.latestResult?.assessedAt && (
+                      <div className="flex justify-between">
+                        <span className="text-(--text-tertiary)">
+                          Đánh giá lần cuối
+                        </span>
+                        <span className="text-(--text-primary) font-medium">
+                          {new Date(
+                            sessionData.latestResult.assessedAt
+                          ).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-(--text-tertiary)">Mã phiên</span>
+                      <span className="text-(--text-primary) font-medium text-xs">
+                        {sessionData.screeningId.slice(0, 8)}…
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </main>
+
+        {/* Modal xác nhận lưu kết quả */}
+        <ConfirmModal
+          open={saveConfirmOpen}
+          title="Xác nhận lưu kết quả"
+          message="Bạn có chắc muốn lưu kết quả khám này không? Sau khi lưu, phiên này sẽ chuyển sang chế độ chỉ xem và không thể chỉnh sửa."
+          confirmLabel="Lưu kết quả"
+          cancelLabel="Kiểm tra lại"
+          tone="default"
+          isLoading={saving}
+          onCancel={() => {
+            if (!saving) setSaveConfirmOpen(false);
+          }}
+          onConfirm={() => {
+            void executeSaveResults();
+          }}
+        />
+
+        {shareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+            <div className="w-full max-w-lg rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5 shadow-xl">
+              <h3 className="text-lg font-semibold text-(--text-primary)">
+                Chia sẻ kết quả khám
+              </h3>
+              <p className="mt-1 text-sm text-(--text-secondary)">
+                {isWalkInPatient
+                  ? 'Bệnh nhân walk-in: nhập email nhận kết quả.'
+                  : 'Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.'}
+              </p>
+
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-(--text-tertiary)">
+                    Email người nhận
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-tertiary)" />
+                    <input
+                      type="email"
+                      value={shareEmail}
+                      onChange={(event) => setShareEmail(event.target.value)}
+                      placeholder="patient@example.com"
+                      className="w-full rounded-xl border border-(--border-primary) bg-(--bg-primary) py-2 pl-10 pr-3 text-sm text-(--text-primary)"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm text-(--text-primary)">
+                    <input
+                      type="checkbox"
+                      checked={shareIncludePdf}
+                      onChange={(event) =>
+                        setShareIncludePdf(event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    Đính kèm báo cáo PDF
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm text-(--text-primary)">
+                    <input
+                      type="checkbox"
+                      checked={shareIncludeRetinalImages}
+                      onChange={(event) =>
+                        setShareIncludeRetinalImages(event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    Chia sẻ đường dẫn ảnh võng mạc
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!sharing) setShareModalOpen(false);
+                  }}
+                  className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary)"
+                  disabled={sharing}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareResult}
+                  disabled={sharing}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {sharing && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Gửi chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,9 @@ export interface OrganisationRecentPatientDto {
   address?: string;
   email?: string;
   phoneNumber?: string;
+  isWalkIn: boolean;
+  bmi?: number;
+  diseaseHistory?: string;
   lastScreening: string;
   aiPrediction: string;
   confidence: number; // 0-100
@@ -20,10 +23,17 @@ export interface OrganisationRecentPatientDto {
   priority: 'low' | 'medium' | 'high';
 }
 
-export interface UpdateOrganisationPatientContactRequest {
+export interface UpdateOrganisationPatientRequest {
+  // Walk-in only (ignored by backend for registered)
+  fullName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  citizenId?: string;
+  // Shared
   address?: string;
   phoneNumber?: string;
-  email?: string;
+  bmi?: number;
+  diseaseHistory?: string;
 }
 
 export const getOrganisationRecentPatients = async (): Promise<
@@ -36,12 +46,12 @@ export const getOrganisationRecentPatients = async (): Promise<
   return unwrapApiData<OrganisationRecentPatientDto[]>(response.data);
 };
 
-export const updateOrganisationPatientContact = async (
+export const updateOrganisationPatient = async (
   patientId: string,
-  request: UpdateOrganisationPatientContactRequest
+  request: UpdateOrganisationPatientRequest
 ): Promise<string> => {
   const response = await api.put<ApiResponse<string>>(
-    `${API_ENDPOINTS.ORGANISATION.PATIENTS}/${patientId}/contact`,
+    `${API_ENDPOINTS.ORGANISATION.PATIENTS}/${patientId}`,
     request
   );
 
