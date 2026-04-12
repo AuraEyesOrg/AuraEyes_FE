@@ -79,6 +79,7 @@
       "loginForm": {
         "heading": "Chào mừng quay lại",
         "description": "Đăng nhập vào tài khoản AuraEyes để tiếp tục.",
+        "backHome": "Quay về trang chủ",
         "emailLabel": "Địa chỉ email",
         "emailPlaceholder": "your@email.com",
         "passwordLabel": "Mật khẩu",
@@ -666,6 +667,7 @@
       "downloadFailed": "Không thể tải file mẫu hợp đồng.",
       "activeTitle": "Hợp đồng đã được kích hoạt!",
       "activeDescription": "Bạn có thể bắt đầu nhận ca bệnh và tư vấn trên hệ thống AURA.",
+      "redirectCountdown": "Tự động chuyển tới bảng điều khiển sau {{seconds}} giây.",
       "status": {
         "uploadedPendingApproval": "Đã upload - Chờ admin duyệt",
         "pendingSignature": "Chờ ký hợp đồng",
@@ -1040,6 +1042,10 @@
       "organizationTypeClinic": "Phòng khám",
       "organizationTypeHospital": "Bệnh viện",
       "cityLocation": "Thành phố / Khu vực",
+      "businessCode": "Mã số doanh nghiệp",
+      "businessCodePlaceholder": "0312345678",
+      "taxCode": "Mã số thuế",
+      "taxCodePlaceholder": "0312345678",
       "partnershipNeeds": "Nhu cầu hợp tác",
       "estimatedMonthlyScreenings": "Số ca sàng lọc ước tính mỗi tháng",
       "selectRange": "Chọn khoảng",

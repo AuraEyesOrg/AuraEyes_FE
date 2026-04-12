@@ -159,6 +159,11 @@ export const API_ENDPOINTS = {
       TERMINATE: (id: string) => `/system-admin/contracts/${id}/terminate`,
       CANCEL: (id: string) => `/system-admin/contracts/${id}/cancel`,
     },
+
+    // Cashflow Ledger
+    CASHFLOW: {
+      TRANSACTIONS: '/system-admin/cashflow/transactions',
+    },
   },
 
   // Patient features
@@ -300,6 +305,11 @@ export const API_ENDPOINTS = {
     },
     BILLING_SUMMARY: '/organisations/billing/summary',
     SCREENING_REPORTS: '/organisations/screening-reports',
+    WALLET: {
+      GET: '/wallets',
+      TRANSACTIONS: '/wallets/transactions',
+      CREATE_DEPOSIT: '/wallets/deposit',
+    },
   },
 
   // AI Quota Management

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Shield,
   Smartphone,
@@ -16,6 +17,7 @@ import {
   Download,
   CheckCircle,
   XCircle,
+  Bell,
 } from 'lucide-react';
 import {
   getTwoFactorStatus,
@@ -34,6 +36,12 @@ import type {
 import '@/styles/auth-animations.css';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '@/features/patient/components/PatientLayout';
+import { useChangePassword } from '@/features/patient/hooks/useProfile';
+import {
+  changePasswordSchema,
+  type ChangePasswordFormData,
+} from '@/features/patient/schemas/profile.schema';
+import { toast } from 'react-toastify';
 
 const TwoFactorSettingsPage = () => {
   const navigate = useNavigate();
@@ -54,6 +62,9 @@ const TwoFactorSettingsPage = () => {
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryModalPassword, setRecoveryModalPassword] = useState('');
   const [showRecoveryModalPw, setShowRecoveryModalPw] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const changePasswordMutation = useChangePassword();
 
   const {
     register: registerVerify,
@@ -68,6 +79,15 @@ const TwoFactorSettingsPage = () => {
     formState: { errors: disableErrors },
     reset: resetDisable,
   } = useForm<TwoFactorDisableFormData>();
+
+  const {
+    register: registerChangePassword,
+    handleSubmit: handleChangePasswordSubmit,
+    reset: resetChangePassword,
+    formState: { errors: changePasswordErrors },
+  } = useForm<ChangePasswordFormData>({
+    resolver: yupResolver(changePasswordSchema),
+  });
 
   // Fetch 2FA status on mount
   const fetchStatus = useCallback(async () => {
@@ -217,6 +237,19 @@ const TwoFactorSettingsPage = () => {
     }
   };
 
+  const onChangePasswordSubmit = (data: ChangePasswordFormData) => {
+    changePasswordMutation.mutate(data, {
+      onSuccess: () => {
+        toast.success('Password changed successfully');
+        setShowChangePassword(false);
+        resetChangePassword();
+      },
+      onError: () => {
+        toast.error('Failed to change password');
+      },
+    });
+  };
+
   // Loading state
   if (isLoading && step === 'status' && !status) {
     const loader = (
@@ -240,6 +273,60 @@ const TwoFactorSettingsPage = () => {
   // Shared page content (used in both contexts)
   const mainContent = (
     <>
+      {isPatientContext && (
+        <div className="mb-6 space-y-4">
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center">
+                  <Key className="w-5 h-5 text-brand" />
+                </div>
+                <div>
+                  <p className="font-medium text-[var(--text-primary)]">
+                    Password
+                  </p>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Update your account password regularly.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChangePassword(true)}
+                className="px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors"
+              >
+                Change
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-[var(--text-primary)]">
+                    Notifications
+                  </p>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Manage notification and reminder preferences.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/patient/notifications')}
+                className="px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] transition-colors"
+              >
+                Configure
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error Alert */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
@@ -690,6 +777,119 @@ const TwoFactorSettingsPage = () => {
                     <Spinner size={16} className="mx-auto" />
                   ) : (
                     'Generate'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md shadow-xl border border-[var(--border-color)]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                Change Password
+              </h3>
+              <button
+                onClick={() => {
+                  setShowChangePassword(false);
+                  resetChangePassword();
+                  changePasswordMutation.reset();
+                }}
+                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-[var(--text-secondary)]" />
+              </button>
+            </div>
+
+            {changePasswordMutation.isError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {changePasswordMutation.error?.message ||
+                  'Failed to change password'}
+              </div>
+            )}
+
+            <form
+              onSubmit={handleChangePasswordSubmit(onChangePasswordSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  Current Password
+                </label>
+                <input
+                  {...registerChangePassword('currentPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {changePasswordErrors.currentPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {changePasswordErrors.currentPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  New Password
+                </label>
+                <input
+                  {...registerChangePassword('newPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {changePasswordErrors.newPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {changePasswordErrors.newPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
+                  Confirm New Password
+                </label>
+                <input
+                  {...registerChangePassword('confirmNewPassword')}
+                  type="password"
+                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                />
+                {changePasswordErrors.confirmNewPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {changePasswordErrors.confirmNewPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowChangePassword(false);
+                    resetChangePassword();
+                    changePasswordMutation.reset();
+                  }}
+                  className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changePasswordMutation.isPending}
+                  className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <Spinner size={16} />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Key className="w-4 h-4" />
+                      Change Password
+                    </>
                   )}
                 </button>
               </div>

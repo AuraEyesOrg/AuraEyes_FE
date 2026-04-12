@@ -82,6 +82,7 @@ declare module 'i18next' {
         loginForm: {
           heading: string;
           description: string;
+          backHome: string;
           emailLabel: string;
           emailPlaceholder: string;
           passwordLabel: string;
@@ -669,6 +670,7 @@ declare module 'i18next' {
         downloadFailed: string;
         activeTitle: string;
         activeDescription: string;
+        redirectCountdown: string;
         status: {
           uploadedPendingApproval: string;
           pendingSignature: string;
@@ -1043,6 +1045,10 @@ declare module 'i18next' {
         organizationTypeClinic: string;
         organizationTypeHospital: string;
         cityLocation: string;
+        businessCode: string;
+        businessCodePlaceholder: string;
+        taxCode: string;
+        taxCodePlaceholder: string;
         partnershipNeeds: string;
         estimatedMonthlyScreenings: string;
         selectRange: string;
@@ -2154,6 +2160,17 @@ declare module 'i18next' {
       labels: {
         organisation: string;
         noAddress: string;
+        quickDates: string;
+        morning: string;
+        afternoon: string;
+        selectedSlot: string;
+      };
+      reasons: {
+        routine: string;
+        blurredVision: string;
+        eyePressure: string;
+        eyePain: string;
+        firstVisit: string;
       };
       fields: {
         visitDate: string;
@@ -2165,14 +2182,18 @@ declare module 'i18next' {
         organisation: string;
         selectOrganisation: string;
         remainingCapacity: string;
+        availableCount: string;
+        full: string;
       };
       actions: {
         bookClinicVisit: string;
+        jumpToFirstAvailable: string;
       };
       empty: {
         organisations: string;
         selectOrganisationFirst: string;
         noSlotsForDate: string;
+        noUpcomingSlots: string;
       };
       messages: {
         bookSuccess: string;

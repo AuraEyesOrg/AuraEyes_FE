@@ -17,6 +17,14 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     return children;
   }
 
+  // Email verification routes must remain accessible even when user is logged in.
+  if (
+    normalizedPath === '/confirm-email' ||
+    normalizedPath === '/email-verification-required'
+  ) {
+    return children;
+  }
+
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
   const isPendingVerification =
     user?.verificationStatus === 'PendingVerification' ||
@@ -40,7 +48,7 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
   const roles = user?.roles ?? [];
   const dashboardPath = roles.includes('SystemAdmin')
     ? '/system-admin/dashboard'
-    : roles.includes('OrgAdmin') || roles.includes('Organization')
+    : roles.includes('OrgAdmin')
       ? '/organisation/dashboard'
       : roles.includes('Ophthalmologist')
         ? '/ophthalmologist/dashboard'

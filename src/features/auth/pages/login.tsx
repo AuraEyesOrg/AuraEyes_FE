@@ -53,6 +53,32 @@ interface RegisterFormData {
   agreeTerms: boolean;
 }
 
+type GoogleJwtPayload = {
+  picture?: string;
+};
+
+const getGooglePictureFromCredential = (
+  credential: string | undefined
+): string | undefined => {
+  if (!credential) return undefined;
+
+  try {
+    const payloadBase64 = credential.split('.')[1];
+    if (!payloadBase64) return undefined;
+
+    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+    const payload = JSON.parse(
+      atob(`${normalized}${padding}`)
+    ) as GoogleJwtPayload;
+
+    const picture = (payload.picture ?? '').trim();
+    return picture.length > 0 ? picture : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const LoginPage = () => {
   const { t } = useSafeTranslation();
   const copyrightText = t('AuthPages.shared.copyright').replace(
@@ -83,6 +109,30 @@ const LoginPage = () => {
   const uiLocale = locale === 'vi' ? 'vi' : 'en';
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+
+  const hasUnverifiedEmailError = (message: string) => {
+    const normalized = message.toLowerCase();
+
+    return [
+      'confirm your email',
+      'verify your email',
+      'email has not been confirmed',
+      'please confirm your email before logging in',
+      'xác nhận email',
+      'chưa xác nhận email',
+      'chưa xác thực email',
+    ].some((keyword) => normalized.includes(keyword));
+  };
+
+  const redirectToEmailReminderScreen = (email: string) => {
+    navigate(
+      `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(email)}`
+    );
+  };
+
+  const redirectToEmailReminderWithoutPrefill = () => {
+    navigate(toLocalizedAuthPath('/email-verification-required'));
+  };
 
   const isPendingVerification = (user?: {
     isVerified?: boolean | null;
@@ -157,10 +207,7 @@ const LoginPage = () => {
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
-        } else if (
-          roles.includes('OrgAdmin') ||
-          roles.includes('Organization')
-        ) {
+        } else if (roles.includes('OrgAdmin')) {
           if (response.user?.contractStatus !== 'Active') {
             navigate('/organisation/contract');
           } else {
@@ -170,10 +217,16 @@ const LoginPage = () => {
           navigate(toLocalizedAuthPath('/'));
         }
       } else {
-        setError(
+        const resolvedError =
           response.errors?.join(', ') ||
-            t('AuthPages.login.messages.loginFailed')
-        );
+          t('AuthPages.login.messages.loginFailed');
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
+        setError(resolvedError);
       }
     } catch (err: unknown) {
       console.error('Login error:', err);
@@ -184,14 +237,38 @@ const LoginPage = () => {
       // Check for axios error response
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
-          response?: { data?: { message?: string; errors?: string[] } };
+          response?: {
+            data?: {
+              message?: string;
+              errors?: string[] | Record<string, string[]>;
+            };
+          };
         };
-        setError(
+
+        const responseErrors = axiosError.response?.data?.errors;
+        const flattenedErrors = Array.isArray(responseErrors)
+          ? responseErrors
+          : responseErrors
+            ? Object.values(responseErrors).flat()
+            : [];
+
+        const resolvedError =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          flattenedErrors.join(', ') ||
+          errorMessage;
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
+        setError(resolvedError);
       } else {
+        if (hasUnverifiedEmailError(errorMessage)) {
+          redirectToEmailReminderScreen(data.email);
+          return;
+        }
+
         setError(errorMessage);
       }
     } finally {
@@ -277,28 +354,37 @@ const LoginPage = () => {
 
       // Login successful
       if (response.succeeded) {
-        if (response.user) {
-          authLogin(response.user);
+        let loggedInUser = response.user;
+        const googlePicture = getGooglePictureFromCredential(
+          credentialResponse.credential
+        );
+
+        if (loggedInUser && googlePicture) {
+          loggedInUser = {
+            ...loggedInUser,
+            avatarUrl: googlePicture,
+          };
         }
 
-        const roles = response.user?.roles || [];
+        if (loggedInUser) {
+          authLogin(loggedInUser);
+        }
+
+        const roles = loggedInUser?.roles || [];
         if (roles.includes('SystemAdmin')) {
           navigate('/system-admin/dashboard');
         } else if (roles.includes('Patient')) {
           navigate('/patient/dashboard');
         } else if (roles.includes('Ophthalmologist')) {
-          if (isPendingVerification(response.user)) {
+          if (isPendingVerification(loggedInUser)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (response.user?.contractStatus !== 'Active') {
+          } else if (loggedInUser?.contractStatus !== 'Active') {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
-        } else if (
-          roles.includes('OrgAdmin') ||
-          roles.includes('Organization')
-        ) {
-          if (response.user?.contractStatus !== 'Active') {
+        } else if (roles.includes('OrgAdmin')) {
+          if (loggedInUser?.contractStatus !== 'Active') {
             navigate('/organisation/contract');
           } else {
             navigate('/organisation/dashboard');
@@ -307,10 +393,16 @@ const LoginPage = () => {
           navigate(toLocalizedAuthPath('/'));
         }
       } else {
-        setError(
+        const resolvedError =
           response.errors?.join(', ') ||
-            t('AuthPages.login.messages.googleFailed')
-        );
+          t('AuthPages.login.messages.googleFailed');
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
+        setError(resolvedError);
       }
     } catch (err: unknown) {
       console.error('Google login error:', err);
@@ -320,14 +412,38 @@ const LoginPage = () => {
           : t('AuthPages.login.messages.googleError');
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
-          response?: { data?: { message?: string; errors?: string[] } };
+          response?: {
+            data?: {
+              message?: string;
+              errors?: string[] | Record<string, string[]>;
+            };
+          };
         };
-        setError(
+
+        const responseErrors = axiosError.response?.data?.errors;
+        const flattenedErrors = Array.isArray(responseErrors)
+          ? responseErrors
+          : responseErrors
+            ? Object.values(responseErrors).flat()
+            : [];
+
+        const resolvedError =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          flattenedErrors.join(', ') ||
+          errorMessage;
+
+        if (hasUnverifiedEmailError(resolvedError)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
+        setError(resolvedError);
       } else {
+        if (hasUnverifiedEmailError(errorMessage)) {
+          redirectToEmailReminderWithoutPrefill();
+          return;
+        }
+
         setError(errorMessage);
       }
     } finally {
@@ -472,6 +588,14 @@ const LoginPage = () => {
                 <p className="text-gray-500 text-base">
                   {t('AuthPages.login.loginForm.description')}
                 </p>
+                <div>
+                  <Link
+                    to={toLocalizedAuthPath('/')}
+                    className="inline-flex items-center text-sm font-medium text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
+                  >
+                    {t('AuthPages.login.loginForm.backHome')}
+                  </Link>
+                </div>
               </div>
 
               {/* Form */}

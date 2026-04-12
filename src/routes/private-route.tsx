@@ -57,8 +57,7 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
     user?.isVerified !== false &&
     user?.contractStatus !== 'Active';
 
-  const isOrgAdmin =
-    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
+  const isOrgAdmin = user?.roles?.includes('OrgAdmin');
   const needsOrganisationContract =
     isOrgAdmin && user?.contractStatus !== 'Active';
 

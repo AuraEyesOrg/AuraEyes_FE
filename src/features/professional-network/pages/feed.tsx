@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { PostComposer } from '../components/post/PostComposer';
 import { PostCard } from '../components/post/PostCard';
 import { FeedSkeleton } from '../components/post/PostSkeleton';
@@ -14,13 +14,22 @@ import { useToggleReaction } from '../hooks/useToggleReaction';
 import { useToggleSavePost } from '../hooks/useToggleSavePost';
 import { useHidePost } from '../hooks/useHidePost';
 import useAuthStore from '@/store/auth-store';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import type { ReactionType } from '../types';
 
 function FeedPage() {
   const [activeTab, setActiveTab] = useState<'feed' | 'manage'>('feed');
   const [page, setPage] = useState(1);
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthStore();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
   const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
   const isManageQuery = searchParams.get('tab') === 'manage';
   const effectiveTab: 'feed' | 'manage' =
@@ -209,7 +218,9 @@ function FeedPage() {
               {trendingTopics.map((topic, index) => (
                 <Link
                   key={topic.topicName}
-                  to={`/network/discover?tag=${encodeURIComponent(topic.topicName)}`}
+                  to={toLocalizedPath(
+                    `/network/discover?tag=${encodeURIComponent(topic.topicName)}`
+                  )}
                   className="flex flex-col gap-0.5 px-5 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <p className="text-xs text-slate-400">
@@ -230,7 +241,7 @@ function FeedPage() {
               )}
             </div>
             <Link
-              to="/network/discover"
+              to={toLocalizedPath('/network/discover')}
               className="block text-center text-primary font-medium text-sm px-5 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-t border-slate-200 dark:border-slate-800"
             >
               Show more

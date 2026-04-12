@@ -18,12 +18,20 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
 
@@ -39,6 +47,7 @@ export function NetworkSidebar() {
         : user?.roles?.includes('SystemAdmin')
           ? '/system-admin/dashboard'
           : '/';
+  const localizedDashboardRoute = toLocalizedPath(dashboardRoute);
 
   const navItems = [
     { to: '/network', icon: Home, label: 'Feed', end: true },
@@ -56,7 +65,7 @@ export function NetworkSidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(toLocalizedPath('/login'));
   };
 
   return (
@@ -81,7 +90,7 @@ export function NetworkSidebar() {
 
         {/* Back to Dashboard */}
         <Link
-          to={dashboardRoute}
+          to={localizedDashboardRoute}
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -97,7 +106,7 @@ export function NetworkSidebar() {
           {navItems.map((item) => (
             <NavLink
               key={item.to}
-              to={item.to}
+              to={toLocalizedPath(item.to)}
               end={item.end}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${

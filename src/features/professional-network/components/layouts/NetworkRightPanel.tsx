@@ -6,12 +6,22 @@
  * Hidden on screens < lg (1024px)
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { ProfessionalCardMini } from '../professional/ProfessionalCardMini';
 import { mockOphthalmologists, mockGroups, trendingTopics } from '../../data';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 export function NetworkRightPanel() {
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+
   // Get suggested connections (skip first 2, take next 3)
   const suggestedConnections = mockOphthalmologists.slice(2, 5);
   // Get user's groups (members only)
@@ -42,7 +52,9 @@ export function NetworkRightPanel() {
           {trendingTopics.map((topic, index) => (
             <Link
               key={topic.tag}
-              to={`/network/discover?tag=${encodeURIComponent(topic.tag)}`}
+              to={toLocalizedPath(
+                `/network/discover?tag=${encodeURIComponent(topic.tag)}`
+              )}
               className="hover-animation accent-tab hover-card relative 
                          flex flex-col gap-0.5 px-4 py-3"
             >
@@ -57,7 +69,7 @@ export function NetworkRightPanel() {
           ))}
         </div>
         <Link
-          to="/network/discover"
+          to={toLocalizedPath('/network/discover')}
           className="custom-button accent-tab hover-card block w-full rounded-2xl
                      rounded-t-none text-center text-brand-primary px-4 py-3"
         >
@@ -81,7 +93,7 @@ export function NetworkRightPanel() {
           ))}
         </div>
         <Link
-          to="/network/discover"
+          to={toLocalizedPath('/network/discover')}
           className="custom-button accent-tab hover-card block w-full rounded-2xl
                      rounded-t-none text-center text-brand-primary px-4 py-3"
         >
@@ -98,7 +110,7 @@ export function NetworkRightPanel() {
           {myGroups.slice(0, 3).map((group) => (
             <Link
               key={group.id}
-              to="/network/discover"
+              to={toLocalizedPath('/network/discover')}
               className="flex items-center gap-3 px-4 py-3 hover-card hover-animation"
             >
               <img
@@ -118,7 +130,7 @@ export function NetworkRightPanel() {
           ))}
         </div>
         <Link
-          to="/network/discover"
+          to={toLocalizedPath('/network/discover')}
           className="custom-button accent-tab hover-card block w-full rounded-2xl
                      rounded-t-none text-center text-brand-primary px-4 py-3"
         >

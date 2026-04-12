@@ -8,13 +8,14 @@ import {
   FileText,
   Users,
   Globe,
-  Receipt,
+  Wallet,
   FileBarChart,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 
 interface SidebarProps {
@@ -31,7 +32,7 @@ const navItems = [
     hasBadge: true,
   },
   { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
-  { icon: Receipt, label: 'Billing', path: '/organisation/billing' },
+  { icon: Wallet, label: 'Wallet', path: '/organisation/wallet' },
   { icon: FileBarChart, label: 'Reports', path: '/organisation/reports' },
   { icon: Globe, label: 'Aura Network', path: '/network' },
   { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
@@ -48,18 +49,14 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
     ? navItems
     : navItems.filter((item) => item.path === '/organisation/contract');
 
-  const displayName = user?.fullName ?? 'Organisation';
+  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Organisation');
+  const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
-  const initials = displayName
-    .split(' ')
-    .map((w) => w.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const avatarUrl = user?.avatarUrl ?? '';
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(resolvePathWithLocale('/login'));
   };
 
   return (
@@ -113,8 +110,13 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
       <div className="border-t border-gray-200 px-6 py-4 dark:border-slate-700">
         <div className="flex items-center gap-3 px-2">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0">
-              {initials || 'OR'}
+            <div
+              className="w-10 h-10 rounded-full bg-brand bg-cover bg-center flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0"
+              style={{
+                backgroundImage: avatarUrl ? `url("${avatarUrl}")` : undefined,
+              }}
+            >
+              {!avatarUrl && (avatarMeta.initials || 'OR')}
             </div>
             <div className="flex flex-col overflow-hidden">
               <p className="text-sm font-bold text-(--text-primary) truncate">

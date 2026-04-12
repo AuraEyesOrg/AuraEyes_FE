@@ -99,6 +99,7 @@ export interface ProfessionalPost {
   allowComments: boolean;
   isInternalCase?: boolean;
   consultationSessionId?: string;
+  aiScreeningId?: string;
   patientAge?: number;
   patientGender?: string;
   attachments: PostAttachment[];
@@ -302,6 +303,7 @@ export interface CreatePostRequest {
   allowComments: boolean;
   isInternalCase?: boolean;
   consultationSessionId?: string;
+  aiScreeningId?: string;
   patientAge?: number;
   patientGender?: string;
 }

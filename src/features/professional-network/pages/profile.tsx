@@ -4,7 +4,12 @@
  */
 
 import { useState } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import {
+  useParams,
+  Link,
+  useLocation,
+  useSearchParams,
+} from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -27,6 +32,11 @@ import { PostSkeleton } from '../components/post/PostSkeleton';
 import { InitialsAvatar } from '../components/professional/InitialsAvatar';
 import { useUserProfile, useUserPosts } from '../hooks/useNetworkPosts';
 import useAuthStore from '@/store/auth-store';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 type TabType = 'posts' | 'about';
 
@@ -53,7 +63,11 @@ function ProfileSkeleton() {
 
 function ProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
   const isPreviewMode = searchParams.get('preview') === 'true';
   const { user: currentUser } = useAuthStore();
   const currentUserId = currentUser?.id || '';
@@ -89,7 +103,7 @@ function ProfilePage() {
         <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
           <div className="flex items-center gap-6 px-4 h-[53px]">
             <Link
-              to="/network/feed"
+              to={toLocalizedPath('/network/feed')}
               className="p-2 hover:bg-gray-100 rounded-full hover-animation"
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
@@ -114,7 +128,7 @@ function ProfilePage() {
         <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
           <div className="flex items-center gap-6 px-4 h-[53px]">
             <Link
-              to="/network/feed"
+              to={toLocalizedPath('/network/feed')}
               className="p-2 hover:bg-gray-100 rounded-full hover-animation"
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
@@ -143,7 +157,7 @@ function ProfilePage() {
             </span>
           </div>
           <Link
-            to={`/network/profile/${currentUserId}`}
+            to={toLocalizedPath(`/network/profile/${currentUserId}`)}
             className="flex items-center gap-1.5 text-sm font-medium text-amber-800 hover:text-amber-900"
           >
             <X className="w-4 h-4" />
@@ -156,7 +170,7 @@ function ProfilePage() {
       <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
         <div className="flex items-center gap-6 px-4 h-[53px]">
           <Link
-            to="/network/feed"
+            to={toLocalizedPath('/network/feed')}
             className="p-2 hover:bg-gray-100 rounded-full hover-animation"
           >
             <ArrowLeft className="w-5 h-5 text-text-main" />
@@ -171,7 +185,9 @@ function ProfilePage() {
           </div>
           {isOwnProfile && (
             <Link
-              to={`/network/profile/${currentUserId}?preview=true`}
+              to={toLocalizedPath(
+                `/network/profile/${currentUserId}?preview=true`
+              )}
               className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-brand-primary hover-animation"
             >
               <Eye className="w-4 h-4" />
@@ -230,7 +246,9 @@ function ProfilePage() {
           <div className="flex items-center gap-2">
             {isOwnProfile ? (
               <Link
-                to={`/network/profile/${currentUserId}?preview=true`}
+                to={toLocalizedPath(
+                  `/network/profile/${currentUserId}?preview=true`
+                )}
                 className="flex items-center gap-1.5 text-sm font-medium text-text-muted border border-light-border rounded-lg px-3 py-2 hover:bg-main-search-background transition-all"
               >
                 <Eye className="w-4 h-4" />

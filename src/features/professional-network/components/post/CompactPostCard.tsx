@@ -5,10 +5,15 @@
  * Wrapped in a Link to the full post detail page.
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FileText, FlaskConical, HelpingHand, Newspaper } from 'lucide-react';
 import type { ProfessionalPost } from '../../types';
 import { InitialsAvatar } from '../professional/InitialsAvatar';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 const postTypeConfig = {
   CasePresentation: {
@@ -38,6 +43,11 @@ interface Props {
 }
 
 export function CompactPostCard({ post }: Props) {
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+
   const typeConfig =
     postTypeConfig[post.category as keyof typeof postTypeConfig] ??
     postTypeConfig.KnowledgeShare;
@@ -48,7 +58,7 @@ export function CompactPostCard({ post }: Props) {
 
   return (
     <Link
-      to={`/network/post/${post.id}`}
+      to={toLocalizedPath(`/network/post/${post.id}`)}
       className="flex items-start gap-3 px-4 py-3 hover:bg-black/[0.03] hover-animation"
     >
       {/* Avatar */}

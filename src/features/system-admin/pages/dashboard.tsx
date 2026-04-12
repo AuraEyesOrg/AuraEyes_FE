@@ -6,6 +6,7 @@ import {
   Building2,
   ChevronRight,
   Download,
+  FileText,
   Landmark,
   Radio,
   Stethoscope,
@@ -33,7 +34,11 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import { dashboardApi } from '../api';
 import type { SystemAdminDashboardMetrics } from '../types/system-admin.types';
-import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import {
+  buildTimestampedFileName,
+  downloadPdfTableFile,
+  downloadXlsxFile,
+} from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
 const DONUT_COLORS = ['#06b6d4', '#14b8a6', '#22c55e', '#f59e0b', '#8b5cf6'];
@@ -65,6 +70,7 @@ export default function SystemAdminDashboard() {
   const metrics = metricsQuery.data;
   const isLoading = metricsQuery.isLoading;
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const monthlyChartData = useMemo(() => {
     if (!metrics) return [];
@@ -152,6 +158,110 @@ export default function SystemAdminDashboard() {
       ]
     : [];
 
+  const dashboardExportRows = useMemo(() => {
+    if (!metrics) return [];
+
+    return [
+      {
+        section: 'Users',
+        metric: 'Doctors - Total',
+        value: metrics.doctors.total,
+      },
+      {
+        section: 'Users',
+        metric: 'Doctors - Growth %',
+        value: metrics.doctors.growthPercentage,
+      },
+      {
+        section: 'Users',
+        metric: 'Organisations - Total',
+        value: metrics.organisations.total,
+      },
+      {
+        section: 'Users',
+        metric: 'Organisations - Growth %',
+        value: metrics.organisations.growthPercentage,
+      },
+      {
+        section: 'Users',
+        metric: 'Patients - Total',
+        value: metrics.patients.total,
+      },
+      {
+        section: 'Users',
+        metric: 'Patients - Growth %',
+        value: metrics.patients.growthPercentage,
+      },
+      {
+        section: 'Operations',
+        metric: 'Live consultation sessions',
+        value: metrics.systemStatus.liveConsultationSessions,
+      },
+      {
+        section: 'Pending',
+        metric: 'Ophthalmologist verifications',
+        value: metrics.pendingActions.pendingOphthalmologistVerifications,
+      },
+      {
+        section: 'Pending',
+        metric: 'Withdrawal requests',
+        value: metrics.pendingActions.pendingWithdrawalRequests,
+      },
+      {
+        section: 'Pending',
+        metric: 'Organisation onboarding',
+        value: metrics.pendingActions.pendingOrganisationOnboarding,
+      },
+      {
+        section: 'Revenue (YTD)',
+        metric: 'Wallet top-ups (calendar year)',
+        value: metrics.totalDepositRevenueYear,
+      },
+      {
+        section: 'Revenue (YTD)',
+        metric: 'Consultation commission (calendar year)',
+        value: metrics.totalPlatformCommissionYear,
+      },
+      ...metrics.paymentMethods.map((item) => ({
+        section: 'Payment Methods',
+        metric: item.name,
+        value: item.value,
+      })),
+      ...metrics.monthlyRevenue.map((item) => ({
+        section: 'Monthly Revenue',
+        metric: item.label,
+        value: item.value,
+      })),
+      ...metrics.monthlyPlatformCommission.map((item) => ({
+        section: 'Monthly platform commission',
+        metric: item.label,
+        value: item.value,
+      })),
+      ...metrics.dailyRevenue.map((item) => ({
+        section: 'Daily Revenue',
+        metric: item.label,
+        value: item.value,
+      })),
+      ...metrics.dailyPlatformCommission.map((item) => ({
+        section: 'Daily platform commission',
+        metric: item.label,
+        value: item.value,
+      })),
+    ];
+  }, [metrics]);
+
+  const dashboardExportColumns = useMemo(
+    () => [
+      { header: 'Section', value: (row: { section: string }) => row.section },
+      { header: 'Metric', value: (row: { metric: string }) => row.metric },
+      {
+        header: 'Value',
+        value: (row: { value: number | string }) => row.value,
+      },
+    ],
+    []
+  );
+
   const handleExportDashboard = async () => {
     if (!metrics) {
       toast.info('No dashboard data available for export.');
@@ -161,103 +271,18 @@ export default function SystemAdminDashboard() {
     try {
       setIsExporting(true);
 
-      const rows = [
-        {
-          section: 'Users',
-          metric: 'Doctors - Total',
-          value: metrics.doctors.total,
-        },
-        {
-          section: 'Users',
-          metric: 'Doctors - Growth %',
-          value: metrics.doctors.growthPercentage,
-        },
-        {
-          section: 'Users',
-          metric: 'Organisations - Total',
-          value: metrics.organisations.total,
-        },
-        {
-          section: 'Users',
-          metric: 'Organisations - Growth %',
-          value: metrics.organisations.growthPercentage,
-        },
-        {
-          section: 'Users',
-          metric: 'Patients - Total',
-          value: metrics.patients.total,
-        },
-        {
-          section: 'Users',
-          metric: 'Patients - Growth %',
-          value: metrics.patients.growthPercentage,
-        },
-        {
-          section: 'Operations',
-          metric: 'Live consultation sessions',
-          value: metrics.systemStatus.liveConsultationSessions,
-        },
-        {
-          section: 'Pending',
-          metric: 'Ophthalmologist verifications',
-          value: metrics.pendingActions.pendingOphthalmologistVerifications,
-        },
-        {
-          section: 'Pending',
-          metric: 'Withdrawal requests',
-          value: metrics.pendingActions.pendingWithdrawalRequests,
-        },
-        {
-          section: 'Pending',
-          metric: 'Organisation onboarding',
-          value: metrics.pendingActions.pendingOrganisationOnboarding,
-        },
-        {
-          section: 'Revenue (YTD)',
-          metric: 'Wallet top-ups (calendar year)',
-          value: metrics.totalDepositRevenueYear,
-        },
-        {
-          section: 'Revenue (YTD)',
-          metric: 'Consultation commission (calendar year)',
-          value: metrics.totalPlatformCommissionYear,
-        },
-        ...metrics.paymentMethods.map((item) => ({
-          section: 'Payment Methods',
-          metric: item.name,
-          value: item.value,
-        })),
-        ...metrics.monthlyRevenue.map((item) => ({
-          section: 'Monthly Revenue',
-          metric: item.label,
-          value: item.value,
-        })),
-        ...metrics.monthlyPlatformCommission.map((item) => ({
-          section: 'Monthly platform commission',
-          metric: item.label,
-          value: item.value,
-        })),
-        ...metrics.dailyRevenue.map((item) => ({
-          section: 'Daily Revenue',
-          metric: item.label,
-          value: item.value,
-        })),
-        ...metrics.dailyPlatformCommission.map((item) => ({
-          section: 'Daily platform commission',
-          metric: item.label,
-          value: item.value,
-        })),
-      ];
-
       await downloadXlsxFile(
-        rows,
-        [
-          { header: 'Section', value: (row) => row.section },
-          { header: 'Metric', value: (row) => row.metric },
-          { header: 'Value', value: (row) => row.value },
-        ],
+        dashboardExportRows,
+        dashboardExportColumns,
         buildTimestampedFileName('system-admin-dashboard', 'xlsx'),
-        'Dashboard'
+        {
+          sheetName: 'Dashboard',
+          title: 'System Admin Dashboard Export',
+          subtitle: 'Growth, revenue, queue, and system status',
+          includeGeneratedAt: true,
+          generatedBy: 'AuraEyes System Admin',
+          columnWidths: [24, 48, 22],
+        }
       );
       toast.success('Dashboard data exported successfully.');
     } catch (error) {
@@ -265,6 +290,35 @@ export default function SystemAdminDashboard() {
       toast.error('Failed to export dashboard data. Please try again.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportDashboardPdf = async () => {
+    if (!metrics) {
+      toast.info('No dashboard data available for export.');
+      return;
+    }
+
+    try {
+      setIsExportingPdf(true);
+      await downloadPdfTableFile(
+        dashboardExportRows,
+        dashboardExportColumns,
+        buildTimestampedFileName('system-admin-dashboard', 'pdf'),
+        {
+          title: 'System Admin Dashboard Export',
+          subtitle: 'Growth, revenue, queue, and system status',
+          orientation: 'landscape',
+          includeGeneratedAt: true,
+          generatedBy: 'AuraEyes System Admin',
+        }
+      );
+      toast.success('Dashboard PDF exported successfully.');
+    } catch (error) {
+      console.error('Failed to export dashboard PDF:', error);
+      toast.error('Failed to export dashboard PDF. Please try again.');
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -277,14 +331,24 @@ export default function SystemAdminDashboard() {
           title="System Admin Dashboard"
           description="Growth, revenue, queue, and system status"
           actions={
-            <button
-              onClick={handleExportDashboard}
-              disabled={isExporting || !metrics}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Download className="w-4 h-4" />
-              {isExporting ? 'Exporting...' : 'Export Excel'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportDashboard}
+                disabled={isExporting || !metrics}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                {isExporting ? 'Exporting...' : 'Export Excel'}
+              </button>
+              <button
+                onClick={handleExportDashboardPdf}
+                disabled={isExportingPdf || !metrics}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <FileText className="w-4 h-4" />
+                {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+              </button>
+            </div>
           }
           showNotifications={true}
         />

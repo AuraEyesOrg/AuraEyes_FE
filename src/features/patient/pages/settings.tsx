@@ -89,7 +89,7 @@ export default function SettingsPage() {
           icon: Shield,
           titleKey: 'PatientSettings.items.security.title',
           descriptionKey: 'PatientSettings.items.security.description',
-          path: '/forgot-password',
+          path: '/patient/security',
         },
       ],
     },
