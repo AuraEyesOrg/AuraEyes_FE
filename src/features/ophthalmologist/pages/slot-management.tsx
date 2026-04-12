@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Calendar,
@@ -26,6 +26,7 @@ import {
   useUnblockSlot,
   useCreateScheduleTemplate,
   useDeleteScheduleTemplate,
+  useAllowedPriceRange,
 } from '@/features/patient/hooks/use-booking';
 import {
   SlotType,
@@ -86,6 +87,7 @@ interface OphthalmologistMeApiResponse {
   success: boolean;
   data?: {
     employmentType?: string | null;
+    yearsOfExperience?: number;
   };
 }
 
@@ -118,23 +120,73 @@ export default function SlotManagementPage() {
     [user?.employmentType]
   );
 
-  const { data: profileEmploymentType, isLoading: employmentLoading } =
-    useQuery({
-      queryKey: ['ophthalmologist', 'me', 'employment-type'],
+  const { data: doctorProfileSummary, isLoading: employmentLoading } = useQuery(
+    {
+      queryKey: ['ophthalmologist', 'me', 'profile-summary'],
       queryFn: async () => {
         const response = await api.get<OphthalmologistMeApiResponse>(
           '/ophthalmologist/profile'
         );
 
-        return normalizeEmploymentType(response.data?.data?.employmentType);
+        return {
+          employmentType: normalizeEmploymentType(
+            response.data?.data?.employmentType
+          ),
+          yearsOfExperience:
+            typeof response.data?.data?.yearsOfExperience === 'number'
+              ? response.data.data.yearsOfExperience
+              : null,
+        };
       },
-      enabled: authEmploymentType === null,
-      staleTime: 5 * 60 * 1000,
-    });
+      enabled: !!doctorId,
+      staleTime: 0,
+      refetchOnMount: 'always',
+    }
+  );
 
-  const employmentType = authEmploymentType ?? profileEmploymentType ?? null;
+  const employmentType =
+    doctorProfileSummary?.employmentType ?? authEmploymentType ?? null;
+  const yearsOfExperience = doctorProfileSummary?.yearsOfExperience ?? null;
   const isFullTimeDoctor = employmentType === 'FullTime';
   const isPartTimeDoctor = employmentType === 'PartTime';
+  const employmentNoticeToastRef = useRef<EmploymentType | null>(null);
+
+  const {
+    data: allowedPriceRange,
+    isLoading: pricingRangeLoading,
+    isError: pricingRangeError,
+  } = useAllowedPriceRange(doctorId, {
+    enabled: isPartTimeDoctor && !!doctorId,
+  });
+
+  useEffect(() => {
+    if (employmentLoading || !employmentType) {
+      return;
+    }
+
+    if (employmentNoticeToastRef.current === employmentType) {
+      return;
+    }
+
+    employmentNoticeToastRef.current = employmentType;
+
+    if (employmentType === 'FullTime') {
+      ophthalToast.info(
+        t(
+          'Ophthalmologist.slotManagement.fullTimeNotice',
+          'You are a full-time ophthalmologist. Appointment slots are generated automatically by the system. You can still block or unblock your slots when needed.'
+        )
+      );
+      return;
+    }
+
+    ophthalToast.info(
+      t(
+        'Ophthalmologist.slotManagement.partTimeNotice',
+        'You are a part-time ophthalmologist. Use templates to generate slots, and keep your daily slot quota in mind.'
+      )
+    );
+  }, [employmentLoading, employmentType, t]);
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -192,6 +244,74 @@ export default function SlotManagementPage() {
   const unblockMutation = useUnblockSlot();
   const createTemplateMutation = useCreateScheduleTemplate();
   const deleteTemplateMutation = useDeleteScheduleTemplate();
+
+  const suggestedPartTimeCost = useMemo(() => {
+    if (!allowedPriceRange) {
+      return null;
+    }
+
+    return Math.round(
+      (allowedPriceRange.minPrice + allowedPriceRange.maxPrice) / 2
+    );
+  }, [allowedPriceRange]);
+
+  const templateCostValidationMessage = useMemo(() => {
+    if (!isPartTimeDoctor) {
+      return null;
+    }
+
+    const trimmedCost = templateCost.trim();
+    if (!trimmedCost) {
+      return t(
+        'Ophthalmologist.slotManagement.pricing.costRequired',
+        'Cost is required for part-time doctors.'
+      );
+    }
+
+    const parsedCost = Number(trimmedCost);
+    if (!Number.isInteger(parsedCost) || parsedCost <= 0) {
+      return t(
+        'Ophthalmologist.slotManagement.pricing.positiveIntegerOnly',
+        'Cost must be a positive integer.'
+      );
+    }
+
+    if (
+      allowedPriceRange &&
+      (parsedCost < allowedPriceRange.minPrice ||
+        parsedCost > allowedPriceRange.maxPrice)
+    ) {
+      return t(
+        'Ophthalmologist.slotManagement.pricing.outOfRange',
+        `Cost must be between ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} and ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
+      );
+    }
+
+    return null;
+  }, [allowedPriceRange, isPartTimeDoctor, t, templateCost]);
+
+  useEffect(() => {
+    if (!showTemplateModal || !isPartTimeDoctor || !allowedPriceRange) {
+      return;
+    }
+
+    const currentCost = Number(templateCost);
+    const isCurrentCostInRange =
+      Number.isInteger(currentCost) &&
+      currentCost >= allowedPriceRange.minPrice &&
+      currentCost <= allowedPriceRange.maxPrice;
+
+    if (!isCurrentCostInRange) {
+      setTemplateCost(
+        String(suggestedPartTimeCost ?? allowedPriceRange.minPrice)
+      );
+    }
+  }, [
+    allowedPriceRange,
+    isPartTimeDoctor,
+    showTemplateModal,
+    suggestedPartTimeCost,
+  ]);
 
   const slots = slotsData?.items ?? [];
 
@@ -342,6 +462,33 @@ export default function SlotManagementPage() {
       return;
     }
 
+    if (isPartTimeDoctor && pricingRangeLoading) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.slotManagement.pricing.rangeLoading',
+          'Pricing range is loading. Please try again in a moment.'
+        )
+      );
+      return;
+    }
+
+    if (isPartTimeDoctor && pricingRangeError) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.slotManagement.pricing.rangeLoadFailed',
+          'Unable to load your allowed price range. Please refresh and try again.'
+        )
+      );
+      return;
+    }
+
+    if (templateCostValidationMessage) {
+      ophthalToast.error(templateCostValidationMessage);
+      return;
+    }
+
+    const parsedTemplateCost = Number(templateCost);
+
     createTemplateMutation.mutate(
       {
         ophthalId: doctorId,
@@ -350,7 +497,7 @@ export default function SlotManagementPage() {
         endTime: `${templateEndTime}:00`,
         slotDuration: templateSlotDuration,
         slotType: templateSlotType,
-        cost: parseInt(templateCost) || 0,
+        cost: parsedTemplateCost,
         maxCapacity: 1,
       },
       {
@@ -368,7 +515,7 @@ export default function SlotManagementPage() {
           setTemplateEndTime('21:00');
           setTemplateSlotDuration(30);
           setTemplateSlotType(SlotType.Consultation);
-          setTemplateCost('200000');
+          setTemplateCost(String(suggestedPartTimeCost ?? 200000));
         },
         onError: (err) => {
           ophthalToast.error(
@@ -391,8 +538,13 @@ export default function SlotManagementPage() {
     templateSlotDuration,
     templateSlotType,
     templateCost,
+    templateCostValidationMessage,
     createTemplateMutation,
     isFullTimeDoctor,
+    isPartTimeDoctor,
+    pricingRangeError,
+    pricingRangeLoading,
+    suggestedPartTimeCost,
     t,
   ]);
 
@@ -532,11 +684,7 @@ export default function SlotManagementPage() {
     [isFullTimeDoctor, t]
   );
 
-  if (
-    slotsLoading ||
-    templatesLoading ||
-    (employmentLoading && authEmploymentType === null)
-  ) {
+  if (slotsLoading || templatesLoading || employmentLoading) {
     return (
       <div className="flex h-screen w-full bg-(--bg-primary)">
         <DoctorSidebar pendingCount={0} />
@@ -607,23 +755,6 @@ export default function SlotManagementPage() {
               </button>
             )}
           </div>
-
-          {isFullTimeDoctor && (
-            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800/60 dark:bg-blue-900/20 dark:text-blue-200">
-              {t(
-                'Ophthalmologist.slotManagement.fullTimeNotice',
-                'You are a full-time ophthalmologist. Appointment slots are generated automatically by the system. You can still block or unblock your slots when needed.'
-              )}
-            </div>
-          )}
-          {isPartTimeDoctor && (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-200">
-              {t(
-                'Ophthalmologist.slotManagement.partTimeNotice',
-                'You are a part-time ophthalmologist. Use templates to generate slots, and keep your daily slot quota in mind.'
-              )}
-            </div>
-          )}
 
           {/* Compact Stats */}
           <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -945,6 +1076,28 @@ export default function SlotManagementPage() {
               )}
             </h3>
 
+            {isPartTimeDoctor &&
+              (yearsOfExperience !== null || allowedPriceRange) && (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-200">
+                  {yearsOfExperience !== null && (
+                    <p>
+                      {t(
+                        'Ophthalmologist.slotManagement.pricing.experienceLabel',
+                        `Your experience: ${yearsOfExperience} years.`
+                      )}
+                    </p>
+                  )}
+                  {allowedPriceRange && (
+                    <p className={yearsOfExperience !== null ? 'mt-1' : ''}>
+                      {t(
+                        'Ophthalmologist.slotManagement.pricing.allowedRangeLabel',
+                        `Allowed price range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1062,10 +1215,34 @@ export default function SlotManagementPage() {
                 </label>
                 <input
                   type="number"
+                  min={1}
+                  step={1}
                   value={templateCost}
                   onChange={(e) => setTemplateCost(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
+                {allowedPriceRange && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {t(
+                      'Ophthalmologist.slotManagement.pricing.allowedRangeHint',
+                      `Allowed range: ${allowedPriceRange.minPrice.toLocaleString('vi-VN')} - ${allowedPriceRange.maxPrice.toLocaleString('vi-VN')} VND.`
+                    )}
+                    {suggestedPartTimeCost && (
+                      <>
+                        {' '}
+                        {t(
+                          'Ophthalmologist.slotManagement.pricing.suggestedHint',
+                          `Suggested: ${suggestedPartTimeCost.toLocaleString('vi-VN')} VND.`
+                        )}
+                      </>
+                    )}
+                  </p>
+                )}
+                {templateCostValidationMessage && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    {templateCostValidationMessage}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1078,7 +1255,10 @@ export default function SlotManagementPage() {
               </button>
               <button
                 onClick={handleCreateTemplate}
-                disabled={createTemplateMutation.isPending}
+                disabled={
+                  createTemplateMutation.isPending ||
+                  Boolean(templateCostValidationMessage)
+                }
                 className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition disabled:opacity-50"
               >
                 {createTemplateMutation.isPending

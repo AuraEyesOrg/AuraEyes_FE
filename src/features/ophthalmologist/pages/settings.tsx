@@ -390,7 +390,7 @@ export default function SettingsPage() {
       phone: profileForm.phone?.trim() || undefined,
       address: profileForm.address?.trim() || undefined,
       bio: profileForm.bio?.trim() || undefined,
-      yearsOfExperience: Number(profileForm.yearsOfExperience) || 0,
+      yearsOfExperience: profile.yearsOfExperience,
     });
   };
 
@@ -1204,14 +1204,13 @@ export default function SettingsPage() {
                   min={0}
                   max={70}
                   value={profileForm.yearsOfExperience}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({
-                      ...prev,
-                      yearsOfExperience: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  readOnly
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-[#162d4d] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white cursor-not-allowed"
                 />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Years of experience can only be updated by admins.
+                </p>
               </div>
 
               <div>
