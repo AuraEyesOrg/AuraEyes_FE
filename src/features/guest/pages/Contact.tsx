@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -7,6 +8,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -633,19 +635,19 @@ const ContactPage = () => {
                       className="text-sm text-[var(--color-text-muted)]"
                     >
                       {t('Contact.form.termsPrefix')}{' '}
-                      <a
-                        href="#"
+                      <Link
+                        to={resolvePathWithLocale('/terms')}
                         className="text-[var(--color-brand-primary)] hover:underline"
                       >
                         {t('Contact.form.termsOfService')}
-                      </a>{' '}
+                      </Link>{' '}
                       {t('Contact.form.and')}{' '}
-                      <a
-                        href="#"
+                      <Link
+                        to={resolvePathWithLocale('/privacy')}
                         className="text-[var(--color-brand-primary)] hover:underline"
                       >
                         {t('Contact.form.privacyPolicy')}
-                      </a>
+                      </Link>
                       .
                     </label>
                   </div>
