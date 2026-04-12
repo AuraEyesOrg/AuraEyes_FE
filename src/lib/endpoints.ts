@@ -298,6 +298,7 @@ export const API_ENDPOINTS = {
     WALLET: {
       GET: '/wallets',
       TRANSACTIONS: '/wallets/transactions',
+      CREATE_DEPOSIT: '/wallets/deposit',
     },
   },
 

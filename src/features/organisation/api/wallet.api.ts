@@ -71,6 +71,21 @@ export interface PagedResult<T> {
   hasNext: boolean;
 }
 
+export interface CreateOrgDepositRequest {
+  amountVnd: number;
+  paymentMethod?: number;
+  description?: string;
+  returnUrl: string;
+  cancelUrl: string;
+}
+
+export interface CreateOrgDepositResponse {
+  depositRequestId: string;
+  paymentUrl: string;
+  orderCode: string;
+  expiresAt?: string;
+}
+
 export const organisationWalletApi = {
   async getWallet() {
     const response = await api.get<ApiResponse<WalletDto>>(
@@ -86,5 +101,13 @@ export const organisationWalletApi = {
       params: { pageNumber, pageSize },
     });
     return unwrapApiData<PagedResult<WalletTransactionDto>>(response.data);
+  },
+
+  async createDeposit(request: CreateOrgDepositRequest) {
+    const response = await api.post<ApiResponse<CreateOrgDepositResponse>>(
+      API_ENDPOINTS.ORGANISATION.WALLET.CREATE_DEPOSIT,
+      request
+    );
+    return unwrapApiData<CreateOrgDepositResponse>(response.data);
   },
 };

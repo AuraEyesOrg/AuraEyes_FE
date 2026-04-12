@@ -143,11 +143,7 @@ export default function DoctorSidebar({
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
-              to={
-                item.path === '/network'
-                  ? item.path
-                  : toLocalizedPath(item.path)
-              }
+              to={toLocalizedPath(item.path)}
               className={({ isActive }) =>
                 `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive

@@ -3,21 +3,34 @@
  * Full professional card with details and actions
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BadgeCheck, Users, FileText, Star } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
 import { InitialsAvatar } from './InitialsAvatar';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface Props {
   professional: Ophthalmologist;
 }
 
 export function ProfessionalCard({ professional }: Props) {
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+
   return (
     <div className="px-4 py-3">
       <div className="flex gap-3">
         {/* Avatar */}
-        <Link to={`/network/profile/${professional.id}`} className="shrink-0">
+        <Link
+          to={toLocalizedPath(`/network/profile/${professional.id}`)}
+          className="shrink-0"
+        >
           <InitialsAvatar
             fullName={professional.fullName}
             avatarUrl={professional.avatarUrl}
@@ -32,7 +45,7 @@ export function ProfessionalCard({ professional }: Props) {
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 <Link
-                  to={`/network/profile/${professional.id}`}
+                  to={toLocalizedPath(`/network/profile/${professional.id}`)}
                   className="font-bold text-[15px] text-text-main hover:underline truncate"
                 >
                   {professional.fullName}

@@ -1489,6 +1489,33 @@ const Router = () => (
 
         {/* ============ PROFESSIONAL NETWORK ROUTES ============ */}
         <Route
+          path="/:locale/network"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={[
+                'SystemAdmin',
+                'Admin',
+                'OrgAdmin',
+                'Ophthalmologist',
+              ]}
+              element={<NetworkLayout />}
+            />
+          }
+        >
+          <Route index element={<NetworkFeedPage />} />
+          <Route path="feed" element={<NetworkFeedPage />} />
+          <Route path="discover" element={<NetworkDiscoverPage />} />
+
+          <Route path="saved" element={<NetworkSavedPage />} />
+          <Route path="post/:id" element={<NetworkPostDetailPage />} />
+          <Route path="profile/:id" element={<NetworkProfilePage />} />
+          <Route
+            path="organisation/:id"
+            element={<NetworkOrganisationPage />}
+          />
+        </Route>
+
+        <Route
           path="/network"
           element={
             <PrivateRoute

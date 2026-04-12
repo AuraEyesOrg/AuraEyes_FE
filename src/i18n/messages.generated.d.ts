@@ -82,6 +82,7 @@ declare module 'i18next' {
         loginForm: {
           heading: string;
           description: string;
+          backHome: string;
           emailLabel: string;
           emailPlaceholder: string;
           passwordLabel: string;
@@ -669,6 +670,7 @@ declare module 'i18next' {
         downloadFailed: string;
         activeTitle: string;
         activeDescription: string;
+        redirectCountdown: string;
         status: {
           uploadedPendingApproval: string;
           pendingSignature: string;
@@ -1043,6 +1045,10 @@ declare module 'i18next' {
         organizationTypeClinic: string;
         organizationTypeHospital: string;
         cityLocation: string;
+        businessCode: string;
+        businessCodePlaceholder: string;
+        taxCode: string;
+        taxCodePlaceholder: string;
         partnershipNeeds: string;
         estimatedMonthlyScreenings: string;
         selectRange: string;
