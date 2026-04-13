@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
-import { cashflowApi, type CashflowTransactionItem } from '../api/cashflow.api';
 import {
   ophthalmologistApi,
   type AdminWithdrawalRequestItem,
@@ -121,17 +120,15 @@ export default function WithdrawalRequestsPage() {
   const withdrawHistoryQuery = useQuery({
     queryKey: [
       'admin',
-      'withdraw-transactions',
-      { historyPageNumber, historyPageSize, searchTerm },
+      'completed-withdrawal-requests',
+      { historyPageNumber, historyPageSize },
     ],
     queryFn: () =>
-      cashflowApi.getTransactions({
-        actorRole: 'Ophthalmologist',
-        status: 'Completed',
-        pageNumber: historyPageNumber,
-        pageSize: historyPageSize,
-        searchTerm: searchTerm || undefined,
-      }),
+      ophthalmologistApi.getWithdrawalRequests(
+        historyPageNumber,
+        historyPageSize,
+        'Completed'
+      ),
   });
 
   const confirmMutation = useMutation({
@@ -265,22 +262,25 @@ export default function WithdrawalRequestsPage() {
     return { pending, totalAmount };
   }, [listQuery.data?.items]);
 
-  const withdrawTransactions = useMemo(() => {
+  const withdrawalHistoryItems = useMemo(() => {
     const items = withdrawHistoryQuery.data?.items ?? [];
+    const keyword = searchTerm.trim().toLowerCase();
 
-    return items.filter((transaction: CashflowTransactionItem) => {
-      const txType = transaction.transactionType.toLowerCase();
-      const referenceType = (transaction.referenceType ?? '').toLowerCase();
-      const description = (transaction.description ?? '').toLowerCase();
+    if (!keyword) return items;
 
-      return (
-        txType === 'withdrawal' ||
-        referenceType === 'payout' ||
-        description.includes('withdraw') ||
-        description.includes('payout')
-      );
-    });
-  }, [withdrawHistoryQuery.data?.items]);
+    return items.filter((item) =>
+      [
+        item.doctorFullName,
+        item.doctorEmail,
+        item.bankAccountNumber,
+        item.bankName,
+        item.contractNumber ?? '',
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [withdrawHistoryQuery.data?.items, searchTerm]);
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -448,7 +448,7 @@ export default function WithdrawalRequestsPage() {
               <div className="py-8 text-center text-sm text-slate-500">
                 Đang tải lịch sử giao dịch rút tiền...
               </div>
-            ) : withdrawTransactions.length === 0 ? (
+            ) : withdrawalHistoryItems.length === 0 ? (
               <div className="py-8 text-center text-sm text-slate-500">
                 Chưa có giao dịch rút tiền nào.
               </div>
@@ -466,33 +466,33 @@ export default function WithdrawalRequestsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {withdrawTransactions.map((transaction) => (
+                    {withdrawalHistoryItems.map((item) => (
                       <tr
-                        key={transaction.id}
+                        key={item.id}
                         className="border-b border-slate-100 dark:border-slate-800"
                       >
                         <td className="py-2 pr-3 whitespace-nowrap">
-                          {formatDate(transaction.createdAt)}
+                          {formatDate(item.createdAt)}
                         </td>
                         <td className="py-2 pr-3">
                           <p className="font-medium text-slate-900 dark:text-white">
-                            {transaction.actorName}
+                            {item.doctorFullName}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {transaction.actorEmail ?? 'N/A'}
+                            {item.doctorEmail ?? 'N/A'}
                           </p>
                         </td>
                         <td className="py-2 pr-3 font-semibold text-amber-600">
-                          {formatMoney(transaction.amount)}
+                          {formatMoney(item.amount)}
                         </td>
-                        <td className="py-2 pr-3">
-                          {transaction.transactionType}
-                        </td>
+                        <td className="py-2 pr-3">Withdrawal</td>
                         <td className="py-2 pr-3 font-mono text-xs text-slate-500">
-                          {transaction.referenceId ?? 'N/A'}
+                          {item.transferReference ??
+                            item.externalPayoutId ??
+                            'N/A'}
                         </td>
                         <td className="py-2 pr-3">
-                          {transaction.description ?? 'N/A'}
+                          {item.adminNote ?? item.note ?? 'N/A'}
                         </td>
                       </tr>
                     ))}
