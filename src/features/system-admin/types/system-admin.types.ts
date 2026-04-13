@@ -151,6 +151,10 @@ export interface Organisation {
   licenseNumber?: string;
   orgType: string;
   deviceCount: number;
+  purchasedAiQuota?: number;
+  managedPatientCount?: number;
+  registeredPatientCount?: number;
+  walkInPatientCount?: number;
   isActive: boolean;
   createdAt: string;
   // UI-only fields (not from API)

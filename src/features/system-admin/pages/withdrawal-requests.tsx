@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import { cashflowApi, type CashflowTransactionItem } from '../api/cashflow.api';
 import {
   ophthalmologistApi,
   type AdminWithdrawalRequestItem,
@@ -86,7 +87,9 @@ export default function WithdrawalRequestsPage() {
   const [status, setStatus] = useState<WithdrawalRequestStatus | 'all'>(
     'Pending'
   );
+  const [historyPageNumber, setHistoryPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const historyPageSize = 10;
 
   // Manual confirm modal state
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -113,6 +116,22 @@ export default function WithdrawalRequestsPage() {
         pageSize,
         status === 'all' ? undefined : status
       ),
+  });
+
+  const withdrawHistoryQuery = useQuery({
+    queryKey: [
+      'admin',
+      'withdraw-transactions',
+      { historyPageNumber, historyPageSize, searchTerm },
+    ],
+    queryFn: () =>
+      cashflowApi.getTransactions({
+        actorRole: 'Ophthalmologist',
+        status: 'Completed',
+        pageNumber: historyPageNumber,
+        pageSize: historyPageSize,
+        searchTerm: searchTerm || undefined,
+      }),
   });
 
   const confirmMutation = useMutation({
@@ -245,6 +264,23 @@ export default function WithdrawalRequestsPage() {
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
     return { pending, totalAmount };
   }, [listQuery.data?.items]);
+
+  const withdrawTransactions = useMemo(() => {
+    const items = withdrawHistoryQuery.data?.items ?? [];
+
+    return items.filter((transaction: CashflowTransactionItem) => {
+      const txType = transaction.transactionType.toLowerCase();
+      const referenceType = (transaction.referenceType ?? '').toLowerCase();
+      const description = (transaction.description ?? '').toLowerCase();
+
+      return (
+        txType === 'withdrawal' ||
+        referenceType === 'payout' ||
+        description.includes('withdraw') ||
+        description.includes('payout')
+      );
+    });
+  }, [withdrawHistoryQuery.data?.items]);
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -385,6 +421,110 @@ export default function WithdrawalRequestsPage() {
                     )
                   }
                   disabled={!listQuery.data.hasNext}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
+                >
+                  Sau
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                Withdraw Transaction History
+              </h3>
+              <button
+                onClick={() => withdrawHistoryQuery.refetch()}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh history
+              </button>
+            </div>
+
+            {withdrawHistoryQuery.isLoading ? (
+              <div className="py-8 text-center text-sm text-slate-500">
+                Đang tải lịch sử giao dịch rút tiền...
+              </div>
+            ) : withdrawTransactions.length === 0 ? (
+              <div className="py-8 text-center text-sm text-slate-500">
+                Chưa có giao dịch rút tiền nào.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                      <th className="py-2 pr-3">Created</th>
+                      <th className="py-2 pr-3">Doctor</th>
+                      <th className="py-2 pr-3">Amount</th>
+                      <th className="py-2 pr-3">Type</th>
+                      <th className="py-2 pr-3">Reference</th>
+                      <th className="py-2 pr-3">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawTransactions.map((transaction) => (
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-slate-100 dark:border-slate-800"
+                      >
+                        <td className="py-2 pr-3 whitespace-nowrap">
+                          {formatDate(transaction.createdAt)}
+                        </td>
+                        <td className="py-2 pr-3">
+                          <p className="font-medium text-slate-900 dark:text-white">
+                            {transaction.actorName}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {transaction.actorEmail ?? 'N/A'}
+                          </p>
+                        </td>
+                        <td className="py-2 pr-3 font-semibold text-amber-600">
+                          {formatMoney(transaction.amount)}
+                        </td>
+                        <td className="py-2 pr-3">
+                          {transaction.transactionType}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-xs text-slate-500">
+                          {transaction.referenceId ?? 'N/A'}
+                        </td>
+                        <td className="py-2 pr-3">
+                          {transaction.description ?? 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {withdrawHistoryQuery.data &&
+            withdrawHistoryQuery.data.totalPages > 1 ? (
+              <div className="mt-4 flex items-center justify-between">
+                <button
+                  onClick={() =>
+                    setHistoryPageNumber((p) => Math.max(1, p - 1))
+                  }
+                  disabled={!withdrawHistoryQuery.data.hasPrevious}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Trước
+                </button>
+                <p className="text-sm text-slate-500">
+                  Trang {withdrawHistoryQuery.data.pageNumber}/
+                  {withdrawHistoryQuery.data.totalPages}
+                </p>
+                <button
+                  onClick={() =>
+                    setHistoryPageNumber((p) =>
+                      Math.min(withdrawHistoryQuery.data!.totalPages, p + 1)
+                    )
+                  }
+                  disabled={!withdrawHistoryQuery.data.hasNext}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
                 >
                   Sau

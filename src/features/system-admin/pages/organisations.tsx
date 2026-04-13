@@ -48,6 +48,10 @@ interface Organisation {
   status: 'active' | 'inactive' | 'suspended';
   contractStatus: ContractStatus;
   usersCount: number;
+  purchasedAiQuota: number;
+  managedPatientCount: number;
+  registeredPatientCount: number;
+  walkInPatientCount: number;
   // Billing info
   monthlyAIUsage: number;
   monthlyBilling: number;
@@ -70,6 +74,10 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   status: item.isActive ? 'active' : 'inactive',
   contractStatus: item.isActive ? 'active' : 'expired',
   usersCount: item.usersCount ?? 0,
+  purchasedAiQuota: item.purchasedAiQuota ?? 0,
+  managedPatientCount: item.managedPatientCount ?? 0,
+  registeredPatientCount: item.registeredPatientCount ?? 0,
+  walkInPatientCount: item.walkInPatientCount ?? 0,
   monthlyAIUsage: 0,
   monthlyBilling: 0,
   pendingPayment: 0,
@@ -143,8 +151,8 @@ export default function OrganisationsPage() {
 
   // Calculate stats
   const activeOrgs = organisations.filter((o) => o.status === 'active').length;
-  const totalPendingPayments = organisations.reduce(
-    (sum, o) => sum + o.pendingPayment,
+  const totalPurchasedQuota = organisations.reduce(
+    (sum, o) => sum + o.purchasedAiQuota,
     0
   );
   const inactiveOrgs = organisations.filter(
@@ -262,6 +270,15 @@ export default function OrganisationsPage() {
       ),
     },
     {
+      header: 'Purchased Quota',
+      accessor: 'purchasedAiQuota',
+      render: (value) => (
+        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+          {(value as number).toLocaleString()} credits
+        </span>
+      ),
+    },
+    {
       header: 'AI Screenings',
       accessor: 'totalScreenings',
       render: (value) => (
@@ -362,6 +379,28 @@ export default function OrganisationsPage() {
         <span className="text-sm font-medium text-slate-900 dark:text-white">
           {value as number} screenings
         </span>
+      ),
+    },
+    {
+      header: 'Purchased Quota',
+      accessor: 'purchasedAiQuota',
+      render: (value) => (
+        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+          {(value as number).toLocaleString()} credits
+        </span>
+      ),
+    },
+    {
+      header: 'Managed Patients',
+      accessor: 'managedPatientCount',
+      render: (_, row) => (
+        <div className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="font-semibold">{row.managedPatientCount}</p>
+          <p className="text-xs text-slate-500">
+            {row.registeredPatientCount} registered • {row.walkInPatientCount}{' '}
+            walk-in
+          </p>
+        </div>
       ),
     },
     {
@@ -572,10 +611,10 @@ export default function OrganisationsPage() {
                 variant="success"
               />
               <StatsCard
-                title="Pending Payments"
-                value={formatCurrency(totalPendingPayments, usdCurrencyOptions)}
+                title="Purchased Quota"
+                value={totalPurchasedQuota.toLocaleString()}
                 icon={CreditCard}
-                description="Awaiting collection"
+                description="Credits purchased by organisations"
                 variant="warning"
               />
               <StatsCard
