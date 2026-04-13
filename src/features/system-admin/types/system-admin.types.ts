@@ -91,6 +91,19 @@ export interface SystemAdminDashboardSystemStatus {
   databaseHealthy: boolean;
 }
 
+export interface SystemAdminBetterStackMonitor {
+  key: string;
+  name: string;
+  category: string;
+  configured: boolean;
+}
+
+export interface SystemAdminBetterStack {
+  enabled: boolean;
+  embedUrl: string | null;
+  monitors: SystemAdminBetterStackMonitor[];
+}
+
 export interface SystemAdminTopDoctor {
   ophthalmologistId: string;
   name: string;
@@ -125,6 +138,7 @@ export interface SystemAdminDashboardMetrics {
   monthlyNewPatientCounts: number[];
   pendingActions: SystemAdminDashboardPendingActions;
   systemStatus: SystemAdminDashboardSystemStatus;
+  betterStack: SystemAdminBetterStack;
   topDoctorsByConsultationRevenue: SystemAdminTopDoctor[];
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
@@ -516,6 +530,7 @@ export interface ContractDto {
   userFullName: string;
   userEmail: string;
   aiQuotaLimit: number;
+  monthlyQuotaLimit: number;
   platformCommissionRate: number;
   commissionRate?: number | null;
   actualMonthlySalary?: number | null;
@@ -540,12 +555,14 @@ export interface CreateContractPayload {
 export interface UpdateContractPayload {
   templateId: string;
   aiQuotaLimit: number;
+  monthlyQuotaLimit: number;
   platformCommissionRate: number;
 }
 
 export interface SignContractPayload {
   commissionRate: number;
   actualMonthlySalary: number;
+  confirmedMonthlyQuotaLimit?: number;
   signedContent?: string;
   scannedDocumentUrl?: string;
 }

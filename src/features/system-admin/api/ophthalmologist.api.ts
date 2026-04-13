@@ -81,6 +81,8 @@ export interface AdminWithdrawalRequestItem {
   bankName: string;
   bankAccountNumber: string;
   accountHolderName: string;
+  /** Mã BIN ngân hàng PayOS (ví dụ: "970415" = Vietinbank). Cần thiết để chi tự động. */
+  bankBin?: string | null;
   contractNumber?: string | null;
   note?: string | null;
   adminNote?: string | null;
@@ -90,6 +92,40 @@ export interface AdminWithdrawalRequestItem {
   createdAt: string;
   doctorFullName: string;
   doctorEmail: string;
+  /** ID lệnh chi PayOS (externalPayoutId từ PayOS) */
+  externalPayoutId?: string | null;
+  /** Reference ID nội bộ gửi cho PayOS */
+  payOSReferenceId?: string | null;
+  /** Trạng thái từ PayOS: PENDING, PROCESSING, SUCCEEDED, FAILED */
+  payOSApprovalState?: string | null;
+}
+
+export interface PayOSPayoutTransactionDto {
+  id: string;
+  amount: number;
+  description: string;
+  toBin: string;
+  toAccountNumber: string;
+  toAccountName: string;
+  state: string;
+}
+
+export interface PayoutViaPayOSResponse {
+  withdrawalRequestId: string;
+  externalPayoutId: string;
+  payOSReferenceId: string;
+  approvalState: string;
+  withdrawalStatus: string;
+  transactions: PayOSPayoutTransactionDto[];
+}
+
+export interface PayoutStatusResponse {
+  withdrawalRequestId: string;
+  externalPayoutId: string;
+  payOSReferenceId: string;
+  approvalState: string;
+  withdrawalStatus: string;
+  transactions: PayOSPayoutTransactionDto[];
 }
 
 export const ophthalmologistApi = {
@@ -192,5 +228,32 @@ export const ophthalmologistApi = {
     );
 
     return response.data;
+  },
+
+  /**
+   * [Admin] Trigger lệnh chi tự động qua PayOS Payout API.
+   * WithdrawalRequest phải ở Pending và có BankBin hợp lệ.
+   */
+  async processPayoutViaPayOS(
+    withdrawalRequestId: string,
+    categories?: string[]
+  ) {
+    const response = await api.post<ApiResponse<PayoutViaPayOSResponse>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.PAYOUTS.PROCESS(withdrawalRequestId),
+      { categories: categories ?? ['salary'] }
+    );
+    return unwrapApiData<PayoutViaPayOSResponse>(response.data);
+  },
+
+  /**
+   * [Admin] Đồng bộ trạng thái lệnh chi từ PayOS về hệ thống.
+   * Gọi PayOS GET /v1/payouts/{payoutId} và cập nhật WithdrawalRequest.
+   */
+  async syncPayoutStatus(withdrawalRequestId: string) {
+    const response = await api.post<ApiResponse<PayoutStatusResponse>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.PAYOUTS.SYNC_STATUS(withdrawalRequestId),
+      {}
+    );
+    return unwrapApiData<PayoutStatusResponse>(response.data);
   },
 };

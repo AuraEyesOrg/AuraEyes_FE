@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Image,
   FileText,
@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 import type { PostCategory } from '../../types';
 import { useCreatePost } from '../../hooks/useCreatePost';
-import { postsApi } from '../../api/network.api';
 import useAuthStore from '@/store/auth-store';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useConsultationSession } from '@/features/consultation/hooks';
 import { getConsultationSessions } from '@/features/consultation/api/consultation.api';
 import { SessionStatus } from '@/types/consultation';
 import { ShareClinicCaseModal } from './ShareClinicCaseModal';
+import { resolveAuthorType } from '../../utils/authorType';
 
 const postTypes: {
   type: PostCategory;
@@ -45,9 +45,6 @@ export function PostComposer() {
     useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientGender, setPatientGender] = useState('');
-  const [patientHeight, setPatientHeight] = useState('');
-  const [patientWeight, setPatientWeight] = useState('');
-  const [medicalDiagnosis, setMedicalDiagnosis] = useState('');
   const [isCaseDisclaimerAccepted, setIsCaseDisclaimerAccepted] =
     useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -60,11 +57,6 @@ export function PostComposer() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createPost = useCreatePost();
   const { user } = useAuthStore();
-
-  const shareInternalCase = useMutation({
-    mutationFn: (consultationSessionId: string) =>
-      postsApi.shareConsultationCase(consultationSessionId),
-  });
 
   const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
   const isCasePresentation = selectedType === 'CasePresentation';
@@ -145,7 +137,6 @@ export function PostComposer() {
   const isPostDisabled =
     (!hasContent && !(isCasePresentation && isInternalCase)) ||
     createPost.isPending ||
-    shareInternalCase.isPending ||
     (hasFiles && !isAnonymizationConfirmed) ||
     !hasRequiredCaseMetadata;
 
@@ -184,75 +175,51 @@ export function PostComposer() {
   const handleSubmit = () => {
     if (isPostDisabled) return;
 
-    if (isCasePresentation && isInternalCase) {
-      shareInternalCase.mutate(selectedInternalSessionId, {
-        onSuccess: () => {
-          setContent('');
-          setCaseSource('external');
-          setSelectedInternalSessionId('');
-          setFiles([]);
-          setPreviews([]);
-          setPatientAge('');
-          setPatientGender('');
-          setPatientHeight('');
-          setPatientWeight('');
-          setMedicalDiagnosis('');
-          setIsCaseDisclaimerAccepted(false);
-          setIsAnonymizationConfirmed(false);
-          setIsExpanded(false);
-        },
-      });
-      return;
-    }
-
     const formData = new FormData();
-    const normalizedContent = medicalDiagnosis.trim()
-      ? `${content.trim()}\n\nMedical diagnosis: ${medicalDiagnosis.trim()}`
-      : content.trim();
+    const normalizedContent = content.trim();
 
-    formData.append('authorType', 'Ophthalmologist');
+    formData.append(
+      'authorType',
+      resolveAuthorType(user?.roles, 'Ophthalmologist')
+    );
     formData.append('content', normalizedContent);
     formData.append('category', selectedType);
     formData.append('visibility', 'Public');
     formData.append('allowComments', 'true');
-    formData.append('isInternalCase', 'false');
+    formData.append('isInternalCase', String(isInternalCase));
     formData.append(
       'isAnonymizationConfirmed',
-      String(isAnonymizationConfirmed)
+      String(isInternalCase || isAnonymizationConfirmed)
     );
 
-    if (isCasePresentation) {
+    if (isCasePresentation && isInternalCase) {
+      formData.append('consultationSessionId', selectedInternalSessionId);
+    }
+
+    if (isCasePresentation && !isInternalCase) {
       if (patientAge.trim()) {
         formData.append('patientAge', patientAge.trim());
       }
       if (patientGender.trim()) {
         formData.append('patientGender', patientGender.trim());
       }
-      if (patientHeight.trim()) {
-        formData.append('patientHeight', patientHeight.trim());
-      }
-      if (patientWeight.trim()) {
-        formData.append('patientWeight', patientWeight.trim());
-      }
-      if (medicalDiagnosis.trim()) {
-        formData.append('medicalDiagnosis', medicalDiagnosis.trim());
-      }
     }
 
-    files.forEach((file) => {
-      formData.append('attachments', file);
-    });
+    if (!isInternalCase) {
+      files.forEach((file) => {
+        formData.append('attachments', file);
+      });
+    }
 
     createPost.mutate(formData, {
       onSuccess: () => {
         setContent('');
+        setCaseSource('external');
+        setSelectedInternalSessionId('');
         setFiles([]);
         setPreviews([]);
         setPatientAge('');
         setPatientGender('');
-        setPatientHeight('');
-        setPatientWeight('');
-        setMedicalDiagnosis('');
         setIsCaseDisclaimerAccepted(false);
         setIsAnonymizationConfirmed(false);
         setIsExpanded(false);
@@ -440,58 +407,38 @@ export function PostComposer() {
                   </div>
                 )}
 
-                <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
-                  Allowed anonymized patient info (optional)
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={120}
-                    value={patientAge}
-                    onChange={(e) => setPatientAge(e.target.value)}
-                    placeholder="Patient age"
-                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
-                  />
-                  <select
-                    value={patientGender}
-                    onChange={(e) => setPatientGender(e.target.value)}
-                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
-                  >
-                    <option value="">Patient gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <input
-                    type="number"
-                    min={0}
-                    max={250}
-                    value={patientHeight}
-                    onChange={(e) => setPatientHeight(e.target.value)}
-                    placeholder="Height (cm)"
-                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    max={300}
-                    value={patientWeight}
-                    onChange={(e) => setPatientWeight(e.target.value)}
-                    placeholder="Weight (kg)"
-                    className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
-                  />
-                </div>
-                <textarea
-                  value={medicalDiagnosis}
-                  onChange={(e) => setMedicalDiagnosis(e.target.value)}
-                  placeholder="Medical diagnosis (optional)"
-                  className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900 min-h-[88px]"
-                />
-                <div className="rounded-lg border border-cyan-200 bg-white p-2 text-[11px] text-cyan-800 dark:border-cyan-800 dark:bg-slate-900 dark:text-cyan-200">
-                  Allowed only: age, gender, height, weight, diagnosis, medical
-                  images. Do not include name, address, or phone number.
-                </div>
+                {caseSource === 'external' && (
+                  <>
+                    <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
+                      Allowed anonymized patient info (optional)
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={120}
+                        value={patientAge}
+                        onChange={(e) => setPatientAge(e.target.value)}
+                        placeholder="Patient age"
+                        className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                      />
+                      <select
+                        value={patientGender}
+                        onChange={(e) => setPatientGender(e.target.value)}
+                        className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
+                      >
+                        <option value="">Patient gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="rounded-lg border border-cyan-200 bg-white p-2 text-[11px] text-cyan-800 dark:border-cyan-800 dark:bg-slate-900 dark:text-cyan-200">
+                      Allowed only: age, gender, and medical images. Do not
+                      include name, address, or phone number.
+                    </div>
+                  </>
+                )}
                 <label className="flex items-start gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -564,12 +511,7 @@ export function PostComposer() {
               <div className="flex items-center gap-3">
                 <LoadingButton
                   onClick={handleSubmit}
-                  isPending={
-                    createPost.isPending ||
-                    (isCasePresentation &&
-                      isInternalCase &&
-                      shareInternalCase.isPending)
-                  }
+                  isPending={createPost.isPending}
                   disabled={isPostDisabled}
                   className="btn-primary py-2 px-5 text-[15px]"
                 >

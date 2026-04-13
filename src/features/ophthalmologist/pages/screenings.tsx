@@ -184,7 +184,7 @@ function getConfidenceLabel(confidence: number, t: TranslateFn): string {
     return t('Ophthalmologist.screenings.confidence.moderate', 'Moderate');
   if (confidence > 0)
     return t('Ophthalmologist.screenings.confidence.low', 'Low');
-  return t('Ophthalmologist.screenings.confidence.notAvailable', 'N/A');
+  return t('Ophthalmologist.screenings.confidence.na', 'N/A');
 }
 
 function aiLabelForRow(
@@ -193,7 +193,7 @@ function aiLabelForRow(
 ): string {
   if (row.aiPrimaryLabel?.trim()) return row.aiPrimaryLabel.trim();
   if (row.latestRiskLevel?.trim()) return row.latestRiskLevel.trim();
-  return t('Ophthalmologist.screenings.ai.pendingAnalysis', 'Pending analysis');
+  return t('Ophthalmologist.screenings.pendingAnalysis', 'Pending analysis');
 }
 
 type SortMode = 'priority' | 'date';
@@ -233,7 +233,7 @@ export default function ScreeningsPage() {
     } catch {
       setLoadError(
         t(
-          'Ophthalmologist.screenings.loadFailed',
+          'Ophthalmologist.screenings.loadError',
           'Could not load screenings. Please try again.'
         )
       );
@@ -381,27 +381,27 @@ export default function ScreeningsPage() {
   const statusTabs = [
     {
       key: 'all',
-      label: t('Ophthalmologist.screenings.tabs.all', 'All'),
+      label: t('Ophthalmologist.screenings.filter.all', 'All'),
       count: stats.total,
     },
     {
       key: 'pending-review',
-      label: t('Ophthalmologist.screenings.tabs.pending', 'Pending'),
+      label: t('Ophthalmologist.screenings.filter.pending', 'Pending'),
       count: stats.pending,
     },
     {
       key: 'flagged',
-      label: t('Ophthalmologist.screenings.tabs.flagged', 'Flagged'),
+      label: t('Ophthalmologist.screenings.filter.flagged', 'Flagged'),
       count: stats.flagged,
     },
     {
       key: 'reviewed',
-      label: t('Ophthalmologist.screenings.tabs.reviewed', 'Reviewed'),
+      label: t('Ophthalmologist.screenings.filter.reviewed', 'Reviewed'),
       count: stats.reviewed,
     },
     {
       key: 'approved',
-      label: t('Ophthalmologist.screenings.tabs.approved', 'Approved'),
+      label: t('Ophthalmologist.screenings.filter.approved', 'Approved'),
       count: stats.approved,
     },
   ];
@@ -412,10 +412,10 @@ export default function ScreeningsPage() {
 
       <div className="flex-1 h-full overflow-y-auto">
         <DoctorHeader
-          pageName={t('Ophthalmologist.screenings.pageName', 'Screenings')}
+          pageName={t('Ophthalmologist.screenings.title', 'Screenings')}
         />
 
-        <main className="p-6 max-w-[1400px] mx-auto">
+        <main className="p-6 max-w-350 mx-auto">
           {/* ── Header ── */}
           <div className="flex items-end justify-between mb-6">
             <div>
@@ -435,7 +435,7 @@ export default function ScreeningsPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-[#1e3a5f] dark:bg-[#0a1f44] dark:text-gray-200 dark:hover:bg-[#1e3a5f]"
             >
               <RefreshCw className="h-4 w-4" />
-              {t('Ophthalmologist.screenings.refresh', 'Refresh')}
+              {t('Ophthalmologist.common.refresh', 'Refresh')}
             </button>
           </div>
 
@@ -558,18 +558,18 @@ export default function ScreeningsPage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 {t(
-                  'Ophthalmologist.screenings.emptyTitle',
+                  'Ophthalmologist.screenings.empty.title',
                   'No Screenings Found'
                 )}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                 {searchQuery || selectedStatus !== 'all'
                   ? t(
-                      'Ophthalmologist.screenings.emptyFiltered',
+                      'Ophthalmologist.screenings.empty.filtered',
                       'No screenings match your current filters. Try adjusting your search or status filter.'
                     )
                   : t(
-                      'Ophthalmologist.screenings.emptyDefault',
+                      'Ophthalmologist.screenings.empty.default',
                       'Screenings appear here when a patient books a consultation that includes an AI screening linked to you.'
                     )}
               </p>
@@ -739,24 +739,18 @@ export default function ScreeningsPage() {
                             <>
                               <Eye className="w-4 h-4" />
                               {t(
-                                'Ophthalmologist.screenings.actions.reviewNow',
+                                'Ophthalmologist.screenings.reviewNow',
                                 'Review Now'
                               )}
                             </>
                           ) : isFlagged ? (
                             <>
                               <AlertTriangle className="w-4 h-4" />
-                              {t(
-                                'Ophthalmologist.screenings.actions.review',
-                                'Review'
-                              )}
+                              {t('Ophthalmologist.screenings.review', 'Review')}
                             </>
                           ) : (
                             <>
-                              {t(
-                                'Ophthalmologist.screenings.actions.view',
-                                'View'
-                              )}
+                              {t('Ophthalmologist.common.view', 'View')}
                               <ArrowRight className="w-3.5 h-3.5" />
                             </>
                           )}
@@ -772,13 +766,13 @@ export default function ScreeningsPage() {
           {filteredScreenings.length > 0 && (
             <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 dark:border-[#1e3a5f] dark:bg-[#0a1f44] md:flex-row md:items-center md:justify-between">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t('Ophthalmologist.screenings.pagination.showing', 'Showing')}{' '}
+                {t('Ophthalmologist.common.showing', 'Showing')}{' '}
                 {(safeCurrentPage - 1) * SCREENINGS_PAGE_SIZE + 1}-
                 {Math.min(
                   safeCurrentPage * SCREENINGS_PAGE_SIZE,
                   filteredScreenings.length
                 )}{' '}
-                {t('Ophthalmologist.screenings.pagination.of', 'of')}{' '}
+                {t('Ophthalmologist.common.of', 'of')}{' '}
                 {filteredScreenings.length}
               </p>
 
@@ -791,10 +785,7 @@ export default function ScreeningsPage() {
                   disabled={safeCurrentPage <= 1}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  {t(
-                    'Ophthalmologist.screenings.pagination.previous',
-                    'Previous'
-                  )}
+                  {t('Ophthalmologist.common.previous', 'Previous')}
                 </button>
 
                 <span className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
@@ -809,7 +800,7 @@ export default function ScreeningsPage() {
                   disabled={safeCurrentPage >= totalPages}
                   className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#1e3a5f] dark:text-gray-300 dark:hover:bg-[#1e3a5f]"
                 >
-                  {t('Ophthalmologist.screenings.pagination.next', 'Next')}
+                  {t('Ophthalmologist.common.next', 'Next')}
                 </button>
               </div>
             </div>

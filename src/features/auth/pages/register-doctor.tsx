@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useFieldArray, useForm } from 'react-hook-form';
 import {
   Mail,
@@ -19,6 +19,11 @@ import {
 import { useEffect, useState } from 'react';
 import { registerOphthalmologist } from '../api/auth.api';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 import '@/styles/auth-animations.css';
 
 type DegreeLevel =
@@ -35,14 +40,6 @@ const DEGREE_LEVEL_OPTIONS: Array<{ value: DegreeLevel; label: string }> = [
   { value: 'AssociateProfessor', label: 'Associate Professor' },
   { value: 'Professor', label: 'Professor' },
 ];
-
-interface CredentialFormItem {
-  name: string;
-  issuingAuthority: string;
-  issuedDate: string;
-  expiryDate: string;
-  file: File | null;
-}
 
 interface DegreeFormItem {
   name: string;
@@ -96,6 +93,11 @@ const RegisterDoctorPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
 
   const {
     control,
@@ -255,6 +257,9 @@ const RegisterDoctorPage = () => {
 
       setSubmittedEmail(data.email);
       setIsSubmitted(true);
+      navigate(
+        `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(data.email)}`
+      );
     } catch (err: unknown) {
       const error = err as {
         response?: {
@@ -1057,7 +1062,7 @@ const RegisterDoctorPage = () => {
               <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
-                  to="/"
+                  to={toLocalizedAuthPath('/')}
                   className="font-semibold text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                 >
                   Sign in here

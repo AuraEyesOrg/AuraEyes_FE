@@ -14,6 +14,7 @@ import { walletApi } from '../api/patient.api';
 import type { VerifyPaymentResponse } from '../types';
 import { toast } from 'react-toastify';
 import { formatCurrency } from '@/lib/helper';
+import { useTranslation } from 'react-i18next';
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
 
@@ -30,6 +31,10 @@ type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
  * leaving the page stuck on "loading". A plain promise is immune to this.
  */
 export default function PaymentCallbackPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -62,7 +67,7 @@ export default function PaymentCallbackPage() {
         setPaymentData(data);
         setStatus(data.isSuccess ? 'success' : 'failed');
         if (data.isSuccess) {
-          toast.success('Bạn đã nạp tiền thành công!');
+          toast.success(t('PatientPaymentCallback.toast.depositSuccess'));
         }
         refetchWallet();
       },
@@ -83,10 +88,10 @@ export default function PaymentCallbackPage() {
                 <Spinner size={32} />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                Verifying Payment...
+                {t('PatientPaymentCallback.loading.title')}
               </h1>
               <p className="text-(--text-secondary)">
-                Please wait while we confirm your payment.
+                {t('PatientPaymentCallback.loading.description')}
               </p>
             </>
           )}
@@ -98,10 +103,10 @@ export default function PaymentCallbackPage() {
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                Payment Successful!
+                {t('PatientPaymentCallback.success.title')}
               </h1>
               <p className="text-(--text-secondary) mb-6">
-                Your wallet has been credited successfully.
+                {t('PatientPaymentCallback.success.description')}
               </p>
 
               {/* Payment details */}
@@ -110,7 +115,7 @@ export default function PaymentCallbackPage() {
                   <>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-(--text-secondary)">
-                        Amount
+                        {t('PatientPaymentCallback.labels.amount')}
                       </span>
                       <span className="font-semibold text-green-600 dark:text-green-400">
                         +{formatCurrency(paymentData.amount)}
@@ -118,7 +123,7 @@ export default function PaymentCallbackPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-(--text-secondary)">
-                        Order Code
+                        {t('PatientPaymentCallback.labels.orderCode')}
                       </span>
                       <span className="font-mono text-sm text-(--text-primary)">
                         {paymentData.orderCode}
@@ -127,7 +132,8 @@ export default function PaymentCallbackPage() {
                     {paymentData.newBalance !== null && (
                       <div className="flex items-center justify-between pt-3 border-t border-(--border-color)">
                         <span className="text-sm text-(--text-secondary) flex items-center gap-1">
-                          <Wallet className="w-4 h-4" /> New Balance
+                          <Wallet className="w-4 h-4" />{' '}
+                          {t('PatientPaymentCallback.labels.newBalance')}
                         </span>
                         <span className="font-bold text-brand text-lg">
                           {formatCurrency(paymentData.newBalance)}
@@ -147,18 +153,18 @@ export default function PaymentCallbackPage() {
                 <XCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                Payment Failed
+                {t('PatientPaymentCallback.failed.title')}
               </h1>
               <p className="text-(--text-secondary) mb-6">
                 {paymentData?.message ||
-                  'The payment could not be verified. No charges have been made.'}
+                  t('PatientPaymentCallback.failed.fallbackDescription')}
               </p>
 
               {orderCode && (
                 <div className="bg-(--bg-secondary) rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-(--text-secondary)">
-                      Order Code
+                      {t('PatientPaymentCallback.labels.orderCode')}
                     </span>
                     <span className="font-mono text-sm text-(--text-primary)">
                       {orderCode}
@@ -176,10 +182,10 @@ export default function PaymentCallbackPage() {
                 <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
               </div>
               <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-                Payment Cancelled
+                {t('PatientPaymentCallback.cancelled.title')}
               </h1>
               <p className="text-(--text-secondary) mb-6">
-                You cancelled the payment. No charges have been made.
+                {t('PatientPaymentCallback.cancelled.description')}
               </p>
             </>
           )}
@@ -192,7 +198,7 @@ export default function PaymentCallbackPage() {
                 className="flex-1 py-3 bg-brand hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Wallet
+                {t('PatientPaymentCallback.actions.backToWallet')}
               </button>
             </div>
           )}

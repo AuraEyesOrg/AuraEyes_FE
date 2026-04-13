@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { RetinalImage } from '../types/retinal.types';
 import {
   ChevronUp,
   Images,
@@ -12,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import type { RetinalImage } from '@/features/organisation/types/retinal.types';
 
 interface ImageGalleryProps {
   images: RetinalImage[];

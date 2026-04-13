@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -7,6 +8,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +22,8 @@ const ContactPage = () => {
     organizationContactEmail: '',
     organizationPhone: '',
     organizationName: '',
+    organizationBusinessCode: '',
+    organizationTaxCode: '',
     organizationType: 'clinic',
     organizationLocation: '',
     estimatedVolume: '',
@@ -122,6 +126,12 @@ const ContactPage = () => {
         address: formData.organizationLocation.trim() || undefined,
         notes:
           [
+            formData.organizationBusinessCode.trim()
+              ? `Business code: ${formData.organizationBusinessCode.trim()}`
+              : null,
+            formData.organizationTaxCode.trim()
+              ? `Tax code: ${formData.organizationTaxCode.trim()}`
+              : null,
             `Role: ${formData.organizationContactRole.trim()}`,
             formData.estimatedVolume
               ? `Estimated monthly screenings: ${formData.estimatedVolume}`
@@ -140,6 +150,8 @@ const ContactPage = () => {
         organizationContactEmail: '',
         organizationPhone: '',
         organizationName: '',
+        organizationBusinessCode: '',
+        organizationTaxCode: '',
         organizationType: 'clinic',
         organizationLocation: '',
         estimatedVolume: '',
@@ -531,6 +543,34 @@ const ContactPage = () => {
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          {t('Contact.form.businessCode')}
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationBusinessCode"
+                          value={formData.organizationBusinessCode}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder={t(
+                            'Contact.form.businessCodePlaceholder'
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--color-brand-dark)] mb-2">
+                          {t('Contact.form.taxCode')}
+                        </label>
+                        <input
+                          type="text"
+                          name="organizationTaxCode"
+                          value={formData.organizationTaxCode}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
+                          placeholder={t('Contact.form.taxCodePlaceholder')}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -595,19 +635,19 @@ const ContactPage = () => {
                       className="text-sm text-[var(--color-text-muted)]"
                     >
                       {t('Contact.form.termsPrefix')}{' '}
-                      <a
-                        href="#"
+                      <Link
+                        to={resolvePathWithLocale('/terms')}
                         className="text-[var(--color-brand-primary)] hover:underline"
                       >
                         {t('Contact.form.termsOfService')}
-                      </a>{' '}
+                      </Link>{' '}
                       {t('Contact.form.and')}{' '}
-                      <a
-                        href="#"
+                      <Link
+                        to={resolvePathWithLocale('/privacy')}
                         className="text-[var(--color-brand-primary)] hover:underline"
                       >
                         {t('Contact.form.privacyPolicy')}
-                      </a>
+                      </Link>
                       .
                     </label>
                   </div>

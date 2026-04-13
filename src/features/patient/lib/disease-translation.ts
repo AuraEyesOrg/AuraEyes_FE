@@ -57,7 +57,8 @@ function normalizeDiseaseName(name: string): string {
 }
 
 export function isNormalDisease(name: string): boolean {
-  return name.trim().toLowerCase() === 'normal';
+  const n = name.trim().toLowerCase();
+  return n === 'normal' || n === 'wnl';
 }
 
 export function toDisplayDiseaseName(

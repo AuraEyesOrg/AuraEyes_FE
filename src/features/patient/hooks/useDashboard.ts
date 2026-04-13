@@ -25,17 +25,37 @@ export const dashboardKeys = {
   analysis: () => [...dashboardKeys.all, 'analysis'] as const,
 };
 
+const DASHBOARD_QUERY_OPTIONS = {
+  staleTime: 60_000,
+  gcTime: 15 * 60_000,
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+  refetchInterval: 30_000,
+} as const;
+
 // ============ HOOK ============
 
 export const useDashboard = () => {
   const profileQuery = useQuery<PatientProfile, Error>({
     queryKey: profileKeys.detail(),
     queryFn: getProfile,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 
   const walletQuery = useQuery<Wallet, Error>({
     queryKey: dashboardKeys.wallet(),
     queryFn: getWallets,
+    staleTime: 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: 30_000,
   });
 
   const appointmentsQuery = useQuery<ClinicAppointmentDto[], Error>({
@@ -45,16 +65,22 @@ export const useDashboard = () => {
       return getPatientClinicAppointments(profileQuery.data.id);
     },
     enabled: Boolean(profileQuery.data?.id),
+    placeholderData: [],
+    ...DASHBOARD_QUERY_OPTIONS,
   });
 
   const reportsQuery = useQuery<ScreeningReport[], Error>({
     queryKey: dashboardKeys.reports(),
     queryFn: getReports,
+    placeholderData: [],
+    ...DASHBOARD_QUERY_OPTIONS,
   });
 
   const analysisQuery = useQuery<AnalysisResult[], Error>({
     queryKey: dashboardKeys.analysis(),
     queryFn: getAnalysisList,
+    placeholderData: [],
+    ...DASHBOARD_QUERY_OPTIONS,
   });
 
   const normalizeStatus = (value?: string | null): string =>
@@ -120,12 +146,20 @@ export const useDashboard = () => {
 
   const wallet = walletQuery.data;
 
+  const hasAnyDashboardData =
+    profileQuery.data !== undefined ||
+    walletQuery.data !== undefined ||
+    appointmentsQuery.data !== undefined ||
+    reportsQuery.data !== undefined ||
+    analysisQuery.data !== undefined;
+
   const isLoading =
-    profileQuery.isLoading ||
-    walletQuery.isLoading ||
-    appointmentsQuery.isLoading ||
-    reportsQuery.isLoading ||
-    analysisQuery.isLoading;
+    !hasAnyDashboardData &&
+    (profileQuery.isLoading ||
+      walletQuery.isLoading ||
+      appointmentsQuery.isLoading ||
+      reportsQuery.isLoading ||
+      analysisQuery.isLoading);
 
   return {
     profile,

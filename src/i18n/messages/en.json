@@ -1,4 +1,24 @@
 {
+  "Validation": {
+    "Required": "This field is required",
+    "MaxLength": {
+      "FullName": "Full name must not exceed 200 characters",
+      "Phone": "Phone number must not exceed 20 characters",
+      "Address": "Address must not exceed 500 characters",
+      "CitizenId": "Citizen ID must not exceed 20 characters"
+    },
+    "MinLength": {
+      "Password": "Password must be at least 8 characters"
+    },
+    "Invalid": {
+      "Gender": "Invalid gender",
+      "CitizenId": "Citizen ID must be exactly 12 digits"
+    },
+    "Password": {
+      "MustBeDifferent": "New password must be different from current password",
+      "Mismatch": "Passwords do not match"
+    }
+  },
   "Navigation": {
     "home": "Home",
     "about": "About Us",
@@ -59,6 +79,7 @@
       "loginForm": {
         "heading": "Welcome Back",
         "description": "Sign in to your AuraEyes account to continue.",
+        "backHome": "Back to Home",
         "emailLabel": "Email Address",
         "emailPlaceholder": "your@email.com",
         "passwordLabel": "Password",
@@ -208,7 +229,29 @@
       "doctor": "Doctor",
       "role": "Ophthalmologist",
       "logout": "Logout",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "back": "Back",
+      "email": "Email",
+      "next": "Next",
+      "of": "of",
+      "other": "Other",
+      "page": "Page",
+      "previous": "Previous",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "saving": "Saving...",
+      "severity": {
+        "mild": "Mild",
+        "severe": "Severe"
+      },
+      "showing": "Showing",
+      "status": {
+        "draft": "Draft",
+        "finalized": "Finalized",
+        "reviewed": "Reviewed"
+      },
+      "submitting": "Submitting...",
+      "view": "View"
     },
     "header": {
       "pages": "Pages",
@@ -224,7 +267,8 @@
       "consultations": "Consultations",
       "analytics": "Analytics",
       "contract": "Contract",
-      "settings": "Settings"
+      "settings": "Settings",
+      "wallet": "Wallet"
     },
     "dashboard": {
       "greeting": {
@@ -377,6 +421,12 @@
         "cancelReason": "Cancelled by ophthalmologist",
         "cancelSuccess": "Appointment cancelled successfully.",
         "cancelError": "Unable to cancel appointment. Please try again."
+      },
+      "tab": {
+        "cancelled": "Cancelled",
+        "past": "Past",
+        "today": "Today",
+        "upcoming": "Upcoming"
       }
     },
     "schedules": {
@@ -392,7 +442,9 @@
         "thisWeek": "This Week",
         "available": "Available",
         "booked": "Booked",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "blocked": "Blocked",
+        "totalSlots": "Total Slots"
       },
       "filter": {
         "all": "All",
@@ -477,6 +529,14 @@
           "preVisitDescription": "Patient can leave notes before the consultation starts. Chat opens at appointment time.",
           "inProgressDescription": "Consultation is active. You can chat and join the video call.",
           "completedDescription": "Consultation has been completed. Chat is now read-only."
+        },
+        "shareCase": {
+          "aiConfidence": "AI confidence",
+          "doctorSays": "Doctor says",
+          "finalDiagnosis": "Final diagnosis",
+          "patient": "Patient",
+          "riskLevel": "Risk level",
+          "summary": "Summary"
         }
       }
     },
@@ -511,7 +571,9 @@
         "active": "Active",
         "urgent": "Urgent",
         "pastOnly": "Past Only"
-      }
+      },
+      "emptyTitle": "No Patients Found",
+      "message": "Message"
     },
     "slotManagement": {
       "title": "Appointment Slots",
@@ -605,6 +667,7 @@
       "downloadFailed": "Unable to download contract template file.",
       "activeTitle": "Contract has been activated!",
       "activeDescription": "You can now start receiving cases and consulting on the AURA platform.",
+      "redirectCountdown": "Redirecting to dashboard in {{seconds}}s...",
       "status": {
         "uploadedPendingApproval": "Uploaded - Waiting for admin approval",
         "pendingSignature": "Waiting for signature",
@@ -634,7 +697,78 @@
           "signStamp": "Sign and stamp",
           "captureUpload": "Capture and upload"
         }
-      }
+      },
+      "commission": "Commission"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "unknown": "Unknown"
+    },
+    "screeningReview": {
+      "note": "Note:"
+    },
+    "screenings": {
+      "confidence": {
+        "high": "High",
+        "low": "Low",
+        "moderate": "Moderate",
+        "na": "N/A"
+      },
+      "filter": {
+        "all": "All",
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "pending": "Pending",
+        "reviewed": "Reviewed"
+      },
+      "images": "images",
+      "pendingAnalysis": "Pending analysis",
+      "review": "Review",
+      "risk": {
+        "high": "High Risk",
+        "low": "Low Risk",
+        "medium": "Medium Risk",
+        "unknown": "Unknown"
+      },
+      "sort": {
+        "byDate": "By Date",
+        "byPriority": "By Priority"
+      },
+      "stats": {
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "pending": "Pending",
+        "total": "Total"
+      },
+      "status": {
+        "approved": "Approved",
+        "flagged": "Flagged",
+        "rejected": "Rejected",
+        "reviewed": "Reviewed"
+      },
+      "title": "Screenings"
+    },
+    "wallet": {
+      "balance": "Current balance",
+      "loading": "Loading wallet...",
+      "title": "Ophthalmologist Wallet",
+      "transactionType": {
+        "bonus": "Bonus",
+        "deposit": "Deposit",
+        "payment": "Payment",
+        "refund": "Refund",
+        "transfer": "Transfer"
+      },
+      "transactions": "Transaction History",
+      "withdraw": {
+        "status": {
+          "cancelled": "Cancelled",
+          "failed": "Rejected",
+          "pending": "Pending",
+          "processing": "Processing"
+        }
+      },
+      "yourNote": "Your note"
     }
   },
   "MedicalTerms": {
@@ -908,6 +1042,10 @@
       "organizationTypeClinic": "Clinic",
       "organizationTypeHospital": "Hospital",
       "cityLocation": "City / Location",
+      "businessCode": "Business Registration Code",
+      "businessCodePlaceholder": "1234567890",
+      "taxCode": "Tax Code",
+      "taxCodePlaceholder": "1234567890",
       "partnershipNeeds": "Partnership Needs",
       "estimatedMonthlyScreenings": "Estimated Monthly Screenings",
       "selectRange": "Select range",
@@ -1240,6 +1378,10 @@
     }
   },
   "PatientReview": {
+    "page": {
+      "title": "Review & Next Steps",
+      "subtitle": "Analysis complete. Please review your results and recommended next steps."
+    },
     "status": {
       "healthy": "Looks Healthy",
       "low": "Low Risk",
@@ -1252,8 +1394,1108 @@
       "moderate": "Findings were detected and should be reviewed by an eye specialist for confirmation and next steps.",
       "high": "We found areas worth discussing with an eye specialist. Early attention is the best path to protecting your vision."
     },
+    "empty": {
+      "description": "No analysis results to review. Please start a new screening first."
+    },
+    "sections": {
+      "recommendedActions": "Recommended Actions",
+      "learnMore": "Learn More About Your Eyes"
+    },
+    "labels": {
+      "retinalImage": "Retinal image",
+      "retinalScanAlt": "Retinal scan",
+      "noImage": "No image",
+      "scanId": "Scan ID: {{id}}",
+      "capturedAt": "Captured:",
+      "aiAssessment": "AI Assessment",
+      "aiConfidence": "AI Confidence: {{confidence}}%",
+      "pdfFormat": "PDF Format",
+      "primaryRecommendation": "Primary Recommendation"
+    },
+    "descriptions": {
+      "bookConsultation": "Connect with a certified ophthalmologist to review these results in detail. Early intervention is key to maintaining eye health.",
+      "startNewAnalysis": "Start a new analysis"
+    },
     "findingsDetected": "Detected findings include:",
     "backToDashboard": "Back to Dashboard",
-    "sessionLabel": "Session"
+    "sessionLabel": "Session",
+    "actions": {
+      "startNewScreening": "Start New Screening",
+      "zoomImage": "Zoom Image",
+      "viewFullAnalysisDetails": "View Full Analysis Details",
+      "bookConsultation": "Book a Consultation",
+      "findSpecialist": "Find a Specialist",
+      "askAuraAssistant": "Ask AURA AI Assistant",
+      "downloadReport": "Download Report",
+      "newScan": "New Scan",
+      "viewAllResources": "View all resources"
+    },
+    "footer": {
+      "importantDisclaimer": "AURA is an AI-assisted screening tool and does not provide a definitive medical diagnosis.",
+      "copyright": "© {{year}} AURA Health. All rights reserved."
+    }
+  },
+  "PatientAppointments": {
+    "page": {
+      "title": "Appointments",
+      "subtitle": "Manage your doctor and organisation appointments"
+    },
+    "loading": {
+      "appointments": "Loading appointments...",
+      "clinicAppointments": "Loading clinic appointments..."
+    },
+    "stats": {
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "total": "Total",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "label": "Filter",
+      "all": "All",
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sections": {
+      "organisationSlots": "Organisation Slots",
+      "doctorSlots": "Doctor Slots"
+    },
+    "actions": {
+      "bookMoreSlot": "Book More Slot",
+      "rateClinic": "Rate Clinic",
+      "viewChat": "View Chat",
+      "joinCall": "Join Call",
+      "cancel": "Cancel",
+      "viewDetails": "View Details",
+      "bookFirstAppointment": "Book Your First Appointment"
+    },
+    "labels": {
+      "clinicVisit": "Clinic Visit",
+      "organisationAppointment": "Organisation appointment",
+      "reason": "Reason: {{reason}}",
+      "notScheduledYet": "Not scheduled yet",
+      "doctorName": "Doctor: {{name}}",
+      "videoConsultation": "Video consultation",
+      "videoConsultationReady": "Video consultation (link ready)"
+    },
+    "sessionType": {
+      "verification": "Verification",
+      "videoCall": "Video Call",
+      "clinicBooking": "Clinic Booking"
+    },
+    "sessionStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "clinicStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked In",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show"
+    },
+    "empty": {
+      "clinicAll": "No clinic appointments yet.",
+      "clinicByFilter": "No {{filter}} clinic appointments.",
+      "doctorAll": "No doctor appointments yet.",
+      "doctorByFilter": "No {{filter}} doctor appointments.",
+      "noAppointmentsTitle": "No Appointments Found",
+      "noAppointmentsAll": "You haven't created any appointments yet.",
+      "noAppointmentsByFilter": "No {{filter}} appointments."
+    },
+    "toast": {
+      "cancelSigninRequired": "Unable to cancel appointment. Please sign in again.",
+      "feedbackSubmitted": "Feedback submitted",
+      "feedbackAlreadyExists": "Feedback already exists for this appointment.",
+      "feedbackSubmitFailed": "Unable to submit feedback right now. Please try again."
+    },
+    "cancelModal": {
+      "title": "Cancel appointment?",
+      "message": "Are you sure you want to cancel this appointment? The consultation fee will be refunded to your wallet.",
+      "confirmLabel": "Yes, cancel appointment",
+      "cancelLabel": "Keep appointment"
+    },
+    "feedback": {
+      "submittedBadge": "Feedback submitted",
+      "modalTitle": "Clinic feedback",
+      "modalSubtitle": "Share your clinic visit experience.",
+      "submitLabel": "Submit clinic feedback"
+    }
+  },
+  "PatientDashboard": {
+    "greeting": {
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening"
+    },
+    "fallback": {
+      "firstName": "there"
+    },
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Moderate Risk",
+      "high": "High Risk",
+      "critical": "Critical Risk",
+      "notAvailable": "N/A"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
+    "detectedSummary": {
+      "low": "The AI analysis detected no significant anomalies in this latest scan. Continue regular monitoring to maintain stable retinal health.",
+      "medium": "The AI analysis detected moderate retinal risk patterns. Please review this session and consider booking a follow-up with a specialist.",
+      "high": "The AI analysis detected high-risk retinal patterns that may need urgent specialist review. Please open this session for detailed findings.",
+      "default": "The AI analysis detected findings from your latest scan. Open this session to review details and recommended next steps."
+    },
+    "header": {
+      "retinalOverview": "Your Retinal Health Overview"
+    },
+    "stats": {
+      "latestAiRiskStatus": "Latest AI Risk Status",
+      "noScans": "No Scans",
+      "nextAppointment": "Next Appointment",
+      "noneScheduled": "None Scheduled",
+      "walletBalance": "Wallet Balance",
+      "noWalletValue": "-"
+    },
+    "hero": {
+      "title": {
+        "specialistVerified": "Specialist Verified",
+        "aiScreening": "AI Screening"
+      },
+      "awaitingAnalysis": "Awaiting Analysis",
+      "latestRetinalScanAlt": "Latest retinal scan",
+      "scanId": "Scan ID: #{{id}}",
+      "latestAnalysisResult": "Latest Analysis Result",
+      "dateScanned": "Date Scanned",
+      "nextScreening": "Next Screening",
+      "processingTitle": "Latest Session Is Processing",
+      "noResultsTitle": "No Screening Results Yet",
+      "processingDescription": "Your latest screening session is available. Open it to continue analysis and review results.",
+      "noResultsDescription": "Upload your first retinal scan to get started with AI-powered analysis."
+    },
+    "actions": {
+      "newScreening": "New Screening",
+      "viewFullReport": "View Full Report",
+      "openLatestSession": "Open Latest Session",
+      "uploadFirstScan": "Upload Your First Scan"
+    },
+    "history": {
+      "title": "Screening History",
+      "viewAll": "View All",
+      "recentScreeningAlt": "Recent screening",
+      "sessionLabel": "Screening Session",
+      "imagesSingle": "{{count}} image",
+      "imagesMultiple": "{{count}} images",
+      "empty": "No screening history yet."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "messageSpecialist": "Message Specialist",
+      "bookAppointment": "Book Appointment"
+    }
+  },
+  "PatientSettings": {
+    "page": {
+      "title": "Settings",
+      "subtitle": "Manage your account settings and preferences"
+    },
+    "sections": {
+      "account": "Account",
+      "preferences": "Preferences",
+      "billing": "Billing"
+    },
+    "items": {
+      "profile": {
+        "title": "Profile",
+        "description": "Manage your personal information and avatar"
+      },
+      "security": {
+        "title": "Security",
+        "description": "Reset password and account security"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Email alerts, push notifications, reminders"
+      },
+      "paymentMethods": {
+        "title": "Payment Methods",
+        "description": "Manage wallet and payment options"
+      }
+    },
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark Mode",
+      "currentDark": "Currently using dark theme",
+      "currentLight": "Currently using light theme",
+      "toggleAriaLabel": "Toggle dark mode"
+    },
+    "language": {
+      "title": "Language & Region",
+      "subtitle": "Choose your preferred display language"
+    }
+  },
+  "PatientRoadmap": {
+    "page": {
+      "title": "Health Roadmap",
+      "subtitle": "Personalized guidance generated from your doctor diagnosis and AI screening context."
+    },
+    "error": {
+      "title": "Unable to load roadmap",
+      "description": "Please refresh the page or try again later."
+    },
+    "empty": {
+      "description": "Your personalized roadmap will appear after your doctor finalizes a diagnosis."
+    },
+    "risk": {
+      "badge": "{{risk}} Risk",
+      "levels": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+      }
+    },
+    "generatedOn": "Generated on {{date}}",
+    "source": "Source: {{source}}",
+    "sections": {
+      "nextSteps": {
+        "title": "Next Steps",
+        "empty": "No immediate next steps were generated."
+      },
+      "lifestyleAdvice": {
+        "title": "Lifestyle Advice",
+        "empty": "No lifestyle guidance was generated."
+      },
+      "warningSigns": {
+        "title": "Warning Signs",
+        "empty": "No warning signs were listed."
+      }
+    },
+    "followUp": {
+      "title": "Follow-up Recommendation",
+      "needed": "Follow-up is recommended: {{timeframe}}",
+      "timeframeFallback": "Please contact your doctor for schedule details.",
+      "notNeeded": "No immediate follow-up is required.",
+      "disclaimer": "Clinical diagnosis and treatment decisions remain under doctor responsibility. This roadmap is patient-facing guidance."
+    }
+  },
+  "PatientNotifications": {
+    "page": {
+      "title": "Notifications",
+      "subtitle": "View and manage all your notifications"
+    },
+    "connection": {
+      "label": "Real-time notifications:",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "search": {
+      "placeholder": "Search notifications..."
+    },
+    "filters": {
+      "all": "All Notifications",
+      "unread": "Unread ({{count}})",
+      "aiScreenings": "AI Screenings",
+      "consultations": "Consultations",
+      "appointments": "Appointments",
+      "wallet": "Wallet"
+    },
+    "actions": {
+      "markAllRead": "Mark All Read",
+      "clickToViewDetails": "Click to view details ->"
+    },
+    "loading": {
+      "notifications": "Loading notifications..."
+    },
+    "empty": {
+      "title": "No notifications found",
+      "adjustSearchOrFilters": "Try adjusting your search or filter criteria",
+      "waiting": "We'll notify you when something happens"
+    },
+    "pagination": {
+      "showingRange": "Showing {{start}} to {{end}} of {{total}} notifications",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{current}} of {{total}}"
+    }
+  },
+  "PatientPaymentCallback": {
+    "toast": {
+      "depositSuccess": "Wallet top-up completed successfully!"
+    },
+    "loading": {
+      "title": "Verifying Payment...",
+      "description": "Please wait while we confirm your payment."
+    },
+    "success": {
+      "title": "Payment Successful!",
+      "description": "Your wallet has been credited successfully."
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "fallbackDescription": "The payment could not be verified. No charges have been made."
+    },
+    "cancelled": {
+      "title": "Payment Cancelled",
+      "description": "You cancelled the payment. No charges have been made."
+    },
+    "labels": {
+      "amount": "Amount",
+      "orderCode": "Order Code",
+      "newBalance": "New Balance"
+    },
+    "actions": {
+      "backToWallet": "Back to Wallet"
+    }
+  },
+  "PatientWallet": {
+    "page": {
+      "title": "Digital Wallet",
+      "subtitle": "Manage your balance and view transaction history"
+    },
+    "loading": {
+      "wallet": "Loading wallet..."
+    },
+    "error": {
+      "title": "Unable to load wallet",
+      "fallback": "An unexpected error occurred. Please try again.",
+      "retry": "Retry"
+    },
+    "balance": {
+      "available": "Available Balance"
+    },
+    "actions": {
+      "topUpWallet": "Top Up Wallet",
+      "cancel": "Cancel"
+    },
+    "stats": {
+      "thisMonth": "This Month",
+      "totalDeposits": "Total Deposits",
+      "totalSpent": "Total Spent",
+      "transactions": "Transactions"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "vnpayDescription": "Cards, Bank Transfer, QR",
+      "vnpayLongDescription": "Credit/Debit Card, Bank Transfer",
+      "payosDescription": "Bank Transfer, QR"
+    },
+    "transactions": {
+      "title": "Transaction History",
+      "totalCount": "{{count}} total",
+      "loadFailed": "Failed to load transactions",
+      "emptyTitle": "No transactions yet",
+      "emptyDescription": "Top up your wallet to get started"
+    },
+    "transactionStatus": {
+      "completed": "Completed"
+    },
+    "transactionTypes": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "payment": "Payment",
+      "refund": "Refund",
+      "transfer": "Transfer",
+      "bonus": "Bonus"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "deposit": {
+      "title": "Top Up Your Wallet",
+      "subtitle": "Choose an amount and payment method",
+      "description": "Wallet Top-up via {{method}}",
+      "selectAmount": "Select Amount",
+      "customAmountPlaceholder": "Or enter custom amount (min 10,000)",
+      "currency": "VND",
+      "minAmount": "Minimum deposit amount is 10,000 VND",
+      "maxAmount": "Maximum deposit amount is 50,000,000 VND",
+      "paymentMethod": "Payment Method",
+      "createFailed": "Failed to create deposit. Please try again.",
+      "creating": "Creating...",
+      "proceedToPay": "Proceed to Pay"
+    }
+  },
+  "PatientScreening": {
+    "page": {
+      "title": "My Scans",
+      "subtitle": "View and manage your retinal screening history"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "risk": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "critical": "Critical risk"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
+    "stats": {
+      "totalScans": "Total Scans",
+      "completed": "Completed",
+      "processing": "Processing",
+      "findings": "Findings"
+    },
+    "search": {
+      "placeholder": "Search scans..."
+    },
+    "list": {
+      "recentScans": "Recent Scans ({{count}})"
+    },
+    "empty": {
+      "title": "No scans yet",
+      "description": "Start your first retinal screening to detect potential issues early"
+    },
+    "labels": {
+      "bothEyes": "Both Eyes",
+      "finding": "finding",
+      "findings": "findings"
+    },
+    "actions": {
+      "newScreening": "New Screening",
+      "filter": "Filter",
+      "viewReview": "View Review",
+      "downloadReport": "Download Report",
+      "shareWithDoctor": "Share with Doctor",
+      "delete": "Delete"
+    }
+  },
+  "PatientScreeningNew": {
+    "page": {
+      "title": "New Screening",
+      "uploadTitle": "Upload Retinal Images",
+      "uploadSubtitle": "High-resolution fundus photography for AI analysis. Quality validated in real-time."
+    },
+    "toast": {
+      "invalidFileType": "Invalid file type. Allowed: {{allowed}}",
+      "duplicateImages": "These images have already been uploaded!"
+    },
+    "errors": {
+      "noUploadedUrl": "No uploaded image URL returned from server.",
+      "createSessionFailed": "Failed to create screening session.",
+      "startAnalysisFailed": "Unable to save consent and start analysis. Please try again."
+    },
+    "validation": {
+      "notFundus": "This does not look like a retinal fundus image. Please upload a valid fundus photo only.",
+      "croppedEdges": "Retina appears cropped at the edge. Please recapture with better centering.",
+      "blurry": "Image appears blurry for reliable analysis. Please retake.",
+      "tooDark": "Image is too dark. Please retake with better lighting.",
+      "overexposed": "Image is overexposed. Please reduce brightness and retake.",
+      "highQuality": "High quality image",
+      "acceptableQuality": "Acceptable quality",
+      "serviceUnavailable": "Fundus validation service is unavailable. Please try again in a moment."
+    },
+    "processing": {
+      "local": "Processing locally...",
+      "analyzingQuality": "Analyzing image quality..."
+    },
+    "status": {
+      "uploading": "Uploading...",
+      "analyzing": "Analysing...",
+      "ready": "Ready",
+      "highQuality": "High Quality",
+      "qualityWarning": "Quality Warning",
+      "notFundus": "Not Fundus"
+    },
+    "qualityStandards": {
+      "title": "Quality Standards",
+      "evenLighting": "Even Lighting",
+      "evenLightingDescription": "Avoid dark spots or overexposure.",
+      "sharpFocus": "Sharp Focus",
+      "sharpFocusDescription": "Ensure vascular details are crisp.",
+      "centeredOpticDisc": "Centered Optic Disc",
+      "centeredOpticDiscDescription": "Retina should be centered in frame."
+    },
+    "supportedFormats": {
+      "title": "Supported Formats",
+      "value": "DICOM, JPG, PNG (Max 10MB)"
+    },
+    "dropzone": {
+      "dropHere": "Drop images here",
+      "dragAndDrop": "Drag & Drop fundus images here",
+      "or": "or",
+      "browseFiles": "browse files",
+      "fromComputer": "from your computer",
+      "pasteHintPrefix": "",
+      "pasteHintSuffix": "to paste from clipboard"
+    },
+    "queue": {
+      "title": "Validation Queue ({{count}})",
+      "empty": "No images uploaded yet. Drag & drop or click to upload.",
+      "readyToSubmit": "{{count}} file(s) ready to submit"
+    },
+    "consent": {
+      "title": "Data Sharing Consent"
+    },
+    "footer": {
+      "hipaa": "Your data is encrypted and HIPAA compliant. Uploaded images are used solely for your diagnostic session."
+    },
+    "actions": {
+      "clearAll": "Clear All",
+      "retry": "Retry",
+      "remove": "Remove",
+      "startAnalysis": "Start AI Analysis",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "agreeAndContinue": "I Agree, Continue"
+    }
+  },
+  "PatientProfile": {
+    "page": {
+      "title": "My Profile",
+      "subtitle": "Manage your personal information and account settings"
+    },
+    "loading": {
+      "profile": "Loading profile..."
+    },
+    "error": {
+      "title": "Failed to load profile",
+      "fallback": "An unexpected error occurred"
+    },
+    "toast": {
+      "profileUpdated": "Profile updated successfully",
+      "profileUpdateFailed": "Failed to update profile",
+      "loadImageFailed": "Failed to load image",
+      "avatarUpdated": "Profile photo updated successfully",
+      "avatarUploadFailed": "Failed to upload avatar",
+      "passwordChanged": "Password changed successfully",
+      "passwordChangeFailed": "Failed to change password"
+    },
+    "sections": {
+      "personalInformation": "Personal Information",
+      "securitySettings": "Security Settings"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "emailImmutable": "Email cannot be changed",
+      "phoneNumber": "Phone Number",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "address": "Address"
+    },
+    "gender": {
+      "preferNotToSay": "Prefer not to say",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "labels": {
+      "emailVerified": "Email Verified",
+      "emailNotVerified": "Email Not Verified",
+      "memberSince": "Member Since",
+      "twoFactorStatus": "2FA Status",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "avatar": {
+      "modalTitle": "Update Profile Photo",
+      "changeHint": "Click or drop another image to change",
+      "dropHere": "Drop your image here",
+      "dragDrop": "Drag & drop your photo",
+      "browseHint": "or click to browse files",
+      "pastePrefix": "You can also",
+      "pasteSuffix": "paste an image",
+      "supportedFormats": "Supported formats: JPG, PNG, GIF, WebP • Max size: 5MB",
+      "savePhoto": "Save Photo",
+      "uploading": "Uploading...",
+      "selectImageFile": "Please select an image file",
+      "maxSizeError": "Image must be less than 5MB",
+      "readFileFailed": "Failed to read file"
+    },
+    "security": {
+      "passwordTitle": "Password",
+      "passwordDescription": "Change your account password",
+      "twoFactorTitle": "Two-Factor Authentication",
+      "notificationTitle": "Notification Preferences",
+      "notificationDescription": "Email & Push notifications",
+      "changePasswordModalTitle": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "changingPassword": "Changing..."
+    },
+    "actions": {
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "change": "Change",
+      "manage": "Manage",
+      "configure": "Configure",
+      "changePassword": "Change Password"
+    }
+  },
+  "PatientBookAppointment": {
+    "modal": {
+      "slotReserved": "Slot Reserved",
+      "timeRemaining": "Time remaining to complete booking",
+      "date": "Date",
+      "time": "Time",
+      "price": "Price:"
+    },
+    "labels": {
+      "ophthalmologist": "Ophthalmologist",
+      "bookingFor": "Booking for:",
+      "videoConsultation": "Video Consultation",
+      "inClinicOrVideo": "In-clinic / Video Consultation",
+      "selectTime": "Select a Time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "selected": "Selected:",
+      "at": "at"
+    },
+    "notice": {
+      "prefix": "Please note: Appointments must be booked at least",
+      "suffix": "in advance."
+    },
+    "empty": {
+      "noTimesFor": "No available times for",
+      "thisDate": "this date",
+      "selectDateAndTime": "Please select a date and an available time."
+    },
+    "errors": {
+      "signInRequired": "Please sign in to book a consultation slot."
+    },
+    "actions": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "processing": "Processing...",
+      "confirmBooking": "Confirm Booking"
+    }
+  },
+  "PatientReports": {
+    "page": {
+      "title": "Medical Reports",
+      "subtitle": "View, download, and track your screening results and heatmaps"
+    },
+    "stats": {
+      "totalReports": "Total Reports",
+      "verified": "Verified",
+      "withHeatmaps": "With Heatmaps",
+      "healthyResults": "Healthy Results"
+    },
+    "search": {
+      "placeholder": "Search reports..."
+    },
+    "filters": {
+      "label": "Filter",
+      "all": "All"
+    },
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Medium Risk",
+      "high": "High Risk"
+    },
+    "type": {
+      "screening": "Retinal Screening",
+      "followUp": "Follow-up Scan",
+      "verification": "Verified Result"
+    },
+    "badges": {
+      "verified": "Verified"
+    },
+    "fields": {
+      "result": "Result: {{value}}",
+      "analyzedBy": "Analyzed by:",
+      "detectedConditions": "Detected Conditions:"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "viewHeatmap": "View Heatmap",
+      "downloadPdf": "Download PDF",
+      "startFirstScreening": "Start Your First Screening"
+    },
+    "empty": {
+      "title": "No Reports Found",
+      "adjustSearchOrFilters": "Try adjusting your search or filters.",
+      "noScreenings": "You haven't completed any screenings yet."
+    },
+    "mock": {
+      "result": {
+        "healthy": "Healthy",
+        "mildSignsDetected": "Mild Signs Detected",
+        "requiresAttention": "Requires Attention"
+      },
+      "doctor": {
+        "aiAnalysis": "AI Analysis"
+      },
+      "conditions": {
+        "earlyAmdSigns": "Early AMD signs",
+        "monitorBloodSugar": "Monitor blood sugar",
+        "diabeticRetinopathyStage1": "Diabetic Retinopathy - Stage 1"
+      }
+    }
+  },
+  "PatientClinics": {
+    "page": {
+      "title": "Book At Organisation Clinic",
+      "subtitle": "Pick a clinic, choose a date, and reserve an in-person visit slot."
+    },
+    "search": {
+      "placeholder": "Search organisation by name, city, or address"
+    },
+    "loading": {
+      "organisations": "Loading organisations...",
+      "slots": "Loading slots..."
+    },
+    "labels": {
+      "organisation": "Organisation",
+      "noAddress": "No address",
+      "quickDates": "Quick Dates",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "selectedSlot": "Selected Slot"
+    },
+    "reasons": {
+      "routine": "Routine follow-up",
+      "blurredVision": "Blurred vision",
+      "eyePressure": "Eye pressure check",
+      "eyePain": "Eye pain or discomfort",
+      "firstVisit": "First-time visit"
+    },
+    "fields": {
+      "visitDate": "Visit Date",
+      "visitReason": "Visit Reason",
+      "visitReasonPlaceholder": "Blurred vision, routine follow-up..."
+    },
+    "slots": {
+      "title": "Available Slots",
+      "organisation": "Organisation: {{name}}",
+      "selectOrganisation": "Select an organisation to load available slots.",
+      "remainingCapacity": "Remaining capacity: {{remaining}}/{{max}}",
+      "availableCount": "{{count}} slot(s) available",
+      "full": "Full"
+    },
+    "actions": {
+      "bookClinicVisit": "Book Clinic Visit",
+      "jumpToFirstAvailable": "Go to First Available"
+    },
+    "empty": {
+      "organisations": "No organisation found.",
+      "selectOrganisationFirst": "Please select an organisation first.",
+      "noSlotsForDate": "No available slots for selected date.",
+      "noUpcomingSlots": "No upcoming slots are available for this organisation."
+    },
+    "messages": {
+      "bookSuccess": "Appointment booked successfully. Please check status in Appointments."
+    },
+    "toast": {
+      "bookSuccess": "Clinic booking completed successfully!"
+    }
+  },
+  "PatientRetinalAnalysis": {
+    "page": {
+      "title": "Your Screening Results"
+    },
+    "toggles": {
+      "showHighlights": "Show AI Highlights",
+      "showHeatmap": "Show Heatmap"
+    },
+    "summary": {
+      "title": "Your Retinal Health Summary",
+      "preAnalyzeDescription": "Our AI will examine your retinal images for any signs that need attention. This usually takes just a few seconds.",
+      "analyzing": "Analyzing your retinal scan..."
+    },
+    "actions": {
+      "preparingSession": "Preparing session...",
+      "outOfQuota": "Out of quota",
+      "startScreening": "Start Screening",
+      "continueToReview": "Continue to Review",
+      "reanalyze": "Re-analyze scan"
+    },
+    "badge": {
+      "looksHealthy": "Looks Healthy",
+      "needsAttention": "Needs Attention"
+    },
+    "findings": {
+      "empty": {
+        "title": "No abnormalities detected",
+        "description": "AI did not detect abnormal signs in the fundus image. Please continue regular eye check-ups."
+      },
+      "normal": {
+        "title": "Normal result",
+        "description": "No disease signs were detected in your fundus image. Continue regular eye check-ups to protect your vision."
+      },
+      "primaryTitle": "Primary Finding",
+      "relatedTitle": "Related Findings",
+      "criticalHint": "A critical finding is present in this list. Please prioritize seeing an ophthalmologist soon.",
+      "nextStepLabel": "Next step:",
+      "nextStepDescription": "Continue to Review so a specialist can confirm the results and advise an appropriate care plan.",
+      "urgency": {
+        "critical": "Urgent",
+        "warning": "Needs Follow-up",
+        "caution": "Caution",
+        "info": "Info",
+        "normal": "Normal"
+      },
+      "suggestion": {
+        "critical": "Please see an ophthalmologist immediately.",
+        "warning": "You should consult an ophthalmologist.",
+        "caution": "Regular follow-up is recommended.",
+        "info": "No immediate action is required.",
+        "normal": "Continue regular eye check-ups."
+      }
+    },
+    "risk": {
+      "low": {
+        "label": "Low Risk",
+        "summary": "Your scan shows low-risk findings. Keep regular follow-up to monitor your retinal health."
+      },
+      "moderate": {
+        "label": "Worth Reviewing",
+        "summary": "Our AI noticed some areas that may benefit from a specialist's review. This does not mean there is a problem, it means a closer look could be helpful."
+      },
+      "high": {
+        "label": "Needs Attention",
+        "summary": "We found some areas worth discussing with an eye specialist. Early detection is the best path to protecting your vision, and your next step is to have these results reviewed by a doctor."
+      },
+      "healthy": {
+        "label": "Looks Healthy",
+        "summary": "Great news, your retinal scan looks healthy. No significant concerns were found. We recommend maintaining regular eye check-ups to keep your vision in great shape."
+      }
+    },
+    "errors": {
+      "noImagesInSession": "No images found in this screening session.",
+      "loadScreeningFailed": "Unable to load screening images. Please try again.",
+      "noImageForAnalysis": "No image available for analysis",
+      "quotaExceeded": "You are out of AI credits. Please purchase more to continue.",
+      "quotaDeductFailed": "Unable to deduct AI quota. Please try again.",
+      "modelLoading": "AI model is loading. Please try again in a moment.",
+      "invalidImage": "Invalid image. Please upload a valid retinal fundus image.",
+      "analysisUnavailable": "AI analysis is unavailable. Please check that the AI service is running."
+    },
+    "analysis": {
+      "helper": {
+        "primaryFindingDescription": "{{disease}} detected as the primary finding ({{confidence}}% confidence).",
+        "secondaryFindingDescription": "{{disease}} - {{status}} ({{confidence}}% confidence).",
+        "confidenceDescription": "{{disease}} ({{confidence}}% confidence).",
+        "detectedByAi": "{{disease}} was detected by our AI screening.",
+        "detectedByAiWithReview": "{{disease}} was detected by our AI screening. Your specialist can evaluate this further.",
+        "detectedByAiTool": "Detected by our AI screening tool."
+      },
+      "persistedSummary": {
+        "high": "Findings need attention from an ophthalmologist.",
+        "moderate": "Some findings may need specialist review.",
+        "normal": "No major risk findings detected.",
+        "low": "Low-risk findings detected. Routine specialist follow-up is recommended."
+      }
+    },
+    "disclaimer": {
+      "importantLabel": "Important:",
+      "message": "This AI screening assists but does not replace professional medical advice. Results should be reviewed by a qualified ophthalmologist."
+    }
+  },
+  "PatientSidebar": {
+    "portalSubtitle": "Patient Portal",
+    "user": {
+      "defaultName": "Patient"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "myScans": "My Scans",
+      "reports": "Reports",
+      "appointments": "Appointments",
+      "findClinics": "Find Clinics",
+      "healthRoadmap": "Health Roadmap",
+      "chat": "Chat",
+      "wallet": "Wallet",
+      "helpFeedback": "Help & Feedback",
+      "settings": "Settings"
+    },
+    "actions": {
+      "logout": "Logout"
+    }
+  },
+  "PatientHeader": {
+    "breadcrumb": {
+      "home": "Home"
+    },
+    "search": {
+      "placeholder": "Search reports, appointments..."
+    },
+    "actions": {
+      "toggleTheme": "Toggle theme"
+    },
+    "pages": {
+      "dashboard": "Dashboard",
+      "screening": "My Scans",
+      "reports": "Reports",
+      "appointments": "Appointments",
+      "doctors": "Find Doctors",
+      "clinics": "Find Clinics",
+      "roadmap": "Health Roadmap",
+      "chat": "Chat",
+      "wallet": "Wallet",
+      "profile": "My Profile",
+      "settings": "Settings",
+      "security": "Security",
+      "notifications": "Notifications"
+    }
+  },
+  "PatientChat": {
+    "phase": {
+      "preVisitLabel": "Pre-visit",
+      "preVisitDescription": "Share symptoms, scan notes, or questions before the consultation starts. The doctor will review them at appointment time.",
+      "inProgressLabel": "In Progress",
+      "inProgressDescription": "Consultation is active. You can chat and join the video call.",
+      "completedLabel": "Completed",
+      "completedDescription": "Consultation has been completed. Chat is now read-only.",
+      "chatOpensIn": "Chat opens in",
+      "autoOpenAtScheduledTime": "Chat will automatically open at the scheduled appointment time",
+      "unlockAfterVerification": "Chat will unlock after your doctor verifies the session."
+    },
+    "schedule": {
+      "pending": "Schedule pending",
+      "unavailable": "Schedule is unavailable."
+    },
+    "preview": {
+      "memoOnly": "Leave a note for your doctor...",
+      "archived": "Session completed - no messages",
+      "locked": "Chat opens at appointment time",
+      "empty": "No messages yet",
+      "imageAttachmentShared": "Image attachment shared",
+      "scanShared": "Retinal scan shared",
+      "newMessage": "New message"
+    },
+    "meeting": {
+      "joinLocked": "Join Locked",
+      "joinBeforeMinutes": "Join room {{minutes}} minutes before start",
+      "unlockAfter": "Opens in {{time}}",
+      "joinMeeting": "Join Meeting",
+      "join": "Join",
+      "canJoinBeforeMinutes": "Can join {{minutes}} minutes before start",
+      "ended": "Ended",
+      "sessionExpired": "Session has passed the allowed join window",
+      "linkPending": "Link Pending",
+      "consultationCompleted": "Consultation completed"
+    },
+    "composer": {
+      "initialSharedScanMessage": "Hi Doctor, I'd like to share my recent screening results for your review.",
+      "scanPreviewAlt": "Scan preview",
+      "readyToShareScan": "Ready to share: {{eyeLabel}}",
+      "findingsCount": " / {{count}} finding(s)",
+      "readyToShareImage": "Ready to share image",
+      "encrypted": "Encrypted",
+      "imageAttachedBadge": "Image attached",
+      "characterLimitReached": "Character limit reached.",
+      "placeholder": {
+        "scanContext": "Add context for the scan before sending it to your ophthalmologist...",
+        "preVisit": "Share symptoms, scan notes, or questions before the consultation starts...",
+        "inProgress": "Type a message...",
+        "default": "Type your message here..."
+      }
+    },
+    "fallback": {
+      "assignedOphthalmologist": "Assigned ophthalmologist",
+      "patient": "Patient",
+      "retinalScan": "Retinal Scan",
+      "notAvailable": "N/A",
+      "you": "You",
+      "sharedImage": "Shared image",
+      "pendingImage": "Pending image",
+      "riskLabelUnavailable": "Risk label unavailable",
+      "noSummaryAvailable": "No summary available"
+    },
+    "toast": {
+      "invalidImageFile": "Please select a valid image file.",
+      "imageTooLarge": "Image size must be 10MB or less.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "uploadFailedGeneric": "Unable to upload image. Please try again.",
+      "imageAttached": "Image attached.",
+      "sendMessageFailed": "Failed to send message. Please try again."
+    },
+    "session": {
+      "type": {
+        "verification": "Verification",
+        "videoCall": "Video Call",
+        "clinicBooking": "Clinic Booking"
+      },
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "message": {
+      "meta": {
+        "savedPreVisit": "Saved as pre-visit note",
+        "deliveredToDoctor": "Delivered to your doctor",
+        "doctorNote": "Doctor note"
+      }
+    },
+    "loading": {
+      "conversations": "Loading conversations..."
+    },
+    "search": {
+      "placeholder": "Search by doctor, status, or session type"
+    },
+    "stats": {
+      "all": "All",
+      "open": "Open",
+      "upcoming": "Upcoming"
+    },
+    "empty": {
+      "noSearchResultsTitle": "No sessions match your search",
+      "noSearchResultsDescription": "Try a doctor name, chat status, or consultation type.",
+      "preVisitTitle": "Leave a note for your doctor",
+      "completedTitle": "No messages in this session",
+      "preVisitDescription": "Start by sharing symptoms, concerns, or a brief note before your consultation begins.",
+      "inProgressDescription": "The consultation is active. Start the conversation when you are ready.",
+      "completedDescription": "This consultation has been completed.",
+      "selectSessionTitle": "Select a session",
+      "selectSessionDescription": "Choose a consultation from the left panel to review the full conversation."
+    },
+    "typing": {
+      "doctorIsTyping": "Doctor is typing..."
+    },
+    "chatStatus": {
+      "title": "Chat status: {{status}}",
+      "unreadActivity": "Unread activity"
+    },
+    "overview": {
+      "show": "Show session overview",
+      "hide": "Hide session overview",
+      "close": "Close session overview",
+      "title": "Session Overview",
+      "appointment": "Appointment",
+      "lastActivity": "Last activity",
+      "consultationFee": "Consultation fee",
+      "phase": "Phase",
+      "pendingScanShare": "Pending Scan Share",
+      "pendingScanAlt": "Pending scan"
+    },
+    "guidance": {
+      "title": "Conversation Guidance",
+      "description": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes help your ophthalmologist triage faster.",
+      "sidebarDescription": "Be specific about symptom timing, changes in vision, pain, and recent scan results. Short, structured notes make it easier for your ophthalmologist to triage quickly."
+    }
+  },
+  "FocusModeLayout": {
+    "steps": {
+      "upload": "Upload & Validate",
+      "analysis": "Analysis",
+      "review": "Review"
+    },
+    "breadcrumb": {
+      "home": "Home",
+      "newScreening": "New Screening"
+    }
   }
 }

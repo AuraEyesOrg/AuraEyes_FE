@@ -11,10 +11,11 @@ import {
   History,
   AlertCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Spinner from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import PatientLayout from '../components/PatientLayout';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatShortDate } from '@/lib/date-utils';
@@ -23,29 +24,38 @@ import { screeningApi } from '../api/screening.api';
 
 // ============ HELPERS ============
 
-const getGreeting = () => {
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+const getGreeting = (t: TranslateFn) => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good Morning';
-  if (hour < 18) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return t('PatientDashboard.greeting.morning');
+  if (hour < 18) return t('PatientDashboard.greeting.afternoon');
+  return t('PatientDashboard.greeting.evening');
 };
 
-const getRiskLabel = (risk?: string) => {
-  if (!risk) return 'N/A';
-  return risk.charAt(0).toUpperCase() + risk.slice(1) + ' Risk';
+const getRiskLabel = (risk: string | undefined, t: TranslateFn) => {
+  const normalized = normalizeRiskLevel(risk);
+  if (!normalized) return t('PatientDashboard.risk.notAvailable');
+  return normalized === 'low'
+    ? t('PatientDashboard.badge.looksHealthy', {
+        defaultValue: 'Looks Healthy',
+      })
+    : t('PatientDashboard.badge.needsAttention', {
+        defaultValue: 'Needs Attention',
+      });
 };
 
-const getDetectedSummary = (risk?: string) => {
+const getDetectedSummary = (risk: string | undefined, t: TranslateFn) => {
   switch (risk) {
     case 'low':
-      return 'The AI analysis detected no significant anomalies in this latest scan. Continue regular monitoring to maintain stable retinal health.';
+      return t('PatientDashboard.detectedSummary.low');
     case 'medium':
-      return 'The AI analysis detected moderate retinal risk patterns. Please review this session and consider booking a follow-up with a specialist.';
+      return t('PatientDashboard.detectedSummary.medium');
     case 'high':
     case 'critical':
-      return 'The AI analysis detected high-risk retinal patterns that may need urgent specialist review. Please open this session for detailed findings.';
+      return t('PatientDashboard.detectedSummary.high');
     default:
-      return 'The AI analysis detected findings from your latest scan. Open this session to review details and recommended next steps.';
+      return t('PatientDashboard.detectedSummary.default');
   }
 };
 
@@ -54,7 +64,18 @@ const normalizeRiskLevel = (risk?: string) => {
   return risk.toLowerCase();
 };
 
+const looksLikeI18nKey = (value?: string) => {
+  if (!value) return false;
+  return /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*){2,}$/.test(
+    value.trim()
+  );
+};
+
 export default function PatientDashboard() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const {
     profile,
     wallet,
@@ -65,7 +86,9 @@ export default function PatientDashboard() {
     isLoading,
   } = useDashboard();
 
-  const firstName = profile?.fullName?.split(' ')[0] ?? 'there';
+  const firstName =
+    profile?.fullName?.split(' ')[0] ??
+    t('PatientDashboard.fallback.firstName');
 
   const recentSessionsQuery = useQuery({
     queryKey: ['screening', 'recent', 'dashboard'],
@@ -73,11 +96,42 @@ export default function PatientDashboard() {
       const response = await screeningApi.getRecentSessions(5);
       return response.data ?? [];
     },
+    staleTime: 60_000,
+    gcTime: 15 * 60_000,
+    // Always re-validate this query when returning to dashboard
+    // so hero card reflects the newest screening session.
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: 30_000,
+    placeholderData: [],
   });
 
   const recentSessions = recentSessionsQuery.data ?? [];
   const latestSession = recentSessions[0];
   const latestSessionRisk = normalizeRiskLevel(latestSession?.latestRiskLevel);
+  const latestSessionDetailQuery = useQuery({
+    queryKey: [
+      'screening',
+      'latest-session-detail',
+      latestSession?.screeningId,
+    ],
+    enabled: Boolean(latestSession?.screeningId),
+    queryFn: async () => {
+      if (!latestSession?.screeningId) return null;
+      const response = await screeningApi.getSessionById(
+        latestSession.screeningId
+      );
+      return response.data ?? null;
+    },
+    staleTime: 60_000,
+    gcTime: 15 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  });
+  const latestSessionImageUrl =
+    latestSessionDetailQuery.data?.images?.[0]?.imageUrl;
 
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
@@ -123,23 +177,58 @@ export default function PatientDashboard() {
 
   const currentDate = formatShortDate(new Date().toISOString());
   const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
-  const effectiveLatestRisk = latestReportRisk ?? latestSessionRisk;
+  const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
   const hasHeroResult = Boolean(latestReport || latestSession);
-  const heroImageUrl = latestReport?.heatmapUrl ?? latestSession?.thumbnailUrl;
+  const heroImageCandidates = useMemo(() => {
+    // Prefer session thumbnail (retinal photo) over heatmap to avoid dark/blank-looking hero images.
+    const candidates = [
+      latestSessionImageUrl,
+      latestSession?.thumbnailUrl,
+      latestReport?.heatmapUrl,
+    ]
+      .filter((url): url is string => Boolean(url && url.trim().length > 0))
+      .map((url) => url.trim());
+    return [...new Set(candidates)];
+  }, [
+    latestReport?.heatmapUrl,
+    latestSession?.thumbnailUrl,
+    latestSessionImageUrl,
+  ]);
+  const [heroImageCandidateIndex, setHeroImageCandidateIndex] = useState(0);
+  const heroImageUrl =
+    heroImageCandidates[heroImageCandidateIndex] ??
+    heroImageCandidates[0] ??
+    undefined;
   const heroTitle =
-    latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
-      ? 'Specialist Verified'
-      : 'AI Screening';
+    latestSession != null
+      ? t('PatientDashboard.hero.title.aiScreening')
+      : latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
+        ? t('PatientDashboard.hero.title.specialistVerified')
+        : t('PatientDashboard.hero.title.aiScreening');
   const heroRiskLabel = effectiveLatestRisk
-    ? getRiskLabel(effectiveLatestRisk)
-    : 'Awaiting Analysis';
+    ? getRiskLabel(effectiveLatestRisk, t)
+    : t('PatientDashboard.hero.awaitingAnalysis');
   const heroSummary =
-    latestReport?.summary || getDetectedSummary(effectiveLatestRisk);
-  const heroDate = latestReport?.createdAt ?? latestSession?.createdAt;
-  const heroScanId = latestReport?.id ?? latestSession?.screeningId;
+    latestSession != null
+      ? getDetectedSummary(effectiveLatestRisk, t)
+      : latestReport?.summary && !looksLikeI18nKey(latestReport.summary)
+        ? latestReport.summary
+        : getDetectedSummary(effectiveLatestRisk, t);
+  const heroDate = latestSession?.createdAt ?? latestReport?.createdAt;
+  const heroScanId = latestSession?.screeningId ?? latestReport?.id;
+  const latestSessionHasResult = Boolean(latestSession?.latestRiskLevel);
+  const latestSessionTargetPath = latestSessionHasResult
+    ? '/patient/screening/review'
+    : latestSession?.screeningId
+      ? `/patient/analysis?screeningId=${latestSession.screeningId}`
+      : '/patient/analysis';
   const [isHeroImageLoaded, setIsHeroImageLoaded] = useState(false);
   const [isHeroImageErrored, setIsHeroImageErrored] = useState(false);
+
+  useEffect(() => {
+    setHeroImageCandidateIndex(0);
+  }, [heroImageCandidates.join('|')]);
 
   useEffect(() => {
     setIsHeroImageLoaded(false);
@@ -153,34 +242,34 @@ export default function PatientDashboard() {
   const statsCards = [
     {
       icon: Eye,
-      label: 'Latest AI Risk Status',
+      label: t('PatientDashboard.stats.latestAiRiskStatus'),
       value: effectiveLatestRisk
-        ? getRiskLabel(effectiveLatestRisk)
-        : 'No Scans',
+        ? getRiskLabel(effectiveLatestRisk, t)
+        : t('PatientDashboard.stats.noScans'),
       valueColor: 'text-brand',
       bgColor: 'icon-bg-blue',
       iconColor: 'text-blue-500',
     },
     {
       icon: Calendar,
-      label: 'Next Appointment',
+      label: t('PatientDashboard.stats.nextAppointment'),
       value: nextAppointment
         ? formatShortDate(nextAppointment.date)
-        : 'None Scheduled',
+        : t('PatientDashboard.stats.noneScheduled'),
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-pink',
       iconColor: 'text-pink-500',
     },
     {
       icon: Wallet,
-      label: 'Wallet Balance',
+      label: t('PatientDashboard.stats.walletBalance'),
       value: wallet
         ? formatCurrency(wallet.balance, {
             locale: 'vi-VN',
             useCurrencyStyle: false,
             suffix: ' VNĐ',
           })
-        : '—',
+        : t('PatientDashboard.stats.noWalletValue'),
       valueColor: 'text-[var(--text-primary)]',
       bgColor: 'icon-bg-orange',
       iconColor: 'text-orange-500',
@@ -204,11 +293,11 @@ export default function PatientDashboard() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <h2 className="text-3xl font-extrabold text-(--text-primary) tracking-tight">
-              {getGreeting()}, {firstName}
+              {getGreeting(t)}, {firstName}
             </h2>
             <p className="text-(--text-secondary) mt-1 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              {currentDate} • Your Retinal Health Overview
+              {currentDate} • {t('PatientDashboard.header.retinalOverview')}
             </p>
           </div>
 
@@ -218,7 +307,7 @@ export default function PatientDashboard() {
               className="btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              New Screening
+              {t('PatientDashboard.actions.newScreening')}
             </Link>
           </div>
         </header>
@@ -236,7 +325,7 @@ export default function PatientDashboard() {
                     )}
                     <img
                       src={heroImageUrl}
-                      alt="Latest retinal scan"
+                      alt={t('PatientDashboard.hero.latestRetinalScanAlt')}
                       className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
                         showHeroImageSkeleton
                           ? 'opacity-0'
@@ -246,6 +335,11 @@ export default function PatientDashboard() {
                       onError={() => {
                         setIsHeroImageErrored(true);
                         setIsHeroImageLoaded(true);
+                        setHeroImageCandidateIndex((prev) =>
+                          prev < heroImageCandidates.length - 1
+                            ? prev + 1
+                            : prev
+                        );
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -258,7 +352,9 @@ export default function PatientDashboard() {
                 {heroScanId && (
                   <div className="absolute bottom-4 left-4">
                     <span className="bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded border border-white/20">
-                      Scan ID: #{heroScanId.slice(0, 8)}
+                      {t('PatientDashboard.hero.scanId', {
+                        id: heroScanId.slice(0, 8),
+                      })}
                     </span>
                   </div>
                 )}
@@ -269,7 +365,7 @@ export default function PatientDashboard() {
                 <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">
-                      Latest Analysis Result
+                      {t('PatientDashboard.hero.latestAnalysisResult')}
                     </p>
                     <h3 className="text-2xl font-bold text-(--text-primary)">
                       {heroTitle}
@@ -283,7 +379,7 @@ export default function PatientDashboard() {
                     >
                       <CheckCircle className="w-4 h-4" />
                       <span className="font-bold capitalize">
-                        {effectiveLatestRisk} Risk
+                        {getRiskLabel(effectiveLatestRisk, t)}
                       </span>
                     </div>
                   )}
@@ -297,7 +393,7 @@ export default function PatientDashboard() {
                   {heroDate && (
                     <div>
                       <p className="text-xs text-(--text-muted) mb-1">
-                        Date Scanned
+                        {t('PatientDashboard.hero.dateScanned')}
                       </p>
                       <p className="font-medium text-(--text-primary)">
                         {formatShortDate(heroDate)}
@@ -307,7 +403,7 @@ export default function PatientDashboard() {
                   {nextAppointment && (
                     <div>
                       <p className="text-xs text-[var(--text-muted)] mb-1">
-                        Next Screening
+                        {t('PatientDashboard.hero.nextScreening')}
                       </p>
                       <p className="font-medium text-brand">
                         {formatShortDate(nextAppointment.date)}
@@ -317,7 +413,9 @@ export default function PatientDashboard() {
                   <div className="ml-auto">
                     <Link
                       to={
-                        latestSession ? '/patient/analysis' : '/patient/reports'
+                        latestSession
+                          ? latestSessionTargetPath
+                          : '/patient/reports'
                       }
                       state={
                         latestSession
@@ -327,8 +425,8 @@ export default function PatientDashboard() {
                       className="btn-primary flex items-center gap-2"
                     >
                       {latestReport
-                        ? 'View Full Report'
-                        : 'Open Latest Session'}
+                        ? t('PatientDashboard.actions.viewFullReport')
+                        : t('PatientDashboard.actions.openLatestSession')}
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
@@ -361,13 +459,13 @@ export default function PatientDashboard() {
                 <AlertCircle className="w-12 h-12 mx-auto lg:mx-0 mb-4 text-(--text-muted)" />
                 <h3 className="text-xl font-bold text-(--text-primary) mb-2">
                   {hasLatestSession
-                    ? 'Latest Session Is Processing'
-                    : 'No Screening Results Yet'}
+                    ? t('PatientDashboard.hero.processingTitle')
+                    : t('PatientDashboard.hero.noResultsTitle')}
                 </h3>
                 <p className="text-(--text-secondary) mb-6">
                   {hasLatestSession
-                    ? 'Your latest screening session is available. Open it to continue analysis and review results.'
-                    : 'Upload your first retinal scan to get started with AI-powered analysis.'}
+                    ? t('PatientDashboard.hero.processingDescription')
+                    : t('PatientDashboard.hero.noResultsDescription')}
                 </p>
                 {hasLatestSession ? (
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center lg:justify-start gap-4">
@@ -375,7 +473,7 @@ export default function PatientDashboard() {
                       <span
                         className={`inline-flex items-center justify-center px-4 py-2 rounded-full border font-semibold capitalize ${getRiskBadgeColors(latestSessionRisk)}`}
                       >
-                        {latestSessionRisk} risk
+                        {getRiskLabel(latestSessionRisk, t)}
                       </span>
                     )}
                     <Link
@@ -384,7 +482,7 @@ export default function PatientDashboard() {
                       className="btn-primary inline-flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      Open Latest Session
+                      {t('PatientDashboard.actions.openLatestSession')}
                     </Link>
                   </div>
                 ) : (
@@ -393,7 +491,7 @@ export default function PatientDashboard() {
                     className="btn-primary inline-flex items-center gap-2 self-center lg:self-end w-fit"
                   >
                     <Upload className="w-4 h-4" />
-                    Upload Your First Scan
+                    {t('PatientDashboard.actions.uploadFirstScan')}
                   </Link>
                 )}
               </div>
@@ -428,13 +526,13 @@ export default function PatientDashboard() {
               <div className="p-6 border-b border-(--border-color) flex justify-between items-center">
                 <h3 className="text-lg font-bold text-(--text-primary) flex items-center gap-2">
                   <History className="w-5 h-5 text-(--text-muted)" />
-                  Screening History
+                  {t('PatientDashboard.history.title')}
                 </h3>
                 <Link
                   to="/patient/screening"
                   className="text-sm font-medium text-brand hover:underline"
                 >
-                  View All
+                  {t('PatientDashboard.history.viewAll')}
                 </Link>
               </div>
 
@@ -450,8 +548,10 @@ export default function PatientDashboard() {
                           <div>
                             <p className="font-bold text-(--text-primary)">
                               {report.type === 'OPHTHALMOLOGIST_VERIFIED'
-                                ? 'Specialist Verified'
-                                : 'AI Screening'}
+                                ? t(
+                                    'PatientDashboard.hero.title.specialistVerified'
+                                  )
+                                : t('PatientDashboard.hero.title.aiScreening')}
                             </p>
                             <p className="text-sm text-(--text-secondary)">
                               {formatShortDate(report.createdAt)}
@@ -463,7 +563,7 @@ export default function PatientDashboard() {
                             <span
                               className={getRiskBadgeStyle(report.riskLevel)}
                             >
-                              {report.riskLevel} Risk
+                              {getRiskLabel(report.riskLevel, t)}
                             </span>
                             <Link
                               to={`/patient/reports`}
@@ -489,7 +589,9 @@ export default function PatientDashboard() {
                             {session.thumbnailUrl ? (
                               <img
                                 src={session.thumbnailUrl}
-                                alt="Recent screening"
+                                alt={t(
+                                  'PatientDashboard.history.recentScreeningAlt'
+                                )}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
                               />
@@ -501,18 +603,23 @@ export default function PatientDashboard() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-semibold text-(--text-primary)">
-                              Screening Session
+                              {t('PatientDashboard.history.sessionLabel')}
                             </p>
                             <p className="text-sm text-(--text-secondary)">
                               {formatShortDate(session.createdAt)} •{' '}
-                              {session.imagesCount} image
-                              {session.imagesCount !== 1 ? 's' : ''}
+                              {session.imagesCount === 1
+                                ? t('PatientDashboard.history.imagesSingle', {
+                                    count: session.imagesCount,
+                                  })
+                                : t('PatientDashboard.history.imagesMultiple', {
+                                    count: session.imagesCount,
+                                  })}
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
                             {risk && (
                               <span className={getRiskBadgeStyle(risk)}>
-                                {risk} Risk
+                                {getRiskLabel(risk, t)}
                               </span>
                             )}
                             <Link
@@ -530,7 +637,7 @@ export default function PatientDashboard() {
                 ) : (
                   <div className="text-center py-8 text-(--text-muted)">
                     <History className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                    <p>No screening history yet.</p>
+                    <p>{t('PatientDashboard.history.empty')}</p>
                   </div>
                 )}
               </div>
@@ -542,27 +649,31 @@ export default function PatientDashboard() {
             {/* Quick Actions */}
             <div className="medical-card flex flex-col gap-3">
               <h3 className="text-sm font-bold text-(--text-primary) uppercase tracking-wide mb-2">
-                Quick Actions
+                {t('PatientDashboard.quickActions.title')}
               </h3>
 
               <Link
                 to="/patient/chat"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <MessageCircle className="w-5 h-5 text-brand" />
-                  <span className="font-bold">Message Specialist</span>
+                  <span className="font-bold">
+                    {t('PatientDashboard.quickActions.messageSpecialist')}
+                  </span>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 to="/patient/clinics"
-                className="flex items-center justify-between w-full p-4 rounded-lg bg-white dark:bg-[#1e3a5f] border border-(--border-color) dark:border-[#2d4a6f] text-(--text-primary) hover:border-brand/50 hover:bg-brand-soft dark:hover:bg-brand/10 transition-all group"
+                className="flex items-center justify-between w-full p-4 rounded-lg bg-(--bg-secondary) border border-(--border-color) text-(--text-primary) hover:border-brand/50 hover:bg-(--bg-tertiary) transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-purple-600" />
-                  <span className="font-bold">Book Appointment</span>
+                  <span className="font-bold">
+                    {t('PatientDashboard.quickActions.bookAppointment')}
+                  </span>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
               </Link>

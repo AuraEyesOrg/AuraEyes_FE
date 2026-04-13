@@ -41,7 +41,7 @@ export default function MaintenancePage() {
                 {t('GuestMaintenance.primaryCta')}
               </Link>
               <Link
-                to="/status"
+                to="https://status.auraeyes.site/"
                 className="inline-flex items-center rounded-xl border border-(--border-color) bg-(--bg-secondary) px-5 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-white dark:hover:bg-slate-800"
               >
                 {t('GuestMaintenance.secondaryCta')}

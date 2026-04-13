@@ -2,6 +2,22 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n, { resources } from '@/i18n/i18n';
 
+type InterpolationParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
+function applyInterpolation(
+  template: string,
+  params?: InterpolationParams
+): string {
+  if (!params) return template;
+  return template.replace(/{{\s*([\w.]+)\s*}}/g, (_, key: string) => {
+    const value = params[key];
+    return value == null ? '' : String(value);
+  });
+}
+
 const resolveResourceValue = (locale: 'vi' | 'en', key: string) => {
   return key.split('.').reduce<unknown>((accumulator, segment) => {
     if (
@@ -32,8 +48,20 @@ export const useSafeTranslation = () => {
   const { t: baseT } = useTranslation();
 
   const t = useCallback(
-    (key: string, fallback = '') => {
-      const translated = baseT(key, { defaultValue: '' });
+    (
+      key: string,
+      fallbackOrParams: string | InterpolationParams = '',
+      params?: InterpolationParams
+    ) => {
+      const fallback =
+        typeof fallbackOrParams === 'string' ? fallbackOrParams : '';
+      const interpolationParams =
+        typeof fallbackOrParams === 'string' ? params : fallbackOrParams;
+
+      const translated = baseT(key, {
+        defaultValue: '',
+        ...(interpolationParams ?? {}),
+      });
 
       if (translated && translated !== key) {
         return translated;
@@ -48,11 +76,11 @@ export const useSafeTranslation = () => {
           typeof resourceValue === 'string' &&
           resourceValue.trim().length > 0
         ) {
-          return resourceValue;
+          return applyInterpolation(resourceValue, interpolationParams);
         }
       }
 
-      return fallback || key;
+      return applyInterpolation(fallback || key, interpolationParams);
     },
     [baseT]
   );

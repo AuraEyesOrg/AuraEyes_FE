@@ -3,9 +3,14 @@
  * Card for displaying organisation information
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BadgeCheck, MapPin, Building2, Users } from 'lucide-react';
 import type { Organisation } from '../../types';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface Props {
   organisation: Organisation;
@@ -18,6 +23,11 @@ const orgTypeLabels = {
 };
 
 export function OrganisationCard({ organisation }: Props) {
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+
   // API may return {id, fullName, email} shape — normalise defensively
   const displayName =
     organisation.name ??
@@ -46,7 +56,9 @@ export function OrganisationCard({ organisation }: Props) {
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 <Link
-                  to={`/network/organisation/${organisation.id}`}
+                  to={toLocalizedPath(
+                    `/network/organisation/${organisation.id}`
+                  )}
                   className="font-bold text-[15px] text-text-main hover:underline truncate"
                 >
                   {displayName}

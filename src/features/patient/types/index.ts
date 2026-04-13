@@ -12,6 +12,7 @@ export interface PatientProfile {
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
+  citizenId?: string;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -25,6 +26,7 @@ export interface ProfileUpdateData {
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
+  citizenId?: string;
 }
 
 // ============ RETINAL IMAGE & ANALYSIS TYPES ============

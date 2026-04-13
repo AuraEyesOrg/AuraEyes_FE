@@ -8,6 +8,7 @@
 // Export disease mapping utilities and urgency levels
 export {
   DISEASE_URGENCY_LEVELS,
+  V2_DISEASE_URGENCY,
   DISEASE_DESCRIPTIONS,
   getDiseaseUrgency,
   getDiseaseDescription,

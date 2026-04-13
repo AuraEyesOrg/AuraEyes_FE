@@ -4,33 +4,45 @@
  * Matches Twitter/X "Who to follow" card exactly
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
 import type { Ophthalmologist } from '../../types';
+import { InitialsAvatar } from './InitialsAvatar';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface Props {
   professional: Ophthalmologist;
 }
 
 export function ProfessionalCardMini({ professional }: Props) {
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
+
   return (
     <div className="flex items-center gap-3 w-full">
       {/* Avatar - fixed size, no shrink */}
       <Link
-        to={`/network/profile/${professional.id}`}
+        to={toLocalizedPath(`/network/profile/${professional.id}`)}
         className="flex-shrink-0"
       >
-        <img
-          src={professional.avatarUrl}
-          alt={professional.fullName}
-          className="w-10 h-10 rounded-full object-cover hover:opacity-90 hover-animation"
+        <InitialsAvatar
+          fullName={professional.fullName}
+          avatarUrl={professional.avatarUrl}
+          size="md"
+          className="hover:opacity-90 hover-animation"
         />
       </Link>
 
       {/* Name & Specialty - flex-1 with min-w-0 for proper truncation */}
       <div className="flex-1 min-w-0 overflow-hidden">
         <Link
-          to={`/network/profile/${professional.id}`}
+          to={toLocalizedPath(`/network/profile/${professional.id}`)}
           className="flex items-center gap-1 hover:underline max-w-full"
         >
           <span className="font-bold text-[15px] text-text-main truncate">

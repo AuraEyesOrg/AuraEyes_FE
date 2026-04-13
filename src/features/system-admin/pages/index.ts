@@ -4,6 +4,7 @@
  */
 
 export { default as DashboardPage } from './dashboard';
+export { default as StatusPage } from './status';
 export { default as OrganisationsPage } from './organisations';
 export { default as PatientsPage } from './patients';
 export { default as OphthalmologistsPage } from './ophthalmologists';
@@ -17,6 +18,7 @@ export { default as UsersPage } from './users';
 export { default as PermissionsPage } from './permissions';
 export { default as ContractTemplatesPage } from './contract-templates';
 export { default as ContractTemplateEditorPage } from './contract-template-editor';
+export { default as CashflowPage } from './cashflow';
 
 // Legacy default export for backward compatibility
 export { default } from './dashboard';

@@ -43,6 +43,19 @@ interface AdminSystemStatusDto {
   databaseHealthy: boolean;
 }
 
+interface AdminBetterStackMonitorDto {
+  key: string;
+  name: string;
+  category: string;
+  configured: boolean;
+}
+
+interface AdminBetterStackDto {
+  enabled: boolean;
+  embedUrl?: string | null;
+  monitors: AdminBetterStackMonitorDto[];
+}
+
 interface AdminTopDoctorDto {
   ophthalmologistId: string;
   name: string;
@@ -74,6 +87,7 @@ interface AdminMetricsDto {
   monthlyNewPatientCounts?: number[];
   pendingActions?: AdminPendingActionsDto;
   systemStatus?: AdminSystemStatusDto;
+  betterStack?: AdminBetterStackDto;
   topDoctorsByConsultationRevenue?: AdminTopDoctorDto[];
   topOrganisationsByRating?: AdminTopOrganisationDto[];
 }
@@ -156,6 +170,16 @@ export const dashboardApi = {
             data.systemStatus?.liveConsultationSessions ?? 0,
           apiHealthy: data.systemStatus?.apiHealthy ?? true,
           databaseHealthy: data.systemStatus?.databaseHealthy ?? false,
+        },
+        betterStack: {
+          enabled: data.betterStack?.enabled ?? false,
+          embedUrl: data.betterStack?.embedUrl ?? null,
+          monitors: (data.betterStack?.monitors ?? []).map((item) => ({
+            key: item.key,
+            name: item.name,
+            category: item.category,
+            configured: Boolean(item.configured),
+          })),
         },
         topDoctorsByConsultationRevenue: topDoctorsByConsultationRevenue.map(
           (d) => ({

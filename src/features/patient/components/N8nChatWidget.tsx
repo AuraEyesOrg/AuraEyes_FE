@@ -6,7 +6,7 @@ import type { ScreeningConsultationContext } from '../types/consultation-context
 import {
   buildN8nChatRequest,
   normalizeN8nChatResponse,
-} from './n8n-chat.contract';
+} from '../types/n8n-chat.contract';
 import { useSystemSettings } from '@/features/system-admin/api/system-settings.api';
 
 export const openN8nChat = () => {

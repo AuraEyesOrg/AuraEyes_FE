@@ -12,3 +12,4 @@ export { exportApi } from './export.api';
 export { permissionsApi } from './permissions.api';
 export { contractTemplatesApi } from './contract-templates.api';
 export { contractsApi } from './contracts.api';
+export { cashflowApi } from './cashflow.api';

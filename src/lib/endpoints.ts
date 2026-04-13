@@ -73,6 +73,14 @@ export const API_ENDPOINTS = {
         `/system-admin/ophthalmologists/withdrawal-requests/${requestId}/reject`,
     },
 
+    // PayOS Payout Management (automated payout via PayOS API)
+    PAYOUTS: {
+      PROCESS: (withdrawalRequestId: string) =>
+        `/admin/payouts/withdrawal-requests/${withdrawalRequestId}/process`,
+      SYNC_STATUS: (withdrawalRequestId: string) =>
+        `/admin/payouts/withdrawal-requests/${withdrawalRequestId}/sync-status`,
+    },
+
     // Patient Management
     PATIENTS: {
       LIST: '/system-admin/patients',
@@ -152,6 +160,11 @@ export const API_ENDPOINTS = {
       SIGN: (id: string) => `/system-admin/contracts/${id}/sign`,
       TERMINATE: (id: string) => `/system-admin/contracts/${id}/terminate`,
       CANCEL: (id: string) => `/system-admin/contracts/${id}/cancel`,
+    },
+
+    // Cashflow Ledger
+    CASHFLOW: {
+      TRANSACTIONS: '/system-admin/cashflow/transactions',
     },
   },
 
@@ -283,6 +296,24 @@ export const API_ENDPOINTS = {
     CALENDAR: '/organisation/calendar',
     ANALYTICS: '/organisation/analytics',
     SETTINGS: '/organisation/settings',
+    // Organisation Screening
+    SCREENING: {
+      CREATE_SESSION: '/organisations/screenings/create-session',
+      DETAIL: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}`,
+      EXPORT_PDF: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}/report-pdf`,
+      SHARE: (screeningId: string) =>
+        `/organisations/screenings/${screeningId}/share`,
+      HISTORY: '/organisations/screenings/history',
+    },
+    BILLING_SUMMARY: '/organisations/billing/summary',
+    SCREENING_REPORTS: '/organisations/screening-reports',
+    WALLET: {
+      GET: '/wallets',
+      TRANSACTIONS: '/wallets/transactions',
+      CREATE_DEPOSIT: '/wallets/deposit',
+    },
   },
 
   // AI Quota Management

@@ -41,6 +41,7 @@ import {
   formatCountdown,
   parseSlotDateTimeUtc,
 } from '@/lib/date-utils';
+import { useTranslation } from 'react-i18next';
 
 // ============ HELPERS ============
 
@@ -86,6 +87,10 @@ const ReservationModal = ({
   onCancel,
   isLoading,
 }: ReservationModalProps) => {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const [remainingSeconds, setRemainingSeconds] = useState(
     reservation?.remainingSeconds ?? 300
   );
@@ -120,7 +125,7 @@ const ReservationModal = ({
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Slot Reserved
+            {t('PatientBookAppointment.modal.slotReserved')}
           </h3>
           <button
             onClick={onCancel}
@@ -135,10 +140,10 @@ const ReservationModal = ({
           <div className="flex items-center justify-center gap-2 mb-2">
             <Timer className={`w-5 h-5 ${urgencyClass}`} />
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              Time remaining to complete booking
+              {t('PatientBookAppointment.modal.timeRemaining')}
             </span>
           </div>
-          <div className="text-4xl font-bold ${urgencyClass}">
+          <div className={`text-4xl font-bold ${urgencyClass}`}>
             {formatCountdown(remainingSeconds)}
           </div>
         </div>
@@ -148,7 +153,9 @@ const ReservationModal = ({
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('PatientBookAppointment.modal.date')}
+              </p>
               <p className="font-medium text-gray-900 dark:text-white">
                 {formatDate(slot.date)}
               </p>
@@ -157,7 +164,9 @@ const ReservationModal = ({
           <div className="flex items-center gap-3">
             <Clock className="w-5 h-5 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('PatientBookAppointment.modal.time')}
+              </p>
               <p className="font-medium text-gray-900 dark:text-white">
                 {formatSlotTime(slot.startTime)} -{' '}
                 {formatSlotTime(slot.endTime)}
@@ -166,7 +175,7 @@ const ReservationModal = ({
           </div>
           <div className="flex items-center gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Price:
+              {t('PatientBookAppointment.modal.price')}
             </span>
             <span className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
               {slot.cost?.toLocaleString('vi-VN')} VND
@@ -181,7 +190,7 @@ const ReservationModal = ({
             disabled={isLoading}
             className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
           >
-            Cancel
+            {t('PatientBookAppointment.actions.cancel')}
           </button>
           <button
             onClick={onConfirm}
@@ -190,11 +199,12 @@ const ReservationModal = ({
           >
             {isLoading ? (
               <>
-                <Spinner /> Processing...
+                <Spinner /> {t('PatientBookAppointment.actions.processing')}
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" /> Confirm Booking
+                <CheckCircle className="w-5 h-5" />
+                {t('PatientBookAppointment.actions.confirmBooking')}
               </>
             )}
           </button>
@@ -218,6 +228,10 @@ export interface BookAppointmentProps {
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function BookAppointmentPage(props: BookAppointmentProps) {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -396,13 +410,13 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
     async (slot: AppointmentSlotListDto) => {
       if (slot.status !== 'Available') return;
       if (!patientId) {
-        setErrorMessage('Vui lòng đăng nhập để đặt lịch tư vấn.');
+        setErrorMessage(t('PatientBookAppointment.errors.signInRequired'));
         return;
       }
       setErrorMessage('');
       setSelectedSlot(slot);
     },
-    [patientId]
+    [patientId, t]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -511,23 +525,25 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                 onClick={props.onClose}
                 className="absolute left-6 top-6 flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" /> Back
+                <ArrowLeft className="w-4 h-4" />
+                {t('PatientBookAppointment.actions.back')}
               </button>
             )}
             <h1 className="text-xl font-bold tracking-widest text-gray-800 dark:text-gray-100 uppercase mb-4">
               Aura
             </h1>
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-              {doctorInfo?.userFullName ?? 'Ophthalmologist'}
+              {doctorInfo?.userFullName ??
+                t('PatientBookAppointment.labels.ophthalmologist')}
             </h2>
             <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              Ophthalmologist
+              {t('PatientBookAppointment.labels.ophthalmologist')}
             </p>
             <div className="mt-3 inline-flex bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-              Booking for:{' '}
+              {t('PatientBookAppointment.labels.bookingFor')}{' '}
               {props.viewMode === 'today'
-                ? 'Video Consultation'
-                : 'In-clinic / Video Consultation'}
+                ? t('PatientBookAppointment.labels.videoConsultation')
+                : t('PatientBookAppointment.labels.inClinicOrVideo')}
             </div>
           </div>
 
@@ -541,8 +557,9 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
             <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2 shadow-sm">
               <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
               <span>
-                Please note: Appointments must be booked at least{' '}
-                <strong>{warningText}</strong> in advance.
+                {t('PatientBookAppointment.notice.prefix')}{' '}
+                <strong>{warningText}</strong>{' '}
+                {t('PatientBookAppointment.notice.suffix')}
               </span>
             </div>
           )}
@@ -632,7 +649,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
             {/* RIGHT: Time Slots */}
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                Select a Time
+                {t('PatientBookAppointment.labels.selectTime')}
               </h3>
 
               {isLoading ? (
@@ -641,10 +658,10 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                 </div>
               ) : selectedDaySlots.length === 0 ? (
                 <div className="text-gray-500 text-sm py-8 text-center italic">
-                  No available times for{' '}
+                  {t('PatientBookAppointment.empty.noTimesFor')}{' '}
                   {selectedDate
                     ? new Date(selectedDate).toLocaleDateString()
-                    : 'this date'}
+                    : t('PatientBookAppointment.empty.thisDate')}
                   .
                 </div>
               ) : (
@@ -652,7 +669,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                   {morningSlots.length > 0 && (
                     <div>
                       <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                        Morning
+                        {t('PatientBookAppointment.labels.morning')}
                       </h4>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {morningSlots.map((slot) => {
@@ -689,7 +706,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
                   {afternoonSlots.length > 0 && (
                     <div>
                       <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                        Afternoon
+                        {t('PatientBookAppointment.labels.afternoon')}
                       </h4>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {afternoonSlots.map((slot) => {
@@ -732,12 +749,16 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
             <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {selectedSlot ? (
                 <span>
-                  Selected: {new Date(selectedSlot.date).toLocaleDateString()}{' '}
-                  at {formatSlotTime(selectedSlot.startTime)} |{' '}
+                  {t('PatientBookAppointment.labels.selected')}{' '}
+                  {new Date(selectedSlot.date).toLocaleDateString()} {''}
+                  {t('PatientBookAppointment.labels.at')}{' '}
+                  {formatSlotTime(selectedSlot.startTime)} |{' '}
                   {formatVnd(selectedSlot.cost)}
                 </span>
               ) : (
-                <span>Please select a date and an available time.</span>
+                <span>
+                  {t('PatientBookAppointment.empty.selectDateAndTime')}
+                </span>
               )}
             </div>
             <button
@@ -746,7 +767,7 @@ export default function BookAppointmentPage(props: BookAppointmentProps) {
               className="w-full sm:w-auto px-8 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-full shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               {reserveMutation.isPending ? <Spinner size={16} /> : null}
-              Confirm Booking
+              {t('PatientBookAppointment.actions.confirmBooking')}
             </button>
           </div>
         </div>

@@ -124,6 +124,8 @@ function ContractDetailDialog({
 
   const [commissionRate, setCommissionRate] = useState<string>('');
   const [actualMonthlySalary, setActualMonthlySalary] = useState<string>('');
+  const [confirmedMonthlyQuotaLimit, setConfirmedMonthlyQuotaLimit] =
+    useState<string>('');
 
   useEffect(() => {
     if (!contract) return;
@@ -132,10 +134,14 @@ function ContractDetailDialog({
       contract.commissionRate ?? contract.platformCommissionRate ?? 0;
     setCommissionRate(String(commissionSeed));
     setActualMonthlySalary(String(contract.actualMonthlySalary ?? ''));
+    setConfirmedMonthlyQuotaLimit(String(contract.monthlyQuotaLimit ?? ''));
   }, [contract]);
 
   const commissionRateValue = Number(commissionRate);
   const actualMonthlySalaryValue = Number(actualMonthlySalary);
+  const confirmedMonthlyQuotaValue = Number(confirmedMonthlyQuotaLimit);
+  const isOrganisationContract =
+    contract?.contractType === 'MedicalOrganizationContract';
   const canVerifyWithDeal =
     Number.isFinite(commissionRateValue) &&
     Number.isFinite(actualMonthlySalaryValue) &&
@@ -144,6 +150,13 @@ function ContractDetailDialog({
     commissionRateValue >= 0 &&
     commissionRateValue <= 100 &&
     actualMonthlySalaryValue >= 0;
+  const canVerifyWithMonthlyQuota =
+    Number.isFinite(confirmedMonthlyQuotaValue) &&
+    confirmedMonthlyQuotaLimit.trim().length > 0 &&
+    confirmedMonthlyQuotaValue > 0;
+  const canVerify = isOrganisationContract
+    ? canVerifyWithMonthlyQuota
+    : canVerifyWithDeal;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -200,56 +213,83 @@ function ContractDetailDialog({
                   value={String(contract.aiQuotaLimit)}
                 />
                 <InfoRow
+                  label="Monthly AI quota"
+                  value={String(contract.monthlyQuotaLimit ?? 0)}
+                />
+                <InfoRow
                   label="Hoa hồng"
                   value={`${(contract.commissionRate ?? contract.platformCommissionRate).toString()}%`}
                 />
-                <InfoRow
-                  label="Lương deal"
-                  value={
-                    contract.actualMonthlySalary != null
-                      ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
-                      : 'Chưa chốt'
-                  }
-                />
+                {!isOrganisationContract && (
+                  <InfoRow
+                    label="Lương deal"
+                    value={
+                      contract.actualMonthlySalary != null
+                        ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
+                        : 'Chưa chốt'
+                    }
+                  />
+                )}
               </div>
 
               {contract.status === 'PendingSignature' &&
                 contract.scannedDocumentUrl && (
                   <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Deal Terms (Admin xác nhận)
+                      {isOrganisationContract
+                        ? 'Quota Terms (Admin xác nhận)'
+                        : 'Deal Terms (Admin xác nhận)'}
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="text-sm text-slate-600 dark:text-slate-300">
-                        Hoa hồng (%)
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step={0.01}
-                          value={commissionRate}
-                          onChange={(e) => setCommissionRate(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                        />
-                      </label>
-                      <label className="text-sm text-slate-600 dark:text-slate-300">
-                        Actual monthly salary (VND)
-                        <input
-                          type="number"
-                          min={0}
-                          step={1}
-                          value={actualMonthlySalary}
-                          onChange={(e) =>
-                            setActualMonthlySalary(e.target.value)
-                          }
-                          className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                        />
-                      </label>
-                    </div>
-                    {!canVerifyWithDeal && (
+                    {isOrganisationContract ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="text-sm text-slate-600 dark:text-slate-300">
+                          Confirmed monthly quota
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={confirmedMonthlyQuotaLimit}
+                            onChange={(e) =>
+                              setConfirmedMonthlyQuotaLimit(e.target.value)
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="text-sm text-slate-600 dark:text-slate-300">
+                          Hoa hồng (%)
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.01}
+                            value={commissionRate}
+                            onChange={(e) => setCommissionRate(e.target.value)}
+                            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                          />
+                        </label>
+                        <label className="text-sm text-slate-600 dark:text-slate-300">
+                          Actual monthly salary (VND)
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={actualMonthlySalary}
+                            onChange={(e) =>
+                              setActualMonthlySalary(e.target.value)
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+                          />
+                        </label>
+                      </div>
+                    )}
+                    {!canVerify && (
                       <p className="text-xs text-red-500">
-                        Nhập Commission rate (0-100) và lương thực tế trước khi
-                        xác nhận hợp đồng.
+                        {isOrganisationContract
+                          ? 'Nhập Monthly quota lớn hơn 0 trước khi xác nhận hợp đồng.'
+                          : 'Nhập Commission rate (0-100) và lương thực tế trước khi xác nhận hợp đồng.'}
                       </p>
                     )}
                   </div>
@@ -326,11 +366,24 @@ function ContractDetailDialog({
               <button
                 onClick={() =>
                   onVerify(contractId, {
-                    commissionRate: commissionRateValue,
-                    actualMonthlySalary: actualMonthlySalaryValue,
+                    commissionRate: isOrganisationContract
+                      ? (contract.commissionRate ??
+                        contract.platformCommissionRate ??
+                        0)
+                      : Number.isFinite(commissionRateValue)
+                        ? commissionRateValue
+                        : 0,
+                    actualMonthlySalary: isOrganisationContract
+                      ? 0
+                      : Number.isFinite(actualMonthlySalaryValue)
+                        ? actualMonthlySalaryValue
+                        : 0,
+                    confirmedMonthlyQuotaLimit: isOrganisationContract
+                      ? confirmedMonthlyQuotaValue
+                      : undefined,
                   })
                 }
-                disabled={!canVerifyWithDeal}
+                disabled={!canVerify}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
               >
                 <CheckCircle className="w-4 h-4" />

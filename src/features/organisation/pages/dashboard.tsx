@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Activity, CalendarDays, Clock3, Cpu, ShieldCheck } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import Sidebar from '../components/Sidebar';
@@ -14,9 +16,15 @@ export default function OrganisationDashboard() {
     queryFn: getOrganisationDashboardMetrics,
   });
 
+  useEffect(() => {
+    if (metricsQuery.isError) {
+      toast.error('Unable to load the live organisation dashboard.');
+    }
+  }, [metricsQuery.isError]);
+
   if (metricsQuery.isLoading || !metricsQuery.data) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
+      <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
         <Spinner size={36} />
       </div>
     );
@@ -24,9 +32,9 @@ export default function OrganisationDashboard() {
 
   if (metricsQuery.isError) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-          Unable to load the live organisation dashboard.
+      <div className="flex flex-col items-center justify-center h-screen w-full bg-(--bg-primary)">
+        <div className="text-slate-500 font-medium dark:text-slate-400">
+          Dashboard data is currently unavailable.
         </div>
       </div>
     );
@@ -77,19 +85,20 @@ export default function OrganisationDashboard() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
+    <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar pendingCount={pendingWorkload} />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Dashboard" />
 
         <main className="p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
               Welcome back, {displayName}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-(--text-secondary)">
               Here's your live dashboard for <b>{displayName}</b>. Monitor key
+              metrics and manage your organisation.
             </p>
           </div>
 
@@ -129,16 +138,16 @@ export default function OrganisationDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            <section className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
                   <CalendarDays className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-(--text-primary)">
                     Appointment Status Tracking
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-(--text-secondary)">
                     Real-time appointment lifecycle across your organisation.
                   </p>
                 </div>
@@ -149,10 +158,10 @@ export default function OrganisationDashboard() {
                   return (
                     <div
                       key={status.label}
-                      className="rounded-lg bg-gray-50 p-4 dark:bg-[#0a1f44]"
+                      className="rounded-lg bg-(--bg-primary) p-4"
                     >
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-(--text-tertiary)">
                           {status.label}
                         </p>
                         <p
@@ -161,7 +170,7 @@ export default function OrganisationDashboard() {
                           {status.value}
                         </p>
                       </div>
-                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-(--border-primary)">
                         <div
                           className={`h-full rounded-full ${status.colorClass}`}
                           style={{ width: `${Math.min(100, percent)}%` }}
@@ -173,42 +182,42 @@ export default function OrganisationDashboard() {
               </div>
             </section>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-[#2d4a6f] dark:bg-[#1e3a5f]">
+            <section className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
                   <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-(--text-primary)">
                     Organisation Utilization & AI Quota
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-(--text-secondary)">
                     Capacity consumption and AI credits for daily operations.
                   </p>
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="rounded-lg bg-gray-50 p-4 dark:bg-[#0a1f44]">
+                <div className="rounded-lg bg-(--bg-primary) p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-(--text-tertiary)">
                       Utilization rate today
                     </p>
                     <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                       {safeUtilization.toFixed(1)}%
                     </p>
                   </div>
-                  <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+                  <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-(--border-primary)">
                     <div
                       className="h-full rounded-full bg-emerald-500"
                       style={{ width: `${safeUtilization}%` }}
                     />
                   </div>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-4 dark:bg-[#0a1f44]">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="rounded-lg bg-(--bg-primary) p-4">
+                  <p className="text-sm text-(--text-tertiary)">
                     Remaining AI quota
                   </p>
-                  <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+                  <p className="mt-2 text-3xl font-bold text-(--text-primary)">
                     {metrics.remainingAiQuota}
                   </p>
                 </div>

@@ -120,7 +120,9 @@ export default function ReviewPage() {
         (img) => ({
           id: img.id,
           url: img.imageUrl,
-          name: img.imageUrl.split('/').pop() ?? 'Retinal image',
+          name:
+            img.imageUrl.split('/').pop() ??
+            t('PatientReview.labels.retinalImage', 'Retinal image'),
           eye:
             img.eyeSide?.toLowerCase() === 'right'
               ? 'Right Eye (OD)'
@@ -219,11 +221,7 @@ export default function ReviewPage() {
   const riskStyle = RISK_STYLE_CONFIG[effectiveRiskLevel];
   const riskLabel = showHealthyStatus
     ? t('PatientReview.status.healthy', 'Looks Healthy')
-    : effectiveRiskLevel === 'high'
-      ? t('PatientReview.status.high', 'Needs Attention')
-      : effectiveRiskLevel === 'moderate'
-        ? t('PatientReview.status.moderate', 'Needs Review')
-        : t('PatientReview.status.low', 'Low Risk');
+    : t('PatientReview.status.high', 'Needs Attention');
   const riskSummary = showHealthyStatus
     ? t(
         'PatientReview.summary.healthy',
@@ -256,12 +254,35 @@ export default function ReviewPage() {
     hydratedSession?.resultsPersisted ??
     Boolean(rawJsonForAnalysis);
 
-  const primaryAiConfidence = useMemo(() => {
-    if (anomalies.length === 0) return null;
-    const primary = anomalies.find((a) => a.isHighest);
-    if (primary != null) return primary.confidence;
-    return Math.max(...anomalies.map((a) => a.confidence));
-  }, [anomalies]);
+  const patientFriendlyFindings = useMemo(() => {
+    const isVietnamese = currentLanguage.toLowerCase().startsWith('vi');
+    const labels = anomalies
+      .filter((a) => !isNormalDisease(a.code ?? a.name))
+      .map((a) => {
+        if (isVietnamese) {
+          const friendlyVi = a.friendlyName?.trim();
+          if (friendlyVi) return friendlyVi;
+          return toDisplayDiseaseName(a.name, currentLanguage).trim();
+        }
+
+        const friendlyEn = a.friendlyDescription?.trim();
+        if (friendlyEn) return friendlyEn;
+
+        const fallback = a.name?.trim();
+        return fallback ?? '';
+      })
+      .filter(Boolean);
+
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const label of labels) {
+      const key = label.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(label);
+    }
+    return deduped;
+  }, [anomalies, currentLanguage]);
 
   const consultationContext =
     useMemo<ScreeningConsultationContext | null>(() => {
@@ -318,21 +339,21 @@ export default function ReviewPage() {
     return (
       <FocusModeLayout
         currentStep="review"
-        title="Review & Next Steps"
+        title={t('PatientReview.page.title', 'Review & Next Steps')}
         exitPath="/patient/screening/new"
         showBreadcrumb={false}
       >
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center space-y-4 max-w-sm">
             <p className="text-(--text-secondary) text-[15px]">
-              No analysis results to review. Please start a new screening first.
+              {t('PatientReview.empty.description')}
             </p>
             <button
               onClick={() => navigate('/patient/screening/new')}
               className="inline-flex items-center gap-2 px-5 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors"
             >
               <Sparkles className="w-4 h-4" />
-              Start New Screening
+              {t('PatientReview.actions.startNewScreening')}
             </button>
           </div>
         </div>
@@ -343,7 +364,7 @@ export default function ReviewPage() {
   return (
     <FocusModeLayout
       currentStep="review"
-      title="Review & Next Steps"
+      title={t('PatientReview.page.title', 'Review & Next Steps')}
       exitPath="/patient/screening/new"
       showBreadcrumb={false}
     >
@@ -352,11 +373,10 @@ export default function ReviewPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex flex-col gap-1.5">
               <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-(--text-primary)">
-                Review &amp; Next Actions
+                {t('PatientReview.page.title')}
               </h1>
               <p className="text-(--text-secondary) text-lg">
-                Analysis complete. Please review your results and recommended
-                next steps.
+                {t('PatientReview.page.subtitle')}
               </p>
             </div>
             <button
@@ -374,12 +394,12 @@ export default function ReviewPage() {
               {thumbnail ? (
                 <img
                   src={thumbnail}
-                  alt="Retinal scan"
+                  alt={t('PatientReview.labels.retinalScanAlt')}
                   className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-500">
-                  No image
+                  {t('PatientReview.labels.noImage')}
                 </div>
               )}
               <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg">
@@ -387,7 +407,7 @@ export default function ReviewPage() {
               </div>
               <button
                 className="absolute top-3 right-3 p-2 bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md rounded-lg text-white transition-colors"
-                title="Zoom Image"
+                title={t('PatientReview.actions.zoomImage')}
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
@@ -399,10 +419,10 @@ export default function ReviewPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div>
                     <p className="text-sm text-(--text-secondary) font-medium mb-0.5">
-                      Scan ID: {scanId}
+                      {t('PatientReview.labels.scanId', { id: scanId })}
                     </p>
                     <p className="text-xs text-(--text-muted)">
-                      Captured:{' '}
+                      {t('PatientReview.labels.capturedAt')}{' '}
                       {new Date().toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -419,11 +439,11 @@ export default function ReviewPage() {
                 </div>
 
                 <h3 className="text-xl font-bold mb-2 text-(--text-primary)">
-                  AI Assessment
+                  {t('PatientReview.labels.aiAssessment')}
                 </h3>
                 <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
                   {riskSummary}
-                  {anomalies.length > 0 && (
+                  {patientFriendlyFindings.length > 0 && (
                     <>
                       {' '}
                       {t(
@@ -431,11 +451,17 @@ export default function ReviewPage() {
                         'Detected findings include:'
                       )}{' '}
                       <strong className="text-(--text-primary)">
-                        {anomalies
-                          .map((a) =>
-                            toDisplayDiseaseName(a.name, currentLanguage)
-                          )
-                          .join(', ')}
+                        {patientFriendlyFindings.slice(0, 4).join(', ')}
+                        {patientFriendlyFindings.length > 4
+                          ? t('PatientReview.findingsMore', {
+                              count: patientFriendlyFindings.length - 4,
+                              defaultValue: currentLanguage
+                                .toLowerCase()
+                                .startsWith('vi')
+                                ? ' và {{count}} dấu hiệu khác'
+                                : ' and {{count}} more findings',
+                            })
+                          : ''}
                       </strong>
                       .
                     </>
@@ -466,23 +492,15 @@ export default function ReviewPage() {
                   className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  View Full Analysis Details
+                  {t('PatientReview.actions.viewFullAnalysisDetails')}
                 </button>
-                {primaryAiConfidence != null && (
-                  <>
-                    <span className="text-(--border-color)">|</span>
-                    <span className="text-xs text-(--text-muted)">
-                      AI Confidence: {primaryAiConfidence}%
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-(--text-primary)">
-              Recommended Actions
+              {t('PatientReview.sections.recommendedActions')}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
@@ -494,15 +512,13 @@ export default function ReviewPage() {
                 <div className="relative z-10 flex flex-col h-full justify-between gap-6">
                   <div className="max-w-md">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider mb-4">
-                      Primary Recommendation
+                      {t('PatientReview.labels.primaryRecommendation')}
                     </div>
                     <h3 className="text-2xl font-bold text-(--text-primary) mb-2">
-                      Book a Consultation
+                      {t('PatientReview.actions.bookConsultation')}
                     </h3>
                     <p className="text-(--text-secondary) leading-relaxed">
-                      Connect with a certified ophthalmologist to review these
-                      results in detail. Early intervention is key to
-                      maintaining eye health.
+                      {t('PatientReview.descriptions.bookConsultation')}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -517,14 +533,14 @@ export default function ReviewPage() {
                       className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
                     >
                       <CalendarCheck className="w-5 h-5" />
-                      Find a Specialist
+                      {t('PatientReview.actions.findSpecialist')}
                     </button>
                     <button
                       onClick={openN8nChat}
                       className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
                     >
                       <Bot className="w-5 h-5" />
-                      Ask AURA AI Assistant
+                      {t('PatientReview.actions.askAuraAssistant')}
                     </button>
                   </div>
                 </div>
@@ -535,16 +551,16 @@ export default function ReviewPage() {
                 <SecondaryActionCard
                   icon={<FileDown className="w-5 h-5" />}
                   iconBg="bg-blue-50 text-blue-600"
-                  title="Download Report"
-                  subtitle="PDF Format"
+                  title={t('PatientReview.actions.downloadReport')}
+                  subtitle={t('PatientReview.labels.pdfFormat')}
                   actionIcon={<FileDown className="w-4 h-4" />}
                 />
 
                 <SecondaryActionCard
                   icon={<ImagePlus className="w-5 h-5" />}
                   iconBg="bg-emerald-50 text-emerald-600"
-                  title="New Scan"
-                  subtitle="Start a new analysis"
+                  title={t('PatientReview.actions.newScan')}
+                  subtitle={t('PatientReview.descriptions.startNewAnalysis')}
                   actionIcon={<ChevronRight className="w-4 h-4" />}
                   onClick={() => navigate('/patient/screening/new')}
                 />
@@ -555,7 +571,7 @@ export default function ReviewPage() {
           <section className="border-t border-(--border-color) pt-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-(--text-primary)">
-                Learn More About Your Eyes
+                {t('PatientReview.sections.learnMore')}
               </h2>
               <a
                 href="https://www.nei.nih.gov/eye-health-information/eye-conditions-and-diseases/diabetic-retinopathy"
@@ -563,7 +579,7 @@ export default function ReviewPage() {
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-primary hover:text-primary/80 inline-flex items-center gap-1 transition-colors"
               >
-                View all resources
+                {t('PatientReview.actions.viewAllResources')}
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -628,12 +644,12 @@ export default function ReviewPage() {
             <div className="text-center text-sm text-(--text-muted) space-y-1">
               <p>
                 <strong className="text-(--text-secondary)">Important:</strong>{' '}
-                AURA is an AI-assisted screening tool and does not provide a
-                definitive medical diagnosis.
+                {t('PatientReview.footer.importantDisclaimer')}
               </p>
               <p>
-                &copy; {new Date().getFullYear()} AURA Health. All rights
-                reserved.
+                {t('PatientReview.footer.copyright', {
+                  year: new Date().getFullYear(),
+                })}
               </p>
             </div>
           </footer>

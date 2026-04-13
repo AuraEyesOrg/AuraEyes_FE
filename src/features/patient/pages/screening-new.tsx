@@ -21,8 +21,10 @@ import { toast } from 'react-toastify';
 import { screeningApi } from '../api/screening.api';
 import { agreeScreeningConsent } from '../api/consent.api';
 import { UPLOAD_SCREENING_CONSENT_CONTENT } from '../constants/consent-content';
+import { useTranslation } from 'react-i18next';
 
 import { aiCoreClient } from '@/lib/axios';
+import i18n from '@/i18n/i18n';
 
 type ImageStatus = 'uploading' | 'validating' | 'ready' | 'warning' | 'error';
 
@@ -73,6 +75,9 @@ const _STEPS: { key: Step; label: string; number: number }[] = [
   { key: 'review', label: 'Review', number: 3 },
 ];
 
+const tScreeningNew = (key: string, options?: Record<string, unknown>) =>
+  i18n.t(key as never, options as never) as unknown as string;
+
 interface FundusValidationApiResponse {
   is_fundus: boolean;
   confidence: number;
@@ -92,7 +97,7 @@ async function analyzeImageQuality(file: File): Promise<{
 
   try {
     const { data } = await aiCoreClient.post<FundusValidationApiResponse>(
-      '/diagnosis/validate-fundus',
+      '/api/v1/diagnosis/validate-fundus',
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -104,8 +109,7 @@ async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'error',
         quality: 'low',
-        message:
-          'This does not look like a retinal fundus image. Please upload a valid fundus photo only.',
+        message: tScreeningNew('PatientScreeningNew.validation.notFundus'),
       };
     }
 
@@ -114,8 +118,7 @@ async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'warning',
         quality: 'low',
-        message:
-          'Retina appears cropped at the edge. Please recapture with better centering.',
+        message: tScreeningNew('PatientScreeningNew.validation.croppedEdges'),
       };
     }
 
@@ -123,7 +126,7 @@ async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image appears blurry for reliable analysis. Please retake.',
+        message: tScreeningNew('PatientScreeningNew.validation.blurry'),
       };
     }
 
@@ -131,7 +134,7 @@ async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image is too dark. Please retake with better lighting.',
+        message: tScreeningNew('PatientScreeningNew.validation.tooDark'),
       };
     }
 
@@ -139,7 +142,7 @@ async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image is overexposed. Please reduce brightness and retake.',
+        message: tScreeningNew('PatientScreeningNew.validation.overexposed'),
       };
     }
 
@@ -147,19 +150,26 @@ async function analyzeImageQuality(file: File): Promise<{
       status: 'ready',
       quality: data.quality === 'high' ? 'high' : 'medium',
       message:
-        data.quality === 'high' ? 'High quality image' : 'Acceptable quality',
+        data.quality === 'high'
+          ? tScreeningNew('PatientScreeningNew.validation.highQuality')
+          : tScreeningNew('PatientScreeningNew.validation.acceptableQuality'),
     };
   } catch {
     return {
       status: 'error',
       quality: 'low',
-      message:
-        'Fundus validation service is unavailable. Please try again in a moment.',
+      message: tScreeningNew(
+        'PatientScreeningNew.validation.serviceUnavailable'
+      ),
     };
   }
 }
 
 export default function ScreeningNewPage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const navigate = useNavigate();
   const [_currentStep, _setCurrentStep] = useState<Step>('upload');
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -233,7 +243,9 @@ export default function ScreeningNewPage() {
     const invalidFiles = files.filter((file) => !isSupportedImage(file));
     if (invalidFiles.length > 0) {
       toast.error(
-        `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`
+        t('PatientScreeningNew.toast.invalidFileType', {
+          allowed: ALLOWED_EXTENSIONS.join(', '),
+        })
       );
     }
 
@@ -253,7 +265,7 @@ export default function ScreeningNewPage() {
     });
 
     if (newUniqueFiles.length === 0) {
-      toast.warning('These images have already been uploaded!');
+      toast.warning(t('PatientScreeningNew.toast.duplicateImages'));
       return;
     }
 
@@ -281,7 +293,7 @@ export default function ScreeningNewPage() {
               ...img,
               status: 'uploading',
               progress: 18,
-              message: 'Processing...',
+              message: t('PatientScreeningNew.processing.local'),
             }
           : img
       )
@@ -296,7 +308,7 @@ export default function ScreeningNewPage() {
               ...img,
               status: 'validating',
               progress: 30,
-              message: 'Analyzing image quality...',
+              message: t('PatientScreeningNew.processing.analyzingQuality'),
             }
           : img
       )
@@ -383,7 +395,7 @@ export default function ScreeningNewPage() {
       const uploadedUrls = uploadResp.data?.uploadedUrls ?? [];
 
       if (uploadedUrls.length === 0) {
-        throw new Error('No uploaded image URL returned from server.');
+        throw new Error(t('PatientScreeningNew.errors.noUploadedUrl'));
       }
 
       const retinalImages = uploadedUrls.map((url, idx) => ({
@@ -403,7 +415,7 @@ export default function ScreeningNewPage() {
 
       const createdScreeningId = sessionResp.data?.screeningId;
       if (!createdScreeningId) {
-        throw new Error('Failed to create screening session.');
+        throw new Error(t('PatientScreeningNew.errors.createSessionFailed'));
       }
 
       await agreeScreeningConsent(createdScreeningId, {
@@ -425,9 +437,7 @@ export default function ScreeningNewPage() {
       });
     } catch (error) {
       console.error('Failed to prepare consented screening session:', error);
-      toast.error(
-        'Unable to save consent and start analysis. Please try again.'
-      );
+      toast.error(t('PatientScreeningNew.errors.startAnalysisFailed'));
     } finally {
       setIsPreparingSession(false);
     }
@@ -439,35 +449,37 @@ export default function ScreeningNewPage() {
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
             <Spinner size={12} />
-            Uploading...
+            {t('PatientScreeningNew.status.uploading')}
           </span>
         );
       case 'validating':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-full border border-amber-500/30">
             <Spinner size={12} />
-            Analysing...
+            {t('PatientScreeningNew.status.analyzing')}
           </span>
         );
       case 'ready':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
             <CheckCircle className="w-3 h-3" />
-            {img.quality === 'high' ? 'High Quality' : 'Ready'}
+            {img.quality === 'high'
+              ? t('PatientScreeningNew.status.highQuality')
+              : t('PatientScreeningNew.status.ready')}
           </span>
         );
       case 'warning':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-medium rounded-full border border-amber-500/30">
             <AlertCircle className="w-3 h-3" />
-            Quality Warning
+            {t('PatientScreeningNew.status.qualityWarning')}
           </span>
         );
       case 'error':
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">
             <X className="w-3 h-3" />
-            Not Fundus
+            {t('PatientScreeningNew.status.notFundus')}
           </span>
         );
     }
@@ -476,7 +488,7 @@ export default function ScreeningNewPage() {
   return (
     <FocusModeLayout
       currentStep="upload"
-      title="New Screening"
+      title={t('PatientScreeningNew.page.title')}
       exitPath="/patient/screening"
       showBreadcrumb={false}
     >
@@ -487,17 +499,16 @@ export default function ScreeningNewPage() {
           <div className="lg:col-span-3 flex flex-col gap-4">
             <div>
               <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">
-                Upload Retinal Images
+                {t('PatientScreeningNew.page.uploadTitle')}
               </h1>
               <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-                High-resolution fundus photography for AI analysis. Quality
-                validated in real-time.
+                {t('PatientScreeningNew.page.uploadSubtitle')}
               </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <h3 className="text-xs uppercase tracking-wider font-bold text-[var(--text-muted)] mb-1">
-                Quality Standards
+                {t('PatientScreeningNew.qualityStandards.title')}
               </h3>
 
               <div className="flex gap-2 p-3 rounded-lg bg-[var(--bg-secondary)] border-l-4 border-l-brand">
@@ -506,10 +517,12 @@ export default function ScreeningNewPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">
-                    Even Lighting
+                    {t('PatientScreeningNew.qualityStandards.evenLighting')}
                   </h4>
                   <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                    Avoid dark spots or overexposure.
+                    {t(
+                      'PatientScreeningNew.qualityStandards.evenLightingDescription'
+                    )}
                   </p>
                 </div>
               </div>
@@ -520,10 +533,12 @@ export default function ScreeningNewPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">
-                    Sharp Focus
+                    {t('PatientScreeningNew.qualityStandards.sharpFocus')}
                   </h4>
                   <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                    Ensure vascular details are crisp.
+                    {t(
+                      'PatientScreeningNew.qualityStandards.sharpFocusDescription'
+                    )}
                   </p>
                 </div>
               </div>
@@ -534,10 +549,14 @@ export default function ScreeningNewPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">
-                    Centered Optic Disc
+                    {t(
+                      'PatientScreeningNew.qualityStandards.centeredOpticDisc'
+                    )}
                   </h4>
                   <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                    Retina should be centered in frame.
+                    {t(
+                      'PatientScreeningNew.qualityStandards.centeredOpticDiscDescription'
+                    )}
                   </p>
                 </div>
               </div>
@@ -548,10 +567,10 @@ export default function ScreeningNewPage() {
                 <Info className="w-4 h-4 text-brand mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-brand">
-                    Supported Formats
+                    {t('PatientScreeningNew.supportedFormats.title')}
                   </p>
                   <p className="text-xs text-brand/70">
-                    DICOM, JPG, PNG (Max 10MB)
+                    {t('PatientScreeningNew.supportedFormats.value')}
                   </p>
                 </div>
               </div>
@@ -588,15 +607,15 @@ export default function ScreeningNewPage() {
                   <div className="text-center space-y-1">
                     <p className="text-lg font-bold text-[var(--text-primary)]">
                       {dragActive
-                        ? 'Drop images here'
-                        : 'Drag & Drop fundus images here'}
+                        ? t('PatientScreeningNew.dropzone.dropHere')
+                        : t('PatientScreeningNew.dropzone.dragAndDrop')}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)]">
-                      or{' '}
+                      {t('PatientScreeningNew.dropzone.or')}{' '}
                       <span className="text-brand font-medium hover:underline">
-                        browse files
+                        {t('PatientScreeningNew.dropzone.browseFiles')}
                       </span>{' '}
-                      from your computer
+                      {t('PatientScreeningNew.dropzone.fromComputer')}
                     </p>
                   </div>
 
@@ -604,8 +623,9 @@ export default function ScreeningNewPage() {
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
                     <Clipboard className="w-3.5 h-3.5 text-brand" />
                     <span className="text-xs text-[var(--text-secondary)]">
-                      <span className="text-brand font-medium">Ctrl+V</span> to
-                      paste from clipboard
+                      {t('PatientScreeningNew.dropzone.pasteHintPrefix')}{' '}
+                      <span className="text-brand font-medium">Ctrl+V</span>{' '}
+                      {t('PatientScreeningNew.dropzone.pasteHintSuffix')}
                     </span>
                   </div>
 
@@ -624,7 +644,9 @@ export default function ScreeningNewPage() {
               <div className="p-6 flex-1">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                    Validation Queue ({images.length})
+                    {t('PatientScreeningNew.queue.title', {
+                      count: images.length,
+                    })}
                   </h3>
                   <div className="flex items-center gap-3">
                     {images.some(
@@ -633,7 +655,7 @@ export default function ScreeningNewPage() {
                         img.status === 'validating'
                     ) ? (
                       <span className="text-xs font-medium text-[var(--text-muted)]">
-                        Processing locally...
+                        {t('PatientScreeningNew.processing.local')}
                       </span>
                     ) : (
                       images.length > 0 && (
@@ -649,7 +671,7 @@ export default function ScreeningNewPage() {
                           className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          Clear All
+                          {t('PatientScreeningNew.actions.clearAll')}
                         </button>
                       )
                     )}
@@ -659,7 +681,7 @@ export default function ScreeningNewPage() {
                 {images.length === 0 ? (
                   <div className="text-center py-8 text-[var(--text-muted)]">
                     <p className="text-sm">
-                      No images uploaded yet. Drag & drop or click to upload.
+                      {t('PatientScreeningNew.queue.empty')}
                     </p>
                   </div>
                 ) : (
@@ -742,7 +764,7 @@ export default function ScreeningNewPage() {
                           <button
                             onClick={() => retryImage(img.id)}
                             className="p-2 text-[var(--text-muted)] hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
-                            title="Retry"
+                            title={t('PatientScreeningNew.actions.retry')}
                           >
                             <RefreshCw className="w-4 h-4" />
                           </button>
@@ -750,7 +772,7 @@ export default function ScreeningNewPage() {
                           <button
                             onClick={() => removeImage(img.id)}
                             className="p-2 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                            title="Remove"
+                            title={t('PatientScreeningNew.actions.remove')}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -765,8 +787,9 @@ export default function ScreeningNewPage() {
               <div className="bg-[var(--bg-secondary)]/50 px-6 py-4 flex items-end justify-end border-t border-[var(--border-color)] mt-auto">
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-[var(--text-muted)] hidden sm:block font-medium">
-                    {readyImages.length} file
-                    {readyImages.length !== 1 ? 's' : ''} ready to submit
+                    {t('PatientScreeningNew.queue.readyToSubmit', {
+                      count: readyImages.length,
+                    })}
                   </span>
                   <button
                     disabled={!canProceed || isPreparingSession}
@@ -774,7 +797,7 @@ export default function ScreeningNewPage() {
                     className="px-6 py-2.5 rounded-lg bg-brand hover:brightness-110 text-white text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand"
                   >
                     <>
-                      Start AI Analysis
+                      {t('PatientScreeningNew.actions.startAnalysis')}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   </button>
@@ -788,8 +811,7 @@ export default function ScreeningNewPage() {
         <footer className="mt-8 text-center">
           <p className="text-xs text-[var(--text-muted)] flex items-center justify-center gap-2">
             <Lock className="w-3.5 h-3.5" />
-            Your data is encrypted and HIPAA compliant. Uploaded images are used
-            solely for your diagnostic session.
+            {t('PatientScreeningNew.footer.hipaa')}
           </p>
         </footer>
 
@@ -797,7 +819,7 @@ export default function ScreeningNewPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] p-6 shadow-2xl">
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">
-                Data Sharing Consent
+                {t('PatientScreeningNew.consent.title')}
               </h3>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
                 {UPLOAD_SCREENING_CONSENT_CONTENT}
@@ -809,7 +831,7 @@ export default function ScreeningNewPage() {
                   disabled={isPreparingSession}
                   className="px-4 py-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                 >
-                  Cancel
+                  {t('PatientScreeningNew.actions.cancel')}
                 </button>
                 <button
                   type="button"
@@ -822,10 +844,10 @@ export default function ScreeningNewPage() {
                   {isPreparingSession ? (
                     <span className="inline-flex items-center gap-2">
                       <Spinner size={14} />
-                      Saving...
+                      {t('PatientScreeningNew.actions.saving')}
                     </span>
                   ) : (
-                    'I Agree, Continue'
+                    t('PatientScreeningNew.actions.agreeAndContinue')
                   )}
                 </button>
               </div>

@@ -15,6 +15,33 @@ const extractMessageFromPayload = (payload: unknown): string | null => {
   if (typeof payload === 'object') {
     const data = payload as ErrorPayload;
 
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      if (
+        typeof data.errors[0] === 'object' &&
+        data.errors[0] !== null &&
+        'error' in data.errors[0]
+      ) {
+        return data.errors.map((e: any) => e.error).join(', ');
+      }
+      if (typeof data.errors[0] === 'string') {
+        return data.errors.join(', ');
+      }
+    }
+
+    if (
+      data.errors &&
+      typeof data.errors === 'object' &&
+      !Array.isArray(data.errors)
+    ) {
+      const firstKey = Object.keys(data.errors)[0];
+      if (firstKey) {
+        const messages = (data.errors as Record<string, string[]>)[firstKey];
+        if (Array.isArray(messages) && messages.length > 0) {
+          return messages[0];
+        }
+      }
+    }
+
     if (typeof data.message === 'string' && data.message.trim()) {
       return data.message;
     }
@@ -23,22 +50,9 @@ const extractMessageFromPayload = (payload: unknown): string | null => {
       return data.detail;
     }
 
-    // ASP.NET ProblemDetails often uses a generic title (e.g. "An error occurred").
-    // Prefer it only when no specific message/detail is available.
+    // 4. ASP.NET ProblemDetails generic title
     if (typeof data.title === 'string' && data.title.trim()) {
       return data.title;
-    }
-
-    if (Array.isArray(data.errors) && data.errors.length > 0) {
-      return data.errors[0];
-    }
-
-    if (data.errors && typeof data.errors === 'object') {
-      const firstKey = Object.keys(data.errors)[0];
-      const firstValue = firstKey
-        ? (data.errors as Record<string, string[]>)[firstKey]?.[0]
-        : null;
-      if (firstValue) return firstValue;
     }
   }
 
@@ -183,6 +197,40 @@ export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
         /(insufficient\s+wallet\s+balance|wallet\s+not\s+found|top\s*up\s*your\s*wallet)/i,
       mappedMessage:
         'Số dư ví không đủ để đặt lịch. Vui lòng nạp thêm và thử lại.',
+    },
+    {
+      pattern: /(timeout|network|ECONNABORTED)/i,
+      mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+    },
+  ]);
+};
+
+export const mapWalkInPatientErrorMessage = (error: unknown): string => {
+  const raw = extractApiErrorMessage(
+    error,
+    'Không thể tạo hồ sơ bệnh nhân mới.'
+  );
+
+  return mapByKeywords(raw, [
+    {
+      pattern: /Phone\s+number\s+already\s+exists/i,
+      mappedMessage: 'Số điện thoại này đã tồn tại trong hệ thống.',
+    },
+    {
+      pattern: /Citizen\s+ID\s+already\s+exists/i,
+      mappedMessage: 'Căn cước công dân (CCCD) này đã lập hồ sơ tại tổ chức.',
+    },
+    {
+      pattern: /(Email|UserName).*already/i,
+      mappedMessage: 'Email này đã được sử dụng.',
+    },
+    {
+      pattern: /User\s+not\s+authenticated/i,
+      mappedMessage: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+    },
+    {
+      pattern: /Organisation\s+not\s+found/i,
+      mappedMessage: 'Không tìm thấy thông tin tổ chức. Vui lòng thử lại.',
     },
     {
       pattern: /(timeout|network|ECONNABORTED)/i,

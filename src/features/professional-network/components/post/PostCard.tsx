@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MoreHorizontal,
@@ -32,6 +32,12 @@ import { useRepostMutation } from '../../hooks/useRepostMutation';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { formatViCompactDate } from '@/lib/date-utils';
 import useAuthStore from '@/store/auth-store';
+import { resolveAuthorType } from '../../utils/authorType';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface Props {
   post: ProfessionalPost;
@@ -117,6 +123,10 @@ export function PostCard({
   isHidingPost = false,
 }: Props) {
   const { user } = useAuthStore();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
   const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
 
   const [showReactions, setShowReactions] = useState(false);
@@ -206,7 +216,7 @@ export function PostCard({
     repostMutation.mutate(
       {
         postId: post.id,
-        authorType: 'Ophthalmologist',
+        authorType: resolveAuthorType(user?.roles, 'Ophthalmologist'),
         repostComment: repostComment.trim() || undefined,
       },
       { onSuccess: handleCloseShareDialog }
@@ -269,7 +279,7 @@ export function PostCard({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 min-w-0 text-[15px]">
                 <Link
-                  to={`/network/profile/${post.author.id}`}
+                  to={toLocalizedPath(`/network/profile/${post.author.id}`)}
                   className="font-bold text-(--text-primary) hover:underline truncate"
                 >
                   {post.author.fullName}
@@ -371,7 +381,9 @@ export function PostCard({
                     />
                     <div className="flex items-center gap-1 min-w-0 text-[13px]">
                       <Link
-                        to={`/network/profile/${post.originalPost.author.id}`}
+                        to={toLocalizedPath(
+                          `/network/profile/${post.originalPost.author.id}`
+                        )}
                         className="font-semibold text-(--text-primary) hover:underline truncate"
                       >
                         {post.originalPost.author.fullName}
@@ -392,7 +404,11 @@ export function PostCard({
                       )}
                     </div>
                   ) : (
-                    <Link to={`/network/post/${post.originalPost.id}`}>
+                    <Link
+                      to={toLocalizedPath(
+                        `/network/post/${post.originalPost.id}`
+                      )}
+                    >
                       <p className="text-[14px] text-(--text-primary) leading-snug line-clamp-3">
                         {post.originalPost.content}
                       </p>
@@ -428,7 +444,10 @@ export function PostCard({
             {!post.isRepost && (
               <>
                 {/* Content */}
-                <Link to={`/network/post/${post.id}`} className="block mt-2">
+                <Link
+                  to={toLocalizedPath(`/network/post/${post.id}`)}
+                  className="block mt-2"
+                >
                   {post.isInternalCase && parsedInternalCase ? (
                     <div className="space-y-3">
                       <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
@@ -634,7 +653,7 @@ export function PostCard({
 
               {/* Comment */}
               <Link
-                to={`/network/post/${post.id}`}
+                to={toLocalizedPath(`/network/post/${post.id}`)}
                 className="group flex items-center gap-1 p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-all"
               >
                 <MessageCircle className="w-[18px] h-[18px]" />

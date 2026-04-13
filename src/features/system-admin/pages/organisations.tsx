@@ -12,12 +12,8 @@ import {
   Search,
   Download,
   Plus,
-  MoreVertical,
   Eye,
-  DollarSign,
-  TrendingUp,
   Users,
-  Activity,
   CheckCircle2,
   Mail,
   Phone,
@@ -147,22 +143,22 @@ export default function OrganisationsPage() {
 
   // Calculate stats
   const activeOrgs = organisations.filter((o) => o.status === 'active').length;
-  const totalMonthlyRevenue = organisations.reduce(
-    (sum, o) => sum + o.monthlyBilling,
-    0
-  );
   const totalPendingPayments = organisations.reduce(
     (sum, o) => sum + o.pendingPayment,
     0
   );
-  const totalScreenings = organisations.reduce(
-    (sum, o) => sum + o.totalScreenings,
-    0
-  );
-  const totalUsers = organisations.reduce((sum, o) => sum + o.usersCount, 0);
+  const inactiveOrgs = organisations.filter(
+    (o) => o.status !== 'active'
+  ).length;
   const pendingOnboardingRequests = onboardingRequests.filter(
     (request) => request.status === 'Pending'
   );
+
+  const focusOrganisationInTab = useCallback((tab: TabType, name: string) => {
+    setActiveTab(tab);
+    setSearchQuery(name);
+    setPageNumber(1);
+  }, []);
 
   const handleApproveOnboarding = async (requestId: string) => {
     try {
@@ -324,16 +320,21 @@ export default function OrganisationsPage() {
     {
       header: 'Actions',
       accessor: () => null,
-      render: () => (
+      render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={() => focusOrganisationInTab('contracts', row.name)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Details"
+            title="View contracts"
           >
             <Eye className="w-4 h-4" />
           </button>
-          <button className="text-slate-500 hover:text-primary transition-colors p-1">
-            <MoreVertical className="w-5 h-5" />
+          <button
+            onClick={() => focusOrganisationInTab('billing', row.name)}
+            className="text-slate-500 hover:text-primary transition-colors p-1"
+            title="View billing"
+          >
+            <CreditCard className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -399,16 +400,14 @@ export default function OrganisationsPage() {
     {
       header: 'Actions',
       accessor: () => null,
-      render: () => (
+      render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={() => focusOrganisationInTab('organisations', row.name)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Invoice"
+            title="View organisation"
           >
-            <FileText className="w-4 h-4" />
-          </button>
-          <button className="text-slate-500 hover:text-primary transition-colors p-1">
-            <MoreVertical className="w-5 h-5" />
+            <Eye className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -492,9 +491,6 @@ export default function OrganisationsPage() {
               Renew
             </button>
           )}
-          <button className="text-slate-500 hover:text-primary transition-colors p-1">
-            <MoreVertical className="w-5 h-5" />
-          </button>
         </div>
       ),
     },
@@ -540,9 +536,16 @@ export default function OrganisationsPage() {
                 <Download className="w-4 h-4" />
                 {isExporting ? 'Exporting...' : 'Export Report'}
               </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20">
+              <button
+                onClick={() => {
+                  document
+                    .getElementById('onboarding-requests')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
+              >
                 <Plus className="w-4 h-4" />
-                Add Organisation
+                Review Onboarding
               </button>
             </div>
           }
@@ -551,24 +554,22 @@ export default function OrganisationsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="px-6 md:px-10 py-6 max-w-400 mx-auto w-full space-y-6">
             {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatsCard
+                title="Total Organisations"
+                value={totalCount}
+                icon={Building2}
+                description="Current page is server-paginated"
+                variant="primary"
+              />
               <StatsCard
                 title="Active Organisations"
                 value={activeOrgs}
-                icon={Building2}
+                icon={CheckCircle2}
                 change={2}
                 trend="up"
                 description={`${organisations.length} total`}
                 variant="success"
-              />
-              <StatsCard
-                title="Monthly Revenue"
-                value={formatCurrency(totalMonthlyRevenue, usdCurrencyOptions)}
-                icon={DollarSign}
-                change={15}
-                trend="up"
-                description="From AI services"
-                variant="primary"
               />
               <StatsCard
                 title="Pending Payments"
@@ -578,104 +579,18 @@ export default function OrganisationsPage() {
                 variant="warning"
               />
               <StatsCard
-                title="Total Screenings"
-                value={totalScreenings.toLocaleString()}
-                icon={Activity}
-                change={8}
-                trend="up"
-                description="All time AI usage"
-                variant="primary"
-              />
-              <StatsCard
-                title="Organisation Users"
-                value={totalUsers}
+                title="Inactive Organisations"
+                value={inactiveOrgs}
                 icon={Users}
-                description="Across all orgs"
-                variant="primary"
+                description="Need admin review"
+                variant="warning"
               />
             </div>
 
-            {/* Revenue Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    AI Screening Revenue
-                  </h3>
-                  <TrendingUp className="w-5 h-5 text-emerald-500" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(totalMonthlyRevenue, usdCurrencyOptions)}
-                  </span>
-                  <span className="text-sm text-emerald-500">+12%</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Based on{' '}
-                  {organisations.reduce((sum, o) => sum + o.monthlyAIUsage, 0)}{' '}
-                  screenings this month
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Active Contracts
-                  </h3>
-                  <FileText className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {
-                      organisations.filter((o) => o.contractStatus === 'active')
-                        .length
-                    }
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    / {organisations.length}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  {
-                    organisations.filter((o) => o.contractStatus === 'pending')
-                      .length
-                  }{' '}
-                  pending signature,{' '}
-                  {
-                    organisations.filter((o) => o.contractStatus === 'expired')
-                      .length
-                  }{' '}
-                  expired
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Collection Rate
-                  </h3>
-                  <CreditCard className="w-5 h-5 text-amber-500" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {totalMonthlyRevenue > 0
-                      ? Math.round(
-                          ((totalMonthlyRevenue - totalPendingPayments) /
-                            totalMonthlyRevenue) *
-                            100
-                        )
-                      : 0}
-                    %
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  {formatCurrency(totalPendingPayments, usdCurrencyOptions)}{' '}
-                  pending collection
-                </p>
-              </div>
-            </div>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <section
+              id="onboarding-requests"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">

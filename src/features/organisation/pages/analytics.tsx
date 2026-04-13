@@ -6,9 +6,11 @@ import ToolsSidebar from '../components/ToolsSidebar';
 import ImageViewer from '../components/ImageViewer';
 import AnalysisSidebar from '../components/AnalysisSidebar';
 import ImageGallery from '../components/ImageGallery';
-import { ToggleState, Anomaly, RetinalImage } from '../types/retinal.types';
-import { OrganisationData } from '../types/organisation.types';
-import { useEffect } from 'react';
+import type {
+  Anomaly,
+  RetinalImage,
+  ToggleState,
+} from '@/features/organisation/types/retinal.types';
 
 // Default sample image for demo
 const DEFAULT_IMAGE: RetinalImage = {
@@ -44,7 +46,6 @@ const MOCK_ANOMALIES: Anomaly[] = [
 ];
 
 export default function AnalyticsPage() {
-  const [orgData, setOrgData] = useState<OrganisationData | null>(null);
   const [toggles, setToggles] = useState<ToggleState>({
     vesselSegmentation: false,
     hemorrhages: true,
@@ -65,12 +66,6 @@ export default function AnalyticsPage() {
     DEFAULT_IMAGE.id
   );
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    import('@/data/organisation-mock.json').then((module) => {
-      setOrgData(module.default as OrganisationData);
-    });
-  }, []);
 
   // Get current selected image
   const currentImage =
@@ -259,20 +254,12 @@ export default function AnalyticsPage() {
     }
   };
 
-  if (!orgData) {
-    return (
-      <div className="flex items-center justify-center h-screen w-full bg-[var(--bg-primary)]">
-        <div className="text-gray-900 dark:text-white">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen w-full bg-[var(--bg-primary)]">
-      <Sidebar pendingCount={orgData.dashboardStats.pendingReviews.value} />
+    <div className="flex h-screen w-full bg-(--bg-primary)">
+      <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader />
+        <OrganisationHeader pageName="Analytics" />
 
         <main className="p-6">
           {/* Page Title */}
@@ -287,7 +274,7 @@ export default function AnalyticsPage() {
 
           {/* Analytics Interface Container */}
           <div
-            className="bg-white dark:bg-[#1e3a5f] rounded-xl border border-gray-200 dark:border-[#2d4a6f] overflow-hidden"
+            className="bg-(--bg-secondary) rounded-xl border border-(--border-primary) overflow-hidden"
             style={{ height: 'calc(100vh - 220px)' }}
           >
             <div className="flex h-full">

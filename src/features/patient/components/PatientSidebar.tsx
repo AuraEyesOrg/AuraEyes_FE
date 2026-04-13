@@ -14,31 +14,82 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
-
-const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/patient/dashboard' },
-  { icon: Eye, label: 'My Scans', path: '/patient/screening' },
-  { icon: FileText, label: 'Reports', path: '/patient/reports' },
-  { icon: Calendar, label: 'Appointments', path: '/patient/appointments' },
-  { icon: MapPin, label: 'Find Clinics', path: '/patient/clinics' },
-  { icon: Milestone, label: 'Health Roadmap', path: '/patient/roadmap' },
-  { icon: MessageCircle, label: 'Chat', path: '/patient/chat', badge: true },
-  { icon: Wallet, label: 'Wallet', path: '/patient/wallet' },
-  {
-    icon: MessageSquareHeart,
-    label: 'Help & Feedback',
-    path: '/patient/help-feedback',
-  },
-  { icon: Settings, label: 'Settings', path: '/patient/settings' },
-];
+import { getUserAvatarMeta } from '@/lib/user-avatar';
+import { useTranslation } from 'react-i18next';
 
 export default function PatientSidebar() {
+  const { t: i18nT } = useTranslation();
+  const t = (
+    key: string,
+    defaultValueOrOptions?: string | Record<string, unknown>
+  ) => {
+    const options =
+      typeof defaultValueOrOptions === 'string'
+        ? ({ defaultValue: defaultValueOrOptions } as Record<string, unknown>)
+        : defaultValueOrOptions;
+
+    return i18nT(key as never, options as never) as unknown as string;
+  };
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const navItems = [
+    {
+      icon: Home,
+      label: t('PatientSidebar.nav.dashboard', 'Dashboard'),
+      path: '/patient/dashboard',
+    },
+    {
+      icon: Eye,
+      label: t('PatientSidebar.nav.myScans', 'My Scans'),
+      path: '/patient/screening',
+    },
+    {
+      icon: FileText,
+      label: t('PatientSidebar.nav.reports', 'Reports'),
+      path: '/patient/reports',
+    },
+    {
+      icon: Calendar,
+      label: t('PatientSidebar.nav.appointments', 'Appointments'),
+      path: '/patient/appointments',
+    },
+    {
+      icon: MapPin,
+      label: t('PatientSidebar.nav.findClinics', 'Find Clinics'),
+      path: '/patient/clinics',
+    },
+    {
+      icon: Milestone,
+      label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
+      path: '/patient/roadmap',
+    },
+    {
+      icon: MessageCircle,
+      label: t('PatientSidebar.nav.chat', 'Chat'),
+      path: '/patient/chat',
+      badge: true,
+    },
+    {
+      icon: Wallet,
+      label: t('PatientSidebar.nav.wallet', 'Wallet'),
+      path: '/patient/wallet',
+    },
+    {
+      icon: MessageSquareHeart,
+      label: t('PatientSidebar.nav.helpFeedback', 'Help & Feedback'),
+      path: '/patient/help-feedback',
+    },
+    {
+      icon: Settings,
+      label: t('PatientSidebar.nav.settings', 'Settings'),
+      path: '/patient/settings',
+    },
+  ];
 
-  const userName = user?.fullName ?? 'Patient';
+  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Patient');
+  const userName = avatarMeta.displayName;
   const userAvatar = user?.avatarUrl;
-  const userId = user?.email ?? '';
+  const userEmail = user?.email ?? '';
 
   const handleLogout = () => {
     logout();
@@ -52,7 +103,7 @@ export default function PatientSidebar() {
         <div className="mb-10 px-2">
           <AuraLogo
             size="md"
-            subtitle="Patient Portal"
+            subtitle={t('PatientSidebar.portalSubtitle', 'Patient Portal')}
             to="/patient/dashboard"
           />
         </div>
@@ -92,7 +143,7 @@ export default function PatientSidebar() {
             >
               <div className="relative shrink-0">
                 <div
-                  className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
+                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
                   style={{
                     backgroundImage: userAvatar
                       ? `url("${userAvatar}")`
@@ -101,23 +152,23 @@ export default function PatientSidebar() {
                 >
                   {!userAvatar && (
                     <span className="text-white font-bold text-sm">
-                      {userName.charAt(0)}
+                      {avatarMeta.initials || 'PT'}
                     </span>
                   )}
                 </div>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A202C]"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-(--bg-secondary)"></div>
               </div>
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate group-hover:text-brand transition-colors">
                   {userName}
                 </p>
-                <p className="text-xs text-gray-400 truncate">ID: {userId}</p>
+                <p className="text-xs text-gray-400 truncate">{userEmail}</p>
               </div>
             </NavLink>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-              title="Logout"
+              title={t('PatientSidebar.actions.logout', 'Logout')}
             >
               <LogOut className="w-5 h-5" />
             </button>

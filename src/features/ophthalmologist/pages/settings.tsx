@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
   Mail,
   Phone,
@@ -121,12 +121,12 @@ interface UploadAvatarResponse {
 
 const DEFAULT_PROFILE: OphthalmologistProfile = {
   id: '',
-  fullName: 'Unknown Doctor',
+  fullName: '',
   email: 'N/A',
   phone: 'N/A',
-  bio: 'No profile bio available.',
+  bio: '',
   yearsOfExperience: 0,
-  specialty: 'Ophthalmologist',
+  specialty: '',
   hospital: 'N/A',
   department: 'N/A',
   address: 'N/A',
@@ -148,6 +148,7 @@ const mapCertificateTypeFromApi = (
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const { i18n } = useTranslation();
+
   const location = useLocation();
   const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
@@ -408,13 +409,23 @@ export default function SettingsPage() {
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      ophthalToast.error('Invalid file type. Supported: JPG, PNG, GIF, WebP');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.validation.avatarFileType',
+          'Invalid file type. Supported: JPG, PNG, GIF, WebP'
+        )
+      );
       event.target.value = '';
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      ophthalToast.error('File must be smaller than 5MB');
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.settings.validation.avatarFileSize',
+          'File must be smaller than 5MB'
+        )
+      );
       event.target.value = '';
       return;
     }
@@ -1150,7 +1161,10 @@ export default function SettingsPage() {
           <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-2xl mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Edit Profile Information
+                {t(
+                  'Ophthalmologist.settings.editModal.title',
+                  'Edit Profile Information'
+                )}
               </h3>
               <button
                 onClick={() => setShowEditProfileModal(false)}
@@ -1163,7 +1177,10 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name
+                  {t(
+                    'Ophthalmologist.settings.editModal.fullName',
+                    'Full Name'
+                  )}
                 </label>
                 <input
                   type="text"
@@ -1180,7 +1197,10 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number
+                  {t(
+                    'Ophthalmologist.settings.editModal.phoneNumber',
+                    'Phone Number'
+                  )}
                 </label>
                 <input
                   type="text"
@@ -1233,7 +1253,10 @@ export default function SettingsPage() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Bio / Description
+                {t(
+                  'Ophthalmologist.settings.editModal.bioDescription',
+                  'Bio / Description'
+                )}
               </label>
               <textarea
                 rows={4}
@@ -1253,14 +1276,19 @@ export default function SettingsPage() {
                 onClick={() => setShowEditProfileModal(false)}
                 className="px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
               >
-                Cancel
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleUpdateProfile}
                 disabled={updateProfileMutation.isPending}
                 className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors disabled:opacity-60"
               >
-                {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateProfileMutation.isPending
+                  ? t('Ophthalmologist.common.saving', 'Saving...')
+                  : t(
+                      'Ophthalmologist.settings.editModal.saveChanges',
+                      'Save Changes'
+                    )}
               </button>
             </div>
           </div>

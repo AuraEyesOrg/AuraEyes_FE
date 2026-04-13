@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -9,9 +8,6 @@ import {
   MapPin,
   Calendar,
   Camera,
-  Shield,
-  Bell,
-  Key,
   Save,
   Edit3,
   CheckCircle,
@@ -19,6 +15,7 @@ import {
   Image as ImageIcon,
   X,
   Clipboard,
+  Shield,
   AlertCircle,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
@@ -28,21 +25,20 @@ import {
   useProfile,
   useUpdateProfile,
   useUploadAvatar,
-  useChangePassword,
 } from '../hooks/useProfile';
-import {
-  profileSchema,
-  changePasswordSchema,
-  type ProfileFormData,
-  type ChangePasswordFormData,
-} from '../schemas/profile.schema';
+import { profileSchema, type ProfileFormData } from '../schemas/profile.schema';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 export default function ProfilePage() {
+  const { t: i18nT } = useTranslation();
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18nT(key as never, options as never) as unknown as string;
+
   const { data: profile, isLoading, error } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const uploadAvatarMutation = useUploadAvatar();
-  const changePasswordMutation = useChangePassword();
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -53,9 +49,6 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
-
-  // Change password modal state
-  const [showChangePassword, setShowChangePassword] = useState(false);
 
   // Profile form
   const {
@@ -71,17 +64,8 @@ export default function ProfilePage() {
       dateOfBirth: '',
       gender: '',
       address: '',
+      citizenId: '',
     },
-  });
-
-  // Change password form
-  const {
-    register: registerPw,
-    handleSubmit: handleSubmitPw,
-    reset: resetPw,
-    formState: { errors: pwErrors },
-  } = useForm<ChangePasswordFormData>({
-    resolver: yupResolver(changePasswordSchema),
   });
 
   // Reset form when profile data loads or editing starts
@@ -95,6 +79,7 @@ export default function ProfilePage() {
           : '',
         gender: profile.gender ?? '',
         address: profile.address ?? '',
+        citizenId: profile.citizenId ?? '',
       });
     }
   }, [profile, reset]);
@@ -109,14 +94,20 @@ export default function ProfilePage() {
         dateOfBirth: data.dateOfBirth || undefined,
         gender: (data.gender as 'male' | 'female' | 'other') || undefined,
         address: data.address || undefined,
+        citizenId: data.citizenId || undefined,
       },
       {
         onSuccess: () => {
-          toast.success('Profile updated successfully');
+          toast.success(t('PatientProfile.toast.profileUpdated'));
           setIsEditing(false);
         },
-        onError: (_err) => {
-          toast.error('Failed to update profile');
+        onError: (error) => {
+          toast.error(
+            extractApiErrorMessage(
+              error,
+              t('PatientProfile.toast.profileUpdateFailed')
+            )
+          );
         },
       }
     );
@@ -132,27 +123,32 @@ export default function ProfilePage() {
           : '',
         gender: profile.gender ?? '',
         address: profile.address ?? '',
+        citizenId: profile.citizenId ?? '',
       });
     }
     setIsEditing(false);
   };
 
-  const processImageFile = useCallback((file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
-        reject(new Error('Please select an image file'));
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        reject(new Error('Image must be less than 5MB'));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  }, []);
+  const processImageFile = useCallback(
+    (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+          reject(new Error(t('PatientProfile.avatar.selectImageFile')));
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          reject(new Error(t('PatientProfile.avatar.maxSizeError')));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () =>
+          reject(new Error(t('PatientProfile.avatar.readFileFailed')));
+        reader.readAsDataURL(file);
+      });
+    },
+    [t]
+  );
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,10 +159,10 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch {
-        toast.error('Failed to load image');
+        toast.error(t('PatientProfile.toast.loadImageFailed'));
       }
     },
-    [processImageFile]
+    [processImageFile, t]
   );
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -200,10 +196,10 @@ export default function ProfilePage() {
         setPreviewUrl(dataUrl);
         setAvatarFile(file);
       } catch {
-        toast.error('Failed to load image');
+        toast.error(t('PatientProfile.toast.loadImageFailed'));
       }
     },
-    [processImageFile]
+    [processImageFile, t]
   );
 
   const handlePaste = useCallback(
@@ -222,14 +218,16 @@ export default function ProfilePage() {
             setAvatarFile(file);
           } catch (err) {
             toast.error(
-              err instanceof Error ? err.message : 'Failed to load image'
+              err instanceof Error
+                ? err.message
+                : t('PatientProfile.toast.loadImageFailed')
             );
           }
           break;
         }
       }
     },
-    [showAvatarUpload, processImageFile]
+    [showAvatarUpload, processImageFile, t]
   );
 
   useEffect(() => {
@@ -241,13 +239,13 @@ export default function ProfilePage() {
     if (!avatarFile) return;
     uploadAvatarMutation.mutate(avatarFile, {
       onSuccess: () => {
-        toast.success('Profile photo updated successfully');
+        toast.success(t('PatientProfile.toast.avatarUpdated'));
         setShowAvatarUpload(false);
         setPreviewUrl(null);
         setAvatarFile(null);
       },
       onError: (_err) => {
-        toast.error('Failed to upload avatar');
+        toast.error(t('PatientProfile.toast.avatarUploadFailed'));
       },
     });
   };
@@ -259,21 +257,6 @@ export default function ProfilePage() {
     setIsDragging(false);
   };
 
-  // ============ CHANGE PASSWORD HANDLERS ============
-
-  const onPasswordSubmit = (data: ChangePasswordFormData) => {
-    changePasswordMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success('Password changed successfully');
-        setShowChangePassword(false);
-        resetPw();
-      },
-      onError: (_err) => {
-        toast.error('Failed to change password');
-      },
-    });
-  };
-
   // ============ LOADING / ERROR STATES ============
 
   if (isLoading) {
@@ -282,7 +265,9 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-4">
             <Spinner size={40} />
-            <p className="text-[var(--text-secondary)]">Loading profile...</p>
+            <p className="text-[var(--text-secondary)]">
+              {t('PatientProfile.loading.profile')}
+            </p>
           </div>
         </div>
       </PatientLayout>
@@ -296,10 +281,10 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-4 text-center">
             <AlertCircle className="w-10 h-10 text-red-500" />
             <p className="text-[var(--text-primary)] font-medium">
-              Failed to load profile
+              {t('PatientProfile.error.title')}
             </p>
             <p className="text-[var(--text-secondary)] text-sm">
-              {error?.message || 'An unexpected error occurred'}
+              {error?.message || t('PatientProfile.error.fallback')}
             </p>
           </div>
         </div>
@@ -311,10 +296,10 @@ export default function ProfilePage() {
     <PatientLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-          My Profile
+          {t('PatientProfile.page.title')}
         </h1>
         <p className="text-[var(--text-secondary)]">
-          Manage your personal information and account settings
+          {t('PatientProfile.page.subtitle')}
         </p>
       </div>
 
@@ -351,7 +336,7 @@ export default function ProfilePage() {
                 <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                      Update Profile Photo
+                      {t('PatientProfile.avatar.modalTitle')}
                     </h3>
                     <button
                       onClick={handleAvatarCancel}
@@ -385,7 +370,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <p className="text-sm text-[var(--text-secondary)]">
-                          Click or drop another image to change
+                          {t('PatientProfile.avatar.changeHint')}
                         </p>
                       </div>
                     ) : (
@@ -406,11 +391,11 @@ export default function ProfilePage() {
                         <div>
                           <p className="text-[var(--text-primary)] font-medium mb-1">
                             {isDragging
-                              ? 'Drop your image here'
-                              : 'Drag & drop your photo'}
+                              ? t('PatientProfile.avatar.dropHere')
+                              : t('PatientProfile.avatar.dragDrop')}
                           </p>
                           <p className="text-sm text-[var(--text-secondary)]">
-                            or click to browse files
+                            {t('PatientProfile.avatar.browseHint')}
                           </p>
                         </div>
                       </div>
@@ -428,22 +413,22 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-center gap-2 mt-4 p-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
                     <Clipboard className="w-4 h-4 text-brand" />
                     <span className="text-sm text-[var(--text-secondary)]">
-                      You can also{' '}
+                      {t('PatientProfile.avatar.pastePrefix')}{' '}
                       <span className="text-brand font-medium">Ctrl+V</span> to
-                      paste an image
+                      {t('PatientProfile.avatar.pasteSuffix')}
                     </span>
                   </div>
 
                   {/* File requirements */}
                   <p className="text-xs text-[var(--text-muted)] text-center mt-3">
-                    Supported formats: JPG, PNG, GIF, WebP &bull; Max size: 5MB
+                    {t('PatientProfile.avatar.supportedFormats')}
                   </p>
 
                   {/* Upload error */}
                   {uploadAvatarMutation.isError && (
                     <p className="text-sm text-red-500 text-center mt-2">
                       {uploadAvatarMutation.error?.message ||
-                        'Failed to upload avatar'}
+                        t('PatientProfile.toast.avatarUploadFailed')}
                     </p>
                   )}
 
@@ -453,7 +438,7 @@ export default function ProfilePage() {
                       onClick={handleAvatarCancel}
                       className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
                     >
-                      Cancel
+                      {t('PatientProfile.actions.cancel')}
                     </button>
                     <button
                       onClick={handleAvatarSave}
@@ -463,12 +448,12 @@ export default function ProfilePage() {
                       {uploadAvatarMutation.isPending ? (
                         <>
                           <Spinner size={16} />
-                          Uploading...
+                          {t('PatientProfile.avatar.uploading')}
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          Save Photo
+                          {t('PatientProfile.avatar.savePhoto')}
                         </>
                       )}
                     </button>
@@ -492,8 +477,8 @@ export default function ProfilePage() {
               <CheckCircle className="w-4 h-4" />
               <span>
                 {profile.isEmailVerified
-                  ? 'Email Verified'
-                  : 'Email Not Verified'}
+                  ? t('PatientProfile.labels.emailVerified')
+                  : t('PatientProfile.labels.emailNotVerified')}
               </span>
             </div>
           </div>
@@ -503,13 +488,17 @@ export default function ProfilePage() {
           {/* Quick Stats */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">Member Since</span>
+              <span className="text-[var(--text-secondary)]">
+                {t('PatientProfile.labels.memberSince')}
+              </span>
               <span className="text-[var(--text-primary)] font-medium">
                 {formatMonthYear(profile.createdAt)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)]">2FA Status</span>
+              <span className="text-[var(--text-secondary)]">
+                {t('PatientProfile.labels.twoFactorStatus')}
+              </span>
               <span
                 className={`font-medium ${
                   profile.isTwoFactorEnabled
@@ -517,7 +506,9 @@ export default function ProfilePage() {
                     : 'text-yellow-600'
                 }`}
               >
-                {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
+                {profile.isTwoFactorEnabled
+                  ? t('PatientProfile.labels.enabled')
+                  : t('PatientProfile.labels.disabled')}
               </span>
             </div>
           </div>
@@ -532,7 +523,7 @@ export default function ProfilePage() {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                Personal Information
+                {t('PatientProfile.sections.personalInformation')}
               </h2>
               {!isEditing ? (
                 <button
@@ -541,7 +532,7 @@ export default function ProfilePage() {
                   className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
                 >
                   <Edit3 className="w-4 h-4" />
-                  Edit
+                  {t('PatientProfile.actions.edit')}
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -550,7 +541,7 @@ export default function ProfilePage() {
                     onClick={handleCancel}
                     className="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
-                    Cancel
+                    {t('PatientProfile.actions.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -562,24 +553,18 @@ export default function ProfilePage() {
                     ) : (
                       <Save className="w-4 h-4" />
                     )}
-                    Save
+                    {t('PatientProfile.actions.save')}
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Update error */}
-            {updateProfileMutation.isError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                {updateProfileMutation.error?.message ||
-                  'Failed to update profile'}
-              </div>
-            )}
+            {/* Update error is handled via Toast */}
 
             {/* Update success */}
             {updateProfileMutation.isSuccess && !isEditing && (
               <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                Profile updated successfully!
+                {t('PatientProfile.toast.profileUpdated')}
               </div>
             )}
 
@@ -588,7 +573,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <User className="w-4 h-4" />
-                  Full Name
+                  {t('PatientProfile.fields.fullName')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -599,7 +584,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.fullName && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.fullName.message}
+                        {t(formErrors.fullName.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -614,14 +599,14 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Mail className="w-4 h-4" />
-                  Email
+                  {t('PatientProfile.fields.email')}
                 </label>
                 <p className="text-[var(--text-primary)] font-medium">
                   {profile.email}
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  <span className="text-red-500">(*)</span> Email cannot be
-                  changed{' '}
+                  <span className="text-red-500">(*)</span>{' '}
+                  {t('PatientProfile.fields.emailImmutable')}
                 </p>
               </div>
 
@@ -629,7 +614,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Phone className="w-4 h-4" />
-                  Phone Number
+                  {t('PatientProfile.fields.phoneNumber')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -640,7 +625,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.phone && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.phone.message}
+                        {t(formErrors.phone.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -655,7 +640,7 @@ export default function ProfilePage() {
               <div>
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <Calendar className="w-4 h-4" />
-                  Date of Birth
+                  {t('PatientProfile.fields.dateOfBirth')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -666,7 +651,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.dateOfBirth && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.dateOfBirth.message}
+                        {t(formErrors.dateOfBirth.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -682,7 +667,7 @@ export default function ProfilePage() {
               {/* Gender */}
               <div>
                 <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Gender
+                  {t('PatientProfile.fields.gender')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -691,13 +676,22 @@ export default function ProfilePage() {
                       className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
                     >
                       <option value="">Prefer not to say</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value="">
+                        {t('PatientProfile.gender.preferNotToSay')}
+                      </option>
+                      <option value="male">
+                        {t('PatientProfile.gender.male')}
+                      </option>
+                      <option value="female">
+                        {t('PatientProfile.gender.female')}
+                      </option>
+                      <option value="other">
+                        {t('PatientProfile.gender.other')}
+                      </option>
                     </select>
                     {formErrors.gender && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.gender.message}
+                        {t(formErrors.gender.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -708,11 +702,38 @@ export default function ProfilePage() {
                 )}
               </div>
 
+              {/* Citizen ID */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
+                  <Shield className="w-4 h-4" />
+                  Citizen ID (CCCD)
+                </label>
+                {isEditing ? (
+                  <div>
+                    <input
+                      {...register('citizenId')}
+                      type="text"
+                      className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                      placeholder="Enter CCCD"
+                    />
+                    {formErrors.citizenId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {t(formErrors.citizenId.message ?? '')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[var(--text-primary)] font-medium">
+                    {profile.citizenId || '\u2014'}
+                  </p>
+                )}
+              </div>
+
               {/* Address */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-2">
                   <MapPin className="w-4 h-4" />
-                  Address
+                  {t('PatientProfile.fields.address')}
                 </label>
                 {isEditing ? (
                   <div>
@@ -723,7 +744,7 @@ export default function ProfilePage() {
                     />
                     {formErrors.address && (
                       <p className="text-sm text-red-500 mt-1">
-                        {formErrors.address.message}
+                        {t(formErrors.address.message ?? '')}
                       </p>
                     )}
                   </div>
@@ -735,224 +756,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </form>
-
-          {/* Security Settings */}
-          <div className="medical-card">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6">
-              Security Settings
-            </h2>
-
-            <div className="space-y-4">
-              {/* Change Password */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center">
-                    <Key className="w-5 h-5 text-brand" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      Password
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Change your account password
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowChangePassword(true)}
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  Change
-                </button>
-              </div>
-
-              {/* Two-Factor Auth */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      profile.isTwoFactorEnabled
-                        ? 'bg-green-50'
-                        : 'bg-yellow-50'
-                    }`}
-                  >
-                    <Shield
-                      className={`w-5 h-5 ${
-                        profile.isTwoFactorEnabled
-                          ? 'text-green-600'
-                          : 'text-yellow-600'
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      Two-Factor Authentication
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        profile.isTwoFactorEnabled
-                          ? 'text-green-600'
-                          : 'text-yellow-600'
-                      }`}
-                    >
-                      {profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled'}
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/patient/security"
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  Manage
-                </Link>
-              </div>
-
-              {/* Notifications */}
-              <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">
-                      Notification Preferences
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Email & Push notifications
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/patient/notifications"
-                  className="px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-brand-soft text-[var(--text-primary)] rounded-lg transition-colors border border-[var(--border-color)]"
-                >
-                  Configure
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Change Password Modal */}
-      {showChangePassword && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[var(--bg-primary)] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl border border-[var(--border-color)]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Change Password
-              </h3>
-              <button
-                onClick={() => {
-                  setShowChangePassword(false);
-                  resetPw();
-                  changePasswordMutation.reset();
-                }}
-                className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-[var(--text-secondary)]" />
-              </button>
-            </div>
-
-            {changePasswordMutation.isError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-                {changePasswordMutation.error?.message ||
-                  'Failed to change password'}
-              </div>
-            )}
-
-            {changePasswordMutation.isSuccess && (
-              <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                Password changed successfully!
-              </div>
-            )}
-
-            <form
-              onSubmit={handleSubmitPw(onPasswordSubmit)}
-              className="space-y-4"
-            >
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Current Password
-                </label>
-                <input
-                  {...registerPw('currentPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.currentPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.currentPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  New Password
-                </label>
-                <input
-                  {...registerPw('newPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.newPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.newPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm text-[var(--text-secondary)] mb-2 block">
-                  Confirm New Password
-                </label>
-                <input
-                  {...registerPw('confirmNewPassword')}
-                  type="password"
-                  className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-brand/50"
-                />
-                {pwErrors.confirmNewPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {pwErrors.confirmNewPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowChangePassword(false);
-                    resetPw();
-                    changePasswordMutation.reset();
-                  }}
-                  className="flex-1 px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-xl transition-colors border border-[var(--border-color)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={changePasswordMutation.isPending}
-                  className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {changePasswordMutation.isPending ? (
-                    <>
-                      <Spinner size={16} />
-                      Changing...
-                    </>
-                  ) : (
-                    <>
-                      <Key className="w-4 h-4" />
-                      Change Password
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </PatientLayout>
   );
 }

@@ -2,14 +2,9 @@ import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, CheckCircle, Home, ChevronRight } from 'lucide-react';
 import { QuotaBadge } from './index';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type Step = 'upload' | 'analysis' | 'review';
-
-const STEPS: { key: Step; label: string; number: number }[] = [
-  { key: 'upload', label: 'Upload & Validate', number: 1 },
-  { key: 'analysis', label: 'Analysis', number: 2 },
-  { key: 'review', label: 'Review', number: 3 },
-];
 
 interface FocusModeLayoutProps {
   children: ReactNode;
@@ -28,12 +23,44 @@ export default function FocusModeLayout({
   onExit,
   exitPath = '/patient/screening',
   showBreadcrumb = true,
-  breadcrumbItems = [
-    { label: 'Home', path: '/patient/dashboard' },
-    { label: 'New Screening' },
-  ],
+  breadcrumbItems,
 }: FocusModeLayoutProps) {
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
+  const steps: { key: Step; label: string; number: number }[] = [
+    {
+      key: 'upload',
+      label: t('FocusModeLayout.steps.upload', 'Upload & Validate'),
+      number: 1,
+    },
+    {
+      key: 'analysis',
+      label: t('FocusModeLayout.steps.analysis', 'Analysis'),
+      number: 2,
+    },
+    {
+      key: 'review',
+      label: t('FocusModeLayout.steps.review', 'Review'),
+      number: 3,
+    },
+  ];
+  const resolvedBreadcrumbItems: { label: string; path?: string }[] =
+    showBreadcrumb
+      ? (breadcrumbItems?.length ?? 0) > 0
+        ? (breadcrumbItems ?? [])
+        : [
+            {
+              label: t('FocusModeLayout.breadcrumb.home', 'Home'),
+              path: '/patient/dashboard',
+            },
+            {
+              label: t(
+                'FocusModeLayout.breadcrumb.newScreening',
+                'New Screening'
+              ),
+            },
+          ]
+      : [];
 
   const handleExit = () => {
     if (onExit) {
@@ -74,12 +101,12 @@ export default function FocusModeLayout({
                 <div
                   className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand -z-10 rounded-full transition-all duration-500"
                   style={{
-                    width: `${(STEPS.findIndex((s) => s.key === currentStep) / (STEPS.length - 1)) * 100}%`,
+                    width: `${(steps.findIndex((s) => s.key === currentStep) / (steps.length - 1)) * 100}%`,
                   }}
                 />
 
-                {STEPS.map((step, index) => {
-                  const currentIndex = STEPS.findIndex(
+                {steps.map((step, index) => {
+                  const currentIndex = steps.findIndex(
                     (s) => s.key === currentStep
                   );
                   const isCompleted = currentIndex > index;
@@ -140,7 +167,7 @@ export default function FocusModeLayout({
       {showBreadcrumb && (
         <nav className="px-6 lg:px-10 py-3 border-b border-[var(--border-color)]/50">
           <ol className="flex items-center space-x-2 text-sm">
-            {breadcrumbItems.map((item, index) => (
+            {resolvedBreadcrumbItems.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
                 {index > 0 && (
                   <ChevronRight className="w-4 h-4 text-[var(--border-color)]" />

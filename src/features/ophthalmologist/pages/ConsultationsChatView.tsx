@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   useTransition,
+  type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
 import {
@@ -38,6 +39,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import ConfirmModal from '@/components/ui/confirm-modal';
 import { CaseSnapshotAiThumbnail, ScreeningReviewLink } from '../components';
 import AvatarBadge from '../components/AvatarBadge';
 import {
@@ -75,10 +77,11 @@ import {
 } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
-import ConfirmModal from '@/components/ui/confirm-modal';
 import { postsApi } from '@/features/professional-network/api/network.api';
+import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 
 type ConsultationPhase = 'PRE_VISIT' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -634,16 +637,16 @@ function ShareCaseModal({
   const livePreview = [
     t(
       'Ophthalmologist.consultations.chat.shareCase.previewTitle',
-      'Bài đăng chia sẻ ca lâm sàng (ẩn danh)'
+      'Anonymized clinical case post'
     ),
-    `${t('Ophthalmologist.consultations.chat.shareCase.patientLabel', 'Bệnh nhân')}: ${patientName}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.riskLevelLabel', 'Mức độ nguy cơ')}: ${caseSnapshot.riskLevel ?? t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.confidenceLabel', 'Độ tin cậy AI')}: ${caseSnapshot.confidenceScore ?? '--'}%`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.patient', 'Patient')}: ${patientName}`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.riskLevel', 'Risk level')}: ${caseSnapshot.riskLevel ?? 'N/A'}`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.aiConfidence', 'AI confidence')}: ${caseSnapshot.confidenceScore ?? '--'}%`,
     '',
-    `${t('Ophthalmologist.consultations.chat.shareCase.summaryLabel', 'Tóm tắt')}: ${caseSnapshot.summary ?? t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
-    `${t('Ophthalmologist.consultations.chat.shareCase.finalDiagnosisLabel', 'Chẩn đoán cuối')}: ${caseSnapshot.findings ?? t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.summary', 'Summary')}: ${caseSnapshot.summary ?? 'N/A'}`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.finalDiagnosis', 'Final diagnosis')}: ${caseSnapshot.findings ?? 'N/A'}`,
     '',
-    `${t('Ophthalmologist.consultations.chat.shareCase.doctorNoteLabel', 'Bác sĩ nói rằng')}: ${content.trim() || '...'}`,
+    `${t('Ophthalmologist.consultations.chat.shareCase.doctorSays', 'Doctor says')}: ${content.trim() || '...'}`,
   ].join('\n');
 
   return (
@@ -658,7 +661,7 @@ function ShareCaseModal({
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
             {t(
               'Ophthalmologist.consultations.chat.shareCase.title',
-              'Chia sẻ ca lên mạng lưới'
+              'Share Case To Network'
             )}
           </h3>
           <button
@@ -675,15 +678,15 @@ function ShareCaseModal({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
               {t(
                 'Ophthalmologist.consultations.chat.shareCase.doctorContent',
-                'Nội dung từ bác sĩ'
+                'Doctor Content'
               )}
             </p>
             <textarea
               value={content}
               onChange={(event) => onChangeContent(event.target.value)}
               placeholder={t(
-                'Ophthalmologist.consultations.chat.shareCase.placeholder',
-                'Nhập ghi chú chuyên môn để chia sẻ với mạng lưới bác sĩ...'
+                'Ophthalmologist.consultations.chat.shareCase.contentPlaceholder',
+                'Enter clinical notes to share with the doctor network...'
               )}
               rows={7}
               className="mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-100"
@@ -693,7 +696,7 @@ function ShareCaseModal({
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
                 {t(
                   'Ophthalmologist.consultations.chat.shareCase.retinalImages',
-                  'Ảnh võng mạc'
+                  'Retinal Images'
                 )}{' '}
                 ({caseSnapshot.originalImageUrls.length})
               </p>
@@ -716,7 +719,7 @@ function ShareCaseModal({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
               {t(
                 'Ophthalmologist.consultations.chat.shareCase.preview',
-                'Xem trước bài đăng'
+                'Post Preview'
               )}
             </p>
             <div className="mt-3 h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-700 dark:border-[#1e3a5f] dark:bg-[#0a1929]/40 dark:text-slate-200">
@@ -731,7 +734,7 @@ function ShareCaseModal({
             onClick={onClose}
             className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#1e3a5f] dark:text-slate-200 dark:hover:bg-[#0a1929]"
           >
-            {t('Ophthalmologist.common.cancel', 'Hủy')}
+            {t('Ophthalmologist.common.cancel', 'Cancel')}
           </button>
           <button
             type="button"
@@ -743,11 +746,11 @@ function ShareCaseModal({
             {isSubmitting
               ? t(
                   'Ophthalmologist.consultations.chat.shareCase.sharing',
-                  'Đang chia sẻ ca...'
+                  'Sharing case...'
                 )
               : t(
-                  'Ophthalmologist.consultations.chat.shareCase.action',
-                  'Chia sẻ ca lên mạng lưới'
+                  'Ophthalmologist.consultations.chat.shareCase.title',
+                  'Share Case To Network'
                 )}
           </button>
         </div>
@@ -861,7 +864,10 @@ export default function ConsultationsChatView({
       doctorNote: string;
     }) => {
       const formData = new FormData();
-      formData.append('authorType', 'Ophthalmologist');
+      formData.append(
+        'authorType',
+        resolveAuthorType(user?.roles, 'Ophthalmologist')
+      );
       formData.append('category', 'CasePresentation');
       formData.append('visibility', 'Public');
       formData.append('allowComments', 'true');
@@ -1233,19 +1239,16 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
-  const handleCancelSession = async (sessionId: string) => {
-    if (!currentDoctorId) return;
+  const handleCancelSession = (sessionId: string) => {
     setSessionActionTarget({ type: 'cancel', sessionId });
   };
 
-  const handleEndSession = async (sessionId: string) => {
-    if (!currentDoctorId) return;
+  const handleEndSession = (sessionId: string) => {
     setSessionActionTarget({ type: 'complete', sessionId });
   };
 
-  const confirmSessionAction = () => {
-    if (!sessionActionTarget || !currentDoctorId) {
-      setSessionActionTarget(null);
+  const confirmSessionAction = useCallback(() => {
+    if (!currentDoctorId || !sessionActionTarget) {
       return;
     }
 
@@ -1275,63 +1278,81 @@ export default function ConsultationsChatView({
         onSettled: () => setSessionActionTarget(null),
       }
     );
-  };
-
-  const handleMessageChange = (
-    event: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const value = event.target.value;
-    setNewMessage(value.slice(0, MESSAGE_CHARACTER_LIMIT));
-
-    if (value.trim()) {
-      scheduleOwnTyping();
-    } else {
-      stopOwnTyping();
-    }
-  };
+  }, [
+    cancelSessionMutation,
+    currentDoctorId,
+    endSessionMutation,
+    sessionActionTarget,
+    t,
+  ]);
 
   const appendEmoji = (emoji: string) => {
     setNewMessage((previous) => {
       const next = `${previous}${emoji}`;
-      return next.slice(0, MESSAGE_CHARACTER_LIMIT);
+      if (next.length > MESSAGE_CHARACTER_LIMIT) {
+        return next.slice(0, MESSAGE_CHARACTER_LIMIT);
+      }
+      return next;
     });
-    scheduleOwnTyping();
   };
 
   const handleImageButtonClick = () => {
-    if (uploadChatImagesMutation.isPending || !canSendMessage) return;
     imageInputRef.current?.click();
   };
 
-  const handleImageSelected = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile || !selectedSessionId) return;
+  const handleMessageChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    const nextValue = event.target.value;
+    const boundedValue =
+      nextValue.length <= MESSAGE_CHARACTER_LIMIT
+        ? nextValue
+        : nextValue.slice(0, MESSAGE_CHARACTER_LIMIT);
+
+    setNewMessage(boundedValue);
+
+    if (boundedValue.trim() && canSendMessage && selectedSessionId) {
+      scheduleOwnTyping();
+      return;
+    }
+
+    stopOwnTyping();
+  };
+
+  const handleImageSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      ophthalToast.error('Please select a valid image file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      ophthalToast.error('Image size must be 10MB or less.');
+      return;
+    }
 
     try {
-      const uploaded = await uploadChatImagesMutation.mutateAsync({
-        sessionId: selectedSessionId,
-        files: [selectedFile],
-      });
+      const result = await uploadChatImagesMutation.mutateAsync([file]);
+      const uploadedUrl = result.uploadedUrls[0];
 
-      const first = uploaded?.[0];
-      if (first?.url) {
-        setPendingImageUrl(first.url);
-        setPendingImageName(first.fileName ?? selectedFile.name);
+      if (!uploadedUrl) {
+        ophthalToast.error('Upload failed. Please try again.');
+        return;
       }
+
+      setPendingImageUrl(uploadedUrl);
+      setPendingImageName(file.name);
+      ophthalToast.success('Image attached.');
     } catch (error) {
-      ophthalToast.error(
-        extractApiErrorMessage(
-          error,
-          t(
-            'Ophthalmologist.consultations.chat.uploadImageError',
-            'Không thể tải ảnh lên. Vui lòng thử lại.'
-          )
-        )
+      const raw = extractApiErrorMessage(
+        error,
+        'Unable to upload image. Please try again.'
       );
-    } finally {
-      event.target.value = '';
+      ophthalToast.error(raw);
     }
   };
 
@@ -1429,8 +1450,14 @@ export default function ConsultationsChatView({
   const doctorName =
     user?.fullName?.trim() ||
     t('Ophthalmologist.consultations.chat.doctor', 'Doctor');
-  const patientAvatarUrl =
-    selectedSession?.patientAvatarUrl ?? currentSession?.patientAvatarUrl;
+  const patientAvatarUrl = resolveAvatarUrl(
+    selectedSession?.patientAvatarUrl,
+    currentSession?.patientAvatarUrl
+  );
+  const doctorAvatarUrl = resolveAvatarUrl(
+    user?.avatarUrl,
+    selectedSession?.ophthalmologistAvatarUrl
+  );
   const meetingAccessState = getMeetingAccessState(
     currentSession?.appointmentTime ?? null,
     currentTimeMs,
@@ -1745,8 +1772,8 @@ export default function ConsultationsChatView({
                           </span>
                           <span className="sm:hidden">
                             {t(
-                              'Ophthalmologist.consultations.chat.joinShort',
-                              'Vào'
+                              'Ophthalmologist.consultations.chat.join',
+                              'Join'
                             )}
                           </span>
                         </a>
@@ -2107,7 +2134,7 @@ export default function ConsultationsChatView({
                           (showAvatar ? (
                             <AvatarBadge
                               name={doctorName}
-                              avatarUrl={user?.avatarUrl}
+                              avatarUrl={doctorAvatarUrl}
                               size="sm"
                             />
                           ) : (
@@ -2483,13 +2510,13 @@ export default function ConsultationsChatView({
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">
                   {t(
                     'Ophthalmologist.consultations.chat.shareCase.title',
-                    'Chia sẻ ca lên mạng lưới'
+                    'Share Case To Network'
                   )}
                 </p>
                 <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
                   {t(
                     'Ophthalmologist.consultations.chat.shareCase.description',
-                    'Chia sẻ ca đã ẩn danh lên Aura Network với bố cục bài đăng y khoa.'
+                    'Share anonymized cases to Aura Network with a clinical post layout.'
                   )}
                 </p>
                 <button
@@ -2505,11 +2532,11 @@ export default function ConsultationsChatView({
                   {shareConsultationMutation.isPending
                     ? t(
                         'Ophthalmologist.consultations.chat.shareCase.sharing',
-                        'Đang chia sẻ ca...'
+                        'Sharing case...'
                       )
                     : t(
-                        'Ophthalmologist.consultations.chat.shareCase.action',
-                        'Chia sẻ ca lên mạng lưới'
+                        'Ophthalmologist.consultations.chat.shareCase.title',
+                        'Share Case To Network'
                       )}
                 </button>
               </div>
@@ -2629,13 +2656,13 @@ export default function ConsultationsChatView({
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                     {t(
                       'Ophthalmologist.consultations.chat.shareCase.title',
-                      'Chia sẻ ca lên mạng lưới'
+                      'Share Case To Network'
                     )}
                   </p>
                   <p className="mt-2 text-xs text-slate-500 dark:text-gray-400">
                     {t(
                       'Ophthalmologist.consultations.chat.shareCase.description',
-                      'Chia sẻ ca đã ẩn danh lên Aura Network với bố cục bài đăng y khoa.'
+                      'Share anonymized cases to Aura Network with a clinical post layout.'
                     )}
                   </p>
                   <button
@@ -2651,18 +2678,18 @@ export default function ConsultationsChatView({
                     {shareConsultationMutation.isPending
                       ? t(
                           'Ophthalmologist.consultations.chat.shareCase.sharing',
-                          'Đang chia sẻ ca...'
+                          'Sharing case...'
                         )
                       : t(
-                          'Ophthalmologist.consultations.chat.shareCase.action',
-                          'Chia sẻ ca lên mạng lưới'
+                          'Ophthalmologist.consultations.chat.shareCase.title',
+                          'Share Case To Network'
                         )}
                   </button>
                   {!selectedSession?.caseSnapshot && (
                     <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-300">
                       {t(
-                        'Ophthalmologist.consultations.chat.shareCase.missingSnapshot',
-                        'Phiên tư vấn này chưa có snapshot võng mạc hoặc chẩn đoán cuối nên chưa thể chia sẻ.'
+                        'Ophthalmologist.consultations.chat.shareCase.notEligible',
+                        'This consultation has no retinal snapshot or final diagnosis yet, so it cannot be shared.'
                       )}
                     </p>
                   )}
@@ -2673,7 +2700,7 @@ export default function ConsultationsChatView({
                 <div className="rounded-[28px] bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-[#0a1f44] dark:ring-[#1e3a5f]">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                     {t(
-                      'Ophthalmologist.consultations.chat.caseSnapshotTitle',
+                      'Ophthalmologist.consultations.chat.aiCaseSnapshot',
                       'AI Case Snapshot'
                     )}
                   </p>
@@ -2689,21 +2716,24 @@ export default function ConsultationsChatView({
                           src={
                             selectedSession.caseSnapshot.originalImageUrls[0]
                           }
-                          alt="Original retinal image"
+                          alt={t(
+                            'Ophthalmologist.consultations.chat.originalRetinalImage',
+                            'Original retinal image'
+                          )}
                           className="h-24 w-full object-cover"
                         />
                       ) : (
                         <div className="h-24 w-full flex items-center justify-center text-[11px] text-slate-500">
                           {t(
                             'Ophthalmologist.consultations.chat.noOriginalImage',
-                            'Không có ảnh gốc'
+                            'No original image'
                           )}
                         </div>
                       )}
                       <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
                         {t(
-                          'Ophthalmologist.consultations.chat.caseSnapshotOriginal',
-                          'Ảnh gốc'
+                          'Ophthalmologist.consultations.chat.original',
+                          'Original'
                         )}
                       </p>
                     </div>
@@ -2713,8 +2743,8 @@ export default function ConsultationsChatView({
                       />
                       <p className="px-2 py-1 text-[10px] text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-[#1e3a5f]">
                         {t(
-                          'Ophthalmologist.consultations.chat.caseSnapshotAiAnnotated',
-                          'Ảnh AI đánh dấu'
+                          'Ophthalmologist.consultations.chat.aiAnnotated',
+                          'AI Annotated'
                         )}
                       </p>
                     </div>
@@ -2790,6 +2820,7 @@ export default function ConsultationsChatView({
 
       {currentSession && selectedSession?.caseSnapshot && (
         <ShareCaseModal
+          t={t}
           isOpen={isShareCaseModalOpen}
           isSubmitting={shareConsultationMutation.isPending}
           patientName={patientName}
@@ -2823,11 +2854,11 @@ export default function ConsultationsChatView({
           sessionActionTarget?.type === 'cancel'
             ? t(
                 'Ophthalmologist.consultations.chat.cancelSessionTitle',
-                'Hủy phiên tư vấn?'
+                'Cancel session?'
               )
             : t(
-                'Ophthalmologist.consultations.chat.completeSessionTitle',
-                'Hoàn tất phiên tư vấn?'
+                'Ophthalmologist.consultations.chat.completeConsultationTitle',
+                'Complete consultation?'
               )
         }
         message={
@@ -2846,7 +2877,7 @@ export default function ConsultationsChatView({
             ? t('Ophthalmologist.common.cancel', 'Cancel')
             : t('Ophthalmologist.consultations.chat.complete', 'Complete')
         }
-        cancelLabel={t('Ophthalmologist.common.back', 'Quay lại')}
+        cancelLabel={t('Ophthalmologist.common.back', 'Back')}
         tone={sessionActionTarget?.type === 'cancel' ? 'danger' : 'default'}
         isLoading={
           sessionActionTarget?.type === 'cancel'

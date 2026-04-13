@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -17,6 +17,11 @@ import {
 import { PostCard } from '../components/post/PostCard';
 import { ProfessionalCardMini } from '../components/professional/ProfessionalCardMini';
 import type { Organisation, ProfessionalPost, Ophthalmologist } from '../types';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 type TabType = 'posts' | 'members' | 'about';
 
@@ -30,6 +35,10 @@ const orgTypeLabels: Record<Organisation['type'], string> = {
 
 function OrganisationPage() {
   const { id: _id } = useParams();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [isFollowing, setIsFollowing] = useState(false);
   const [organisation, _setOrganisation] = useState<Organisation | null>(null);
@@ -44,7 +53,7 @@ function OrganisationPage() {
         <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
           <div className="flex items-center gap-4 px-4 h-[53px]">
             <Link
-              to="/network/discover"
+              to={toLocalizedPath('/network/discover')}
               className="p-2 hover:bg-gray-100 rounded-full hover-animation"
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
@@ -66,7 +75,7 @@ function OrganisationPage() {
       <header className="hover-animation sticky top-0 z-10 bg-white/60 backdrop-blur-md border-b border-light-border">
         <div className="flex items-center gap-4 px-4 h-[53px]">
           <Link
-            to="/network/discover"
+            to={toLocalizedPath('/network/discover')}
             className="p-2 hover:bg-gray-100 rounded-full hover-animation"
           >
             <ArrowLeft className="w-5 h-5 text-text-main" />

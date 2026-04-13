@@ -3,6 +3,9 @@
  * Renders a colored circle with the user's initials when no avatarUrl is available.
  */
 
+import { useState } from 'react';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
+
 interface InitialsAvatarProps {
   fullName: string;
   avatarUrl?: string | null;
@@ -52,19 +55,18 @@ export function InitialsAvatar({
   size = 'md',
   className = '',
 }: InitialsAvatarProps) {
+  const [hasImageError, setHasImageError] = useState(false);
   const sizeClass = SIZE_CLASSES[size];
   const baseClass = `rounded-full object-cover ${sizeClass} ${className}`;
+  const safeAvatarUrl = resolveAvatarUrl(avatarUrl);
 
-  if (avatarUrl) {
+  if (safeAvatarUrl && !hasImageError) {
     return (
       <img
-        src={avatarUrl}
+        src={safeAvatarUrl}
         alt={fullName}
         className={baseClass}
-        onError={(e) => {
-          // If image fails to load, hide it so the parent can show a fallback
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
+        onError={() => setHasImageError(true)}
       />
     );
   }

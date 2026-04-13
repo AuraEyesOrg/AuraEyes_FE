@@ -1,4 +1,4 @@
-import type { ScreeningConsultationContext } from '../types/consultation-context';
+import type { ScreeningConsultationContext } from './consultation-context';
 
 export type N8nChatIntent =
   | 'BOOK_APPOINTMENT'

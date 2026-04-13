@@ -285,10 +285,19 @@ export default function AnalyticsPage() {
             : 'text-blue-500';
 
         const message = reviewed
-          ? `${t('Ophthalmologist.analytics.activity.reviewedScreeningFor', 'Reviewed screening for')} ${item.patientName}`
+          ? t(
+              'Ophthalmologist.analytics.activity.reviewedScreening',
+              `Reviewed screening for ${item.patientName}`
+            )
           : highRisk
-            ? `${t('Ophthalmologist.analytics.activity.flaggedHighRiskFor', 'Flagged high-risk case for')} ${item.patientName}`
-            : `${t('Ophthalmologist.analytics.activity.newScreeningFrom', 'New screening received from')} ${item.patientName}`;
+            ? t(
+                'Ophthalmologist.analytics.activity.flaggedHighRisk',
+                `Flagged high-risk case for ${item.patientName}`
+              )
+            : t(
+                'Ophthalmologist.analytics.activity.newScreeningReceived',
+                `New screening received from ${item.patientName}`
+              );
 
         return {
           message,
@@ -493,14 +502,17 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-cyan-500 rounded" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('Ophthalmologist.analytics.screenings', 'Screenings')}
+                    {t(
+                      'Ophthalmologist.analytics.legend.screenings',
+                      'Screenings'
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-cyan-200 rounded" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {t(
-                      'Ophthalmologist.analytics.reviewsCompleted',
+                      'Ophthalmologist.analytics.legend.reviewsCompleted',
                       'Reviews Completed'
                     )}
                   </span>
@@ -593,7 +605,7 @@ export default function AnalyticsPage() {
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {t(
-                      'Ophthalmologist.analytics.basedOnReviewed',
+                      'Ophthalmologist.analytics.basedOnReviewedScreenings',
                       'Based on reviewed screenings'
                     )}
                   </p>
@@ -628,7 +640,7 @@ export default function AnalyticsPage() {
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {t(
-                      'Ophthalmologist.analytics.modelVersionHint',
+                      'Ophthalmologist.analytics.mostUsedRecentScreenings',
                       'Most used in recent screenings'
                     )}
                   </p>

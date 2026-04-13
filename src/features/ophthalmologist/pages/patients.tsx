@@ -623,9 +623,8 @@ export default function PatientsPage() {
                                 <span className="font-medium text-gray-700 dark:text-gray-200">
                                   {t(
                                     'Ophthalmologist.patients.lastDiagnosis',
-                                    'Last diagnosis'
+                                    'Last diagnosis:'
                                   )}
-                                  :
                                 </span>{' '}
                                 {patient.lastDiagnosis}
                               </p>

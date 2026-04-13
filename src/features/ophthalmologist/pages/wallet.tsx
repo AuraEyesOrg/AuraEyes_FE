@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Wallet,
   ArrowDownLeft,
@@ -9,6 +9,10 @@ import {
   BadgeCheck,
   XCircle,
   Clock3,
+  ChevronDown,
+  Search,
+  X,
+  Landmark,
 } from 'lucide-react';
 import { DoctorHeader, DoctorSidebar } from '../components';
 import Spinner from '@/components/ui/spinner';
@@ -16,6 +20,7 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { formatCurrency } from '@/lib/helper';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
+import { VIETNAMESE_BANKS } from '@/constants/vietnameseBanks';
 import {
   TransactionType,
   parseWalletTransactionType,
@@ -40,28 +45,31 @@ type TranslateFn = (key: string, fallback: string) => string;
 const getTransactionLabel = (type: TransactionType, t: TranslateFn): string => {
   switch (type) {
     case TransactionType.Deposit:
-      return t('Ophthalmologist.wallet.transactionType.deposit', 'Nạp tiền');
+      return t('Ophthalmologist.wallet.transactionType.deposit', 'Deposit');
     case TransactionType.Withdrawal:
-      return t('Ophthalmologist.wallet.transactionType.withdrawal', 'Rút tiền');
-    case TransactionType.Payment:
-      return t('Ophthalmologist.wallet.transactionType.payment', 'Thanh toán');
-    case TransactionType.Refund:
-      return t('Ophthalmologist.wallet.transactionType.refund', 'Hoàn tiền');
-    case TransactionType.Transfer:
       return t(
-        'Ophthalmologist.wallet.transactionType.transfer',
-        'Chuyển khoản'
+        'Ophthalmologist.wallet.transactionType.withdrawal',
+        'Withdrawal'
       );
+    case TransactionType.Payment:
+      return t('Ophthalmologist.wallet.transactionType.payment', 'Payment');
+    case TransactionType.Refund:
+      return t('Ophthalmologist.wallet.transactionType.refund', 'Refund');
+    case TransactionType.Transfer:
+      return t('Ophthalmologist.wallet.transactionType.transfer', 'Transfer');
     case TransactionType.Bonus:
-      return t('Ophthalmologist.wallet.transactionType.bonus', 'Thưởng');
+      return t('Ophthalmologist.wallet.transactionType.bonus', 'Bonus');
     default:
-      return t('Ophthalmologist.wallet.transactionType.default', 'Giao dịch');
+      return t(
+        'Ophthalmologist.wallet.transactionType.transaction',
+        'Transaction'
+      );
   }
 };
 
 const getBookingConsultationSubLabel = (
   transaction: WalletTransactionDto,
-  translate: TranslateFn
+  t: TranslateFn
 ): string | null => {
   if (transaction.referenceType !== 'Booking') {
     return null;
@@ -71,9 +79,9 @@ const getBookingConsultationSubLabel = (
     txType === TransactionType.Deposit ||
     txType === TransactionType.Transfer
   ) {
-    return translate(
-      'Ophthalmologist.wallet.transactionType.consultationIncome',
-      'Thu nhập tư vấn'
+    return t(
+      'Ophthalmologist.wallet.consultationIncomeShort',
+      'Consultation income'
     );
   }
   return null;
@@ -101,8 +109,38 @@ export default function OphthalmologistWalletPage() {
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
+  const [bankBin, setBankBin] = useState('');
   const [contractNumber, setContractNumber] = useState('');
   const [note, setNote] = useState('');
+
+  // Bank combobox state
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+  const bankDropdownRef = useRef<HTMLDivElement>(null);
+
+  const filteredBanks = useMemo(() => {
+    const q = bankSearch.toLowerCase();
+    return VIETNAMESE_BANKS.filter(
+      (b) =>
+        b.fullName.toLowerCase().includes(q) ||
+        b.shortName.toLowerCase().includes(q) ||
+        b.bin.includes(q)
+    );
+  }, [bankSearch]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        bankDropdownRef.current &&
+        !bankDropdownRef.current.contains(e.target as Node)
+      ) {
+        setBankDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const walletQuery = useOphthalmologistWallet();
   const transactionsQuery = useOphthalmologistWalletTransactions(
@@ -147,6 +185,7 @@ export default function OphthalmologistWalletPage() {
     setBankName('');
     setBankAccountNumber('');
     setAccountHolderName('');
+    setBankBin('');
     setContractNumber('');
     setNote('');
   };
@@ -155,8 +194,8 @@ export default function OphthalmologistWalletPage() {
     if (status === 'Completed') {
       return {
         label: t(
-          'Ophthalmologist.wallet.withdrawStatus.completed',
-          'Đã hoàn tất'
+          'Ophthalmologist.wallet.withdraw.status.completed',
+          'Completed'
         ),
         className:
           'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -168,8 +207,8 @@ export default function OphthalmologistWalletPage() {
       return {
         label:
           status === 'Cancelled'
-            ? t('Ophthalmologist.wallet.withdrawStatus.cancelled', 'Đã hủy')
-            : t('Ophthalmologist.wallet.withdrawStatus.rejected', 'Từ chối'),
+            ? t('Ophthalmologist.wallet.withdraw.status.cancelled', 'Cancelled')
+            : t('Ophthalmologist.wallet.withdraw.status.failed', 'Rejected'),
         className:
           'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
         icon: XCircle,
@@ -179,8 +218,8 @@ export default function OphthalmologistWalletPage() {
     return {
       label:
         status === 'Processing'
-          ? t('Ophthalmologist.wallet.withdrawStatus.processing', 'Đang xử lý')
-          : t('Ophthalmologist.wallet.withdrawStatus.pending', 'Đang chờ'),
+          ? t('Ophthalmologist.wallet.withdraw.status.processing', 'Processing')
+          : t('Ophthalmologist.wallet.withdraw.status.pending', 'Pending'),
       className:
         'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
       icon: Clock3,
@@ -194,8 +233,8 @@ export default function OphthalmologistWalletPage() {
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       toast.error(
         t(
-          'Ophthalmologist.wallet.validation.invalidAmount',
-          'Số tiền rút không hợp lệ.'
+          'Ophthalmologist.wallet.toast.invalidWithdrawAmount',
+          'Invalid withdrawal amount.'
         )
       );
       return;
@@ -204,8 +243,8 @@ export default function OphthalmologistWalletPage() {
     if (numericAmount > wallet.balance) {
       toast.error(
         t(
-          'Ophthalmologist.wallet.validation.exceedBalance',
-          'Số tiền rút vượt quá số dư ví hiện tại.'
+          'Ophthalmologist.wallet.toast.withdrawExceedsBalance',
+          'Withdrawal amount exceeds current wallet balance.'
         )
       );
       return;
@@ -218,8 +257,18 @@ export default function OphthalmologistWalletPage() {
     ) {
       toast.error(
         t(
-          'Ophthalmologist.wallet.validation.missingBankInfo',
-          'Vui lòng nhập đầy đủ thông tin ngân hàng nhận tiền.'
+          'Ophthalmologist.wallet.toast.missingBankInfo',
+          'Please provide complete recipient bank information.'
+        )
+      );
+      return;
+    }
+
+    if (!bankBin.trim()) {
+      toast.error(
+        t(
+          'Ophthalmologist.wallet.toast.missingBankBin',
+          'Please provide the bank BIN code for automated PayOS payout.'
         )
       );
       return;
@@ -231,14 +280,15 @@ export default function OphthalmologistWalletPage() {
         bankName: bankName.trim(),
         bankAccountNumber: bankAccountNumber.trim(),
         accountHolderName: accountHolderName.trim(),
+        bankBin: bankBin.trim(),
         contractNumber: contractNumber.trim() || undefined,
         note: note.trim() || undefined,
       });
 
       toast.success(
         t(
-          'Ophthalmologist.wallet.toast.withdrawRequestSent',
-          'Đã gửi yêu cầu rút tiền. Vui lòng chờ admin xác nhận chuyển khoản.'
+          'Ophthalmologist.wallet.toast.withdrawSubmitted',
+          'Withdrawal request submitted. Please wait for admin confirmation.'
         )
       );
       setShowWithdrawModal(false);
@@ -251,8 +301,8 @@ export default function OphthalmologistWalletPage() {
         error instanceof Error
           ? error.message
           : t(
-              'Ophthalmologist.wallet.toast.withdrawRequestError',
-              'Không thể gửi yêu cầu rút tiền.'
+              'Ophthalmologist.wallet.toast.withdrawSubmitFailed',
+              'Unable to submit withdrawal request.'
             );
       toast.error(errorMessage);
     }
@@ -335,10 +385,10 @@ export default function OphthalmologistWalletPage() {
               onClick={() => setShowWithdrawModal(true)}
               className="w-full md:w-auto px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
             >
-              <ArrowUpRight className="w-4 h-4" />
+              <Landmark className="w-4 h-4" />
               {t(
-                'Ophthalmologist.wallet.requestWithdrawal',
-                'Gửi yêu cầu rút tiền'
+                'Ophthalmologist.wallet.actions.createWithdrawRequest',
+                'Create withdrawal request'
               )}
             </button>
           </div>
@@ -371,13 +421,13 @@ export default function OphthalmologistWalletPage() {
               </p>
               <p className="text-xs text-slate-500 mt-2">
                 {t(
-                  'Ophthalmologist.wallet.inflowDescription',
-                  'Gồm nạp ví, thưởng, hoàn tiền và thu nhập tư vấn'
+                  'Ophthalmologist.wallet.thisMonthInDescription',
+                  'Includes top-ups, bonuses, refunds, and consultation income'
                 )}{' '}
                 - {wallet.transactionsThisMonth}{' '}
                 {t(
-                  'Ophthalmologist.wallet.transactionsThisMonth',
-                  'giao dịch trong tháng'
+                  'Ophthalmologist.wallet.transactionsInMonth',
+                  'transactions this month'
                 )}
               </p>
             </div>
@@ -386,7 +436,7 @@ export default function OphthalmologistWalletPage() {
               <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-2">
                 {t(
                   'Ophthalmologist.wallet.pendingWithdrawRequests',
-                  'Yêu cầu rút đang chờ'
+                  'Pending withdrawal requests'
                 )}
               </p>
               <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
@@ -401,7 +451,7 @@ export default function OphthalmologistWalletPage() {
                 }{' '}
                 {t(
                   'Ophthalmologist.wallet.requestsProcessing',
-                  'yêu cầu đang xử lý'
+                  'requests processing'
                 )}
               </p>
             </div>
@@ -409,7 +459,10 @@ export default function OphthalmologistWalletPage() {
 
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
             <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-4">
-              {t('Ophthalmologist.wallet.withdrawRequests', 'Yêu cầu rút tiền')}
+              {t(
+                'Ophthalmologist.wallet.withdrawRequestsTitle',
+                'Withdrawal Requests'
+              )}
             </h2>
 
             {withdrawalRequestsQuery.isLoading ? (
@@ -420,7 +473,7 @@ export default function OphthalmologistWalletPage() {
               <p className="text-sm text-slate-500">
                 {t(
                   'Ophthalmologist.wallet.noWithdrawRequests',
-                  'Chưa có yêu cầu rút tiền nào.'
+                  'No withdrawal requests yet.'
                 )}
               </p>
             ) : (
@@ -455,14 +508,17 @@ export default function OphthalmologistWalletPage() {
 
                       <div className="mt-2 text-xs text-slate-500 space-y-1">
                         <p>
-                          {t('Ophthalmologist.wallet.submittedAt', 'Gửi lúc')}:{' '}
-                          {formatDateTimeWithYear(request.createdAt)}
+                          {t(
+                            'Ophthalmologist.wallet.submittedAt',
+                            'Submitted at'
+                          )}
+                          : {formatDateTimeWithYear(request.createdAt)}
                         </p>
                         {request.contractNumber ? (
                           <p>
                             {t(
                               'Ophthalmologist.wallet.contractReference',
-                              'Hợp đồng tham chiếu'
+                              'Contract reference'
                             )}
                             : {request.contractNumber}
                           </p>
@@ -471,7 +527,7 @@ export default function OphthalmologistWalletPage() {
                           <p>
                             {t(
                               'Ophthalmologist.wallet.transferReference',
-                              'Mã tham chiếu CK'
+                              'Transfer reference'
                             )}
                             : {request.transferReference}
                           </p>
@@ -479,19 +535,16 @@ export default function OphthalmologistWalletPage() {
                         {request.adminNote ? (
                           <p>
                             {t(
-                              'Ophthalmologist.wallet.adminFeedback',
-                              'Phản hồi admin'
+                              'Ophthalmologist.wallet.adminNote',
+                              'Admin note'
                             )}
                             : {request.adminNote}
                           </p>
                         ) : null}
                         {request.note ? (
                           <p>
-                            {t(
-                              'Ophthalmologist.wallet.yourNote',
-                              'Ghi chú của bạn'
-                            )}
-                            : {request.note}
+                            {t('Ophthalmologist.wallet.yourNote', 'Your note')}:{' '}
+                            {request.note}
                           </p>
                         ) : null}
                       </div>
@@ -511,10 +564,10 @@ export default function OphthalmologistWalletPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  {t('Ophthalmologist.common.previous', 'Trước')}
+                  {t('Ophthalmologist.common.previous', 'Previous')}
                 </button>
                 <p className="text-sm text-slate-500">
-                  {t('Ophthalmologist.common.page', 'Trang')}{' '}
+                  {t('Ophthalmologist.common.page', 'Page')}{' '}
                   {withdrawPagination.pageNumber}/
                   {withdrawPagination.totalPages}
                 </p>
@@ -527,7 +580,7 @@ export default function OphthalmologistWalletPage() {
                   disabled={!withdrawPagination.hasNext}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('Ophthalmologist.common.next', 'Sau')}
+                  {t('Ophthalmologist.common.next', 'Next')}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -611,10 +664,10 @@ export default function OphthalmologistWalletPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  {t('Ophthalmologist.common.previous', 'Trước')}
+                  {t('Ophthalmologist.common.previous', 'Previous')}
                 </button>
                 <p className="text-sm text-slate-500">
-                  {t('Ophthalmologist.common.page', 'Trang')}{' '}
+                  {t('Ophthalmologist.common.page', 'Page')}{' '}
                   {txPagination.pageNumber}/{txPagination.totalPages}
                 </p>
                 <button
@@ -626,7 +679,7 @@ export default function OphthalmologistWalletPage() {
                   disabled={!txPagination.hasNext}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('Ophthalmologist.common.next', 'Sau')}
+                  {t('Ophthalmologist.common.next', 'Next')}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -646,8 +699,8 @@ export default function OphthalmologistWalletPage() {
               <div className="relative z-10 w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {t(
-                    'Ophthalmologist.wallet.createWithdrawRequest',
-                    'Tạo yêu cầu rút tiền'
+                    'Ophthalmologist.wallet.withdrawModal.title',
+                    'Create Withdrawal Request'
                   )}
                 </h3>
 
@@ -655,8 +708,8 @@ export default function OphthalmologistWalletPage() {
                   <label className="space-y-1 text-sm">
                     <span className="text-slate-600 dark:text-slate-300">
                       {t(
-                        'Ophthalmologist.wallet.withdrawAmountVnd',
-                        'Số tiền rút (VND)'
+                        'Ophthalmologist.wallet.withdrawModal.amountLabel',
+                        'Withdrawal Amount (VND)'
                       )}
                     </span>
                     <input
@@ -665,8 +718,8 @@ export default function OphthalmologistWalletPage() {
                         setAmount(e.target.value.replace(/[^0-9]/g, ''))
                       }
                       placeholder={t(
-                        'Ophthalmologist.wallet.amountExample',
-                        'Ví dụ: 500000'
+                        'Ophthalmologist.wallet.withdrawModal.amountPlaceholder',
+                        'Example: 500000'
                       )}
                       className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                     />
@@ -675,8 +728,8 @@ export default function OphthalmologistWalletPage() {
                   <label className="space-y-1 text-sm">
                     <span className="text-slate-600 dark:text-slate-300">
                       {t(
-                        'Ophthalmologist.wallet.contractNumberOptional',
-                        'Số hợp đồng (nếu có)'
+                        'Ophthalmologist.wallet.withdrawModal.contractLabel',
+                        'Contract Number (optional)'
                       )}
                     </span>
                     <input
@@ -690,26 +743,122 @@ export default function OphthalmologistWalletPage() {
                     />
                   </label>
 
-                  <label className="space-y-1 text-sm">
-                    <span className="text-slate-600 dark:text-slate-300">
-                      {t('Ophthalmologist.wallet.bankName', 'Ngân hàng')}
-                    </span>
-                    <input
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      placeholder={t(
-                        'Ophthalmologist.wallet.bankExample',
-                        'VD: Vietcombank'
+                  {/* Bank searchable combobox — spans both columns on md+ */}
+                  <div
+                    className="md:col-span-2 space-y-1 text-sm"
+                    ref={bankDropdownRef}
+                  >
+                    <span className="text-slate-600 dark:text-slate-300 block">
+                      {t(
+                        'Ophthalmologist.wallet.withdrawModal.bankLabel',
+                        'Bank'
                       )}
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
-                    />
-                  </label>
+                      <span className="text-rose-500 ml-1">*</span>
+                    </span>
+
+                    {/* Trigger button */}
+                    <button
+                      type="button"
+                      onClick={() => setBankDropdownOpen((o) => !o)}
+                      className="w-full flex items-center justify-between rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-left"
+                    >
+                      <span
+                        className={
+                          bankName
+                            ? 'text-slate-900 dark:text-white'
+                            : 'text-slate-400'
+                        }
+                      >
+                        {bankName
+                          ? bankName
+                          : t(
+                              'Ophthalmologist.wallet.withdrawModal.bankPlaceholder',
+                              'Search and select bank…'
+                            )}
+                      </span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        {bankName && (
+                          <X
+                            className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBankName('');
+                              setBankBin('');
+                              setBankSearch('');
+                            }}
+                          />
+                        )}
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                      </span>
+                    </button>
+
+                    {/* Dropdown */}
+                    {bankDropdownOpen && (
+                      <div className="absolute z-20 mt-1 w-full max-w-[calc(100%-3rem)] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
+                        {/* Search input */}
+                        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                          <input
+                            autoFocus
+                            value={bankSearch}
+                            onChange={(e) => setBankSearch(e.target.value)}
+                            placeholder={t(
+                              'Ophthalmologist.wallet.withdrawModal.bankSearchPlaceholder',
+                              'Search bank name or BIN…'
+                            )}
+                            className="flex-1 bg-transparent text-sm outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                          />
+                          {bankSearch && (
+                            <button
+                              onClick={() => setBankSearch('')}
+                              type="button"
+                            >
+                              <X className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Bank list */}
+                        <ul className="max-h-52 overflow-y-auto py-1">
+                          {filteredBanks.length === 0 ? (
+                            <li className="px-4 py-2 text-xs text-slate-400">
+                              {t(
+                                'Ophthalmologist.wallet.withdrawModal.noBankFound',
+                                'No bank found.'
+                              )}
+                            </li>
+                          ) : (
+                            filteredBanks.map((bank) => (
+                              <li key={bank.bin}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBankName(bank.shortName);
+                                    setBankBin(bank.bin);
+                                    setBankSearch('');
+                                    setBankDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${
+                                    bankBin === bank.bin
+                                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium'
+                                      : 'text-slate-800 dark:text-slate-200'
+                                  }`}
+                                >
+                                  {bank.shortName}
+                                </button>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
                   <label className="space-y-1 text-sm">
                     <span className="text-slate-600 dark:text-slate-300">
                       {t(
-                        'Ophthalmologist.wallet.accountNumber',
-                        'Số tài khoản'
+                        'Ophthalmologist.wallet.withdrawModal.accountNumberLabel',
+                        'Account Number'
                       )}
                     </span>
                     <input
@@ -718,8 +867,8 @@ export default function OphthalmologistWalletPage() {
                         setBankAccountNumber(e.target.value.replace(/\s+/g, ''))
                       }
                       placeholder={t(
-                        'Ophthalmologist.wallet.accountNumberPlaceholder',
-                        'Nhập số tài khoản'
+                        'Ophthalmologist.wallet.withdrawModal.accountNumberPlaceholder',
+                        'Enter account number'
                       )}
                       className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                     />
@@ -729,16 +878,16 @@ export default function OphthalmologistWalletPage() {
                 <label className="space-y-1 text-sm block">
                   <span className="text-slate-600 dark:text-slate-300">
                     {t(
-                      'Ophthalmologist.wallet.accountHolderName',
-                      'Tên chủ tài khoản'
+                      'Ophthalmologist.wallet.withdrawModal.accountHolderLabel',
+                      'Account Holder Name'
                     )}
                   </span>
                   <input
                     value={accountHolderName}
                     onChange={(e) => setAccountHolderName(e.target.value)}
                     placeholder={t(
-                      'Ophthalmologist.wallet.accountHolderPlaceholder',
-                      'Theo thông tin hợp đồng'
+                      'Ophthalmologist.wallet.withdrawModal.accountHolderPlaceholder',
+                      'As stated in contract'
                     )}
                     className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                   />
@@ -746,22 +895,25 @@ export default function OphthalmologistWalletPage() {
 
                 <label className="space-y-1 text-sm block">
                   <span className="text-slate-600 dark:text-slate-300">
-                    {t('Ophthalmologist.wallet.note', 'Ghi chú')}
+                    {t(
+                      'Ophthalmologist.wallet.withdrawModal.noteLabel',
+                      'Note'
+                    )}
                   </span>
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     rows={3}
                     placeholder={t(
-                      'Ophthalmologist.wallet.notePlaceholder',
-                      'Ghi chú thêm cho admin (không bắt buộc)'
+                      'Ophthalmologist.wallet.withdrawModal.notePlaceholder',
+                      'Additional note for admin (optional)'
                     )}
                     className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                   />
                 </label>
 
                 <div className="text-xs text-slate-500">
-                  {t('Ophthalmologist.wallet.balance', 'Số dư hiện tại')}:{' '}
+                  {t('Ophthalmologist.wallet.balance', 'Current balance')}:{' '}
                   {formatCurrency(wallet.balance, vndCurrencyOptions)}
                 </div>
 
@@ -771,7 +923,7 @@ export default function OphthalmologistWalletPage() {
                     disabled={createWithdrawalRequestMutation.isPending}
                     className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm"
                   >
-                    {t('Ophthalmologist.common.cancel', 'Hủy')}
+                    {t('Ophthalmologist.common.cancel', 'Cancel')}
                   </button>
                   <button
                     onClick={handleSubmitWithdrawalRequest}
@@ -779,10 +931,10 @@ export default function OphthalmologistWalletPage() {
                     className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-60"
                   >
                     {createWithdrawalRequestMutation.isPending
-                      ? t('Ophthalmologist.wallet.submitting', 'Đang gửi...')
+                      ? t('Ophthalmologist.common.submitting', 'Submitting...')
                       : t(
-                          'Ophthalmologist.wallet.submitRequest',
-                          'Gửi yêu cầu'
+                          'Ophthalmologist.common.submitRequest',
+                          'Submit Request'
                         )}
                   </button>
                 </div>

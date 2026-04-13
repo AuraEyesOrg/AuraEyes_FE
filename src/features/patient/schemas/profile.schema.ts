@@ -3,42 +3,51 @@ import * as yup from 'yup';
 export const profileSchema = yup.object().shape({
   fullName: yup
     .string()
-    .required('Full name is required')
-    .max(200, 'Full name must not exceed 200 characters'),
+    .required('Validation.Required')
+    .max(200, 'Validation.MaxLength.FullName'),
   phone: yup
     .string()
     .optional()
     .default('')
-    .max(20, 'Phone number must not exceed 20 characters'),
+    .max(20, 'Validation.MaxLength.Phone'),
   dateOfBirth: yup.string().optional().default(''),
   gender: yup
     .string()
     .optional()
     .default('')
-    .oneOf(['male', 'female', 'other', ''], 'Invalid gender'),
+    .oneOf(['male', 'female', 'other', ''], 'Validation.Invalid.Gender'),
   address: yup
     .string()
     .optional()
     .default('')
-    .max(500, 'Address must not exceed 500 characters'),
+    .max(500, 'Validation.MaxLength.Address'),
+  citizenId: yup
+    .string()
+    .optional()
+    .default('')
+    .test(
+      'is-12-digits',
+      'Validation.Invalid.CitizenId',
+      (val) => !val || /^[0-9]{12}$/.test(val)
+    ),
 });
 
 export type ProfileFormData = yup.InferType<typeof profileSchema>;
 
 export const changePasswordSchema = yup.object().shape({
-  currentPassword: yup.string().required('Current password is required'),
+  currentPassword: yup.string().required('Validation.Required'),
   newPassword: yup
     .string()
-    .required('New password is required')
-    .min(8, 'Password must be at least 8 characters')
+    .required('Validation.Required')
+    .min(8, 'Validation.MinLength.Password')
     .notOneOf(
       [yup.ref('currentPassword')],
-      'New password must be different from current password'
+      'Validation.Password.MustBeDifferent'
     ),
   confirmNewPassword: yup
     .string()
-    .required('Password confirmation is required')
-    .oneOf([yup.ref('newPassword')], 'Passwords do not match'),
+    .required('Validation.Required')
+    .oneOf([yup.ref('newPassword')], 'Validation.Password.Mismatch'),
 });
 
 export type ChangePasswordFormData = yup.InferType<typeof changePasswordSchema>;
