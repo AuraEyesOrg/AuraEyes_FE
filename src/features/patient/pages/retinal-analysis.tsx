@@ -1134,78 +1134,78 @@ export default function RetinalAnalysis() {
       exitPath="/patient/screening/new"
       showBreadcrumb={false}
     >
-      {/* Left: Image + toggle  |  Right: Summary / Findings / Actions     */}
+      {/* Outer wrapper: fixed height, no overflow bleed */}
       <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f2f5]">
-        {/* --- Main row --- */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* LEFT — Image Viewer                                          */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Toggle — above image, aligned right */}
-            {canShowOverlayControls && (
-              <div className="flex-shrink-0 flex justify-end px-4 py-2">
-                {/* Toggle bounding box */}
-                <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
-                  <span className="text-sm font-medium text-slate-600">
-                    {t('PatientRetinalAnalysis.toggles.showHighlights')}
-                  </span>
-                  <button
-                    role="switch"
-                    aria-checked={showHighlights}
-                    onClick={() => {
-                      if (!hasBoundingBoxes) return;
-                      setShowHighlights(!showHighlights);
-                    }}
-                    disabled={!hasBoundingBoxes}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      !hasBoundingBoxes
-                        ? 'bg-slate-200 cursor-not-allowed'
-                        : showHighlights
-                          ? 'bg-cyan-300'
-                          : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                        showHighlights ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </label>
-                {/* Toggle heatmap overlay nếu có heatmapUrl */}
-                {heatmapUrl && (
-                  <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-md border border-slate-200/60">
-                    <span className="text-sm font-medium text-slate-600">
-                      {t('PatientRetinalAnalysis.toggles.showHeatmap')}
-                    </span>
-                    <button
-                      role="switch"
-                      aria-checked={showHeatmap}
-                      onClick={() => {
-                        if (!heatmapUrl) return;
-                        setShowHeatmap(!showHeatmap);
-                      }}
-                      disabled={!heatmapUrl}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        !heatmapUrl
-                          ? 'bg-slate-200 cursor-not-allowed'
-                          : showHeatmap
-                            ? 'bg-orange-400'
-                            : 'bg-slate-300'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                          showHeatmap ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </label>
-                )}
-              </div>
-            )}
+        {/* Toggle bar — sticky at top, above the image panel */}
+        {canShowOverlayControls && (
+          <div className="flex-shrink-0 flex justify-center items-center gap-3 px-4 py-2 bg-[#f0f2f5] border-b border-slate-200/60 z-10">
+            {/* Highlights toggle */}
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
+              <span className="text-sm font-medium text-slate-600">
+                {t('PatientRetinalAnalysis.toggles.showHighlights')}
+              </span>
+              <button
+                role="switch"
+                aria-checked={showHighlights}
+                onClick={() => {
+                  if (hasBoundingBoxes) setShowHighlights(!showHighlights);
+                }}
+                disabled={!hasBoundingBoxes}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  !hasBoundingBoxes
+                    ? 'bg-slate-200 cursor-not-allowed'
+                    : showHighlights
+                      ? 'bg-cyan-400'
+                      : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${showHighlights ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </label>
 
-            {/* Image — pushed below toggle */}
-            <div className="flex-1 min-h-0 flex items-center justify-center">
+            {/* Heatmap toggle */}
+            {heatmapUrl && (
+              <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
+                <span className="text-sm font-medium text-slate-600">
+                  {t('PatientRetinalAnalysis.toggles.showHeatmap')}
+                </span>
+                <button
+                  role="switch"
+                  aria-checked={showHeatmap}
+                  onClick={() => {
+                    if (heatmapUrl) setShowHeatmap(!showHeatmap);
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    showHeatmap ? 'bg-orange-400' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${showHeatmap ? 'translate-x-6' : 'translate-x-1'}`}
+                  />
+                </button>
+              </label>
+            )}
+          </div>
+        )}
+
+        {/* Main row */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* LEFT — Image viewer: fixed max-width, controlled height */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 p-3 gap-2">
+            {/*
+            KEY FIX: explicit height with max constraint so image
+            never fills the entire screen. Use `h-[calc(100%-X)]`
+            or a fixed px value depending on strip presence.
+          */}
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-black shadow-lg ${
+                images.length > 1
+                  ? 'flex-1 min-h-0 max-h-[calc(100vh-220px)]'
+                  : 'flex-1 min-h-0 max-h-[calc(100vh-160px)]'
+              }`}
+            >
               <PatientImageViewer
                 toggles={toggles}
                 zoomLevel={1}
@@ -1218,9 +1218,9 @@ export default function RetinalAnalysis() {
               />
             </div>
 
-            {/* Image strip below image */}
+            {/* Image strip */}
             {images.length > 1 && (
-              <div className="flex-shrink-0 px-4 py-2">
+              <div className="flex-shrink-0">
                 <PatientImageStrip
                   images={images}
                   selectedImageId={selectedImageId}
@@ -1230,10 +1230,11 @@ export default function RetinalAnalysis() {
             )}
           </div>
 
-          {/* RIGHT — Results Panel                                        */}
-          <div className="w-[520px] flex-shrink-0 p-6 pl-3 flex flex-col min-h-0">
+          {/* RIGHT — Results panel */}
+          <div className="w-[500px] flex-shrink-0 p-4 pl-2 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm">
-              <div className="px-8 py-8 space-y-7">
+              <div className="px-7 py-7 space-y-7">
+                {/* Header */}
                 <section>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <h1 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">
@@ -1249,7 +1250,6 @@ export default function RetinalAnalysis() {
                     )}
                   </div>
 
-                  {/* -- Pre-analysis / Analyzing / Result summary -- */}
                   {!analyzed && !isAnalyzing ? (
                     <div className="space-y-4">
                       <p className="text-[15px] text-slate-500 leading-relaxed">
@@ -1293,7 +1293,7 @@ export default function RetinalAnalysis() {
                         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                           {t('PatientRetinalAnalysis.summary.waitingOverlay', {
                             defaultValue:
-                              'Primary diagnosis is ready. Detailed overlay (bbox/heatmap) is still processing...',
+                              'Primary diagnosis is ready. Detailed overlay is still processing...',
                           })}
                         </p>
                       )}
@@ -1307,7 +1307,6 @@ export default function RetinalAnalysis() {
                   )}
                 </section>
 
-                {/* ---- Findings ---- */}
                 {analyzed && (
                   <PatientFindings
                     anomalies={anomalies}
@@ -1320,7 +1319,6 @@ export default function RetinalAnalysis() {
                   />
                 )}
 
-                {/* ---- Actions ---- */}
                 {analyzed && (
                   <section className="space-y-3">
                     <button
@@ -1352,7 +1350,6 @@ export default function RetinalAnalysis() {
                   </section>
                 )}
 
-                {/* ---- Disclaimer ---- */}
                 <section className="pt-4 border-t border-slate-100">
                   <p className="text-sm text-slate-500 leading-relaxed">
                     <strong className="text-slate-600">

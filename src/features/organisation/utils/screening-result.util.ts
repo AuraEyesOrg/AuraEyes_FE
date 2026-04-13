@@ -26,6 +26,33 @@ interface RiskConfigItem {
 
 const ORGANISATION_NOTE_MARKER = '[Organisation Note]';
 
+function resolveFindingName(item: AIStandardPrediction): string {
+  return item.code ?? item.class_name ?? item.name_en ?? item.name_vi ?? '';
+}
+
+function resolveFindingDisplayName(
+  item: AIStandardPrediction,
+  language: string
+): string {
+  const isVietnamese = language.toLowerCase().startsWith('vi');
+
+  if (item.code && (item.name_vi || item.name_en)) {
+    if (isVietnamese) {
+      return item.name_vi ?? item.name_en ?? item.code;
+    }
+
+    return item.name_en ?? item.name_vi ?? item.code;
+  }
+
+  if (item.name_vi || item.name_en) {
+    return isVietnamese
+      ? (item.name_vi ?? item.name_en ?? item.code ?? item.class_name ?? '')
+      : (item.name_en ?? item.name_vi ?? item.code ?? item.class_name ?? '');
+  }
+
+  return toDisplayDiseaseName(item.class_name ?? item.code ?? '', language);
+}
+
 export const riskConfig: Record<RiskLevel, RiskConfigItem> = {
   Low: {
     color: 'text-emerald-600 dark:text-emerald-400',
@@ -149,17 +176,11 @@ export function mapAiFindings(
   language: string,
   maxItems = 6
 ): AiFindingItem[] {
-  const isVietnamese = language.toLowerCase().startsWith('vi');
   return predictions.slice(0, maxItems).map((item) => {
-    const displayName =
-      item.code && item.name_vi
-        ? isVietnamese
-          ? item.name_vi
-          : (item.name_en ?? item.code)
-        : toDisplayDiseaseName(item.class_name ?? item.code ?? '', language);
+    const displayName = resolveFindingDisplayName(item, language);
     return {
-      id: `${item.rank}-${item.code ?? item.class_name ?? ''}`,
-      name: item.code ?? item.class_name ?? '',
+      id: `${item.rank}-${resolveFindingName(item)}`,
+      name: resolveFindingName(item),
       localizedName: displayName,
       confidence: clampConfidence((item.confidence ?? 0) * 100),
       status: item.status ?? 'primary',
@@ -349,7 +370,26 @@ export function extractTopKFromRaw(
   try {
     const parsed = JSON.parse(rawJsonOutput) as Partial<AIStandardResponse>;
     const topK = parsed.prediction?.top_k ?? [];
-    return [...topK].sort((a, b) => a.rank - b.rank);
+
+    if (topK.length > 0) {
+      return [...topK].sort((a, b) => a.rank - b.rank);
+    }
+
+    const anomalies = parsed.anomalies ?? [];
+    if (anomalies.length === 0) return [];
+
+    return anomalies.map((item, index) => ({
+      rank: index + 1,
+      class_name: item.name,
+      code: item.name,
+      name_en: item.name,
+      name_vi: item.name,
+      confidence:
+        typeof item.confidence === 'number' && item.confidence > 1
+          ? item.confidence / 100
+          : (item.confidence ?? 0),
+      status: item.status,
+    }));
   } catch {
     return [];
   }
