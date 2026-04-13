@@ -24,6 +24,9 @@ import PageHeader from '../components/PageHeader';
 import {
   useSystemSettings,
   useUpdateSystemSettings,
+  useExperiencePricingRules,
+  useUpdateExperiencePricingRules,
+  type ExperiencePricingRule,
 } from '../api/system-settings.api';
 
 interface SettingSection {
@@ -91,7 +94,9 @@ export default function SettingsPage() {
   const domainInputRef = useRef<HTMLInputElement>(null);
 
   const { data: systemSettings } = useSystemSettings();
+  const { data: experiencePricingRules } = useExperiencePricingRules();
   const updateSettingsMutation = useUpdateSystemSettings();
+  const updatePricingRulesMutation = useUpdateExperiencePricingRules();
 
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
@@ -103,6 +108,10 @@ export default function SettingsPage() {
     minAdvanceBookingHours: 0.5,
     aiQuotaUnitPrice: 10000,
     freeAiQuota: 3,
+    partTimeMaxSlotsPerDay: 100,
+    fullTimeSlotWindowDays: 30,
+    fullTimeMinSlotCost: 100000,
+    fullTimeMaxSlotCost: 400000,
   });
 
   // Trusted medical domains for AI resource search
@@ -110,6 +119,7 @@ export default function SettingsPage() {
     DEFAULT_TRUSTED_DOMAINS
   );
   const [domainInput, setDomainInput] = useState('');
+  const [pricingBands, setPricingBands] = useState<ExperiencePricingRule[]>([]);
 
   useEffect(() => {
     if (systemSettings) {
@@ -124,6 +134,18 @@ export default function SettingsPage() {
         freeAiQuota: systemSettings['FREE_AI_QUOTA']
           ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
           : 3,
+        partTimeMaxSlotsPerDay: systemSettings['PART_TIME_MAX_SLOTS_PER_DAY']
+          ? parseInt(systemSettings['PART_TIME_MAX_SLOTS_PER_DAY'], 10)
+          : 100,
+        fullTimeSlotWindowDays: systemSettings['FULLTIME_SLOT_WINDOW_DAYS']
+          ? parseInt(systemSettings['FULLTIME_SLOT_WINDOW_DAYS'], 10)
+          : 30,
+        fullTimeMinSlotCost: systemSettings['FULLTIME_MIN_SLOT_COST']
+          ? parseInt(systemSettings['FULLTIME_MIN_SLOT_COST'], 10)
+          : 100000,
+        fullTimeMaxSlotCost: systemSettings['FULLTIME_MAX_SLOT_COST']
+          ? parseInt(systemSettings['FULLTIME_MAX_SLOT_COST'], 10)
+          : 400000,
       }));
 
       if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
@@ -135,6 +157,18 @@ export default function SettingsPage() {
       }
     }
   }, [systemSettings]);
+
+  useEffect(() => {
+    if (!experiencePricingRules) {
+      return;
+    }
+
+    setPricingBands(
+      [...experiencePricingRules].sort(
+        (a, b) => a.minYearsExperience - b.minYearsExperience
+      )
+    );
+  }, [experiencePricingRules]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
@@ -157,6 +191,15 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const normalizedFullTimeMinCost = Math.max(
+        0,
+        generalSettings.fullTimeMinSlotCost
+      );
+      const normalizedFullTimeMaxCost = Math.max(
+        normalizedFullTimeMinCost,
+        generalSettings.fullTimeMaxSlotCost
+      );
+
       const settingsToUpdate = {
         MIN_ADVANCE_BOOKING_HOURS: Math.max(
           0.5,
@@ -167,9 +210,33 @@ export default function SettingsPage() {
           generalSettings.aiQuotaUnitPrice
         ).toString(),
         FREE_AI_QUOTA: Math.max(0, generalSettings.freeAiQuota).toString(),
+        PART_TIME_MAX_SLOTS_PER_DAY: Math.max(
+          1,
+          generalSettings.partTimeMaxSlotsPerDay
+        ).toString(),
+        FULLTIME_SLOT_WINDOW_DAYS: Math.max(
+          1,
+          generalSettings.fullTimeSlotWindowDays
+        ).toString(),
+        FULLTIME_MIN_SLOT_COST: normalizedFullTimeMinCost.toString(),
+        FULLTIME_MAX_SLOT_COST: normalizedFullTimeMaxCost.toString(),
         TRUSTED_EYE_HEALTH_DOMAINS: trustedDomains.join(','),
       };
       await updateSettingsMutation.mutateAsync(settingsToUpdate);
+
+      if (pricingBands.length > 0) {
+        await updatePricingRulesMutation.mutateAsync(
+          pricingBands.map((band) => ({
+            id: band.id,
+            minPrice: Math.max(1, Math.trunc(band.minPrice)),
+            maxPrice: Math.max(
+              Math.max(1, Math.trunc(band.minPrice)),
+              Math.trunc(band.maxPrice)
+            ),
+          }))
+        );
+      }
+
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error(error);
@@ -177,6 +244,26 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePricingBandChange = (
+    id: string,
+    field: 'minPrice' | 'maxPrice',
+    value: number
+  ) => {
+    setPricingBands((prev) =>
+      prev.map((band) => {
+        if (band.id !== id) {
+          return band;
+        }
+
+        const normalizedValue = Number.isFinite(value) ? value : 0;
+        return {
+          ...band,
+          [field]: normalizedValue,
+        };
+      })
+    );
   };
 
   const addDomain = () => {
@@ -351,6 +438,164 @@ export default function SettingsPage() {
             }
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Part-time max slots per day
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.partTimeMaxSlotsPerDay}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                partTimeMaxSlotsPerDay: parseInt(e.target.value, 10) || 1,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Global daily quota for all part-time ophthalmologist slots.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time generation window (days)
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={generalSettings.fullTimeSlotWindowDays}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeSlotWindowDays: parseInt(e.target.value, 10) || 1,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Number of forward days Hangfire keeps generated for full-time
+            schedules.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time minimum slot cost (VND)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.fullTimeMinSlotCost}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeMinSlotCost: parseInt(e.target.value, 10) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Full-time maximum slot cost (VND)
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            value={generalSettings.fullTimeMaxSlotCost}
+            onChange={(e) =>
+              setGeneralSettings({
+                ...generalSettings,
+                fullTimeMaxSlotCost: parseInt(e.target.value, 10) || 0,
+              })
+            }
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Auto-generated full-time slot cost is clamped between min and max.
+          </p>
+        </div>
+        <div className="md:col-span-2">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/60">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+              Part-time pricing bands by experience
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Update min/max price for each seeded experience band.
+            </p>
+
+            {pricingBands.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                No pricing bands found.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {pricingBands.map((band) => (
+                  <div
+                    key={band.id}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900"
+                  >
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Experience band
+                      </label>
+                      <input
+                        type="text"
+                        value={`${band.minYearsExperience} - ${band.maxYearsExperience} years`}
+                        readOnly
+                        disabled
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Min price (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1000}
+                        value={band.minPrice}
+                        onChange={(e) =>
+                          handlePricingBandChange(
+                            band.id,
+                            'minPrice',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Max price (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1000}
+                        value={band.maxPrice}
+                        onChange={(e) =>
+                          handlePricingBandChange(
+                            band.id,
+                            'maxPrice',
+                            parseInt(e.target.value, 10) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="md:col-span-2">
           <p className="text-xs text-slate-500 dark:text-slate-400">

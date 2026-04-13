@@ -6,13 +6,13 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Landmark,
   BadgeCheck,
   XCircle,
   Clock3,
   ChevronDown,
   Search,
   X,
+  Landmark,
 } from 'lucide-react';
 import { DoctorHeader, DoctorSidebar } from '../components';
 import Spinner from '@/components/ui/spinner';
@@ -365,9 +365,25 @@ export default function OphthalmologistWalletPage() {
               <RefreshCw className="w-4 h-4" />
               {t('Ophthalmologist.contract.refresh', 'Làm mới')}
             </button>
+          </div>
+
+          <div className="rounded-2xl bg-linear-to-br from-cyan-500 to-teal-500 p-5">
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white/80 text-sm font-medium">
+                  {t('Ophthalmologist.wallet.balance', 'Số dư hiện tại')}
+                </span>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-white mb-4">
+              {formatCurrency(wallet.balance, vndCurrencyOptions)}
+            </p>
             <button
               onClick={() => setShowWithdrawModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+              className="w-full md:w-auto px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
             >
               <Landmark className="w-4 h-4" />
               {t(
@@ -378,20 +394,6 @@ export default function OphthalmologistWalletPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20 p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <p className="text-sm text-cyan-700 dark:text-cyan-300 font-medium">
-                  {t('Ophthalmologist.wallet.balance', 'Số dư hiện tại')}
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-cyan-800 dark:text-cyan-200">
-                {formatCurrency(wallet.balance, vndCurrencyOptions)}
-              </p>
-            </div>
-
             <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-5">
               <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium mb-2">
                 {t(
@@ -733,7 +735,10 @@ export default function OphthalmologistWalletPage() {
                     <input
                       value={contractNumber}
                       onChange={(e) => setContractNumber(e.target.value)}
-                      placeholder="AURA-OPH-..."
+                      placeholder={t(
+                        'Ophthalmologist.wallet.contractNumberPlaceholder',
+                        'AURA-OPH-...'
+                      )}
                       className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                     />
                   </label>

@@ -154,6 +154,10 @@ export default function OphthalmologistsPage() {
   const [rejectError, setRejectError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [payingSalary, setPayingSalary] = useState(false);
+  const [updatingEmployment, setUpdatingEmployment] = useState(false);
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState<
+    'FullTime' | 'PartTime'
+  >('PartTime');
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -190,6 +194,11 @@ export default function OphthalmologistsPage() {
       .then((r) => setPendingTotalCount(r.totalCount))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!selectedDoctor) return;
+    setSelectedEmploymentType(selectedDoctor.employmentType);
+  }, [selectedDoctor]);
 
   // Calculate stats
   const totalDoctors = totalCount;
@@ -267,6 +276,49 @@ export default function OphthalmologistsPage() {
     } finally {
       setPayingSalary(false);
     }
+  };
+
+  const handleUpdateEmploymentType = async () => {
+    if (!selectedDoctor) return;
+
+    if (selectedEmploymentType === selectedDoctor.employmentType) {
+      toast.info('Employment type is unchanged.');
+      return;
+    }
+
+    setUpdatingEmployment(true);
+    try {
+      await ophthalmologistApi.updateEmploymentType({
+        id: selectedDoctor.id,
+        yearsOfExperience: selectedDoctor.yearsOfExperience,
+        bio: selectedDoctor.bio ?? undefined,
+        employmentType: selectedEmploymentType,
+      });
+
+      setSelectedDoctor((prev) =>
+        prev ? { ...prev, employmentType: selectedEmploymentType } : prev
+      );
+      setOphthalmologists((prev) =>
+        prev.map((doctor) =>
+          doctor.id === selectedDoctor.id
+            ? { ...doctor, employmentType: selectedEmploymentType }
+            : doctor
+        )
+      );
+
+      toast.success('Employment type updated successfully.');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to update employment type:', error);
+      toast.error('Failed to update employment type. Please try again.');
+    } finally {
+      setUpdatingEmployment(false);
+    }
+  };
+
+  const closeDoctorDetail = () => {
+    setSelectedDoctor(null);
+    setUpdatingEmployment(false);
   };
 
   const handleRejectClick = (doctor: Ophthalmologist) => {
@@ -974,7 +1026,7 @@ export default function OphthalmologistsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
             className="fixed inset-0 bg-black/50"
-            onClick={() => setSelectedDoctor(null)}
+            onClick={closeDoctorDetail}
           />
           <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl m-4">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800">
@@ -1012,7 +1064,7 @@ export default function OphthalmologistsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedDoctor(null)}
+                  onClick={closeDoctorDetail}
                   className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <XCircle className="w-5 h-5 text-slate-500" />
@@ -1160,9 +1212,31 @@ export default function OphthalmologistsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">Employment</p>
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">
-                      {selectedDoctor.employmentType}
-                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <select
+                        value={selectedEmploymentType}
+                        onChange={(e) =>
+                          setSelectedEmploymentType(
+                            e.target.value as 'FullTime' | 'PartTime'
+                          )
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                      >
+                        <option value="FullTime">FullTime</option>
+                        <option value="PartTime">PartTime</option>
+                      </select>
+                      <button
+                        onClick={handleUpdateEmploymentType}
+                        disabled={
+                          updatingEmployment ||
+                          selectedEmploymentType ===
+                            selectedDoctor.employmentType
+                        }
+                        className="px-3 py-2 rounded-lg text-xs font-semibold text-white bg-primary hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {updatingEmployment ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
                     {selectedDoctor.workingHoursPerWeek !== undefined && (
                       <p className="text-xs text-slate-500 mt-1">
                         {selectedDoctor.workingHoursPerWeek}h/week

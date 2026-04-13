@@ -105,6 +105,7 @@ export interface UserInfoResponse {
   emailConfirmed: boolean;
   organizationId?: string;
   roleId?: string | null;
+  employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
   isVerified?: boolean | null;
   verificationStatus?: string | null;

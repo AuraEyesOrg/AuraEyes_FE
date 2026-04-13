@@ -5,6 +5,7 @@ import type {
   ProfileUpdateData,
   RetinalImageUpload,
   AnalysisResult,
+  AnalysisFinding,
   ScreeningReport,
   Clinic,
   ClinicSearchFilters,
@@ -71,8 +72,8 @@ export const PATIENT_ENDPOINTS = {
 
   // Screening Reports
   REPORTS: {
-    LIST: '/patient/reports',
-    GET: (id: string) => `/patient/reports/${id}`,
+    LIST: '/screenings/recent',
+    GET: (id: string) => `/screenings/${id}`,
     DOWNLOAD_PDF: (id: string) => `/patient/reports/${id}/pdf`,
   },
 
@@ -521,18 +522,214 @@ export const downloadAnalysisPdf = async (id: string): Promise<Blob> => {
 
 // ============ REPORTS API ============
 
-export const getReports = async (): Promise<ScreeningReport[]> => {
-  const response = await api.get<ApiResponse<ScreeningReport[]>>(
-    PATIENT_ENDPOINTS.REPORTS.LIST
+interface ScreeningSessionSummary {
+  screeningId: string;
+  patientId?: string;
+  createdAt: string;
+  processedAt?: string;
+  latestRiskLevel?: string;
+}
+
+interface ScreeningSessionDetail {
+  screeningId: string;
+  patientId: string;
+  createdAt: string;
+  latestResult?: {
+    screeningResultId: string;
+    riskLevel: string;
+    confidenceScore: number;
+    summary?: string;
+    findings?: string;
+    assessedAt: string;
+  };
+  latestDiagnosis?: {
+    diagnosisCode?: string;
+    codingSystem?: string;
+    clinicalFindings?: string;
+    severityLevel?: string;
+    confidenceLevel?: number;
+    treatmentPlan?: string;
+    recommendations?: string;
+    lifestyleAdvice?: string;
+    isUrgent: boolean;
+    status?: string;
+    followUpDate?: string;
+    isReferralNeeded: boolean;
+    finalizedAt?: string;
+    confirmedAt?: string;
+  };
+}
+
+const normalizeReportRiskLevel = (
+  riskLevel?: string | null
+): ScreeningReport['riskLevel'] => {
+  const normalized = (riskLevel ?? '').trim().toLowerCase();
+
+  if (normalized === 'critical') return 'critical';
+  if (normalized === 'high') return 'high';
+  if (normalized === 'medium' || normalized === 'moderate') return 'medium';
+  return 'low';
+};
+
+const inferReportRecommendations = (
+  riskLevel: ScreeningReport['riskLevel']
+): string[] => {
+  if (riskLevel === 'critical') {
+    return [
+      'Seek urgent ophthalmologist consultation.',
+      'Avoid delaying follow-up examination.',
+    ];
+  }
+
+  if (riskLevel === 'high') {
+    return [
+      'Schedule ophthalmologist review within 48 hours.',
+      'Monitor symptoms and vision changes closely.',
+    ];
+  }
+
+  if (riskLevel === 'medium') {
+    return [
+      'Arrange follow-up eye examination soon.',
+      'Maintain healthy eye-care habits and routine checks.',
+    ];
+  }
+
+  return [
+    'Continue routine eye screening as scheduled.',
+    'Maintain preventive eye-care lifestyle.',
+  ];
+};
+
+const parseFindingItems = (
+  findings: string | undefined,
+  riskLevel: ScreeningReport['riskLevel'],
+  confidenceScore: number
+): AnalysisFinding[] => {
+  if (!findings?.trim()) return [];
+
+  const severity: AnalysisFinding['severity'] =
+    riskLevel === 'high' || riskLevel === 'critical'
+      ? 'high'
+      : riskLevel === 'medium'
+        ? 'medium'
+        : 'low';
+
+  return findings
+    .split(/[,;\n\r]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item, index) => ({
+      id: `${index + 1}`,
+      type: 'clinical-finding',
+      severity,
+      location: 'retina',
+      description: item,
+      confidence: confidenceScore,
+    }));
+};
+
+const parseRecommendationItems = (value?: string): string[] => {
+  if (!value?.trim()) return [];
+
+  const normalized = value
+    .split(/[\n\r;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (normalized.length > 0) return normalized;
+  return [value.trim()];
+};
+
+const mapSessionSummaryToReport = (
+  session: ScreeningSessionSummary
+): ScreeningReport => {
+  const riskLevel = normalizeReportRiskLevel(session.latestRiskLevel);
+
+  return {
+    id: session.screeningId,
+    patientId: session.patientId ?? '',
+    imageId: session.screeningId,
+    analysisId: session.screeningId,
+    type: 'AI_SCREENING',
+    status: session.processedAt ? 'completed' : 'pending',
+    riskLevel,
+    summary: 'AI retinal screening session recorded.',
+    findings: [],
+    recommendations: inferReportRecommendations(riskLevel),
+    createdAt: session.createdAt,
+  };
+};
+
+const mapSessionDetailToReport = (
+  detail: ScreeningSessionDetail
+): ScreeningReport => {
+  const riskLevel = normalizeReportRiskLevel(detail.latestResult?.riskLevel);
+  const confidenceScore = detail.latestResult?.confidenceScore ?? 0;
+  const findings = parseFindingItems(
+    detail.latestResult?.findings,
+    riskLevel,
+    confidenceScore
   );
-  return response.data.data!;
+  const diagnosisRecommendations = parseRecommendationItems(
+    detail.latestDiagnosis?.recommendations
+  );
+
+  return {
+    id: detail.screeningId,
+    patientId: detail.patientId,
+    imageId: detail.screeningId,
+    analysisId: detail.latestResult?.screeningResultId ?? detail.screeningId,
+    type: 'AI_SCREENING',
+    status: detail.latestResult ? 'completed' : 'pending',
+    riskLevel,
+    summary:
+      detail.latestResult?.summary?.trim() ||
+      detail.latestResult?.findings?.trim() ||
+      'AI retinal screening result is available.',
+    findings,
+    recommendations:
+      diagnosisRecommendations.length > 0
+        ? diagnosisRecommendations
+        : inferReportRecommendations(riskLevel),
+    createdAt: detail.latestResult?.assessedAt ?? detail.createdAt,
+    medicalDiagnosis: detail.latestDiagnosis
+      ? {
+          diagnosisCode: detail.latestDiagnosis.diagnosisCode,
+          codingSystem: detail.latestDiagnosis.codingSystem,
+          clinicalFindings: detail.latestDiagnosis.clinicalFindings,
+          severityLevel: detail.latestDiagnosis.severityLevel,
+          confidenceLevel: detail.latestDiagnosis.confidenceLevel,
+          treatmentPlan: detail.latestDiagnosis.treatmentPlan,
+          recommendations: detail.latestDiagnosis.recommendations,
+          lifestyleAdvice: detail.latestDiagnosis.lifestyleAdvice,
+          isUrgent: detail.latestDiagnosis.isUrgent,
+          status: detail.latestDiagnosis.status,
+          followUpDate: detail.latestDiagnosis.followUpDate,
+          isReferralNeeded: detail.latestDiagnosis.isReferralNeeded,
+          finalizedAt: detail.latestDiagnosis.finalizedAt,
+          confirmedAt: detail.latestDiagnosis.confirmedAt,
+        }
+      : undefined,
+  };
+};
+
+export const getReports = async (): Promise<ScreeningReport[]> => {
+  const response = await api.get<ApiResponse<ScreeningSessionSummary[]>>(
+    PATIENT_ENDPOINTS.REPORTS.LIST,
+    { params: { limit: 20 } }
+  );
+
+  const sessions = response.data.data ?? [];
+  return sessions.map(mapSessionSummaryToReport);
 };
 
 export const getReport = async (id: string): Promise<ScreeningReport> => {
-  const response = await api.get<ApiResponse<ScreeningReport>>(
+  const response = await api.get<ApiResponse<ScreeningSessionDetail>>(
     PATIENT_ENDPOINTS.REPORTS.GET(id)
   );
-  return response.data.data!;
+
+  return mapSessionDetailToReport(response.data.data!);
 };
 
 export const downloadReportPdf = async (id: string): Promise<Blob> => {

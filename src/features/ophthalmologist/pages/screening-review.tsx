@@ -62,6 +62,7 @@ interface DetectedFinding {
 }
 
 type BoxRect = { x: number; y: number; width: number; height: number };
+type TranslateFn = (key: string, fallback: string) => string;
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -124,20 +125,35 @@ function anomalyToFinding(a: Anomaly): DetectedFinding {
   };
 }
 
-const riskLevelConfig: Record<
-  RiskLevel,
-  { label: string; color: string; bg: string }
-> = {
-  None: { label: 'No Risk', color: 'text-gray-600', bg: 'bg-gray-100' },
-  Low: { label: 'Low Risk', color: 'text-green-600', bg: 'bg-green-100' },
+const getRiskLevelConfig = (
+  t: TranslateFn
+): Record<RiskLevel, { label: string; color: string; bg: string }> => ({
+  None: {
+    label: t('Ophthalmologist.screeningReview.risk.none', 'No Risk'),
+    color: 'text-gray-600',
+    bg: 'bg-gray-100',
+  },
+  Low: {
+    label: t('Ophthalmologist.screeningReview.risk.low', 'Low Risk'),
+    color: 'text-green-600',
+    bg: 'bg-green-100',
+  },
   Moderate: {
-    label: 'Moderate',
+    label: t('Ophthalmologist.screeningReview.risk.moderate', 'Moderate'),
     color: 'text-yellow-600',
     bg: 'bg-yellow-100',
   },
-  High: { label: 'High Risk', color: 'text-orange-600', bg: 'bg-orange-100' },
-  Critical: { label: 'Critical', color: 'text-red-600', bg: 'bg-red-100' },
-};
+  High: {
+    label: t('Ophthalmologist.screeningReview.risk.high', 'High Risk'),
+    color: 'text-orange-600',
+    bg: 'bg-orange-100',
+  },
+  Critical: {
+    label: t('Ophthalmologist.screeningReview.risk.critical', 'Critical'),
+    color: 'text-red-600',
+    bg: 'bg-red-100',
+  },
+});
 
 type SidebarTab = 'patient' | 'history' | 'exam' | 'reports';
 
@@ -173,6 +189,7 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -248,15 +265,29 @@ export default function ScreeningReviewPage() {
 
   const referralPillLabel =
     riskLevelUi === 'High' || riskLevelUi === 'Critical'
-      ? 'Referral Recommended'
+      ? t(
+          'Ophthalmologist.screeningReview.referral.recommended',
+          'Referral Recommended'
+        )
       : riskLevelUi === 'Moderate'
-        ? 'Monitor closely'
-        : 'Routine follow-up';
+        ? t(
+            'Ophthalmologist.screeningReview.referral.monitor',
+            'Monitor closely'
+          )
+        : t(
+            'Ophthalmologist.screeningReview.referral.routine',
+            'Routine follow-up'
+          );
 
   useEffect(() => {
     if (!screeningId || !isUuid(screeningId)) {
       setLoading(false);
-      setLoadError('Invalid screening identifier.');
+      setLoadError(
+        t(
+          'Ophthalmologist.screeningReview.invalidIdentifier',
+          'Invalid screening identifier.'
+        )
+      );
       setDetail(null);
       return;
     }
@@ -274,9 +305,19 @@ export default function ScreeningReviewPage() {
       } catch (e) {
         if (cancelled) return;
         if (isAxiosError(e) && e.response?.status === 404) {
-          setLoadError('Screening not found or you do not have access.');
+          setLoadError(
+            t(
+              'Ophthalmologist.screeningReview.notFound',
+              'Screening not found or you do not have access.'
+            )
+          );
         } else {
-          setLoadError('Could not load screening. Please try again.');
+          setLoadError(
+            t(
+              'Ophthalmologist.screeningReview.loadFailed',
+              'Could not load screening. Please try again.'
+            )
+          );
         }
         setDetail(null);
       } finally {
@@ -287,7 +328,7 @@ export default function ScreeningReviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [screeningId]);
+  }, [screeningId, t]);
 
   useEffect(() => {
     if (!detail?.rawJsonOutput || !selectedImage?.imageUrl) {
@@ -413,8 +454,10 @@ export default function ScreeningReviewPage() {
       consultationSessionsQuery.isLoading ||
       consultationSessionsQuery.isFetching
     ) {
-      const message =
-        'Still loading linked consultation session. Please retry in a moment.';
+      const message = t(
+        'Ophthalmologist.screeningReview.sessionLinkLoading',
+        'Still loading linked consultation session. Please retry in a moment.'
+      );
       ophthalToast.info(message);
       return;
     }
@@ -617,7 +660,7 @@ export default function ScreeningReviewPage() {
 
                 <div className="flex items-center gap-3">
                   <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-xs font-medium">
-                    AI Model:{' '}
+                    {t('Ophthalmologist.screeningReview.aiModel', 'AI Model')}:{' '}
                     {detail.modelVersion?.trim()
                       ? detail.modelVersion
                       : t(
@@ -747,7 +790,11 @@ export default function ScreeningReviewPage() {
                                         : 'text-gray-600 dark:text-gray-400'
                                     }`}
                                   >
-                                    {img.eyeSide} Eye
+                                    {img.eyeSide}{' '}
+                                    {t(
+                                      'Ophthalmologist.screeningReview.eye',
+                                      'Eye'
+                                    )}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-500">
                                     Q:{' '}
@@ -983,8 +1030,14 @@ export default function ScreeningReviewPage() {
                         }`}
                         title={
                           overlayEditMode
-                            ? 'Exit overlay edit (drag / resize handles)'
-                            : 'Edit AI boxes: drag to move, drag corner to resize'
+                            ? t(
+                                'Ophthalmologist.screeningReview.toolbar.exitOverlayEdit',
+                                'Exit overlay edit (drag / resize handles)'
+                              )
+                            : t(
+                                'Ophthalmologist.screeningReview.toolbar.editOverlay',
+                                'Edit AI boxes: drag to move, drag corner to resize'
+                              )
                         }
                       >
                         <Pencil className="w-5 h-5" />
@@ -1330,7 +1383,11 @@ export default function ScreeningReviewPage() {
                                     : 'text-yellow-600 dark:text-yellow-400'
                               }`}
                             >
-                              {finding.confidence}% Conf.
+                              {finding.confidence}%{' '}
+                              {t(
+                                'Ophthalmologist.screeningReview.confAbbr',
+                                'Conf.'
+                              )}
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">

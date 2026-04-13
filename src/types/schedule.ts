@@ -194,6 +194,13 @@ export interface GenerateSlotsRequest {
   skipExistingDates?: boolean;
 }
 
+export interface AllowedPriceRangeDto {
+  ophthalmologistId: string;
+  yearsOfExperience: number;
+  minPrice: number;
+  maxPrice: number;
+}
+
 // ============ SCHEDULE TEMPLATE TYPES ============
 
 export interface ScheduleTemplateDto {

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
+  CalendarDays,
   Building2,
   ChevronRight,
   Download,
@@ -33,7 +34,10 @@ import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import { dashboardApi } from '../api';
-import type { SystemAdminDashboardMetrics } from '../types/system-admin.types';
+import type {
+  SystemAdminDashboardMetrics,
+  SystemAdminPartTimeSlotQuotaUsage,
+} from '../types/system-admin.types';
 import {
   buildTimestampedFileName,
   downloadPdfTableFile,
@@ -61,13 +65,71 @@ const resolveTrend = (growthPercentage: number): 'up' | 'down' | 'stable' => {
   return 'stable';
 };
 
+const toDateOnly = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const addDays = (baseDate: Date, days: number) => {
+  const d = new Date(baseDate);
+  d.setDate(d.getDate() + days);
+  return d;
+};
+
+const formatDayLabel = (date: string) => {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 export default function SystemAdminDashboard() {
+  const [quotaFromDate, setQuotaFromDate] = useState(() =>
+    toDateOnly(new Date())
+  );
+  const [quotaToDate, setQuotaToDate] = useState(() =>
+    toDateOnly(addDays(new Date(), 13))
+  );
+
+  const normalizedQuotaRange = useMemo(() => {
+    if (quotaFromDate <= quotaToDate) {
+      return {
+        fromDate: quotaFromDate,
+        toDate: quotaToDate,
+      };
+    }
+
+    return {
+      fromDate: quotaToDate,
+      toDate: quotaFromDate,
+    };
+  }, [quotaFromDate, quotaToDate]);
+
   const metricsQuery = useQuery<SystemAdminDashboardMetrics>({
     queryKey: ['system-admin-dashboard', 'metrics'],
     queryFn: dashboardApi.getMetrics,
   });
 
+  const quotaUsageQuery = useQuery<SystemAdminPartTimeSlotQuotaUsage[]>({
+    queryKey: [
+      'system-admin-dashboard',
+      'part-time-slot-usage',
+      normalizedQuotaRange.fromDate,
+      normalizedQuotaRange.toDate,
+    ],
+    queryFn: () =>
+      dashboardApi.getPartTimeSlotUsage(
+        normalizedQuotaRange.fromDate,
+        normalizedQuotaRange.toDate
+      ),
+  });
+
   const metrics = metricsQuery.data;
+  const quotaUsageRows = quotaUsageQuery.data ?? [];
   const isLoading = metricsQuery.isLoading;
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -89,6 +151,50 @@ export default function SystemAdminDashboard() {
       commission: metrics.dailyPlatformCommission[i]?.value ?? 0,
     }));
   }, [metrics]);
+
+  const quotaChartData = useMemo(() => {
+    return quotaUsageRows.map((row) => {
+      const quota = Math.max(row.quota, 0);
+      const used = Math.min(Math.max(row.usedSlots, 0), quota || row.usedSlots);
+      const remaining = Math.max(quota - used, row.remainingSlots, 0);
+      const utilization = quota > 0 ? (used / quota) * 100 : 0;
+
+      return {
+        ...row,
+        label: formatDayLabel(row.date),
+        usedSlots: used,
+        remainingSlots: remaining,
+        utilization,
+      };
+    });
+  }, [quotaUsageRows]);
+
+  const quotaSummary = useMemo(() => {
+    if (quotaChartData.length === 0) {
+      return {
+        totalUsed: 0,
+        totalQuota: 0,
+        averageUtilization: 0,
+        nearLimitDays: 0,
+      };
+    }
+
+    const totalUsed = quotaChartData.reduce(
+      (sum, row) => sum + row.usedSlots,
+      0
+    );
+    const totalQuota = quotaChartData.reduce((sum, row) => sum + row.quota, 0);
+    const nearLimitDays = quotaChartData.filter(
+      (row) => row.quota > 0 && row.utilization >= 80
+    ).length;
+
+    return {
+      totalUsed,
+      totalQuota,
+      averageUtilization: totalQuota > 0 ? (totalUsed / totalQuota) * 100 : 0,
+      nearLimitDays,
+    };
+  }, [quotaChartData]);
 
   const topCards = metrics
     ? [
@@ -247,6 +353,11 @@ export default function SystemAdminDashboard() {
         metric: item.label,
         value: item.value,
       })),
+      ...quotaUsageRows.map((item) => ({
+        section: 'Part-time slot quota usage',
+        metric: `${item.date} - used/quota/remaining`,
+        value: `${item.usedSlots}/${item.quota}/${item.remainingSlots}`,
+      })),
     ];
   }, [metrics]);
 
@@ -320,6 +431,12 @@ export default function SystemAdminDashboard() {
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const applyQuotaRangePreset = (days: number) => {
+    const start = new Date();
+    setQuotaFromDate(toDateOnly(start));
+    setQuotaToDate(toDateOnly(addDays(start, days - 1)));
   };
 
   return (
@@ -536,6 +653,162 @@ export default function SystemAdminDashboard() {
                             />
                           </LineChart>
                         </ResponsiveContainer>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
+                    <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-4">
+                      <div>
+                        <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5 flex items-center gap-2">
+                          <CalendarDays className="w-4 h-4 text-sky-500" />
+                          Part-time slot quota usage
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs">
+                          Reserved slots by day against global quota
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div>
+                          <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                            From
+                          </label>
+                          <input
+                            type="date"
+                            value={quotaFromDate}
+                            onChange={(e) => setQuotaFromDate(e.target.value)}
+                            className="px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                            To
+                          </label>
+                          <input
+                            type="date"
+                            value={quotaToDate}
+                            onChange={(e) => setQuotaToDate(e.target.value)}
+                            className="px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => applyQuotaRangePreset(7)}
+                          className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          7d
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyQuotaRangePreset(14)}
+                          className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          14d
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyQuotaRangePreset(30)}
+                          className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          30d
+                        </button>
+                      </div>
+                    </div>
+
+                    {quotaUsageQuery.isLoading ? (
+                      <div className="h-64 flex items-center justify-center">
+                        <Spinner size={28} />
+                      </div>
+                    ) : quotaUsageQuery.isError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+                        Failed to load part-time slot quota usage.
+                      </div>
+                    ) : quotaChartData.length === 0 ? (
+                      <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                        No quota usage data
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Used slots
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {quotaSummary.totalUsed.toLocaleString('en-US')}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Quota capacity
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {quotaSummary.totalQuota.toLocaleString('en-US')}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Avg utilization
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {quotaSummary.averageUtilization.toFixed(1)}%
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Near-limit days
+                            </p>
+                            <p className="text-base font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                              {quotaSummary.nearLimitDays}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={quotaChartData}>
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#cbd5e1"
+                                className="dark:stroke-slate-700"
+                              />
+                              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                              <YAxis tick={{ fontSize: 11 }} />
+                              <Tooltip
+                                formatter={(value, name) => {
+                                  if (name === 'usedSlots') {
+                                    return [value, 'Used'];
+                                  }
+                                  return [value, 'Remaining'];
+                                }}
+                                labelFormatter={(label, payload) => {
+                                  const row = payload?.[0]?.payload as
+                                    | SystemAdminPartTimeSlotQuotaUsage
+                                    | undefined;
+                                  return row
+                                    ? `${label} (${row.date})`
+                                    : String(label);
+                                }}
+                              />
+                              <Legend wrapperStyle={{ fontSize: 12 }} />
+                              <Bar
+                                dataKey="usedSlots"
+                                name="Used"
+                                stackId="quota"
+                                fill="#0ea5e9"
+                                radius={[4, 4, 0, 0]}
+                              />
+                              <Bar
+                                dataKey="remainingSlots"
+                                name="Remaining"
+                                stackId="quota"
+                                fill="#22c55e"
+                                radius={[4, 4, 0, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     )}
                   </section>

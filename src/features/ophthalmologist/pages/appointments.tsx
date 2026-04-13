@@ -59,17 +59,27 @@ const formatDateTime = (
   };
 };
 
-function getCountdownText(appointmentTime: string | null): string | null {
+function getCountdownText(
+  appointmentTime: string | null,
+  labels: {
+    startsIn: string;
+    inPrefix: string;
+    hours: string;
+    minutes: string;
+    days: string;
+  }
+): string | null {
   if (!appointmentTime) return null;
   const diff = new Date(appointmentTime).getTime() - Date.now();
   if (diff <= 0 || Number.isNaN(diff)) return null;
   const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `Starts in ${mins}m`;
+  if (mins < 60) return `${labels.startsIn} ${mins}${labels.minutes}`;
   const hrs = Math.floor(mins / 60);
   const remMins = mins % 60;
-  if (hrs < 24) return `Starts in ${hrs}h ${remMins}m`;
+  if (hrs < 24)
+    return `${labels.startsIn} ${hrs}${labels.hours} ${remMins}${labels.minutes}`;
   const days = Math.floor(hrs / 24);
-  return `In ${days}d ${hrs % 24}h`;
+  return `${labels.inPrefix} ${days}${labels.days} ${hrs % 24}${labels.hours}`;
 }
 
 function getTypeMeta(type: ConsultationSessionType) {
@@ -184,6 +194,19 @@ export default function AppointmentsPage() {
 
   const cancelMutation = useCancelSession();
   const sessions = sessionsData?.items ?? [];
+  const countdownLabels = useMemo(
+    () => ({
+      startsIn: t(
+        'Ophthalmologist.appointments.countdown.startsIn',
+        'Starts in'
+      ),
+      inPrefix: t('Ophthalmologist.appointments.countdown.in', 'In'),
+      hours: t('Ophthalmologist.appointments.countdown.hoursShort', 'h'),
+      minutes: t('Ophthalmologist.appointments.countdown.minutesShort', 'm'),
+      days: t('Ophthalmologist.appointments.countdown.daysShort', 'd'),
+    }),
+    [t]
+  );
 
   /* ── categorize ── */
   const { todaySessions, upcomingSessions, pastSessions, cancelledSessions } =
@@ -580,7 +603,10 @@ export default function AppointmentsPage() {
                         </div>
                         {isNext && (
                           <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
-                            {getCountdownText(session.appointmentTime) ?? 'Now'}
+                            {getCountdownText(
+                              session.appointmentTime,
+                              countdownLabels
+                            ) ?? t('Ophthalmologist.appointments.now', 'Now')}
                           </span>
                         )}
                       </div>
@@ -609,7 +635,10 @@ export default function AppointmentsPage() {
               );
               const typeMeta = getTypeMeta(session.type);
               const statusCfg = getStatusConfig(session.status, t);
-              const countdown = getCountdownText(session.appointmentTime);
+              const countdown = getCountdownText(
+                session.appointmentTime,
+                countdownLabels
+              );
               const isActive =
                 session.status === SessionStatus.Pending ||
                 session.status === SessionStatus.Confirmed;

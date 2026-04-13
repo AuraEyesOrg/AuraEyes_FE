@@ -333,7 +333,14 @@ export default function ScreeningsPage() {
     }
 
     return filtered;
-  }, [getEffectiveReviewStatus, items, searchQuery, selectedStatus, sortMode]);
+  }, [
+    getEffectiveReviewStatus,
+    items,
+    searchQuery,
+    selectedStatus,
+    sortMode,
+    t,
+  ]);
 
   useEffect(() => {
     setCurrentPage(1);
