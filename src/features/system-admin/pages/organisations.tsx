@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   FileText,
@@ -93,6 +94,7 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
 });
 
 export default function OrganisationsPage() {
+  const navigate = useNavigate();
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [onboardingRequests, setOnboardingRequests] = useState<
     OrganisationOnboardingRequestDto[]
@@ -167,6 +169,10 @@ export default function OrganisationsPage() {
     setSearchQuery(name);
     setPageNumber(1);
   }, []);
+
+  const openContractsManagement = useCallback(() => {
+    navigate('/system-admin/contracts');
+  }, [navigate]);
 
   const handleApproveOnboarding = async (requestId: string) => {
     try {
@@ -520,6 +526,7 @@ export default function OrganisationsPage() {
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={openContractsManagement}
             className="text-slate-500 hover:text-primary transition-colors p-1"
             title="View Contract"
           >
