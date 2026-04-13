@@ -588,14 +588,6 @@ const LoginPage = () => {
                 <p className="text-gray-500 text-base">
                   {t('AuthPages.login.loginForm.description')}
                 </p>
-                <div>
-                  <Link
-                    to={toLocalizedAuthPath('/')}
-                    className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-[#1F85F5] hover:text-[#1F85F5]"
-                  >
-                    {t('AuthPages.login.loginForm.backHome')}
-                  </Link>
-                </div>
               </div>
 
               {/* Form */}
