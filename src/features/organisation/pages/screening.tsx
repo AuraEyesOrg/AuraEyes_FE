@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ScanEye,
   Upload,
@@ -38,6 +38,7 @@ type ScreeningCreationStep = Extract<
    ═══════════════════════════════════════════════════════════════════════ */
 export default function OrganisationScreeningPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -233,7 +234,11 @@ export default function OrganisationScreeningPage() {
       }>(uploadResponse);
       setIsUploading(false);
 
-      // Step 2: Create screening session
+      // Step 2: Deduct 1 quota credit for this screening.
+      await orgBillingApi.deductQuota();
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
+
+      // Step 3: Create screening session
       const retinalImages = (uploadData?.uploadedUrls ?? []).map((url, i) => ({
         imageUrl: url,
         eyeSide: validImages[i]?.eyeSide ?? ('Both' as const),
