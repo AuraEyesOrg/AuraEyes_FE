@@ -5,11 +5,13 @@ import {
   ChevronRight,
   Clock,
   Play,
-  UserCheck,
+  QrCode,
+  X,
   UserX,
 } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import Spinner from '@/components/ui/spinner';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
@@ -34,6 +36,10 @@ import {
 } from '@/lib/date-utils';
 
 const DAYS_PER_WEEK = 7;
+const CLINIC_CHECKIN_QR_PREFIX = 'AURA-CLINIC-APPOINTMENT';
+const CLINIC_QR_READER_ID = 'organisation-clinic-checkin-qr-reader';
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** All states in order for the pipeline strip */
 const PIPELINE_STEPS = [
@@ -124,6 +130,39 @@ function getPatientInitials(appointment: {
   return getInitials(patientName || appointment.patientId);
 }
 
+function parseClinicCheckInQrPayload(rawValue: string): {
+  appointmentId: string;
+  organisationId?: string;
+  dateKey?: string;
+} | null {
+  const value = rawValue.trim();
+  if (!value) return null;
+
+  const parts = value.split('|').map((part) => part.trim());
+
+  if (parts.length >= 7 && parts[0] === CLINIC_CHECKIN_QR_PREFIX) {
+    const appointmentId = parts[1] ?? '';
+    const organisationId = parts[3] ?? '';
+    const dateKey = parts[4] ?? '';
+
+    if (!UUID_REGEX.test(appointmentId)) return null;
+
+    return {
+      appointmentId,
+      organisationId: UUID_REGEX.test(organisationId)
+        ? organisationId
+        : undefined,
+      dateKey: /^\d{4}-\d{2}-\d{2}$/.test(dateKey) ? dateKey : undefined,
+    };
+  }
+
+  if (UUID_REGEX.test(value)) {
+    return { appointmentId: value };
+  }
+
+  return null;
+}
+
 export default function CalendarPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
@@ -131,6 +170,10 @@ export default function CalendarPage() {
   const todayKey = toLocalDateKey(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(todayKey);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [scanTargetAppointmentId, setScanTargetAppointmentId] = useState<
+    string | null
+  >(null);
 
   const weekWindow = useMemo(() => {
     const weekStart = getStartOfWeekMonday(new Date());
@@ -228,16 +271,101 @@ export default function CalendarPage() {
     }
   };
 
+  useEffect(() => {
+    if (!isQrScannerOpen) return;
+
+    let scanner: Html5QrcodeScanner | null = null;
+    let hasHandledScan = false;
+
+    scanner = new Html5QrcodeScanner(
+      CLINIC_QR_READER_ID,
+      {
+        qrbox: {
+          width: 250,
+          height: 250,
+        },
+        fps: 5,
+      },
+      false
+    );
+
+    scanner.render(
+      (decodedText) => {
+        if (hasHandledScan) return;
+        hasHandledScan = true;
+
+        void scanner
+          ?.clear()
+          .catch(() => undefined)
+          .finally(() => {
+            setIsQrScannerOpen(false);
+            setScanTargetAppointmentId(null);
+
+            const parsed = parseClinicCheckInQrPayload(decodedText);
+            if (!parsed) {
+              toast.error('Invalid clinic check-in QR code.');
+              return;
+            }
+
+            if (
+              scanTargetAppointmentId &&
+              parsed.appointmentId.toLowerCase() !==
+                scanTargetAppointmentId.toLowerCase()
+            ) {
+              toast.error(
+                'This QR code does not match the selected appointment.'
+              );
+              return;
+            }
+
+            if (
+              parsed.organisationId &&
+              organisationId &&
+              parsed.organisationId.toLowerCase() !==
+                organisationId.toLowerCase()
+            ) {
+              toast.error('This QR code does not belong to your organisation.');
+              return;
+            }
+
+            if (parsed.dateKey) {
+              setSelectedDate(parsed.dateKey);
+              setCurrentWeekOffset(getWeekOffsetFromDateKey(parsed.dateKey));
+            }
+
+            void (async () => {
+              try {
+                await checkInMutation.mutateAsync(
+                  scanTargetAppointmentId ?? parsed.appointmentId
+                );
+                toast.success('Check-in successful via QR.');
+              } catch (error) {
+                toast.error(mapClinicStaffErrorMessage(error));
+              }
+            })();
+          });
+      },
+      () => {
+        // Ignore frame-level decode failures while camera is active.
+      }
+    );
+
+    return () => {
+      void scanner
+        ?.clear()
+        .catch(() => undefined)
+        .finally(() => {
+          scanner = null;
+        });
+    };
+  }, [
+    checkInMutation,
+    isQrScannerOpen,
+    organisationId,
+    scanTargetAppointmentId,
+  ]);
+
   const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
-    if (appointment.status === 'Pending')
-      return {
-        label: 'Check-in',
-        icon: UserCheck,
-        successMessage: 'Check-in successful.',
-        className:
-          'bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50',
-        action: () => checkInMutation.mutateAsync(appointment.id),
-      };
     if (appointment.status === 'CheckedIn')
       return {
         label: 'Start consultation',
@@ -538,7 +666,20 @@ export default function CalendarPage() {
 
                         {/* Actions */}
                         <div className="flex flex-wrap items-center gap-2">
-                          {primaryAction ? (
+                          {appt.status === 'Pending' ? (
+                            <button
+                              type="button"
+                              disabled={isMutating || !organisationId}
+                              onClick={() => {
+                                setScanTargetAppointmentId(appt.id);
+                                setIsQrScannerOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <QrCode className="h-3.5 w-3.5" />
+                              Scan QR check-in
+                            </button>
+                          ) : primaryAction ? (
                             <button
                               type="button"
                               disabled={isMutating}
@@ -588,6 +729,37 @@ export default function CalendarPage() {
           </div>
         </main>
       </div>
+
+      {isQrScannerOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-(--border-color) bg-(--bg-primary) p-4 shadow-xl">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-(--text-primary)">
+                  Scan QR for check-in
+                </h3>
+                <p className="mt-1 text-xs text-(--text-muted)">
+                  Point the camera at the patient appointment QR code.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsQrScannerOpen(false);
+                  setScanTargetAppointmentId(null);
+                }}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-(--border-color) text-(--text-secondary) transition hover:bg-(--bg-secondary)"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-(--border-color) bg-black">
+              <div id={CLINIC_QR_READER_ID} className="w-full" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
