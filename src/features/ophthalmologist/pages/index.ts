@@ -5,3 +5,4 @@ export { default as AppointmentsPage } from './appointments';
 export { default as SettingsPage } from './settings';
 export { default as SchedulesPage } from './schedules';
 export { default as SlotManagementPage } from './slot-management';
+export { default as LeaveRequestsPage } from './leave-requests';
