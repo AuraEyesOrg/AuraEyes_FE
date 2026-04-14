@@ -46,6 +46,7 @@ import type {
   RiskLevel,
 } from '@/features/organisation/types/screening-result.types';
 import {
+  buildFindingsFromBoxes,
   buildFindingsText,
   buildSummary,
   clampConfidence,
@@ -309,41 +310,62 @@ export default function OrganisationScreeningResultPage() {
   };
 
   // ─── Box annotation CRUD ────────────────────────────────────────────────
+  const syncFindingsFromBoxes = useCallback((nextBoxes: DetectionBox[]) => {
+    const nextFindings = buildFindingsFromBoxes(nextBoxes);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      return { ...prev, findings: nextFindings };
+    });
+  }, []);
+
   const handleBoxCreate = useCallback(
     (payload: BoxCreatePayload) => {
       if (isViewOnly) return;
       const newBox = createManualBox(payload.location);
-      setDetectedBoxes((prev) => [...prev, newBox]);
+      setDetectedBoxes((prev) => {
+        const next = [...prev, newBox];
+        syncFindingsFromBoxes(next);
+        return next;
+      });
       setSelectedBoxId(newBox.id);
       setLabelSelectorBoxId(newBox.id);
       setAnnotationMode('select');
       setSaved(false);
     },
-    [isViewOnly]
+    [isViewOnly, syncFindingsFromBoxes]
   );
 
   const handleBoxUpdate = useCallback(
     (payload: BoxUpdatePayload) => {
       if (isViewOnly) return;
-      setDetectedBoxes((prev) =>
-        prev.map((box) =>
+      setDetectedBoxes((prev) => {
+        const next = prev.map((box) =>
           box.id === payload.id ? { ...box, ...payload } : box
-        )
-      );
+        );
+        // Only sync findings when label/name changed (not during drag moves)
+        if (payload.name !== undefined || payload.localizedName !== undefined) {
+          syncFindingsFromBoxes(next);
+        }
+        return next;
+      });
       setSaved(false);
     },
-    [isViewOnly]
+    [isViewOnly, syncFindingsFromBoxes]
   );
 
   const handleBoxDelete = useCallback(
     (id: string) => {
       if (isViewOnly) return;
-      setDetectedBoxes((prev) => prev.filter((box) => box.id !== id));
+      setDetectedBoxes((prev) => {
+        const next = prev.filter((box) => box.id !== id);
+        syncFindingsFromBoxes(next);
+        return next;
+      });
       if (selectedBoxId === id) setSelectedBoxId(null);
       if (labelSelectorBoxId === id) setLabelSelectorBoxId(null);
       setSaved(false);
     },
-    [isViewOnly, selectedBoxId, labelSelectorBoxId]
+    [isViewOnly, selectedBoxId, labelSelectorBoxId, syncFindingsFromBoxes]
   );
 
   const handleBoxSelect = useCallback((id: string | null) => {

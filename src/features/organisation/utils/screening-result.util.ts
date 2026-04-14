@@ -138,6 +138,33 @@ export function buildFindingsText(items: AiFindingItem[]): string {
   return `Primary Finding: ${primaryFinding}\nRelated Findings: ${secondaryFindings.join(', ')}`;
 }
 
+export function buildFindingsFromBoxes(boxes: DetectionBox[]): string {
+  const labeled = boxes.filter((b) => b.localizedName.trim().length > 0);
+  if (labeled.length === 0) return '';
+
+  const aiBoxes = labeled.filter((b) => b.source === 'ai');
+  const manualBoxes = labeled.filter((b) => b.source === 'manual');
+
+  const lines: string[] = [];
+
+  if (aiBoxes.length > 0) {
+    const [primary, ...rest] = aiBoxes;
+    lines.push(`Primary Finding: ${primary.localizedName}`);
+    if (rest.length > 0) {
+      lines.push(
+        `Related Findings: ${rest.map((b) => b.localizedName).join(', ')}`
+      );
+    }
+  }
+
+  if (manualBoxes.length > 0) {
+    const manualNames = manualBoxes.map((b) => b.localizedName).join(', ');
+    lines.push(`Manual Annotations: ${manualNames}`);
+  }
+
+  return lines.join('\n');
+}
+
 export function splitFindingsAndNote(content?: string): {
   findings: string;
   note: string;
