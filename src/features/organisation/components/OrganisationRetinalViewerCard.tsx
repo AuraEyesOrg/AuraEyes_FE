@@ -1,11 +1,9 @@
 import {
   Activity,
   Eye,
-  Loader2,
   MousePointer2,
   Pencil,
   PenTool,
-  ScanEye,
   Trash2,
 } from 'lucide-react';
 import type { RefObject } from 'react';
@@ -289,17 +287,6 @@ export function OrganisationRetinalViewerCard({
                 <Activity className="w-3.5 h-3.5" />
                 {showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
               </button>
-            )}
-
-            {analyzing ? (
-              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> AI scanner
-                active
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-full border border-(--border-primary) bg-(--bg-primary) px-3 py-1 text-xs font-medium text-(--text-secondary)">
-                <ScanEye className="w-3.5 h-3.5" /> Ready for review
-              </span>
             )}
           </div>
         </div>
