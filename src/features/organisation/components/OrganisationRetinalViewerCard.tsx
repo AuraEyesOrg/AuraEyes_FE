@@ -174,12 +174,11 @@ export function OrganisationRetinalViewerCard({
     isEditable && onBoxCreate && onBoxUpdate && onBoxDelete && onBoxSelect;
 
   const manualCount = detectedBoxes.filter((b) => b.source === 'manual').length;
-  const aiCount = detectedBoxes.filter((b) => b.source === 'ai').length;
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl overflow-hidden bg-(--bg-secondary) border border-(--border-primary)">
-        <div className="px-5 py-4 border-b border-(--border-primary) flex items-center justify-between gap-4">
+        <div className="px-5 py-4 border-b border-(--border-primary) flex items-center justify-between gap-4 min-h-[72px]">
           <div>
             <p className="text-sm font-semibold text-(--text-primary)">
               Retinal Viewer
@@ -202,7 +201,7 @@ export function OrganisationRetinalViewerCard({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Annotation mode toggles */}
             {useAnnotationLayer && (
               <div className="flex items-center gap-0.5 rounded-full border border-(--border-primary) bg-(--bg-primary) p-0.5">
@@ -235,13 +234,20 @@ export function OrganisationRetinalViewerCard({
               </div>
             )}
 
-            {/* Edit label + Delete for selected box */}
-            {useAnnotationLayer && selectedBoxId && (
-              <>
+            {/* Keep action slot width stable to avoid toolbar reflow/jump */}
+            {useAnnotationLayer && (
+              <div className="flex items-center gap-2 min-w-[190px] justify-end">
                 <button
                   type="button"
-                  onClick={() => onBoxDoubleClick?.(selectedBoxId)}
-                  className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 dark:border-indigo-800/40 dark:bg-indigo-900/20 dark:text-indigo-400 transition"
+                  onClick={() =>
+                    selectedBoxId && onBoxDoubleClick?.(selectedBoxId)
+                  }
+                  disabled={!selectedBoxId}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                    selectedBoxId
+                      ? 'border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:border-indigo-800/40 dark:bg-indigo-900/20 dark:text-indigo-400'
+                      : 'pointer-events-none opacity-0'
+                  }`}
                   title="Edit label of selected box"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -249,14 +255,19 @@ export function OrganisationRetinalViewerCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onBoxDelete(selectedBoxId)}
-                  className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 transition"
+                  onClick={() => selectedBoxId && onBoxDelete(selectedBoxId)}
+                  disabled={!selectedBoxId}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                    selectedBoxId
+                      ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400'
+                      : 'pointer-events-none opacity-0'
+                  }`}
                   title="Delete selected box"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Delete
                 </button>
-              </>
+              </div>
             )}
 
             {detectedBoxes.length > 0 && (
