@@ -78,7 +78,6 @@ const ScreeningPage = lazy(() => import('@/features/patient/pages/screening'));
 const ScreeningNewPage = lazy(
   () => import('@/features/patient/pages/screening-new')
 );
-const ReportsPage = lazy(() => import('@/features/patient/pages/reports'));
 const AppointmentsPage = lazy(
   () => import('@/features/patient/pages/appointments')
 );
@@ -393,6 +392,10 @@ const Router = () => (
           path="/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
         />
+        <Route
+          path="/patient/reports"
+          element={<LocalizedRedirect target="/patient/screening" />}
+        />
         <Route path="/logout" element={<LogoutRoute />} />
         <Route path="/:locale/logout" element={<LogoutRoute />} />
 
@@ -454,6 +457,10 @@ const Router = () => (
         <Route
           path="/:locale/ophthalmologist/analytics"
           element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
+        />
+        <Route
+          path="/:locale/patient/reports"
+          element={<LocalizedRedirect target="/patient/screening" />}
         />
 
         <Route
@@ -607,15 +614,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<ReviewPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/patient/reports"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
-              element={<ReportsPage />}
             />
           }
         />
@@ -1050,14 +1048,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <ReviewPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/patient/reports"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ReportsPage />
             </PrivateRoute>
           }
         />

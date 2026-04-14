@@ -1882,9 +1882,50 @@
       "newScreening": "Sàng lọc mới",
       "filter": "Bộ lọc",
       "viewReview": "Xem đánh giá",
+      "viewDiagnosis": "Chẩn đoán y khoa",
       "downloadReport": "Tải báo cáo",
       "shareWithDoctor": "Chia sẻ với bác sĩ",
       "delete": "Xóa"
+    },
+    "diagnosis": {
+      "title": "Chẩn đoán y khoa",
+      "loading": "Đang tải chi tiết chẩn đoán y khoa...",
+      "detailsTitle": "Chi tiết chẩn đoán y khoa",
+      "notAvailable": "Không có",
+      "yes": "Có",
+      "no": "Không",
+      "type": {
+        "aiScreening": "Sàng lọc võng mạc",
+        "verifiedResult": "Kết quả đã xác minh"
+      },
+      "status": {
+        "verified": "Đã xác minh"
+      },
+      "fields": {
+        "createdAt": "Thời điểm tạo",
+        "diagnosisCode": "Mã chẩn đoán",
+        "codingSystem": "Hệ mã",
+        "severityLevel": "Mức độ nghiêm trọng",
+        "confidenceLevel": "Mức độ tin cậy",
+        "clinicalStatus": "Trạng thái lâm sàng",
+        "urgentCase": "Ca khẩn cấp",
+        "referralNeeded": "Cần chuyển tuyến",
+        "followUpDate": "Ngày tái khám",
+        "finalizedAt": "Thời điểm hoàn tất",
+        "verifiedAt": "Thời điểm xác minh",
+        "verifiedBy": "Xác minh bởi"
+      },
+      "sections": {
+        "clinicalSummary": "Tóm tắt lâm sàng",
+        "findings": "Các phát hiện",
+        "treatmentPlan": "Kế hoạch điều trị",
+        "lifestyleAdvice": "Khuyến nghị lối sống",
+        "recommendations": "Khuyến nghị"
+      },
+      "empty": {
+        "findings": "Chưa có mô tả chi tiết về các phát hiện.",
+        "recommendations": "Chưa có khuyến nghị."
+      }
     }
   },
   "PatientScreeningNew": {
@@ -2090,69 +2131,6 @@
       "confirmBooking": "Xác nhận đặt lịch"
     }
   },
-  "PatientReports": {
-    "page": {
-      "title": "Báo cáo y tế",
-      "subtitle": "Xem, tải xuống và theo dõi kết quả sàng lọc cùng heatmap của bạn"
-    },
-    "stats": {
-      "totalReports": "Tổng báo cáo",
-      "verified": "Đã xác minh",
-      "withHeatmaps": "Có heatmap",
-      "healthyResults": "Kết quả khỏe mạnh"
-    },
-    "search": {
-      "placeholder": "Tìm kiếm báo cáo..."
-    },
-    "filters": {
-      "label": "Bộ lọc",
-      "all": "Tất cả"
-    },
-    "risk": {
-      "low": "Nguy cơ thấp",
-      "medium": "Nguy cơ trung bình",
-      "high": "Nguy cơ cao"
-    },
-    "type": {
-      "screening": "Sàng lọc võng mạc",
-      "followUp": "Lần quét tái khám",
-      "verification": "Kết quả đã xác minh"
-    },
-    "badges": {
-      "verified": "Đã xác minh"
-    },
-    "fields": {
-      "result": "Kết quả: {{value}}",
-      "analyzedBy": "Phân tích bởi:",
-      "detectedConditions": "Các dấu hiệu phát hiện:"
-    },
-    "actions": {
-      "viewDetails": "Xem chi tiết",
-      "viewHeatmap": "Xem heatmap",
-      "downloadPdf": "Tải PDF",
-      "startFirstScreening": "Bắt đầu lần sàng lọc đầu tiên"
-    },
-    "empty": {
-      "title": "Không tìm thấy báo cáo",
-      "adjustSearchOrFilters": "Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.",
-      "noScreenings": "Bạn chưa hoàn tất lần sàng lọc nào."
-    },
-    "mock": {
-      "result": {
-        "healthy": "Khỏe mạnh",
-        "mildSignsDetected": "Phát hiện dấu hiệu nhẹ",
-        "requiresAttention": "Cần chú ý"
-      },
-      "doctor": {
-        "aiAnalysis": "Phân tích AI"
-      },
-      "conditions": {
-        "earlyAmdSigns": "Dấu hiệu AMD sớm",
-        "monitorBloodSugar": "Theo dõi đường huyết",
-        "diabeticRetinopathyStage1": "Bệnh võng mạc đái tháo đường - Giai đoạn 1"
-      }
-    }
-  },
   "PatientClinics": {
     "page": {
       "title": "Đặt lịch tại cơ sở y tế",
@@ -2320,7 +2298,6 @@
     "nav": {
       "dashboard": "Tổng quan",
       "myScans": "Lượt quét của tôi",
-      "reports": "Báo cáo",
       "appointments": "Lịch hẹn",
       "findClinics": "Tìm phòng khám",
       "healthRoadmap": "Lộ trình sức khỏe",
@@ -2346,7 +2323,6 @@
     "pages": {
       "dashboard": "Tổng quan",
       "screening": "Lượt quét của tôi",
-      "reports": "Báo cáo",
       "appointments": "Lịch hẹn",
       "doctors": "Tìm bác sĩ",
       "clinics": "Tìm phòng khám",

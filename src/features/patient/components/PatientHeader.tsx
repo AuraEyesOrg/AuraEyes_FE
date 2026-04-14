@@ -31,7 +31,6 @@ export default function PatientHeader() {
     const pageNameMap: Record<string, string> = {
       dashboard: t('PatientHeader.pages.dashboard', 'Dashboard'),
       screening: t('PatientHeader.pages.screening', 'My Scans'),
-      reports: t('PatientHeader.pages.reports', 'Reports'),
       appointments: t('PatientHeader.pages.appointments', 'Appointments'),
       doctors: t('PatientHeader.pages.doctors', 'Find Doctors'),
       clinics: t('PatientHeader.pages.clinics', 'Find Clinics'),

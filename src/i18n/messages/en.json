@@ -1882,9 +1882,50 @@
       "newScreening": "New Screening",
       "filter": "Filter",
       "viewReview": "View Review",
+      "viewDiagnosis": "Medical Diagnosis",
       "downloadReport": "Download Report",
       "shareWithDoctor": "Share with Doctor",
       "delete": "Delete"
+    },
+    "diagnosis": {
+      "title": "Medical Diagnosis",
+      "loading": "Loading medical diagnosis details...",
+      "detailsTitle": "Medical Diagnosis Details",
+      "notAvailable": "N/A",
+      "yes": "Yes",
+      "no": "No",
+      "type": {
+        "aiScreening": "Retinal Screening",
+        "verifiedResult": "Verified Result"
+      },
+      "status": {
+        "verified": "Verified"
+      },
+      "fields": {
+        "createdAt": "Created At",
+        "diagnosisCode": "Diagnosis Code",
+        "codingSystem": "Coding System",
+        "severityLevel": "Severity Level",
+        "confidenceLevel": "Confidence Level",
+        "clinicalStatus": "Clinical Status",
+        "urgentCase": "Urgent Case",
+        "referralNeeded": "Referral Needed",
+        "followUpDate": "Follow-up Date",
+        "finalizedAt": "Finalized At",
+        "verifiedAt": "Verified At",
+        "verifiedBy": "Verified By"
+      },
+      "sections": {
+        "clinicalSummary": "Clinical Summary",
+        "findings": "Findings",
+        "treatmentPlan": "Treatment Plan",
+        "lifestyleAdvice": "Lifestyle Advice",
+        "recommendations": "Recommendations"
+      },
+      "empty": {
+        "findings": "No detailed findings available.",
+        "recommendations": "No recommendations available."
+      }
     }
   },
   "PatientScreeningNew": {
@@ -2090,69 +2131,6 @@
       "confirmBooking": "Confirm Booking"
     }
   },
-  "PatientReports": {
-    "page": {
-      "title": "Medical Reports",
-      "subtitle": "View, download, and track your screening results and heatmaps"
-    },
-    "stats": {
-      "totalReports": "Total Reports",
-      "verified": "Verified",
-      "withHeatmaps": "With Heatmaps",
-      "healthyResults": "Healthy Results"
-    },
-    "search": {
-      "placeholder": "Search reports..."
-    },
-    "filters": {
-      "label": "Filter",
-      "all": "All"
-    },
-    "risk": {
-      "low": "Low Risk",
-      "medium": "Medium Risk",
-      "high": "High Risk"
-    },
-    "type": {
-      "screening": "Retinal Screening",
-      "followUp": "Follow-up Scan",
-      "verification": "Verified Result"
-    },
-    "badges": {
-      "verified": "Verified"
-    },
-    "fields": {
-      "result": "Result: {{value}}",
-      "analyzedBy": "Analyzed by:",
-      "detectedConditions": "Detected Conditions:"
-    },
-    "actions": {
-      "viewDetails": "View Details",
-      "viewHeatmap": "View Heatmap",
-      "downloadPdf": "Download PDF",
-      "startFirstScreening": "Start Your First Screening"
-    },
-    "empty": {
-      "title": "No Reports Found",
-      "adjustSearchOrFilters": "Try adjusting your search or filters.",
-      "noScreenings": "You haven't completed any screenings yet."
-    },
-    "mock": {
-      "result": {
-        "healthy": "Healthy",
-        "mildSignsDetected": "Mild Signs Detected",
-        "requiresAttention": "Requires Attention"
-      },
-      "doctor": {
-        "aiAnalysis": "AI Analysis"
-      },
-      "conditions": {
-        "earlyAmdSigns": "Early AMD signs",
-        "monitorBloodSugar": "Monitor blood sugar",
-        "diabeticRetinopathyStage1": "Diabetic Retinopathy - Stage 1"
-      }
-    }
-  },
   "PatientClinics": {
     "page": {
       "title": "Book At Organisation Clinic",
@@ -2320,7 +2298,6 @@
     "nav": {
       "dashboard": "Dashboard",
       "myScans": "My Scans",
-      "reports": "Reports",
       "appointments": "Appointments",
       "findClinics": "Find Clinics",
       "healthRoadmap": "Health Roadmap",
@@ -2346,7 +2323,6 @@
     "pages": {
       "dashboard": "Dashboard",
       "screening": "My Scans",
-      "reports": "Reports",
       "appointments": "Appointments",
       "doctors": "Find Doctors",
       "clinics": "Find Clinics",

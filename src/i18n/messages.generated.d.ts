@@ -1885,9 +1885,50 @@ declare module 'i18next' {
         newScreening: string;
         filter: string;
         viewReview: string;
+        viewDiagnosis: string;
         downloadReport: string;
         shareWithDoctor: string;
         delete: string;
+      };
+      diagnosis: {
+        title: string;
+        loading: string;
+        detailsTitle: string;
+        notAvailable: string;
+        yes: string;
+        no: string;
+        type: {
+          aiScreening: string;
+          verifiedResult: string;
+        };
+        status: {
+          verified: string;
+        };
+        fields: {
+          createdAt: string;
+          diagnosisCode: string;
+          codingSystem: string;
+          severityLevel: string;
+          confidenceLevel: string;
+          clinicalStatus: string;
+          urgentCase: string;
+          referralNeeded: string;
+          followUpDate: string;
+          finalizedAt: string;
+          verifiedAt: string;
+          verifiedBy: string;
+        };
+        sections: {
+          clinicalSummary: string;
+          findings: string;
+          treatmentPlan: string;
+          lifestyleAdvice: string;
+          recommendations: string;
+        };
+        empty: {
+          findings: string;
+          recommendations: string;
+        };
       };
     };
     PatientScreeningNew: {
@@ -2093,69 +2134,6 @@ declare module 'i18next' {
         confirmBooking: string;
       };
     };
-    PatientReports: {
-      page: {
-        title: string;
-        subtitle: string;
-      };
-      stats: {
-        totalReports: string;
-        verified: string;
-        withHeatmaps: string;
-        healthyResults: string;
-      };
-      search: {
-        placeholder: string;
-      };
-      filters: {
-        label: string;
-        all: string;
-      };
-      risk: {
-        low: string;
-        medium: string;
-        high: string;
-      };
-      type: {
-        screening: string;
-        followUp: string;
-        verification: string;
-      };
-      badges: {
-        verified: string;
-      };
-      fields: {
-        result: string;
-        analyzedBy: string;
-        detectedConditions: string;
-      };
-      actions: {
-        viewDetails: string;
-        viewHeatmap: string;
-        downloadPdf: string;
-        startFirstScreening: string;
-      };
-      empty: {
-        title: string;
-        adjustSearchOrFilters: string;
-        noScreenings: string;
-      };
-      mock: {
-        result: {
-          healthy: string;
-          mildSignsDetected: string;
-          requiresAttention: string;
-        };
-        doctor: {
-          aiAnalysis: string;
-        };
-        conditions: {
-          earlyAmdSigns: string;
-          monitorBloodSugar: string;
-          diabeticRetinopathyStage1: string;
-        };
-      };
-    };
     PatientClinics: {
       page: {
         title: string;
@@ -2323,7 +2301,6 @@ declare module 'i18next' {
       nav: {
         dashboard: string;
         myScans: string;
-        reports: string;
         appointments: string;
         findClinics: string;
         healthRoadmap: string;
@@ -2349,7 +2326,6 @@ declare module 'i18next' {
       pages: {
         dashboard: string;
         screening: string;
-        reports: string;
         appointments: string;
         doctors: string;
         clinics: string;

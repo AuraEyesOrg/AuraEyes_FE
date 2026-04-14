@@ -119,8 +119,8 @@ export default function RoadmapPage() {
 
   const ctaLinks = useMemo(
     () => ({
-      viewDiagnosis: `${localizedPath('/patient/reports')}?openDiagnosis=latest`,
-      downloadReport: `${localizedPath('/patient/reports')}?diagnosisId=${latestRoadmap?.medicalDiagnosisId ?? ''}`,
+      viewDiagnosis: `${localizedPath('/patient/screening')}?openDiagnosis=latest`,
+      downloadReport: `${localizedPath('/patient/screening')}?diagnosisId=${latestRoadmap?.medicalDiagnosisId ?? ''}`,
     }),
     [currentLocale, latestRoadmap?.medicalDiagnosisId]
   );

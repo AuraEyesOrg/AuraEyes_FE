@@ -1,7 +1,6 @@
 import {
   Home,
   Eye,
-  FileText,
   Wallet,
   Settings,
   LogOut,
@@ -42,11 +41,6 @@ export default function PatientSidebar() {
       icon: Eye,
       label: t('PatientSidebar.nav.myScans', 'My Scans'),
       path: '/patient/screening',
-    },
-    {
-      icon: FileText,
-      label: t('PatientSidebar.nav.reports', 'Reports'),
-      path: '/patient/reports',
     },
     {
       icon: Calendar,

@@ -415,7 +415,7 @@ export default function PatientDashboard() {
                       to={
                         latestSession
                           ? latestSessionTargetPath
-                          : '/patient/reports'
+                          : '/patient/screening?openDiagnosis=latest'
                       }
                       state={
                         latestSession
@@ -566,7 +566,7 @@ export default function PatientDashboard() {
                               {getRiskLabel(report.riskLevel, t)}
                             </span>
                             <Link
-                              to={`/patient/reports`}
+                              to={`/patient/screening?diagnosisId=${encodeURIComponent(report.id)}`}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >
                               <FileText className="w-5 h-5" />
@@ -623,8 +623,7 @@ export default function PatientDashboard() {
                               </span>
                             )}
                             <Link
-                              to="/patient/reports"
-                              state={{ screeningId: session.screeningId }}
+                              to={`/patient/screening?diagnosisId=${encodeURIComponent(session.screeningId)}`}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >
                               <FileText className="w-5 h-5" />
