@@ -38,6 +38,58 @@ export enum NotificationType {
   SystemAlert = 9,
 }
 
+export type NotificationTypeValue = NotificationType | string | number;
+
+const NOTIFICATION_TYPE_NAME_MAP: Record<string, NotificationType> = {
+  aiscreeningcompleted: NotificationType.AiScreeningCompleted,
+  consultationaccepted: NotificationType.ConsultationAccepted,
+  consultationresultprovided: NotificationType.ConsultationResultProvided,
+  newconsultationrequest: NotificationType.NewConsultationRequest,
+  newpatientmessage: NotificationType.NewPatientMessage,
+  newappointmentbooked: NotificationType.NewAppointmentBooked,
+  schedulechanged: NotificationType.ScheduleChanged,
+  walletdepositsuccess: NotificationType.WalletDepositSuccess,
+  walletpaymentprocessed: NotificationType.WalletPaymentProcessed,
+  systemalert: NotificationType.SystemAlert,
+};
+
+function isKnownNotificationType(value: number): value is NotificationType {
+  return NotificationType[value] !== undefined;
+}
+
+function normalizeNotificationTypeKey(value: string): string {
+  return value
+    .trim()
+    .replace(/[\s_-]/g, '')
+    .toLowerCase();
+}
+
+export function parseNotificationType(
+  type: NotificationTypeValue | null | undefined
+): NotificationType | null {
+  if (typeof type === 'number' && Number.isFinite(type)) {
+    return isKnownNotificationType(type) ? type : null;
+  }
+
+  if (typeof type === 'string') {
+    const trimmedType = type.trim();
+    if (!trimmedType) {
+      return null;
+    }
+
+    if (/^-?\d+$/.test(trimmedType)) {
+      const parsedType = Number.parseInt(trimmedType, 10);
+      return isKnownNotificationType(parsedType) ? parsedType : null;
+    }
+
+    const mappedType =
+      NOTIFICATION_TYPE_NAME_MAP[normalizeNotificationTypeKey(trimmedType)];
+    return mappedType ?? null;
+  }
+
+  return null;
+}
+
 /**
  * Base notification payload interface - all payloads extend this
  */
@@ -120,7 +172,7 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: NotificationTypeValue;
   referenceId?: string | null;
   isRead: boolean;
   payload: NotificationPayloadRaw;
@@ -134,7 +186,7 @@ export interface SignalRNotification {
   id: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: NotificationTypeValue;
   referenceId?: string | null;
   payload: NotificationPayloadRaw;
   createdAt: string;
@@ -164,8 +216,10 @@ export interface UnreadCountResponse {
 /**
  * Helper to get notification icon based on type
  */
-export function getNotificationIcon(type: NotificationType): string {
-  switch (type) {
+export function getNotificationIcon(type: NotificationTypeValue): string {
+  const normalizedType = parseNotificationType(type);
+
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted:
       return 'eye';
     case NotificationType.ConsultationAccepted:
@@ -191,8 +245,10 @@ export function getNotificationIcon(type: NotificationType): string {
 /**
  * Helper to get notification color based on type
  */
-export function getNotificationColor(type: NotificationType): string {
-  switch (type) {
+export function getNotificationColor(type: NotificationTypeValue): string {
+  const normalizedType = parseNotificationType(type);
+
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted:
       return 'text-blue-500';
     case NotificationType.ConsultationAccepted:
@@ -328,6 +384,7 @@ export function getNotificationRoute(
   roles: string[] = []
 ): string {
   const normalizedRoles = roles.map((r) => r.toLowerCase());
+  const normalizedType = parseNotificationType(notification.type);
   const payload = parsePayload(notification.payload);
   const normalizedRouteHint = normalizeRouteHint(
     readString(payload, 'routeHint')
@@ -364,7 +421,7 @@ export function getNotificationRoute(
 
   const fallbackHome = getRoleHome(normalizedRoles);
 
-  switch (notification.type) {
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted: {
       const base = isPatient
         ? '/patient/reports'
@@ -430,7 +487,7 @@ export function getNotificationRoute(
 
       return appendIdQuery(
         base,
-        notification.type === NotificationType.NewAppointmentBooked
+        normalizedType === NotificationType.NewAppointmentBooked
           ? isPatient
             ? 'appointmentId'
             : 'sessionId'

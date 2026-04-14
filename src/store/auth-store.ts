@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { logger } from './logger';
 import { getItem, setItem } from '@/lib/local-storage';
 import { queryClient } from '@/lib/react-query';
-import { resolveAvatarUrl } from '@/lib/user-avatar';
+import { resolveAvatarUrl, resolvePreferredAvatarUrl } from '@/lib/user-avatar';
 import useNotificationStore from './useNotificationStore';
 
 export interface AuthUser {
@@ -11,6 +11,8 @@ export interface AuthUser {
   email: string;
   fullName: string;
   avatarUrl?: string | null;
+  uploadedAvatarUrl?: string | null;
+  providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string | null;
@@ -32,10 +34,22 @@ type AuthState = {
 
 const AUTH_USER_KEY = 'user';
 
-const normalizeAuthUser = (user: AuthUser): AuthUser => ({
-  ...user,
-  avatarUrl: resolveAvatarUrl(user.avatarUrl) ?? null,
-});
+const normalizeAuthUser = (user: AuthUser): AuthUser => {
+  const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
+  const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
+
+  return {
+    ...user,
+    uploadedAvatarUrl,
+    providerAvatarUrl,
+    avatarUrl:
+      resolvePreferredAvatarUrl({
+        uploadedAvatarUrl,
+        providerAvatarUrl,
+        avatarUrl: user.avatarUrl,
+      }) ?? null,
+  };
+};
 
 const hydrateAuthUser = (): AuthUser | null => {
   const storedUser = getItem<AuthUser>(AUTH_USER_KEY);

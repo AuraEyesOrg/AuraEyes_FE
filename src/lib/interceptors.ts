@@ -9,7 +9,7 @@ import useAuthStore from '@/store/auth-store';
 import type { AuthUser } from '@/store/auth-store';
 import { getItem } from './local-storage';
 import { router } from './router';
-import { resolveAvatarUrl } from './user-avatar';
+import { resolveAvatarUrl, resolvePreferredAvatarUrl } from './user-avatar';
 
 export interface ConsoleError {
   status: number;
@@ -100,15 +100,43 @@ const refreshAccessToken = async () => {
     const persistedUser = getItem<AuthUser>(USER_KEY);
     const incomingUser = payload.user as Partial<AuthUser>;
 
+    const mergedUploadedAvatarUrl =
+      resolveAvatarUrl(
+        incomingUser.uploadedAvatarUrl,
+        currentUser?.uploadedAvatarUrl,
+        persistedUser?.uploadedAvatarUrl
+      ) ?? null;
+
+    const mergedProviderAvatarUrl =
+      resolveAvatarUrl(
+        incomingUser.providerAvatarUrl,
+        currentUser?.providerAvatarUrl,
+        persistedUser?.providerAvatarUrl
+      ) ?? null;
+
     const mergedUser = {
       ...(persistedUser ?? {}),
       ...(currentUser ?? {}),
       ...incomingUser,
+      uploadedAvatarUrl: mergedUploadedAvatarUrl,
+      providerAvatarUrl: mergedProviderAvatarUrl,
       avatarUrl:
-        resolveAvatarUrl(
-          incomingUser.avatarUrl,
-          currentUser?.avatarUrl,
-          persistedUser?.avatarUrl
+        resolvePreferredAvatarUrl(
+          {
+            uploadedAvatarUrl: mergedUploadedAvatarUrl,
+            providerAvatarUrl: mergedProviderAvatarUrl,
+            avatarUrl: incomingUser.avatarUrl,
+          },
+          {
+            uploadedAvatarUrl: currentUser?.uploadedAvatarUrl,
+            providerAvatarUrl: currentUser?.providerAvatarUrl,
+            avatarUrl: currentUser?.avatarUrl,
+          },
+          {
+            uploadedAvatarUrl: persistedUser?.uploadedAvatarUrl,
+            providerAvatarUrl: persistedUser?.providerAvatarUrl,
+            avatarUrl: persistedUser?.avatarUrl,
+          }
         ) ?? null,
     };
 

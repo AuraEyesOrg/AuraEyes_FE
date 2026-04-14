@@ -54,32 +54,6 @@ interface RegisterFormData {
   agreeTerms: boolean;
 }
 
-type GoogleJwtPayload = {
-  picture?: string;
-};
-
-const getGooglePictureFromCredential = (
-  credential: string | undefined
-): string | undefined => {
-  if (!credential) return undefined;
-
-  try {
-    const payloadBase64 = credential.split('.')[1];
-    if (!payloadBase64) return undefined;
-
-    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
-    const payload = JSON.parse(
-      atob(`${normalized}${padding}`)
-    ) as GoogleJwtPayload;
-
-    const picture = (payload.picture ?? '').trim();
-    return picture.length > 0 ? picture : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
 const LoginPage = () => {
   const { t } = useSafeTranslation();
   const copyrightText = t('AuthPages.shared.copyright').replace(
@@ -352,16 +326,6 @@ const LoginPage = () => {
       // Login successful
       if (response.succeeded) {
         let loggedInUser = response.user;
-        const googlePicture = getGooglePictureFromCredential(
-          credentialResponse.credential
-        );
-
-        if (loggedInUser && googlePicture) {
-          loggedInUser = {
-            ...loggedInUser,
-            avatarUrl: googlePicture,
-          };
-        }
 
         if (loggedInUser) {
           authLogin(loggedInUser);

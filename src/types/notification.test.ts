@@ -189,4 +189,17 @@ describe('getNotificationRoute', () => {
       `/ophthalmologist/screenings/${screeningId}/review`
     );
   });
+
+  it('routes correctly when backend sends notification type as enum name', () => {
+    const notification: Notification = {
+      ...buildNotification(NotificationType.NewPatientMessage, {
+        sessionId: 'session-123',
+      }),
+      type: 'NewPatientMessage',
+    };
+
+    expect(getNotificationRoute(notification, ['Doctor'])).toBe(
+      '/ophthalmologist/consultations?sessionId=session-123'
+    );
+  });
 });

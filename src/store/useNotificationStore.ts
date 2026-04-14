@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { logger } from './logger';
 import type { Notification, SignalRNotification } from '@/types/notification';
-import { NotificationType } from '@/types/notification';
+import {
+  NotificationType,
+  parseNotificationType,
+  type NotificationTypeValue,
+} from '@/types/notification';
 
 /**
  * Maximum notifications to keep in memory for the dropdown
@@ -267,12 +271,14 @@ function showBrowserNotification(notification: Notification): void {
  * @param t - i18n translate function (optional). If not provided, returns English labels.
  */
 export function getNotificationTypeLabel(
-  type: NotificationType,
+  type: NotificationTypeValue,
   t?: (key: string, defaultValue: string) => string
 ): string {
+  const normalizedType = parseNotificationType(type);
+
   if (!t) {
     // Fallback English labels if no i18n function provided
-    switch (type) {
+    switch (normalizedType) {
       case NotificationType.AiScreeningCompleted:
         return 'Screening';
       case NotificationType.ConsultationAccepted:
@@ -293,7 +299,7 @@ export function getNotificationTypeLabel(
   }
 
   // i18n-based labels
-  switch (type) {
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted:
       return t('notification.types.screening', 'Screening');
     case NotificationType.ConsultationAccepted:
