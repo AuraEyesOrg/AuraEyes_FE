@@ -40,6 +40,13 @@ export interface AIStandardPrediction {
 }
 
 export interface AIStandardResponse {
+  image_id?: string;
+  filename?: string;
+  model?: {
+    checkpoint: string;
+    epoch: number;
+    val_acc: number;
+  };
   prediction: {
     code?: string;
     name_en?: string;
@@ -55,9 +62,18 @@ export interface AIStandardResponse {
   model_note?: {
     status: string;
     notes: string[];
+    possible_conditions?: AIStandardPrediction[];
     disclaimer: string;
   };
   localization?: {
+    primary?: {
+      x: number;
+      y: number;
+    } | null;
+    method?: string;
+    type?: string;
+    threshold?: number;
+    num_lesions?: number;
     all_lesions: Array<{
       bbox: {
         x: number;
@@ -67,9 +83,17 @@ export interface AIStandardResponse {
       };
       confidence?: number;
     }>;
+    error?: string | null;
   } | null;
   heatmap_colormap_url?: string;
   heatmap_url?: string | null;
+  anomalies?: Array<{
+    id?: string;
+    name?: string;
+    confidence?: number;
+    status?: string;
+    location?: DetectionBoxLocation;
+  }>;
 }
 
 export interface DetectionBoxLocation {
