@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, Search, CheckCheck, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import useNotificationStore from '@/store/useNotificationStore';
 import useAuthStore from '@/store/auth-store';
 import { NotificationService } from '@/lib/notificationService';
@@ -65,6 +65,7 @@ const TYPE_GROUPS: Record<
 
 export default function ViewAllNotificationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
@@ -149,10 +150,21 @@ export default function ViewAllNotificationsPage() {
       }
     }
 
-    const route = getNotificationRoute(notification, user?.roles ?? []);
-    if (route !== '/notifications' && route !== '/notifications/view-all') {
-      navigate(route);
+    const targetRoute = getNotificationRoute(
+      notification,
+      user?.roles ?? []
+    ).trim();
+
+    if (!targetRoute || targetRoute === '#') {
+      return;
     }
+
+    const [targetPathname] = targetRoute.split('?');
+    if (targetPathname === location.pathname) {
+      return;
+    }
+
+    navigate(targetRoute);
   };
 
   const handleMarkAllAsRead = async () => {

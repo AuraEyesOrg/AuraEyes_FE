@@ -262,6 +262,18 @@ function appendIdQuery(path: string, key: string, value: string): string {
   return `${path}${separator}${key}=${encodeURIComponent(value)}`;
 }
 
+function normalizeRouteHint(routeHintRaw: string): string {
+  if (!routeHintRaw) return '';
+
+  if (routeHintRaw.startsWith('/')) {
+    return routeHintRaw;
+  }
+
+  return routeHintRaw.includes('/')
+    ? `/${routeHintRaw.replace(/^\/+/, '')}`
+    : '';
+}
+
 function hasRole(roles: string[], roleCandidates: string[]): boolean {
   return roleCandidates.some((candidate) => roles.includes(candidate));
 }
@@ -280,6 +292,16 @@ function readBoolean(
   for (const key of keys) {
     const value = normalizedPayload[normalize(key)];
     if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalizedValue = value.trim().toLowerCase();
+      if (normalizedValue === 'true' || normalizedValue === '1') return true;
+      if (normalizedValue === 'false' || normalizedValue === '0') return false;
+    }
+
+    if (typeof value === 'number') {
+      if (value === 1) return true;
+      if (value === 0) return false;
+    }
   }
 
   return false;
@@ -307,6 +329,13 @@ export function getNotificationRoute(
 ): string {
   const normalizedRoles = roles.map((r) => r.toLowerCase());
   const payload = parsePayload(notification.payload);
+  const normalizedRouteHint = normalizeRouteHint(
+    readString(payload, 'routeHint')
+  );
+
+  if (normalizedRouteHint) {
+    return normalizedRouteHint;
+  }
 
   const fallbackReferenceId =
     typeof notification.referenceId === 'string'
@@ -425,16 +454,6 @@ export function getNotificationRoute(
     }
 
     case NotificationType.SystemAlert: {
-      const routeHintRaw = readString(payload, 'routeHint');
-      if (
-        routeHintRaw &&
-        (routeHintRaw.startsWith('/') || routeHintRaw.includes('/'))
-      ) {
-        return routeHintRaw.startsWith('/')
-          ? routeHintRaw
-          : `/${routeHintRaw.replace(/^\/+/, '')}`;
-      }
-
       const action = readString(payload, 'action', 'notificationAction')
         .toLowerCase()
         .trim();

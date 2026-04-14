@@ -139,6 +139,17 @@ describe('getNotificationRoute', () => {
     );
   });
 
+  it('prioritizes routeHint for non-SystemAlert notifications', () => {
+    const notification = buildNotification(NotificationType.NewPatientMessage, {
+      routeHint: 'ophthalmologist/consultations?sessionId=abc',
+      sessionId: 'should-not-be-used',
+    });
+
+    expect(getNotificationRoute(notification, ['Doctor'])).toBe(
+      '/ophthalmologist/consultations?sessionId=abc'
+    );
+  });
+
   it('supports Organization role alias for org wallet route', () => {
     const txId = '5310c0ec-a2aa-4513-a48c-4eefef18f73b';
     const notification = buildNotification(
@@ -161,6 +172,21 @@ describe('getNotificationRoute', () => {
 
     expect(getNotificationRoute(notification, ['SystemAdmin'])).toBe(
       '/system-admin/verifications'
+    );
+  });
+
+  it('treats string boolean sharedMedicalData values as true', () => {
+    const screeningId = 'f5936924-aa6b-4ac8-ab9d-75de89959f1b';
+    const notification = buildNotification(
+      NotificationType.NewAppointmentBooked,
+      {
+        aiScreeningId: screeningId,
+        sharedMedicalData: 'true',
+      }
+    );
+
+    expect(getNotificationRoute(notification, ['Ophthalmologist'])).toBe(
+      `/ophthalmologist/screenings/${screeningId}/review`
     );
   });
 });
