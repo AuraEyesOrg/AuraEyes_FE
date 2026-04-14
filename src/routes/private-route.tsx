@@ -57,25 +57,12 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
     user?.isVerified !== false &&
     user?.contractStatus !== 'Active';
 
-  const isOrgAdmin = user?.roles?.includes('OrgAdmin');
-  const needsOrganisationContract =
-    isOrgAdmin && user?.contractStatus !== 'Active';
-
   if (needsContract && normalizedPath !== '/ophthalmologist/contract') {
     return (
       <Navigate
         to={resolvePathWithLocale('/ophthalmologist/contract')}
         replace
       />
-    );
-  }
-
-  if (
-    needsOrganisationContract &&
-    normalizedPath !== '/organisation/contract'
-  ) {
-    return (
-      <Navigate to={resolvePathWithLocale('/organisation/contract')} replace />
     );
   }
 

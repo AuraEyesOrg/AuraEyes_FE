@@ -106,9 +106,12 @@ export default function NotificationDropdown({
     }
 
     // Navigate to relevant page
-    const route = getNotificationRoute(notification, user?.roles ?? []);
-    if (route !== '#') {
-      navigate(route);
+    const targetRoute = getNotificationRoute(
+      notification,
+      user?.roles ?? []
+    ).trim();
+    if (targetRoute && targetRoute !== '#') {
+      navigate(targetRoute);
     }
 
     setIsOpen(false);

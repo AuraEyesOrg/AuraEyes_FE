@@ -8,6 +8,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronRight, LogOut } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
@@ -57,7 +58,6 @@ export default function Sidebar() {
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'System Admin');
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
-  const avatarUrl = user?.avatarUrl ?? '';
 
   const handleLogout = () => {
     logout();
@@ -210,16 +210,14 @@ export default function Sidebar() {
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div
-                className="w-10 h-10 rounded-full bg-brand bg-cover bg-center flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0"
-                style={{
-                  backgroundImage: avatarUrl
-                    ? `url("${avatarUrl}")`
-                    : undefined,
-                }}
-              >
-                {!avatarUrl && (avatarMeta.initials || 'SA')}
-              </div>
+              <UserAvatar
+                fullName={user?.fullName}
+                avatarUrl={user?.avatarUrl}
+                fallbackName="System Admin"
+                size="md"
+                className="shrink-0 border-2 border-brand/30 shadow-sm"
+                fallbackClassName="bg-brand text-white"
+              />
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {displayName}

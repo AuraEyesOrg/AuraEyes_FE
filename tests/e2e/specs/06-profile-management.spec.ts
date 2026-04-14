@@ -6,12 +6,12 @@ import { query } from '../helpers/postgres';
 const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
-test.describe('Flow 06 - Profile Management', () => {
+test.describe('Flow 06 - Profile Management (Standardized)', () => {
   test.beforeEach(async ({ request }) => {
     await resetAndSeed(request);
   });
 
-  test('patient updates profile information and avatar from /patient/profile', async ({
+  test('@module-profile PROFILE_01 - patient updates profile information and avatar from /patient/profile', async ({
     browser,
   }) => {
     test.setTimeout(180_000);
@@ -73,7 +73,7 @@ test.describe('Flow 06 - Profile Management', () => {
     await ctx.close();
   });
 
-  test('patient cannot change password with wrong current password', async ({
+  test('@module-profile PROFILE_02 - patient cannot change password with wrong current password', async ({
     browser,
   }) => {
     test.setTimeout(120_000);

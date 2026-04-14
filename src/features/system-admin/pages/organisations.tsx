@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   FileText,
@@ -48,6 +49,10 @@ interface Organisation {
   status: 'active' | 'inactive' | 'suspended';
   contractStatus: ContractStatus;
   usersCount: number;
+  purchasedAiQuota: number;
+  managedPatientCount: number;
+  registeredPatientCount: number;
+  walkInPatientCount: number;
   // Billing info
   monthlyAIUsage: number;
   monthlyBilling: number;
@@ -70,6 +75,10 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   status: item.isActive ? 'active' : 'inactive',
   contractStatus: item.isActive ? 'active' : 'expired',
   usersCount: item.usersCount ?? 0,
+  purchasedAiQuota: item.purchasedAiQuota ?? 0,
+  managedPatientCount: item.managedPatientCount ?? 0,
+  registeredPatientCount: item.registeredPatientCount ?? 0,
+  walkInPatientCount: item.walkInPatientCount ?? 0,
   monthlyAIUsage: 0,
   monthlyBilling: 0,
   pendingPayment: 0,
@@ -85,6 +94,7 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
 });
 
 export default function OrganisationsPage() {
+  const navigate = useNavigate();
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [onboardingRequests, setOnboardingRequests] = useState<
     OrganisationOnboardingRequestDto[]
@@ -143,8 +153,8 @@ export default function OrganisationsPage() {
 
   // Calculate stats
   const activeOrgs = organisations.filter((o) => o.status === 'active').length;
-  const totalPendingPayments = organisations.reduce(
-    (sum, o) => sum + o.pendingPayment,
+  const totalPurchasedQuota = organisations.reduce(
+    (sum, o) => sum + o.purchasedAiQuota,
     0
   );
   const inactiveOrgs = organisations.filter(
@@ -159,6 +169,10 @@ export default function OrganisationsPage() {
     setSearchQuery(name);
     setPageNumber(1);
   }, []);
+
+  const openContractsManagement = useCallback(() => {
+    navigate('/system-admin/contracts');
+  }, [navigate]);
 
   const handleApproveOnboarding = async (requestId: string) => {
     try {
@@ -258,6 +272,15 @@ export default function OrganisationsPage() {
       render: (value) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
           {value as number}
+        </span>
+      ),
+    },
+    {
+      header: 'Purchased Quota',
+      accessor: 'purchasedAiQuota',
+      render: (value) => (
+        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+          {(value as number).toLocaleString()} credits
         </span>
       ),
     },
@@ -362,6 +385,28 @@ export default function OrganisationsPage() {
         <span className="text-sm font-medium text-slate-900 dark:text-white">
           {value as number} screenings
         </span>
+      ),
+    },
+    {
+      header: 'Purchased Quota',
+      accessor: 'purchasedAiQuota',
+      render: (value) => (
+        <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+          {(value as number).toLocaleString()} credits
+        </span>
+      ),
+    },
+    {
+      header: 'Managed Patients',
+      accessor: 'managedPatientCount',
+      render: (_, row) => (
+        <div className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="font-semibold">{row.managedPatientCount}</p>
+          <p className="text-xs text-slate-500">
+            {row.registeredPatientCount} registered • {row.walkInPatientCount}{' '}
+            walk-in
+          </p>
+        </div>
       ),
     },
     {
@@ -481,6 +526,7 @@ export default function OrganisationsPage() {
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={openContractsManagement}
             className="text-slate-500 hover:text-primary transition-colors p-1"
             title="View Contract"
           >
@@ -572,10 +618,10 @@ export default function OrganisationsPage() {
                 variant="success"
               />
               <StatsCard
-                title="Pending Payments"
-                value={formatCurrency(totalPendingPayments, usdCurrencyOptions)}
+                title="Purchased Quota"
+                value={totalPurchasedQuota.toLocaleString()}
                 icon={CreditCard}
-                description="Awaiting collection"
+                description="Credits purchased by organisations"
                 variant="warning"
               />
               <StatsCard

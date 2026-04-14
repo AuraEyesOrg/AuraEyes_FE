@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import {
@@ -103,7 +104,6 @@ export default function DoctorSidebar({
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Doctor');
   const displayName = avatarMeta.displayName;
-  const userAvatar = user?.avatarUrl;
   const displayEmail = user?.email ?? '';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
@@ -182,22 +182,14 @@ export default function DoctorSidebar({
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="relative shrink-0">
-                <div
-                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center"
-                  style={{
-                    backgroundImage: userAvatar
-                      ? `url("${userAvatar}")`
-                      : undefined,
-                  }}
-                >
-                  {!userAvatar && (
-                    <span className="text-white font-bold text-sm">
-                      {avatarMeta.initials || 'DR'}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <UserAvatar
+                fullName={user?.fullName}
+                avatarUrl={user?.avatarUrl}
+                fallbackName="Doctor"
+                size="md"
+                className="shrink-0 border-2 border-brand/30 shadow-sm"
+                fallbackClassName="bg-brand text-white"
+              />
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {displayName}

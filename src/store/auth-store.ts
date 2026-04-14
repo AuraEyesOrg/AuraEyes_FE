@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { logger } from './logger';
 import { getItem, setItem } from '@/lib/local-storage';
 import { queryClient } from '@/lib/react-query';
+import { resolveAvatarUrl, resolvePreferredAvatarUrl } from '@/lib/user-avatar';
 import useNotificationStore from './useNotificationStore';
 
 export interface AuthUser {
@@ -10,6 +11,8 @@ export interface AuthUser {
   email: string;
   fullName: string;
   avatarUrl?: string | null;
+  uploadedAvatarUrl?: string | null;
+  providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string | null;
@@ -31,11 +34,35 @@ type AuthState = {
 
 const AUTH_USER_KEY = 'user';
 
+const normalizeAuthUser = (user: AuthUser): AuthUser => {
+  const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
+  const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
+
+  return {
+    ...user,
+    uploadedAvatarUrl,
+    providerAvatarUrl,
+    avatarUrl:
+      resolvePreferredAvatarUrl({
+        uploadedAvatarUrl,
+        providerAvatarUrl,
+        avatarUrl: user.avatarUrl,
+      }) ?? null,
+  };
+};
+
+const hydrateAuthUser = (): AuthUser | null => {
+  const storedUser = getItem<AuthUser>(AUTH_USER_KEY);
+  return storedUser ? normalizeAuthUser(storedUser) : null;
+};
+
+const hydratedUser = hydrateAuthUser();
+
 const useAuthStore = create<AuthState>()(
   logger<AuthState>(
     (set) => ({
-      isAuthenticated: !!getItem<AuthUser>(AUTH_USER_KEY),
-      user: getItem<AuthUser>(AUTH_USER_KEY),
+      isAuthenticated: !!hydratedUser,
+      user: hydratedUser,
 
       setIsAuthenticated: (isAuthenticated) => {
         set({ isAuthenticated });
@@ -43,16 +70,19 @@ const useAuthStore = create<AuthState>()(
 
       setUser: (user) => {
         if (user) {
-          setItem(AUTH_USER_KEY, user);
+          const normalizedUser = normalizeAuthUser(user);
+          setItem(AUTH_USER_KEY, normalizedUser);
+          set({ user: normalizedUser, isAuthenticated: true });
         } else {
           window.localStorage.removeItem(AUTH_USER_KEY);
+          set({ user: null, isAuthenticated: false });
         }
-        set({ user });
       },
 
       login: (user) => {
-        setItem(AUTH_USER_KEY, user);
-        set({ isAuthenticated: true, user });
+        const normalizedUser = normalizeAuthUser(user);
+        setItem(AUTH_USER_KEY, normalizedUser);
+        set({ isAuthenticated: true, user: normalizedUser });
       },
 
       logout: () => {

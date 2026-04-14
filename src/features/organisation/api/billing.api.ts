@@ -62,6 +62,10 @@ export const orgBillingApi = {
     );
     return unwrapApiData<BuyOrgQuotaResponse>(response.data);
   },
+
+  async deductQuota(): Promise<void> {
+    await api.post(API_ENDPOINTS.QUOTAS.DEDUCT);
+  },
 };
 
 export const orgReportsApi = {

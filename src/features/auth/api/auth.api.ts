@@ -8,6 +8,7 @@ import { setItem, getItem } from '@/lib/local-storage';
 import useAuthStore from '@/store/auth-store';
 import type { ApiResponse } from '@/types/api-response';
 import { unwrapApiData } from '@/types/api-response';
+import { resolveAvatarUrl, resolvePreferredAvatarUrl } from '@/lib/user-avatar';
 import type {
   LoginRequest,
   GoogleLoginRequest,
@@ -54,15 +55,34 @@ const enrichUserWithRoleId = (
   user: UserInfoResponse,
   accessToken?: string
 ): UserInfoResponse => {
-  if (user.roleId) return user;
-  if (!accessToken) return user;
+  const normalizedUser = normalizeUserAvatar(user);
+
+  if (normalizedUser.roleId) return normalizedUser;
+  if (!accessToken) return normalizedUser;
 
   const profileId = parseProfileIdFromToken(accessToken);
-  if (!profileId) return user;
+  if (!profileId) return normalizedUser;
+
+  return {
+    ...normalizedUser,
+    roleId: profileId,
+  };
+};
+
+const normalizeUserAvatar = (user: UserInfoResponse): UserInfoResponse => {
+  const uploadedAvatarUrl = resolveAvatarUrl(user.uploadedAvatarUrl) ?? null;
+  const providerAvatarUrl = resolveAvatarUrl(user.providerAvatarUrl) ?? null;
 
   return {
     ...user,
-    roleId: profileId,
+    uploadedAvatarUrl,
+    providerAvatarUrl,
+    avatarUrl:
+      resolvePreferredAvatarUrl({
+        uploadedAvatarUrl,
+        providerAvatarUrl,
+        avatarUrl: user.avatarUrl,
+      }) ?? null,
   };
 };
 
@@ -412,5 +432,5 @@ export const getCurrentUser = async (): Promise<UserInfoResponse> => {
   const response = await api.get<ApiResponse<UserInfoResponse>>(
     `${AUTH_BASE_URL}/me`
   );
-  return unwrapApiData<UserInfoResponse>(response.data);
+  return normalizeUserAvatar(unwrapApiData<UserInfoResponse>(response.data));
 };

@@ -14,6 +14,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { useTranslation } from 'react-i18next';
 
@@ -88,7 +89,6 @@ export default function PatientSidebar() {
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Patient');
   const userName = avatarMeta.displayName;
-  const userAvatar = user?.avatarUrl;
   const userEmail = user?.email ?? '';
 
   const handleLogout = () => {
@@ -142,20 +142,14 @@ export default function PatientSidebar() {
               className="flex items-center gap-3 flex-1 min-w-0 group cursor-pointer"
             >
               <div className="relative shrink-0">
-                <div
-                  className="w-10 h-10 rounded-full bg-brand bg-cover bg-center border-2 border-brand/30 shadow-sm flex items-center justify-center group-hover:border-brand transition-colors"
-                  style={{
-                    backgroundImage: userAvatar
-                      ? `url("${userAvatar}")`
-                      : undefined,
-                  }}
-                >
-                  {!userAvatar && (
-                    <span className="text-white font-bold text-sm">
-                      {avatarMeta.initials || 'PT'}
-                    </span>
-                  )}
-                </div>
+                <UserAvatar
+                  fullName={user?.fullName}
+                  avatarUrl={user?.avatarUrl}
+                  fallbackName="Patient"
+                  size="md"
+                  className="border-2 border-brand/30 shadow-sm group-hover:border-brand transition-colors"
+                  fallbackClassName="bg-brand text-white"
+                />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-(--bg-secondary)"></div>
               </div>
               <div className="flex flex-col overflow-hidden">

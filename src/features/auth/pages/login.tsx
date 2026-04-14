@@ -36,6 +36,7 @@ import {
 } from '../api';
 import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
+import { shouldRedirectToContract } from '../utils/contract-status';
 
 type AuthMode = 'login' | 'register';
 
@@ -52,32 +53,6 @@ interface RegisterFormData {
   confirmPassword: string;
   agreeTerms: boolean;
 }
-
-type GoogleJwtPayload = {
-  picture?: string;
-};
-
-const getGooglePictureFromCredential = (
-  credential: string | undefined
-): string | undefined => {
-  if (!credential) return undefined;
-
-  try {
-    const payloadBase64 = credential.split('.')[1];
-    if (!payloadBase64) return undefined;
-
-    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
-    const payload = JSON.parse(
-      atob(`${normalized}${padding}`)
-    ) as GoogleJwtPayload;
-
-    const picture = (payload.picture ?? '').trim();
-    return picture.length > 0 ? picture : undefined;
-  } catch {
-    return undefined;
-  }
-};
 
 const LoginPage = () => {
   const { t } = useSafeTranslation();
@@ -202,17 +177,13 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (response.user?.contractStatus !== 'Active') {
+          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (response.user?.contractStatus !== 'Active') {
-            navigate('/organisation/contract');
-          } else {
-            navigate('/organisation/dashboard');
-          }
+          navigate('/organisation/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }
@@ -355,16 +326,6 @@ const LoginPage = () => {
       // Login successful
       if (response.succeeded) {
         let loggedInUser = response.user;
-        const googlePicture = getGooglePictureFromCredential(
-          credentialResponse.credential
-        );
-
-        if (loggedInUser && googlePicture) {
-          loggedInUser = {
-            ...loggedInUser,
-            avatarUrl: googlePicture,
-          };
-        }
 
         if (loggedInUser) {
           authLogin(loggedInUser);
@@ -378,17 +339,13 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(loggedInUser)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (loggedInUser?.contractStatus !== 'Active') {
+          } else if (shouldRedirectToContract(loggedInUser?.contractStatus)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (loggedInUser?.contractStatus !== 'Active') {
-            navigate('/organisation/contract');
-          } else {
-            navigate('/organisation/dashboard');
-          }
+          navigate('/organisation/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }

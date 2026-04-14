@@ -1,7 +1,8 @@
-import { Search, Moon, Sun, User } from 'lucide-react';
+import { Search, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import useAuthStore from '@/store/auth-store';
 import { NotificationDropdown } from '@/components/ui/notification';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export default function DashboardHeader() {
   const { theme, toggleTheme } = useTheme();
@@ -46,9 +47,13 @@ export default function DashboardHeader() {
 
           {/* User Profile */}
           <button className="flex items-center gap-2 header-action-btn">
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-              <User size={18} className="text-white" />
-            </div>
+            <UserAvatar
+              fullName={user?.fullName}
+              avatarUrl={user?.avatarUrl}
+              fallbackName="System Admin"
+              size="sm"
+              fallbackClassName="bg-brand/20 text-brand"
+            />
             <span className="text-sm font-medium text-heading hidden md:block">
               {displayInitial}
             </span>
