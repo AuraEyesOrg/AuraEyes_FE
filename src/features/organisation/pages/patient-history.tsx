@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   CalendarDays,
-  Clock3,
   Eye,
   FileText,
   Loader2,
@@ -24,7 +23,72 @@ import {
   orgScreeningApi,
   type OrgScreeningHistoryItem,
 } from '../api/screening.api';
-import type { OrgScreeningSessionDetail } from '../types/screening-result.types';
+import type {
+  DetectionBox,
+  OrgScreeningSessionDetail,
+} from '../types/screening-result.types';
+import { aiCoreClient } from '@/lib/axios';
+import {
+  extractVisualArtifactsFromRaw,
+  getDetectionStyle,
+} from '../utils/screening-result.util';
+
+interface SessionVisualAssets {
+  boxedUrl?: string;
+  heatmapUrl?: string;
+}
+
+function resolveAiAssetUrl(url?: unknown): string | undefined {
+  if (typeof url !== 'string' || url.length === 0) return undefined;
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
+    return url;
+  }
+
+  try {
+    const base =
+      typeof aiCoreClient.defaults.baseURL === 'string' &&
+      aiCoreClient.defaults.baseURL.length > 0
+        ? aiCoreClient.defaults.baseURL
+        : window.location.origin;
+
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
+}
+
+function parseSessionVisualAssets(rawJsonOutput?: string): SessionVisualAssets {
+  if (!rawJsonOutput) return {};
+
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+
+    const boxedUrl = resolveAiAssetUrl(
+      parsed.annotatedImageUrl ??
+        parsed.annotated_image_url ??
+        parsed.boxedImageUrl ??
+        parsed.boxed_image_url ??
+        parsed.boxed_url ??
+        parsed.image_url
+    );
+    const heatmapUrl = resolveAiAssetUrl(
+      parsed.heatmap_url ?? parsed.heatmap_colormap_url ?? parsed.heatmapUrl
+    );
+
+    return {
+      boxedUrl,
+      heatmapUrl,
+    };
+  } catch {
+    return {};
+  }
+}
 
 function getRiskClass(riskLevel?: string): string {
   const normalized = riskLevel?.toLowerCase();
@@ -136,6 +200,46 @@ export default function OrganisationPatientHistoryPage() {
       return unwrapApiData<OrgScreeningSessionDetail>(response);
     },
   });
+
+  const sessionVisualAssets = useMemo(() => {
+    return parseSessionVisualAssets(screeningDetailQuery.data?.rawJsonOutput);
+  }, [screeningDetailQuery.data?.rawJsonOutput]);
+
+  const [primaryImageSize, setPrimaryImageSize] = useState<{
+    width: number;
+    height: number;
+  }>({
+    width: 0,
+    height: 0,
+  });
+
+  const sessionImages = screeningDetailQuery.data?.images ?? [];
+  const primaryImage = sessionImages[0];
+
+  useEffect(() => {
+    setPrimaryImageSize({ width: 0, height: 0 });
+  }, [primaryImage?.id, selectedScreeningId]);
+
+  const generatedArtifacts = useMemo(() => {
+    return extractVisualArtifactsFromRaw(
+      screeningDetailQuery.data?.rawJsonOutput,
+      primaryImageSize.width,
+      primaryImageSize.height,
+      'vi'
+    );
+  }, [
+    screeningDetailQuery.data?.rawJsonOutput,
+    primaryImageSize.width,
+    primaryImageSize.height,
+  ]);
+
+  const boxedOverlayBoxes = useMemo<DetectionBox[]>(() => {
+    if (sessionVisualAssets.boxedUrl) return [];
+    return generatedArtifacts.boxes;
+  }, [sessionVisualAssets.boxedUrl, generatedArtifacts.boxes]);
+
+  const resolvedHeatmapUrl =
+    sessionVisualAssets.heatmapUrl ?? generatedArtifacts.heatmapUrl;
 
   const openScreeningResult = () => {
     if (!selectedScreeningId) return;
@@ -275,12 +379,6 @@ export default function OrganisationPatientHistoryPage() {
                             <Eye className="h-3.5 w-3.5" /> {item.imagesCount}{' '}
                             images
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-tertiary) px-2.5 py-1 text-(--text-secondary)">
-                            <Clock3 className="h-3.5 w-3.5" />
-                            {item.confidenceScore
-                              ? `${item.confidenceScore}%`
-                              : 'N/A'}
-                          </span>
                         </div>
                       </button>
                     );
@@ -357,27 +455,96 @@ export default function OrganisationPatientHistoryPage() {
                       <CalendarDays className="h-4 w-4 text-primary" />
                       Retinal images
                     </h3>
-                    {(screeningDetailQuery.data.images ?? []).length === 0 ? (
+                    {sessionImages.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-(--border-primary) p-4 text-sm text-(--text-tertiary)">
                         No retinal images were found for this session.
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {screeningDetailQuery.data.images.map((image) => (
-                          <div
-                            key={image.id}
-                            className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)"
-                          >
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                          <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
                             <img
-                              src={image.imageUrl}
-                              alt={`Retinal image ${image.eyeSide}`}
-                              className="h-40 w-full object-cover"
+                              src={primaryImage?.imageUrl}
+                              alt={`Retinal image ${primaryImage?.eyeSide ?? ''}`}
+                              className="h-44 w-full object-cover"
+                              onLoad={(event) => {
+                                const target = event.currentTarget;
+                                setPrimaryImageSize({
+                                  width: target.naturalWidth,
+                                  height: target.naturalHeight,
+                                });
+                              }}
                             />
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
-                              Eye side: {image.eyeSide}
+                              Original • Eye side: {primaryImage?.eyeSide}
                             </div>
                           </div>
-                        ))}
+
+                          <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
+                            {sessionVisualAssets.boxedUrl ? (
+                              <img
+                                src={sessionVisualAssets.boxedUrl}
+                                alt="Boxed retinal image"
+                                className="h-44 w-full object-cover"
+                              />
+                            ) : boxedOverlayBoxes.length > 0 && primaryImage ? (
+                              <div className="relative h-44 w-full">
+                                <img
+                                  src={primaryImage.imageUrl}
+                                  alt="Boxed retinal image"
+                                  className="h-44 w-full object-cover"
+                                />
+                                {boxedOverlayBoxes.map((box) => {
+                                  const style = getDetectionStyle(box.type);
+                                  return (
+                                    <div
+                                      key={box.id}
+                                      className="absolute border"
+                                      style={{
+                                        left: `${box.location.x}%`,
+                                        top: `${box.location.y}%`,
+                                        width: `${box.location.width}%`,
+                                        height: `${box.location.height}%`,
+                                        borderColor: style.borderColor,
+                                        backgroundColor: style.backgroundColor,
+                                      }}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="h-44 p-4 text-xs text-(--text-tertiary) border-b border-dashed border-(--border-primary)">
+                                Boxed image is not available for this session.
+                              </div>
+                            )}
+                            <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
+                              Boxed
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
+                            {resolvedHeatmapUrl ? (
+                              <img
+                                src={resolvedHeatmapUrl}
+                                alt="Heatmap retinal image"
+                                className="h-44 w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-44 p-4 text-xs text-(--text-tertiary) border-b border-dashed border-(--border-primary)">
+                                Heatmap image is not available for this session.
+                              </div>
+                            )}
+                            <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
+                              Heatmap
+                            </div>
+                          </div>
+                        </div>
+                        {sessionImages.length > 1 ? (
+                          <p className="text-xs text-(--text-tertiary)">
+                            Showing AI visual previews for the first retinal
+                            image in this session.
+                          </p>
+                        ) : null}
                       </div>
                     )}
                   </div>
@@ -390,25 +557,13 @@ export default function OrganisationPatientHistoryPage() {
 
                     {screeningDetailQuery.data.latestResult ? (
                       <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) p-4 space-y-4">
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           <div>
                             <p className="text-xs text-(--text-tertiary)">
                               Risk level
                             </p>
                             <p className="text-sm font-semibold text-(--text-primary)">
                               {screeningDetailQuery.data.latestResult.riskLevel}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-(--text-tertiary)">
-                              Confidence
-                            </p>
-                            <p className="text-sm font-semibold text-(--text-primary)">
-                              {
-                                screeningDetailQuery.data.latestResult
-                                  .confidenceScore
-                              }
-                              %
                             </p>
                           </div>
                           <div>

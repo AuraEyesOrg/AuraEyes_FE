@@ -80,6 +80,7 @@ export default function OrganisationSlotManagementPage() {
   const [endTime, setEndTime] = useState('12:00');
   const [slotDuration, setSlotDuration] = useState(30);
   const [maxCapacity, setMaxCapacity] = useState(5);
+  const [cost, setCost] = useState<number | null>(null);
   const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(
     null
   );
@@ -191,6 +192,7 @@ export default function OrganisationSlotManagementPage() {
           endTime: `${endTime}:00`,
           slotDuration,
           maxCapacity,
+          cost: cost && cost > 0 ? cost : null,
         },
       });
       toast.success('Template created successfully.');
@@ -450,6 +452,9 @@ export default function OrganisationSlotManagementPage() {
                             Capacity
                           </th>
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
+                            Deposit
+                          </th>
+                          <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
                             Actions
                           </th>
                         </tr>
@@ -497,6 +502,17 @@ export default function OrganisationSlotManagementPage() {
                                     {slot.bookedCount}/{slot.maxCapacity}
                                   </span>
                                 </div>
+                              </td>
+                              <td className="px-3 py-3">
+                                {slot.cost != null && slot.cost > 0 ? (
+                                  <span className="text-xs font-medium tabular-nums text-amber-600 dark:text-amber-400">
+                                    {slot.cost.toLocaleString('vi-VN')}₫
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-(--text-muted)">
+                                    Free
+                                  </span>
+                                )}
                               </td>
                               <td className="px-3 py-3">
                                 <div className="flex flex-wrap items-center gap-1.5">
@@ -615,15 +631,35 @@ export default function OrganisationSlotManagementPage() {
                       className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                     />
                   </label>
-                  <label className="block text-xs font-medium text-(--text-secondary) md:col-span-2">
+                  <label className="block text-xs font-medium text-(--text-secondary)">
                     Max capacity per slot
                     <input
                       type="number"
                       min={1}
                       value={maxCapacity}
                       onChange={(e) => setMaxCapacity(Number(e.target.value))}
-                      className="mt-1.5 w-full max-w-[160px] rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
+                      className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                     />
+                  </label>
+                  <label className="block text-xs font-medium text-(--text-secondary)">
+                    Deposit fee (VND)
+                    <input
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={cost ?? ''}
+                      onChange={(e) =>
+                        setCost(
+                          e.target.value === '' ? null : Number(e.target.value)
+                        )
+                      }
+                      placeholder="0 = free"
+                      className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
+                    />
+                    <span className="mt-1 block text-[11px] text-(--text-muted)">
+                      Patients will be charged this deposit when booking to
+                      prevent spam.
+                    </span>
                   </label>
                 </div>
                 <button
@@ -670,6 +706,14 @@ export default function OrganisationSlotManagementPage() {
                           <p className="mt-0.5 text-xs text-(--text-muted)">
                             {tpl.slotDuration} min per slot · capacity{' '}
                             {tpl.maxCapacity}
+                            {tpl.cost != null && tpl.cost > 0 && (
+                              <>
+                                {' · '}
+                                <span className="font-medium text-amber-600 dark:text-amber-400">
+                                  {tpl.cost.toLocaleString('vi-VN')}₫ deposit
+                                </span>
+                              </>
+                            )}
                           </p>
                         </div>
                         <button
@@ -822,6 +866,12 @@ export default function OrganisationSlotManagementPage() {
                             {formatSlotTimeShort(tpl.endTime)}
                             {' · '}
                             {tpl.slotDuration} min · cap {tpl.maxCapacity}
+                            {tpl.cost != null && tpl.cost > 0 && (
+                              <>
+                                {' · '}
+                                {tpl.cost.toLocaleString('vi-VN')}₫
+                              </>
+                            )}
                           </p>
                         </button>
                       );

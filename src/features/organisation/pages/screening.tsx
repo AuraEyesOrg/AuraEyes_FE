@@ -56,12 +56,14 @@ export default function OrganisationScreeningPage() {
     queryFn: getOrganisationRecentPatients,
   });
 
-  const { data: billingSummary } = useQuery({
+  const { data: billingSummary, isLoading: isBillingLoading } = useQuery({
     queryKey: ['org-billing-summary'],
     queryFn: () => orgBillingApi.getSummary(),
   });
 
   const remainingQuota = billingSummary?.remainingQuota ?? 0;
+  const isQuotaExhausted =
+    !isBillingLoading && remainingQuota !== null && remainingQuota <= 0;
 
   const preSelectedPatientId = searchParams.get('patientId');
   useEffect(() => {
@@ -318,13 +320,26 @@ export default function OrganisationScreeningPage() {
                   algorithm.
                 </p>
               </div>
-              <div className="ml-auto rounded-xl border border-(--border-primary) bg-(--bg-secondary) px-3 py-2 text-right">
+              {/* Quota badge — header right */}
+              <div className="ml-auto rounded-xl border border-(--border-primary) bg-(--bg-secondary) px-3 py-2 text-right min-w-[100px]">
                 <p className="text-xs text-(--text-tertiary)">
                   Remaining quota
                 </p>
-                <p className="text-lg font-bold text-(--text-primary)">
-                  {remainingQuota}
-                </p>
+                {isBillingLoading ? (
+                  <div className="h-7 flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-(--text-secondary)" />
+                  </div>
+                ) : (
+                  <p
+                    className={`text-lg font-bold ${
+                      isQuotaExhausted
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-(--text-primary)'
+                    }`}
+                  >
+                    {remainingQuota ?? '—'}
+                  </p>
+                )}
               </div>
 
               {/* Context: Selected Patient */}
@@ -547,66 +562,77 @@ export default function OrganisationScreeningPage() {
                 </div>
               )}
 
-              {remainingQuota <= 0 && (
-                <div className="flex items-start justify-between gap-3 p-4 mt-5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40">
-                  <div>
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                      Quota exhausted
-                    </p>
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                      You need to purchase more quota before starting a new
-                      screening.
-                    </p>
+              {/* Navigation Bar — thay toàn bộ đoạn navigation bar + quota warning */}
+              <div className="mt-8 space-y-3">
+                {/* Quota exhausted banner — chỉ hiện khi đã load xong VÀ thực sự hết */}
+                {isQuotaExhausted && (
+                  <div className="flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800/40 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                          Quota exhausted
+                        </p>
+                        <p className="text-xs text-red-500 dark:text-red-400 truncate">
+                          Purchase more credits to continue screening.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/organisation/wallet')}
+                      className="shrink-0 rounded-lg bg-red-600 hover:bg-red-700 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
+                    >
+                      Top up →
+                    </button>
                   </div>
+                )}
+
+                {/* Nav row */}
+                <div className="flex items-center justify-between">
                   <button
-                    type="button"
-                    onClick={() => navigate('/organisation/wallet')}
-                    className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                    onClick={goBack}
+                    disabled={isCreating}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition-colors disabled:opacity-50"
                   >
-                    Go to Wallet
+                    <ArrowLeft className="w-4 h-4" />
+                    Cancel & Return
                   </button>
-                </div>
-              )}
-            </div>
 
-            {/* Navigation Bar */}
-            <div className="flex items-center justify-between mt-8">
-              <button
-                onClick={goBack}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent transition-colors"
-                disabled={isCreating}
-              >
-                <ArrowLeft className="w-4 h-4" /> Cancel & Return
-              </button>
-
-              {currentStep === 'upload-images' ? (
-                <button
-                  onClick={goNext}
-                  disabled={!canProceed}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  Proceed to Review <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleLaunchScreening}
-                  disabled={!canProceed || isCreating || remainingQuota <= 0}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-sm"
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {isUploading
-                        ? 'Transferring Files…'
-                        : 'Executing AI Model…'}
-                    </>
+                  {currentStep === 'upload-images' ? (
+                    <button
+                      onClick={goNext}
+                      disabled={!canProceed}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      Proceed to Review
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   ) : (
-                    <>
-                      <ScanEye className="w-4 h-4" /> Start AI Analysis
-                    </>
+                    <button
+                      onClick={handleLaunchScreening}
+                      disabled={!canProceed || isCreating || isQuotaExhausted}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isUploading
+                            ? 'Transferring Files…'
+                            : 'Executing AI Model…'}
+                        </>
+                      ) : (
+                        <>
+                          <ScanEye className="w-4 h-4" />
+                          Start AI Analysis
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
+                </div>
+              </div>
             </div>
           </div>
         </main>
