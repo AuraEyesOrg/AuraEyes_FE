@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getProfile,
@@ -18,11 +19,30 @@ export const profileKeys = {
 // ============ QUERIES ============
 
 export const useProfile = () => {
-  return useQuery<PatientProfile, Error>({
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const query = useQuery<PatientProfile, Error>({
     queryKey: profileKeys.detail(),
     queryFn: getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always',
   });
+
+  useEffect(() => {
+    if (!query.data) return;
+
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) return;
+
+    setUser({
+      ...currentUser,
+      fullName: query.data.fullName,
+      email: query.data.email,
+      avatarUrl: query.data.avatarUrl ?? currentUser.avatarUrl,
+    });
+  }, [query.data, setUser]);
+
+  return query;
 };
 
 // ============ MUTATIONS ============

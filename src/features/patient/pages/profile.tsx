@@ -30,6 +30,7 @@ import { profileSchema, type ProfileFormData } from '../schemas/profile.schema';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
 
 export default function ProfilePage() {
   const { t: i18nT } = useTranslation();
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const uploadAvatarMutation = useUploadAvatar();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarImageError, setAvatarImageError] = useState(false);
 
   // Avatar upload state
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
@@ -83,6 +85,12 @@ export default function ProfilePage() {
       });
     }
   }, [profile, reset]);
+
+  useEffect(() => {
+    setAvatarImageError(false);
+  }, [profile?.avatarUrl]);
+
+  const resolvedAvatarUrl = resolveAvatarUrl(profile?.avatarUrl);
 
   // ============ PROFILE FORM HANDLERS ============
 
@@ -310,15 +318,17 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="relative mb-6">
               <div className="w-32 h-32 rounded-full flex items-center justify-center overflow-hidden shadow-brand">
-                {profile.avatarUrl ? (
+                {resolvedAvatarUrl && !avatarImageError ? (
                   <img
-                    src={profile.avatarUrl}
+                    src={resolvedAvatarUrl}
                     alt={profile.fullName}
                     className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarImageError(true)}
                   />
                 ) : (
                   <span className="text-4xl font-bold text-white">
-                    {profile.fullName.charAt(0)}
+                    {profile.fullName.charAt(0) || 'U'}
                   </span>
                 )}
               </div>

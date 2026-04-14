@@ -135,6 +135,13 @@ export const organisationApi = {
     >(API_ENDPOINTS.SYSTEM_ADMIN.ORGANISATIONS.APPROVE_ONBOARDING(id));
     return response.data.data;
   },
+
+  async updateMonthlyQuota(id: string, monthlyQuotaLimit: number) {
+    await api.put(
+      API_ENDPOINTS.SYSTEM_ADMIN.ORGANISATIONS.UPDATE_MONTHLY_QUOTA(id),
+      { monthlyQuotaLimit }
+    );
+  },
 };
 
 export const deviceApi = {
