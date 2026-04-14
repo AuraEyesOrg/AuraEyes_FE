@@ -38,6 +38,37 @@ interface SessionVisualAssets {
   heatmapUrl?: string;
 }
 
+function getImageFileName(url?: string): string | undefined {
+  if (!url) return undefined;
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+    const value = parsed.pathname.split('/').pop();
+    return value ? decodeURIComponent(value).toLowerCase() : undefined;
+  } catch {
+    const value = url.split('?')[0].split('#')[0].split('/').pop();
+    return value ? decodeURIComponent(value).toLowerCase() : undefined;
+  }
+}
+
+function readVisualAssetFromRecord(
+  record: Record<string, unknown>
+): SessionVisualAssets {
+  return {
+    boxedUrl: resolveAiAssetUrl(
+      record.annotatedImageUrl ??
+        record.annotated_image_url ??
+        record.boxedImageUrl ??
+        record.boxed_image_url ??
+        record.boxed_url ??
+        record.image_url
+    ),
+    heatmapUrl: resolveAiAssetUrl(
+      record.heatmap_url ?? record.heatmap_colormap_url ?? record.heatmapUrl
+    ),
+  };
+}
+
 function resolveAiAssetUrl(url?: unknown): string | undefined {
   if (typeof url !== 'string' || url.length === 0) return undefined;
 
@@ -63,28 +94,72 @@ function resolveAiAssetUrl(url?: unknown): string | undefined {
   }
 }
 
-function parseSessionVisualAssets(rawJsonOutput?: string): SessionVisualAssets {
+function parseSessionVisualAssets(
+  rawJsonOutput?: string,
+  selectedImage?: { id: string; imageUrl: string }
+): SessionVisualAssets {
   if (!rawJsonOutput) return {};
 
   try {
     const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
 
-    const boxedUrl = resolveAiAssetUrl(
-      parsed.annotatedImageUrl ??
-        parsed.annotated_image_url ??
-        parsed.boxedImageUrl ??
-        parsed.boxed_image_url ??
-        parsed.boxed_url ??
-        parsed.image_url
-    );
-    const heatmapUrl = resolveAiAssetUrl(
-      parsed.heatmap_url ?? parsed.heatmap_colormap_url ?? parsed.heatmapUrl
-    );
-
-    return {
-      boxedUrl,
-      heatmapUrl,
+    const candidates: Record<string, unknown>[] = [];
+    const pushCandidate = (value: unknown) => {
+      if (!value || typeof value !== 'object') return;
+      candidates.push(value as Record<string, unknown>);
     };
+
+    pushCandidate(parsed);
+    [parsed.results, parsed.images, parsed.predictions].forEach((value) => {
+      if (!Array.isArray(value)) return;
+      value.forEach((item) => pushCandidate(item));
+    });
+
+    if (!selectedImage) {
+      return readVisualAssetFromRecord(parsed);
+    }
+
+    const selectedFileName = getImageFileName(selectedImage.imageUrl);
+    let bestCandidate: Record<string, unknown> | null = null;
+    let bestScore = -1;
+
+    candidates.forEach((candidate) => {
+      let score = 0;
+
+      const candidateImageId =
+        typeof candidate.image_id === 'string' ? candidate.image_id : undefined;
+      if (candidateImageId && candidateImageId === selectedImage.id) {
+        score += 4;
+      }
+
+      const candidateImageUrl =
+        typeof candidate.image_url === 'string'
+          ? candidate.image_url
+          : undefined;
+      if (candidateImageUrl && candidateImageUrl === selectedImage.imageUrl) {
+        score += 3;
+      }
+
+      const candidateFileName =
+        typeof candidate.filename === 'string'
+          ? candidate.filename.toLowerCase()
+          : getImageFileName(candidateImageUrl);
+
+      if (selectedFileName && candidateFileName === selectedFileName) {
+        score += 3;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCandidate = candidate;
+      }
+    });
+
+    if (bestCandidate && bestScore > 0) {
+      return readVisualAssetFromRecord(bestCandidate);
+    }
+
+    return readVisualAssetFromRecord(parsed);
   } catch {
     return {};
   }
@@ -201,9 +276,7 @@ export default function OrganisationPatientHistoryPage() {
     },
   });
 
-  const sessionVisualAssets = useMemo(() => {
-    return parseSessionVisualAssets(screeningDetailQuery.data?.rawJsonOutput);
-  }, [screeningDetailQuery.data?.rawJsonOutput]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [primaryImageSize, setPrimaryImageSize] = useState<{
     width: number;
@@ -214,11 +287,35 @@ export default function OrganisationPatientHistoryPage() {
   });
 
   const sessionImages = screeningDetailQuery.data?.images ?? [];
-  const primaryImage = sessionImages[0];
+  const primaryImage = sessionImages[selectedImageIndex] ?? sessionImages[0];
+
+  const sessionVisualAssets = useMemo(() => {
+    return parseSessionVisualAssets(
+      screeningDetailQuery.data?.rawJsonOutput,
+      primaryImage
+        ? { id: primaryImage.id, imageUrl: primaryImage.imageUrl }
+        : undefined
+    );
+  }, [screeningDetailQuery.data?.rawJsonOutput, primaryImage]);
 
   useEffect(() => {
     setPrimaryImageSize({ width: 0, height: 0 });
   }, [primaryImage?.id, selectedScreeningId]);
+
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [selectedScreeningId]);
+
+  useEffect(() => {
+    if (sessionImages.length === 0) {
+      setSelectedImageIndex(0);
+      return;
+    }
+
+    if (selectedImageIndex >= sessionImages.length) {
+      setSelectedImageIndex(0);
+    }
+  }, [sessionImages.length, selectedImageIndex]);
 
   const generatedArtifacts = useMemo(() => {
     return extractVisualArtifactsFromRaw(
@@ -540,10 +637,38 @@ export default function OrganisationPatientHistoryPage() {
                           </div>
                         </div>
                         {sessionImages.length > 1 ? (
-                          <p className="text-xs text-(--text-tertiary)">
-                            Showing AI visual previews for the first retinal
-                            image in this session.
-                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs text-(--text-tertiary)">
+                              Select an original image to update Boxed/Heatmap
+                              previews.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                              {sessionImages.map((image, index) => {
+                                const selected = index === selectedImageIndex;
+                                return (
+                                  <button
+                                    key={image.id}
+                                    type="button"
+                                    onClick={() => setSelectedImageIndex(index)}
+                                    className={`rounded-lg border p-1 text-left transition ${
+                                      selected
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-(--border-primary) bg-(--bg-primary) hover:bg-(--bg-tertiary)'
+                                    }`}
+                                  >
+                                    <img
+                                      src={image.imageUrl}
+                                      alt={`Retinal thumbnail ${image.eyeSide}`}
+                                      className="h-16 w-full rounded-md object-cover"
+                                    />
+                                    <p className="mt-1 px-1 text-[11px] text-(--text-secondary)">
+                                      {image.eyeSide}
+                                    </p>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         ) : null}
                       </div>
                     )}
