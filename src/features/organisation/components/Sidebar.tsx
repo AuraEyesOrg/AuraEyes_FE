@@ -44,10 +44,7 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
-  const contractApproved = user?.contractStatus === 'Active';
-  const visibleNavItems = contractApproved
-    ? navItems
-    : navItems.filter((item) => item.path === '/organisation/contract');
+  const visibleNavItems = navItems;
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Organisation');
   const displayName = avatarMeta.displayName;

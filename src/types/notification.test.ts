@@ -128,4 +128,39 @@ describe('getNotificationRoute', () => {
       '/organisation/contract'
     );
   });
+
+  it('normalizes routeHint without leading slash', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      routeHint: 'organisation/contract',
+    });
+
+    expect(getNotificationRoute(notification, ['OrgAdmin'])).toBe(
+      '/organisation/contract'
+    );
+  });
+
+  it('supports Organization role alias for org wallet route', () => {
+    const txId = '5310c0ec-a2aa-4513-a48c-4eefef18f73b';
+    const notification = buildNotification(
+      NotificationType.WalletPaymentProcessed,
+      {
+        transactionId: txId,
+      }
+    );
+
+    expect(getNotificationRoute(notification, ['Organization'])).toBe(
+      `/organisation/wallet?transactionId=${encodeURIComponent(txId)}`
+    );
+  });
+
+  it('routes verification action variants by keyword matching', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      action: 'organisation_verification_request_submitted',
+      verificationFlowType: 'OrganisationVerification',
+    });
+
+    expect(getNotificationRoute(notification, ['SystemAdmin'])).toBe(
+      '/system-admin/verifications'
+    );
+  });
 });

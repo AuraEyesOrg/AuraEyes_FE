@@ -9,12 +9,12 @@ const ORG_ADMIN_EMAIL =
 const PATIENT_EMAIL = process.env.E2E_ROLE_EMAIL_PATIENT ?? 'patient@gmail.com';
 const DEFAULT_PASSWORD = 'Password123!';
 
-test.describe('Flow 07 - Professional Network Collaboration', () => {
+test.describe('Professional Network Post, Comment, Reaction, Reply Modules', () => {
   test.beforeEach(async ({ request }) => {
     await resetAndSeed(request);
   });
 
-  test('ophthalmologist creates a case presentation post with media', async ({
+  test('@round-1 @module-network NETWORK_01 - ophthalmologist creates a case presentation post with media', async ({
     browser,
   }) => {
     test.setTimeout(180_000);
@@ -75,13 +75,14 @@ test.describe('Flow 07 - Professional Network Collaboration', () => {
     await ctx.close();
   });
 
-  test('organisation creates announcement and comment on post detail', async ({
+  test('@round-2 @module-network NETWORK_02 - organisation can comment, react, and reply on a network post', async ({
     browser,
   }) => {
     test.setTimeout(180_000);
 
     const postText = `E2E Announcement ${Date.now()}`;
     const commentText = `E2E comment ${Date.now()}`;
+    const replyText = `E2E reply ${Date.now()}`;
 
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
@@ -112,6 +113,16 @@ test.describe('Flow 07 - Professional Network Collaboration', () => {
 
     await expect(page).toHaveURL(/\/network\/post\//);
 
+    const reactionTrigger = page
+      .locator('article')
+      .first()
+      .locator(
+        'button:has(svg.lucide-lightbulb), button:has(svg.lucide-thumbs-up)'
+      )
+      .first();
+    await reactionTrigger.hover();
+    await page.locator('button[title="Agree"]').first().click();
+
     await page.getByPlaceholder('Add a comment...').fill(commentText);
     await page
       .getByRole('button', { name: /^Post$/ })
@@ -120,10 +131,19 @@ test.describe('Flow 07 - Professional Network Collaboration', () => {
 
     await expect(page.getByText(commentText)).toBeVisible({ timeout: 20_000 });
 
+    const postedComment = page
+      .locator('div.hover-animation', { hasText: commentText })
+      .first();
+    await postedComment.getByRole('button', { name: /^Reply$/i }).click();
+    await page.getByPlaceholder(/Reply to/i).fill(replyText);
+    await postedComment.locator('button:has(svg.lucide-send)').click();
+
+    await expect(page.getByText(replyText)).toBeVisible({ timeout: 20_000 });
+
     await ctx.close();
   });
 
-  test('patient is blocked from accessing /network/feed', async ({
+  test('@round-3 @module-network NETWORK_03 - patient is blocked from accessing /network/feed', async ({
     browser,
   }) => {
     test.setTimeout(90_000);

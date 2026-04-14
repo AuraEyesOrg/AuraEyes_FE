@@ -118,7 +118,11 @@ export default function ViewAllNotificationsPage() {
       return 'system-admin';
     }
 
-    if (normalizedRoles.some((role) => ['orgadmin'].includes(role))) {
+    if (
+      normalizedRoles.some((role) =>
+        ['orgadmin', 'organization'].includes(role)
+      )
+    ) {
       return 'organisation';
     }
 

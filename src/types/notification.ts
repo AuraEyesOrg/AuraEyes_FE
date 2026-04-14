@@ -288,7 +288,8 @@ function readBoolean(
 function getRoleHome(roles: string[]): string {
   if (hasRole(roles, ['systemadmin', 'admin']))
     return '/system-admin/dashboard';
-  if (hasRole(roles, ['orgadmin'])) return '/organisation/dashboard';
+  if (hasRole(roles, ['orgadmin', 'organization']))
+    return '/organisation/dashboard';
   if (hasRole(roles, ['ophthalmologist', 'doctor']))
     return '/ophthalmologist/dashboard';
   if (hasRole(roles, ['patient'])) return '/patient/notifications';
@@ -328,7 +329,7 @@ export function getNotificationRoute(
     readString(payload, 'transactionId') || fallbackReferenceId;
 
   const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin', 'admin']);
-  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin']);
+  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin', 'organization']);
   const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
   const isPatient = hasRole(normalizedRoles, ['patient']);
 
@@ -424,25 +425,60 @@ export function getNotificationRoute(
     }
 
     case NotificationType.SystemAlert: {
-      const routeHint = readString(payload, 'routeHint');
-      if (routeHint.startsWith('/')) {
-        return routeHint;
+      const routeHintRaw = readString(payload, 'routeHint');
+      if (
+        routeHintRaw &&
+        (routeHintRaw.startsWith('/') || routeHintRaw.includes('/'))
+      ) {
+        return routeHintRaw.startsWith('/')
+          ? routeHintRaw
+          : `/${routeHintRaw.replace(/^\/+/, '')}`;
       }
 
-      const action = readString(payload, 'action').toLowerCase();
+      const action = readString(payload, 'action', 'notificationAction')
+        .toLowerCase()
+        .trim();
       const flowType = readString(
         payload,
         'verificationFlowType',
-        'reviewFlowType'
-      ).toLowerCase();
+        'reviewFlowType',
+        'flowType',
+        'verificationFlow'
+      )
+        .toLowerCase()
+        .trim();
       const isOrganisationVerificationFlow =
         flowType.includes('organisation') || flowType.includes('organization');
+      const isVerificationFlow =
+        flowType.includes('verification') ||
+        flowType.includes('onboarding') ||
+        flowType.includes('credential') ||
+        isOrganisationVerificationFlow;
+
+      const isVerificationSubmittedAction =
+        action === 'verification_request_submitted' ||
+        (action.includes('verification') &&
+          (action.includes('request') || action.includes('submitted')));
+
+      const isVerificationReviewAction =
+        action === 'verification_review_completed' ||
+        action === 'ophthalmologist_verification_approved' ||
+        action === 'verification_review_rejected' ||
+        action === 'ophthalmologist_verification_rejected' ||
+        (action.includes('verification') &&
+          (action.includes('review') ||
+            action.includes('approved') ||
+            action.includes('rejected')));
+
+      const isContractActivatedAction =
+        action === 'contract_activated' ||
+        (action.includes('contract') && action.includes('activat'));
 
       if (action === 'ophthalmologist_email_confirmed') {
         return isSystemAdmin ? '/system-admin/contracts' : fallbackHome;
       }
 
-      if (action === 'verification_request_submitted') {
+      if (isVerificationSubmittedAction) {
         return isSystemAdmin
           ? '/system-admin/verifications'
           : isDoctor
@@ -452,12 +488,7 @@ export function getNotificationRoute(
               : fallbackHome;
       }
 
-      if (
-        action === 'verification_review_completed' ||
-        action === 'ophthalmologist_verification_approved' ||
-        action === 'verification_review_rejected' ||
-        action === 'ophthalmologist_verification_rejected'
-      ) {
+      if (isVerificationReviewAction) {
         return isDoctor
           ? '/ophthalmologist/settings'
           : isOrgAdmin
@@ -467,7 +498,7 @@ export function getNotificationRoute(
               : fallbackHome;
       }
 
-      if (action === 'contract_activated') {
+      if (isContractActivatedAction) {
         return isDoctor
           ? '/ophthalmologist/contract'
           : isOrgAdmin
@@ -475,11 +506,7 @@ export function getNotificationRoute(
             : fallbackHome;
       }
 
-      if (
-        flowType === 'onboardingverification' ||
-        flowType === 'credentialupdatereview' ||
-        isOrganisationVerificationFlow
-      ) {
+      if (isVerificationFlow) {
         return isSystemAdmin
           ? '/system-admin/verifications'
           : isDoctor

@@ -36,6 +36,7 @@ import {
 } from '../api';
 import type { TwoFactorRequiredResponse } from '../types';
 import useAuthStore from '@/store/auth-store';
+import { shouldRedirectToContract } from '../utils/contract-status';
 
 type AuthMode = 'login' | 'register';
 
@@ -202,17 +203,13 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (response.user?.contractStatus !== 'Active') {
+          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (response.user?.contractStatus !== 'Active') {
-            navigate('/organisation/contract');
-          } else {
-            navigate('/organisation/dashboard');
-          }
+          navigate('/organisation/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }
@@ -378,17 +375,13 @@ const LoginPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(loggedInUser)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/pending-approval'));
-          } else if (loggedInUser?.contractStatus !== 'Active') {
+          } else if (shouldRedirectToContract(loggedInUser?.contractStatus)) {
             navigate(toLocalizedAuthPath('/ophthalmologist/contract'));
           } else {
             navigate(toLocalizedAuthPath('/ophthalmologist/dashboard'));
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (loggedInUser?.contractStatus !== 'Active') {
-            navigate('/organisation/contract');
-          } else {
-            navigate('/organisation/dashboard');
-          }
+          navigate('/organisation/dashboard');
         } else {
           navigate(toLocalizedAuthPath('/'));
         }
