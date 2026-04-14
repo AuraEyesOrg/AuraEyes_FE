@@ -1,13 +1,14 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
   Eye,
-  BarChart3,
   Wallet,
   Calendar,
   CalendarClock,
+  CalendarX,
   LogOut,
   Settings,
   MessagesSquare,
@@ -15,6 +16,7 @@ import {
   Globe,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
+import { api } from '@/lib/api';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -30,6 +32,32 @@ import { persistLocale } from '@/i18n/middleware';
 interface DoctorSidebarProps {
   pendingCount?: number;
 }
+
+interface OphthalmologistMeApiResponse {
+  success: boolean;
+  data?: {
+    employmentType?: string | null;
+  };
+}
+
+const normalizeEmploymentType = (
+  value: string | null | undefined
+): 'FullTime' | 'PartTime' | null => {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(/[\s_-]/g, '').toLowerCase();
+  if (normalized === 'fulltime') {
+    return 'FullTime';
+  }
+
+  if (normalized === 'parttime') {
+    return 'PartTime';
+  }
+
+  return null;
+};
 
 const navItems = [
   {
@@ -59,6 +87,11 @@ const navItems = [
     path: '/ophthalmologist/schedules',
   },
   {
+    labelKey: 'Ophthalmologist.sidebar.leaveRequests',
+    icon: CalendarX,
+    path: '/ophthalmologist/leave-requests',
+  },
+  {
     labelKey: 'Ophthalmologist.sidebar.consultations',
     icon: MessagesSquare,
     path: '/ophthalmologist/consultations',
@@ -68,11 +101,6 @@ const navItems = [
     labelKey: 'Common.sidebar.auraNetwork',
     icon: Globe,
     path: '/network',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.analytics',
-    icon: BarChart3,
-    path: '/ophthalmologist/analytics',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.contract',
@@ -105,11 +133,32 @@ export default function DoctorSidebar({
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Doctor');
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
+  const authEmploymentType = normalizeEmploymentType(user?.employmentType);
+
+  const { data: latestEmploymentType } = useQuery({
+    queryKey: ['ophthalmologist', 'me', 'employment-type'],
+    queryFn: async () => {
+      const response = await api.get<OphthalmologistMeApiResponse>(
+        '/ophthalmologist/profile'
+      );
+
+      return normalizeEmploymentType(response.data?.data?.employmentType);
+    },
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const isFullTimeDoctor =
+    (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';
   const visibleNavItems = contractApproved
-    ? navItems
+    ? navItems.filter(
+        (item) =>
+          item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
+      )
     : navItems.filter((item) => item.path === '/ophthalmologist/contract');
 
   const handleLogout = () => {

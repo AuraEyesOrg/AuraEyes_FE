@@ -267,11 +267,42 @@ declare module 'i18next' {
         screenings: string;
         appointments: string;
         schedules: string;
+        leaveRequests: string;
         consultations: string;
-        analytics: string;
         contract: string;
         settings: string;
         wallet: string;
+      };
+      leaveRequests: {
+        pageTitle: string;
+        submitTitle: string;
+        submitDescription: string;
+        startDate: string;
+        endDate: string;
+        reason: string;
+        reasonPlaceholder: string;
+        submitAction: string;
+        historyTitle: string;
+        empty: string;
+        submittedAt: string;
+        adminNote: string;
+        confirmCancel: string;
+        cancelAction: string;
+        status: {
+          all: string;
+          pending: string;
+          approved: string;
+          rejected: string;
+          cancelled: string;
+        };
+        toast: {
+          createSuccess: string;
+          createFailed: string;
+          cancelSuccess: string;
+          cancelFailed: string;
+          missingFields: string;
+          invalidDateRange: string;
+        };
       };
       dashboard: {
         greeting: {
@@ -319,6 +350,11 @@ declare module 'i18next' {
           experienceSuffix: string;
           years: string;
           specialty: string;
+          employmentType: string;
+          employmentTypeValues: {
+            fullTime: string;
+            partTime: string;
+          };
           hospital: string;
           address: string;
           bio: string;
@@ -357,6 +393,17 @@ declare module 'i18next' {
           title: string;
           security: string;
           securityHint: string;
+          securityHintChecking: string;
+          securityHintEnabled: string;
+          securityHintDisabled: string;
+          resetPassword: string;
+          resetPasswordHint: string;
+          currentPassword: string;
+          newPassword: string;
+          confirmNewPassword: string;
+          updatePassword: string;
+          passwordChanged: string;
+          passwordChangeFailed: string;
           language: string;
           languageVi: string;
           languageEn: string;
@@ -591,6 +638,13 @@ declare module 'i18next' {
         generate: string;
         generating: string;
         blockReason: string;
+        fullTimeNotice: string;
+        partTimeNotice: string;
+        subtitleFullTime: string;
+        subtitlePartTime: string;
+        fullTimeManualCreateBlocked: string;
+        fullTimeManualGenerateBlocked: string;
+        fullTimeDeleteTemplateBlocked: string;
         confirmDeleteTemplate: string;
         confirmDeleteTemplateMessage: string;
         confirmDeleteTemplateAction: string;
@@ -702,10 +756,6 @@ declare module 'i18next' {
           };
         };
         commission: string;
-      };
-      analytics: {
-        title: string;
-        unknown: string;
       };
       screeningReview: {
         note: string;
@@ -1874,9 +1924,50 @@ declare module 'i18next' {
         newScreening: string;
         filter: string;
         viewReview: string;
+        viewDiagnosis: string;
         downloadReport: string;
         shareWithDoctor: string;
         delete: string;
+      };
+      diagnosis: {
+        title: string;
+        loading: string;
+        detailsTitle: string;
+        notAvailable: string;
+        yes: string;
+        no: string;
+        type: {
+          aiScreening: string;
+          verifiedResult: string;
+        };
+        status: {
+          verified: string;
+        };
+        fields: {
+          createdAt: string;
+          diagnosisCode: string;
+          codingSystem: string;
+          severityLevel: string;
+          confidenceLevel: string;
+          clinicalStatus: string;
+          urgentCase: string;
+          referralNeeded: string;
+          followUpDate: string;
+          finalizedAt: string;
+          verifiedAt: string;
+          verifiedBy: string;
+        };
+        sections: {
+          clinicalSummary: string;
+          findings: string;
+          treatmentPlan: string;
+          lifestyleAdvice: string;
+          recommendations: string;
+        };
+        empty: {
+          findings: string;
+          recommendations: string;
+        };
       };
     };
     PatientScreeningNew: {
@@ -2082,69 +2173,6 @@ declare module 'i18next' {
         confirmBooking: string;
       };
     };
-    PatientReports: {
-      page: {
-        title: string;
-        subtitle: string;
-      };
-      stats: {
-        totalReports: string;
-        verified: string;
-        withHeatmaps: string;
-        healthyResults: string;
-      };
-      search: {
-        placeholder: string;
-      };
-      filters: {
-        label: string;
-        all: string;
-      };
-      risk: {
-        low: string;
-        medium: string;
-        high: string;
-      };
-      type: {
-        screening: string;
-        followUp: string;
-        verification: string;
-      };
-      badges: {
-        verified: string;
-      };
-      fields: {
-        result: string;
-        analyzedBy: string;
-        detectedConditions: string;
-      };
-      actions: {
-        viewDetails: string;
-        viewHeatmap: string;
-        downloadPdf: string;
-        startFirstScreening: string;
-      };
-      empty: {
-        title: string;
-        adjustSearchOrFilters: string;
-        noScreenings: string;
-      };
-      mock: {
-        result: {
-          healthy: string;
-          mildSignsDetected: string;
-          requiresAttention: string;
-        };
-        doctor: {
-          aiAnalysis: string;
-        };
-        conditions: {
-          earlyAmdSigns: string;
-          monitorBloodSugar: string;
-          diabeticRetinopathyStage1: string;
-        };
-      };
-    };
     PatientClinics: {
       page: {
         title: string;
@@ -2318,7 +2346,6 @@ declare module 'i18next' {
       nav: {
         dashboard: string;
         myScans: string;
-        reports: string;
         appointments: string;
         findClinics: string;
         healthRoadmap: string;
@@ -2344,7 +2371,6 @@ declare module 'i18next' {
       pages: {
         dashboard: string;
         screening: string;
-        reports: string;
         appointments: string;
         doctors: string;
         clinics: string;

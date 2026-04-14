@@ -126,13 +126,6 @@
       "active": false
     },
     {
-      "id": "analytics",
-      "label": "Analytics",
-      "icon": "BarChart3",
-      "path": "/ophthalmologist/analytics",
-      "active": false
-    },
-    {
       "id": "settings",
       "label": "Settings",
       "icon": "Settings",

@@ -13,3 +13,4 @@ export { permissionsApi } from './permissions.api';
 export { contractTemplatesApi } from './contract-templates.api';
 export { contractsApi } from './contracts.api';
 export { cashflowApi } from './cashflow.api';
+export { adminLeaveRequestsApi } from './leave-requests.api';

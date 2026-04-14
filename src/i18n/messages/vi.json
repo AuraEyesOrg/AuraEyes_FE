@@ -264,11 +264,42 @@
       "screenings": "Sàng lọc",
       "appointments": "Lịch hẹn",
       "schedules": "Lịch làm việc",
+      "leaveRequests": "Nghỉ phép",
       "consultations": "Tư vấn",
-      "analytics": "Phân tích",
       "contract": "Hợp đồng",
       "settings": "Cài đặt",
       "wallet": "Ví"
+    },
+    "leaveRequests": {
+      "pageTitle": "Đơn nghỉ phép",
+      "submitTitle": "Tạo đơn nghỉ phép mới",
+      "submitDescription": "Đơn nghỉ phép cần gửi trước ít nhất 3 ngày và sẽ được hệ thống quản trị duyệt.",
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "reason": "Lý do",
+      "reasonPlaceholder": "Mô tả lý do bạn cần xin nghỉ phép.",
+      "submitAction": "Gửi đơn",
+      "historyTitle": "Lịch sử đơn nghỉ phép",
+      "empty": "Không có đơn nghỉ phép theo bộ lọc hiện tại.",
+      "submittedAt": "Gửi lúc",
+      "adminNote": "Ghi chú admin",
+      "confirmCancel": "Bạn có chắc muốn hủy đơn nghỉ phép này không? Hành động này không thể hoàn tác.",
+      "cancelAction": "Hủy đơn",
+      "status": {
+        "all": "Tất cả trạng thái",
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối",
+        "cancelled": "Đã hủy"
+      },
+      "toast": {
+        "createSuccess": "Đã gửi đơn nghỉ phép thành công.",
+        "createFailed": "Không thể gửi đơn nghỉ phép.",
+        "cancelSuccess": "Đã hủy đơn nghỉ phép thành công.",
+        "cancelFailed": "Không thể hủy đơn nghỉ phép.",
+        "missingFields": "Vui lòng nhập ngày bắt đầu, ngày kết thúc và lý do.",
+        "invalidDateRange": "Ngày kết thúc phải cùng hoặc sau ngày bắt đầu."
+      }
     },
     "dashboard": {
       "greeting": {
@@ -316,6 +347,11 @@
         "experienceSuffix": "năm kinh nghiệm",
         "years": "năm",
         "specialty": "Chuyên khoa",
+        "employmentType": "Hình thức làm việc",
+        "employmentTypeValues": {
+          "fullTime": "Toàn thời gian",
+          "partTime": "Bán thời gian"
+        },
         "hospital": "Bệnh viện / Phòng khám",
         "address": "Địa chỉ",
         "bio": "Mô tả / Giới thiệu"
@@ -354,6 +390,17 @@
         "title": "Cài đặt tài khoản",
         "security": "Bảo mật",
         "securityHint": "Đặt lại mật khẩu & 2FA",
+        "securityHintChecking": "Đang kiểm tra trạng thái 2FA...",
+        "securityHintEnabled": "2FA đang bật. Quản lý mật khẩu và mã dự phòng",
+        "securityHintDisabled": "2FA đang tắt. Thiết lập bảo vệ ngay",
+        "resetPassword": "Đặt lại mật khẩu",
+        "resetPasswordHint": "Cập nhật mật khẩu hiện tại của bạn",
+        "currentPassword": "Mật khẩu hiện tại",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "updatePassword": "Cập nhật mật khẩu",
+        "passwordChanged": "Đổi mật khẩu thành công.",
+        "passwordChangeFailed": "Không thể đổi mật khẩu lúc này. Vui lòng thử lại.",
         "language": "Ngôn ngữ",
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "English (US)"
@@ -588,6 +635,13 @@
       "generate": "Sinh slot",
       "generating": "Đang sinh...",
       "blockReason": "Đã chặn bởi bác sĩ",
+      "fullTimeNotice": "Bạn là bác sĩ nhãn khoa toàn thời gian. Slot lịch hẹn được hệ thống tự động sinh. Bạn vẫn có thể chặn hoặc bỏ chặn slot khi cần.",
+      "partTimeNotice": "Bạn là bác sĩ nhãn khoa bán thời gian. Hãy dùng mẫu lịch để sinh slot và lưu ý hạn mức slot mỗi ngày.",
+      "subtitleFullTime": "Xem và kiểm soát các slot lịch hẹn do hệ thống tự động sinh",
+      "subtitlePartTime": "Quản lý mẫu lịch và tự sinh slot lịch hẹn",
+      "fullTimeManualCreateBlocked": "Bác sĩ toàn thời gian không thể tự tạo mẫu lịch.",
+      "fullTimeManualGenerateBlocked": "Bác sĩ toàn thời gian không thể tự sinh slot.",
+      "fullTimeDeleteTemplateBlocked": "Bác sĩ toàn thời gian không thể xóa mẫu do hệ thống quản lý.",
       "confirmDeleteTemplate": "Bạn có chắc muốn xóa mẫu này không?",
       "confirmDeleteTemplateMessage": "Hành động này không thể hoàn tác. Các lần sinh slot trong tương lai từ mẫu này sẽ không còn khả dụng.",
       "confirmDeleteTemplateAction": "Xóa mẫu",
@@ -699,10 +753,6 @@
         }
       },
       "commission": "Hoa hồng"
-    },
-    "analytics": {
-      "title": "Phân tích",
-      "unknown": "Không xác định"
     },
     "screeningReview": {
       "note": "Lưu ý:"
@@ -1871,9 +1921,50 @@
       "newScreening": "Sàng lọc mới",
       "filter": "Bộ lọc",
       "viewReview": "Xem đánh giá",
+      "viewDiagnosis": "Chẩn đoán y khoa",
       "downloadReport": "Tải báo cáo",
       "shareWithDoctor": "Chia sẻ với bác sĩ",
       "delete": "Xóa"
+    },
+    "diagnosis": {
+      "title": "Chẩn đoán y khoa",
+      "loading": "Đang tải chi tiết chẩn đoán y khoa...",
+      "detailsTitle": "Chi tiết chẩn đoán y khoa",
+      "notAvailable": "Không có",
+      "yes": "Có",
+      "no": "Không",
+      "type": {
+        "aiScreening": "Sàng lọc võng mạc",
+        "verifiedResult": "Kết quả đã xác minh"
+      },
+      "status": {
+        "verified": "Đã xác minh"
+      },
+      "fields": {
+        "createdAt": "Thời điểm tạo",
+        "diagnosisCode": "Mã chẩn đoán",
+        "codingSystem": "Hệ mã",
+        "severityLevel": "Mức độ nghiêm trọng",
+        "confidenceLevel": "Mức độ tin cậy",
+        "clinicalStatus": "Trạng thái lâm sàng",
+        "urgentCase": "Ca khẩn cấp",
+        "referralNeeded": "Cần chuyển tuyến",
+        "followUpDate": "Ngày tái khám",
+        "finalizedAt": "Thời điểm hoàn tất",
+        "verifiedAt": "Thời điểm xác minh",
+        "verifiedBy": "Xác minh bởi"
+      },
+      "sections": {
+        "clinicalSummary": "Tóm tắt lâm sàng",
+        "findings": "Các phát hiện",
+        "treatmentPlan": "Kế hoạch điều trị",
+        "lifestyleAdvice": "Khuyến nghị lối sống",
+        "recommendations": "Khuyến nghị"
+      },
+      "empty": {
+        "findings": "Chưa có mô tả chi tiết về các phát hiện.",
+        "recommendations": "Chưa có khuyến nghị."
+      }
     }
   },
   "PatientScreeningNew": {
@@ -2079,69 +2170,6 @@
       "confirmBooking": "Xác nhận đặt lịch"
     }
   },
-  "PatientReports": {
-    "page": {
-      "title": "Báo cáo y tế",
-      "subtitle": "Xem, tải xuống và theo dõi kết quả sàng lọc cùng heatmap của bạn"
-    },
-    "stats": {
-      "totalReports": "Tổng báo cáo",
-      "verified": "Đã xác minh",
-      "withHeatmaps": "Có heatmap",
-      "healthyResults": "Kết quả khỏe mạnh"
-    },
-    "search": {
-      "placeholder": "Tìm kiếm báo cáo..."
-    },
-    "filters": {
-      "label": "Bộ lọc",
-      "all": "Tất cả"
-    },
-    "risk": {
-      "low": "Nguy cơ thấp",
-      "medium": "Nguy cơ trung bình",
-      "high": "Nguy cơ cao"
-    },
-    "type": {
-      "screening": "Sàng lọc võng mạc",
-      "followUp": "Lần quét tái khám",
-      "verification": "Kết quả đã xác minh"
-    },
-    "badges": {
-      "verified": "Đã xác minh"
-    },
-    "fields": {
-      "result": "Kết quả: {{value}}",
-      "analyzedBy": "Phân tích bởi:",
-      "detectedConditions": "Các dấu hiệu phát hiện:"
-    },
-    "actions": {
-      "viewDetails": "Xem chi tiết",
-      "viewHeatmap": "Xem heatmap",
-      "downloadPdf": "Tải PDF",
-      "startFirstScreening": "Bắt đầu lần sàng lọc đầu tiên"
-    },
-    "empty": {
-      "title": "Không tìm thấy báo cáo",
-      "adjustSearchOrFilters": "Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.",
-      "noScreenings": "Bạn chưa hoàn tất lần sàng lọc nào."
-    },
-    "mock": {
-      "result": {
-        "healthy": "Khỏe mạnh",
-        "mildSignsDetected": "Phát hiện dấu hiệu nhẹ",
-        "requiresAttention": "Cần chú ý"
-      },
-      "doctor": {
-        "aiAnalysis": "Phân tích AI"
-      },
-      "conditions": {
-        "earlyAmdSigns": "Dấu hiệu AMD sớm",
-        "monitorBloodSugar": "Theo dõi đường huyết",
-        "diabeticRetinopathyStage1": "Bệnh võng mạc đái tháo đường - Giai đoạn 1"
-      }
-    }
-  },
   "PatientClinics": {
     "page": {
       "title": "Đặt lịch tại cơ sở y tế",
@@ -2315,7 +2343,6 @@
     "nav": {
       "dashboard": "Tổng quan",
       "myScans": "Lượt quét của tôi",
-      "reports": "Báo cáo",
       "appointments": "Lịch hẹn",
       "findClinics": "Tìm phòng khám",
       "healthRoadmap": "Lộ trình sức khỏe",
@@ -2341,7 +2368,6 @@
     "pages": {
       "dashboard": "Tổng quan",
       "screening": "Lượt quét của tôi",
-      "reports": "Báo cáo",
       "appointments": "Lịch hẹn",
       "doctors": "Tìm bác sĩ",
       "clinics": "Tìm phòng khám",

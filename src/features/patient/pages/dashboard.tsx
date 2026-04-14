@@ -416,35 +416,24 @@ export default function PatientDashboard() {
                     </div>
                   )}
                   <div className="ml-auto">
-                    <div className="flex items-center gap-3">
-                      {latestSessionHasResult && latestSession?.screeningId && (
-                        <Link
-                          to="/patient/reports"
-                          state={{ screeningId: latestSession.screeningId }}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-(--border-color) text-sm font-semibold text-(--text-primary) hover:border-brand/50 hover:text-brand transition-colors"
-                        >
-                          {t('PatientDashboard.actions.viewFullReport')}
-                        </Link>
-                      )}
-                      <Link
-                        to={
-                          latestSession
-                            ? latestSessionTargetPath
-                            : '/patient/reports'
-                        }
-                        state={
-                          latestSession
-                            ? { screeningId: latestSession.screeningId }
-                            : undefined
-                        }
-                        className="btn-primary flex items-center gap-2"
-                      >
-                        {latestSession
-                          ? t('PatientDashboard.actions.openLatestSession')
-                          : t('PatientDashboard.actions.viewFullReport')}
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
+                    <Link
+                      to={
+                        latestSession
+                          ? latestSessionTargetPath
+                          : '/patient/screening?openDiagnosis=latest'
+                      }
+                      state={
+                        latestSession
+                          ? { screeningId: latestSession.screeningId }
+                          : undefined
+                      }
+                      className="btn-primary flex items-center gap-2"
+                    >
+                      {latestReport
+                        ? t('PatientDashboard.actions.viewFullReport')
+                        : t('PatientDashboard.actions.openLatestSession')}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -553,7 +542,46 @@ export default function PatientDashboard() {
               </div>
 
               <div className="p-6 flex-1">
-                {recentSessions.length > 0 ? (
+                {recentReports && recentReports.length > 0 ? (
+                  <div className="relative pl-4 border-l-2 border-[var(--border-color)] space-y-8">
+                    {recentReports.map((report) => (
+                      <div key={report.id} className="relative pl-6 group">
+                        <div
+                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white dark:border-[#1e3a5f] ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
+                        />
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-(--text-primary)">
+                              {report.type === 'OPHTHALMOLOGIST_VERIFIED'
+                                ? t(
+                                    'PatientDashboard.hero.title.specialistVerified'
+                                  )
+                                : t('PatientDashboard.hero.title.aiScreening')}
+                            </p>
+                            <p className="text-sm text-(--text-secondary)">
+                              {formatShortDate(report.createdAt)}
+                              {report.verifiedBy &&
+                                ` • ${report.verifiedBy.fullName}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={getRiskBadgeStyle(report.riskLevel)}
+                            >
+                              {getRiskLabel(report.riskLevel, t)}
+                            </span>
+                            <Link
+                              to={`/patient/screening?diagnosisId=${encodeURIComponent(report.id)}`}
+                              className="text-[var(--text-muted)] hover:text-brand transition-colors"
+                            >
+                              <FileText className="w-5 h-5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentSessions.length > 0 ? (
                   <div className="space-y-4">
                     {recentSessions.map((session) => {
                       const risk = normalizeRiskLevel(session.latestRiskLevel);
@@ -600,8 +628,7 @@ export default function PatientDashboard() {
                               </span>
                             )}
                             <Link
-                              to="/patient/reports"
-                              state={{ screeningId: session.screeningId }}
+                              to={`/patient/screening?diagnosisId=${encodeURIComponent(session.screeningId)}`}
                               className="text-[var(--text-muted)] hover:text-brand transition-colors"
                             >
                               <FileText className="w-5 h-5" />

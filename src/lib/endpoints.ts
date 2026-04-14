@@ -73,6 +73,11 @@ export const API_ENDPOINTS = {
         `/system-admin/ophthalmologists/withdrawal-requests/${requestId}/confirm`,
       REJECT_WITHDRAWAL_REQUEST: (requestId: string) =>
         `/system-admin/ophthalmologists/withdrawal-requests/${requestId}/reject`,
+      LEAVE_REQUESTS: '/system-admin/ophthalmologists/leave-requests',
+      APPROVE_LEAVE_REQUEST: (requestId: string) =>
+        `/system-admin/ophthalmologists/leave-requests/${requestId}/approve`,
+      REJECT_LEAVE_REQUEST: (requestId: string) =>
+        `/system-admin/ophthalmologists/leave-requests/${requestId}/reject`,
     },
 
     // PayOS Payout Management (automated payout via PayOS API)
@@ -183,6 +188,12 @@ export const API_ENDPOINTS = {
     PATIENTS: '/ophthalmologist/patients',
     SCREENINGS: '/ophthalmologist/screenings',
     REPORTS: '/ophthalmologist/reports',
+    LEAVE_REQUESTS: {
+      LIST: '/ophthalmologist/leave-requests',
+      CREATE: '/ophthalmologist/leave-requests',
+      CANCEL: (requestId: string) =>
+        `/ophthalmologist/leave-requests/${requestId}/cancel`,
+    },
     CONTRACT: {
       MY_CONTRACT: '/ophthalmologists/my-contract',
       UPLOAD: '/ophthalmologists/my-contract/upload',

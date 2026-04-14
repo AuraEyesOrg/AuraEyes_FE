@@ -424,7 +424,7 @@ export function getNotificationRoute(
   switch (normalizedType) {
     case NotificationType.AiScreeningCompleted: {
       const base = isPatient
-        ? '/patient/reports'
+        ? '/patient/screening'
         : isDoctor
           ? '/ophthalmologist/screenings'
           : isOrgAdmin

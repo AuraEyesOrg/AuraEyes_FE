@@ -6,8 +6,7 @@ export { default as ScreeningPage } from './screening';
 export { default as ScreeningNewPage } from './screening-new';
 export { default as RetinalAnalysisPage } from './retinal-analysis';
 
-// Reports & Appointments
-export { default as ReportsPage } from './reports';
+// Appointments
 export { default as AppointmentsPage } from './appointments';
 export { default as BookAppointmentPage } from './book-appointment';
 export { default as BookingConfirmationPage } from './booking-confirmation';
