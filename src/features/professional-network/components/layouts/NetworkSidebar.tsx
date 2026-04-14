@@ -23,6 +23,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
@@ -32,8 +33,6 @@ export function NetworkSidebar() {
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
-
-  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
 
   const stateDashboardRoute = (location.state as { dashboardRoute?: string })
     ?.dashboardRoute;
@@ -141,17 +140,14 @@ export function NetworkSidebar() {
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="flex items-center gap-3 px-2">
             <div className="flex items-center gap-3 flex-1">
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.fullName}
-                  className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-brand/30 shadow-sm"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 border-2 border-brand/30 shadow-sm font-bold text-sm">
-                  {userInitial}
-                </div>
-              )}
+              <UserAvatar
+                fullName={user?.fullName}
+                avatarUrl={user?.avatarUrl}
+                fallbackName="User"
+                size="md"
+                className="shrink-0 border-2 border-brand/30 shadow-sm"
+                fallbackClassName="bg-brand/20 text-brand"
+              />
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
                   {user?.fullName || 'User'}

@@ -17,6 +17,7 @@ import type { PostCategory } from '../../types';
 import { useCreatePost } from '../../hooks/useCreatePost';
 import useAuthStore from '@/store/auth-store';
 import { LoadingButton } from '@/components/ui/loading-button';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useConsultationSession } from '@/features/consultation/hooks';
 import { getConsultationSessions } from '@/features/consultation/api/consultation.api';
 import { SessionStatus } from '@/types/consultation';
@@ -58,7 +59,6 @@ export function PostComposer() {
   const createPost = useCreatePost();
   const { user } = useAuthStore();
 
-  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || '?';
   const isCasePresentation = selectedType === 'CasePresentation';
   const hasFiles = files.length > 0;
   const isInternalCase = isCasePresentation && caseSource === 'internal';
@@ -229,17 +229,14 @@ export function PostComposer() {
 
   return (
     <div className="flex gap-x-3 px-4 py-3 border-b border-light-border">
-      {user?.avatarUrl ? (
-        <img
-          src={user.avatarUrl}
-          alt={user.fullName}
-          className="w-10 h-10 rounded-full object-cover shrink-0"
-        />
-      ) : (
-        <div className="w-10 h-10 rounded-full bg-brand/20 text-brand flex items-center justify-center shrink-0 font-bold text-sm">
-          {userInitial}
-        </div>
-      )}
+      <UserAvatar
+        fullName={user?.fullName}
+        avatarUrl={user?.avatarUrl}
+        fallbackName="User"
+        size="md"
+        className="shrink-0"
+        fallbackClassName="bg-brand/20 text-brand"
+      />
       <div className="flex-1 min-w-0">
         <textarea
           placeholder="Share insights with your network..."
