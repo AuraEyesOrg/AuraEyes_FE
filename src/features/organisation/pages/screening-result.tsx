@@ -752,7 +752,7 @@ export default function OrganisationScreeningResultPage() {
                           loading ||
                           !sessionData.images.length
                         }
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
+                        className="inline-flex min-w-[148px] items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
                       >
                         {analyzing || enhancingAnalysis ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -760,9 +760,9 @@ export default function OrganisationScreeningResultPage() {
                           <RefreshCw className="w-4 h-4" />
                         )}
                         {analyzing
-                          ? 'Đang phân tích nhanh…'
+                          ? 'Đang phân tích…'
                           : enhancingAnalysis
-                            ? 'Đang tăng cường kết quả…'
+                            ? 'Đang hoàn thiện…'
                             : 'Phân tích'}
                       </button>
                       <button

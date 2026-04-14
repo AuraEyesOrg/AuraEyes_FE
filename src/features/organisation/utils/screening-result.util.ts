@@ -134,7 +134,7 @@ export function buildFindingsText(items: AiFindingItem[]): string {
     return `Primary Finding: ${primaryFinding}`;
   }
 
-  return `Primary Finding: ${primaryFinding}\nSecondary Findings: ${secondaryFindings.join(', ')}`;
+  return `Primary Finding: ${primaryFinding}\nRelated Findings: ${secondaryFindings.join(', ')}`;
 }
 
 export function splitFindingsAndNote(content?: string): {
