@@ -1,5 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +16,7 @@ import {
   Globe,
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
+import { api } from '@/lib/api';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
@@ -28,6 +30,13 @@ import { persistLocale } from '@/i18n/middleware';
 
 interface DoctorSidebarProps {
   pendingCount?: number;
+}
+
+interface OphthalmologistMeApiResponse {
+  success: boolean;
+  data?: {
+    employmentType?: string | null;
+  };
 }
 
 const normalizeEmploymentType = (
@@ -124,8 +133,24 @@ export default function DoctorSidebar({
   const displayName = avatarMeta.displayName;
   const userAvatar = user?.avatarUrl;
   const displayEmail = user?.email ?? '';
+  const authEmploymentType = normalizeEmploymentType(user?.employmentType);
+
+  const { data: latestEmploymentType } = useQuery({
+    queryKey: ['ophthalmologist', 'me', 'employment-type'],
+    queryFn: async () => {
+      const response = await api.get<OphthalmologistMeApiResponse>(
+        '/ophthalmologist/profile'
+      );
+
+      return normalizeEmploymentType(response.data?.data?.employmentType);
+    },
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
   const isFullTimeDoctor =
-    normalizeEmploymentType(user?.employmentType ?? null) === 'FullTime';
+    (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';

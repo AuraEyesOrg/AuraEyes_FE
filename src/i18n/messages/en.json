@@ -283,6 +283,7 @@
       "empty": "No leave requests found for the selected filter.",
       "submittedAt": "Submitted at",
       "adminNote": "Admin note",
+      "confirmCancel": "Are you sure you want to cancel this leave request? This action cannot be undone.",
       "cancelAction": "Cancel request",
       "status": {
         "all": "All statuses",

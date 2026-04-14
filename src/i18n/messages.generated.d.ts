@@ -286,6 +286,7 @@ declare module 'i18next' {
         empty: string;
         submittedAt: string;
         adminNote: string;
+        confirmCancel: string;
         cancelAction: string;
         status: {
           all: string;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, useLocation } from 'react-router-dom';
 import { CalendarDays, RefreshCw, XCircle } from 'lucide-react';
@@ -8,11 +8,19 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import useAuthStore from '@/store/auth-store';
+import { api } from '@/lib/api';
 import { getLocaleFromPathname, withLocalePathname } from '@/i18n/locales';
 import {
   ophthalmologistLeaveRequestsApi,
   type OphthalmologistLeaveRequestStatus,
 } from '../api/leave-requests.api';
+
+interface OphthalmologistMeApiResponse {
+  success: boolean;
+  data?: {
+    employmentType?: string | null;
+  };
+}
 
 const normalizeEmploymentType = (
   value: string | null | undefined
@@ -74,8 +82,26 @@ export default function OphthalmologistLeaveRequestsPage() {
   const dashboardPath = locale
     ? withLocalePathname(locale, '/ophthalmologist/dashboard')
     : '/ophthalmologist/dashboard';
+  const authEmploymentType = normalizeEmploymentType(user?.employmentType);
+
+  const { data: latestEmploymentType, isLoading: employmentLoading } = useQuery(
+    {
+      queryKey: ['ophthalmologist', 'me', 'employment-type'],
+      queryFn: async () => {
+        const response = await api.get<OphthalmologistMeApiResponse>(
+          '/ophthalmologist/profile'
+        );
+
+        return normalizeEmploymentType(response.data?.data?.employmentType);
+      },
+      enabled: !!user,
+      staleTime: 0,
+      refetchOnMount: 'always',
+    }
+  );
+
   const isFullTimeDoctor =
-    normalizeEmploymentType(user?.employmentType ?? null) === 'FullTime';
+    (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
   const [pageNumber, setPageNumber] = useState(1);
   const [status, setStatus] = useState<
@@ -126,7 +152,7 @@ export default function OphthalmologistLeaveRequestsPage() {
         20,
         status === 'all' ? undefined : status
       ),
-    enabled: isFullTimeDoctor,
+    enabled: !employmentLoading && isFullTimeDoctor,
   });
 
   const createMutation = useMutation({
@@ -190,6 +216,28 @@ export default function OphthalmologistLeaveRequestsPage() {
     },
   });
 
+  const handleCancelRequest = useCallback(
+    async (requestId: string) => {
+      const confirmed = await ophthalToast.confirm(
+        t(
+          'Ophthalmologist.leaveRequests.confirmCancel',
+          'Are you sure you want to cancel this leave request? This action cannot be undone.'
+        ),
+        {
+          confirmLabel: t('Ophthalmologist.common.confirm', 'Confirm'),
+          cancelLabel: t('Ophthalmologist.common.cancel', 'Cancel'),
+        }
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      cancelMutation.mutate(requestId);
+    },
+    [cancelMutation, t]
+  );
+
   const handleSubmit = () => {
     if (!startDate || !endDate || !reason.trim()) {
       ophthalToast.error(
@@ -215,6 +263,27 @@ export default function OphthalmologistLeaveRequestsPage() {
   };
 
   const leaveRequests = leaveRequestsQuery.data?.items ?? [];
+
+  if (employmentLoading) {
+    return (
+      <div className="flex h-screen w-full bg-(--bg-primary)">
+        <DoctorSidebar />
+        <div className="flex-1 h-full overflow-y-auto">
+          <DoctorHeader
+            pageName={t(
+              'Ophthalmologist.leaveRequests.pageTitle',
+              'Leave Requests'
+            )}
+          />
+          <main className="p-6">
+            <div className="py-10 flex items-center justify-center">
+              <Spinner size={28} />
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   if (!isFullTimeDoctor) {
     return <Navigate to={dashboardPath} replace />;
@@ -411,7 +480,9 @@ export default function OphthalmologistLeaveRequestsPage() {
 
                         {request.status === 'Pending' ? (
                           <button
-                            onClick={() => cancelMutation.mutate(request.id)}
+                            onClick={() => {
+                              void handleCancelRequest(request.id);
+                            }}
                             disabled={cancelMutation.isPending}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 text-rose-600 dark:border-rose-700 dark:text-rose-300 px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
                           >

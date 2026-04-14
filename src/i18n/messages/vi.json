@@ -283,6 +283,7 @@
       "empty": "Không có đơn nghỉ phép theo bộ lọc hiện tại.",
       "submittedAt": "Gửi lúc",
       "adminNote": "Ghi chú admin",
+      "confirmCancel": "Bạn có chắc muốn hủy đơn nghỉ phép này không? Hành động này không thể hoàn tác.",
       "cancelAction": "Hủy đơn",
       "status": {
         "all": "Tất cả trạng thái",
