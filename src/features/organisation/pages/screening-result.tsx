@@ -77,6 +77,7 @@ export default function OrganisationScreeningResultPage() {
   // ─── Core loading / action states ────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [enhancingAnalysis, setEnhancingAnalysis] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -316,19 +317,20 @@ export default function OrganisationScreeningResultPage() {
       const file = new File([blob], fileName, {
         type: blob.type || 'image/jpeg',
       });
-      const formData = new FormData();
-      formData.append('file', file);
+      const fastFormData = new FormData();
+      fastFormData.append('file', file);
+      fastFormData.append('topk', '5');
 
-      const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/diagnosis/analyze',
-        formData,
+      // Phase 1: fast inference for quicker initial feedback.
+      const { data: fastData } = await aiCoreClient.post<AIStandardResponse>(
+        '/api/v2/diagnosis/v2/analyze/fast',
+        fastFormData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
-          params: { threshold: 0.6, localization: true },
         }
       );
 
-      const topK = [...(data.prediction?.top_k ?? [])]
+      const topK = [...(fastData.prediction?.top_k ?? [])]
         .sort((a, b) => a.rank - b.rank)
         .slice(0, 6);
 
@@ -343,7 +345,7 @@ export default function OrganisationScreeningResultPage() {
       );
 
       setAiFindings(mappedFindings);
-      setRawJsonOutput(JSON.stringify(data));
+      setRawJsonOutput(JSON.stringify(fastData));
       setShowHighlights(true);
       setShowHeatmap(false);
       setDraft({
@@ -354,6 +356,53 @@ export default function OrganisationScreeningResultPage() {
       });
       setConsultationNote('');
       setSaved(false);
+      setAnalyzing(false);
+
+      // Phase 2: full inference for localization + heatmap details.
+      setEnhancingAnalysis(true);
+      try {
+        const fullFormData = new FormData();
+        fullFormData.append('file', file);
+        fullFormData.append('threshold', '0.55');
+        fullFormData.append('topk', '5');
+
+        const { data: fullData } = await aiCoreClient.post<AIStandardResponse>(
+          '/api/v2/diagnosis/v2/analyze',
+          fullFormData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+
+        const fullTopK = [...(fullData.prediction?.top_k ?? [])]
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 6);
+
+        if (fullTopK.length > 0) {
+          const mappedFullFindings = mapAiFindings(fullTopK, currentLanguage);
+          const primaryFull = mappedFullFindings[0];
+          const fullRiskLevel = toRiskLevelFromUrgency(
+            getDiseaseUrgency(primaryFull.name),
+            primaryFull.confidence
+          );
+
+          setAiFindings(mappedFullFindings);
+          setRawJsonOutput(JSON.stringify(fullData));
+          setDraft({
+            riskLevel: fullRiskLevel,
+            confidenceScore: primaryFull.confidence,
+            summary: buildSummary(fullRiskLevel, primaryFull.localizedName),
+            findings: buildFindingsText(mappedFullFindings),
+          });
+        }
+      } catch (fullError) {
+        console.warn(
+          'Full organization AI analyze failed, using fast result:',
+          fullError
+        );
+      } finally {
+        setEnhancingAnalysis(false);
+      }
 
       toast.success(
         'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.'
@@ -368,6 +417,7 @@ export default function OrganisationScreeningResultPage() {
       );
     } finally {
       setAnalyzing(false);
+      setEnhancingAnalysis(false);
     }
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
@@ -702,16 +752,23 @@ export default function OrganisationScreeningResultPage() {
                       <button
                         onClick={handleAnalyze}
                         disabled={
-                          analyzing || loading || !sessionData.images.length
+                          analyzing ||
+                          enhancingAnalysis ||
+                          loading ||
+                          !sessionData.images.length
                         }
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
                       >
-                        {analyzing ? (
+                        {analyzing || enhancingAnalysis ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
+                        {analyzing
+                          ? 'Đang phân tích nhanh…'
+                          : enhancingAnalysis
+                            ? 'Đang tăng cường kết quả…'
+                            : 'Phân tích'}
                       </button>
                       <button
                         onClick={requestSaveResults}
