@@ -17,6 +17,7 @@ import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { useTranslation } from 'react-i18next';
+import { useProfile } from '../hooks/useProfile';
 
 export default function PatientSidebar() {
   const { t: i18nT } = useTranslation();
@@ -33,6 +34,7 @@ export default function PatientSidebar() {
   };
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { data: profile } = useProfile();
   const navItems = [
     {
       icon: Home,
@@ -87,9 +89,13 @@ export default function PatientSidebar() {
     },
   ];
 
-  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Patient');
+  const displayName = profile?.fullName ?? user?.fullName;
+  const displayEmail = profile?.email ?? user?.email;
+  const displayAvatarUrl = profile?.avatarUrl ?? user?.avatarUrl;
+
+  const avatarMeta = getUserAvatarMeta(displayName, 'Patient');
   const userName = avatarMeta.displayName;
-  const userEmail = user?.email ?? '';
+  const userEmail = displayEmail ?? '';
 
   const handleLogout = () => {
     logout();
@@ -143,8 +149,8 @@ export default function PatientSidebar() {
             >
               <div className="relative shrink-0">
                 <UserAvatar
-                  fullName={user?.fullName}
-                  avatarUrl={user?.avatarUrl}
+                  fullName={displayName}
+                  avatarUrl={displayAvatarUrl}
                   fallbackName="Patient"
                   size="md"
                   className="border-2 border-brand/30 shadow-sm group-hover:border-brand transition-colors"

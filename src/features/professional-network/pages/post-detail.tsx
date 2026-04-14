@@ -75,15 +75,11 @@ function CommentRepliesList({
     <div className="ml-11 mt-2 space-y-2">
       {replies.map((reply) => (
         <div key={reply.id} className="flex gap-2">
-          {reply.author.avatarUrl ? (
-            <img
-              src={reply.author.avatarUrl}
-              alt={reply.author.fullName}
-              className="w-8 h-8 rounded-full object-cover shrink-0"
-            />
-          ) : (
-            <InitialsAvatar fullName={reply.author.fullName} size="xs" />
-          )}
+          <InitialsAvatar
+            fullName={reply.author.fullName}
+            avatarUrl={reply.author.avatarUrl}
+            size="xs"
+          />
           <div className="flex-1 bg-main-search-background rounded-2xl px-3 py-2">
             <p className="font-bold text-[13px] text-text-main">
               {reply.author.fullName}
@@ -276,18 +272,11 @@ function PostDetailPage() {
             <div key={comment.id} className="hover-animation px-4 py-3">
               {/* Comment body */}
               <div className="flex gap-3">
-                {comment.author.avatarUrl ? (
-                  <img
-                    src={comment.author.avatarUrl}
-                    alt={comment.author.fullName}
-                    className="w-10 h-10 rounded-full object-cover shrink-0"
-                  />
-                ) : (
-                  <InitialsAvatar
-                    fullName={comment.author.fullName}
-                    size="sm"
-                  />
-                )}
+                <InitialsAvatar
+                  fullName={comment.author.fullName}
+                  avatarUrl={comment.author.avatarUrl}
+                  size="sm"
+                />
                 <div className="flex-1">
                   <p className="font-bold text-[15px] text-text-main">
                     {comment.author.fullName}

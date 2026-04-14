@@ -28,6 +28,8 @@ export const API_ENDPOINTS = {
     ORGANISATIONS: {
       LIST: '/system-admin/organisations',
       DETAIL: (id: string) => `/system-admin/organisations/${id}`,
+      UPDATE_MONTHLY_QUOTA: (id: string) =>
+        `/system-admin/organisations/${id}/monthly-quota`,
       ONBOARDING_REQUESTS: '/system-admin/organisations/onboarding-requests',
       APPROVE_ONBOARDING: (id: string) =>
         `/system-admin/organisations/onboarding-requests/${id}/approve`,

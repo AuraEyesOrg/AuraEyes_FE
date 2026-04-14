@@ -14,6 +14,7 @@ import {
   Download,
   Plus,
   Eye,
+  Pencil,
   Users,
   CheckCircle2,
   Mail,
@@ -50,6 +51,9 @@ interface Organisation {
   contractStatus: ContractStatus;
   usersCount: number;
   purchasedAiQuota: number;
+  monthlyQuotaLimit: number;
+  monthlyQuotaUsed: number;
+  monthlyQuotaRemaining: number;
   managedPatientCount: number;
   registeredPatientCount: number;
   walkInPatientCount: number;
@@ -76,6 +80,9 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   contractStatus: item.isActive ? 'active' : 'expired',
   usersCount: item.usersCount ?? 0,
   purchasedAiQuota: item.purchasedAiQuota ?? 0,
+  monthlyQuotaLimit: item.monthlyQuotaLimit ?? 0,
+  monthlyQuotaUsed: item.monthlyQuotaUsed ?? 0,
+  monthlyQuotaRemaining: item.monthlyQuotaRemaining ?? 0,
   managedPatientCount: item.managedPatientCount ?? 0,
   registeredPatientCount: item.registeredPatientCount ?? 0,
   walkInPatientCount: item.walkInPatientCount ?? 0,
@@ -114,6 +121,11 @@ export default function OrganisationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [editingQuotaOrg, setEditingQuotaOrg] = useState<Organisation | null>(
+    null
+  );
+  const [monthlyQuotaInput, setMonthlyQuotaInput] = useState('0');
+  const [isUpdatingQuota, setIsUpdatingQuota] = useState(false);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -238,6 +250,40 @@ export default function OrganisationsPage() {
   // Server-side filtering is already applied, use all results
   const filteredOrganisations = organisations;
 
+  const openMonthlyQuotaEditor = (org: Organisation) => {
+    setEditingQuotaOrg(org);
+    setMonthlyQuotaInput(String(org.monthlyQuotaLimit));
+  };
+
+  const closeMonthlyQuotaEditor = () => {
+    setEditingQuotaOrg(null);
+    setMonthlyQuotaInput('0');
+    setIsUpdatingQuota(false);
+  };
+
+  const handleSaveMonthlyQuota = async () => {
+    if (!editingQuotaOrg) return;
+
+    const parsedQuota = Number.parseInt(monthlyQuotaInput, 10);
+    if (!Number.isFinite(parsedQuota) || parsedQuota < 0) {
+      toast.error('Monthly quota must be a non-negative integer.');
+      return;
+    }
+
+    try {
+      setIsUpdatingQuota(true);
+      await organisationApi.updateMonthlyQuota(editingQuotaOrg.id, parsedQuota);
+      await loadData();
+      toast.success('Monthly quota updated successfully.');
+      closeMonthlyQuotaEditor();
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(error, 'Failed to update monthly quota.')
+      );
+      setIsUpdatingQuota(false);
+    }
+  };
+
   const usdCurrencyOptions = {
     locale: 'en-US',
     currency: 'USD',
@@ -282,6 +328,21 @@ export default function OrganisationsPage() {
         <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
           {(value as number).toLocaleString()} credits
         </span>
+      ),
+    },
+    {
+      header: 'Monthly Quota',
+      accessor: 'monthlyQuotaLimit',
+      render: (_, row) => (
+        <div className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="font-semibold">
+            {row.monthlyQuotaLimit.toLocaleString()} limit
+          </p>
+          <p className="text-xs text-slate-500">
+            {row.monthlyQuotaUsed.toLocaleString()} used •{' '}
+            {row.monthlyQuotaRemaining.toLocaleString()} remaining
+          </p>
+        </div>
       ),
     },
     {
@@ -359,6 +420,13 @@ export default function OrganisationsPage() {
           >
             <CreditCard className="w-4 h-4" />
           </button>
+          <button
+            onClick={() => openMonthlyQuotaEditor(row)}
+            className="text-slate-500 hover:text-primary transition-colors p-1"
+            title="Edit monthly quota"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
         </div>
       ),
     },
@@ -393,6 +461,16 @@ export default function OrganisationsPage() {
       render: (value) => (
         <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
           {(value as number).toLocaleString()} credits
+        </span>
+      ),
+    },
+    {
+      header: 'Monthly Quota',
+      accessor: 'monthlyQuotaLimit',
+      render: (_, row) => (
+        <span className="text-sm font-medium text-slate-900 dark:text-white">
+          {row.monthlyQuotaUsed.toLocaleString()} /{' '}
+          {row.monthlyQuotaLimit.toLocaleString()}
         </span>
       ),
     },
@@ -866,6 +944,57 @@ export default function OrganisationsPage() {
           </div>
         </main>
       </div>
+
+      {editingQuotaOrg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              Update Monthly Quota
+            </h3>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              {editingQuotaOrg.name}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              <label
+                htmlFor="monthlyQuota"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Monthly quota limit
+              </label>
+              <input
+                id="monthlyQuota"
+                type="number"
+                min={0}
+                value={monthlyQuotaInput}
+                onChange={(e) => setMonthlyQuotaInput(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/40 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Current usage:{' '}
+                {editingQuotaOrg.monthlyQuotaUsed.toLocaleString()} credits
+              </p>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={closeMonthlyQuotaEditor}
+                disabled={isUpdatingQuota}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveMonthlyQuota}
+                disabled={isUpdatingQuota}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-900 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUpdatingQuota ? 'Saving...' : 'Save quota'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

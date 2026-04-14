@@ -71,6 +71,7 @@ export default function UserAvatar({
         src={resolvedAvatarUrl}
         alt={resolvedAlt}
         className={`${sizeClass} rounded-full object-cover ${className} ${imageClassName}`.trim()}
+        referrerPolicy="no-referrer"
         onError={() => setHasImageError(true)}
       />
     );

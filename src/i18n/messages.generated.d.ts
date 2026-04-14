@@ -2198,6 +2198,12 @@ declare module 'i18next' {
       messages: {
         bookSuccess: string;
       };
+      deposit: {
+        label: string;
+        fee: string;
+        walletBalance: string;
+        insufficient: string;
+      };
       toast: {
         bookSuccess: string;
       };

@@ -236,11 +236,7 @@ export default function OrganisationScreeningPage() {
       }>(uploadResponse);
       setIsUploading(false);
 
-      // Step 2: Deduct 1 quota credit for this screening.
-      await orgBillingApi.deductQuota();
-      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
-
-      // Step 3: Create screening session
+      // Step 2: Create screening session (backend deducts quota atomically)
       const retinalImages = (uploadData?.uploadedUrls ?? []).map((url, i) => ({
         imageUrl: url,
         eyeSide: validImages[i]?.eyeSide ?? ('Both' as const),
@@ -254,6 +250,8 @@ export default function OrganisationScreeningPage() {
       const sessionData = unwrapApiData<{ screeningId: string }>(
         sessionResponse
       );
+
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
 
       if (sessionData?.screeningId) {
         navigate(
@@ -272,6 +270,14 @@ export default function OrganisationScreeningPage() {
       let errorMessage =
         'Failed to create screening session. Please try again.';
       if (isAxiosError(err) && err.response?.data) {
+        if (err.response.status === 402) {
+          toast.error(
+            'Your organisation has no remaining quota. Please top up.'
+          );
+          navigate('/organisation/wallet');
+          return;
+        }
+
         const data = err.response.data as any;
         if (data.message) {
           errorMessage = data.message;

@@ -159,6 +159,9 @@ export interface Organisation {
   orgType: string;
   deviceCount: number;
   purchasedAiQuota?: number;
+  monthlyQuotaLimit?: number;
+  monthlyQuotaUsed?: number;
+  monthlyQuotaRemaining?: number;
   managedPatientCount?: number;
   registeredPatientCount?: number;
   walkInPatientCount?: number;
