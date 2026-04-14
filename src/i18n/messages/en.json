@@ -265,7 +265,6 @@
       "appointments": "Appointments",
       "schedules": "Schedules",
       "consultations": "Consultations",
-      "analytics": "Analytics",
       "contract": "Contract",
       "settings": "Settings",
       "wallet": "Wallet"
@@ -715,10 +714,6 @@
         }
       },
       "commission": "Commission"
-    },
-    "analytics": {
-      "title": "Analytics",
-      "unknown": "Unknown"
     },
     "screeningReview": {
       "note": "Note:"

@@ -164,9 +164,6 @@ const OphthalmologistPatientsPage = lazy(
 const OphthalmologistScreeningsPage = lazy(
   () => import('@/features/ophthalmologist/pages/screenings')
 );
-const OphthalmologistAnalyticsPage = lazy(
-  () => import('@/features/ophthalmologist/pages/analytics')
-);
 const OphthalmologistAppointmentsPage = lazy(
   () => import('@/features/ophthalmologist/pages/appointments')
 );
@@ -392,6 +389,10 @@ const Router = () => (
         />
         <Route path="/terms" element={<LocalizedRedirect target="/terms" />} />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route
+          path="/ophthalmologist/analytics"
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
+        />
         <Route path="/logout" element={<LogoutRoute />} />
         <Route path="/:locale/logout" element={<LogoutRoute />} />
 
@@ -450,6 +451,10 @@ const Router = () => (
             <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
+        <Route
+          path="/:locale/ophthalmologist/analytics"
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
+        />
 
         <Route
           path="/:locale/ophthalmologist/dashboard"
@@ -475,15 +480,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistScreeningsPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/ophthalmologist/analytics"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistAnalyticsPage />}
             />
           }
         />
@@ -1298,14 +1294,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistScreeningsPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/ophthalmologist/analytics"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistAnalyticsPage />
             </PrivateRoute>
           }
         />

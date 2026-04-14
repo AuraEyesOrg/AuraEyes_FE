@@ -265,7 +265,6 @@
       "appointments": "Lịch hẹn",
       "schedules": "Lịch làm việc",
       "consultations": "Tư vấn",
-      "analytics": "Phân tích",
       "contract": "Hợp đồng",
       "settings": "Cài đặt",
       "wallet": "Ví"
@@ -715,10 +714,6 @@
         }
       },
       "commission": "Hoa hồng"
-    },
-    "analytics": {
-      "title": "Phân tích",
-      "unknown": "Không xác định"
     },
     "screeningReview": {
       "note": "Lưu ý:"

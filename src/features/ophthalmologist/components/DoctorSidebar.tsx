@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   Eye,
-  BarChart3,
   Wallet,
   Calendar,
   CalendarClock,
@@ -67,11 +66,6 @@ const navItems = [
     labelKey: 'Common.sidebar.auraNetwork',
     icon: Globe,
     path: '/network',
-  },
-  {
-    labelKey: 'Ophthalmologist.sidebar.analytics',
-    icon: BarChart3,
-    path: '/ophthalmologist/analytics',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.contract',

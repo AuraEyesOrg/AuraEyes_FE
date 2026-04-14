@@ -268,7 +268,6 @@ declare module 'i18next' {
         appointments: string;
         schedules: string;
         consultations: string;
-        analytics: string;
         contract: string;
         settings: string;
         wallet: string;
@@ -718,10 +717,6 @@ declare module 'i18next' {
           };
         };
         commission: string;
-      };
-      analytics: {
-        title: string;
-        unknown: string;
       };
       screeningReview: {
         note: string;
