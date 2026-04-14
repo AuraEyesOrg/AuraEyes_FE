@@ -78,7 +78,6 @@ const ScreeningPage = lazy(() => import('@/features/patient/pages/screening'));
 const ScreeningNewPage = lazy(
   () => import('@/features/patient/pages/screening-new')
 );
-const ReportsPage = lazy(() => import('@/features/patient/pages/reports'));
 const AppointmentsPage = lazy(
   () => import('@/features/patient/pages/appointments')
 );
@@ -164,9 +163,6 @@ const OphthalmologistPatientsPage = lazy(
 const OphthalmologistScreeningsPage = lazy(
   () => import('@/features/ophthalmologist/pages/screenings')
 );
-const OphthalmologistAnalyticsPage = lazy(
-  () => import('@/features/ophthalmologist/pages/analytics')
-);
 const OphthalmologistAppointmentsPage = lazy(
   () => import('@/features/ophthalmologist/pages/appointments')
 );
@@ -187,6 +183,9 @@ const OphthalmologistContractPage = lazy(
 );
 const OphthalmologistWalletPage = lazy(
   () => import('@/features/ophthalmologist/pages/wallet')
+);
+const OphthalmologistLeaveRequestsPage = lazy(
+  () => import('@/features/ophthalmologist/pages/leave-requests')
 );
 
 // System Admin pages
@@ -210,6 +209,9 @@ const SystemAdminVerificationRequests = lazy(
 );
 const SystemAdminWithdrawalRequests = lazy(
   () => import('@/features/system-admin/pages/withdrawal-requests')
+);
+const SystemAdminLeaveRequests = lazy(
+  () => import('@/features/system-admin/pages/leave-requests')
 );
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
@@ -392,6 +394,14 @@ const Router = () => (
         />
         <Route path="/terms" element={<LocalizedRedirect target="/terms" />} />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
+        <Route
+          path="/ophthalmologist/analytics"
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
+        />
+        <Route
+          path="/patient/reports"
+          element={<LocalizedRedirect target="/patient/screening" />}
+        />
         <Route path="/logout" element={<LogoutRoute />} />
         <Route path="/:locale/logout" element={<LogoutRoute />} />
 
@@ -450,6 +460,14 @@ const Router = () => (
             <LocalizedRedirect target="/ophthalmologist/pending-approval" />
           }
         />
+        <Route
+          path="/:locale/ophthalmologist/analytics"
+          element={<LocalizedRedirect target="/ophthalmologist/dashboard" />}
+        />
+        <Route
+          path="/:locale/patient/reports"
+          element={<LocalizedRedirect target="/patient/screening" />}
+        />
 
         <Route
           path="/:locale/ophthalmologist/dashboard"
@@ -479,15 +497,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/:locale/ophthalmologist/analytics"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Ophthalmologist']}
-              element={<OphthalmologistAnalyticsPage />}
-            />
-          }
-        />
-        <Route
           path="/:locale/ophthalmologist/appointments"
           element={
             <LocalizedPrivateRoute
@@ -502,6 +511,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Ophthalmologist']}
               element={<OphthalmologistSettingsPage />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/ophthalmologist/security"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<TwoFactorSettingsPage />}
             />
           }
         />
@@ -559,6 +577,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/ophthalmologist/leave-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistLeaveRequestsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/patient/dashboard"
@@ -602,15 +629,6 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['Patient']}
               element={<ReviewPage />}
-            />
-          }
-        />
-        <Route
-          path="/:locale/patient/reports"
-          element={
-            <LocalizedPrivateRoute
-              allowedRoles={['Patient']}
-              element={<ReportsPage />}
             />
           }
         />
@@ -901,6 +919,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/system-admin/leave-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminLeaveRequests />}
+            />
+          }
+        />
 
         <Route path="/:locale" element={<GuestLayout />}>
           <Route index element={<HomePage />} />
@@ -1045,14 +1072,6 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <ReviewPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/patient/reports"
-          element={
-            <PrivateRoute allowedRoles={['Patient']}>
-              <ReportsPage />
             </PrivateRoute>
           }
         />
@@ -1293,14 +1312,6 @@ const Router = () => (
           }
         />
         <Route
-          path="/ophthalmologist/analytics"
-          element={
-            <PrivateRoute allowedRoles={['Ophthalmologist']}>
-              <OphthalmologistAnalyticsPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/ophthalmologist/appointments"
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
@@ -1313,6 +1324,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistSettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/security"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <TwoFactorSettingsPage />
             </PrivateRoute>
           }
         />
@@ -1353,6 +1372,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistContractPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/leave-requests"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistLeaveRequestsPage />
             </PrivateRoute>
           }
         />
@@ -1411,6 +1438,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminWithdrawalRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/leave-requests"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminLeaveRequests />
             </PrivateRoute>
           }
         />

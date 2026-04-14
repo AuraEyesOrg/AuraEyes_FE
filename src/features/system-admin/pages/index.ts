@@ -19,6 +19,7 @@ export { default as PermissionsPage } from './permissions';
 export { default as ContractTemplatesPage } from './contract-templates';
 export { default as ContractTemplateEditorPage } from './contract-template-editor';
 export { default as CashflowPage } from './cashflow';
+export { default as LeaveRequestsPage } from './leave-requests';
 
 // Legacy default export for backward compatibility
 export { default } from './dashboard';

@@ -264,11 +264,42 @@
       "screenings": "Screenings",
       "appointments": "Appointments",
       "schedules": "Schedules",
+      "leaveRequests": "Leave Requests",
       "consultations": "Consultations",
-      "analytics": "Analytics",
       "contract": "Contract",
       "settings": "Settings",
       "wallet": "Wallet"
+    },
+    "leaveRequests": {
+      "pageTitle": "Leave Requests",
+      "submitTitle": "Submit New Leave Request",
+      "submitDescription": "Leave requests must be submitted at least 3 days in advance and reviewed by system admin.",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe why you need this leave request.",
+      "submitAction": "Submit Request",
+      "historyTitle": "Request History",
+      "empty": "No leave requests found for the selected filter.",
+      "submittedAt": "Submitted at",
+      "adminNote": "Admin note",
+      "confirmCancel": "Are you sure you want to cancel this leave request? This action cannot be undone.",
+      "cancelAction": "Cancel request",
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "toast": {
+        "createSuccess": "Leave request submitted successfully.",
+        "createFailed": "Failed to submit leave request.",
+        "cancelSuccess": "Leave request cancelled successfully.",
+        "cancelFailed": "Failed to cancel leave request.",
+        "missingFields": "Please provide start date, end date, and reason.",
+        "invalidDateRange": "End date must be on or after start date."
+      }
     },
     "dashboard": {
       "greeting": {
@@ -316,6 +347,11 @@
         "experienceSuffix": "years experience",
         "years": "years",
         "specialty": "Specialty",
+        "employmentType": "Employment Type",
+        "employmentTypeValues": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time"
+        },
         "hospital": "Hospital / Clinic",
         "address": "Address",
         "bio": "Bio / Description"
@@ -354,6 +390,17 @@
         "title": "Account Settings",
         "security": "Security",
         "securityHint": "Reset password & 2FA",
+        "securityHintChecking": "Checking 2FA status...",
+        "securityHintEnabled": "2FA is enabled. Manage password and recovery codes",
+        "securityHintDisabled": "2FA is off. Set up protection now",
+        "resetPassword": "Reset Password",
+        "resetPasswordHint": "Update your current password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "updatePassword": "Update Password",
+        "passwordChanged": "Password changed successfully.",
+        "passwordChangeFailed": "Unable to change password right now. Please try again.",
         "language": "Language",
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "English (US)"
@@ -588,6 +635,13 @@
       "generate": "Generate",
       "generating": "Generating...",
       "blockReason": "Blocked by doctor",
+      "fullTimeNotice": "You are a full-time ophthalmologist. Appointment slots are generated automatically by the system. You can still block or unblock your slots when needed.",
+      "partTimeNotice": "You are a part-time ophthalmologist. Use templates to generate slots, and keep your daily slot quota in mind.",
+      "subtitleFullTime": "View and control your system-generated appointment slots",
+      "subtitlePartTime": "Manage your schedule templates and generate appointment slots",
+      "fullTimeManualCreateBlocked": "Full-time ophthalmologists cannot manually create schedule templates.",
+      "fullTimeManualGenerateBlocked": "Full-time ophthalmologists cannot manually generate slots.",
+      "fullTimeDeleteTemplateBlocked": "Full-time ophthalmologists cannot delete system-managed templates.",
       "confirmDeleteTemplate": "Are you sure you want to delete this template?",
       "confirmDeleteTemplateMessage": "This action cannot be undone. Related future slot generation from this template will no longer be available.",
       "confirmDeleteTemplateAction": "Delete template",
@@ -699,10 +753,6 @@
         }
       },
       "commission": "Commission"
-    },
-    "analytics": {
-      "title": "Analytics",
-      "unknown": "Unknown"
     },
     "screeningReview": {
       "note": "Note:"
@@ -1871,9 +1921,50 @@
       "newScreening": "New Screening",
       "filter": "Filter",
       "viewReview": "View Review",
+      "viewDiagnosis": "Medical Diagnosis",
       "downloadReport": "Download Report",
       "shareWithDoctor": "Share with Doctor",
       "delete": "Delete"
+    },
+    "diagnosis": {
+      "title": "Medical Diagnosis",
+      "loading": "Loading medical diagnosis details...",
+      "detailsTitle": "Medical Diagnosis Details",
+      "notAvailable": "N/A",
+      "yes": "Yes",
+      "no": "No",
+      "type": {
+        "aiScreening": "Retinal Screening",
+        "verifiedResult": "Verified Result"
+      },
+      "status": {
+        "verified": "Verified"
+      },
+      "fields": {
+        "createdAt": "Created At",
+        "diagnosisCode": "Diagnosis Code",
+        "codingSystem": "Coding System",
+        "severityLevel": "Severity Level",
+        "confidenceLevel": "Confidence Level",
+        "clinicalStatus": "Clinical Status",
+        "urgentCase": "Urgent Case",
+        "referralNeeded": "Referral Needed",
+        "followUpDate": "Follow-up Date",
+        "finalizedAt": "Finalized At",
+        "verifiedAt": "Verified At",
+        "verifiedBy": "Verified By"
+      },
+      "sections": {
+        "clinicalSummary": "Clinical Summary",
+        "findings": "Findings",
+        "treatmentPlan": "Treatment Plan",
+        "lifestyleAdvice": "Lifestyle Advice",
+        "recommendations": "Recommendations"
+      },
+      "empty": {
+        "findings": "No detailed findings available.",
+        "recommendations": "No recommendations available."
+      }
     }
   },
   "PatientScreeningNew": {
@@ -2079,69 +2170,6 @@
       "confirmBooking": "Confirm Booking"
     }
   },
-  "PatientReports": {
-    "page": {
-      "title": "Medical Reports",
-      "subtitle": "View, download, and track your screening results and heatmaps"
-    },
-    "stats": {
-      "totalReports": "Total Reports",
-      "verified": "Verified",
-      "withHeatmaps": "With Heatmaps",
-      "healthyResults": "Healthy Results"
-    },
-    "search": {
-      "placeholder": "Search reports..."
-    },
-    "filters": {
-      "label": "Filter",
-      "all": "All"
-    },
-    "risk": {
-      "low": "Low Risk",
-      "medium": "Medium Risk",
-      "high": "High Risk"
-    },
-    "type": {
-      "screening": "Retinal Screening",
-      "followUp": "Follow-up Scan",
-      "verification": "Verified Result"
-    },
-    "badges": {
-      "verified": "Verified"
-    },
-    "fields": {
-      "result": "Result: {{value}}",
-      "analyzedBy": "Analyzed by:",
-      "detectedConditions": "Detected Conditions:"
-    },
-    "actions": {
-      "viewDetails": "View Details",
-      "viewHeatmap": "View Heatmap",
-      "downloadPdf": "Download PDF",
-      "startFirstScreening": "Start Your First Screening"
-    },
-    "empty": {
-      "title": "No Reports Found",
-      "adjustSearchOrFilters": "Try adjusting your search or filters.",
-      "noScreenings": "You haven't completed any screenings yet."
-    },
-    "mock": {
-      "result": {
-        "healthy": "Healthy",
-        "mildSignsDetected": "Mild Signs Detected",
-        "requiresAttention": "Requires Attention"
-      },
-      "doctor": {
-        "aiAnalysis": "AI Analysis"
-      },
-      "conditions": {
-        "earlyAmdSigns": "Early AMD signs",
-        "monitorBloodSugar": "Monitor blood sugar",
-        "diabeticRetinopathyStage1": "Diabetic Retinopathy - Stage 1"
-      }
-    }
-  },
   "PatientClinics": {
     "page": {
       "title": "Book At Organisation Clinic",
@@ -2315,7 +2343,6 @@
     "nav": {
       "dashboard": "Dashboard",
       "myScans": "My Scans",
-      "reports": "Reports",
       "appointments": "Appointments",
       "findClinics": "Find Clinics",
       "healthRoadmap": "Health Roadmap",
@@ -2341,7 +2368,6 @@
     "pages": {
       "dashboard": "Dashboard",
       "screening": "My Scans",
-      "reports": "Reports",
       "appointments": "Appointments",
       "doctors": "Find Doctors",
       "clinics": "Find Clinics",
