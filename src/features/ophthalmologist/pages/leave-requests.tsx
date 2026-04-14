@@ -1,15 +1,37 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Navigate, useLocation } from 'react-router-dom';
 import { CalendarDays, RefreshCw, XCircle } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { DoctorHeader, DoctorSidebar } from '../components';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import useAuthStore from '@/store/auth-store';
+import { getLocaleFromPathname, withLocalePathname } from '@/i18n/locales';
 import {
   ophthalmologistLeaveRequestsApi,
   type OphthalmologistLeaveRequestStatus,
 } from '../api/leave-requests.api';
+
+const normalizeEmploymentType = (
+  value: string | null | undefined
+): 'FullTime' | 'PartTime' | null => {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(/[\s_-]/g, '').toLowerCase();
+  if (normalized === 'fulltime') {
+    return 'FullTime';
+  }
+
+  if (normalized === 'parttime') {
+    return 'PartTime';
+  }
+
+  return null;
+};
 
 const formatDate = (dateText: string) => {
   const parsed = new Date(dateText);
@@ -45,7 +67,15 @@ const statusBadgeClass: Record<OphthalmologistLeaveRequestStatus, string> = {
 
 export default function OphthalmologistLeaveRequestsPage() {
   const { t } = useSafeTranslation();
+  const location = useLocation();
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const locale = getLocaleFromPathname(location.pathname);
+  const dashboardPath = locale
+    ? withLocalePathname(locale, '/ophthalmologist/dashboard')
+    : '/ophthalmologist/dashboard';
+  const isFullTimeDoctor =
+    normalizeEmploymentType(user?.employmentType ?? null) === 'FullTime';
 
   const [pageNumber, setPageNumber] = useState(1);
   const [status, setStatus] = useState<
@@ -96,6 +126,7 @@ export default function OphthalmologistLeaveRequestsPage() {
         20,
         status === 'all' ? undefined : status
       ),
+    enabled: isFullTimeDoctor,
   });
 
   const createMutation = useMutation({
@@ -184,6 +215,10 @@ export default function OphthalmologistLeaveRequestsPage() {
   };
 
   const leaveRequests = leaveRequestsQuery.data?.items ?? [];
+
+  if (!isFullTimeDoctor) {
+    return <Navigate to={dashboardPath} replace />;
+  }
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">

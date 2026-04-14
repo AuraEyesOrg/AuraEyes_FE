@@ -30,6 +30,25 @@ interface DoctorSidebarProps {
   pendingCount?: number;
 }
 
+const normalizeEmploymentType = (
+  value: string | null | undefined
+): 'FullTime' | 'PartTime' | null => {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(/[\s_-]/g, '').toLowerCase();
+  if (normalized === 'fulltime') {
+    return 'FullTime';
+  }
+
+  if (normalized === 'parttime') {
+    return 'PartTime';
+  }
+
+  return null;
+};
+
 const navItems = [
   {
     labelKey: 'Ophthalmologist.sidebar.dashboard',
@@ -105,11 +124,16 @@ export default function DoctorSidebar({
   const displayName = avatarMeta.displayName;
   const userAvatar = user?.avatarUrl;
   const displayEmail = user?.email ?? '';
+  const isFullTimeDoctor =
+    normalizeEmploymentType(user?.employmentType ?? null) === 'FullTime';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved = user?.contractStatus === 'Active';
   const visibleNavItems = contractApproved
-    ? navItems
+    ? navItems.filter(
+        (item) =>
+          item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
+      )
     : navItems.filter((item) => item.path === '/ophthalmologist/contract');
 
   const handleLogout = () => {
