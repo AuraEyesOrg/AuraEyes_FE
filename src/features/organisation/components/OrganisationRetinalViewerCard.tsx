@@ -174,7 +174,6 @@ export function OrganisationRetinalViewerCard({
     isEditable && onBoxCreate && onBoxUpdate && onBoxDelete && onBoxSelect;
 
   const manualCount = detectedBoxes.filter((b) => b.source === 'manual').length;
-  const aiCount = detectedBoxes.filter((b) => b.source === 'ai').length;
 
   return (
     <div className="space-y-4">
