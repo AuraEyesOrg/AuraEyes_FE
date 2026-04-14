@@ -259,11 +259,6 @@ export function OrganisationRetinalViewerCard({
                             backgroundColor: style.backgroundColor,
                           }}
                         />
-                        <div
-                          className={`absolute left-0 bottom-full mb-1.5 rounded-md border px-2 py-1 text-[11px] font-semibold whitespace-nowrap ${style.labelClass}`}
-                        >
-                          {box.localizedName} ({box.confidence}%)
-                        </div>
                       </div>
                     );
                   })}

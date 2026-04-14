@@ -121,10 +121,20 @@ export function buildSummary(
 }
 
 export function buildFindingsText(items: AiFindingItem[]): string {
-  return items
+  const findingNames = items
     .slice(0, 4)
-    .map((item) => `${item.localizedName} (${item.confidence}%)`)
-    .join(', ');
+    .map((item) => item.localizedName.trim())
+    .filter((name) => name.length > 0);
+
+  if (findingNames.length === 0) return '';
+
+  const [primaryFinding, ...secondaryFindings] = findingNames;
+
+  if (secondaryFindings.length === 0) {
+    return `Primary Finding: ${primaryFinding}`;
+  }
+
+  return `Primary Finding: ${primaryFinding}\nSecondary Findings: ${secondaryFindings.join(', ')}`;
 }
 
 export function splitFindingsAndNote(content?: string): {
