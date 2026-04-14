@@ -32,9 +32,13 @@ import i18n from '@/i18n/i18n';
 import { postsApi } from '@/features/professional-network/api/network.api';
 import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 import useAuthStore from '@/store/auth-store';
+import { BoxLabelSelector } from '../components/BoxLabelSelector';
 import type {
   AiFindingItem,
   AIStandardResponse,
+  AnnotationMode,
+  BoxCreatePayload,
+  BoxUpdatePayload,
   DetectionBox,
   ImageLayout,
   OrgScreeningSessionDetail,
@@ -42,14 +46,17 @@ import type {
   RiskLevel,
 } from '@/features/organisation/types/screening-result.types';
 import {
+  buildFindingsFromBoxes,
   buildFindingsText,
   buildSummary,
   clampConfidence,
   composeFindingsWithNote,
+  createManualBox,
   extractTopKFromRaw,
   extractVisualArtifactsFromRaw,
   getErrorMessage,
   mapAiFindings,
+  mergeBoxesIntoRawJson,
   normalizeRiskLevel,
   riskConfig,
   splitFindingsAndNote,
@@ -77,6 +84,7 @@ export default function OrganisationScreeningResultPage() {
   // ─── Core loading / action states ────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [enhancingAnalysis, setEnhancingAnalysis] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -106,6 +114,14 @@ export default function OrganisationScreeningResultPage() {
   const [heatmapUrl, setHeatmapUrl] = useState<string | undefined>();
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
 
+  // ─── Annotation editing states ──────────────────────────────────────────
+  const [annotationMode, setAnnotationMode] =
+    useState<AnnotationMode>('select');
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+  const [labelSelectorBoxId, setLabelSelectorBoxId] = useState<string | null>(
+    null
+  );
+
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -113,6 +129,7 @@ export default function OrganisationScreeningResultPage() {
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
   const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
+  const canShareResult = Boolean(screeningId && sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
@@ -292,6 +309,74 @@ export default function OrganisationScreeningResultPage() {
     setSaved(false);
   };
 
+  // ─── Box annotation CRUD ────────────────────────────────────────────────
+  const syncFindingsFromBoxes = useCallback((nextBoxes: DetectionBox[]) => {
+    const nextFindings = buildFindingsFromBoxes(nextBoxes);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      return { ...prev, findings: nextFindings };
+    });
+  }, []);
+
+  const handleBoxCreate = useCallback(
+    (payload: BoxCreatePayload) => {
+      if (isViewOnly) return;
+      const newBox = createManualBox(payload.location);
+      setDetectedBoxes((prev) => {
+        const next = [...prev, newBox];
+        syncFindingsFromBoxes(next);
+        return next;
+      });
+      setSelectedBoxId(newBox.id);
+      setLabelSelectorBoxId(newBox.id);
+      setAnnotationMode('select');
+      setSaved(false);
+    },
+    [isViewOnly, syncFindingsFromBoxes]
+  );
+
+  const handleBoxUpdate = useCallback(
+    (payload: BoxUpdatePayload) => {
+      if (isViewOnly) return;
+      setDetectedBoxes((prev) => {
+        const next = prev.map((box) =>
+          box.id === payload.id ? { ...box, ...payload } : box
+        );
+        // Only sync findings when label/name changed (not during drag moves)
+        if (payload.name !== undefined || payload.localizedName !== undefined) {
+          syncFindingsFromBoxes(next);
+        }
+        return next;
+      });
+      setSaved(false);
+    },
+    [isViewOnly, syncFindingsFromBoxes]
+  );
+
+  const handleBoxDelete = useCallback(
+    (id: string) => {
+      if (isViewOnly) return;
+      setDetectedBoxes((prev) => {
+        const next = prev.filter((box) => box.id !== id);
+        syncFindingsFromBoxes(next);
+        return next;
+      });
+      if (selectedBoxId === id) setSelectedBoxId(null);
+      if (labelSelectorBoxId === id) setLabelSelectorBoxId(null);
+      setSaved(false);
+    },
+    [isViewOnly, selectedBoxId, labelSelectorBoxId, syncFindingsFromBoxes]
+  );
+
+  const handleBoxSelect = useCallback((id: string | null) => {
+    setSelectedBoxId(id);
+    if (!id) setLabelSelectorBoxId(null);
+  }, []);
+
+  const selectedBoxForLabel = labelSelectorBoxId
+    ? (detectedBoxes.find((b) => b.id === labelSelectorBoxId) ?? null)
+    : null;
+
   // ─── AI Analyze ───────────────────────────────────────────────────────────
   const handleAnalyze = useCallback(async () => {
     if (
@@ -316,19 +401,20 @@ export default function OrganisationScreeningResultPage() {
       const file = new File([blob], fileName, {
         type: blob.type || 'image/jpeg',
       });
-      const formData = new FormData();
-      formData.append('file', file);
+      const fastFormData = new FormData();
+      fastFormData.append('file', file);
+      fastFormData.append('topk', '5');
 
-      const { data } = await aiCoreClient.post<AIStandardResponse>(
-        '/diagnosis/analyze',
-        formData,
+      // Phase 1: fast inference for quicker initial feedback.
+      const { data: fastData } = await aiCoreClient.post<AIStandardResponse>(
+        '/api/v2/diagnosis/v2/analyze/fast',
+        fastFormData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
-          params: { threshold: 0.6, localization: true },
         }
       );
 
-      const topK = [...(data.prediction?.top_k ?? [])]
+      const topK = [...(fastData.prediction?.top_k ?? [])]
         .sort((a, b) => a.rank - b.rank)
         .slice(0, 6);
 
@@ -343,7 +429,7 @@ export default function OrganisationScreeningResultPage() {
       );
 
       setAiFindings(mappedFindings);
-      setRawJsonOutput(JSON.stringify(data));
+      setRawJsonOutput(JSON.stringify(fastData));
       setShowHighlights(true);
       setShowHeatmap(false);
       setDraft({
@@ -354,6 +440,53 @@ export default function OrganisationScreeningResultPage() {
       });
       setConsultationNote('');
       setSaved(false);
+      setAnalyzing(false);
+
+      // Phase 2: full inference for localization + heatmap details.
+      setEnhancingAnalysis(true);
+      try {
+        const fullFormData = new FormData();
+        fullFormData.append('file', file);
+        fullFormData.append('threshold', '0.55');
+        fullFormData.append('topk', '5');
+
+        const { data: fullData } = await aiCoreClient.post<AIStandardResponse>(
+          '/api/v2/diagnosis/v2/analyze',
+          fullFormData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          }
+        );
+
+        const fullTopK = [...(fullData.prediction?.top_k ?? [])]
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 6);
+
+        if (fullTopK.length > 0) {
+          const mappedFullFindings = mapAiFindings(fullTopK, currentLanguage);
+          const primaryFull = mappedFullFindings[0];
+          const fullRiskLevel = toRiskLevelFromUrgency(
+            getDiseaseUrgency(primaryFull.name),
+            primaryFull.confidence
+          );
+
+          setAiFindings(mappedFullFindings);
+          setRawJsonOutput(JSON.stringify(fullData));
+          setDraft({
+            riskLevel: fullRiskLevel,
+            confidenceScore: primaryFull.confidence,
+            summary: buildSummary(fullRiskLevel, primaryFull.localizedName),
+            findings: buildFindingsText(mappedFullFindings),
+          });
+        }
+      } catch (fullError) {
+        console.warn(
+          'Full organization AI analyze failed, using fast result:',
+          fullError
+        );
+      } finally {
+        setEnhancingAnalysis(false);
+      }
 
       toast.success(
         'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.'
@@ -368,6 +501,7 @@ export default function OrganisationScreeningResultPage() {
       );
     } finally {
       setAnalyzing(false);
+      setEnhancingAnalysis(false);
     }
   }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
 
@@ -440,18 +574,13 @@ export default function OrganisationScreeningResultPage() {
     const topFindings = aiFindings.slice(0, 3);
     const findingText =
       topFindings.length > 0
-        ? topFindings
-            .map(
-              (f) => `- ${f.localizedName}: ${clampConfidence(f.confidence)}%`
-            )
-            .join('\n')
+        ? topFindings.map((f) => `- ${f.localizedName}`).join('\n')
         : '- No clear abnormal findings';
 
     return [
       'AI screening case shared by organisation',
       `Session: ${sessionData.screeningId.slice(0, 8)}...`,
       `Risk level: ${draft.riskLevel}`,
-      `Confidence: ${clampConfidence(draft.confidenceScore)}%`,
       '',
       'Summary:',
       draft.summary,
@@ -540,11 +669,13 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
+    const finalJsonOutput = mergeBoxesIntoRawJson(jsonOutput, detectedBoxes);
+
     setSaveConfirmOpen(false);
     setSaving(true);
     try {
       await orgScreeningApi.saveResults(screeningId, {
-        rawJsonOutput: jsonOutput,
+        rawJsonOutput: finalJsonOutput,
         riskLevel: draft.riskLevel,
         confidenceScore: clampConfidence(draft.confidenceScore),
         summary: draft.summary,
@@ -658,7 +789,12 @@ export default function OrganisationScreeningResultPage() {
                   {/* Nút Chia sẻ — mở modal tổng hợp */}
                   <button
                     onClick={() => setShareModalOpen(true)}
-                    disabled={!screeningId}
+                    disabled={!canShareResult}
+                    title={
+                      canShareResult
+                        ? 'Chia sẻ kết quả'
+                        : 'Vui lòng lưu hồ sơ trước khi chia sẻ.'
+                    }
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
                     <Share2 className="w-4 h-4" />
@@ -690,7 +826,7 @@ export default function OrganisationScreeningResultPage() {
                       ? 'Đang tạo PDF…'
                       : canDownloadPdf
                         ? 'Tải PDF'
-                        : 'Lưu hồ sơ để in PDF'}
+                        : 'In PDF'}
                   </button>
 
                   {isViewOnly ? (
@@ -702,16 +838,23 @@ export default function OrganisationScreeningResultPage() {
                       <button
                         onClick={handleAnalyze}
                         disabled={
-                          analyzing || loading || !sessionData.images.length
+                          analyzing ||
+                          enhancingAnalysis ||
+                          loading ||
+                          !sessionData.images.length
                         }
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
+                        className="inline-flex min-w-[148px] items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
                       >
-                        {analyzing ? (
+                        {analyzing || enhancingAnalysis ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <RefreshCw className="w-4 h-4" />
                         )}
-                        {analyzing ? 'Đang phân tích…' : 'Phân tích'}
+                        {analyzing
+                          ? 'Đang phân tích…'
+                          : enhancingAnalysis
+                            ? 'Đang hoàn thiện…'
+                            : 'Phân tích'}
                       </button>
                       <button
                         onClick={requestSaveResults}
@@ -750,23 +893,55 @@ export default function OrganisationScreeningResultPage() {
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,1fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
               {/* Left column */}
               <div className="space-y-4">
-                <OrganisationRetinalViewerCard
-                  selectedImage={selectedImage}
-                  selectedImageIndex={selectedImageIndex}
-                  images={sessionData.images}
-                  analyzing={analyzing}
-                  detectedBoxes={detectedBoxes}
-                  showHighlights={showHighlights}
-                  showHeatmap={showHeatmap}
-                  heatmapUrl={heatmapUrl}
-                  imageLayout={imageLayout}
-                  imageContainerRef={imageContainerRef}
-                  imageRef={imageRef}
-                  onToggleHighlights={() => setShowHighlights((c) => !c)}
-                  onToggleHeatmap={() => setShowHeatmap((c) => !c)}
-                  onImageLoad={updateImageLayout}
-                  onSelectImage={setSelectedImageIndex}
-                />
+                <div className="relative">
+                  <OrganisationRetinalViewerCard
+                    selectedImage={selectedImage}
+                    selectedImageIndex={selectedImageIndex}
+                    images={sessionData.images}
+                    analyzing={analyzing}
+                    detectedBoxes={detectedBoxes}
+                    showHighlights={showHighlights}
+                    showHeatmap={showHeatmap}
+                    heatmapUrl={heatmapUrl}
+                    imageLayout={imageLayout}
+                    imageContainerRef={imageContainerRef}
+                    imageRef={imageRef}
+                    onToggleHighlights={() => setShowHighlights((c) => !c)}
+                    onToggleHeatmap={() => setShowHeatmap((c) => !c)}
+                    onImageLoad={updateImageLayout}
+                    onSelectImage={setSelectedImageIndex}
+                    isEditable={!isViewOnly}
+                    annotationMode={annotationMode}
+                    selectedBoxId={selectedBoxId}
+                    onAnnotationModeChange={setAnnotationMode}
+                    onBoxCreate={handleBoxCreate}
+                    onBoxUpdate={handleBoxUpdate}
+                    onBoxDelete={handleBoxDelete}
+                    onBoxSelect={handleBoxSelect}
+                    onBoxDoubleClick={(id) => setLabelSelectorBoxId(id)}
+                  />
+
+                  {/* Box label selector popover */}
+                  {selectedBoxForLabel && !isViewOnly && (
+                    <div className="absolute top-16 right-4 z-40">
+                      <BoxLabelSelector
+                        box={selectedBoxForLabel}
+                        language={currentLanguage}
+                        onUpdate={(patch) => {
+                          handleBoxUpdate({
+                            id: selectedBoxForLabel.id,
+                            ...patch,
+                          });
+                          setLabelSelectorBoxId(null);
+                        }}
+                        onDelete={() => {
+                          handleBoxDelete(selectedBoxForLabel.id);
+                        }}
+                        onClose={() => setLabelSelectorBoxId(null)}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
@@ -775,22 +950,19 @@ export default function OrganisationScreeningResultPage() {
                   </h3>
                   {aiFindings.length > 0 ? (
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {aiFindings.slice(0, 6).map((item) => (
+                      {aiFindings.slice(0, 6).map((item, index) => (
                         <div
                           key={item.id}
                           className="rounded-xl border border-(--border-primary) px-3 py-2.5"
                         >
+                          {index === 0 && (
+                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                              Primary Finding
+                            </p>
+                          )}
                           <p className="text-sm font-medium text-(--text-primary) truncate">
                             {item.localizedName}
                           </p>
-                          <div className="mt-1 flex items-center justify-between gap-2 text-xs">
-                            <span className="text-(--text-tertiary)">
-                              {item.status.replace(/_/g, ' ')}
-                            </span>
-                            <span className="font-semibold text-(--text-secondary)">
-                              {item.confidence}%
-                            </span>
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -826,25 +998,6 @@ export default function OrganisationScreeningResultPage() {
 
                   {draft && (
                     <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-(--text-secondary)">
-                            Độ tin cậy
-                          </span>
-                          <span className="font-semibold text-(--text-primary)">
-                            {clampConfidence(draft.confidenceScore)}%
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-primary transition-all"
-                            style={{
-                              width: `${clampConfidence(draft.confidenceScore)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
                       <div className="grid grid-cols-3 gap-2">
                         {(['Low', 'Moderate', 'High'] as RiskLevel[]).map(
                           (item) => (
@@ -862,27 +1015,6 @@ export default function OrganisationScreeningResultPage() {
                             </button>
                           )
                         )}
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-semibold text-(--text-tertiary)">
-                          Điểm tin cậy (0–100)
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          value={draft.confidenceScore}
-                          disabled={isViewOnly}
-                          onChange={(e) =>
-                            updateDraft(
-                              'confidenceScore',
-                              clampConfidence(Number(e.target.value))
-                            )
-                          }
-                          className="mt-1 w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                        />
                       </div>
                     </div>
                   )}
@@ -1136,12 +1268,6 @@ export default function OrganisationScreeningResultPage() {
                           Mức rủi ro:
                         </span>{' '}
                         {draft.riskLevel}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-(--text-primary)">
-                          Độ tin cậy:
-                        </span>{' '}
-                        {clampConfidence(draft.confidenceScore)}%
                       </p>
                       <p className="line-clamp-2">
                         <span className="font-semibold text-(--text-primary)">

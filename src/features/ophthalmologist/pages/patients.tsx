@@ -173,9 +173,14 @@ const getStatusMeta = (status: PatientCardStatus) => {
 };
 
 /* ────────────────────── Mini bar chart component ────────────────────── */
-function MiniBarChart({ data }: { data: [number, number, number] }) {
+function MiniBarChart({
+  data,
+  labels,
+}: {
+  data: [number, number, number];
+  labels: [string, string, string];
+}) {
   const max = Math.max(...data, 1);
-  const labels = ['2 mo', '1 mo', 'This'];
   return (
     <div className="flex items-end gap-1 h-8">
       {data.map((val, i) => (
@@ -384,6 +389,12 @@ export default function PatientsPage() {
     navigate(
       `/ophthalmologist/consultations?patientId=${encodeURIComponent(patientId)}`
     );
+
+  const miniBarLabels: [string, string, string] = [
+    t('Ophthalmologist.patients.chart.twoMonthsAgo', '2 mo'),
+    t('Ophthalmologist.patients.chart.oneMonthAgo', '1 mo'),
+    t('Ophthalmologist.patients.chart.thisMonth', 'This'),
+  ];
 
   if (isLoading) {
     return (
@@ -621,7 +632,10 @@ export default function PatientsPage() {
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
-                            <MiniBarChart data={patient.visitHistory} />
+                            <MiniBarChart
+                              data={patient.visitHistory}
+                              labels={miniBarLabels}
+                            />
                             <button
                               type="button"
                               onClick={() => goToPatient(patient.id)}

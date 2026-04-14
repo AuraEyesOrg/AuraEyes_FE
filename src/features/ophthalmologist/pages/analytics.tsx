@@ -6,7 +6,6 @@ import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import { useConsultationSessions } from '@/features/consultation/hooks';
 import { formatRelativeTime } from '@/lib/date-utils';
-import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   getOphthalmologistDashboardMetrics,
   type OphthalmologistDashboardMetrics,
@@ -15,6 +14,7 @@ import {
   listOphthalmologistScreenings,
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type ActivityItem = {
   day: string;
@@ -73,15 +73,19 @@ const toChangeLabel = (change: number) =>
   `${change > 0 ? '+' : ''}${Math.abs(change)}%`;
 
 const getMostCommonModelVersion = (
-  screenings: OphthalmologistScreeningListItemDto[]
+  screenings: OphthalmologistScreeningListItemDto[],
+  notAvailableLabel: string
 ) => {
-  if (screenings.length === 0) return 'N/A';
+  if (screenings.length === 0) return notAvailableLabel;
   const counts = new Map<string, number>();
   for (const item of screenings) {
-    const key = item.modelVersion?.trim() || 'N/A';
+    const key = item.modelVersion?.trim() || notAvailableLabel;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
+  return (
+    [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ??
+    notAvailableLabel
+  );
 };
 
 const isReviewed = (status: string | null | undefined) =>
@@ -205,7 +209,21 @@ export default function AnalyticsPage() {
       day.setHours(0, 0, 0, 0);
       day.setDate(day.getDate() - i);
       const dayKey = toDateKey(day);
-      const dayLabel = day.toLocaleDateString('en-US', { weekday: 'short' });
+      const weekday = day.getDay();
+      const dayLabel =
+        weekday === 0
+          ? t('Ophthalmologist.analytics.weekday.sun', 'Sun')
+          : weekday === 1
+            ? t('Ophthalmologist.analytics.weekday.mon', 'Mon')
+            : weekday === 2
+              ? t('Ophthalmologist.analytics.weekday.tue', 'Tue')
+              : weekday === 3
+                ? t('Ophthalmologist.analytics.weekday.wed', 'Wed')
+                : weekday === 4
+                  ? t('Ophthalmologist.analytics.weekday.thu', 'Thu')
+                  : weekday === 5
+                    ? t('Ophthalmologist.analytics.weekday.fri', 'Fri')
+                    : t('Ophthalmologist.analytics.weekday.sat', 'Sat');
 
       const dayScreenings = screenings.filter(
         (s) => getDateKeyFromIso(s.createdAt) === dayKey
@@ -305,7 +323,10 @@ export default function AnalyticsPage() {
       conditionBreakdown: conditions,
       reviewedRate: toPercent(reviewedCount, screenings.length),
       highRiskRate: toPercent(highRiskCount, screenings.length),
-      modelVersion: getMostCommonModelVersion(screenings),
+      modelVersion: getMostCommonModelVersion(
+        screenings,
+        t('Ophthalmologist.analytics.notAvailable', 'N/A')
+      ),
       recentActivity: activityFeed,
     };
   }, [screenings, sessions, t]);
@@ -461,14 +482,14 @@ export default function AnalyticsPage() {
                         style={{
                           height: `${Math.max((day.screenings / maxScreenings) * 100, 0)}px`,
                         }}
-                        title={`${day.screenings} screenings`}
+                        title={`${day.screenings} ${t('Ophthalmologist.analytics.screenings', 'screenings')}`}
                       />
                       <div
                         className="w-6 bg-cyan-200 rounded-b-sm transition-all"
                         style={{
                           height: `${Math.max((day.reviews / maxScreenings) * 100, 0)}px`,
                         }}
-                        title={`${day.reviews} reviews`}
+                        title={`${day.reviews} ${t('Ophthalmologist.analytics.reviews', 'reviews')}`}
                       />
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">

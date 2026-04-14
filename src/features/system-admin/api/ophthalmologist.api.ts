@@ -56,6 +56,13 @@ export interface FeedbackRatingSummary {
   distribution: Record<number, number>;
 }
 
+export interface UpdateOphthalmologistEmploymentPayload {
+  id: string;
+  yearsOfExperience: number;
+  bio?: string;
+  employmentType: 'FullTime' | 'PartTime';
+}
+
 interface PagedResult<T> {
   items: T[];
   pageNumber: number;
@@ -164,6 +171,14 @@ export const ophthalmologistApi = {
     const response = await api.put<ApiResponse<string>>(
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.VERIFY(id),
       { approve, rejectionReason }
+    );
+    return response.data;
+  },
+
+  async updateEmploymentType(payload: UpdateOphthalmologistEmploymentPayload) {
+    const response = await api.put<ApiResponse<string>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.UPDATE_PROFILE(payload.id),
+      payload
     );
     return response.data;
   },

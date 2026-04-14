@@ -388,7 +388,7 @@ export default function WalletPage() {
                   {transactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-4 bg-(--bg-secondary) rounded-xl border border-(--border-color) hover:border-brand/30 transition-all hover:shadow-md"
+                      className="bg-white dark:bg-[#0d2137] rounded-2xl border border-gray-200 dark:border-[#1e3a5f] p-5 hover:border-primary/30 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div
@@ -408,7 +408,7 @@ export default function WalletPage() {
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-left md:text-right shrink-0">
                         <p
                           className={`font-bold text-lg mb-1 ${
                             isPositiveAmount(transaction.transactionType)
@@ -423,7 +423,7 @@ export default function WalletPage() {
                             absolute: true,
                           })}
                         </p>
-                        <span className="flex items-center justify-end gap-1 text-xs text-green-600 dark:text-green-400">
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                           <CheckCircle className="w-3 h-3" />
                           {t('PatientWallet.transactionStatus.completed')}
                         </span>

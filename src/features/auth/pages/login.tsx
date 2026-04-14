@@ -581,6 +581,7 @@ const LoginPage = () => {
                 <p className="text-gray-500 text-base">
                   {t('AuthPages.login.loginForm.description')}
                 </p>
+                <div></div>
               </div>
 
               {/* Form */}

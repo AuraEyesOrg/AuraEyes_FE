@@ -100,6 +100,8 @@ type MeetingAccessState = {
   helperText: string;
 };
 
+type TranslateFn = (key: string, fallback: string) => string;
+
 const getPhaseUIConfig = (
   t: (key: string, fallback: string) => string
 ): Record<ConsultationPhase, PhaseUIEntry> => ({
@@ -602,7 +604,6 @@ interface ConsultationsChatViewProps {
 }
 
 interface ShareCaseModalProps {
-  t: (key: string, fallback: string) => string;
   isOpen: boolean;
   isSubmitting: boolean;
   patientName: string;
@@ -617,10 +618,10 @@ interface ShareCaseModalProps {
     confidenceScore: number | null;
     originalImageUrls: string[];
   };
+  t: TranslateFn;
 }
 
 function ShareCaseModal({
-  t,
   isOpen,
   isSubmitting,
   patientName,
@@ -629,6 +630,7 @@ function ShareCaseModal({
   onClose,
   onSubmit,
   caseSnapshot,
+  t,
 }: ShareCaseModalProps) {
   if (!isOpen) return null;
 
@@ -839,12 +841,12 @@ export default function ConsultationsChatView({
   ) => {
     return [
       '[CASE_RESULT]',
-      `AI Summary: ${aiSummary || 'N/A'}`,
-      `Final Diagnosis: ${finalDiagnosis || 'N/A'}`,
+      `${t('Ophthalmologist.consultations.chat.saveResult.aiSummary', 'Tóm tắt AI')}: ${aiSummary || t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
+      `${t('Ophthalmologist.consultations.chat.saveResult.finalDiagnosis', 'Chẩn đoán cuối')}: ${finalDiagnosis || t('Ophthalmologist.consultations.chat.na', 'N/A')}`,
       '[/CASE_RESULT]',
       '',
       '[DOCTOR_NOTE]',
-      `Bác sĩ nói rằng: ${doctorNote}`,
+      `${t('Ophthalmologist.consultations.chat.saveResult.doctorSays', 'Bác sĩ nói rằng')}: ${doctorNote}`,
       '[/DOCTOR_NOTE]',
     ].join('\n');
   };
@@ -879,7 +881,12 @@ export default function ConsultationsChatView({
       return postsApi.createPost(formData);
     },
     onSuccess: () => {
-      ophthalToast.success('Case shared to professional network');
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.consultations.chat.shareCase.success',
+          'Đã chia sẻ ca lên mạng lưới chuyên môn.'
+        )
+      );
       queryClient.invalidateQueries({ queryKey: ['network'] });
       setShareCaseContent('');
       setIsShareCaseModalOpen(false);
@@ -1252,7 +1259,7 @@ export default function ConsultationsChatView({
           cancelledByUserId: currentDoctorId,
           reason: t(
             'Ophthalmologist.consultations.chat.cancelReason',
-            'Cancelled by doctor'
+            'Đã hủy bởi bác sĩ'
           ),
         },
         {
@@ -2039,7 +2046,10 @@ export default function ConsultationsChatView({
                                     src={imageAttachmentMeta.url}
                                     alt={
                                       imageAttachmentMeta.fileName ??
-                                      'Shared image'
+                                      t(
+                                        'Ophthalmologist.consultations.chat.sharedImage',
+                                        'Ảnh đã chia sẻ'
+                                      )
                                     }
                                     className="max-h-64 w-full rounded-xl object-cover"
                                     loading="lazy"
@@ -2746,10 +2756,18 @@ export default function ConsultationsChatView({
 
                   <div className="mt-4 space-y-2">
                     <p className="text-xs text-slate-500 dark:text-gray-400">
-                      Risk:{' '}
-                      {selectedSession.caseSnapshot.riskLevel ?? 'Unknown'} |
-                      Confidence:{' '}
-                      {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
+                      {t('Ophthalmologist.consultations.chat.risk', 'Nguy cơ')}:{' '}
+                      {selectedSession.caseSnapshot.riskLevel ??
+                        t(
+                          'Ophthalmologist.consultations.chat.unknown',
+                          'Không rõ'
+                        )}{' '}
+                      |{' '}
+                      {t(
+                        'Ophthalmologist.consultations.chat.confidence',
+                        'Độ tin cậy'
+                      )}
+                      : {selectedSession.caseSnapshot.confidenceScore ?? '--'}%
                     </p>
                     {selectedSession.caseSnapshot.summary && (
                       <p className="text-sm text-slate-700 dark:text-gray-300">

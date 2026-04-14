@@ -143,6 +143,13 @@ export interface SystemAdminDashboardMetrics {
   topOrganisationsByRating: SystemAdminTopOrganisation[];
 }
 
+export interface SystemAdminPartTimeSlotQuotaUsage {
+  date: string;
+  usedSlots: number;
+  quota: number;
+  remainingSlots: number;
+}
+
 // ============ ORGANISATIONS & DEVICES ============
 export interface Organisation {
   id: string;

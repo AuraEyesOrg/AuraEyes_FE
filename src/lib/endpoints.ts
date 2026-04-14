@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   SYSTEM_ADMIN: {
     DASHBOARD: {
       STATS: '/system-admin/dashboard/metrics',
+      PART_TIME_SLOT_USAGE: '/system-admin/dashboard/part-time-slot-usage',
       SCREENING_VOLUME: '/system-admin/dashboard/screening-trends',
       RECENT_SCREENINGS: '/system-admin/dashboard/recent-screenings',
       SYSTEM_HEALTH: '/system-admin/dashboard/system-health',
@@ -62,6 +63,7 @@ export const API_ENDPOINTS = {
     OPHTHALMOLOGISTS: {
       LIST: '/system-admin/ophthalmologists',
       VERIFY: (id: string) => `/system-admin/ophthalmologists/${id}/verify`,
+      UPDATE_PROFILE: (id: string) => `/ophthalmologists/${id}`,
       PAY_SALARY: (id: string) =>
         `/system-admin/ophthalmologists/${id}/salary-payout`,
       WITHDRAWAL_REQUESTS: '/system-admin/ophthalmologists/withdrawal-requests',
@@ -220,6 +222,8 @@ export const API_ENDPOINTS = {
     LIST: '/appointment-slots',
     BY_DOCTOR: (ophthalId: string) =>
       `/appointment-slots?ophthalId=${ophthalId}`,
+    PRICING_RANGE: (ophthalId: string) =>
+      `/appointment-slots/ophthalmologists/${ophthalId}/pricing-range`,
     DETAIL: (slotId: string) => `/appointment-slots/${slotId}`,
     UPDATE_STATUS: (slotId: string) => `/appointment-slots/${slotId}/status`,
     GENERATE: '/appointment-slots/generate',

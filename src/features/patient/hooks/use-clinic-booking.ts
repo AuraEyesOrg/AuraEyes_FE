@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { walletKeys } from './use-wallet';
 import {
   cancelClinicAppointment,
   checkInClinicAppointment,
@@ -89,6 +90,7 @@ export const useCreateClinicAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: clinicBookingKeys.availableSlots(variables.organisationId),
       });
+      queryClient.invalidateQueries({ queryKey: walletKeys.all });
     },
   });
 };

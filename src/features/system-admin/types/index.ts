@@ -12,6 +12,8 @@ export type {
   RiskDistribution,
   SystemHealth,
   DashboardData,
+  SystemAdminDashboardMetrics,
+  SystemAdminPartTimeSlotQuotaUsage,
   // Organisations & Devices
   Organisation,
   Device,

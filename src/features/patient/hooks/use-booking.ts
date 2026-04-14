@@ -18,6 +18,7 @@ import {
   generateSlots,
   blockSlot,
   unblockSlot,
+  getAllowedPriceRange,
   getScheduleTemplates,
   createScheduleTemplate,
   deleteScheduleTemplate,
@@ -45,6 +46,8 @@ export const bookingKeys = {
   templates: ['schedule-templates'] as const,
   templatesByDoctor: (ophthalId: string) =>
     [...bookingKeys.templates, ophthalId] as const,
+  pricingRange: (ophthalId: string) =>
+    [...bookingKeys.all, 'pricing-range', ophthalId] as const,
 };
 
 // ============ APPOINTMENT SLOT QUERIES ============
@@ -72,6 +75,19 @@ export const useAppointmentSlot = (
     queryFn: () => getAppointmentSlot(slotId),
     staleTime: 10_000,
     enabled: !!slotId,
+    ...options,
+  });
+
+/** Fetch allowed pricing range for a doctor */
+export const useAllowedPriceRange = (
+  ophthalId: string,
+  options?: { enabled?: boolean }
+) =>
+  useQuery({
+    queryKey: bookingKeys.pricingRange(ophthalId),
+    queryFn: () => getAllowedPriceRange(ophthalId),
+    staleTime: 5 * 60_000,
+    enabled: !!ophthalId,
     ...options,
   });
 

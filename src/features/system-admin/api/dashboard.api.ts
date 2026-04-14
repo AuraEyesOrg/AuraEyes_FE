@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
   ApiResponse,
   SystemAdminDashboardMetrics,
+  SystemAdminPartTimeSlotQuotaUsage,
 } from '../types/system-admin.types';
 
 interface AdminUserGrowthMetricDto {
@@ -71,24 +72,31 @@ interface AdminTopOrganisationDto {
 }
 
 interface AdminMetricsDto {
-  doctors: AdminUserGrowthMetricDto;
-  organisations: AdminUserGrowthMetricDto;
-  patients: AdminUserGrowthMetricDto;
-  paymentMethodBreakdown: AdminPaymentMethodRevenueDto[];
-  monthlyRevenue: AdminRevenuePointDto[];
-  dailyRevenue: AdminRevenuePointDto[];
-  totalDepositRevenueYear: number;
-  totalPlatformCommissionYear: number;
-  monthlyPlatformCommission: AdminRevenuePointDto[];
-  dailyPlatformCommission: AdminRevenuePointDto[];
-  monthlyNewDoctorCounts: number[];
-  monthlyNewOrganisationCounts: number[];
-  monthlyNewPatientCounts: number[];
-  pendingActions: AdminPendingActionsDto;
-  systemStatus: AdminSystemStatusDto;
+  doctors?: AdminUserGrowthMetricDto;
+  organisations?: AdminUserGrowthMetricDto;
+  patients?: AdminUserGrowthMetricDto;
+  paymentMethodBreakdown?: AdminPaymentMethodRevenueDto[];
+  monthlyRevenue?: AdminRevenuePointDto[];
+  dailyRevenue?: AdminRevenuePointDto[];
+  totalDepositRevenueYear?: number;
+  totalPlatformCommissionYear?: number;
+  monthlyPlatformCommission?: AdminRevenuePointDto[];
+  dailyPlatformCommission?: AdminRevenuePointDto[];
+  monthlyNewDoctorCounts?: number[];
+  monthlyNewOrganisationCounts?: number[];
+  monthlyNewPatientCounts?: number[];
+  pendingActions?: AdminPendingActionsDto;
+  systemStatus?: AdminSystemStatusDto;
   betterStack?: AdminBetterStackDto;
-  topDoctorsByConsultationRevenue: AdminTopDoctorDto[];
-  topOrganisationsByRating: AdminTopOrganisationDto[];
+  topDoctorsByConsultationRevenue?: AdminTopDoctorDto[];
+  topOrganisationsByRating?: AdminTopOrganisationDto[];
+}
+
+interface AdminPartTimeSlotQuotaUsageDto {
+  date: string;
+  usedSlots: number;
+  quota: number;
+  remainingSlots: number;
 }
 
 export const dashboardApi = {
@@ -102,19 +110,35 @@ export const dashboardApi = {
         throw new Error('Dashboard metrics response is empty.');
       }
 
+      const defaultGrowthMetric: AdminUserGrowthMetricDto = {
+        total: 0,
+        currentMonth: 0,
+        previousMonth: 0,
+        growthPercentage: 0,
+      };
+
+      const paymentMethodBreakdown = data.paymentMethodBreakdown ?? [];
+      const monthlyRevenue = data.monthlyRevenue ?? [];
+      const dailyRevenue = data.dailyRevenue ?? [];
+      const monthlyPlatformCommission = data.monthlyPlatformCommission ?? [];
+      const dailyPlatformCommission = data.dailyPlatformCommission ?? [];
+      const topDoctorsByConsultationRevenue =
+        data.topDoctorsByConsultationRevenue ?? [];
+      const topOrganisationsByRating = data.topOrganisationsByRating ?? [];
+
       return {
-        doctors: data.doctors,
-        organisations: data.organisations,
-        patients: data.patients,
-        paymentMethods: data.paymentMethodBreakdown.map((item) => ({
+        doctors: data.doctors ?? defaultGrowthMetric,
+        organisations: data.organisations ?? defaultGrowthMetric,
+        patients: data.patients ?? defaultGrowthMetric,
+        paymentMethods: paymentMethodBreakdown.map((item) => ({
           name: item.paymentMethod,
           value: Number(item.amount ?? 0),
         })),
-        monthlyRevenue: data.monthlyRevenue.map((item) => ({
+        monthlyRevenue: monthlyRevenue.map((item) => ({
           label: item.label,
           value: Number(item.revenue ?? 0),
         })),
-        dailyRevenue: data.dailyRevenue.map((item) => ({
+        dailyRevenue: dailyRevenue.map((item) => ({
           label: item.label,
           value: Number(item.revenue ?? 0),
         })),
@@ -122,18 +146,14 @@ export const dashboardApi = {
         totalPlatformCommissionYear: Number(
           data.totalPlatformCommissionYear ?? 0
         ),
-        monthlyPlatformCommission: (data.monthlyPlatformCommission ?? []).map(
-          (item) => ({
-            label: item.label,
-            value: Number(item.revenue ?? 0),
-          })
-        ),
-        dailyPlatformCommission: (data.dailyPlatformCommission ?? []).map(
-          (item) => ({
-            label: item.label,
-            value: Number(item.revenue ?? 0),
-          })
-        ),
+        monthlyPlatformCommission: monthlyPlatformCommission.map((item) => ({
+          label: item.label,
+          value: Number(item.revenue ?? 0),
+        })),
+        dailyPlatformCommission: dailyPlatformCommission.map((item) => ({
+          label: item.label,
+          value: Number(item.revenue ?? 0),
+        })),
         monthlyNewDoctorCounts: data.monthlyNewDoctorCounts ?? [],
         monthlyNewOrganisationCounts: data.monthlyNewOrganisationCounts ?? [],
         monthlyNewPatientCounts: data.monthlyNewPatientCounts ?? [],
@@ -161,26 +181,51 @@ export const dashboardApi = {
             configured: Boolean(item.configured),
           })),
         },
-        topDoctorsByConsultationRevenue: (
-          data.topDoctorsByConsultationRevenue ?? []
-        ).map((d) => ({
-          ophthalmologistId: d.ophthalmologistId,
-          name: d.name,
-          revenue: Number(d.revenue ?? 0),
-          ratingAverage: Number(d.ratingAverage ?? 0),
-          ratingCount: d.ratingCount ?? 0,
-        })),
-        topOrganisationsByRating: (data.topOrganisationsByRating ?? []).map(
-          (o) => ({
-            organisationId: o.organisationId,
-            name: o.name,
-            ratingAverage: Number(o.ratingAverage ?? 0),
-            ratingCount: o.ratingCount ?? 0,
+        topDoctorsByConsultationRevenue: topDoctorsByConsultationRevenue.map(
+          (d) => ({
+            ophthalmologistId: d.ophthalmologistId,
+            name: d.name,
+            revenue: Number(d.revenue ?? 0),
+            ratingAverage: Number(d.ratingAverage ?? 0),
+            ratingCount: d.ratingCount ?? 0,
           })
         ),
+        topOrganisationsByRating: topOrganisationsByRating.map((o) => ({
+          organisationId: o.organisationId,
+          name: o.name,
+          ratingAverage: Number(o.ratingAverage ?? 0),
+          ratingCount: o.ratingCount ?? 0,
+        })),
       };
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
+      throw error;
+    }
+  },
+
+  async getPartTimeSlotUsage(
+    fromDate: string,
+    toDate: string
+  ): Promise<SystemAdminPartTimeSlotQuotaUsage[]> {
+    try {
+      const response = await api.get<
+        ApiResponse<AdminPartTimeSlotQuotaUsageDto[]>
+      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.PART_TIME_SLOT_USAGE, {
+        params: {
+          fromDate,
+          toDate,
+        },
+      });
+
+      const rows = response.data.data ?? [];
+      return rows.map((item) => ({
+        date: item.date,
+        usedSlots: Number(item.usedSlots ?? 0),
+        quota: Number(item.quota ?? 0),
+        remainingSlots: Number(item.remainingSlots ?? 0),
+      }));
+    } catch (error) {
+      console.error('Failed to fetch part-time slot quota usage:', error);
       throw error;
     }
   },

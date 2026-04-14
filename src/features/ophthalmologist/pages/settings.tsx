@@ -24,10 +24,6 @@ import {
   AlertCircle,
   Lock,
   Globe,
-  Wallet,
-  ArrowDownLeft,
-  ArrowUpRight,
-  DollarSign,
   X,
 } from 'lucide-react';
 import {
@@ -39,7 +35,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { api } from '@/lib/api';
 import useAuthStore from '@/store/auth-store';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import { formatCurrency } from '@/lib/helper';
 import {
   type AppLocale,
   DEFAULT_LOCALE,
@@ -64,28 +59,6 @@ interface Certificate {
   expiryDate?: string;
   status: 'verified' | 'pending' | 'expired';
   fileUrl?: string;
-}
-
-type TransactionType =
-  | 'Deposit'
-  | 'Withdrawal'
-  | 'Payment'
-  | 'Refund'
-  | 'Transfer'
-  | 'Bonus';
-
-interface WalletTransaction {
-  id: string;
-  amount: number;
-  transactionType: TransactionType;
-  description?: string;
-  createdAt: string;
-}
-
-interface WalletInfo {
-  id: string;
-  balance: number;
-  transactions: WalletTransaction[];
 }
 
 interface OphthalmologistProfile {
@@ -134,23 +107,6 @@ interface OphthalmologistProfileApi {
   }>;
 }
 
-interface WalletApi {
-  id: string;
-  balance: number;
-}
-
-interface WalletTransactionApi {
-  id: string;
-  amount: number;
-  transactionType: number | string;
-  description?: string | null;
-  createdAt: string;
-}
-
-interface PagedResult<T> {
-  items: T[];
-}
-
 interface UpdateOphthalmologistProfilePayload {
   fullName: string;
   phone?: string;
@@ -179,36 +135,6 @@ const DEFAULT_PROFILE: OphthalmologistProfile = {
   createdAt: new Date().toISOString(),
 };
 
-const normalizeTransactionType = (value: number | string): TransactionType => {
-  if (typeof value === 'string') {
-    const normalized = value.toLowerCase();
-    if (normalized.includes('deposit')) return 'Deposit';
-    if (normalized.includes('withdrawal')) return 'Withdrawal';
-    if (normalized.includes('payment')) return 'Payment';
-    if (normalized.includes('refund')) return 'Refund';
-    if (normalized.includes('transfer')) return 'Transfer';
-    if (normalized.includes('bonus')) return 'Bonus';
-    return 'Transfer';
-  }
-
-  switch (value) {
-    case 1:
-      return 'Deposit';
-    case 2:
-      return 'Withdrawal';
-    case 3:
-      return 'Payment';
-    case 4:
-      return 'Refund';
-    case 5:
-      return 'Transfer';
-    case 6:
-      return 'Bonus';
-    default:
-      return 'Transfer';
-  }
-};
-
 const mapCertificateTypeFromApi = (
   value: string | null | undefined
 ): 'license' | 'degree' | 'certification' => {
@@ -222,14 +148,7 @@ const mapCertificateTypeFromApi = (
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const { i18n } = useTranslation();
-  const unknownDoctorLabel = t(
-    'Ophthalmologist.settings.defaults.unknownDoctor',
-    'Unknown Doctor'
-  );
-  const noBioLabel = t(
-    'Ophthalmologist.settings.defaults.noBio',
-    'No profile bio available.'
-  );
+
   const location = useLocation();
   const navigate = useNavigate();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
@@ -243,14 +162,12 @@ export default function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [appointmentReminders, setAppointmentReminders] = useState(true);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showUploadCredentialsModal, setShowUploadCredentialsModal] =
     useState(false);
   const [credentialTab, setCredentialTab] = useState<'degree' | 'license'>(
     'degree'
   );
-  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [avatarUrlOverride, setAvatarUrlOverride] = useState<string | null>(
     null
   );
@@ -262,33 +179,22 @@ export default function SettingsPage() {
       bio: '',
       yearsOfExperience: 0,
     });
+  const unknownDoctorLabel = t(
+    'Ophthalmologist.settings.defaults.unknownDoctor',
+    'Unknown Doctor'
+  );
+  const notAvailableLabel = t('Ophthalmologist.common.notAvailable', 'N/A');
+  const noBioLabel = t(
+    'Ophthalmologist.settings.defaults.noBio',
+    'No profile bio available.'
+  );
 
   const profileQuery = useQuery({
     queryKey: ['ophthalmologist', 'me', 'profile'],
     queryFn: async () => {
       const response = await api.get<ApiResponse<OphthalmologistProfileApi>>(
-        '/ophthalmologists/me'
+        '/ophthalmologist/profile'
       );
-      return response.data.data;
-    },
-  });
-
-  const walletQuery = useQuery({
-    queryKey: ['wallet', 'detail'],
-    queryFn: async () => {
-      const response = await api.get<ApiResponse<WalletApi>>('/wallets');
-      return response.data.data;
-    },
-  });
-
-  const walletTransactionsQuery = useQuery({
-    queryKey: ['wallet', 'transactions', 'settings-page'],
-    queryFn: async () => {
-      const response = await api.get<
-        ApiResponse<PagedResult<WalletTransactionApi>>
-      >('/wallets/transactions', {
-        params: { pageNumber: 1, pageSize: 8 },
-      });
       return response.data.data;
     },
   });
@@ -385,20 +291,30 @@ export default function SettingsPage() {
   const profile = useMemo<OphthalmologistProfile>(() => {
     const profileData = profileQuery.data;
 
-    if (!user && !profileData) return DEFAULT_PROFILE;
+    if (!user && !profileData)
+      return {
+        ...DEFAULT_PROFILE,
+        fullName: unknownDoctorLabel,
+        email: notAvailableLabel,
+        phone: notAvailableLabel,
+        bio: noBioLabel,
+        hospital: notAvailableLabel,
+        department: notAvailableLabel,
+        address: notAvailableLabel,
+      };
 
     return {
       id: profileData?.id ?? user?.roleId ?? user?.id ?? '',
       fullName:
         profileData?.userFullName ?? user?.fullName ?? unknownDoctorLabel,
-      email: profileData?.userEmail ?? user?.email ?? 'N/A',
-      phone: profileData?.userPhoneNumber ?? 'N/A',
+      email: profileData?.userEmail ?? user?.email ?? notAvailableLabel,
+      phone: profileData?.userPhoneNumber ?? notAvailableLabel,
       bio: profileData?.bio?.trim() || noBioLabel,
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
-      hospital: user?.organizationId ?? 'N/A',
-      department: 'N/A',
-      address: profileData?.userAddress ?? 'N/A',
+      hospital: user?.organizationId ?? notAvailableLabel,
+      department: notAvailableLabel,
+      address: profileData?.userAddress ?? notAvailableLabel,
       isVerified: profileData?.isVerified ?? Boolean(user?.isVerified),
       createdAt: profileData?.createdAt ?? new Date().toISOString(),
       certificates: [
@@ -406,7 +322,7 @@ export default function SettingsPage() {
           id: degree.id,
           name: degree.name,
           type: 'degree' as const,
-          issuedBy: degree.issuingAuthority ?? 'N/A',
+          issuedBy: degree.issuingAuthority ?? notAvailableLabel,
           issuedDate: degree.issuedDate,
           status: 'verified' as const,
           fileUrl: degree.degreeUrl ?? undefined,
@@ -415,14 +331,21 @@ export default function SettingsPage() {
           id: cert.id,
           name: cert.name,
           type: mapCertificateTypeFromApi(cert.type ?? cert.name),
-          issuedBy: cert.issuingAuthority ?? 'N/A',
+          issuedBy: cert.issuingAuthority ?? notAvailableLabel,
           issuedDate: cert.issuedDate,
           expiryDate: cert.expiryDate ?? undefined,
           status: cert.isExpired ? ('expired' as const) : ('verified' as const),
         })),
       ],
     };
-  }, [noBioLabel, profileQuery.data, t, unknownDoctorLabel, user]);
+  }, [
+    noBioLabel,
+    notAvailableLabel,
+    profileQuery.data,
+    t,
+    unknownDoctorLabel,
+    user,
+  ]);
 
   const handleLanguageChange = (nextLocale: AppLocale) => {
     if (nextLocale === locale) return;
@@ -439,18 +362,24 @@ export default function SettingsPage() {
 
     setProfileForm({
       fullName: profile.fullName === unknownDoctorLabel ? '' : profile.fullName,
-      phone: profile.phone === 'N/A' ? '' : profile.phone,
-      address: profile.address === 'N/A' ? '' : profile.address,
+      phone: profile.phone === notAvailableLabel ? '' : profile.phone,
+      address: profile.address === notAvailableLabel ? '' : profile.address,
       bio: profile.bio === noBioLabel ? '' : profile.bio,
       yearsOfExperience: profile.yearsOfExperience,
     });
-  }, [noBioLabel, profile, showEditProfileModal, unknownDoctorLabel]);
+  }, [
+    noBioLabel,
+    notAvailableLabel,
+    profile,
+    showEditProfileModal,
+    unknownDoctorLabel,
+  ]);
 
   const handleUpdateProfile = () => {
     if (!profileForm.fullName.trim()) {
       ophthalToast.error(
         t(
-          'Ophthalmologist.settings.validation.fullNameRequired',
+          'Ophthalmologist.settings.toast.fullNameRequired',
           'Full name is required.'
         )
       );
@@ -462,7 +391,7 @@ export default function SettingsPage() {
       phone: profileForm.phone?.trim() || undefined,
       address: profileForm.address?.trim() || undefined,
       bio: profileForm.bio?.trim() || undefined,
-      yearsOfExperience: Number(profileForm.yearsOfExperience) || 0,
+      yearsOfExperience: profile.yearsOfExperience,
     });
   };
 
@@ -506,52 +435,6 @@ export default function SettingsPage() {
         event.target.value = '';
       },
     });
-  };
-
-  const wallet = useMemo<WalletInfo>(() => {
-    return {
-      id: walletQuery.data?.id ?? '',
-      balance: walletQuery.data?.balance ?? 0,
-      transactions:
-        walletTransactionsQuery.data?.items.map((txn) => ({
-          id: txn.id,
-          amount: txn.amount,
-          transactionType: normalizeTransactionType(txn.transactionType),
-          description: txn.description ?? undefined,
-          createdAt: txn.createdAt,
-        })) ?? [],
-    };
-  }, [walletQuery.data, walletTransactionsQuery.data]);
-
-  const getTransactionIcon = (type: TransactionType) => {
-    switch (type) {
-      case 'Deposit':
-      case 'Bonus':
-      case 'Refund':
-        return {
-          icon: ArrowDownLeft,
-          color: 'text-green-600 dark:text-green-400',
-          bg: 'bg-green-100 dark:bg-green-900/30',
-        };
-      case 'Withdrawal':
-      case 'Payment':
-      case 'Transfer':
-        return {
-          icon: ArrowUpRight,
-          color: 'text-red-600 dark:text-red-400',
-          bg: 'bg-red-100 dark:bg-red-900/30',
-        };
-      default:
-        return {
-          icon: DollarSign,
-          color: 'text-gray-600 dark:text-gray-400',
-          bg: 'bg-gray-100 dark:bg-gray-900/30',
-        };
-    }
-  };
-
-  const isIncomeTransaction = (type: TransactionType) => {
-    return ['Deposit', 'Bonus', 'Refund', 'Payment'].includes(type);
   };
 
   const getStatusBadge = (status: 'verified' | 'pending' | 'expired') => {
@@ -967,125 +850,6 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
-
-              {/* E-Wallet Section */}
-              <div className="bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden">
-                <div className="p-6 border-b border-gray-200 dark:border-[#1e3a5f]">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {t('Ophthalmologist.settings.wallet.title', 'E-Wallet')}
-                  </h2>
-                </div>
-
-                <div className="p-4">
-                  {/* Balance Card */}
-                  <div className="bg-linear-to-br from-cyan-500 to-teal-500 rounded-xl p-5 mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-white/80 text-sm font-medium">
-                          {t(
-                            'Ophthalmologist.settings.wallet.availableBalance',
-                            'Available Balance'
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-4">
-                      {formatCurrency(wallet.balance)}
-                    </p>
-                    <button
-                      onClick={() => setShowWithdrawModal(true)}
-                      className="w-full py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ArrowUpRight className="w-4 h-4" />
-                      {t(
-                        'Ophthalmologist.settings.wallet.withdrawFunds',
-                        'Withdraw Funds'
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Recent Transactions */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
-                      {t(
-                        'Ophthalmologist.settings.wallet.recentTransactions',
-                        'Recent Transactions'
-                      )}
-                    </p>
-                    {walletTransactionsQuery.isLoading && (
-                      <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
-                        {t(
-                          'Ophthalmologist.settings.wallet.loadingTransactions',
-                          'Loading transactions...'
-                        )}
-                      </p>
-                    )}
-                    {!walletTransactionsQuery.isLoading &&
-                      wallet.transactions.length === 0 && (
-                        <p className="px-1 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {t(
-                            'Ophthalmologist.settings.wallet.noTransactions',
-                            'No transactions yet.'
-                          )}
-                        </p>
-                      )}
-                    {wallet.transactions.slice(0, 4).map((txn) => {
-                      const txnStyle = getTransactionIcon(txn.transactionType);
-                      const TxnIcon = txnStyle.icon;
-                      return (
-                        <div
-                          key={txn.id}
-                          className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg"
-                        >
-                          <div
-                            className={`w-9 h-9 ${txnStyle.bg} rounded-lg flex items-center justify-center shrink-0`}
-                          >
-                            <TxnIcon className={`w-4 h-4 ${txnStyle.color}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                              {txn.description || txn.transactionType}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(txn.createdAt).toLocaleDateString(
-                                dateLocale,
-                                {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                }
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p
-                              className={`text-sm font-semibold ${isIncomeTransaction(txn.transactionType) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                            >
-                              {isIncomeTransaction(txn.transactionType)
-                                ? '+'
-                                : '-'}
-                              {formatCurrency(txn.amount)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* View All Link */}
-                  <button className="w-full mt-3 p-3 text-cyan-600 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1">
-                    {t(
-                      'Ophthalmologist.settings.wallet.viewAllTransactions',
-                      'View All Transactions'
-                    )}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Right Column - Quick Settings */}
@@ -1460,14 +1224,13 @@ export default function SettingsPage() {
                   min={0}
                   max={70}
                   value={profileForm.yearsOfExperience}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({
-                      ...prev,
-                      yearsOfExperience: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  readOnly
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-[#162d4d] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white cursor-not-allowed"
                 />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Years of experience can only be updated by admins.
+                </p>
               </div>
 
               <div>
@@ -1526,126 +1289,6 @@ export default function SettingsPage() {
                       'Ophthalmologist.settings.editModal.saveChanges',
                       'Save Changes'
                     )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Withdraw Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowWithdrawModal(false)}
-          />
-          <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t(
-                  'Ophthalmologist.settings.wallet.withdrawFunds',
-                  'Withdraw Funds'
-                )}
-              </h3>
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-
-            {/* Current Balance */}
-            <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t(
-                  'Ophthalmologist.settings.wallet.availableBalance',
-                  'Available Balance'
-                )}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(wallet.balance)}
-              </p>
-            </div>
-
-            {/* Amount Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t(
-                  'Ophthalmologist.settings.wallet.withdrawalAmount',
-                  'Withdrawal Amount'
-                )}
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
-                  VND
-                </span>
-                <input
-                  type="text"
-                  value={withdrawAmount}
-                  onChange={(e) =>
-                    setWithdrawAmount(e.target.value.replace(/[^0-9]/g, ''))
-                  }
-                  placeholder="0"
-                  className="w-full pl-14 pr-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white text-lg font-semibold focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                />
-              </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                {t(
-                  'Ophthalmologist.settings.wallet.minimumWithdrawal',
-                  'Minimum withdrawal'
-                )}
-                : {formatCurrency(100000)}
-              </p>
-            </div>
-
-            {/* Quick Amount Buttons */}
-            <div className="grid grid-cols-3 gap-2 mb-6">
-              {[1000000, 2000000, 5000000].map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => setWithdrawAmount(amount.toString())}
-                  className="py-2 px-3 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
-                >
-                  {formatCurrency(amount)}
-                </button>
-              ))}
-            </div>
-
-            {/* Bank Account Info */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
-              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
-                {t(
-                  'Ophthalmologist.settings.wallet.withdrawalTo',
-                  'Withdrawal to'
-                )}
-              </p>
-              <p className="text-sm text-gray-900 dark:text-white font-semibold">
-                Vietcombank ***1234
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                NGUYEN ALISTAIR CHEN
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                className="flex-1 py-3 px-4 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
-              >
-                {t('Ophthalmologist.common.cancel', 'Cancel')}
-              </button>
-              <button
-                onClick={() => {
-                  // Handle withdrawal
-                  setShowWithdrawModal(false);
-                  setWithdrawAmount('');
-                }}
-                className="flex-1 py-3 px-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <ArrowUpRight className="w-4 h-4" />
-                {t('Ophthalmologist.settings.wallet.withdraw', 'Withdraw')}
               </button>
             </div>
           </div>
