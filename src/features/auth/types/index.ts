@@ -101,6 +101,8 @@ export interface UserInfoResponse {
   email: string;
   fullName: string;
   avatarUrl?: string | null;
+  uploadedAvatarUrl?: string | null;
+  providerAvatarUrl?: string | null;
   roles: string[];
   emailConfirmed: boolean;
   organizationId?: string;

@@ -128,4 +128,78 @@ describe('getNotificationRoute', () => {
       '/organisation/contract'
     );
   });
+
+  it('normalizes routeHint without leading slash', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      routeHint: 'organisation/contract',
+    });
+
+    expect(getNotificationRoute(notification, ['OrgAdmin'])).toBe(
+      '/organisation/contract'
+    );
+  });
+
+  it('prioritizes routeHint for non-SystemAlert notifications', () => {
+    const notification = buildNotification(NotificationType.NewPatientMessage, {
+      routeHint: 'ophthalmologist/consultations?sessionId=abc',
+      sessionId: 'should-not-be-used',
+    });
+
+    expect(getNotificationRoute(notification, ['Doctor'])).toBe(
+      '/ophthalmologist/consultations?sessionId=abc'
+    );
+  });
+
+  it('supports Organization role alias for org wallet route', () => {
+    const txId = '5310c0ec-a2aa-4513-a48c-4eefef18f73b';
+    const notification = buildNotification(
+      NotificationType.WalletPaymentProcessed,
+      {
+        transactionId: txId,
+      }
+    );
+
+    expect(getNotificationRoute(notification, ['Organization'])).toBe(
+      `/organisation/wallet?transactionId=${encodeURIComponent(txId)}`
+    );
+  });
+
+  it('routes verification action variants by keyword matching', () => {
+    const notification = buildNotification(NotificationType.SystemAlert, {
+      action: 'organisation_verification_request_submitted',
+      verificationFlowType: 'OrganisationVerification',
+    });
+
+    expect(getNotificationRoute(notification, ['SystemAdmin'])).toBe(
+      '/system-admin/verifications'
+    );
+  });
+
+  it('treats string boolean sharedMedicalData values as true', () => {
+    const screeningId = 'f5936924-aa6b-4ac8-ab9d-75de89959f1b';
+    const notification = buildNotification(
+      NotificationType.NewAppointmentBooked,
+      {
+        aiScreeningId: screeningId,
+        sharedMedicalData: 'true',
+      }
+    );
+
+    expect(getNotificationRoute(notification, ['Ophthalmologist'])).toBe(
+      `/ophthalmologist/screenings/${screeningId}/review`
+    );
+  });
+
+  it('routes correctly when backend sends notification type as enum name', () => {
+    const notification: Notification = {
+      ...buildNotification(NotificationType.NewPatientMessage, {
+        sessionId: 'session-123',
+      }),
+      type: 'NewPatientMessage',
+    };
+
+    expect(getNotificationRoute(notification, ['Doctor'])).toBe(
+      '/ophthalmologist/consultations?sessionId=session-123'
+    );
+  });
 });

@@ -2223,6 +2223,12 @@
     "messages": {
       "bookSuccess": "Đặt lịch thành công. Vui lòng theo dõi trạng thái tại trang Lịch hẹn."
     },
+    "deposit": {
+      "label": "Tiền cọc",
+      "fee": "Phí cọc",
+      "walletBalance": "Số dư ví",
+      "insufficient": "Số dư không đủ. Vui lòng nạp thêm tiền vào ví."
+    },
     "toast": {
       "bookSuccess": "Bạn đã đặt lịch thành công!"
     }

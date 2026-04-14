@@ -45,6 +45,15 @@ export interface OphthalmologistListItem {
   organisationName?: string;
   isActive: boolean;
   createdAt: string;
+  ratingAverage?: number;
+  ratingCount?: number;
+}
+
+export interface FeedbackRatingSummary {
+  entityId: string;
+  ratingAverage: number;
+  ratingCount: number;
+  distribution: Record<number, number>;
 }
 
 export interface UpdateOphthalmologistEmploymentPayload {
@@ -200,6 +209,13 @@ export const ophthalmologistApi = {
     return unwrapApiData<PagedResult<AdminWithdrawalRequestItem>>(
       response.data
     );
+  },
+
+  async getRatingSummary(ophthalmologistId: string) {
+    const response = await api.get<ApiResponse<FeedbackRatingSummary>>(
+      API_ENDPOINTS.FEEDBACK.OPHTHALMOLOGIST_RATING(ophthalmologistId)
+    );
+    return unwrapApiData<FeedbackRatingSummary>(response.data);
   },
 
   async confirmWithdrawalRequest(

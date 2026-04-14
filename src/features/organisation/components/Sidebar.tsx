@@ -14,6 +14,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { resolvePathWithLocale } from '@/i18n/middleware';
@@ -44,15 +45,11 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
-  const contractApproved = user?.contractStatus === 'Active';
-  const visibleNavItems = contractApproved
-    ? navItems
-    : navItems.filter((item) => item.path === '/organisation/contract');
+  const visibleNavItems = navItems;
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Organisation');
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
-  const avatarUrl = user?.avatarUrl ?? '';
 
   const handleLogout = () => {
     logout();
@@ -110,14 +107,14 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
       <div className="border-t border-gray-200 px-6 py-4 dark:border-slate-700">
         <div className="flex items-center gap-3 px-2">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full bg-brand bg-cover bg-center flex items-center justify-center text-white font-bold text-sm border-2 border-brand/30 shadow-sm shrink-0"
-              style={{
-                backgroundImage: avatarUrl ? `url("${avatarUrl}")` : undefined,
-              }}
-            >
-              {!avatarUrl && (avatarMeta.initials || 'OR')}
-            </div>
+            <UserAvatar
+              fullName={user?.fullName}
+              avatarUrl={user?.avatarUrl}
+              fallbackName="Organisation"
+              size="md"
+              className="shrink-0 border-2 border-brand/30 shadow-sm"
+              fallbackClassName="bg-brand text-white"
+            />
             <div className="flex flex-col overflow-hidden">
               <p className="text-sm font-bold text-(--text-primary) truncate">
                 {displayName}

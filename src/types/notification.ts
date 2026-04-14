@@ -38,6 +38,58 @@ export enum NotificationType {
   SystemAlert = 9,
 }
 
+export type NotificationTypeValue = NotificationType | string | number;
+
+const NOTIFICATION_TYPE_NAME_MAP: Record<string, NotificationType> = {
+  aiscreeningcompleted: NotificationType.AiScreeningCompleted,
+  consultationaccepted: NotificationType.ConsultationAccepted,
+  consultationresultprovided: NotificationType.ConsultationResultProvided,
+  newconsultationrequest: NotificationType.NewConsultationRequest,
+  newpatientmessage: NotificationType.NewPatientMessage,
+  newappointmentbooked: NotificationType.NewAppointmentBooked,
+  schedulechanged: NotificationType.ScheduleChanged,
+  walletdepositsuccess: NotificationType.WalletDepositSuccess,
+  walletpaymentprocessed: NotificationType.WalletPaymentProcessed,
+  systemalert: NotificationType.SystemAlert,
+};
+
+function isKnownNotificationType(value: number): value is NotificationType {
+  return NotificationType[value] !== undefined;
+}
+
+function normalizeNotificationTypeKey(value: string): string {
+  return value
+    .trim()
+    .replace(/[\s_-]/g, '')
+    .toLowerCase();
+}
+
+export function parseNotificationType(
+  type: NotificationTypeValue | null | undefined
+): NotificationType | null {
+  if (typeof type === 'number' && Number.isFinite(type)) {
+    return isKnownNotificationType(type) ? type : null;
+  }
+
+  if (typeof type === 'string') {
+    const trimmedType = type.trim();
+    if (!trimmedType) {
+      return null;
+    }
+
+    if (/^-?\d+$/.test(trimmedType)) {
+      const parsedType = Number.parseInt(trimmedType, 10);
+      return isKnownNotificationType(parsedType) ? parsedType : null;
+    }
+
+    const mappedType =
+      NOTIFICATION_TYPE_NAME_MAP[normalizeNotificationTypeKey(trimmedType)];
+    return mappedType ?? null;
+  }
+
+  return null;
+}
+
 /**
  * Base notification payload interface - all payloads extend this
  */
@@ -120,7 +172,7 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: NotificationTypeValue;
   referenceId?: string | null;
   isRead: boolean;
   payload: NotificationPayloadRaw;
@@ -134,7 +186,7 @@ export interface SignalRNotification {
   id: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: NotificationTypeValue;
   referenceId?: string | null;
   payload: NotificationPayloadRaw;
   createdAt: string;
@@ -164,8 +216,10 @@ export interface UnreadCountResponse {
 /**
  * Helper to get notification icon based on type
  */
-export function getNotificationIcon(type: NotificationType): string {
-  switch (type) {
+export function getNotificationIcon(type: NotificationTypeValue): string {
+  const normalizedType = parseNotificationType(type);
+
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted:
       return 'eye';
     case NotificationType.ConsultationAccepted:
@@ -191,8 +245,10 @@ export function getNotificationIcon(type: NotificationType): string {
 /**
  * Helper to get notification color based on type
  */
-export function getNotificationColor(type: NotificationType): string {
-  switch (type) {
+export function getNotificationColor(type: NotificationTypeValue): string {
+  const normalizedType = parseNotificationType(type);
+
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted:
       return 'text-blue-500';
     case NotificationType.ConsultationAccepted:
@@ -262,6 +318,18 @@ function appendIdQuery(path: string, key: string, value: string): string {
   return `${path}${separator}${key}=${encodeURIComponent(value)}`;
 }
 
+function normalizeRouteHint(routeHintRaw: string): string {
+  if (!routeHintRaw) return '';
+
+  if (routeHintRaw.startsWith('/')) {
+    return routeHintRaw;
+  }
+
+  return routeHintRaw.includes('/')
+    ? `/${routeHintRaw.replace(/^\/+/, '')}`
+    : '';
+}
+
 function hasRole(roles: string[], roleCandidates: string[]): boolean {
   return roleCandidates.some((candidate) => roles.includes(candidate));
 }
@@ -280,6 +348,16 @@ function readBoolean(
   for (const key of keys) {
     const value = normalizedPayload[normalize(key)];
     if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalizedValue = value.trim().toLowerCase();
+      if (normalizedValue === 'true' || normalizedValue === '1') return true;
+      if (normalizedValue === 'false' || normalizedValue === '0') return false;
+    }
+
+    if (typeof value === 'number') {
+      if (value === 1) return true;
+      if (value === 0) return false;
+    }
   }
 
   return false;
@@ -288,7 +366,8 @@ function readBoolean(
 function getRoleHome(roles: string[]): string {
   if (hasRole(roles, ['systemadmin', 'admin']))
     return '/system-admin/dashboard';
-  if (hasRole(roles, ['orgadmin'])) return '/organisation/dashboard';
+  if (hasRole(roles, ['orgadmin', 'organization']))
+    return '/organisation/dashboard';
   if (hasRole(roles, ['ophthalmologist', 'doctor']))
     return '/ophthalmologist/dashboard';
   if (hasRole(roles, ['patient'])) return '/patient/notifications';
@@ -305,7 +384,15 @@ export function getNotificationRoute(
   roles: string[] = []
 ): string {
   const normalizedRoles = roles.map((r) => r.toLowerCase());
+  const normalizedType = parseNotificationType(notification.type);
   const payload = parsePayload(notification.payload);
+  const normalizedRouteHint = normalizeRouteHint(
+    readString(payload, 'routeHint')
+  );
+
+  if (normalizedRouteHint) {
+    return normalizedRouteHint;
+  }
 
   const fallbackReferenceId =
     typeof notification.referenceId === 'string'
@@ -328,13 +415,13 @@ export function getNotificationRoute(
     readString(payload, 'transactionId') || fallbackReferenceId;
 
   const isSystemAdmin = hasRole(normalizedRoles, ['systemadmin', 'admin']);
-  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin']);
+  const isOrgAdmin = hasRole(normalizedRoles, ['orgadmin', 'organization']);
   const isDoctor = hasRole(normalizedRoles, ['ophthalmologist', 'doctor']);
   const isPatient = hasRole(normalizedRoles, ['patient']);
 
   const fallbackHome = getRoleHome(normalizedRoles);
 
-  switch (notification.type) {
+  switch (normalizedType) {
     case NotificationType.AiScreeningCompleted: {
       const base = isPatient
         ? '/patient/screening'
@@ -400,7 +487,7 @@ export function getNotificationRoute(
 
       return appendIdQuery(
         base,
-        notification.type === NotificationType.NewAppointmentBooked
+        normalizedType === NotificationType.NewAppointmentBooked
           ? isPatient
             ? 'appointmentId'
             : 'sessionId'
@@ -424,25 +511,50 @@ export function getNotificationRoute(
     }
 
     case NotificationType.SystemAlert: {
-      const routeHint = readString(payload, 'routeHint');
-      if (routeHint.startsWith('/')) {
-        return routeHint;
-      }
-
-      const action = readString(payload, 'action').toLowerCase();
+      const action = readString(payload, 'action', 'notificationAction')
+        .toLowerCase()
+        .trim();
       const flowType = readString(
         payload,
         'verificationFlowType',
-        'reviewFlowType'
-      ).toLowerCase();
+        'reviewFlowType',
+        'flowType',
+        'verificationFlow'
+      )
+        .toLowerCase()
+        .trim();
       const isOrganisationVerificationFlow =
         flowType.includes('organisation') || flowType.includes('organization');
+      const isVerificationFlow =
+        flowType.includes('verification') ||
+        flowType.includes('onboarding') ||
+        flowType.includes('credential') ||
+        isOrganisationVerificationFlow;
+
+      const isVerificationSubmittedAction =
+        action === 'verification_request_submitted' ||
+        (action.includes('verification') &&
+          (action.includes('request') || action.includes('submitted')));
+
+      const isVerificationReviewAction =
+        action === 'verification_review_completed' ||
+        action === 'ophthalmologist_verification_approved' ||
+        action === 'verification_review_rejected' ||
+        action === 'ophthalmologist_verification_rejected' ||
+        (action.includes('verification') &&
+          (action.includes('review') ||
+            action.includes('approved') ||
+            action.includes('rejected')));
+
+      const isContractActivatedAction =
+        action === 'contract_activated' ||
+        (action.includes('contract') && action.includes('activat'));
 
       if (action === 'ophthalmologist_email_confirmed') {
         return isSystemAdmin ? '/system-admin/contracts' : fallbackHome;
       }
 
-      if (action === 'verification_request_submitted') {
+      if (isVerificationSubmittedAction) {
         return isSystemAdmin
           ? '/system-admin/verifications'
           : isDoctor
@@ -452,12 +564,7 @@ export function getNotificationRoute(
               : fallbackHome;
       }
 
-      if (
-        action === 'verification_review_completed' ||
-        action === 'ophthalmologist_verification_approved' ||
-        action === 'verification_review_rejected' ||
-        action === 'ophthalmologist_verification_rejected'
-      ) {
+      if (isVerificationReviewAction) {
         return isDoctor
           ? '/ophthalmologist/settings'
           : isOrgAdmin
@@ -467,7 +574,7 @@ export function getNotificationRoute(
               : fallbackHome;
       }
 
-      if (action === 'contract_activated') {
+      if (isContractActivatedAction) {
         return isDoctor
           ? '/ophthalmologist/contract'
           : isOrgAdmin
@@ -475,11 +582,7 @@ export function getNotificationRoute(
             : fallbackHome;
       }
 
-      if (
-        flowType === 'onboardingverification' ||
-        flowType === 'credentialupdatereview' ||
-        isOrganisationVerificationFlow
-      ) {
+      if (isVerificationFlow) {
         return isSystemAdmin
           ? '/system-admin/verifications'
           : isDoctor

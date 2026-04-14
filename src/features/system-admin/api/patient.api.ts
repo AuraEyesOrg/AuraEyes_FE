@@ -10,15 +10,26 @@ import { unwrapApiData } from '@/types/api-response';
 
 export interface PatientListItem {
   id: string;
-  userId: string;
+  userId: string | null;
   fullName: string;
-  email: string;
+  email: string | null;
   phone?: string;
   medicalHistorySummary?: string;
   isActive: boolean;
   emailConfirmed: boolean;
+  isWalkIn: boolean;
+  patientType: 'WalkIn' | 'Registered';
+  linkedOrganisationName?: string | null;
   createdAt: string;
-  lastLoginAt?: string;
+  lastLoginAt?: string | null;
+}
+
+export interface PatientMetricsDto {
+  totalPatients: number;
+  registeredPatients: number;
+  walkInPatients: number;
+  activeRegisteredPatients: number;
+  lockedRegisteredPatients: number;
 }
 
 interface PagedResult<T> {
@@ -32,6 +43,13 @@ interface PagedResult<T> {
 }
 
 export const patientApi = {
+  async getMetrics() {
+    const response = await api.get<ApiResponse<PatientMetricsDto>>(
+      `${API_ENDPOINTS.SYSTEM_ADMIN.PATIENTS.LIST}/metrics`
+    );
+    return unwrapApiData<PatientMetricsDto>(response.data);
+  },
+
   /**
    * Fetch patients with pagination and filtering
    */

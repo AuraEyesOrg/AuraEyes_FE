@@ -179,7 +179,9 @@ export default function PatientDashboard() {
   const latestReportRisk = latestReport?.riskLevel ?? latestAnalysis?.riskLevel;
   const effectiveLatestRisk = latestSessionRisk ?? latestReportRisk;
   const hasLatestSession = Boolean(latestSession);
-  const hasHeroResult = Boolean(latestReport || latestSession);
+  const hasHeroResult = Boolean(
+    hasLatestSession || (!recentSessionsQuery.isLoading && latestReport)
+  );
   const heroImageCandidates = useMemo(() => {
     // Prefer session thumbnail (retinal photo) over heatmap to avoid dark/blank-looking hero images.
     const candidates = [
@@ -200,23 +202,26 @@ export default function PatientDashboard() {
     heroImageCandidates[heroImageCandidateIndex] ??
     heroImageCandidates[0] ??
     undefined;
-  const heroTitle =
-    latestSession != null
-      ? t('PatientDashboard.hero.title.aiScreening')
-      : latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
-        ? t('PatientDashboard.hero.title.specialistVerified')
-        : t('PatientDashboard.hero.title.aiScreening');
+  const shouldUseScreeningHero = hasLatestSession;
+  const heroTitle = shouldUseScreeningHero
+    ? t('PatientDashboard.hero.title.aiScreening')
+    : latestReport?.type === 'OPHTHALMOLOGIST_VERIFIED'
+      ? t('PatientDashboard.hero.title.specialistVerified')
+      : t('PatientDashboard.hero.title.aiScreening');
   const heroRiskLabel = effectiveLatestRisk
     ? getRiskLabel(effectiveLatestRisk, t)
     : t('PatientDashboard.hero.awaitingAnalysis');
-  const heroSummary =
-    latestSession != null
-      ? getDetectedSummary(effectiveLatestRisk, t)
-      : latestReport?.summary && !looksLikeI18nKey(latestReport.summary)
-        ? latestReport.summary
-        : getDetectedSummary(effectiveLatestRisk, t);
-  const heroDate = latestSession?.createdAt ?? latestReport?.createdAt;
-  const heroScanId = latestSession?.screeningId ?? latestReport?.id;
+  const heroSummary = shouldUseScreeningHero
+    ? getDetectedSummary(effectiveLatestRisk, t)
+    : latestReport?.summary && !looksLikeI18nKey(latestReport.summary)
+      ? latestReport.summary
+      : getDetectedSummary(effectiveLatestRisk, t);
+  const heroDate = shouldUseScreeningHero
+    ? latestSession?.createdAt
+    : latestReport?.createdAt;
+  const heroScanId = shouldUseScreeningHero
+    ? latestSession?.screeningId
+    : latestReport?.id;
   const latestSessionHasResult = Boolean(latestSession?.latestRiskLevel);
   const latestSessionTargetPath = latestSessionHasResult
     ? '/patient/screening/review'
@@ -632,6 +637,45 @@ export default function PatientDashboard() {
                         </div>
                       );
                     })}
+                  </div>
+                ) : recentReports && recentReports.length > 0 ? (
+                  <div className="relative pl-4 border-l-2 border-[var(--border-color)] space-y-8">
+                    {recentReports.map((report) => (
+                      <div key={report.id} className="relative pl-6 group">
+                        <div
+                          className={`absolute -left-[21px] top-1 w-4 h-4 rounded-full border-[3px] border-white dark:border-[#1e3a5f] ${getTimelineDotColor(report.riskLevel)} ring-1 ring-[var(--border-color)]`}
+                        />
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-(--text-primary)">
+                              {report.type === 'OPHTHALMOLOGIST_VERIFIED'
+                                ? t(
+                                    'PatientDashboard.hero.title.specialistVerified'
+                                  )
+                                : t('PatientDashboard.hero.title.aiScreening')}
+                            </p>
+                            <p className="text-sm text-(--text-secondary)">
+                              {formatShortDate(report.createdAt)}
+                              {report.verifiedBy &&
+                                ` • ${report.verifiedBy.fullName}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={getRiskBadgeStyle(report.riskLevel)}
+                            >
+                              {getRiskLabel(report.riskLevel, t)}
+                            </span>
+                            <Link
+                              to={`/patient/reports`}
+                              className="text-[var(--text-muted)] hover:text-brand transition-colors"
+                            >
+                              <FileText className="w-5 h-5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-(--text-muted)">

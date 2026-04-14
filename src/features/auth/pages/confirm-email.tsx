@@ -22,6 +22,7 @@ import {
 } from '@/i18n/locales';
 import { confirmEmail, getCurrentUser, resendConfirmation } from '../api';
 import useAuthStore from '@/store/auth-store';
+import { shouldRedirectToContract } from '../utils/contract-status';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
 
@@ -75,9 +76,7 @@ const ConfirmEmailPage = () => {
       }
 
       if (roles.includes('OrgAdmin')) {
-        return currentUser.contractStatus !== 'Active'
-          ? '/organisation/contract'
-          : '/organisation/dashboard';
+        return '/organisation/dashboard';
       }
 
       if (roles.includes('Ophthalmologist')) {
@@ -85,7 +84,7 @@ const ConfirmEmailPage = () => {
           return '/ophthalmologist/pending-approval';
         }
 
-        return currentUser.contractStatus !== 'Active'
+        return shouldRedirectToContract(currentUser.contractStatus)
           ? '/ophthalmologist/contract'
           : '/ophthalmologist/dashboard';
       }

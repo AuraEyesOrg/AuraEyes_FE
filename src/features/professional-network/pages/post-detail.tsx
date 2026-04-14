@@ -22,6 +22,7 @@ import { useAddComment } from '../hooks/useAddComment';
 import { useToggleReaction } from '../hooks/useToggleReaction';
 import useAuthStore from '@/store/auth-store';
 import { LoadingButton } from '@/components/ui/loading-button';
+import UserAvatar from '@/components/ui/UserAvatar';
 import type { ReactionType } from '../types';
 import { InitialsAvatar } from '../components/professional/InitialsAvatar';
 import type { PagedResult } from '../types';
@@ -225,15 +226,14 @@ function PostDetailPage() {
 
       {/* Comment Input */}
       <div className="flex gap-3 px-4 py-3 border-b border-light-border">
-        {user?.avatarUrl ? (
-          <img
-            src={user.avatarUrl}
-            alt={user.fullName}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <InitialsAvatar fullName={user?.fullName ?? '?'} size="sm" />
-        )}
+        <UserAvatar
+          fullName={user?.fullName}
+          avatarUrl={user?.avatarUrl}
+          fallbackName="User"
+          size="md"
+          className="shrink-0"
+          fallbackClassName="bg-brand/20 text-brand"
+        />
         <div className="flex-1 flex gap-2">
           <input
             type="text"
@@ -327,18 +327,14 @@ function PostDetailPage() {
               {/* Reply input */}
               {replyingToId === comment.id && (
                 <div className="ml-[52px] mt-2 flex gap-2">
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt={user.fullName}
-                      className="w-8 h-8 rounded-full object-cover shrink-0"
-                    />
-                  ) : (
-                    <InitialsAvatar
-                      fullName={user?.fullName ?? '?'}
-                      size="xs"
-                    />
-                  )}
+                  <UserAvatar
+                    fullName={user?.fullName}
+                    avatarUrl={user?.avatarUrl}
+                    fallbackName="User"
+                    size="sm"
+                    className="shrink-0"
+                    fallbackClassName="bg-brand/20 text-brand"
+                  />
                   <div className="flex-1 flex gap-2">
                     <input
                       type="text"

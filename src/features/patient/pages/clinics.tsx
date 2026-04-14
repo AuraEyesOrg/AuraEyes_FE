@@ -7,6 +7,7 @@ import {
   Search,
   Star,
   Stethoscope,
+  Wallet,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
@@ -15,6 +16,7 @@ import {
   useOrganisationAvailableSlots,
   useOrganisations,
 } from '../hooks/use-clinic-booking';
+import { useWallet } from '../hooks/use-wallet';
 import useAuthStore from '@/store/auth-store';
 import { mapClinicPatientErrorMessage } from '@/lib/api-error';
 import {
@@ -44,6 +46,7 @@ interface SlotItem {
   endTime: string;
   remaining: number;
   maxCapacity: number;
+  cost?: number | null;
 }
 
 interface MiniCalendarProps {
@@ -252,6 +255,17 @@ function SlotGroup({
               >
                 {isFull ? fullLabel : `${slot.remaining}/${slot.maxCapacity}`}
               </span>
+              {slot.cost != null && slot.cost > 0 && (
+                <span
+                  className={`text-[10px] font-medium ${
+                    isSelected
+                      ? 'text-cyan-200'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}
+                >
+                  {slot.cost.toLocaleString('vi-VN')}₫
+                </span>
+              )}
             </button>
           );
         })}
@@ -299,6 +313,7 @@ export default function ClinicsPage() {
   );
 
   const createAppointmentMutation = useCreateClinicAppointment();
+  const { data: walletData } = useWallet();
 
   const upcomingSlots = useMemo(
     () => availableSlots.filter((slot) => !isExpiredClinicSlot(slot)),
@@ -620,6 +635,36 @@ export default function ClinicsPage() {
                   {/* Confirm bar */}
                   {selectedSlot && (
                     <div className="mt-auto pt-4">
+                      {selectedSlot.cost != null &&
+                        selectedSlot.cost > 0 &&
+                        walletData != null && (
+                          <div
+                            className={`mb-2 flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm ${
+                              walletData.balance < selectedSlot.cost
+                                ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                                : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300'
+                            }`}
+                          >
+                            <Wallet className="h-4 w-4 shrink-0" />
+                            <span>
+                              {t('PatientClinics.deposit.walletBalance')}:{' '}
+                              <strong>
+                                {walletData.balance.toLocaleString('vi-VN')}₫
+                              </strong>
+                              {' · '}
+                              {t('PatientClinics.deposit.fee')}:{' '}
+                              <strong>
+                                {selectedSlot.cost.toLocaleString('vi-VN')}₫
+                              </strong>
+                              {walletData.balance < selectedSlot.cost && (
+                                <>
+                                  {' — '}
+                                  {t('PatientClinics.deposit.insufficient')}
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        )}
                       <div className="flex items-center justify-between gap-3 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 dark:border-cyan-800/60 dark:bg-cyan-900/20">
                         <div className="min-w-0">
                           <p className="text-xs text-cyan-700 dark:text-cyan-300">
@@ -631,11 +676,24 @@ export default function ClinicsPage() {
                             {formatSlotTime(selectedSlot.startTime)}
                             {' – '}
                             {formatSlotTime(selectedSlot.endTime)}
+                            {selectedSlot.cost != null &&
+                              selectedSlot.cost > 0 && (
+                                <span className="ml-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+                                  ({t('PatientClinics.deposit.label')}:{' '}
+                                  {selectedSlot.cost.toLocaleString('vi-VN')}₫)
+                                </span>
+                              )}
                           </p>
                         </div>
                         <button
                           type="button"
-                          disabled={createAppointmentMutation.isPending}
+                          disabled={
+                            createAppointmentMutation.isPending ||
+                            (selectedSlot.cost != null &&
+                              selectedSlot.cost > 0 &&
+                              walletData != null &&
+                              walletData.balance < selectedSlot.cost)
+                          }
                           onClick={() => void handleBookSlot()}
                           className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >

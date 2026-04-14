@@ -1,185 +1,202 @@
 # Notification Route Mapping (FE + BE)
 
-Tai lieu nay tong hop toan bo diem su dung notification trong FE + BE, quy tac click notification di route nao, va can truyen ID gi.
+Tài liệu này mô tả đầy đủ cách ánh xạ notification sang route đích trong FE, đối chiếu với payload thực tế từ BE.
+Mục tiêu chính là giảm lỗi click notification bị rơi về route mặc định (thường là dashboard).
 
-## 1) Tong quan luong notification
+## 1) Tổng quan luồng notification
 
-- BE tao notification qua INotificationService.SendAsync(...)
-- Notification duoc luu DB (entity Notification)
-- Sau khi luu, BE day realtime qua SignalR:
-  - ReceiveNotification
-  - ReceiveUnreadCount
-- FE nhan qua hook useSignalRNotification, cap nhat store va hien toast
-- Khi user click notification (dropdown/page), FE goi getNotificationRoute(notification, roles) de resolve route dich
+- BE phát notification qua `INotificationService.SendAsync(...)`.
+- Notification được lưu trong DB (entity `Notification`).
+- Sau khi lưu, BE đẩy realtime qua SignalR:
+  - `ReceiveNotification`
+  - `ReceiveUnreadCount`
+- FE nhận qua hook `useSignalRNotification`, cập nhật store và hiển thị toast.
+- Khi user click notification (dropdown hoặc trang danh sách), FE gọi:
+  - `getNotificationRoute(notification, roles)`
 
-## 2) FE files lien quan
+## 2) Các file FE liên quan
 
-### 2.1 Route resolver va kieu du lieu
+### 2.1 Route resolver và kiểu dữ liệu
 
-- src/types/notification.ts
-  - NotificationType enum
+- `src/types/notification.ts`
+  - `NotificationType`
   - parse payload
-  - getNotificationRoute(notification, roles)
+  - `getNotificationRoute(notification, roles)`
 
-### 2.2 Data fetching va mutations
+### 2.2 Data fetching và mutations
 
-- src/features/notifications/api/notification.api.ts
-- src/lib/notificationService.ts
-- src/features/notifications/hooks/use-notifications.ts
+- `src/features/notifications/api/notification.api.ts`
+- `src/lib/notificationService.ts`
+- `src/features/notifications/hooks/use-notifications.ts`
 
 ### 2.3 State + realtime
 
-- src/store/useNotificationStore.ts
-- src/hooks/useSignalRNotification.ts
+- `src/store/useNotificationStore.ts`
+- `src/hooks/useSignalRNotification.ts`
 
 ### 2.4 UI click handlers
 
-- src/components/ui/notification/NotificationDropdown.tsx
-- src/features/patient/pages/notifications.tsx
-- src/features/notifications/pages/view-all.tsx
+- `src/components/ui/notification/NotificationDropdown.tsx`
+- `src/features/patient/pages/notifications.tsx`
+- `src/features/notifications/pages/view-all.tsx`
 
-## 3) API va Hub contracts
+## 3) API và Hub contract
 
 ### 3.1 REST API
 
-- GET /api/notifications
-- GET /api/notifications/unread-count
-- POST /api/notifications/{id}/mark-read
-- POST /api/notifications/mark-all-read
+- `GET /api/notifications`
+- `GET /api/notifications/unread-count`
+- `POST /api/notifications/{id}/mark-read`
+- `POST /api/notifications/mark-all-read`
 
-Controller: src/API/Controllers/NotificationsController.cs
+Controller: `src/API/Controllers/NotificationsController.cs`
 
 ### 3.2 SignalR Hub
 
-- Hub endpoint: /api/hubs/notifications
+- Hub endpoint: `/api/hubs/notifications`
 - Outbound methods:
-  - ReceiveNotification
-  - ReceiveUnreadCount
+  - `ReceiveNotification`
+  - `ReceiveUnreadCount`
 
 Hub files:
 
-- src/API/Hubs/NotificationHub.cs
-- src/API/Services/NotificationHubService.cs
+- `src/API/Hubs/NotificationHub.cs`
+- `src/API/Services/NotificationHubService.cs`
 
-## 4) Quy tac resolve route khi click notification (FE)
+## 4) Quy tắc resolve route khi click notification (FE)
 
-Nguon su that: src/types/notification.ts (ham getNotificationRoute)
+Nguồn sự thật: `src/types/notification.ts` (`getNotificationRoute`).
 
-### 4.1 Quy tac doc ID tu payload/referenceId
+### 4.1 Chuẩn hoá role
 
-FE uu tien doc ID trong payload theo key list, sau do fallback sang notification.referenceId.
+Resolver xử lý role không phân biệt hoa/thường và có alias:
 
-- screening id: aiScreeningId | screeningId
-- consultation/session id: consultationSessionId | sessionId | consultationId
-- appointment id: appointmentId | appointmentSlotId | slotId
-- transaction id: transactionId
+- `SystemAdmin` ↔ `Admin`
+- `OrgAdmin` ↔ `Organization`
+- `Ophthalmologist` ↔ `Doctor`
 
-### 4.2 Mapping theo NotificationType + role + ID can co
+### 4.2 Chuẩn hoá payload + fallback ID
 
-| NotificationType           | Role                    | Route dich                                                                      | ID can co                                             | Cach truyen        |
-| -------------------------- | ----------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------ |
-| AiScreeningCompleted       | Patient                 | /patient/reports                                                                | screeningId                                           | ?screeningId=...   |
-| AiScreeningCompleted       | Ophthalmologist         | /ophthalmologist/screenings                                                     | screeningId                                           | ?screeningId=...   |
-| AiScreeningCompleted       | OrgAdmin                | /organisation/patients                                                          | screeningId                                           | ?screeningId=...   |
-| ConsultationAccepted       | Ophthalmologist         | /ophthalmologist/consultations                                                  | consultation/session id                               | ?sessionId=...     |
-| ConsultationAccepted       | Patient                 | /patient/chat                                                                   | consultation/session id                               | ?sessionId=...     |
-| ConsultationAccepted       | OrgAdmin                | /organisation/calendar                                                          | consultation/session id                               | ?sessionId=...     |
-| ConsultationResultProvided | Ophthalmologist         | /ophthalmologist/consultations                                                  | consultation/session id                               | ?sessionId=...     |
-| ConsultationResultProvided | Patient                 | /patient/chat                                                                   | consultation/session id                               | ?sessionId=...     |
-| ConsultationResultProvided | OrgAdmin                | /organisation/calendar                                                          | consultation/session id                               | ?sessionId=...     |
-| NewConsultationRequest     | Ophthalmologist         | /ophthalmologist/consultations                                                  | consultation/session id                               | ?sessionId=...     |
-| NewConsultationRequest     | Patient                 | /patient/chat                                                                   | consultation/session id                               | ?sessionId=...     |
-| NewConsultationRequest     | OrgAdmin                | /organisation/calendar                                                          | consultation/session id                               | ?sessionId=...     |
-| NewPatientMessage          | Ophthalmologist         | /ophthalmologist/consultations                                                  | consultation/session id                               | ?sessionId=...     |
-| NewPatientMessage          | Patient                 | /patient/chat                                                                   | consultation/session id                               | ?sessionId=...     |
-| NewPatientMessage          | OrgAdmin                | /organisation/calendar                                                          | consultation/session id                               | ?sessionId=...     |
-| NewAppointmentBooked       | Ophthalmologist         | /ophthalmologist/screenings/{aiScreeningId}/review (neu sharedMedicalData=true) | aiScreeningId                                         | path param         |
-| NewAppointmentBooked       | Ophthalmologist         | /ophthalmologist/appointments                                                   | consultationSessionId/appointmentSlotId/appointmentId | ?sessionId=...     |
-| NewAppointmentBooked       | OrgAdmin                | /organisation/calendar                                                          | consultationSessionId/appointmentSlotId/appointmentId | ?sessionId=...     |
-| NewAppointmentBooked       | Patient                 | /patient/appointments                                                           | consultationSessionId/appointmentSlotId/appointmentId | ?appointmentId=... |
-| ScheduleChanged            | Ophthalmologist         | /ophthalmologist/appointments                                                   | appointment id                                        | ?appointmentId=... |
-| ScheduleChanged            | OrgAdmin                | /organisation/calendar                                                          | appointment id                                        | ?appointmentId=... |
-| ScheduleChanged            | Patient                 | /patient/appointments                                                           | appointment id                                        | ?appointmentId=... |
-| WalletDepositSuccess       | Patient                 | /patient/wallet                                                                 | transactionId                                         | ?transactionId=... |
-| WalletDepositSuccess       | OrgAdmin                | /organisation/wallet                                                            | transactionId                                         | ?transactionId=... |
-| WalletPaymentProcessed     | Patient                 | /patient/wallet                                                                 | transactionId                                         | ?transactionId=... |
-| WalletPaymentProcessed     | OrgAdmin                | /organisation/wallet                                                            | transactionId                                         | ?transactionId=... |
-| WalletPaymentProcessed     | Ophthalmologist         | /ophthalmologist/wallet                                                         | transactionId                                         | ?transactionId=... |
-| SystemAlert                | Phu thuoc action + role | Xem muc 4.3                                                                     | tuy truong hop                                        | route/action based |
+FE ưu tiên đọc ID trong payload, sau đó fallback sang `notification.referenceId`.
 
-### 4.3 SystemAlert action routing
+- `screeningId`: `aiScreeningId` | `screeningId`
+- `consultation/sessionId`: `consultationSessionId` | `sessionId` | `consultationId`
+- `appointmentId`: `appointmentId` | `appointmentSlotId` | `slotId`
+- `transactionId`: `transactionId`
 
-Neu payload co routeHint bat dau bang '/' thi dung truc tiep routeHint.
+### 4.3 Ưu tiên `routeHint`
 
-Neu khong co routeHint, FE route theo action/flow:
+- Nếu payload có `routeHint`:
+  - FE chấp nhận cả dạng có `/` đầu (`/organisation/contract`) và dạng thiếu `/` (`organisation/contract`).
+  - Dạng thiếu `/` sẽ được chuẩn hoá thành path hợp lệ trước khi navigate.
 
-- action = ophthalmologist_email_confirmed
-  - SystemAdmin -> /system-admin/contracts
-- action = verification_request_submitted
-  - SystemAdmin -> /system-admin/verifications
-  - Ophthalmologist -> /ophthalmologist/settings
-  - OrgAdmin -> /organisation/contract
-- action = verification_review_completed hoac ophthalmologist_verification_approved
-  - SystemAdmin -> /system-admin/verifications
-  - Ophthalmologist -> /ophthalmologist/settings
-  - OrgAdmin -> /organisation/contract
-- action = contract_activated
-  - Ophthalmologist -> /ophthalmologist/contract
-  - OrgAdmin -> /organisation/contract
-- flow verification onboarding/credential/organisation
-  - SystemAdmin -> /system-admin/verifications
-  - Ophthalmologist -> /ophthalmologist/settings
-  - OrgAdmin -> /organisation/contract
+Điểm này giúp giảm lỗi click rơi về route mặc định khi BE trả `routeHint` chưa chuẩn.
 
-## 5) BE callsites: Noi phat notification + payload ID keys
+### 4.4 Mapping theo `NotificationType`
 
-Nguon quet chinh: cac file su dung NotificationType.\* va \_notificationService.SendAsync(...)
+| NotificationType                                                                               | Role                    | Route đích                                         | ID cần có                                             | Cách truyền          |
+| ---------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------- | ----------------------------------------------------- | -------------------- |
+| AiScreeningCompleted                                                                           | Patient                 | /patient/reports                                   | screeningId                                           | `?screeningId=...`   |
+| AiScreeningCompleted                                                                           | Ophthalmologist         | /ophthalmologist/screenings                        | screeningId                                           | `?screeningId=...`   |
+| AiScreeningCompleted                                                                           | OrgAdmin/Organization   | /organisation/patients                             | screeningId                                           | `?screeningId=...`   |
+| ConsultationAccepted / ConsultationResultProvided / NewConsultationRequest / NewPatientMessage | Ophthalmologist         | /ophthalmologist/consultations                     | consultation/session id                               | `?sessionId=...`     |
+| ConsultationAccepted / ConsultationResultProvided / NewConsultationRequest / NewPatientMessage | Patient                 | /patient/chat                                      | consultation/session id                               | `?sessionId=...`     |
+| ConsultationAccepted / ConsultationResultProvided / NewConsultationRequest / NewPatientMessage | OrgAdmin/Organization   | /organisation/calendar                             | consultation/session id                               | `?sessionId=...`     |
+| NewAppointmentBooked (sharedMedicalData=true, có aiScreeningId)                                | Ophthalmologist         | /ophthalmologist/screenings/{aiScreeningId}/review | aiScreeningId                                         | path param           |
+| NewAppointmentBooked                                                                           | Ophthalmologist         | /ophthalmologist/appointments                      | consultationSessionId/appointmentSlotId/appointmentId | `?sessionId=...`     |
+| NewAppointmentBooked                                                                           | OrgAdmin/Organization   | /organisation/calendar                             | consultationSessionId/appointmentSlotId/appointmentId | `?sessionId=...`     |
+| NewAppointmentBooked                                                                           | Patient                 | /patient/appointments                              | consultationSessionId/appointmentSlotId/appointmentId | `?appointmentId=...` |
+| ScheduleChanged                                                                                | Ophthalmologist         | /ophthalmologist/appointments                      | appointment id                                        | `?appointmentId=...` |
+| ScheduleChanged                                                                                | OrgAdmin/Organization   | /organisation/calendar                             | appointment id                                        | `?appointmentId=...` |
+| ScheduleChanged                                                                                | Patient                 | /patient/appointments                              | appointment id                                        | `?appointmentId=...` |
+| WalletDepositSuccess                                                                           | Patient                 | /patient/wallet                                    | transactionId                                         | `?transactionId=...` |
+| WalletDepositSuccess                                                                           | OrgAdmin/Organization   | /organisation/wallet                               | transactionId                                         | `?transactionId=...` |
+| WalletPaymentProcessed                                                                         | Patient                 | /patient/wallet                                    | transactionId                                         | `?transactionId=...` |
+| WalletPaymentProcessed                                                                         | OrgAdmin/Organization   | /organisation/wallet                               | transactionId                                         | `?transactionId=...` |
+| WalletPaymentProcessed                                                                         | Ophthalmologist         | /ophthalmologist/wallet                            | transactionId                                         | `?transactionId=...` |
+| SystemAlert                                                                                    | Theo action/flow + role | Xem mục 4.5                                        | tuỳ trường hợp                                        | route/action based   |
 
-| File                                                                                                               | NotificationType           | Trigger                            | Payload keys (quan trong cho route/id)                                                      |
-| ------------------------------------------------------------------------------------------------------------------ | -------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| src/Application/Screenings/Commands/CompleteAiScreening/CompleteAiScreeningCommandHandler.cs                       | AiScreeningCompleted       | Hoan tat AI screening              | ScreeningId, ResultStatus                                                                   |
-| src/Application/ConsultationSessions/Commands/SubmitVerificationReport/SubmitVerificationReportCommandHandler.cs   | ConsultationResultProvided | Bac si gui ket qua consult         | ConsultationId, DoctorId                                                                    |
-| src/Application/ConsultationSessions/Commands/SendMessage/SendMessageCommandHandler.cs                             | NewPatientMessage          | Patient gui tin nhan trong consult | ConsultationId, PatientId                                                                   |
-| src/Application/ConsultationSessions/Commands/CreateVerificationSession/CreateVerificationSessionCommandHandler.cs | NewConsultationRequest     | Tao verification session           | ConsultationId, PatientId                                                                   |
-| src/Infrastructure/Services/SessionReminderWorker.cs                                                               | NewConsultationRequest     | Reminder session tre               | sessionId, consultationId, reminderType                                                     |
-| src/Application/Scheduling/AppointmentSlots/Commands/ConfirmReservation/ConfirmReservationCommandHandler.cs        | NewAppointmentBooked       | Confirm dat lich                   | ConsultationSessionId, AppointmentSlotId, AppointmentTime, AiScreeningId, SharedMedicalData |
-| src/Application/Scheduling/Appointments/Commands/CreateClinicAppointment/CreateClinicAppointmentCommandHandler.cs  | NewAppointmentBooked       | Tao lich tai co so                 | AppointmentId, AppointmentTime, Reason, OrganisationId                                      |
-| src/Application/Wallets/Commands/VerifyPayment/VerifyPaymentCommandHandler.cs                                      | WalletDepositSuccess       | Xac minh nap tien wallet           | TransactionId, Amount, Action                                                               |
-| src/Application/AiQuota/Commands/BuyAiQuota/BuyAiQuotaCommandHandler.cs                                            | WalletPaymentProcessed     | Mua AI quota                       | TransactionId, Amount, QuotaAmount                                                          |
-| src/Application/Ophthalmologists/Commands/UploadCredentials/UploadCredentialsCommandHandler.cs                     | SystemAlert                | Gui request xac minh credentials   | action, verificationFlowType, ophthalmologistId, previousStatus, currentStatus              |
-| src/Application/SystemAdmin/Ophthalmologists/Commands/VerifyOphthalmologist/VerifyOphthalmologistCommandHandler.cs | SystemAlert                | Admin duyet/tu choi verify         | action, reviewFlowType, approved, rejectionReason, ophthalmologistId                        |
-| src/Application/Ophthalmologists/Commands/VerifyOphthalmologist/VerifyOphthalmologistCommandHandler.cs             | SystemAlert                | Ophthalmologist verification event | OphthalmologistId, Action                                                                   |
-| src/Infrastructure/Identity/AuthService.cs                                                                         | SystemAlert                | Confirm email cho ophthalmologist  | action=ophthalmologist_email_confirmed, ophthalmologistUserId, emailConfirmed               |
-| src/Application/SystemAdmin/Contracts/Commands/SignContract/SignContractCommandHandler.cs                          | SystemAlert                | Kich hoat contract                 | action=contract_activated, contractId, contractType, contractStatus, routeHint              |
+### 4.5 Mapping chi tiết `SystemAlert` (đã harden)
 
-## 6) ReferenceId extraction tren BE
+Resolver xử lý theo thứ tự ưu tiên:
 
-File: src/Infrastructure/Services/NotificationService.cs
+1. `routeHint` (nếu có) → đi thẳng route.
+2. `action` (ưu tiên exact match, có thêm keyword matching để chịu được biến thể action mới).
+3. `verificationFlowType/reviewFlowType/flowType` (fallback theo flow verification).
 
-- BE serializes payload camelCase
-- Neu khong truyen referenceId truc tiep, service se tu extract GUID theo type + generic keys
-- Keys generic da ho tro:
-  - consultationSessionId, consultationId, sessionId
-  - appointmentId, appointmentSlotId, slotId
-  - screeningId, aiScreeningId
-  - transactionId, messageId
-  - ophthalmologistId, ophthalmologistUserId
+Các action chính đang có từ BE:
 
-Dieu nay giup FE fallback notification.referenceId khi payload key bi khac ten.
+- `ophthalmologist_email_confirmed`
+  - `SystemAdmin` → `/system-admin/contracts`
+- `verification_request_submitted`
+  - `SystemAdmin` → `/system-admin/verifications`
+  - `Ophthalmologist` → `/ophthalmologist/settings`
+  - `OrgAdmin/Organization` → `/organisation/contract`
+- `verification_review_completed` hoặc `ophthalmologist_verification_approved`
+  - `SystemAdmin` → `/system-admin/verifications`
+  - `Ophthalmologist` → `/ophthalmologist/settings`
+  - `OrgAdmin/Organization` → `/organisation/contract`
+- `contract_activated`
+  - `Ophthalmologist` → `/ophthalmologist/contract`
+  - `OrgAdmin/Organization` → `/organisation/contract`
 
-## 7) Luu y va risk can biet
+Fallback theo flow verification (khi action không match exact):
 
-- ConsultationAccepted va ScheduleChanged dang co enum + route FE, nhung co the khong co du callsite tao notification trong luong nghiep vu hien tai.
-- SystemAlert co routeHint: neu routeHint sai, click se di sai route.
-- Payload naming khong dong nhat (PascalCase/camelCase) van chay nho normalize, nhung nen thong nhat naming de de bao tri.
+- Nếu `flowType` có dấu hiệu verification/onboarding/credential/organisation:
+  - `SystemAdmin` → `/system-admin/verifications`
+  - `Ophthalmologist` → `/ophthalmologist/settings`
+  - `OrgAdmin/Organization` → `/organisation/contract`
 
-## 8) Checklist khi them notification moi
+## 5) BE callsites: nơi phát notification + payload key
 
-1. BE: them NotificationType (neu can), call SendAsync, dam bao payload co ID route key.
-2. FE: cap nhat getNotificationRoute cho role + route dich.
-3. FE UI: dam bao dropdown/view-all click goi getNotificationRoute.
-4. Test manual:
-   - dropdown click dung route
-   - query id dung key
-   - role khac nhau di dung man hinh
-   - unread count update dung qua SignalR.
+Nguồn quét chính: các file gọi `SendAsync(..., NotificationType.SystemAlert, payload: ...)`.
+
+| File                                                                                                                 | NotificationType | Trigger                                  | Payload keys quan trọng                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `src/Application/Ophthalmologists/Commands/UploadCredentials/UploadCredentialsCommandHandler.cs`                     | SystemAlert      | Bác sĩ gửi/yêu cầu duyệt hồ sơ chứng chỉ | `action=verification_request_submitted`, `verificationFlowType`, `ophthalmologistId`, `previousStatus`, `currentStatus` |
+| `src/Application/SystemAdmin/Ophthalmologists/Commands/VerifyOphthalmologist/VerifyOphthalmologistCommandHandler.cs` | SystemAlert      | Admin duyệt/từ chối hồ sơ bác sĩ         | `action=verification_review_completed`, `reviewFlowType`, `approved`, `rejectionReason`, `ophthalmologistId`            |
+| `src/Application/Ophthalmologists/Commands/VerifyOphthalmologist/VerifyOphthalmologistCommandHandler.cs`             | SystemAlert      | Event bác sĩ được verify                 | `action=ophthalmologist_verification_approved`, `verificationFlowType=OnboardingVerification`, `ophthalmologistId`      |
+| `src/Infrastructure/Identity/AuthService.cs`                                                                         | SystemAlert      | Bác sĩ xác nhận email                    | `action=ophthalmologist_email_confirmed`, `ophthalmologistUserId`, `emailConfirmed`                                     |
+| `src/Application/SystemAdmin/Contracts/Commands/SignContract/SignContractCommandHandler.cs`                          | SystemAlert      | Kích hoạt hợp đồng                       | `action=contract_activated`, `contractId`, `contractType`, `contractStatus`, `routeHint`                                |
+
+## 6) ReferenceId extraction ở BE
+
+File: `src/Infrastructure/Services/NotificationService.cs`
+
+- BE serialize payload dạng camelCase.
+- Nếu không truyền `referenceId` trực tiếp, service sẽ cố extract GUID theo type + generic keys.
+- Generic keys đang hỗ trợ:
+  - `consultationSessionId`, `consultationId`, `sessionId`
+  - `appointmentId`, `appointmentSlotId`, `slotId`
+  - `screeningId`, `aiScreeningId`
+  - `transactionId`, `messageId`
+  - `ophthalmologistId`, `ophthalmologistUserId`
+
+Điều này giúp FE vẫn điều hướng được khi tên key payload khác nhau giữa callsite.
+
+## 7) Vì sao click có thể rơi về dashboard mặc định?
+
+Các nguyên nhân thường gặp:
+
+- Action mới chưa được map trong FE resolver.
+- `routeHint` được gửi dạng không chuẩn (thiếu `/` đầu).
+- Role trả về là `Organization` nhưng FE chỉ check `OrgAdmin`.
+- Payload thiếu key ID ưu tiên, không có `referenceId` fallback.
+
+Định hướng fix:
+
+- Ưu tiên map exact action, thêm keyword matching có kiểm soát cho action biến thể.
+- Chuẩn hoá `routeHint` trước khi navigate.
+- Duy trì alias role (`OrgAdmin` + `Organization`).
+- Bảo đảm payload có key ID hoặc `referenceId` hợp lệ.
+
+## 8) Checklist khi thêm notification mới
+
+1. BE: thêm `NotificationType` (nếu cần), gọi `SendAsync`, bảo đảm payload có key ID phục vụ route.
+2. FE: cập nhật `getNotificationRoute` cho role + route đích.
+3. FE UI: bảo đảm click ở dropdown/page đều gọi `getNotificationRoute`.
+4. Test thủ công:
+   - click dropdown đi đúng route
+   - query param đúng key ID
+   - role khác nhau đi đúng màn hình
+   - unread count cập nhật đúng qua SignalR

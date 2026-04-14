@@ -3,6 +3,12 @@ export interface UserAvatarMeta {
   initials: string;
 }
 
+export interface AvatarSource {
+  avatarUrl?: string | null;
+  uploadedAvatarUrl?: string | null;
+  providerAvatarUrl?: string | null;
+}
+
 export function resolveAvatarUrl(
   ...candidates: Array<string | null | undefined>
 ): string | undefined {
@@ -10,6 +16,31 @@ export function resolveAvatarUrl(
     const normalized = (candidate ?? '').trim();
     if (normalized.length > 0) {
       return normalized;
+    }
+  }
+
+  return undefined;
+}
+
+export function resolvePreferredAvatarUrl(
+  ...sources: Array<AvatarSource | null | undefined>
+): string | undefined {
+  for (const source of sources) {
+    if (!source) continue;
+
+    const uploadedAvatarUrl = resolveAvatarUrl(source.uploadedAvatarUrl);
+    if (uploadedAvatarUrl) {
+      return uploadedAvatarUrl;
+    }
+
+    const providerAvatarUrl = resolveAvatarUrl(source.providerAvatarUrl);
+    if (providerAvatarUrl) {
+      return providerAvatarUrl;
+    }
+
+    const avatarUrl = resolveAvatarUrl(source.avatarUrl);
+    if (avatarUrl) {
+      return avatarUrl;
     }
   }
 

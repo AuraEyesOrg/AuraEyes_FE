@@ -5,6 +5,7 @@ import { Shield, ArrowLeft, AlertCircle, Key, Smartphone } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
+import { shouldRedirectToContract } from '../utils/contract-status';
 import '@/styles/auth-animations.css';
 
 interface TwoFactorVerifyForm {
@@ -93,17 +94,13 @@ const TwoFactorVerifyPage = () => {
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
             navigate('/ophthalmologist/pending-approval');
-          } else if (response.user?.contractStatus !== 'Active') {
+          } else if (shouldRedirectToContract(response.user?.contractStatus)) {
             navigate('/ophthalmologist/contract');
           } else {
             navigate('/ophthalmologist/dashboard');
           }
         } else if (roles.includes('OrgAdmin')) {
-          if (response.user?.contractStatus !== 'Active') {
-            navigate('/organisation/contract');
-          } else {
-            navigate('/organisation/dashboard');
-          }
+          navigate('/organisation/dashboard');
         } else {
           navigate('/');
         }

@@ -32,6 +32,7 @@ import StatusBadge from '../components/StatusBadge';
 import { exportApi } from '../api';
 import {
   ophthalmologistApi,
+  type FeedbackRatingSummary,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
 import { formatCurrency } from '@/lib/helper';
@@ -79,7 +80,10 @@ const calculateCommissionAmount = (
 };
 
 /** Map API item to UI Ophthalmologist model */
-const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
+const mapToUiModel = (
+  item: OphthalmologistListItem,
+  ratingSummary?: FeedbackRatingSummary | null
+): Ophthalmologist => ({
   ...item,
   name: item.fullName,
   status: item.isVerified ? 'available' : 'unavailable',
@@ -89,8 +93,10 @@ const mapToUiModel = (item: OphthalmologistListItem): Ophthalmologist => ({
   monthlyEarnings: item.actualMonthlySalary ?? 0,
   totalEarnings: 0,
   pendingPayouts: 0,
-  averageRating: 0,
-  totalReviews: 0,
+  averageRating: Number(
+    item.ratingAverage ?? ratingSummary?.ratingAverage ?? 0
+  ),
+  totalReviews: Number(item.ratingCount ?? ratingSummary?.ratingCount ?? 0),
   joinedAt: new Date(item.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -171,7 +177,27 @@ export default function OphthalmologistsPage() {
         searchQuery || undefined,
         apiVerificationStatus
       );
-      setOphthalmologists(result.items.map(mapToUiModel));
+
+      const ratingSummaries = await Promise.all(
+        result.items.map(async (doctor) => {
+          try {
+            const summary = await ophthalmologistApi.getRatingSummary(
+              doctor.id
+            );
+            return [doctor.id, summary] as const;
+          } catch {
+            return [doctor.id, null] as const;
+          }
+        })
+      );
+
+      const ratingSummaryByDoctorId = new Map(ratingSummaries);
+
+      setOphthalmologists(
+        result.items.map((doctor) =>
+          mapToUiModel(doctor, ratingSummaryByDoctorId.get(doctor.id) ?? null)
+        )
+      );
       setTotalCount(result.totalCount);
       setHasNext(result.hasNext);
       setHasPrevious(result.hasPrevious);
@@ -368,7 +394,7 @@ export default function OphthalmologistsPage() {
       });
 
       const mappedDoctors = doctorsForExport
-        .map(mapToUiModel)
+        .map((doctor) => mapToUiModel(doctor))
         .filter((doctor) =>
           statusFilter === 'all' ? true : doctor.status === statusFilter
         );

@@ -2223,6 +2223,12 @@
     "messages": {
       "bookSuccess": "Appointment booked successfully. Please check status in Appointments."
     },
+    "deposit": {
+      "label": "Deposit",
+      "fee": "Deposit fee",
+      "walletBalance": "Wallet balance",
+      "insufficient": "Insufficient balance. Please top up your wallet."
+    },
     "toast": {
       "bookSuccess": "Clinic booking completed successfully!"
     }

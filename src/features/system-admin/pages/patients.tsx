@@ -8,7 +8,6 @@ import {
   Users,
   UserCheck,
   UserX,
-  Activity,
   Search,
   Download,
   Eye,
@@ -23,7 +22,11 @@ import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { exportApi } from '../api';
-import { patientApi, type PatientListItem } from '../api/patient.api';
+import {
+  patientApi,
+  type PatientListItem,
+  type PatientMetricsDto,
+} from '../api/patient.api';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
@@ -31,26 +34,27 @@ import ConfirmModal from '@/components/ui/confirm-modal';
 interface Patient extends PatientListItem {
   name: string;
   status: 'active' | 'inactive' | 'locked';
-  screeningsCount: number;
   lastScreening?: string;
   emailVerified: boolean;
+  patientTypeLabel: 'Walk-in' | 'Registered';
 }
 
 /** Map API item to UI Patient model */
 const mapToUiPatient = (item: PatientListItem): Patient => ({
   ...item,
   name: item.fullName,
-  status: item.isActive ? 'active' : 'locked',
-  screeningsCount: 0,
+  status: item.isWalkIn ? 'active' : item.isActive ? 'active' : 'locked',
   lastScreening: item.lastLoginAt
     ? new Date(item.lastLoginAt).toLocaleDateString()
     : undefined,
   emailVerified: item.emailConfirmed,
+  patientTypeLabel: item.isWalkIn ? 'Walk-in' : 'Registered',
 });
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [metrics, setMetrics] = useState<PatientMetricsDto | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
@@ -69,16 +73,20 @@ export default function PatientsPage() {
     setLoading(true);
     try {
       const apiStatus = statusFilter === 'all' ? undefined : statusFilter;
-      const result = await patientApi.getPatients(
-        pageNumber,
-        10,
-        searchQuery || undefined,
-        apiStatus
-      );
+      const [result, metricsResult] = await Promise.all([
+        patientApi.getPatients(
+          pageNumber,
+          10,
+          searchQuery || undefined,
+          apiStatus
+        ),
+        patientApi.getMetrics(),
+      ]);
       setPatients(result.items.map(mapToUiPatient));
       setTotalCount(result.totalCount);
       setHasNext(result.hasNext);
       setHasPrevious(result.hasPrevious);
+      setMetrics(metricsResult);
     } catch (error) {
       console.error('Failed to load patients:', error);
       setPatients([]);
@@ -92,19 +100,24 @@ export default function PatientsPage() {
   }, [loadData]);
 
   // Calculate stats
-  const totalPatients = totalCount;
-  const activePatients = patients.filter((p) => p.status === 'active').length;
-  const lockedPatients = patients.filter((p) => p.status === 'locked').length;
-  const totalScreenings = patients.reduce(
-    (sum, p) => sum + p.screeningsCount,
-    0
-  );
+  const totalPatients = metrics?.totalPatients ?? totalCount;
+  const registeredPatients = metrics?.registeredPatients ?? 0;
+  const walkInPatients = metrics?.walkInPatients ?? 0;
+  const lockedPatients = metrics?.lockedRegisteredPatients ?? 0;
 
   // Use server-side filtering; client-side list is already filtered
   const filteredPatients = patients;
 
   // Handle lock/unlock patient
-  const handleToggleLock = async (userId: string, currentStatus: string) => {
+  const handleToggleLock = async (
+    userId: string | null,
+    currentStatus: string
+  ) => {
+    if (!userId) {
+      toast.info('Walk-in patients do not have login accounts to lock/unlock.');
+      return;
+    }
+
     try {
       const action = currentStatus === 'locked' ? 'activate' : 'lock';
 
@@ -164,13 +177,22 @@ export default function PatientsPage() {
         patientsForExport,
         [
           { header: 'Patient ID', value: (row) => row.id },
-          { header: 'User ID', value: (row) => row.userId },
+          { header: 'User ID', value: (row) => row.userId ?? '' },
           { header: 'Full Name', value: (row) => row.fullName },
-          { header: 'Email', value: (row) => row.email },
+          { header: 'Email', value: (row) => row.email ?? '' },
           { header: 'Phone', value: (row) => row.phone ?? '' },
           {
+            header: 'Patient Type',
+            value: (row) => (row.isWalkIn ? 'Walk-in' : 'Registered'),
+          },
+          {
+            header: 'Linked Organisation',
+            value: (row) => row.linkedOrganisationName ?? '',
+          },
+          {
             header: 'Status',
-            value: (row) => (row.isActive ? 'Active' : 'Locked'),
+            value: (row) =>
+              row.isWalkIn ? 'Walk-in' : row.isActive ? 'Active' : 'Locked',
           },
           {
             header: 'Email Confirmed',
@@ -209,34 +231,47 @@ export default function PatientsPage() {
             <span className="text-sm font-bold text-slate-900 dark:text-white">
               {row.name}
             </span>
-            <span className="text-xs text-slate-500">{row.email}</span>
+            <span className="text-xs text-slate-500">
+              {row.email ?? 'Walk-in profile'}
+            </span>
           </div>
         </div>
       ),
     },
     {
-      header: 'Screenings',
-      accessor: 'screeningsCount',
-      render: (value) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
-          {value as number}
+      header: 'Patient Type',
+      accessor: 'patientType',
+      render: (_, row) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            row.isWalkIn
+              ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300'
+              : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+          }`}
+        >
+          {row.patientTypeLabel}
         </span>
       ),
     },
     {
-      header: 'Last Screening',
-      accessor: 'lastScreening',
+      header: 'Linked Organisation',
+      accessor: 'linkedOrganisationName',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {(value as string) || 'Never'}
+          {(value as string) || 'Unassigned'}
         </span>
       ),
     },
+    { header: 'Last Login', accessor: 'lastScreening' },
     { header: 'Joined', accessor: 'createdAt' },
     {
       header: 'Status',
       accessor: 'status',
-      render: (value) => {
+      render: (value, row) => {
+        if (row.isWalkIn) {
+          return <StatusBadge status="info" label="Walk-in" />;
+        }
+
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
           active: 'success',
           inactive: 'warning',
@@ -247,6 +282,7 @@ export default function PatientsPage() {
           inactive: 'Inactive',
           locked: 'Locked',
         };
+
         return (
           <StatusBadge
             status={statusMap[value as string] || 'info'}
@@ -274,8 +310,15 @@ export default function PatientsPage() {
           </button>
           <button
             onClick={() => handleToggleLock(row.userId, row.status)}
-            className="text-slate-500 hover:text-primary transition-colors p-1"
-            title={row.status === 'locked' ? 'Unlock Patient' : 'Lock Patient'}
+            disabled={!row.userId || row.isWalkIn}
+            className="text-slate-500 hover:text-primary transition-colors p-1 disabled:opacity-40 disabled:cursor-not-allowed"
+            title={
+              row.isWalkIn
+                ? 'Walk-in patients cannot be locked'
+                : row.status === 'locked'
+                  ? 'Unlock Patient'
+                  : 'Lock Patient'
+            }
           >
             {row.status === 'locked' ? (
               <Unlock className="w-4 h-4" />
@@ -321,33 +364,29 @@ export default function PatientsPage() {
                 title="Total Patients"
                 value={totalPatients}
                 icon={Users}
-                description="All registered patients"
+                description="Registered and walk-in patients"
                 variant="primary"
               />
               <StatsCard
-                title="Active Patients"
-                value={activePatients}
+                title="Registered Patients"
+                value={registeredPatients}
                 icon={UserCheck}
-                change={8}
-                trend="up"
-                description="+8 this month"
+                description="Patients with login accounts"
                 variant="success"
+              />
+              <StatsCard
+                title="Walk-in Patients"
+                value={walkInPatients}
+                icon={Users}
+                description="Clinic-managed patient profiles"
+                variant="primary"
               />
               <StatsCard
                 title="Locked Accounts"
                 value={lockedPatients}
                 icon={UserX}
-                description="Require attention"
+                description="Registered accounts requiring attention"
                 variant="danger"
-              />
-              <StatsCard
-                title="Total Screenings"
-                value={totalScreenings}
-                icon={Activity}
-                change={15}
-                trend="up"
-                description="All time"
-                variant="primary"
               />
             </div>
 
@@ -373,8 +412,9 @@ export default function PatientsPage() {
                   >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
                     <option value="locked">Locked</option>
+                    <option value="registered">Registered</option>
+                    <option value="walkin">Walk-in</option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
