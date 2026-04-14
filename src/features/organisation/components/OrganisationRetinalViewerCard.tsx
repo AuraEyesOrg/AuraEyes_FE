@@ -3,6 +3,7 @@ import {
   Eye,
   Loader2,
   MousePointer2,
+  Pencil,
   PenTool,
   ScanEye,
   Trash2,
@@ -236,17 +237,28 @@ export function OrganisationRetinalViewerCard({
               </div>
             )}
 
-            {/* Delete selected box */}
+            {/* Edit label + Delete for selected box */}
             {useAnnotationLayer && selectedBoxId && (
-              <button
-                type="button"
-                onClick={() => onBoxDelete(selectedBoxId)}
-                className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 transition"
-                title="Delete selected box"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => onBoxDoubleClick?.(selectedBoxId)}
+                  className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 dark:border-indigo-800/40 dark:bg-indigo-900/20 dark:text-indigo-400 transition"
+                  title="Edit label of selected box"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Edit label
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onBoxDelete(selectedBoxId)}
+                  className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 transition"
+                  title="Delete selected box"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </>
             )}
 
             {detectedBoxes.length > 0 && (

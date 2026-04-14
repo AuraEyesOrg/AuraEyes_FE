@@ -22,6 +22,7 @@ export interface OrganisationScheduleTemplateDto {
   endTime: string;
   slotDuration: number;
   maxCapacity: number;
+  cost?: number | null;
   createdAt: string;
   updatedAt?: string | null;
 }
@@ -48,6 +49,7 @@ export interface CreateOrganisationTemplateRequest {
   endTime: string;
   slotDuration: number;
   maxCapacity: number;
+  cost?: number | null;
 }
 
 export interface UpdateOrganisationTemplateRequest {
@@ -56,6 +58,7 @@ export interface UpdateOrganisationTemplateRequest {
   endTime: string;
   slotDuration: number;
   maxCapacity: number;
+  cost?: number | null;
 }
 
 export interface GenerateOrganisationSlotsRequest {
@@ -105,6 +108,7 @@ export const createOrganisationTemplate = async (
       endTime: request.endTime,
       slotDuration: request.slotDuration,
       maxCapacity: request.maxCapacity,
+      cost: request.cost ?? null,
     }
   );
 
@@ -121,6 +125,7 @@ export const updateOrganisationTemplate = async (
     endTime: request.endTime,
     slotDuration: request.slotDuration,
     maxCapacity: request.maxCapacity,
+    cost: request.cost ?? null,
   });
 };
 
