@@ -42,7 +42,7 @@ import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
-import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
+// import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
 import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
@@ -986,20 +986,42 @@ export default function ScreeningReviewPage() {
         screeningId
       ) {
         try {
-          const boxes = buildDetectionBoxesForSave();
-          const mergedJson = mergeBoxesIntoRawJson(detail.rawJsonOutput, boxes);
+          // Use the same logic as handleSaveEdits for consistency
+          const currentBoxes = findings
+            .filter((f) => f.location)
+            .map((f) => {
+              const loc = boxOverrides[f.id] ?? f.location!;
+              return {
+                id: f.id,
+                name: f.name,
+                description: f.description,
+                confidence: f.confidence,
+                severity: f.severity,
+                location: {
+                  x: loc.x,
+                  y: loc.y,
+                  width: loc.width,
+                  height: loc.height,
+                },
+              };
+            });
 
-          let finalJsonString = mergedJson;
+          const parsed = JSON.parse(detail.rawJsonOutput) as Record<
+            string,
+            unknown
+          >;
+          parsed.doctor_bbox_overrides = currentBoxes;
+
           if (hasHeatmapEdits && heatmapData) {
-            const parsed = JSON.parse(mergedJson);
             parsed.heatmap_data = heatmapData;
-            finalJsonString = JSON.stringify(parsed);
           }
+
+          const finalJsonString = JSON.stringify(parsed);
 
           await import('@/lib/api').then(({ api }) =>
             api.post(`/screenings/${screeningId}/save-results`, {
               rawJsonOutput: finalJsonString,
-              riskLevel: 'Low', // giữ nguyên risk level hiện tại
+              riskLevel: detail.latestResult?.riskLevel ?? 'Low',
               confidenceScore: detail.latestResult?.confidenceScore ?? 0,
               summary: detail.latestResult?.summary,
               findings: detail.latestResult?.findings,
