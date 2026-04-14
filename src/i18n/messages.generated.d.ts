@@ -319,6 +319,11 @@ declare module 'i18next' {
           experienceSuffix: string;
           years: string;
           specialty: string;
+          employmentType: string;
+          employmentTypeValues: {
+            fullTime: string;
+            partTime: string;
+          };
           hospital: string;
           address: string;
           bio: string;
@@ -357,6 +362,17 @@ declare module 'i18next' {
           title: string;
           security: string;
           securityHint: string;
+          securityHintChecking: string;
+          securityHintEnabled: string;
+          securityHintDisabled: string;
+          resetPassword: string;
+          resetPasswordHint: string;
+          currentPassword: string;
+          newPassword: string;
+          confirmNewPassword: string;
+          updatePassword: string;
+          passwordChanged: string;
+          passwordChangeFailed: string;
           language: string;
           languageVi: string;
           languageEn: string;

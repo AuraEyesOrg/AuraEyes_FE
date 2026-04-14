@@ -316,6 +316,11 @@
         "experienceSuffix": "năm kinh nghiệm",
         "years": "năm",
         "specialty": "Chuyên khoa",
+        "employmentType": "Hình thức làm việc",
+        "employmentTypeValues": {
+          "fullTime": "Toàn thời gian",
+          "partTime": "Bán thời gian"
+        },
         "hospital": "Bệnh viện / Phòng khám",
         "address": "Địa chỉ",
         "bio": "Mô tả / Giới thiệu"
@@ -354,6 +359,17 @@
         "title": "Cài đặt tài khoản",
         "security": "Bảo mật",
         "securityHint": "Đặt lại mật khẩu & 2FA",
+        "securityHintChecking": "Đang kiểm tra trạng thái 2FA...",
+        "securityHintEnabled": "2FA đang bật. Quản lý mật khẩu và mã dự phòng",
+        "securityHintDisabled": "2FA đang tắt. Thiết lập bảo vệ ngay",
+        "resetPassword": "Đặt lại mật khẩu",
+        "resetPasswordHint": "Cập nhật mật khẩu hiện tại của bạn",
+        "currentPassword": "Mật khẩu hiện tại",
+        "newPassword": "Mật khẩu mới",
+        "confirmNewPassword": "Xác nhận mật khẩu mới",
+        "updatePassword": "Cập nhật mật khẩu",
+        "passwordChanged": "Đổi mật khẩu thành công.",
+        "passwordChangeFailed": "Không thể đổi mật khẩu lúc này. Vui lòng thử lại.",
         "language": "Ngôn ngữ",
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "English (US)"

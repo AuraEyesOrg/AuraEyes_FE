@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -19,6 +21,7 @@ import {
   ChevronRight,
   Edit3,
   Upload,
+  Key,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -43,12 +46,20 @@ import {
 } from '@/i18n/locales';
 import { persistLocale } from '@/i18n/middleware';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
+import { getTwoFactorStatus } from '@/features/auth/api/two-factor.api';
+import { useChangePassword } from '@/features/patient/hooks/useProfile';
+import {
+  changePasswordSchema,
+  type ChangePasswordFormData,
+} from '@/features/patient/schemas/profile.schema';
 
 interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
 }
+
+type EmploymentType = 'FullTime' | 'PartTime';
 
 interface Certificate {
   id: string;
@@ -69,7 +80,7 @@ interface OphthalmologistProfile {
   bio: string;
   yearsOfExperience: number;
   specialty: string;
-  hospital: string;
+  employmentType: EmploymentType | null;
   department: string;
   address: string;
   isVerified: boolean;
@@ -86,6 +97,7 @@ interface OphthalmologistProfileApi {
   userPhoneNumber?: string | null;
   userAddress?: string | null;
   bio?: string | null;
+  employmentType?: string | null;
   yearsOfExperience: number;
   isVerified: boolean;
   createdAt: string;
@@ -127,7 +139,7 @@ const DEFAULT_PROFILE: OphthalmologistProfile = {
   bio: '',
   yearsOfExperience: 0,
   specialty: '',
-  hospital: 'N/A',
+  employmentType: null,
   department: 'N/A',
   address: 'N/A',
   isVerified: false,
@@ -143,6 +155,26 @@ const mapCertificateTypeFromApi = (
   if (normalized.includes('license')) return 'license';
   if (normalized.includes('degree')) return 'degree';
   return 'certification';
+};
+
+const normalizeEmploymentType = (
+  value: string | null | undefined
+): EmploymentType | null => {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(/[\s_-]/g, '').toLowerCase();
+
+  if (normalized === 'fulltime') {
+    return 'FullTime';
+  }
+
+  if (normalized === 'parttime') {
+    return 'PartTime';
+  }
+
+  return null;
 };
 
 export default function SettingsPage() {
@@ -165,6 +197,7 @@ export default function SettingsPage() {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showUploadCredentialsModal, setShowUploadCredentialsModal] =
     useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [credentialTab, setCredentialTab] = useState<'degree' | 'license'>(
     'degree'
   );
@@ -184,6 +217,16 @@ export default function SettingsPage() {
     'Unknown Doctor'
   );
   const notAvailableLabel = t('Ophthalmologist.common.notAvailable', 'N/A');
+  const changePasswordMutation = useChangePassword();
+  const {
+    register: registerChangePassword,
+    handleSubmit: handleChangePasswordSubmit,
+    reset: resetChangePassword,
+    formState: { errors: changePasswordErrors },
+  } = useForm<ChangePasswordFormData>({
+    resolver: yupResolver(changePasswordSchema),
+  });
+
   const noBioLabel = t(
     'Ophthalmologist.settings.defaults.noBio',
     'No profile bio available.'
@@ -288,8 +331,19 @@ export default function SettingsPage() {
   const displayAvatarUrl =
     avatarUrlOverride ?? profileQuery.data?.userAvatarUrl ?? user?.avatarUrl;
 
+  const securityStatusQuery = useQuery({
+    queryKey: ['auth', 'two-factor', 'status'],
+    queryFn: getTwoFactorStatus,
+    staleTime: 60 * 1000,
+    retry: 1,
+    enabled: Boolean(user?.id),
+  });
+
   const profile = useMemo<OphthalmologistProfile>(() => {
     const profileData = profileQuery.data;
+    const employmentType = normalizeEmploymentType(
+      profileData?.employmentType ?? user?.employmentType ?? null
+    );
 
     if (!user && !profileData)
       return {
@@ -298,7 +352,7 @@ export default function SettingsPage() {
         email: notAvailableLabel,
         phone: notAvailableLabel,
         bio: noBioLabel,
-        hospital: notAvailableLabel,
+        employmentType: null,
         department: notAvailableLabel,
         address: notAvailableLabel,
       };
@@ -312,7 +366,7 @@ export default function SettingsPage() {
       bio: profileData?.bio?.trim() || noBioLabel,
       yearsOfExperience: profileData?.yearsOfExperience ?? 0,
       specialty: t('Ophthalmologist.common.role', 'Ophthalmologist'),
-      hospital: user?.organizationId ?? notAvailableLabel,
+      employmentType,
       department: notAvailableLabel,
       address: profileData?.userAddress ?? notAvailableLabel,
       isVerified: profileData?.isVerified ?? Boolean(user?.isVerified),
@@ -346,6 +400,93 @@ export default function SettingsPage() {
     unknownDoctorLabel,
     user,
   ]);
+
+  const employmentTypeLabel = useMemo(() => {
+    if (profile.employmentType === 'FullTime') {
+      return t(
+        'Ophthalmologist.settings.profile.employmentTypeValues.fullTime',
+        'Full-time'
+      );
+    }
+
+    if (profile.employmentType === 'PartTime') {
+      return t(
+        'Ophthalmologist.settings.profile.employmentTypeValues.partTime',
+        'Part-time'
+      );
+    }
+
+    return notAvailableLabel;
+  }, [notAvailableLabel, profile.employmentType, t]);
+
+  const securityHintLabel = useMemo(() => {
+    if (securityStatusQuery.isLoading || securityStatusQuery.isFetching) {
+      return t(
+        'Ophthalmologist.settings.accountSettings.securityHintChecking',
+        'Checking 2FA status...'
+      );
+    }
+
+    if (securityStatusQuery.data?.isEnabled === true) {
+      return t(
+        'Ophthalmologist.settings.accountSettings.securityHintEnabled',
+        '2FA is enabled. Manage password and recovery codes'
+      );
+    }
+
+    if (securityStatusQuery.data?.isEnabled === false) {
+      return t(
+        'Ophthalmologist.settings.accountSettings.securityHintDisabled',
+        '2FA is off. Set up protection now'
+      );
+    }
+
+    return t(
+      'Ophthalmologist.settings.accountSettings.securityHint',
+      'Reset password & 2FA'
+    );
+  }, [
+    securityStatusQuery.data?.isEnabled,
+    securityStatusQuery.isFetching,
+    securityStatusQuery.isLoading,
+    t,
+  ]);
+
+  const closeChangePasswordModal = () => {
+    setShowChangePasswordModal(false);
+    resetChangePassword();
+    changePasswordMutation.reset();
+  };
+
+  const onChangePasswordSubmit = (data: ChangePasswordFormData) => {
+    changePasswordMutation.mutate(data, {
+      onSuccess: () => {
+        closeChangePasswordModal();
+        ophthalToast.success(
+          t(
+            'Ophthalmologist.settings.accountSettings.passwordChanged',
+            'Password changed successfully.'
+          )
+        );
+      },
+      onError: (error: unknown) => {
+        const err = error as {
+          message?: string;
+          response?: { data?: { message?: string; errors?: string[] } };
+        };
+
+        ophthalToast.error(
+          err.response?.data?.message ||
+            err.response?.data?.errors?.join(', ') ||
+            err.message ||
+            t(
+              'Ophthalmologist.settings.accountSettings.passwordChangeFailed',
+              'Unable to change password right now. Please try again.'
+            )
+        );
+      },
+    });
+  };
 
   const handleLanguageChange = (nextLocale: AppLocale) => {
     if (nextLocale === locale) return;
@@ -667,12 +808,12 @@ export default function SettingsPage() {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                           {t(
-                            'Ophthalmologist.settings.profile.hospital',
-                            'Hospital / Clinic'
+                            'Ophthalmologist.settings.profile.employmentType',
+                            'Employment Type'
                           )}
                         </p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {profile.hospital}
+                          {employmentTypeLabel}
                         </p>
                       </div>
                     </div>
@@ -867,7 +1008,7 @@ export default function SettingsPage() {
 
                 <div className="p-4 space-y-2">
                   <Link
-                    to={toLocalizedPath('/forgot-password')}
+                    to={toLocalizedPath('/ophthalmologist/security')}
                     className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group"
                   >
                     <div className="flex items-center gap-3">
@@ -882,15 +1023,39 @@ export default function SettingsPage() {
                           )}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {t(
-                            'Ophthalmologist.settings.accountSettings.securityHint',
-                            'Reset password & 2FA'
-                          )}
+                          {securityHintLabel}
                         </p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
                   </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowChangePasswordModal(true)}
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                        <Key className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {t(
+                            'Ophthalmologist.settings.accountSettings.resetPassword',
+                            'Reset Password'
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {t(
+                            'Ophthalmologist.settings.accountSettings.resetPasswordHint',
+                            'Update your current password'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-cyan-500 transition-colors" />
+                  </button>
 
                   <div className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
@@ -1151,6 +1316,135 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
+
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeChangePasswordModal}
+          />
+          <div className="relative bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {t(
+                  'Ophthalmologist.settings.accountSettings.resetPassword',
+                  'Reset Password'
+                )}
+              </h3>
+              <button
+                type="button"
+                onClick={closeChangePasswordModal}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-[#1e3a5f] rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            {changePasswordMutation.isError && (
+              <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
+                {changePasswordMutation.error?.message ||
+                  t(
+                    'Ophthalmologist.settings.accountSettings.passwordChangeFailed',
+                    'Unable to change password right now. Please try again.'
+                  )}
+              </div>
+            )}
+
+            <form
+              onSubmit={handleChangePasswordSubmit(onChangePasswordSubmit)}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t(
+                    'Ophthalmologist.settings.accountSettings.currentPassword',
+                    'Current Password'
+                  )}
+                </label>
+                <input
+                  type="password"
+                  {...registerChangePassword('currentPassword')}
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+                {changePasswordErrors.currentPassword?.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {t(
+                      changePasswordErrors.currentPassword.message,
+                      'Current password is required.'
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t(
+                    'Ophthalmologist.settings.accountSettings.newPassword',
+                    'New Password'
+                  )}
+                </label>
+                <input
+                  type="password"
+                  {...registerChangePassword('newPassword')}
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+                {changePasswordErrors.newPassword?.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {t(
+                      changePasswordErrors.newPassword.message,
+                      'New password is invalid.'
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t(
+                    'Ophthalmologist.settings.accountSettings.confirmNewPassword',
+                    'Confirm New Password'
+                  )}
+                </label>
+                <input
+                  type="password"
+                  {...registerChangePassword('confirmNewPassword')}
+                  className="w-full px-4 py-3 bg-white dark:bg-[#1e3a5f] border border-gray-300 dark:border-[#2d4a6f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                />
+                {changePasswordErrors.confirmNewPassword?.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {t(
+                      changePasswordErrors.confirmNewPassword.message,
+                      'Passwords do not match.'
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeChangePasswordModal}
+                  className="px-4 py-2 bg-gray-100 dark:bg-[#1e3a5f] hover:bg-gray-200 dark:hover:bg-[#2d4a6f] text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
+                >
+                  {t('Ophthalmologist.common.cancel', 'Cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={changePasswordMutation.isPending}
+                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-colors disabled:opacity-60"
+                >
+                  {changePasswordMutation.isPending
+                    ? t('Ophthalmologist.common.saving', 'Saving...')
+                    : t(
+                        'Ophthalmologist.settings.accountSettings.updatePassword',
+                        'Update Password'
+                      )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showEditProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">

@@ -506,6 +506,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/ophthalmologist/security"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<TwoFactorSettingsPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/ophthalmologist/consultations"
           element={
             <LocalizedPrivateRoute
@@ -1313,6 +1322,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Ophthalmologist']}>
               <OphthalmologistSettingsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ophthalmologist/security"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <TwoFactorSettingsPage />
             </PrivateRoute>
           }
         />

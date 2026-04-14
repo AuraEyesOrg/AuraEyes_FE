@@ -316,6 +316,11 @@
         "experienceSuffix": "years experience",
         "years": "years",
         "specialty": "Specialty",
+        "employmentType": "Employment Type",
+        "employmentTypeValues": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time"
+        },
         "hospital": "Hospital / Clinic",
         "address": "Address",
         "bio": "Bio / Description"
@@ -354,6 +359,17 @@
         "title": "Account Settings",
         "security": "Security",
         "securityHint": "Reset password & 2FA",
+        "securityHintChecking": "Checking 2FA status...",
+        "securityHintEnabled": "2FA is enabled. Manage password and recovery codes",
+        "securityHintDisabled": "2FA is off. Set up protection now",
+        "resetPassword": "Reset Password",
+        "resetPasswordHint": "Update your current password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "updatePassword": "Update Password",
+        "passwordChanged": "Password changed successfully.",
+        "passwordChangeFailed": "Unable to change password right now. Please try again.",
         "language": "Language",
         "languageVi": "Tiếng Việt (VN)",
         "languageEn": "English (US)"
