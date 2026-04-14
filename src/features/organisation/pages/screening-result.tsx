@@ -114,6 +114,7 @@ export default function OrganisationScreeningResultPage() {
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
   const isViewOnly = Boolean(sessionData?.latestResult);
   const canDownloadPdf = Boolean(screeningId && sessionData?.latestResult);
+  const canShareResult = Boolean(screeningId && sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
@@ -703,7 +704,12 @@ export default function OrganisationScreeningResultPage() {
                   {/* Nút Chia sẻ — mở modal tổng hợp */}
                   <button
                     onClick={() => setShareModalOpen(true)}
-                    disabled={!screeningId}
+                    disabled={!canShareResult}
+                    title={
+                      canShareResult
+                        ? 'Chia sẻ kết quả'
+                        : 'Vui lòng lưu hồ sơ trước khi chia sẻ.'
+                    }
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
                     <Share2 className="w-4 h-4" />
@@ -735,7 +741,7 @@ export default function OrganisationScreeningResultPage() {
                       ? 'Đang tạo PDF…'
                       : canDownloadPdf
                         ? 'Tải PDF'
-                        : 'Lưu hồ sơ để in PDF'}
+                        : 'In PDF'}
                   </button>
 
                   {isViewOnly ? (
