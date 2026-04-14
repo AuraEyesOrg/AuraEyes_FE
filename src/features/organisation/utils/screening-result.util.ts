@@ -11,6 +11,7 @@ import type {
   AiFindingItem,
   AIStandardPrediction,
   AIStandardResponse,
+  BoxSource,
   DetectionBox,
   DetectionBoxLocation,
   DiseaseUrgency,
@@ -273,6 +274,10 @@ export function getDetectionStyle(type: DetectionBox['type']) {
   };
 }
 
+function resolveBoxSource(status?: string): BoxSource {
+  return status === 'manual' ? 'manual' : 'ai';
+}
+
 export function extractVisualArtifactsFromRaw(
   rawJsonOutput: string | undefined,
   imgWidth: number,
@@ -282,12 +287,16 @@ export function extractVisualArtifactsFromRaw(
   if (!rawJsonOutput) return { boxes: [] };
 
   try {
-    const parsed = JSON.parse(rawJsonOutput) as AIStandardResponse & {
+    const parsed = JSON.parse(rawJsonOutput) as Omit<
+      AIStandardResponse,
+      'anomalies'
+    > & {
       anomalies?: Array<{
         id?: string;
         name?: string;
         confidence?: number;
         status?: string;
+        source?: string;
         location?: DetectionBoxLocation;
       }>;
     };
@@ -335,16 +344,40 @@ export function extractVisualArtifactsFromRaw(
             confidence,
             type: toDetectionType(confidence, prediction.status),
             location,
-          } satisfies DetectionBox;
+            source: 'ai' as BoxSource,
+          } as DetectionBox;
         })
-        .filter((item): item is DetectionBox => Boolean(item));
+        .filter((item): item is DetectionBox => item !== null);
 
-      return { boxes, heatmapUrl };
+      // Append manual boxes stored in anomalies (from previous saves)
+      const manualAnomalies = (parsed.anomalies ?? []).filter(
+        (a) => a.source === 'manual' || a.status === 'manual'
+      );
+      const manualBoxes = manualAnomalies
+        .map((item, index): DetectionBox | null => {
+          if (!item.location || !item.name) return null;
+          const rawConf = Number(item.confidence ?? 0);
+          const confidence = clampConfidence(
+            rawConf > 1 ? rawConf : rawConf * 100
+          );
+          return {
+            id: item.id ?? `manual-restored-${index}`,
+            name: item.name,
+            localizedName: toDisplayDiseaseName(item.name, language),
+            confidence,
+            type: toDetectionType(confidence, item.status),
+            location: item.location,
+            source: 'manual' as BoxSource,
+          };
+        })
+        .filter((item): item is DetectionBox => item !== null);
+
+      return { boxes: [...boxes, ...manualBoxes], heatmapUrl };
     }
 
     if (Array.isArray(parsed.anomalies)) {
       const boxes = parsed.anomalies
-        .map((item, index) => {
+        .map((item, index): DetectionBox | null => {
           if (!item.location || !item.name) return null;
 
           const rawConfidence = Number(item.confidence ?? 0);
@@ -359,9 +392,10 @@ export function extractVisualArtifactsFromRaw(
             confidence,
             type: toDetectionType(confidence, item.status),
             location: item.location,
-          } satisfies DetectionBox;
+            source: resolveBoxSource(item.source ?? item.status),
+          };
         })
-        .filter((item): item is DetectionBox => Boolean(item));
+        .filter((item): item is DetectionBox => item !== null);
 
       return { boxes, heatmapUrl };
     }
@@ -403,6 +437,47 @@ export function extractTopKFromRaw(
   } catch {
     return [];
   }
+}
+
+let manualBoxCounter = 0;
+
+export function createManualBox(location: DetectionBoxLocation): DetectionBox {
+  manualBoxCounter += 1;
+  return {
+    id: `manual-${Date.now()}-${manualBoxCounter}`,
+    name: '',
+    localizedName: '',
+    confidence: 0,
+    type: 'info',
+    location,
+    source: 'manual',
+  };
+}
+
+export function mergeBoxesIntoRawJson(
+  existingRawJson: string | undefined,
+  boxes: DetectionBox[]
+): string {
+  let base: Record<string, unknown> = {};
+
+  if (existingRawJson) {
+    try {
+      base = JSON.parse(existingRawJson) as Record<string, unknown>;
+    } catch {
+      base = {};
+    }
+  }
+
+  base.anomalies = boxes.map((box) => ({
+    id: box.id,
+    name: box.name,
+    confidence: box.confidence > 1 ? box.confidence / 100 : box.confidence,
+    status: box.source === 'manual' ? 'manual' : undefined,
+    source: box.source,
+    location: box.location,
+  }));
+
+  return JSON.stringify(base);
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {

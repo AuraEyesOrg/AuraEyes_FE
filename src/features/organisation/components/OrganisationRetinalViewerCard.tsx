@@ -1,7 +1,19 @@
-import { Activity, Eye, Loader2, ScanEye } from 'lucide-react';
+import {
+  Activity,
+  Eye,
+  Loader2,
+  MousePointer2,
+  PenTool,
+  ScanEye,
+  Trash2,
+} from 'lucide-react';
 import type { RefObject } from 'react';
 import { getDetectionStyle } from '@/features/organisation/utils/screening-result.util';
+import { RetinalAnnotationLayer } from './RetinalAnnotationLayer';
 import type {
+  AnnotationMode,
+  BoxCreatePayload,
+  BoxUpdatePayload,
   DetectionBox,
   ImageLayout,
   OrgScreeningImage,
@@ -23,6 +35,16 @@ interface OrganisationRetinalViewerCardProps {
   onToggleHeatmap: () => void;
   onImageLoad: () => void;
   onSelectImage: (index: number) => void;
+  // Annotation props (optional for backward compat)
+  isEditable?: boolean;
+  annotationMode?: AnnotationMode;
+  selectedBoxId?: string | null;
+  onAnnotationModeChange?: (mode: AnnotationMode) => void;
+  onBoxCreate?: (payload: BoxCreatePayload) => void;
+  onBoxUpdate?: (payload: BoxUpdatePayload) => void;
+  onBoxDelete?: (id: string) => void;
+  onBoxSelect?: (id: string | null) => void;
+  onBoxDoubleClick?: (id: string) => void;
 }
 
 function OrganisationScanAnimationOverlay() {
@@ -139,7 +161,22 @@ export function OrganisationRetinalViewerCard({
   onToggleHeatmap,
   onImageLoad,
   onSelectImage,
+  isEditable = false,
+  annotationMode = 'select',
+  selectedBoxId = null,
+  onAnnotationModeChange,
+  onBoxCreate,
+  onBoxUpdate,
+  onBoxDelete,
+  onBoxSelect,
+  onBoxDoubleClick,
 }: OrganisationRetinalViewerCardProps) {
+  const useAnnotationLayer =
+    isEditable && onBoxCreate && onBoxUpdate && onBoxDelete && onBoxSelect;
+
+  const manualCount = detectedBoxes.filter((b) => b.source === 'manual').length;
+  const aiCount = detectedBoxes.filter((b) => b.source === 'ai').length;
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl overflow-hidden bg-(--bg-secondary) border border-(--border-primary)">
@@ -151,10 +188,67 @@ export function OrganisationRetinalViewerCard({
             <p className="text-xs text-(--text-tertiary)">
               {selectedImage?.eyeSide ?? 'Unknown eye'} · Image{' '}
               {Math.min(selectedImageIndex + 1, images.length)}/{images.length}
+              {detectedBoxes.length > 0 && (
+                <span className="ml-2">
+                  · {detectedBoxes.length} box
+                  {detectedBoxes.length !== 1 ? 'es' : ''}
+                  {manualCount > 0 && (
+                    <span className="text-indigo-500 dark:text-indigo-400">
+                      {' '}
+                      ({manualCount} manual)
+                    </span>
+                  )}
+                </span>
+              )}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Annotation mode toggles */}
+            {useAnnotationLayer && (
+              <div className="flex items-center gap-0.5 rounded-full border border-(--border-primary) bg-(--bg-primary) p-0.5">
+                <button
+                  type="button"
+                  onClick={() => onAnnotationModeChange?.('select')}
+                  title="Select & edit boxes"
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    annotationMode === 'select'
+                      ? 'bg-(--bg-secondary) text-primary shadow-sm'
+                      : 'text-(--text-tertiary) hover:text-(--text-primary)'
+                  }`}
+                >
+                  <MousePointer2 className="w-3.5 h-3.5" />
+                  Select
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAnnotationModeChange?.('draw')}
+                  title="Draw new detection box"
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    annotationMode === 'draw'
+                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                      : 'text-(--text-tertiary) hover:text-(--text-primary)'
+                  }`}
+                >
+                  <PenTool className="w-3.5 h-3.5" />
+                  Draw
+                </button>
+              </div>
+            )}
+
+            {/* Delete selected box */}
+            {useAnnotationLayer && selectedBoxId && (
+              <button
+                type="button"
+                onClick={() => onBoxDelete(selectedBoxId)}
+                className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 transition"
+                title="Delete selected box"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            )}
+
             {detectedBoxes.length > 0 && (
               <button
                 type="button"
@@ -228,42 +322,64 @@ export function OrganisationRetinalViewerCard({
                 />
               )}
 
-              {showHighlights && detectedBoxes.length > 0 && imageLayout && (
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: imageLayout.offsetX,
-                    top: imageLayout.offsetY,
-                    width: imageLayout.width,
-                    height: imageLayout.height,
-                  }}
-                >
-                  {detectedBoxes.map((box) => {
-                    const style = getDetectionStyle(box.type);
-
-                    return (
-                      <div
-                        key={box.id}
-                        className="absolute"
-                        style={{
-                          top: `${box.location.y}%`,
-                          left: `${box.location.x}%`,
-                          width: `${box.location.width}%`,
-                          height: `${box.location.height}%`,
-                        }}
-                      >
-                        <div
-                          className="absolute inset-0 rounded-md border-2"
-                          style={{
-                            borderColor: style.borderColor,
-                            backgroundColor: style.backgroundColor,
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+              {/* Interactive annotation layer (edit mode) */}
+              {showHighlights && useAnnotationLayer && imageLayout && (
+                <RetinalAnnotationLayer
+                  boxes={detectedBoxes}
+                  imageLayout={imageLayout}
+                  mode={annotationMode}
+                  isEditable={isEditable}
+                  selectedBoxId={selectedBoxId}
+                  onBoxCreate={onBoxCreate}
+                  onBoxUpdate={onBoxUpdate}
+                  onBoxDelete={onBoxDelete}
+                  onBoxSelect={onBoxSelect}
+                  onBoxDoubleClick={onBoxDoubleClick}
+                />
               )}
+
+              {/* Static box overlay (view-only / non-editable fallback) */}
+              {showHighlights &&
+                !useAnnotationLayer &&
+                detectedBoxes.length > 0 &&
+                imageLayout && (
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: imageLayout.offsetX,
+                      top: imageLayout.offsetY,
+                      width: imageLayout.width,
+                      height: imageLayout.height,
+                    }}
+                  >
+                    {detectedBoxes.map((box) => {
+                      const style = getDetectionStyle(box.type);
+
+                      return (
+                        <div
+                          key={box.id}
+                          className="absolute"
+                          style={{
+                            top: `${box.location.y}%`,
+                            left: `${box.location.x}%`,
+                            width: `${box.location.width}%`,
+                            height: `${box.location.height}%`,
+                          }}
+                        >
+                          <div
+                            className="absolute inset-0 rounded-md border-2"
+                            style={{
+                              borderColor: style.borderColor,
+                              backgroundColor: style.backgroundColor,
+                              borderStyle:
+                                box.source === 'manual' ? 'dashed' : 'solid',
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
               {analyzing && <OrganisationScanAnimationOverlay />}
             </>

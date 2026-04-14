@@ -103,6 +103,8 @@ export interface DetectionBoxLocation {
   height: number;
 }
 
+export type BoxSource = 'ai' | 'manual';
+
 export interface DetectionBox {
   id: string;
   name: string;
@@ -110,6 +112,7 @@ export interface DetectionBox {
   confidence: number;
   type: 'warning' | 'priority_high' | 'info';
   location: DetectionBoxLocation;
+  source: BoxSource;
 }
 
 export interface ImageLayout {
@@ -140,3 +143,25 @@ export type DiseaseUrgency =
   | 'caution'
   | 'info'
   | 'normal';
+
+export type AnnotationMode = 'select' | 'draw';
+
+export interface BoxCreatePayload {
+  location: DetectionBoxLocation;
+}
+
+export interface BoxUpdatePayload {
+  id: string;
+  location?: DetectionBoxLocation;
+  name?: string;
+  localizedName?: string;
+  confidence?: number;
+  type?: DetectionBox['type'];
+}
+
+export interface DiseaseOption {
+  code: string;
+  name: string;
+  localizedName: string;
+  urgency: DiseaseUrgency;
+}

@@ -32,9 +32,13 @@ import i18n from '@/i18n/i18n';
 import { postsApi } from '@/features/professional-network/api/network.api';
 import { resolveAuthorType } from '@/features/professional-network/utils/authorType';
 import useAuthStore from '@/store/auth-store';
+import { BoxLabelSelector } from '../components/BoxLabelSelector';
 import type {
   AiFindingItem,
   AIStandardResponse,
+  AnnotationMode,
+  BoxCreatePayload,
+  BoxUpdatePayload,
   DetectionBox,
   ImageLayout,
   OrgScreeningSessionDetail,
@@ -46,10 +50,12 @@ import {
   buildSummary,
   clampConfidence,
   composeFindingsWithNote,
+  createManualBox,
   extractTopKFromRaw,
   extractVisualArtifactsFromRaw,
   getErrorMessage,
   mapAiFindings,
+  mergeBoxesIntoRawJson,
   normalizeRiskLevel,
   riskConfig,
   splitFindingsAndNote,
@@ -106,6 +112,14 @@ export default function OrganisationScreeningResultPage() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapUrl, setHeatmapUrl] = useState<string | undefined>();
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
+
+  // ─── Annotation editing states ──────────────────────────────────────────
+  const [annotationMode, setAnnotationMode] =
+    useState<AnnotationMode>('select');
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+  const [labelSelectorBoxId, setLabelSelectorBoxId] = useState<string | null>(
+    null
+  );
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -293,6 +307,53 @@ export default function OrganisationScreeningResultPage() {
     setConsultationNote(value);
     setSaved(false);
   };
+
+  // ─── Box annotation CRUD ────────────────────────────────────────────────
+  const handleBoxCreate = useCallback(
+    (payload: BoxCreatePayload) => {
+      if (isViewOnly) return;
+      const newBox = createManualBox(payload.location);
+      setDetectedBoxes((prev) => [...prev, newBox]);
+      setSelectedBoxId(newBox.id);
+      setLabelSelectorBoxId(newBox.id);
+      setAnnotationMode('select');
+      setSaved(false);
+    },
+    [isViewOnly]
+  );
+
+  const handleBoxUpdate = useCallback(
+    (payload: BoxUpdatePayload) => {
+      if (isViewOnly) return;
+      setDetectedBoxes((prev) =>
+        prev.map((box) =>
+          box.id === payload.id ? { ...box, ...payload } : box
+        )
+      );
+      setSaved(false);
+    },
+    [isViewOnly]
+  );
+
+  const handleBoxDelete = useCallback(
+    (id: string) => {
+      if (isViewOnly) return;
+      setDetectedBoxes((prev) => prev.filter((box) => box.id !== id));
+      if (selectedBoxId === id) setSelectedBoxId(null);
+      if (labelSelectorBoxId === id) setLabelSelectorBoxId(null);
+      setSaved(false);
+    },
+    [isViewOnly, selectedBoxId, labelSelectorBoxId]
+  );
+
+  const handleBoxSelect = useCallback((id: string | null) => {
+    setSelectedBoxId(id);
+    if (!id) setLabelSelectorBoxId(null);
+  }, []);
+
+  const selectedBoxForLabel = labelSelectorBoxId
+    ? (detectedBoxes.find((b) => b.id === labelSelectorBoxId) ?? null)
+    : null;
 
   // ─── AI Analyze ───────────────────────────────────────────────────────────
   const handleAnalyze = useCallback(async () => {
@@ -586,11 +647,13 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
+    const finalJsonOutput = mergeBoxesIntoRawJson(jsonOutput, detectedBoxes);
+
     setSaveConfirmOpen(false);
     setSaving(true);
     try {
       await orgScreeningApi.saveResults(screeningId, {
-        rawJsonOutput: jsonOutput,
+        rawJsonOutput: finalJsonOutput,
         riskLevel: draft.riskLevel,
         confidenceScore: clampConfidence(draft.confidenceScore),
         summary: draft.summary,
@@ -808,23 +871,55 @@ export default function OrganisationScreeningResultPage() {
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,1fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
               {/* Left column */}
               <div className="space-y-4">
-                <OrganisationRetinalViewerCard
-                  selectedImage={selectedImage}
-                  selectedImageIndex={selectedImageIndex}
-                  images={sessionData.images}
-                  analyzing={analyzing}
-                  detectedBoxes={detectedBoxes}
-                  showHighlights={showHighlights}
-                  showHeatmap={showHeatmap}
-                  heatmapUrl={heatmapUrl}
-                  imageLayout={imageLayout}
-                  imageContainerRef={imageContainerRef}
-                  imageRef={imageRef}
-                  onToggleHighlights={() => setShowHighlights((c) => !c)}
-                  onToggleHeatmap={() => setShowHeatmap((c) => !c)}
-                  onImageLoad={updateImageLayout}
-                  onSelectImage={setSelectedImageIndex}
-                />
+                <div className="relative">
+                  <OrganisationRetinalViewerCard
+                    selectedImage={selectedImage}
+                    selectedImageIndex={selectedImageIndex}
+                    images={sessionData.images}
+                    analyzing={analyzing}
+                    detectedBoxes={detectedBoxes}
+                    showHighlights={showHighlights}
+                    showHeatmap={showHeatmap}
+                    heatmapUrl={heatmapUrl}
+                    imageLayout={imageLayout}
+                    imageContainerRef={imageContainerRef}
+                    imageRef={imageRef}
+                    onToggleHighlights={() => setShowHighlights((c) => !c)}
+                    onToggleHeatmap={() => setShowHeatmap((c) => !c)}
+                    onImageLoad={updateImageLayout}
+                    onSelectImage={setSelectedImageIndex}
+                    isEditable={!isViewOnly}
+                    annotationMode={annotationMode}
+                    selectedBoxId={selectedBoxId}
+                    onAnnotationModeChange={setAnnotationMode}
+                    onBoxCreate={handleBoxCreate}
+                    onBoxUpdate={handleBoxUpdate}
+                    onBoxDelete={handleBoxDelete}
+                    onBoxSelect={handleBoxSelect}
+                    onBoxDoubleClick={(id) => setLabelSelectorBoxId(id)}
+                  />
+
+                  {/* Box label selector popover */}
+                  {selectedBoxForLabel && !isViewOnly && (
+                    <div className="absolute top-16 right-4 z-40">
+                      <BoxLabelSelector
+                        box={selectedBoxForLabel}
+                        language={currentLanguage}
+                        onUpdate={(patch) => {
+                          handleBoxUpdate({
+                            id: selectedBoxForLabel.id,
+                            ...patch,
+                          });
+                          setLabelSelectorBoxId(null);
+                        }}
+                        onDelete={() => {
+                          handleBoxDelete(selectedBoxForLabel.id);
+                        }}
+                        onClose={() => setLabelSelectorBoxId(null)}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
