@@ -539,11 +539,6 @@ export default function CalendarPage() {
                   {formatDate(selectedDate, 'long')}
                 </h2>
                 <div className="flex items-center gap-2">
-                  {isFetching && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300">
-                      <Spinner /> Updating…
-                    </span>
-                  )}
                   <span className="text-xs text-(--text-muted)">
                     {appointments.length} records
                   </span>
