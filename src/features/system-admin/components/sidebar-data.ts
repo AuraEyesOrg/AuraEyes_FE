@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import {
   BarChart3,
   Building2,
+  CalendarX,
   ClipboardCheck,
   FileCheck,
   FileText,
@@ -55,6 +56,12 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Ophthalmologists',
         path: '/system-admin/ophthalmologists',
         icon: Stethoscope,
+      },
+      {
+        id: 'leave-requests',
+        label: 'Leave Requests',
+        path: '/system-admin/leave-requests',
+        icon: CalendarX,
       },
       {
         id: 'patients',

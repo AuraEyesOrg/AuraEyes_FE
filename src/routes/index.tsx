@@ -184,6 +184,9 @@ const OphthalmologistContractPage = lazy(
 const OphthalmologistWalletPage = lazy(
   () => import('@/features/ophthalmologist/pages/wallet')
 );
+const OphthalmologistLeaveRequestsPage = lazy(
+  () => import('@/features/ophthalmologist/pages/leave-requests')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -206,6 +209,9 @@ const SystemAdminVerificationRequests = lazy(
 );
 const SystemAdminWithdrawalRequests = lazy(
   () => import('@/features/system-admin/pages/withdrawal-requests')
+);
+const SystemAdminLeaveRequests = lazy(
+  () => import('@/features/system-admin/pages/leave-requests')
 );
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
@@ -571,6 +577,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/ophthalmologist/leave-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistLeaveRequestsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/patient/dashboard"
@@ -901,6 +916,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['SystemAdmin', 'Admin']}
               element={<SystemAdminCashflow />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/leave-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminLeaveRequests />}
             />
           }
         />
@@ -1351,6 +1375,14 @@ const Router = () => (
             </PrivateRoute>
           }
         />
+        <Route
+          path="/ophthalmologist/leave-requests"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistLeaveRequestsPage />
+            </PrivateRoute>
+          }
+        />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
         <Route
@@ -1406,6 +1438,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminWithdrawalRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/leave-requests"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminLeaveRequests />
             </PrivateRoute>
           }
         />

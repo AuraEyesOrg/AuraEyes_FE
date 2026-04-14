@@ -7,6 +7,7 @@ import {
   Wallet,
   Calendar,
   CalendarClock,
+  CalendarX,
   LogOut,
   Settings,
   MessagesSquare,
@@ -55,6 +56,11 @@ const navItems = [
     labelKey: 'Ophthalmologist.sidebar.schedules',
     icon: CalendarClock,
     path: '/ophthalmologist/schedules',
+  },
+  {
+    labelKey: 'Ophthalmologist.sidebar.leaveRequests',
+    icon: CalendarX,
+    path: '/ophthalmologist/leave-requests',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.consultations',
