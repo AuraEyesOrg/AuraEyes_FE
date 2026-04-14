@@ -267,10 +267,41 @@ declare module 'i18next' {
         screenings: string;
         appointments: string;
         schedules: string;
+        leaveRequests: string;
         consultations: string;
         contract: string;
         settings: string;
         wallet: string;
+      };
+      leaveRequests: {
+        pageTitle: string;
+        submitTitle: string;
+        submitDescription: string;
+        startDate: string;
+        endDate: string;
+        reason: string;
+        reasonPlaceholder: string;
+        submitAction: string;
+        historyTitle: string;
+        empty: string;
+        submittedAt: string;
+        adminNote: string;
+        cancelAction: string;
+        status: {
+          all: string;
+          pending: string;
+          approved: string;
+          rejected: string;
+          cancelled: string;
+        };
+        toast: {
+          createSuccess: string;
+          createFailed: string;
+          cancelSuccess: string;
+          cancelFailed: string;
+          missingFields: string;
+          invalidDateRange: string;
+        };
       };
       dashboard: {
         greeting: {
@@ -606,6 +637,13 @@ declare module 'i18next' {
         generate: string;
         generating: string;
         blockReason: string;
+        fullTimeNotice: string;
+        partTimeNotice: string;
+        subtitleFullTime: string;
+        subtitlePartTime: string;
+        fullTimeManualCreateBlocked: string;
+        fullTimeManualGenerateBlocked: string;
+        fullTimeDeleteTemplateBlocked: string;
         confirmDeleteTemplate: string;
         confirmDeleteTemplateMessage: string;
         confirmDeleteTemplateAction: string;

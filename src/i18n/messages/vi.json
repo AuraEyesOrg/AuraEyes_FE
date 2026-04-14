@@ -264,10 +264,41 @@
       "screenings": "Sàng lọc",
       "appointments": "Lịch hẹn",
       "schedules": "Lịch làm việc",
+      "leaveRequests": "Nghỉ phép",
       "consultations": "Tư vấn",
       "contract": "Hợp đồng",
       "settings": "Cài đặt",
       "wallet": "Ví"
+    },
+    "leaveRequests": {
+      "pageTitle": "Đơn nghỉ phép",
+      "submitTitle": "Tạo đơn nghỉ phép mới",
+      "submitDescription": "Đơn nghỉ phép cần gửi trước ít nhất 3 ngày và sẽ được hệ thống quản trị duyệt.",
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "reason": "Lý do",
+      "reasonPlaceholder": "Mô tả lý do bạn cần xin nghỉ phép.",
+      "submitAction": "Gửi đơn",
+      "historyTitle": "Lịch sử đơn nghỉ phép",
+      "empty": "Không có đơn nghỉ phép theo bộ lọc hiện tại.",
+      "submittedAt": "Gửi lúc",
+      "adminNote": "Ghi chú admin",
+      "cancelAction": "Hủy đơn",
+      "status": {
+        "all": "Tất cả trạng thái",
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối",
+        "cancelled": "Đã hủy"
+      },
+      "toast": {
+        "createSuccess": "Đã gửi đơn nghỉ phép thành công.",
+        "createFailed": "Không thể gửi đơn nghỉ phép.",
+        "cancelSuccess": "Đã hủy đơn nghỉ phép thành công.",
+        "cancelFailed": "Không thể hủy đơn nghỉ phép.",
+        "missingFields": "Vui lòng nhập ngày bắt đầu, ngày kết thúc và lý do.",
+        "invalidDateRange": "Ngày kết thúc phải cùng hoặc sau ngày bắt đầu."
+      }
     },
     "dashboard": {
       "greeting": {
@@ -603,6 +634,13 @@
       "generate": "Sinh slot",
       "generating": "Đang sinh...",
       "blockReason": "Đã chặn bởi bác sĩ",
+      "fullTimeNotice": "Bạn là bác sĩ nhãn khoa toàn thời gian. Slot lịch hẹn được hệ thống tự động sinh. Bạn vẫn có thể chặn hoặc bỏ chặn slot khi cần.",
+      "partTimeNotice": "Bạn là bác sĩ nhãn khoa bán thời gian. Hãy dùng mẫu lịch để sinh slot và lưu ý hạn mức slot mỗi ngày.",
+      "subtitleFullTime": "Xem và kiểm soát các slot lịch hẹn do hệ thống tự động sinh",
+      "subtitlePartTime": "Quản lý mẫu lịch và tự sinh slot lịch hẹn",
+      "fullTimeManualCreateBlocked": "Bác sĩ toàn thời gian không thể tự tạo mẫu lịch.",
+      "fullTimeManualGenerateBlocked": "Bác sĩ toàn thời gian không thể tự sinh slot.",
+      "fullTimeDeleteTemplateBlocked": "Bác sĩ toàn thời gian không thể xóa mẫu do hệ thống quản lý.",
       "confirmDeleteTemplate": "Bạn có chắc muốn xóa mẫu này không?",
       "confirmDeleteTemplateMessage": "Hành động này không thể hoàn tác. Các lần sinh slot trong tương lai từ mẫu này sẽ không còn khả dụng.",
       "confirmDeleteTemplateAction": "Xóa mẫu",

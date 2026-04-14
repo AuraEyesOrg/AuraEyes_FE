@@ -264,10 +264,41 @@
       "screenings": "Screenings",
       "appointments": "Appointments",
       "schedules": "Schedules",
+      "leaveRequests": "Leave Requests",
       "consultations": "Consultations",
       "contract": "Contract",
       "settings": "Settings",
       "wallet": "Wallet"
+    },
+    "leaveRequests": {
+      "pageTitle": "Leave Requests",
+      "submitTitle": "Submit New Leave Request",
+      "submitDescription": "Leave requests must be submitted at least 3 days in advance and reviewed by system admin.",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe why you need this leave request.",
+      "submitAction": "Submit Request",
+      "historyTitle": "Request History",
+      "empty": "No leave requests found for the selected filter.",
+      "submittedAt": "Submitted at",
+      "adminNote": "Admin note",
+      "cancelAction": "Cancel request",
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "toast": {
+        "createSuccess": "Leave request submitted successfully.",
+        "createFailed": "Failed to submit leave request.",
+        "cancelSuccess": "Leave request cancelled successfully.",
+        "cancelFailed": "Failed to cancel leave request.",
+        "missingFields": "Please provide start date, end date, and reason.",
+        "invalidDateRange": "End date must be on or after start date."
+      }
     },
     "dashboard": {
       "greeting": {
@@ -603,6 +634,13 @@
       "generate": "Generate",
       "generating": "Generating...",
       "blockReason": "Blocked by doctor",
+      "fullTimeNotice": "You are a full-time ophthalmologist. Appointment slots are generated automatically by the system. You can still block or unblock your slots when needed.",
+      "partTimeNotice": "You are a part-time ophthalmologist. Use templates to generate slots, and keep your daily slot quota in mind.",
+      "subtitleFullTime": "View and control your system-generated appointment slots",
+      "subtitlePartTime": "Manage your schedule templates and generate appointment slots",
+      "fullTimeManualCreateBlocked": "Full-time ophthalmologists cannot manually create schedule templates.",
+      "fullTimeManualGenerateBlocked": "Full-time ophthalmologists cannot manually generate slots.",
+      "fullTimeDeleteTemplateBlocked": "Full-time ophthalmologists cannot delete system-managed templates.",
       "confirmDeleteTemplate": "Are you sure you want to delete this template?",
       "confirmDeleteTemplateMessage": "This action cannot be undone. Related future slot generation from this template will no longer be available.",
       "confirmDeleteTemplateAction": "Delete template",
