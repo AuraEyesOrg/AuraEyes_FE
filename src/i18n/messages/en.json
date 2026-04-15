@@ -34,8 +34,293 @@
     "findDoctor": "Find a Doctor",
     "learnMore": "Learn More",
     "language": "Language",
+    "toggleMenu": "Toggle menu",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode",
     "sidebar": {
       "auraNetwork": "Aura Network"
+    }
+  },
+  "GuestFooter": {
+    "platform": "Platform",
+    "services": "Services",
+    "reserved": "All rights reserved",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use",
+    "personalData": "Personal data",
+    "security": "Security policy",
+    "facebookAriaLabel": "Facebook"
+  },
+  "GuestLegal": {
+    "privacy": {
+      "header": {
+        "title": "Privacy Policy",
+        "subtitle": "Privacy Policy",
+        "lastUpdated": "Last updated: 13/03/2026"
+      },
+      "intro": {
+        "complianceLabel": "Compliance standards:",
+        "complianceDescription": "Applies data protection principles aligned with digital healthcare standards and applicable local regulations (including sensitive personal data protection requirements).",
+        "commitment": "AURA Eyes recognizes the importance and sensitivity of Protected Health Information (PHI). We are committed to implementing enterprise-grade security layers to protect your privacy."
+      },
+      "sections": {
+        "classification": {
+          "title": "Data Classification",
+          "description": "We only collect data that is necessary to deliver our services:",
+          "cards": {
+            "pii": {
+              "title": "Personal Identification Data (PII)",
+              "description": "Full name, email address, phone number, profile image, and account authentication information."
+            },
+            "phi": {
+              "title": "Sensitive Medical Data (PHI)",
+              "description": "Uploaded retinal images (DICOM/JPG/PNG), system analysis results (heatmaps, risk indicators), physician diagnostic notes, examination history, and electronic medical records (EMR) stored on the platform."
+            },
+            "professional": {
+              "title": "Professional Data",
+              "description": "(For doctors) Medical degrees, practice certificates, and digital service collaboration agreements."
+            },
+            "financial": {
+              "title": "Financial Data",
+              "description": "E-wallet transaction history and encrypted card/bank account information (for reconciliation and withdrawal)."
+            }
+          }
+        },
+        "usage": {
+          "title": "Purpose and Scope of Data Usage",
+          "items": {
+            "coreOperations": {
+              "title": "Core operations:",
+              "description": "Analyze retinal images using AI models to provide early clinical risk alerts."
+            },
+            "medicalCoordination": {
+              "title": "Medical coordination:",
+              "description": "Grant medical record access to specific doctors/organizations only with explicit patient consent or direct booking/request actions from the patient."
+            },
+            "aiTraining": {
+              "title": "AI model training (Machine Learning):",
+              "description": "AURA Eyes may use retinal imaging data to improve AI accuracy. Prerequisite: all data must undergo full de-identification/anonymization to remove any traceable patient identity details."
+            },
+            "communication": {
+              "title": "Communication & system operations:",
+              "description": "Handle payments, deliver system notifications (SMS/Email), and process security OTP flows."
+            }
+          }
+        },
+        "commitments": {
+          "title": "Storage, Sharing, and Security Commitments",
+          "items": {
+            "noCommercialization": {
+              "title": "No data commercialization",
+              "descriptionPrefix": "We strictly",
+              "highlight": "DO NOT",
+              "descriptionSuffix": "sell or lease users' personal or medical data to any third party for advertising purposes."
+            },
+            "storageStandards": {
+              "title": "Storage standards",
+              "description": "Data is stored on cloud infrastructure with encryption at rest and encryption in transit via SSL/TLS protocols."
+            },
+            "dataSubjectRights": {
+              "title": "Data subject rights",
+              "description": "Users may access/export, request correction, or permanently delete personal/medical data from AURA Eyes by contacting support."
+            }
+          }
+        }
+      }
+    },
+    "personalData": {
+      "header": {
+        "title": "Personal Data Processing Policy",
+        "subtitle": "Personal Data Policy",
+        "lastUpdated": "Last updated: 02/04/2026"
+      },
+      "intro": {
+        "referenceLabel": "Reference document:",
+        "referenceDescription": "Based on applicable personal data protection standards.",
+        "commitment": "This document defines user rights (Data Subjects) and AURA Eyes commitments as a Data Controller and Data Processor."
+      },
+      "sections": {
+        "rights": {
+          "title": "Data Subject Rights",
+          "description": "Users on AURA Eyes have full personal rights over their digital records, including:",
+          "items": {
+            "access": {
+              "title": "Right to access and portability:",
+              "description": "Users can view and download all identity data, transaction history, and personal medical images in machine-readable formats (e.g., JSON, PDF)."
+            },
+            "rectification": {
+              "title": "Right to rectification:",
+              "description": "Users may self-update or request corrections for inaccurate personal information through account management interfaces."
+            },
+            "erasure": {
+              "title": "Right to erasure / Right to be forgotten:",
+              "description": "Users can request permanent account deletion and removal of all associated personal/medical data from AURA Eyes systems."
+            },
+            "withdrawConsent": {
+              "title": "Right to withdraw consent:",
+              "description": "At any time, users can revoke doctor/clinic access to records or opt out of using anonymized image data for AI training."
+            }
+          }
+        },
+        "retention": {
+          "title": "Data Lifecycle and Retention (Data Retention)",
+          "cards": {
+            "active": {
+              "title": "Active Data",
+              "description": "Personal and medical data is maintained continuously while the user account remains active."
+            },
+            "deleted": {
+              "title": "Deleted/Removed Data",
+              "description": "Upon account deletion request, identity (PII) and sensitive medical (PHI) data are removed automatically: 30 days (primary DB), 90 days (backup)."
+            },
+            "legalFinancial": {
+              "title": "Legal & Financial Data",
+              "description": "Financial transaction records and terms consent evidence may be retained up to 5 years for auditing and dispute resolution."
+            }
+          }
+        },
+        "breach": {
+          "title": "Data Breach Response Process",
+          "description": "If unauthorized system access is detected with potential data leakage risk, AURA Eyes commits to:",
+          "items": {
+            "incidentResponse": "Immediately activate system containment procedures (Incident Response Plan).",
+            "notifyAffectedUsers": "Officially notify affected users via Email/SMS within 72 hours of confirmed incidents, including mitigation actions and account-protection guidance."
+          }
+        }
+      }
+    },
+    "security": {
+      "header": {
+        "title": "Security & Safety Standards",
+        "subtitle": "Security Policy",
+        "lastUpdated": "Last updated: 02/04/2026"
+      },
+      "intro": {
+        "title": "Security is a core priority in AURA Eyes software architecture.",
+        "description": "This document details the technical and organizational controls we apply to protect infrastructure, APIs, and user data against cyber threats."
+      },
+      "sections": {
+        "encryption": {
+          "title": "Data Encryption Standards",
+          "description": "All data transmitted through and stored within AURA Eyes is protected by enterprise-grade encryption standards:",
+          "cards": {
+            "dataAtRest": {
+              "title": "Data at Rest Encryption",
+              "description": "Core databases (including relational user data and AI document vector stores) and file storage systems (retinal images, DICOM files) are encrypted using AES-256."
+            },
+            "dataInTransit": {
+              "title": "Data in Transit Encryption",
+              "description": "All user-to-server and service-to-service communication is enforced over HTTPS with TLS 1.2 or TLS 1.3."
+            }
+          }
+        },
+        "accessControl": {
+          "title": "Identity and Access Management (IAM & Access Control)",
+          "items": {
+            "rbac": {
+              "title": "Role-based access control (RBAC)",
+              "description": "The system enforces least-privilege access. Doctors and clinic staff are granted read/write permissions only for patients they are assigned to."
+            },
+            "mfa": {
+              "title": "Multi-factor authentication (MFA / 2FA)",
+              "description": "OTP verification (Email/SMS) is required for sensitive actions such as e-wallet withdrawals, identity updates, and bulk medical data exports."
+            },
+            "sessionManagement": {
+              "title": "Session management security",
+              "description": "Uses short-lived JWTs with token revocation controls to reduce session hijacking risks."
+            }
+          }
+        },
+        "infrastructure": {
+          "title": "Cloud & Infrastructure Security",
+          "items": {
+            "certifications": {
+              "label": "Security certifications:",
+              "description": "The platform is deployed on internationally certified cloud infrastructure with both physical and logical security controls."
+            },
+            "waf": {
+              "label": "Web Application Firewall (WAF):",
+              "description": "Integrated WAF protection mitigates common attacks such as SQL Injection, XSS, and distributed denial-of-service (DDoS)."
+            },
+            "isolation": {
+              "label": "Data isolation:",
+              "description": "Database architecture is isolated inside private VPC networks with no direct exposure to the public internet."
+            }
+          }
+        },
+        "monitoring": {
+          "title": "Monitoring, Logging, and Auditing",
+          "items": {
+            "auditLogs": {
+              "title": "Audit logs",
+              "description": "All CRUD activity on sensitive medical data (PHI) is captured in immutable logs including timestamps, source IP, and actor identity."
+            },
+            "continuousMonitoring": {
+              "title": "24/7 monitoring",
+              "description": "Continuous monitoring helps detect anomalous traffic early and automatically alerts platform security engineers for rapid incident response."
+            }
+          }
+        }
+      }
+    },
+    "terms": {
+      "header": {
+        "title": "Terms of Service",
+        "subtitle": "Terms of Service",
+        "lastUpdated": "Last updated: 13/03/2026",
+        "version": "Version: 1.0"
+      },
+      "intro": {
+        "welcome": "Welcome to AURA Eyes Retinal Vascular Health Screening System (\"System\", \"We\", or \"AURA Eyes\").",
+        "description": "By creating an account, accessing, and using our platform, users (including patients, doctors, and healthcare organizations) agree to comply with all terms below."
+      },
+      "sections": {
+        "serviceNature": {
+          "title": "Nature of Service and Medical Liability Disclaimer",
+          "description": "AURA Eyes is a Software-as-a-Service (SaaS) platform that provides Clinical Decision Support (CDS) tools. Our AI performs preliminary risk stratification based on fundus images (including standard formats such as JPG, PNG, DICOM).",
+          "disclaimer": {
+            "title": "Important advisory",
+            "descriptionPrefix": "All reports, heatmaps, risk pathways, or scores generated by AURA Eyes AI",
+            "highlight": "DO NOT constitute official medical diagnosis",
+            "descriptionSuffix": "and do not replace treatment decisions or professional physician judgment. We disclaim legal liability for medical decisions made solely from AI output without confirmation by a qualified ophthalmologist."
+          }
+        },
+        "userResponsibilities": {
+          "title": "User Responsibilities",
+          "cards": {
+            "patient": {
+              "title": "For Patients / Individuals",
+              "description": "Commit to providing truthful identity and medical image data. Users are fully responsible for safeguarding personal accounts, credentials, and OTP codes."
+            },
+            "medicalProfessional": {
+              "title": "For Medical Professionals",
+              "description": "Commit and take legal responsibility for valid credentials. When joining the Expert Network, doctors must strictly follow anonymization principles for all patient information."
+            }
+          }
+        },
+        "payment": {
+          "title": "Transactions, Payments, and E-Wallet",
+          "items": {
+            "paymentGateway": {
+              "title": "Payment gateway:",
+              "description": "Financial transactions (top-up, AI screening fees, specialist consultation fees, withdrawal requests) are processed through integrated e-wallet systems and licensed payment partners (e.g., PayOS)."
+            },
+            "financialTransparency": {
+              "title": "Financial transparency:",
+              "description": "Service pricing is publicly listed before transaction initiation. Funds deposited into the e-wallet can be used for all internal AURA Eyes services."
+            },
+            "withdrawalPolicy": {
+              "title": "Withdrawal policy:",
+              "description": "For medical professionals, e-wallet withdrawal requests to linked bank accounts are reconciled and processed within 03 - 05 business days under AURA Eyes financial operations policies."
+            }
+          }
+        },
+        "intellectualProperty": {
+          "title": "Intellectual Property",
+          "description": "All source code, AI algorithms, UI designs, logos, and technical documents are exclusively owned by AURA Eyes.",
+          "notice": "Any copying, reverse engineering, or unauthorized commercial usage is strictly prohibited."
+        }
+      }
     }
   },
   "Auth": {
@@ -1004,7 +1289,35 @@
   },
   "About": {
     "heroTitle": "Shaping the future of retinal screening",
-    "heroDescription": "Aura Eyes combines clinical expertise and responsible medical AI to improve early diagnosis access."
+    "heroDescription": "Aura Eyes combines clinical expertise and responsible medical AI to improve early diagnosis access.",
+    "values": {
+      "badge": "Our Values",
+      "title": "Built on Principles That Matter",
+      "description": "Every decision we make is guided by our commitment to health equity, privacy, and scientific integrity.",
+      "cards": {
+        "healthEquity": {
+          "title": "Health Equity",
+          "description": "Making advanced retinal screening accessible to underserved communities worldwide."
+        },
+        "privacyFirst": {
+          "title": "Privacy First",
+          "description": "Your health data is encrypted, anonymized, and never sold to third parties."
+        },
+        "openSource": {
+          "title": "Open Source",
+          "description": "Our core algorithms are open for peer review, ensuring transparency and trust."
+        },
+        "collaboration": {
+          "title": "Collaboration",
+          "description": "Partnering with researchers and clinicians globally to advance retinal health."
+        }
+      }
+    },
+    "cta": {
+      "title": "Join Our Mission",
+      "description": "Whether you're a healthcare provider, researcher, or advocate, there's a place for you in the AURA community.",
+      "primary": "Partner With Us"
+    }
   },
   "HowItWorks": {
     "hero": {
@@ -1012,8 +1325,8 @@
       "titlePrefix": "Demystifying the",
       "titleSuffix": "Screening Process",
       "description": "Our platform leverages advanced computer vision to analyze retinal images for early signs of vascular abnormalities. A non-invasive, secure, and instant check-up for your systemic health.",
-      "primaryCta": "Watch Demo Video",
-      "secondaryCta": "View Technical Docs"
+      "processingStatus": "Processing Status",
+      "analyzing": "Analyzing"
     },
     "process": {
       "badge": "The Journey",
@@ -1089,8 +1402,7 @@
       "titlePrefix": "Partner with",
       "titleSuffix": "to Improve Vision Health Worldwide",
       "description": "Whether you're a hospital or a clinic network, AURA provides the tools and support to bring advanced retinal screening to your patients.",
-      "primaryCta": "Apply for Partnership",
-      "secondaryCta": "Schedule a Demo"
+      "primaryCta": "Apply for Partnership"
     },
     "partnerCard": {
       "title": "Medical Organization (Hospitals/Clinics)",
@@ -1108,7 +1420,8 @@
       "emailSupport": "Email Support",
       "responseTime": "Response Time",
       "responseTimeValue": "Within 24-48 business hours",
-      "headquarters": "Headquarters"
+      "headquarters": "Headquarters",
+      "headquartersValue": "FPT University, HCM, VN"
     },
     "form": {
       "title": "Partner with AURA",
@@ -1119,6 +1432,7 @@
       "workEmail": "Work Email",
       "workEmailPlaceholder": "contact@organization.com",
       "phone": "Phone Number",
+      "phonePlaceholder": "+84 ...",
       "organizationDetails": "Organization Details",
       "organizationName": "Organization Name",
       "organizationType": "Organization Type",
@@ -1384,8 +1698,7 @@
     "cta": {
       "title": "Partner with AURA",
       "description": "Join our network of ethical AI practitioners with full documentation and API access.",
-      "primary": "Request Developer Access",
-      "secondary": "Contact Ethics Board"
+      "primary": "Request Developer Access"
     }
   },
   "Compliance": {

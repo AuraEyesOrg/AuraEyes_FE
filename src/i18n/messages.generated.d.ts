@@ -37,8 +37,293 @@ declare module 'i18next' {
       findDoctor: string;
       learnMore: string;
       language: string;
+      toggleMenu: string;
+      switchToDark: string;
+      switchToLight: string;
       sidebar: {
         auraNetwork: string;
+      };
+    };
+    GuestFooter: {
+      platform: string;
+      services: string;
+      reserved: string;
+      privacy: string;
+      terms: string;
+      personalData: string;
+      security: string;
+      facebookAriaLabel: string;
+    };
+    GuestLegal: {
+      privacy: {
+        header: {
+          title: string;
+          subtitle: string;
+          lastUpdated: string;
+        };
+        intro: {
+          complianceLabel: string;
+          complianceDescription: string;
+          commitment: string;
+        };
+        sections: {
+          classification: {
+            title: string;
+            description: string;
+            cards: {
+              pii: {
+                title: string;
+                description: string;
+              };
+              phi: {
+                title: string;
+                description: string;
+              };
+              professional: {
+                title: string;
+                description: string;
+              };
+              financial: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          usage: {
+            title: string;
+            items: {
+              coreOperations: {
+                title: string;
+                description: string;
+              };
+              medicalCoordination: {
+                title: string;
+                description: string;
+              };
+              aiTraining: {
+                title: string;
+                description: string;
+              };
+              communication: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          commitments: {
+            title: string;
+            items: {
+              noCommercialization: {
+                title: string;
+                descriptionPrefix: string;
+                highlight: string;
+                descriptionSuffix: string;
+              };
+              storageStandards: {
+                title: string;
+                description: string;
+              };
+              dataSubjectRights: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+        };
+      };
+      personalData: {
+        header: {
+          title: string;
+          subtitle: string;
+          lastUpdated: string;
+        };
+        intro: {
+          referenceLabel: string;
+          referenceDescription: string;
+          commitment: string;
+        };
+        sections: {
+          rights: {
+            title: string;
+            description: string;
+            items: {
+              access: {
+                title: string;
+                description: string;
+              };
+              rectification: {
+                title: string;
+                description: string;
+              };
+              erasure: {
+                title: string;
+                description: string;
+              };
+              withdrawConsent: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          retention: {
+            title: string;
+            cards: {
+              active: {
+                title: string;
+                description: string;
+              };
+              deleted: {
+                title: string;
+                description: string;
+              };
+              legalFinancial: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          breach: {
+            title: string;
+            description: string;
+            items: {
+              incidentResponse: string;
+              notifyAffectedUsers: string;
+            };
+          };
+        };
+      };
+      security: {
+        header: {
+          title: string;
+          subtitle: string;
+          lastUpdated: string;
+        };
+        intro: {
+          title: string;
+          description: string;
+        };
+        sections: {
+          encryption: {
+            title: string;
+            description: string;
+            cards: {
+              dataAtRest: {
+                title: string;
+                description: string;
+              };
+              dataInTransit: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          accessControl: {
+            title: string;
+            items: {
+              rbac: {
+                title: string;
+                description: string;
+              };
+              mfa: {
+                title: string;
+                description: string;
+              };
+              sessionManagement: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          infrastructure: {
+            title: string;
+            items: {
+              certifications: {
+                label: string;
+                description: string;
+              };
+              waf: {
+                label: string;
+                description: string;
+              };
+              isolation: {
+                label: string;
+                description: string;
+              };
+            };
+          };
+          monitoring: {
+            title: string;
+            items: {
+              auditLogs: {
+                title: string;
+                description: string;
+              };
+              continuousMonitoring: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+        };
+      };
+      terms: {
+        header: {
+          title: string;
+          subtitle: string;
+          lastUpdated: string;
+          version: string;
+        };
+        intro: {
+          welcome: string;
+          description: string;
+        };
+        sections: {
+          serviceNature: {
+            title: string;
+            description: string;
+            disclaimer: {
+              title: string;
+              descriptionPrefix: string;
+              highlight: string;
+              descriptionSuffix: string;
+            };
+          };
+          userResponsibilities: {
+            title: string;
+            cards: {
+              patient: {
+                title: string;
+                description: string;
+              };
+              medicalProfessional: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          payment: {
+            title: string;
+            items: {
+              paymentGateway: {
+                title: string;
+                description: string;
+              };
+              financialTransparency: {
+                title: string;
+                description: string;
+              };
+              withdrawalPolicy: {
+                title: string;
+                description: string;
+              };
+            };
+          };
+          intellectualProperty: {
+            title: string;
+            description: string;
+            notice: string;
+          };
+        };
       };
     };
     Auth: {
@@ -1008,6 +1293,34 @@ declare module 'i18next' {
     About: {
       heroTitle: string;
       heroDescription: string;
+      values: {
+        badge: string;
+        title: string;
+        description: string;
+        cards: {
+          healthEquity: {
+            title: string;
+            description: string;
+          };
+          privacyFirst: {
+            title: string;
+            description: string;
+          };
+          openSource: {
+            title: string;
+            description: string;
+          };
+          collaboration: {
+            title: string;
+            description: string;
+          };
+        };
+      };
+      cta: {
+        title: string;
+        description: string;
+        primary: string;
+      };
     };
     HowItWorks: {
       hero: {
@@ -1015,8 +1328,8 @@ declare module 'i18next' {
         titlePrefix: string;
         titleSuffix: string;
         description: string;
-        primaryCta: string;
-        secondaryCta: string;
+        processingStatus: string;
+        analyzing: string;
       };
       process: {
         badge: string;
@@ -1093,7 +1406,6 @@ declare module 'i18next' {
         titleSuffix: string;
         description: string;
         primaryCta: string;
-        secondaryCta: string;
       };
       partnerCard: {
         title: string;
@@ -1112,6 +1424,7 @@ declare module 'i18next' {
         responseTime: string;
         responseTimeValue: string;
         headquarters: string;
+        headquartersValue: string;
       };
       form: {
         title: string;
@@ -1122,6 +1435,7 @@ declare module 'i18next' {
         workEmail: string;
         workEmailPlaceholder: string;
         phone: string;
+        phonePlaceholder: string;
         organizationDetails: string;
         organizationName: string;
         organizationType: string;
@@ -1388,7 +1702,6 @@ declare module 'i18next' {
         title: string;
         description: string;
         primary: string;
-        secondary: string;
       };
     };
     Compliance: {

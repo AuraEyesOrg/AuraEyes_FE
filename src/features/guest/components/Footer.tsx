@@ -1,14 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Contact,
-  Facebook,
-  Linkedin,
-  Mail,
-  MapPin,
-  Phone,
-  Twitter,
-} from 'lucide-react';
+import { Contact, Facebook, Mail, MapPin, Phone } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import {
   DEFAULT_LOCALE,
@@ -20,27 +12,6 @@ export const Footer = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const isVietnamese = locale === 'vi';
-
-  const footerLabels = isVietnamese
-    ? {
-        platform: 'Khóa học',
-        services: 'Dịch vụ',
-        reserved: 'Tất cả quyền được bảo lưu',
-        privacy: 'Chính sách bảo mật',
-        terms: 'Điều khoản sử dụng',
-        personalData: 'Dữ liệu cá nhân',
-        security: 'Tiêu chuẩn bảo mật',
-      }
-    : {
-        platform: 'Platform',
-        services: 'Services',
-        reserved: 'All rights reserved',
-        privacy: 'Privacy policy',
-        terms: 'Terms of use',
-        personalData: 'Personal data',
-        security: 'Security policy',
-      };
 
   return (
     <footer className="border-t border-[#D8E0EA] bg-[#EEF2F7]">
@@ -60,31 +31,13 @@ export const Footer = () => {
             </p>
             <div className="mt-6 flex items-center gap-5">
               <a
-                aria-label="Facebook"
+                aria-label={t('GuestFooter.facebookAriaLabel')}
                 className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
                 href="https://www.facebook.com/profile.php?id=61582143393953"
                 rel="noreferrer"
                 target="_blank"
               >
                 <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                aria-label="Twitter"
-                className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
-                href="https://x.com"
-                rel="noreferrer"
-                target="_blank"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                aria-label="LinkedIn"
-                className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
-                href="https://www.linkedin.com"
-                rel="noreferrer"
-                target="_blank"
-              >
-                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -136,7 +89,7 @@ export const Footer = () => {
           {/* Services */}
           <div>
             <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C]">
-              {footerLabels.services}
+              {t('GuestFooter.services')}
             </h4>
             <ul className="space-y-2 text-sm leading-9 text-[#334E68]">
               <li>
@@ -169,7 +122,7 @@ export const Footer = () => {
           {/* Platform */}
           <div>
             <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C]">
-              {footerLabels.platform}
+              {t('GuestFooter.platform')}
             </h4>
             <ul className="space-y-2 text-sm leading-9 text-[#334E68]">
               <li>
@@ -204,32 +157,32 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="flex flex-col gap-4 border-t border-[#D8E0EA] pt-8 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-[#5E7290]">
-            2026 © AURA Health. {footerLabels.reserved}
+            2026 © AURA Health. {t('GuestFooter.reserved')}
           </p>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#5E7290]">
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
               to={withLocalePathname(locale, '/personal-data')}
             >
-              {footerLabels.personalData}
+              {t('GuestFooter.personalData')}
             </Link>
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
               to={withLocalePathname(locale, '/privacy')}
             >
-              {footerLabels.privacy}
+              {t('GuestFooter.privacy')}
             </Link>
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
               to={withLocalePathname(locale, '/security')}
             >
-              {footerLabels.security}
+              {t('GuestFooter.security')}
             </Link>
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
               to={withLocalePathname(locale, '/terms')}
             >
-              {footerLabels.terms}
+              {t('GuestFooter.terms')}
             </Link>
             <Link
               className="transition-colors hover:text-[#2B6CB0]"
@@ -237,13 +190,15 @@ export const Footer = () => {
             >
               {t('Navigation.about')}
             </Link>
-            <Link
+            <a
               className="inline-flex items-center gap-2 transition-colors hover:text-[#2B6CB0]"
-              to="https://status.auraeyes.site"
+              href="https://status.auraeyes.site"
+              target="_blank"
+              rel="noreferrer"
             >
               <span className="h-2.5 w-2.5 rounded-full bg-[#12B76A]" />
               {t('Navigation.status')}
-            </Link>
+            </a>
           </div>
         </div>
       </div>

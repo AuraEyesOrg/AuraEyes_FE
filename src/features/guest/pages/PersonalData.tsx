@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 const PersonalDataPage = () => {
+  const { t } = useSafeTranslation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -16,10 +19,10 @@ const PersonalDataPage = () => {
           {/* Header Area */}
           <div className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-              Quy định Xử lý Dữ liệu Cá nhân
+              {t('GuestLegal.personalData.header.title')}
             </h1>
             <p className="text-[var(--color-brand-primary)] font-medium tracking-widest uppercase">
-              Personal Data Policy
+              {t('GuestLegal.personalData.header.subtitle')}
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/20">
               <svg
@@ -35,7 +38,7 @@ const PersonalDataPage = () => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              Cập nhật lần cuối: 02/04/2026
+              {t('GuestLegal.personalData.header.lastUpdated')}
             </div>
           </div>
 
@@ -44,15 +47,13 @@ const PersonalDataPage = () => {
             <section className="bg-[var(--color-medical-bg)] p-6 rounded-2xl border border-[var(--color-medical-border)]">
               <p className="text-base text-[var(--color-text-muted)] leading-relaxed">
                 <strong className="text-[var(--color-brand-dark)]">
-                  Tài liệu tham chiếu:
+                  {t('GuestLegal.personalData.intro.referenceLabel')}
                 </strong>{' '}
-                Căn cứ theo các tiêu chuẩn bảo vệ dữ liệu cá nhân hiện hành.
+                {t('GuestLegal.personalData.intro.referenceDescription')}
               </p>
               <div className="my-4 w-12 h-1 bg-[var(--color-brand-primary)] rounded-full"></div>
               <p className="text-lg text-[var(--color-brand-dark)] font-medium leading-relaxed">
-                Tài liệu này quy định chi tiết về quyền hạn của người dùng (Chủ
-                thể dữ liệu) và các cam kết của AURA Eyes trong tư cách là đơn
-                vị Kiểm soát và Xử lý dữ liệu.
+                {t('GuestLegal.personalData.intro.commitment')}
               </p>
             </section>
 
@@ -61,52 +62,58 @@ const PersonalDataPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   1
                 </span>
-                Quyền của Chủ thể Dữ liệu
+                {t('GuestLegal.personalData.sections.rights.title')}
               </h2>
               <p className="text-[var(--color-text-muted)] leading-relaxed mb-6">
-                Người dùng trên nền tảng AURA Eyes có các quyền nhân thân tuyệt
-                đối đối với hồ sơ số của mình, bao gồm:
+                {t('GuestLegal.personalData.sections.rights.description')}
               </p>
               <div className="space-y-6">
                 <div className="pl-6 border-l-2 border-[var(--color-medical-border)]">
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Quyền truy cập và trích xuất (Right to Access &
-                    Portability):
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.access.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Người dùng có quyền xem, tải xuống toàn bộ dữ liệu định
-                    danh, lịch sử giao dịch và hồ sơ hình ảnh y tế cá nhân dưới
-                    định dạng máy tính có thể đọc được (ví dụ: JSON, PDF).
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.access.description'
+                    )}
                   </p>
                 </div>
                 <div className="pl-6 border-l-2 border-[var(--color-medical-border)]">
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Quyền chỉnh sửa (Right to Rectification):
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.rectification.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Người dùng có quyền tự cập nhật hoặc yêu cầu hệ thống đính
-                    chính các thông tin cá nhân sai lệch thông qua giao diện
-                    quản lý tài khoản.
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.rectification.description'
+                    )}
                   </p>
                 </div>
                 <div className="pl-6 border-l-2 border-[var(--color-medical-border)]">
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Quyền xóa bỏ (Right to Erasure / Right to be Forgotten):
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.erasure.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Người dùng có quyền yêu cầu xóa vĩnh viễn tài khoản và toàn
-                    bộ dữ liệu cá nhân/y tế liên quan khỏi hệ thống máy chủ tĩnh
-                    của AURA Eyes.
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.erasure.description'
+                    )}
                   </p>
                 </div>
                 <div className="pl-6 border-l-2 border-[var(--color-medical-border)]">
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Quyền rút lại sự đồng ý (Right to Withdraw Consent):
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.withdrawConsent.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Bất cứ lúc nào, người dùng có thể vô hiệu hóa quyền truy cập
-                    hồ sơ của Bác sĩ/Phòng khám hoặc từ chối việc sử dụng dữ
-                    liệu hình ảnh (dù đã ẩn danh) cho mục đích huấn luyện AI.
+                    {t(
+                      'GuestLegal.personalData.sections.rights.items.withdrawConsent.description'
+                    )}
                   </p>
                 </div>
               </div>
@@ -119,7 +126,7 @@ const PersonalDataPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   2
                 </span>
-                Vòng đời và Thời hạn Lưu trữ Dữ liệu (Data Retention)
+                {t('GuestLegal.personalData.sections.retention.title')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
@@ -139,12 +146,14 @@ const PersonalDataPage = () => {
                     </svg>
                   </div>
                   <h3 className="text-base font-bold text-[var(--color-brand-dark)] mb-2">
-                    Dữ liệu Hoạt động
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.active.title'
+                    )}
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Dữ liệu cá nhân và hồ sơ y tế được lưu trữ và duy trì liên
-                    tục trong suốt thời gian tài khoản của người dùng còn ở
-                    trạng thái kích hoạt (Active).
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.active.description'
+                    )}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
@@ -164,12 +173,14 @@ const PersonalDataPage = () => {
                     </svg>
                   </div>
                   <h3 className="text-base font-bold text-[var(--color-brand-dark)] mb-2">
-                    Dữ liệu Xóa/Hủy
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.deleted.title'
+                    )}
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Khi có yêu cầu xóa tài khoản, toàn bộ dữ liệu định danh
-                    (PII) và Dữ liệu y tế nhạy cảm (PHI) sẽ tự động xóa: 30 ngày
-                    (CSDL chính), 90 ngày (Backup).
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.deleted.description'
+                    )}
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
@@ -189,12 +200,14 @@ const PersonalDataPage = () => {
                     </svg>
                   </div>
                   <h3 className="text-base font-bold text-[var(--color-brand-dark)] mb-2">
-                    Dữ liệu Pháp lý & Tài chính
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.legalFinancial.title'
+                    )}
                   </h3>
                   <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                    Bản ghi về giao dịch tài chính và chứng nhận đồng ý điều
-                    khoản dịch vụ có thể lưu trữ tối đa 05 năm phục vụ kiểm toán
-                    và giải quyết tranh chấp.
+                    {t(
+                      'GuestLegal.personalData.sections.retention.cards.legalFinancial.description'
+                    )}
                   </p>
                 </div>
               </div>
@@ -207,11 +220,10 @@ const PersonalDataPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   3
                 </span>
-                Quy trình phản hồi sự cố Dữ liệu (Data Breach Notification)
+                {t('GuestLegal.personalData.sections.breach.title')}
               </h2>
               <p className="text-[var(--color-text-muted)] leading-relaxed mb-6">
-                Trong trường hợp phát hiện hệ thống bị xâm nhập trái phép có
-                nguy cơ gây rò rỉ dữ liệu, AURA Eyes cam kết:
+                {t('GuestLegal.personalData.sections.breach.description')}
               </p>
               <ul className="space-y-4 text-[var(--color-text-muted)] leading-relaxed">
                 <li className="flex items-start gap-3">
@@ -219,8 +231,9 @@ const PersonalDataPage = () => {
                     <div className="w-2 h-2 rounded-full bg-red-500"></div>
                   </div>
                   <span>
-                    Kích hoạt quy trình phong tỏa hệ thống ngay lập tức
-                    (Incident Response Plan).
+                    {t(
+                      'GuestLegal.personalData.sections.breach.items.incidentResponse'
+                    )}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -228,9 +241,9 @@ const PersonalDataPage = () => {
                     <div className="w-2 h-2 rounded-full bg-red-500"></div>
                   </div>
                   <span>
-                    Thông báo chính thức đến người dùng bị ảnh hưởng qua
-                    Email/SMS trong vòng 72 giờ kể từ khi xác nhận sự cố, kèm
-                    theo các biện pháp khắc phục và hướng dẫn bảo vệ tài khoản.
+                    {t(
+                      'GuestLegal.personalData.sections.breach.items.notifyAffectedUsers'
+                    )}
                   </span>
                 </li>
               </ul>

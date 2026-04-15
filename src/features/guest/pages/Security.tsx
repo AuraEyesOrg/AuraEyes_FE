@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 const SecurityPage = () => {
+  const { t } = useSafeTranslation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -16,10 +19,10 @@ const SecurityPage = () => {
           {/* Header Area */}
           <div className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-              Tiêu chuẩn An toàn & Bảo mật
+              {t('GuestLegal.security.header.title')}
             </h1>
             <p className="text-[var(--color-brand-primary)] font-medium tracking-widest uppercase">
-              Security Policy
+              {t('GuestLegal.security.header.subtitle')}
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/20">
               <svg
@@ -35,7 +38,7 @@ const SecurityPage = () => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              Cập nhật lần cuối: 02/04/2026
+              {t('GuestLegal.security.header.lastUpdated')}
             </div>
           </div>
 
@@ -58,13 +61,10 @@ const SecurityPage = () => {
                 </svg>
               </div>
               <p className="text-lg text-[var(--color-brand-dark)] font-medium leading-relaxed">
-                Bảo mật là ưu tiên cốt lõi trong thiết kế kiến trúc phần mềm của
-                AURA Eyes.
+                {t('GuestLegal.security.intro.title')}
               </p>
               <p className="mt-4 text-base text-[var(--color-text-muted)] leading-relaxed">
-                Tài liệu này minh bạch hóa các biện pháp kỹ thuật và tổ chức
-                được chúng tôi áp dụng để bảo vệ cơ sở hạ tầng, API và dữ liệu
-                người dùng khỏi các mối đe dọa không gian mạng.
+                {t('GuestLegal.security.intro.description')}
               </p>
             </section>
 
@@ -73,11 +73,10 @@ const SecurityPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   1
                 </span>
-                Tiêu chuẩn Mã hóa Dữ liệu (Data Encryption)
+                {t('GuestLegal.security.sections.encryption.title')}
               </h2>
               <p className="text-[var(--color-text-muted)] leading-relaxed mb-6">
-                Mọi dữ liệu đi qua và lưu trữ trên hệ thống AURA Eyes đều bị áp
-                đặt các tiêu chuẩn mã hóa quân sự/doanh nghiệp:
+                {t('GuestLegal.security.sections.encryption.description')}
               </p>
               <div className="space-y-6">
                 <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-[var(--color-brand-primary)] transition-colors shadow-sm">
@@ -95,13 +94,14 @@ const SecurityPage = () => {
                         d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                       />
                     </svg>
-                    Mã hóa khi lưu trữ (Data at Rest)
+                    {t(
+                      'GuestLegal.security.sections.encryption.cards.dataAtRest.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Toàn bộ cơ sở dữ liệu cốt lõi (Bao gồm CSDL quan hệ lưu
-                    thông tin người dùng và Vector Database lưu tài liệu nội
-                    bộ/AI) và hệ thống lưu trữ tệp (File Storage chứa ảnh võng
-                    mạc, file DICOM) đều được mã hóa bằng chuẩn AES-256.
+                    {t(
+                      'GuestLegal.security.sections.encryption.cards.dataAtRest.description'
+                    )}
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-[var(--color-brand-primary)] transition-colors shadow-sm">
@@ -119,13 +119,14 @@ const SecurityPage = () => {
                         d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                       />
                     </svg>
-                    Mã hóa đường truyền (Data in Transit)
+                    {t(
+                      'GuestLegal.security.sections.encryption.cards.dataInTransit.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Mọi giao tiếp giữa trình duyệt/ứng dụng của người dùng với
-                    máy chủ AURA Eyes, cũng như giao tiếp nội bộ giữa các
-                    microservices, đều được bắt buộc thực hiện qua giao thức
-                    HTTPS với chuẩn mã hóa TLS 1.2 hoặc TLS 1.3.
+                    {t(
+                      'GuestLegal.security.sections.encryption.cards.dataInTransit.description'
+                    )}
                   </p>
                 </div>
               </div>
@@ -138,39 +139,43 @@ const SecurityPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   2
                 </span>
-                Quản lý Định danh & Kiểm soát Truy cập (IAM & Access Control)
+                {t('GuestLegal.security.sections.accessControl.title')}
               </h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Kiểm soát truy cập dựa trên vai trò (RBAC)
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.rbac.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Hệ thống phân quyền chặt chẽ theo nguyên tắc Đặc quyền tối
-                    thiểu (Principle of Least Privilege). Bác sĩ hoặc nhân viên
-                    phòng khám chỉ được cấp quyền truy cập (Read/Write) vào hồ
-                    sơ bệnh án của đúng bệnh nhân mà họ phụ trách.
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.rbac.description'
+                    )}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Xác thực đa yếu tố (MFA / 2FA)
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.mfa.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Bắt buộc áp dụng phương thức xác thực qua mã OTP (gửi qua
-                    Email hoặc SMS) đối với các hành động nhạy cảm như: Rút tiền
-                    từ ví điện tử, thay đổi thông tin định danh chuyên gia, hoặc
-                    tải xuống hàng loạt hồ sơ y tế.
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.mfa.description'
+                    )}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Bảo mật phiên làm việc (Session Management)
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.sessionManagement.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Sử dụng JSON Web Token (JWT) với thời gian sống (expiration
-                    time) ngắn và cơ chế thu hồi token (Revocation) để chống lại
-                    các cuộc tấn công chiếm đoạt phiên làm việc.
+                    {t(
+                      'GuestLegal.security.sections.accessControl.items.sessionManagement.description'
+                    )}
                   </p>
                 </div>
               </div>
@@ -183,30 +188,38 @@ const SecurityPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   3
                 </span>
-                An ninh Hạ tầng Đám mây (Cloud & Infrastructure Security)
+                {t('GuestLegal.security.sections.infrastructure.title')}
               </h2>
               <ul className="space-y-4 text-[var(--color-text-muted)] leading-relaxed list-disc pl-5">
                 <li>
                   <strong className="text-[var(--color-brand-dark)]">
-                    Chứng chỉ bảo mật:
+                    {t(
+                      'GuestLegal.security.sections.infrastructure.items.certifications.label'
+                    )}
                   </strong>{' '}
-                  Hệ thống được triển khai trên nền tảng điện toán đám mây đạt
-                  chuẩn quốc tế, đảm bảo các chứng chỉ bảo mật vật lý và logic.
+                  {t(
+                    'GuestLegal.security.sections.infrastructure.items.certifications.description'
+                  )}
                 </li>
                 <li>
                   <strong className="text-[var(--color-brand-dark)]">
-                    Tường lửa ứng dụng web (WAF):
+                    {t(
+                      'GuestLegal.security.sections.infrastructure.items.waf.label'
+                    )}
                   </strong>{' '}
-                  Tích hợp WAF để chủ động đánh chặn các cuộc tấn công phổ biến
-                  như SQL Injection, Cross-Site Scripting (XSS) và phân luồng
-                  phòng chống tấn công từ chối dịch vụ (DDoS).
+                  {t(
+                    'GuestLegal.security.sections.infrastructure.items.waf.description'
+                  )}
                 </li>
                 <li>
                   <strong className="text-[var(--color-brand-dark)]">
-                    Cô lập dữ liệu:
+                    {t(
+                      'GuestLegal.security.sections.infrastructure.items.isolation.label'
+                    )}
                   </strong>{' '}
-                  Kiến trúc cơ sở dữ liệu được cô lập hoàn toàn trong Mạng nội
-                  bộ ảo (VPC), không tiếp xúc trực tiếp với internet công cộng.
+                  {t(
+                    'GuestLegal.security.sections.infrastructure.items.isolation.description'
+                  )}
                 </li>
               </ul>
             </section>
@@ -218,28 +231,31 @@ const SecurityPage = () => {
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   4
                 </span>
-                Giám sát, Nhật ký và Kiểm toán (Monitoring & Logging)
+                {t('GuestLegal.security.sections.monitoring.title')}
               </h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Nhật ký truy cập (Audit Logs)
+                    {t(
+                      'GuestLegal.security.sections.monitoring.items.auditLogs.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Mọi thao tác tạo, đọc, sửa, xóa (CRUD) đối với Dữ liệu y tế
-                    nhạy cảm (PHI) đều được hệ thống tự động ghi nhật ký không
-                    thể chối bỏ (immutable logs) bao gồm: Dấu thời gian, IP truy
-                    cập và Định danh tài khoản thực hiện.
+                    {t(
+                      'GuestLegal.security.sections.monitoring.items.auditLogs.description'
+                    )}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
-                    Hệ thống giám sát 24/7
+                    {t(
+                      'GuestLegal.security.sections.monitoring.items.continuousMonitoring.title'
+                    )}
                   </h3>
                   <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    Hệ thống giám sát liên tục giúp phát hiện sớm các lưu lượng
-                    truy cập bất thường và tự động cảnh báo cho đội ngũ kỹ sư
-                    bảo mật của nền tảng để có phương án phản ứng kịp thời.
+                    {t(
+                      'GuestLegal.security.sections.monitoring.items.continuousMonitoring.description'
+                    )}
                   </p>
                 </div>
               </div>
