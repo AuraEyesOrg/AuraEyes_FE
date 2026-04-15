@@ -50,31 +50,31 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
       buildGuestTourSteps({
         logo: t('GuestTour.steps.logo', {
           defaultValue:
-            'Nhan vao logo de quay ve Trang chu bat cu luc nao trong hanh trinh su dung AURA.',
+            'Nhấn vào logo để quay về Trang chủ bất cứ lúc nào trong hành trình sử dụng AURA.',
         }),
         navAbout: t('GuestTour.steps.navAbout', {
           defaultValue:
-            'Muc Ve chung toi gioi thieu su menh cua AURA va gia tri cot loi trong sang loc benh ly nhan khoa bang AI.',
+            'Mục Về chúng tôi giới thiệu sứ mệnh của AURA và giá trị cốt lõi trong sàng lọc bệnh lý nhãn khoa bằng AI.',
         }),
         navHowItWorks: t('GuestTour.steps.navHowItWorks', {
           defaultValue:
-            'Tai Cach hoat dong, ban co the xem quy trinh tu tai anh day mat den bao cao ket qua AI.',
+            'Tại Cách hoạt động, bạn có thể xem quy trình từ tải ảnh đáy mắt đến báo cáo kết quả AI.',
         }),
         aboutMission: t('GuestTour.steps.aboutMission', {
           defaultValue:
-            'Day la khu vuc tom tat su menh va chuc nang chinh cua nen tang AURA: sang loc nhanh, chinh xac va an toan.',
+            'Đây là khu vực tóm tắt sứ mệnh và chức năng chính của nền tảng AURA: sàng lọc nhanh, chính xác và an toàn.',
         }),
         contactOrganisation: t('GuestTour.steps.contactOrganisation', {
           defaultValue:
-            'Muc Lien he la noi cac phong kham va to chuc y te dang ky hop tac hoac nhan tu van onboarding.',
+            'Mục Liên hệ là nơi các phòng khám và tổ chức y tế đăng ký hợp tác hoặc nhận tư vấn onboarding.',
         }),
         getStartedPatient: t('GuestTour.steps.getStartedPatient', {
           defaultValue:
-            'Nut Get Started dan den trang dang nhap/dang ky, noi benh nhan co the tao tai khoan Patient moi.',
+            'Nút Get Started dẫn đến trang đăng nhập/đăng ký, nơi bệnh nhân có thể tạo tài khoản Patient mới.',
         }),
         getStartedDoctor: t('GuestTour.steps.getStartedDoctor', {
           defaultValue:
-            'Cung tu Get Started, bac si co the di den nhanh den luong dang ky Ophthalmologist de tham gia nen tang.',
+            'Cũng từ Get Started, bác sĩ có thể đi đến nhanh luồng đăng ký Ophthalmologist để tham gia nền tảng.',
         }),
       }),
     [t]
@@ -186,11 +186,11 @@ export const GuestTourProvider = ({ children }: GuestTourProviderProps) => {
               buttons: ['back', 'close', 'primary', 'skip'],
             }}
             locale={{
-              back: t('GuestTour.controls.back', { defaultValue: 'Quay lai' }),
-              close: t('GuestTour.controls.close', { defaultValue: 'Dong' }),
-              last: t('GuestTour.controls.last', { defaultValue: 'Hoan tat' }),
-              next: t('GuestTour.controls.next', { defaultValue: 'Tiep theo' }),
-              skip: t('GuestTour.controls.skip', { defaultValue: 'Bo qua' }),
+              back: t('GuestTour.controls.back', { defaultValue: 'Quay lại' }),
+              close: t('GuestTour.controls.close', { defaultValue: 'Đóng' }),
+              last: t('GuestTour.controls.last', { defaultValue: 'Hoàn tất' }),
+              next: t('GuestTour.controls.next', { defaultValue: 'Tiếp theo' }),
+              skip: t('GuestTour.controls.skip', { defaultValue: 'Bỏ qua' }),
             }}
             styles={{
               tooltip: {

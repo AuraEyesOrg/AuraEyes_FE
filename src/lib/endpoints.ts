@@ -308,7 +308,7 @@ export const API_ENDPOINTS = {
     PATIENTS: '/organisations/patients',
     CALENDAR: '/organisation/calendar',
     ANALYTICS: '/organisation/analytics',
-    SETTINGS: '/organisation/settings',
+    SETTINGS: '/organisations/settings',
     // Organisation Screening
     SCREENING: {
       CREATE_SESSION: '/organisations/screenings/create-session',

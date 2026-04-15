@@ -18,6 +18,7 @@ export interface AuthUser {
   organizationId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
+  mustChangePassword?: boolean | null;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;

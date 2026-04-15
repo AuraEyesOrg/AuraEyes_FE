@@ -74,7 +74,7 @@ export const Header = () => {
             onClick={startTourFromHelp}
             className="inline-flex items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] hover:border-[#A6C2DC] hover:bg-[#F7FAFC] transition-colors"
           >
-            {t('Common.helpTour', { defaultValue: 'Huong dan' })}
+            {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
           </button>
 
           <PremiumLanguageSwitcher className="hidden sm:inline-flex" />

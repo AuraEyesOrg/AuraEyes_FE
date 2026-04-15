@@ -21,6 +21,7 @@ interface OrganisationFormData {
   contactPhone: string;
   address: string;
   licenseNumber: string;
+  taxCode: string;
   notes: string;
 }
 
@@ -49,6 +50,7 @@ export default function RegisterOrganisationPage() {
         contactPhone: data.contactPhone.trim() || undefined,
         address: data.address.trim() || undefined,
         licenseNumber: data.licenseNumber.trim() || undefined,
+        taxCode: data.taxCode.trim() || undefined,
         notes: data.notes.trim() || undefined,
       });
       setSubmittedEmail(data.contactEmail.trim());
@@ -217,6 +219,14 @@ export default function RegisterOrganisationPage() {
                 />
               </Field>
             </div>
+
+            <Field label="Mã số thuế" error={errors.taxCode?.message}>
+              <Input
+                icon={<FileText className="h-4 w-4" />}
+                placeholder="0312345678"
+                {...register('taxCode')}
+              />
+            </Field>
 
             <Field label="Địa chỉ" error={errors.address?.message}>
               <Input

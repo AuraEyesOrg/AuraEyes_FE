@@ -65,6 +65,7 @@ export interface RegisterOrganisationRequest {
   contactPhone?: string;
   address?: string;
   licenseNumber?: string;
+  taxCode?: string;
   notes?: string;
 }
 
@@ -109,6 +110,7 @@ export interface UserInfoResponse {
   roleId?: string | null;
   employmentType?: 'FullTime' | 'PartTime' | null;
   twoFactorEnabled: boolean;
+  mustChangePassword?: boolean | null;
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
