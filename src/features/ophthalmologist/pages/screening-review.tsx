@@ -197,6 +197,20 @@ export default function ScreeningReviewPage() {
   const [followUpDate, setFollowUpDate] = useState('');
   const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
+  // ─── Heatmap toolkit draggable state ────────────────────────────────────
+  const [toolkitPos, setToolkitPos] = useState({ x: 0, y: 0 });
+  const [isDraggingToolkit, setIsDraggingToolkit] = useState(false);
+  const handleToolkitDrag = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDraggingToolkit) return;
+      setToolkitPos((prev: { x: number; y: number }) => ({
+        x: prev.x + e.movementX,
+        y: prev.y + e.movementY,
+      }));
+    },
+    [isDraggingToolkit]
+  );
+
   // ─── Heatmap matrix states ──────────────────────────────────────────────
   const [heatmapData, setHeatmapData] = useState<number[][] | null>(null);
   const [heatmapOpacity, setHeatmapOpacity] = useState(0.55);
@@ -210,6 +224,14 @@ export default function ScreeningReviewPage() {
   const [hasHeatmapEdits, setHasHeatmapEdits] = useState(false);
   const heatmapCanvasRef = useRef<HTMLCanvasElement>(null);
   const heatmapDragRef = useRef(false);
+
+  // ─── Manual findings states ──────────────────────────────────────────
+  const [newFindingName, setNewFindingName] = useState('');
+  const [newFindingDescription, setNewFindingDescription] = useState('');
+  const [newFindingSeverity, setNewFindingSeverity] = useState<
+    'low' | 'moderate' | 'high'
+  >('moderate');
+  const [isAddingFinding, setIsAddingFinding] = useState(false);
 
   // ─── Undo stack ────────────────────────────────────────────────────────────
   interface EditorSnapshot {
@@ -421,6 +443,10 @@ export default function ScreeningReviewPage() {
             }>
           | undefined;
 
+        const manualSaved = parsed.doctor_manual_findings as
+          | DetectedFinding[]
+          | undefined;
+
         if (saved && Array.isArray(saved) && saved.length > 0) {
           // Use saved overlay state instead of AI-parsed bboxes
           setFindings(
@@ -436,8 +462,15 @@ export default function ScreeningReviewPage() {
         } else {
           setFindings(mapped);
         }
+
+        if (manualSaved && Array.isArray(manualSaved)) {
+          setSidebarFindings([...mapped, ...manualSaved]);
+        } else {
+          setSidebarFindings(mapped);
+        }
       } catch {
         setFindings(mapped);
+        setSidebarFindings(mapped);
       }
     });
 
@@ -773,10 +806,16 @@ export default function ScreeningReviewPage() {
         });
       parsed.doctor_bbox_overrides = currentBoxes;
 
-      // Also write heatmap_data if edited
+      // Write heatmap_data if edited
       if (hasHeatmapEdits && heatmapData) {
         parsed.heatmap_data = heatmapData;
       }
+
+      // Persist manual findings
+      // We identify manual findings by their ID prefix 'manual-find-'
+      parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
+        sf.id.startsWith('manual-find-')
+      );
 
       const finalJsonString = JSON.stringify(parsed);
 
@@ -819,6 +858,8 @@ export default function ScreeningReviewPage() {
     heatmapData,
     buildDetectionBoxesForSave,
     t,
+    sidebarFindings,
+    findings,
   ]);
 
   const handleFocusFinding = (findingId: string) => {
@@ -1015,6 +1056,10 @@ export default function ScreeningReviewPage() {
           if (hasHeatmapEdits && heatmapData) {
             parsed.heatmap_data = heatmapData;
           }
+
+          parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
+            sf.id.startsWith('manual-find-')
+          );
 
           const finalJsonString = JSON.stringify(parsed);
 
@@ -1576,21 +1621,6 @@ export default function ScreeningReviewPage() {
                         <Settings2 className="w-5 h-5" />
                       </button>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleSaveEdits}
-                        disabled={savingEdits}
-                        className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {savingEdits
-                          ? t('Ophthalmologist.common.saving', 'Saving...')
-                          : t('Ophthalmologist.common.save', 'Save')}
-                      </button>
-                      <span className="text-sm text-gray-400">
-                        {Math.round(zoom * 100)}%
-                      </span>
-                    </div>
                   </div>
 
                   {/* Image Container */}
@@ -1920,7 +1950,49 @@ export default function ScreeningReviewPage() {
                                 </button>
 
                                 {heatmapEditMode !== null && (
-                                  <div className="absolute bottom-full mb-3 right-0 flex items-center gap-4 px-4 py-2 border border-gray-700 bg-gray-900/90 rounded-xl backdrop-blur-md shadow-2xl z-50">
+                                  <div
+                                    onPointerMove={handleToolkitDrag}
+                                    onPointerUp={() =>
+                                      setIsDraggingToolkit(false)
+                                    }
+                                    onPointerLeave={() =>
+                                      setIsDraggingToolkit(false)
+                                    }
+                                    style={{
+                                      transform: `translate(${toolkitPos.x}px, ${toolkitPos.y}px)`,
+                                    }}
+                                    className="absolute bottom-full mb-3 right-0 flex items-center gap-4 px-4 py-2 border border-gray-700 bg-gray-900/90 rounded-xl backdrop-blur-md shadow-2xl z-50 select-none"
+                                  >
+                                    {/* Drag Handle */}
+                                    <div
+                                      onPointerDown={(e) => {
+                                        e.stopPropagation();
+                                        setIsDraggingToolkit(true);
+                                        (
+                                          e.currentTarget as HTMLElement
+                                        ).setPointerCapture(e.pointerId);
+                                      }}
+                                      className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-gray-500 hover:text-cyan-400 transition-colors"
+                                      title="Kéo để di chuyển bộ công cụ"
+                                    >
+                                      <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 16 16"
+                                        fill="currentColor"
+                                      >
+                                        <circle cx="4" cy="4" r="1.5" />
+                                        <circle cx="4" cy="8" r="1.5" />
+                                        <circle cx="4" cy="12" r="1.5" />
+                                        <circle cx="8" cy="4" r="1.5" />
+                                        <circle cx="8" cy="8" r="1.5" />
+                                        <circle cx="8" cy="12" r="1.5" />
+                                        <circle cx="12" cy="4" r="1.5" />
+                                        <circle cx="12" cy="8" r="1.5" />
+                                        <circle cx="12" cy="12" r="1.5" />
+                                      </svg>
+                                    </div>
+
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
                                         Size
@@ -1941,7 +2013,7 @@ export default function ScreeningReviewPage() {
                                     <div className="w-px h-5 bg-gray-700 mx-1" />
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mr-1">
-                                        Bút vẽ
+                                        Heat
                                       </span>
                                       <button
                                         onClick={() => {
@@ -1967,15 +2039,29 @@ export default function ScreeningReviewPage() {
                                         className={`w-5 h-5 rounded-full bg-yellow-400 transition-transform shadow-sm ${brushTargetHeat === 0.4 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
                                         title="Lan vàng"
                                       />
-                                      <div className="w-px h-5 bg-gray-700 mx-2" />
+                                    </div>
+                                    <div className="w-px h-5 bg-gray-700 mx-1" />
+                                    <div className="flex items-center gap-2">
                                       <button
                                         onClick={() =>
                                           setHeatmapEditMode('erase')
                                         }
-                                        className={`flex items-center justify-center p-1.5 rounded w-max bg-gray-700 text-gray-200 transition-all shadow-sm ${heatmapEditMode === 'erase' ? 'ring-2 ring-cyan-400 text-white bg-gray-600' : 'hover:bg-gray-600 hover:text-white'}`}
-                                        title="Cục Tẩy (Rà để giảm nhiệt độ tại điểm chỉ định)"
+                                        className={`flex items-center justify-center p-1.5 rounded w-max bg-gray-800 text-gray-200 transition-all shadow-sm ${heatmapEditMode === 'erase' ? 'ring-2 ring-cyan-400 text-white bg-gray-600' : 'hover:bg-gray-600 hover:text-white'}`}
+                                        title="Cục Tẩy"
                                       >
                                         <Eraser className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={handleUndo}
+                                        disabled={!canUndo}
+                                        className={`p-1.5 rounded transition-all shadow-sm ${
+                                          canUndo
+                                            ? 'bg-gray-700 text-cyan-400 hover:text-white hover:bg-gray-600'
+                                            : 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-40'
+                                        }`}
+                                        title="Hoàn tác"
+                                      >
+                                        <Undo2 className="w-4 h-4" />
                                       </button>
                                       <button
                                         onClick={() => {
@@ -1986,23 +2072,10 @@ export default function ScreeningReviewPage() {
                                           );
                                           setHasHeatmapEdits(true);
                                         }}
-                                        className="ml-1 flex items-center gap-1 px-2 py-1 rounded border border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all text-[10px] uppercase font-bold tracking-wider"
+                                        className="ml-1 flex items-center gap-1 px-2 py-1 rounded border border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all text-[9px] uppercase font-bold tracking-wider"
                                         title="Xóa toàn bộ bản đồ nhiệt"
                                       >
-                                        <svg
-                                          className="w-3.5 h-3.5"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                          />
-                                        </svg>
-                                        Xóa sạch
+                                        Clear
                                       </button>
                                     </div>
                                   </div>
@@ -2052,15 +2125,6 @@ export default function ScreeningReviewPage() {
                             >
                               {detail.latestResult.riskLevel}
                             </span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {t(
-                                'Ophthalmologist.screeningReview.modelConfidence',
-                                'Độ tin cậy mô hình:'
-                              )}{' '}
-                              <strong className="text-gray-900 dark:text-white">
-                                {aiConfidencePct}%
-                              </strong>
-                            </span>
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {referralPillLabel}
@@ -2079,13 +2143,116 @@ export default function ScreeningReviewPage() {
 
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      {t(
-                        'Ophthalmologist.screeningReview.detectedFindings',
-                        'Detected Findings'
-                      )}{' '}
-                      ({sidebarFindings.length})
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {t(
+                          'Ophthalmologist.screeningReview.detectedFindings',
+                          'Detected Findings'
+                        )}{' '}
+                        ({sidebarFindings.length})
+                      </p>
+                      <button
+                        onClick={() => setIsAddingFinding(true)}
+                        className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
+                        title="Thêm thẻ (Add finding)"
+                      >
+                        <PlusSquare className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {isAddingFinding && (
+                      <div className="mb-4 space-y-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-sm">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase text-gray-400">
+                            Tên bệnh / Dấu hiệu
+                          </label>
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newFindingName}
+                            onChange={(e) => setNewFindingName(e.target.value)}
+                            placeholder="Nhập tên..."
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase text-gray-400">
+                            Mô tả chi tiết
+                          </label>
+                          <textarea
+                            value={newFindingDescription}
+                            onChange={(e) =>
+                              setNewFindingDescription(e.target.value)
+                            }
+                            placeholder="Nhập mô tả..."
+                            rows={2}
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-bold uppercase text-gray-400 mr-1">
+                              Rủi ro:
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('low')}
+                              className={`w-6 h-6 rounded-full bg-yellow-400 border-2 transition-all ${newFindingSeverity === 'low' ? 'border-white ring-2 ring-yellow-400 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="Low (Yellow)"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('moderate')}
+                              className={`w-6 h-6 rounded-full bg-orange-500 border-2 transition-all ${newFindingSeverity === 'moderate' ? 'border-white ring-2 ring-orange-500 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="Moderate (Orange)"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('high')}
+                              className={`w-6 h-6 rounded-full bg-red-600 border-2 transition-all ${newFindingSeverity === 'high' ? 'border-white ring-2 ring-red-600 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="High (Red)"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setIsAddingFinding(false)}
+                              className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!newFindingName.trim()) return;
+                                const id = `manual-find-${Date.now()}`;
+                                const newFinding: DetectedFinding = {
+                                  id,
+                                  name: newFindingName.trim(),
+                                  description:
+                                    newFindingDescription.trim() ||
+                                    'Physician indicated finding',
+                                  confidence: 100,
+                                  severity: newFindingSeverity,
+                                };
+                                setSidebarFindings((prev) => [
+                                  ...prev,
+                                  newFinding,
+                                ]);
+                                setFindings((prev) => [...prev, newFinding]);
+                                setNewFindingName('');
+                                setNewFindingDescription('');
+                                setIsAddingFinding(false);
+                              }}
+                              className="px-4 py-1.5 bg-cyan-600 text-white text-[11px] font-bold rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-1.5"
+                            >
+                              <PlusSquare className="w-3.5 h-3.5" /> Thêm
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       {sidebarFindings.length === 0 ? (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -2101,28 +2268,70 @@ export default function ScreeningReviewPage() {
                           className={`border-l-4 rounded-lg p-3 ${getSeverityColor(finding.severity)}`}
                         >
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                              {finding.name}
-                            </h4>
-                            <span
-                              className={`text-xs font-bold ${
-                                finding.confidence >= 90
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : finding.confidence >= 80
-                                    ? 'text-orange-600 dark:text-orange-400'
-                                    : 'text-yellow-600 dark:text-yellow-400'
-                              }`}
+                            <input
+                              type="text"
+                              value={finding.name}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSidebarFindings((prev) =>
+                                  prev.map((f) =>
+                                    f.id === finding.id
+                                      ? { ...f, name: val }
+                                      : f
+                                  )
+                                );
+                                setFindings((prev) =>
+                                  prev.map((f) =>
+                                    f.id === finding.id
+                                      ? { ...f, name: val }
+                                      : f
+                                  )
+                                );
+                              }}
+                              className="font-semibold text-gray-900 dark:text-white text-sm bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded w-full"
+                            />
+                            <button
+                              onClick={() => {
+                                setSidebarFindings((prev) =>
+                                  prev.filter((f) => f.id !== finding.id)
+                                );
+                                setFindings((prev) =>
+                                  prev.filter((f) => f.id !== finding.id)
+                                );
+                              }}
+                              className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-2"
+                              title="Delete Finding"
                             >
-                              {finding.confidence}%{' '}
-                              {t(
-                                'Ophthalmologist.screeningReview.confAbbr',
-                                'Conf.'
-                              )}
-                            </span>
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                            {finding.description}
-                          </p>
+                          <textarea
+                            value={finding.description}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSidebarFindings((prev) =>
+                                prev.map((f) =>
+                                  f.id === finding.id
+                                    ? { ...f, description: val }
+                                    : f
+                                )
+                              );
+                              setFindings((prev) =>
+                                prev.map((f) =>
+                                  f.id === finding.id
+                                    ? { ...f, description: val }
+                                    : f
+                                )
+                              );
+                            }}
+                            rows={1}
+                            className="w-full text-xs text-gray-600 dark:text-gray-400 bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded resize-none min-h-[1.25rem] overflow-hidden"
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = 'auto';
+                              target.style.height = `${target.scrollHeight}px`;
+                            }}
+                          />
                         </div>
                       ))}
                     </div>

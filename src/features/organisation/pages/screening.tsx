@@ -247,7 +247,7 @@ export default function OrganisationScreeningPage() {
         id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         file,
         preview: URL.createObjectURL(file),
-        eyeSide: i % 2 === 0 ? 'Left' : 'Right',
+        eyeSide: 'Both',
         status: 'validating',
         progress: 0,
       });
@@ -302,12 +302,6 @@ export default function OrganisationScreeningPage() {
       }
       return prev.filter((img) => img.id !== imageId);
     });
-  };
-
-  const updateEyeSide = (imageId: string, side: 'Left' | 'Right' | 'Both') => {
-    setImages((prev) =>
-      prev.map((img) => (img.id === imageId ? { ...img, eyeSide: side } : img))
-    );
   };
 
   // ── Launch Screening ──
@@ -596,18 +590,6 @@ export default function OrganisationScreeningPage() {
                                     </p>
                                   )}
                                 </div>
-                                <select
-                                  disabled={img.status === 'validating'}
-                                  value={img.eyeSide}
-                                  onChange={(e) =>
-                                    updateEyeSide(img.id, e.target.value as any)
-                                  }
-                                  className="w-full text-xs py-1 px-2 rounded-md bg-slate-50 border border-slate-200 text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all mt-1 disabled:opacity-50"
-                                >
-                                  <option value="Left">Left Eye (OS)</option>
-                                  <option value="Right">Right Eye (OD)</option>
-                                  <option value="Both">Both / Unknown</option>
-                                </select>
                               </div>
                               <button
                                 onClick={() => removeImage(img.id)}
@@ -670,13 +652,6 @@ export default function OrganisationScreeningPage() {
                               alt=""
                               className="w-full h-full object-cover"
                             />
-                          </div>
-                          <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                            {img.eyeSide === 'Left'
-                              ? 'OS'
-                              : img.eyeSide === 'Right'
-                                ? 'OD'
-                                : 'OU'}
                           </div>
                         </div>
                       ))}
