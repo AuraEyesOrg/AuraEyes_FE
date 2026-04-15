@@ -326,12 +326,50 @@ export function extractVisualArtifactsFromRaw(
         source?: string;
         location?: DetectionBoxLocation;
       }>;
+      doctor_bbox_overrides?: Array<{
+        id?: string;
+        name?: string;
+        confidence?: number;
+        status?: string;
+        source?: string;
+        location?: DetectionBoxLocation;
+      }>;
     };
 
     const heatmapUrl = resolveAiAssetUrl(
       parsed.heatmap_url ?? parsed.heatmap_colormap_url
     );
 
+    // If we have manual overrides/saves, use them as the primary source of truth for boxes
+    const savedBoxesSource = parsed.doctor_bbox_overrides ?? parsed.anomalies;
+    if (Array.isArray(savedBoxesSource) && savedBoxesSource.length > 0) {
+      const boxes = savedBoxesSource
+        .map((item, index): DetectionBox | null => {
+          if (!item.location) return null;
+
+          const rawConfidence = Number(item.confidence ?? 0);
+          const confidence = clampConfidence(
+            rawConfidence > 1 ? rawConfidence : rawConfidence * 100
+          );
+
+          const name = item.name ?? '';
+
+          return {
+            id: item.id ?? `saved-${index + 1}`,
+            name,
+            localizedName: name ? toDisplayDiseaseName(name, language) : '',
+            confidence,
+            type: toDetectionType(confidence, item.status),
+            location: item.location,
+            source: resolveBoxSource(item.source ?? item.status),
+          };
+        })
+        .filter((item): item is DetectionBox => item !== null);
+
+      return { boxes, heatmapUrl };
+    }
+
+    // Fallback to AI-generated localization lesions if no manual saves exist
     const topK = [...(parsed.prediction?.top_k ?? [])].sort(
       (a, b) => a.rank - b.rank
     );
@@ -373,54 +411,6 @@ export function extractVisualArtifactsFromRaw(
             location,
             source: 'ai' as BoxSource,
           } as DetectionBox;
-        })
-        .filter((item): item is DetectionBox => item !== null);
-
-      // Append manual boxes stored in anomalies (from previous saves)
-      const manualAnomalies = (parsed.anomalies ?? []).filter(
-        (a) => a.source === 'manual' || a.status === 'manual'
-      );
-      const manualBoxes = manualAnomalies
-        .map((item, index): DetectionBox | null => {
-          if (!item.location || !item.name) return null;
-          const rawConf = Number(item.confidence ?? 0);
-          const confidence = clampConfidence(
-            rawConf > 1 ? rawConf : rawConf * 100
-          );
-          return {
-            id: item.id ?? `manual-restored-${index}`,
-            name: item.name,
-            localizedName: toDisplayDiseaseName(item.name, language),
-            confidence,
-            type: toDetectionType(confidence, item.status),
-            location: item.location,
-            source: 'manual' as BoxSource,
-          };
-        })
-        .filter((item): item is DetectionBox => item !== null);
-
-      return { boxes: [...boxes, ...manualBoxes], heatmapUrl };
-    }
-
-    if (Array.isArray(parsed.anomalies)) {
-      const boxes = parsed.anomalies
-        .map((item, index): DetectionBox | null => {
-          if (!item.location || !item.name) return null;
-
-          const rawConfidence = Number(item.confidence ?? 0);
-          const confidence = clampConfidence(
-            rawConfidence > 1 ? rawConfidence : rawConfidence * 100
-          );
-
-          return {
-            id: item.id ?? `saved-${index + 1}`,
-            name: item.name,
-            localizedName: toDisplayDiseaseName(item.name, language),
-            confidence,
-            type: toDetectionType(confidence, item.status),
-            location: item.location,
-            source: resolveBoxSource(item.source ?? item.status),
-          };
         })
         .filter((item): item is DetectionBox => item !== null);
 
@@ -495,7 +485,7 @@ export function mergeBoxesIntoRawJson(
     }
   }
 
-  base.anomalies = boxes.map((box) => ({
+  base.doctor_bbox_overrides = boxes.map((box) => ({
     id: box.id,
     name: box.name,
     confidence: box.confidence > 1 ? box.confidence / 100 : box.confidence,

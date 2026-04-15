@@ -358,31 +358,7 @@ export function RetinalAnnotationLayer({
               }}
             />
 
-            {/* Label */}
-            {box.localizedName && (
-              <g>
-                <rect
-                  x={box.location.x}
-                  y={labelY}
-                  width={labelWidth}
-                  height={3}
-                  fill={
-                    isManual ? 'rgba(99, 102, 241, 0.9)' : style.borderColor
-                  }
-                  rx={0.4}
-                />
-                <text
-                  x={box.location.x + 0.8}
-                  y={labelY + 2.2}
-                  fill="white"
-                  fontSize={2}
-                  fontFamily="system-ui, sans-serif"
-                  fontWeight={600}
-                >
-                  {renderedLabel}
-                </text>
-              </g>
-            )}
+            {/* Label display removed as per request */}
 
             {/* Resize handles for selected box */}
             {isSelected && isEditable && mode === 'select' && (
