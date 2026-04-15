@@ -3,7 +3,6 @@ import {
   Eraser,
   Eye,
   MousePointer2,
-  Pencil,
   PenTool,
   Trash2,
   Undo2,
@@ -288,22 +287,6 @@ export function OrganisationRetinalViewerCard({
             {/* Keep action slot width stable to avoid toolbar reflow/jump */}
             {useAnnotationLayer && (
               <div className="flex items-center gap-2 min-w-[190px] justify-end">
-                <button
-                  type="button"
-                  onClick={() =>
-                    selectedBoxId && onBoxDoubleClick?.(selectedBoxId)
-                  }
-                  disabled={!selectedBoxId}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
-                    selectedBoxId
-                      ? 'border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:border-indigo-800/40 dark:bg-indigo-900/20 dark:text-indigo-400'
-                      : 'pointer-events-none opacity-0'
-                  }`}
-                  title="Edit label of selected box"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Edit label
-                </button>
                 <button
                   type="button"
                   onClick={() => selectedBoxId && onBoxDelete(selectedBoxId)}

@@ -317,22 +317,6 @@ export function RetinalAnnotationLayer({
         const style = getDetectionStyle(box.type);
         const isSelected = box.id === selectedBoxId;
         const isManual = box.source === 'manual';
-        const rawLabel = box.localizedName
-          ? `${box.localizedName}${isManual ? ' ✎' : ''}`
-          : '';
-        const labelY = Math.max(0, box.location.y - 3.2);
-        const labelMaxWidthByImage = Math.max(8, 100 - box.location.x);
-        const labelWidth = Math.min(
-          rawLabel.length * 1.3 + 2,
-          box.location.width + 8,
-          labelMaxWidthByImage
-        );
-        const labelMaxChars = Math.max(4, Math.floor((labelWidth - 2) / 1.1));
-        const renderedLabel =
-          rawLabel.length > labelMaxChars
-            ? `${rawLabel.slice(0, Math.max(3, labelMaxChars - 1))}…`
-            : rawLabel;
-
         return (
           <g key={box.id}>
             {/* Box fill */}
