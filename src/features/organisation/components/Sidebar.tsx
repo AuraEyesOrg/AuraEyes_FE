@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -25,6 +26,7 @@ import {
 } from '@/i18n/locales';
 import { persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
+import { getOrganisationDashboardMetrics } from '../api/dashboard.api';
 
 interface SidebarProps {
   pendingCount?: number;
@@ -56,10 +58,25 @@ const navItems = [
   { icon: Settings, labelKey: 'settings', path: '/organisation/settings' },
 ];
 
-export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
+export default function Sidebar({
+  pendingCount: propPendingCount,
+}: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
+
+  const metricsQuery = useQuery({
+    queryKey: ['organisation-dashboard', 'metrics'],
+    queryFn: getOrganisationDashboardMetrics,
+    staleTime: 30_000,
+  });
+
+  const sidebarPendingCount = metricsQuery.data
+    ? metricsQuery.data.totalPatients
+    : 0;
+
+  const pendingCount = propPendingCount ?? sidebarPendingCount;
+
   const visibleNavItems = navItems;
 
   const avatarMeta = getUserAvatarMeta(user?.fullName, 'Organisation');
