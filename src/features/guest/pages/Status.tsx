@@ -1,194 +1,237 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Header } from '../components/Header';
-import { Footer } from '../components/Footer';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import Spinner from '@/components/ui/spinner';
 import { useTranslation } from 'react-i18next';
+import Spinner from '@/components/ui/spinner';
+import { resolvePathWithLocale } from '@/i18n/middleware';
+import { API_ENDPOINTS } from '@/lib/endpoints';
+import {
+  checkGuestServiceHealth,
+  type GuestServiceCheckTarget,
+  type GuestServiceHealthStatus,
+} from '../api/guest.api';
+import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
 
-interface ServiceStatus {
+interface ServiceDescriptor {
   name: string;
-  endpoint: string;
-  status: 'online' | 'offline' | 'degraded' | 'checking';
-  responseTime?: number;
-  lastChecked?: Date;
   description: string;
   icon: string;
   region: string;
+  target: GuestServiceCheckTarget;
 }
+
+interface ServiceStatus extends ServiceDescriptor {
+  status: GuestServiceHealthStatus | 'checking';
+  responseTime?: number;
+  lastChecked?: Date;
+}
+
+type OverallStatus = 'operational' | 'degraded' | 'outage' | 'checking';
+
+const STATUS_REFRESH_INTERVAL_MS = 60_000;
 
 const StatusPage = () => {
   const { t } = useTranslation();
-  const [services, setServices] = useState<ServiceStatus[]>([
-    {
-      name: t('Status.services.aiCore.name'),
-      endpoint: '/health/ai',
-      status: 'checking',
-      description: t('Status.services.aiCore.description'),
-      icon: 'memory',
-      region: 'Global (Multi-region)',
-    },
-    {
-      name: t('Status.services.imageApi.name'),
-      endpoint: '/health',
-      status: 'checking',
-      description: t('Status.services.imageApi.description'),
-      icon: 'cloud_upload',
-      region: 'Vietnam (Southeast Asia)',
-    },
-    {
-      name: t('Status.services.providerPortal.name'),
-      endpoint: '/auth/health',
-      status: 'checking',
-      description: t('Status.services.providerPortal.description'),
-      icon: 'medical_information',
-      region: 'Vietnam (Southeast Asia)',
-    },
-    {
-      name: t('Status.services.patientStore.name'),
-      endpoint: '/health/database',
-      status: 'checking',
-      description: t('Status.services.patientStore.description'),
-      icon: 'database',
-      region: 'Encrypted (At Rest)',
-    },
-  ]);
 
+  const serviceDescriptors = useMemo<ServiceDescriptor[]>(
+    () => [
+      {
+        name: t('Status.services.aiCore.name'),
+        description: t('Status.services.aiCore.description'),
+        icon: 'memory',
+        region: 'Global',
+        target: {
+          endpoint: API_ENDPOINTS.PUBLIC.HEALTH.ROOT,
+          scope: 'root',
+        },
+      },
+      {
+        name: t('Status.services.imageApi.name'),
+        description: t('Status.services.imageApi.description'),
+        icon: 'cloud_upload',
+        region: 'API Gateway',
+        target: {
+          endpoint: API_ENDPOINTS.PUBLIC.SYSTEM_SETTINGS,
+          scope: 'api',
+        },
+      },
+      {
+        name: t('Status.services.providerPortal.name'),
+        description: t('Status.services.providerPortal.description'),
+        icon: 'medical_information',
+        region: 'Public Search',
+        target: {
+          endpoint: API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.OPHTHALMOLOGISTS,
+          scope: 'api',
+          params: {
+            pageNumber: 1,
+            pageSize: 1,
+          },
+        },
+      },
+      {
+        name: t('Status.services.patientStore.name'),
+        description: t('Status.services.patientStore.description'),
+        icon: 'database',
+        region: 'Knowledge Base',
+        target: {
+          endpoint: API_ENDPOINTS.PUBLIC.RESOURCES.EYE_HEALTH,
+          scope: 'api',
+          params: {
+            pageNumber: 1,
+            pageSize: 1,
+          },
+        },
+      },
+    ],
+    [t]
+  );
+
+  const [services, setServices] = useState<ServiceStatus[]>(() =>
+    serviceDescriptors.map((service) => ({
+      ...service,
+      status: 'checking',
+    }))
+  );
   const [lastFullCheck, setLastFullCheck] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [overallStatus, setOverallStatus] = useState<
-    'operational' | 'degraded' | 'outage' | 'checking'
-  >('checking');
 
-  const checkService = async (
-    service: ServiceStatus
-  ): Promise<ServiceStatus> => {
-    const baseUrl = import.meta.env.VITE_API_END_POINT as string;
-    const startTime = performance.now();
-
-    try {
-      const response = await axios.get(`${baseUrl}${service.endpoint}`, {
-        timeout: 10000,
-        validateStatus: (status) => status < 500,
-      });
-
-      const responseTime = Math.round(performance.now() - startTime);
-
-      if (response.status === 200) {
-        return {
-          ...service,
-          status: 'online',
-          responseTime,
-          lastChecked: new Date(),
-        };
-      } else if (response.status >= 400 && response.status < 500) {
-        return {
-          ...service,
-          status: 'degraded',
-          responseTime,
-          lastChecked: new Date(),
-        };
-      } else {
-        return {
-          ...service,
-          status: 'offline',
-          responseTime,
-          lastChecked: new Date(),
-        };
-      }
-    } catch {
-      return {
+  useEffect(() => {
+    setServices(
+      serviceDescriptors.map((service) => ({
         ...service,
-        status: 'offline',
-        responseTime: undefined,
-        lastChecked: new Date(),
-      };
-    }
-  };
+        status: 'checking',
+      }))
+    );
+  }, [serviceDescriptors]);
 
   const checkAllServices = useCallback(async () => {
     setIsRefreshing(true);
-    setOverallStatus('checking');
 
+    const checkedAt = new Date();
     const updatedServices = await Promise.all(
-      services.map((service) => checkService(service))
+      serviceDescriptors.map(async (service) => {
+        const result = await checkGuestServiceHealth(service.target);
+
+        return {
+          ...service,
+          status: result.status,
+          responseTime: result.responseTime,
+          lastChecked: checkedAt,
+        } satisfies ServiceStatus;
+      })
     );
 
     setServices(updatedServices);
-    setLastFullCheck(new Date());
+    setLastFullCheck(checkedAt);
     setIsRefreshing(false);
-
-    // Determine overall status
-    const onlineCount = updatedServices.filter(
-      (s) => s.status === 'online'
-    ).length;
-    const offlineCount = updatedServices.filter(
-      (s) => s.status === 'offline'
-    ).length;
-
-    if (offlineCount === updatedServices.length) {
-      setOverallStatus('outage');
-    } else if (
-      offlineCount > 0 ||
-      updatedServices.some((s) => s.status === 'degraded')
-    ) {
-      setOverallStatus('degraded');
-    } else if (onlineCount === updatedServices.length) {
-      setOverallStatus('operational');
-    }
-  }, [services]);
+  }, [serviceDescriptors]);
 
   useEffect(() => {
-    checkAllServices();
+    void checkAllServices();
 
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(() => {
-      checkAllServices();
-    }, 60000);
+    const interval = window.setInterval(() => {
+      void checkAllServices();
+    }, STATUS_REFRESH_INTERVAL_MS);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => window.clearInterval(interval);
+  }, [checkAllServices]);
+
+  const onlineCount = services.filter(
+    (service) => service.status === 'online'
+  ).length;
+  const degradedCount = services.filter(
+    (service) => service.status === 'degraded'
+  ).length;
+  const offlineCount = services.filter(
+    (service) => service.status === 'offline'
+  ).length;
+  const checkedCount = services.filter(
+    (service) => service.status !== 'checking'
+  ).length;
+
+  const averageResponseTime = useMemo(() => {
+    const samples = services
+      .map((service) => service.responseTime)
+      .filter(
+        (responseTime): responseTime is number =>
+          typeof responseTime === 'number'
+      );
+
+    if (samples.length === 0) {
+      return null;
+    }
+
+    return Math.round(
+      samples.reduce((sum, sample) => sum + sample, 0) / samples.length
+    );
+  }, [services]);
+
+  const overallStatus = useMemo<OverallStatus>(() => {
+    if (checkedCount === 0) {
+      return 'checking';
+    }
+
+    if (offlineCount === checkedCount) {
+      return 'outage';
+    }
+
+    if (offlineCount > 0 || degradedCount > 0) {
+      return 'degraded';
+    }
+
+    return 'operational';
+  }, [checkedCount, degradedCount, offlineCount]);
 
   const getLastUpdatedText = () => {
-    if (!lastFullCheck) return t('Status.labels.checking');
+    if (!lastFullCheck) {
+      return t('Status.labels.checking');
+    }
+
     const now = new Date();
     const diffMs = now.getTime() - lastFullCheck.getTime();
     const diffSec = Math.floor(diffMs / 1000);
 
-    if (diffSec < 5) return t('Status.time.justNow');
-    if (diffSec < 60) return t('Status.time.secondsAgo', { count: diffSec });
+    if (diffSec < 5) {
+      return t('Status.time.justNow');
+    }
+
+    if (diffSec < 60) {
+      return t('Status.time.secondsAgo', { count: diffSec });
+    }
+
     const diffMin = Math.floor(diffSec / 60);
     return t('Status.time.minutesAgo', { count: diffMin });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: ServiceStatus['status']) => {
     switch (status) {
       case 'online':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
             {t('Status.labels.operational')}
           </span>
         );
       case 'offline':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500"></span>
             {t('Status.labels.outage')}
           </span>
         );
       case 'degraded':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
             {t('Status.labels.degraded')}
           </span>
         );
       case 'checking':
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse"></span>
             {t('Status.labels.checking')}
           </span>
         );
@@ -199,9 +242,9 @@ const StatusPage = () => {
     switch (overallStatus) {
       case 'operational':
         return (
-          <div className="relative z-10 flex items-center justify-center size-20 rounded-full bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] mb-2">
+          <div className="relative z-10 mb-2 flex size-20 items-center justify-center rounded-full bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
             <svg
-              className="w-12 h-12"
+              className="h-12 w-12"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -217,9 +260,9 @@ const StatusPage = () => {
         );
       case 'degraded':
         return (
-          <div className="relative z-10 flex items-center justify-center size-20 rounded-full bg-yellow-100 text-yellow-600 mb-2">
+          <div className="relative z-10 mb-2 flex size-20 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
             <svg
-              className="w-12 h-12"
+              className="h-12 w-12"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -235,9 +278,9 @@ const StatusPage = () => {
         );
       case 'outage':
         return (
-          <div className="relative z-10 flex items-center justify-center size-20 rounded-full bg-red-100 text-red-600 mb-2">
+          <div className="relative z-10 mb-2 flex size-20 items-center justify-center rounded-full bg-red-100 text-red-600">
             <svg
-              className="w-12 h-12"
+              className="h-12 w-12"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -251,9 +294,10 @@ const StatusPage = () => {
             </svg>
           </div>
         );
+      case 'checking':
       default:
         return (
-          <div className="relative z-10 flex items-center justify-center size-20 rounded-full bg-gray-100 text-gray-400 mb-2">
+          <div className="relative z-10 mb-2 flex size-20 items-center justify-center rounded-full bg-gray-100 text-gray-400">
             <Spinner size={48} />
           </div>
         );
@@ -268,6 +312,7 @@ const StatusPage = () => {
         return t('Status.overall.partialOutage');
       case 'outage':
         return t('Status.overall.majorOutage');
+      case 'checking':
       default:
         return t('Status.overall.checkingSystems');
     }
@@ -281,6 +326,7 @@ const StatusPage = () => {
         return 'bg-yellow-500';
       case 'outage':
         return 'bg-red-500';
+      case 'checking':
       default:
         return 'bg-gray-300';
     }
@@ -290,39 +336,39 @@ const StatusPage = () => {
     <div className="min-h-screen bg-[var(--color-medical-bg)]">
       <Header />
 
-      <main className="flex-grow flex flex-col items-center w-full px-4 py-8 md:py-12">
-        <div className="w-full max-w-5xl flex flex-col gap-12">
-          {/* Page Heading & Status Hero */}
+      <main className="flex w-full flex-grow flex-col items-center px-4 py-8 md:py-12">
+        <div className="flex w-full max-w-5xl flex-col gap-12">
           <section className="flex flex-col gap-8">
             <div className="flex flex-col gap-2">
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[var(--color-brand-dark)]">
+              <h1 className="text-4xl font-black tracking-tight text-[var(--color-brand-dark)] md:text-5xl">
                 {t('Status.hero.title')}
               </h1>
-              <p className="text-[var(--color-text-muted)] text-lg max-w-2xl">
+              <p className="max-w-2xl text-lg text-[var(--color-text-muted)]">
                 {t('Status.hero.description')}
               </p>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl bg-white border border-[var(--color-medical-border)] p-8 md:p-12 flex flex-col items-center justify-center text-center gap-6 shadow-sm">
-              {/* Pulse Effect Background */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[var(--color-brand-primary)]/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="relative flex flex-col items-center justify-center gap-6 overflow-hidden rounded-2xl border border-[var(--color-medical-border)] bg-white p-8 text-center shadow-sm md:p-12">
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-brand-primary)]/5 blur-3xl"></div>
 
               {getOverallStatusIcon()}
 
               <div className="relative z-10 flex flex-col items-center gap-2">
-                <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-brand-dark)] tracking-tight">
+                <h2 className="text-3xl font-bold tracking-tight text-[var(--color-brand-dark)] md:text-4xl">
                   {getOverallStatusText()}
                 </h2>
-                <p className="text-[var(--color-text-muted)] font-medium flex items-center gap-2">
+                <p className="flex items-center gap-2 font-medium text-[var(--color-text-muted)]">
                   {t('Status.hero.lastUpdated')}: {getLastUpdatedText()}
                   <button
-                    onClick={checkAllServices}
+                    onClick={() => {
+                      void checkAllServices();
+                    }}
                     disabled={isRefreshing}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                    className="rounded-full p-1 transition-colors hover:bg-gray-100 disabled:opacity-50"
                     title={t('Status.hero.refresh')}
                   >
                     <svg
-                      className={`w-4 h-4 text-[var(--color-text-muted)] ${isRefreshing ? 'animate-spin' : ''}`}
+                      className={`h-4 w-4 text-[var(--color-text-muted)] ${isRefreshing ? 'animate-spin' : ''}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -338,24 +384,24 @@ const StatusPage = () => {
                 </p>
               </div>
 
-              {/* Status Bar Indicator */}
-              <div className="w-full max-w-md h-1.5 bg-gray-100 rounded-full overflow-hidden mt-4">
+              <div className="mt-4 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className={`h-full ${getStatusBarColor()} w-full shadow-[0_0_10px_rgba(19,236,236,0.5)] transition-colors duration-300`}
+                  className={`h-full w-full ${getStatusBarColor()} shadow-[0_0_10px_rgba(19,236,236,0.5)] transition-colors duration-300`}
                 ></div>
               </div>
             </div>
           </section>
 
-          {/* Metrics Grid */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  {t('Status.metrics.totalScreenings')}
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="flex h-full flex-col justify-between rounded-2xl border border-[var(--color-medical-border)] bg-white p-6 transition-all hover:border-[var(--color-brand-primary)]/30 hover:shadow-lg">
+              <div className="mb-4 flex items-start justify-between">
+                <p className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('Status.metrics.servicesOnline', {
+                    defaultValue: 'Services online',
+                  })}
                 </p>
                 <svg
-                  className="w-6 h-6 text-[var(--color-brand-primary)]"
+                  className="h-6 w-6 text-[var(--color-brand-primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -364,69 +410,32 @@ const StatusPage = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
               <div>
-                <p className="text-4xl font-black text-[var(--color-brand-dark)] tracking-tight">
-                  1,420,592
+                <p className="text-4xl font-black tracking-tight text-[var(--color-brand-dark)]">
+                  {onlineCount}/{services.length}
                 </p>
-                <div className="mt-2 flex items-center gap-1 text-sm text-green-600 font-medium">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
-                  <span>{t('Status.metrics.totalScreeningsTrend')}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  {t('Status.metrics.aiModelVersion')}
-                </p>
-                <svg
-                  className="w-6 h-6 text-[var(--color-brand-primary)]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-3xl font-black text-[var(--color-brand-dark)] tracking-tight">
-                  v4.2.1
-                </p>
-                <p className="text-sm font-bold text-[var(--color-brand-primary)] mt-1">
-                  {t('Status.metrics.fdaCleared')}
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                  {t('Status.metrics.servicesChecked', {
+                    defaultValue: '{{checked}} services checked',
+                    checked: checkedCount,
+                  })}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col justify-between p-6 rounded-2xl bg-white border border-[var(--color-medical-border)] h-full hover:shadow-lg hover:border-[var(--color-brand-primary)]/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <p className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                  {t('Status.metrics.avgProcessing')}
+            <div className="flex h-full flex-col justify-between rounded-2xl border border-[var(--color-medical-border)] bg-white p-6 transition-all hover:border-[var(--color-brand-primary)]/30 hover:shadow-lg">
+              <div className="mb-4 flex items-start justify-between">
+                <p className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('Status.metrics.avgProcessing', {
+                    defaultValue: 'Average response time',
+                  })}
                 </p>
                 <svg
-                  className="w-6 h-6 text-[var(--color-brand-primary)]"
+                  className="h-6 w-6 text-[var(--color-brand-primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -440,51 +449,89 @@ const StatusPage = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-4xl font-black text-[var(--color-brand-dark)] tracking-tight">
-                  &lt; 1.4s
+                <p className="text-4xl font-black tracking-tight text-[var(--color-brand-dark)]">
+                  {averageResponseTime === null
+                    ? '--'
+                    : `${averageResponseTime}ms`}
                 </p>
-                <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                  {t('Status.metrics.avgProcessingDetail')}
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                  {t('Status.metrics.avgProcessingDetail', {
+                    defaultValue: 'Calculated from the latest service checks.',
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex h-full flex-col justify-between rounded-2xl border border-[var(--color-medical-border)] bg-white p-6 transition-all hover:border-[var(--color-brand-primary)]/30 hover:shadow-lg">
+              <div className="mb-4 flex items-start justify-between">
+                <p className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  {t('Status.metrics.currentState', {
+                    defaultValue: 'Current state',
+                  })}
+                </p>
+                <svg
+                  className="h-6 w-6 text-[var(--color-brand-primary)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-3xl font-black tracking-tight text-[var(--color-brand-dark)]">
+                  {degradedCount > 0
+                    ? t('Status.labels.degraded')
+                    : offlineCount > 0
+                      ? t('Status.labels.outage')
+                      : t('Status.labels.operational')}
+                </p>
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                  {t('Status.metrics.lastCheckText', {
+                    defaultValue: 'Last full check: {{time}}',
+                    time: getLastUpdatedText(),
+                  })}
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Component Status List */}
           <section className="flex flex-col gap-5">
-            <h3 className="text-2xl font-bold text-[var(--color-brand-dark)] px-1">
+            <h3 className="px-1 text-2xl font-bold text-[var(--color-brand-dark)]">
               {t('Status.componentStatus.title')}
             </h3>
-            <div className="rounded-2xl border border-[var(--color-medical-border)] overflow-hidden bg-white">
-              {/* Header Row */}
-              <div className="grid grid-cols-12 gap-4 p-5 bg-gray-50 border-b border-[var(--color-medical-border)] text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+            <div className="overflow-hidden rounded-2xl border border-[var(--color-medical-border)] bg-white">
+              <div className="grid grid-cols-12 gap-4 border-b border-[var(--color-medical-border)] bg-gray-50 p-5 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
                 <div className="col-span-6 md:col-span-5">
                   {t('Status.componentStatus.serviceName')}
                 </div>
-
-                <div className="col-span-3 md:col-span-5 text-right md:text-left">
+                <div className="col-span-3 text-right md:col-span-5 md:text-left">
                   {t('Status.componentStatus.region')}
                 </div>
-                <div className="col-span-3 md:col-span-2 text-right">
+                <div className="col-span-3 text-right">
                   {t('Status.componentStatus.status')}
                 </div>
               </div>
 
-              {/* Service Rows */}
               {services.map((service, index) => (
                 <div
-                  key={index}
-                  className={`grid grid-cols-12 gap-4 p-5 items-center hover:bg-gray-50 transition-colors ${
+                  key={`${service.name}-${index}`}
+                  className={`grid grid-cols-12 items-center gap-4 p-5 transition-colors hover:bg-gray-50 ${
                     index < services.length - 1
                       ? 'border-b border-[var(--color-medical-border)]'
                       : ''
                   }`}
                 >
-                  <div className="col-span-6 md:col-span-5 flex items-center gap-3">
+                  <div className="col-span-6 flex items-center gap-3 md:col-span-5">
                     <span className="text-[var(--color-text-muted)]">
                       {service.icon === 'memory' && (
                         <svg
-                          className="w-5 h-5"
+                          className="h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -499,7 +546,7 @@ const StatusPage = () => {
                       )}
                       {service.icon === 'cloud_upload' && (
                         <svg
-                          className="w-5 h-5"
+                          className="h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -514,7 +561,7 @@ const StatusPage = () => {
                       )}
                       {service.icon === 'medical_information' && (
                         <svg
-                          className="w-5 h-5"
+                          className="h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -529,7 +576,7 @@ const StatusPage = () => {
                       )}
                       {service.icon === 'database' && (
                         <svg
-                          className="w-5 h-5"
+                          className="h-5 w-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -543,14 +590,22 @@ const StatusPage = () => {
                         </svg>
                       )}
                     </span>
-                    <span className="font-semibold text-[var(--color-brand-dark)]">
-                      {service.name}
-                    </span>
+                    <div>
+                      <span className="font-semibold text-[var(--color-brand-dark)]">
+                        {service.name}
+                      </span>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        {service.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="col-span-3 md:col-span-5 text-right md:text-left text-sm text-[var(--color-text-muted)]">
-                    {service.region}
+                  <div className="col-span-3 text-right text-sm text-[var(--color-text-muted)] md:col-span-5 md:text-left">
+                    <span>{service.region}</span>
+                    {typeof service.responseTime === 'number' ? (
+                      <p className="text-xs">{service.responseTime}ms</p>
+                    ) : null}
                   </div>
-                  <div className="col-span-3 md:col-span-2 flex justify-end">
+                  <div className="col-span-3 flex justify-end">
                     {getStatusBadge(service.status)}
                   </div>
                 </div>
@@ -558,7 +613,6 @@ const StatusPage = () => {
             </div>
           </section>
 
-          {/* Trust & Ethics Section */}
           <section className="flex flex-col gap-6 pt-6">
             <div className="flex items-center gap-3">
               <h3 className="text-2xl font-bold text-[var(--color-brand-dark)]">
@@ -567,13 +621,12 @@ const StatusPage = () => {
               <div className="h-px flex-1 bg-[var(--color-medical-border)]"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1 - Bias Monitoring */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
-                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="group relative flex flex-col gap-4 rounded-2xl border border-transparent bg-gray-50 p-8 transition-all hover:border-[var(--color-medical-border)] hover:shadow-lg">
+                <div className="absolute left-0 top-0 h-1 w-full rounded-t-2xl bg-indigo-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div className="flex size-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
                   <svg
-                    className="w-6 h-6"
+                    className="h-6 w-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -587,20 +640,20 @@ const StatusPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
+                  <h4 className="mb-2 text-lg font-bold text-[var(--color-brand-dark)]">
                     {t('Status.trust.cards.bias.title')}
                   </h4>
-                  <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+                  <p className="text-sm leading-relaxed text-[var(--color-text-muted)]">
                     {t('Status.trust.cards.bias.description')}
                   </p>
                 </div>
                 <Link
-                  to="/ethics"
-                  className="mt-auto pt-4 flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider hover:underline"
+                  to={resolvePathWithLocale('/ethics')}
+                  className="mt-auto flex items-center gap-2 pt-4 text-xs font-bold uppercase tracking-wider text-indigo-600 hover:underline"
                 >
                   {t('Status.trust.cards.bias.cta')}
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -615,12 +668,11 @@ const StatusPage = () => {
                 </Link>
               </div>
 
-              {/* Card 2 - Data Privacy */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
-                <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-brand-primary)] rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="size-12 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center">
+              <div className="group relative flex flex-col gap-4 rounded-2xl border border-transparent bg-gray-50 p-8 transition-all hover:border-[var(--color-medical-border)] hover:shadow-lg">
+                <div className="absolute left-0 top-0 h-1 w-full rounded-t-2xl bg-[var(--color-brand-primary)] opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div className="flex size-12 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">
                   <svg
-                    className="w-6 h-6"
+                    className="h-6 w-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -634,20 +686,20 @@ const StatusPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
+                  <h4 className="mb-2 text-lg font-bold text-[var(--color-brand-dark)]">
                     {t('Status.trust.cards.privacy.title')}
                   </h4>
-                  <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+                  <p className="text-sm leading-relaxed text-[var(--color-text-muted)]">
                     {t('Status.trust.cards.privacy.description')}
                   </p>
                 </div>
                 <Link
-                  to="/ethics"
-                  className="mt-auto pt-4 flex items-center gap-2 text-cyan-700 text-xs font-bold uppercase tracking-wider hover:underline"
+                  to={resolvePathWithLocale('/ethics')}
+                  className="mt-auto flex items-center gap-2 pt-4 text-xs font-bold uppercase tracking-wider text-cyan-700 hover:underline"
                 >
                   {t('Status.trust.cards.privacy.cta')}
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -662,12 +714,11 @@ const StatusPage = () => {
                 </Link>
               </div>
 
-              {/* Card 3 - Clinical Validation */}
-              <div className="group relative flex flex-col gap-4 p-8 rounded-2xl bg-gray-50 border border-transparent hover:border-[var(--color-medical-border)] hover:shadow-lg transition-all">
-                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="group relative flex flex-col gap-4 rounded-2xl border border-transparent bg-gray-50 p-8 transition-all hover:border-[var(--color-medical-border)] hover:shadow-lg">
+                <div className="absolute left-0 top-0 h-1 w-full rounded-t-2xl bg-emerald-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                   <svg
-                    className="w-6 h-6"
+                    className="h-6 w-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -681,20 +732,20 @@ const StatusPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-[var(--color-brand-dark)] mb-2">
+                  <h4 className="mb-2 text-lg font-bold text-[var(--color-brand-dark)]">
                     {t('Status.trust.cards.validation.title')}
                   </h4>
-                  <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+                  <p className="text-sm leading-relaxed text-[var(--color-text-muted)]">
                     {t('Status.trust.cards.validation.description')}
                   </p>
                 </div>
                 <Link
-                  to="/about"
-                  className="mt-auto pt-4 flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase tracking-wider hover:underline"
+                  to={resolvePathWithLocale('/about')}
+                  className="mt-auto flex items-center gap-2 pt-4 text-xs font-bold uppercase tracking-wider text-emerald-600 hover:underline"
                 >
                   {t('Status.trust.cards.validation.cta')}
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

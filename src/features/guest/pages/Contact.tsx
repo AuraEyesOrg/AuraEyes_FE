@@ -75,24 +75,6 @@ const ContactPage = () => {
           },
         }
       );
-
-      // Impact stats
-      gsap.fromTo(
-        '.impact-stat',
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.impact-section',
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
     }, containerRef);
 
     return () => ctx.revert();
@@ -190,13 +172,6 @@ const ContactPage = () => {
     ],
   };
 
-  const impactStats = [
-    { value: '120+', label: t('Contact.impact.partnerClinics') },
-    { value: '50K+', label: t('Contact.impact.screeningsPerformed') },
-    { value: '15+', label: t('Contact.impact.countriesReached') },
-    { value: '100%', label: t('Contact.impact.freeForNonProfits') },
-  ];
-
   return (
     <div
       ref={containerRef}
@@ -249,6 +224,7 @@ const ContactPage = () => {
 
               <div className="flex flex-wrap justify-center gap-4">
                 <button
+                  type="button"
                   onClick={() =>
                     document
                       .getElementById('contact-form')
@@ -257,9 +233,6 @@ const ContactPage = () => {
                   className="rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                 >
                   {t('Contact.hero.primaryCta')}
-                </button>
-                <button className="rounded-lg border-2 border-white/30 px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors">
-                  {t('Contact.hero.secondaryCta')}
                 </button>
               </div>
             </div>
@@ -402,7 +375,7 @@ const ContactPage = () => {
                         {t('Contact.info.headquarters')}
                       </p>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        FPT University, HCM, VN
+                        {t('Contact.info.headquartersValue')}
                       </p>
                     </div>
                   </div>
@@ -486,7 +459,7 @@ const ContactPage = () => {
                           value={formData.organizationPhone}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                          placeholder="+84 ..."
+                          placeholder={t('Contact.form.phonePlaceholder')}
                         />
                       </div>
                     </div>
@@ -664,33 +637,6 @@ const ContactPage = () => {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </section>
-
-        {/* Impact Section */}
-        <section className="impact-section py-16 bg-white border-t border-[var(--color-medical-border)]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
-                {t('Contact.impact.title')}
-              </h2>
-              <p className="text-[var(--color-text-muted)]">
-                {t('Contact.impact.description')}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {impactStats.map((stat, index) => (
-                <div key={index} className="impact-stat text-center">
-                  <p className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

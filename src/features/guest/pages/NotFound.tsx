@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { CircleAlert, Home, Compass } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
@@ -42,7 +43,7 @@ export default function NotFoundPage() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/"
+              to={resolvePathWithLocale('/')}
               className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
             >
               <Home className="h-4 w-4" />
@@ -50,7 +51,7 @@ export default function NotFoundPage() {
             </Link>
 
             <Link
-              to="/about"
+              to={resolvePathWithLocale('/about')}
               className="inline-flex items-center gap-2 rounded-xl border border-(--border-color) bg-(--bg-secondary) px-5 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-white dark:hover:bg-slate-800"
             >
               <Compass className="h-4 w-4" />

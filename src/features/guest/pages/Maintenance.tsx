@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Settings2, Wrench, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
@@ -35,17 +36,19 @@ export default function MaintenancePage() {
 
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/"
+                to={resolvePathWithLocale('/')}
                 className="inline-flex items-center rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
               >
                 {t('GuestMaintenance.primaryCta')}
               </Link>
-              <Link
-                to="https://status.auraeyes.site/"
+              <a
+                href="https://status.auraeyes.site/"
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center rounded-xl border border-(--border-color) bg-(--bg-secondary) px-5 py-3 text-sm font-semibold text-(--text-primary) transition hover:bg-white dark:hover:bg-slate-800"
               >
                 {t('GuestMaintenance.secondaryCta')}
-              </Link>
+              </a>
             </div>
           </div>
 
