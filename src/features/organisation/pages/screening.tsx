@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ScanEye,
   Upload,
@@ -10,6 +10,9 @@ import {
   Loader2,
   AlertTriangle,
   Sparkles,
+  Plus,
+  Zap,
+  Coins,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
@@ -22,6 +25,7 @@ import { getOrganisationRecentPatients } from '../api/patients.api';
 import type { OrganisationRecentPatientDto } from '../api/patients.api';
 import { orgScreeningApi } from '../api/screening.api';
 import { orgBillingApi } from '../api/billing.api';
+import { organisationWalletApi } from '../api/wallet.api';
 import { unwrapApiData } from '@/types/api-response';
 import { toast } from 'react-toastify';
 import { isAxiosError } from 'axios';
@@ -51,6 +55,8 @@ export default function OrganisationScreeningPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+  const [quotaAmountInput, setQuotaAmountInput] = useState('50');
 
   const { data: patients = [] } = useQuery({
     queryKey: ['organisation-patients', 'recent'],
@@ -65,6 +71,83 @@ export default function OrganisationScreeningPage() {
   const remainingQuota = billingSummary?.remainingQuota ?? 0;
   const isQuotaExhausted =
     !isBillingLoading && remainingQuota !== null && remainingQuota <= 0;
+  const walletBalance = billingSummary?.walletBalance ?? 0;
+  const calculatedOrganisationUnitPriceFromPatient =
+    billingSummary?.patientUnitPrice && billingSummary.patientUnitPrice > 0
+      ? Math.round(billingSummary.patientUnitPrice * 0.6)
+      : 0;
+  const effectiveOrganisationUnitPrice =
+    billingSummary?.organisationUnitPrice &&
+    billingSummary.organisationUnitPrice > 0
+      ? billingSummary.organisationUnitPrice
+      : calculatedOrganisationUnitPriceFromPatient;
+  const hasValidUnitPrice = effectiveOrganisationUnitPrice > 0;
+
+  const parsedQuotaAmount = Number.parseInt(quotaAmountInput, 10);
+  const selectedQuotaAmount = Number.isFinite(parsedQuotaAmount)
+    ? Math.max(1, Math.min(parsedQuotaAmount, 5000))
+    : 1;
+  const selectedTotalCost =
+    selectedQuotaAmount * effectiveOrganisationUnitPrice;
+  const missingAmount = Math.max(0, selectedTotalCost - walletBalance);
+  const hasEnoughBalance = selectedTotalCost > 0 && missingAmount === 0;
+  const suggestedTopUpAmount =
+    missingAmount > 0
+      ? Math.ceil(Math.max(missingAmount, 10000) / 1000) * 1000
+      : 0;
+
+  const buyQuotaMutation = useMutation({
+    mutationFn: (quotaAmount: number) =>
+      orgBillingApi.buyQuota({ quotaAmount }),
+    onSuccess: () => {
+      toast.success(`Mua thành công ${selectedQuotaAmount} lượt quota.`);
+      setIsQuotaModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
+    },
+    onError: (error) => {
+      if (isAxiosError(error) && error.response?.status === 402) {
+        toast.error('Ví không đủ tiền, hãy nạp thêm tiền vào ví.');
+        return;
+      }
+
+      const message =
+        (isAxiosError(error) &&
+          ((error.response?.data as { message?: string; detail?: string })
+            ?.message ||
+            (error.response?.data as { detail?: string })?.detail)) ||
+        'Không thể mua quota. Vui lòng thử lại.';
+
+      toast.error(message);
+    },
+  });
+
+  const createDepositMutation = useMutation({
+    mutationFn: (amountVnd: number) =>
+      organisationWalletApi.createDeposit({
+        amountVnd,
+        description: `Top up for organisation quota purchase (${amountVnd.toLocaleString('vi-VN')} VND)`,
+        returnUrl: window.location.href,
+        cancelUrl: window.location.href,
+      }),
+    onSuccess: (response) => {
+      if (response.paymentUrl) {
+        window.location.href = response.paymentUrl;
+        return;
+      }
+
+      toast.error('Không lấy được link thanh toán. Vui lòng thử lại.');
+    },
+    onError: (error) => {
+      const message =
+        (isAxiosError(error) &&
+          ((error.response?.data as { message?: string; detail?: string })
+            ?.message ||
+            (error.response?.data as { detail?: string })?.detail)) ||
+        'Không thể tạo yêu cầu nạp ví. Vui lòng thử lại.';
+
+      toast.error(message);
+    },
+  });
 
   const preSelectedPatientId = searchParams.get('patientId');
   useEffect(() => {
@@ -91,6 +174,24 @@ export default function OrganisationScreeningPage() {
     } else {
       setCurrentStep('upload-images');
     }
+  };
+
+  const handleBuyQuotaFromModal = () => {
+    if (!hasValidUnitPrice) {
+      toast.error('Không lấy được đơn giá quota. Vui lòng thử lại sau.');
+      return;
+    }
+
+    buyQuotaMutation.mutate(selectedQuotaAmount);
+  };
+
+  const handleTopUpWalletFromModal = () => {
+    if (suggestedTopUpAmount <= 0) {
+      toast.error('Số tiền nạp chưa hợp lệ.');
+      return;
+    }
+
+    createDepositMutation.mutate(suggestedTopUpAmount);
   };
 
   // ── Image Handling ──
@@ -217,8 +318,8 @@ export default function OrganisationScreeningPage() {
     if (!selectedPatient || validImages.length === 0) return;
 
     if (remainingQuota <= 0) {
-      toast.error('Your organisation has no remaining quota. Please top up.');
-      navigate('/organisation/wallet');
+      toast.error('Hết quota. Vui lòng mua thêm từ ví hoặc nạp ví.');
+      setIsQuotaModalOpen(true);
       return;
     }
 
@@ -271,10 +372,8 @@ export default function OrganisationScreeningPage() {
         'Failed to create screening session. Please try again.';
       if (isAxiosError(err) && err.response?.data) {
         if (err.response.status === 402) {
-          toast.error(
-            'Your organisation has no remaining quota. Please top up.'
-          );
-          navigate('/organisation/wallet');
+          toast.error('Hết quota. Vui lòng mua thêm từ ví hoặc nạp ví.');
+          setIsQuotaModalOpen(true);
           return;
         }
 
@@ -331,26 +430,39 @@ export default function OrganisationScreeningPage() {
                   algorithm.
                 </p>
               </div>
-              {/* Quota badge — header right */}
-              <div className="ml-auto rounded-xl border border-(--border-primary) bg-(--bg-secondary) px-3 py-2 text-right min-w-[100px]">
-                <p className="text-xs text-(--text-tertiary)">
-                  Remaining quota
-                </p>
+              {/* Quota badge — patient-like style, org shows remain only */}
+              <div className="ml-auto inline-flex items-center gap-2">
                 {isBillingLoading ? (
-                  <div className="h-7 flex items-center">
-                    <Loader2 className="w-4 h-4 animate-spin text-(--text-secondary)" />
+                  <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-(--bg-secondary) border border-(--border-primary)">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-(--text-secondary)" />
+                    <span className="text-xs text-(--text-tertiary)">
+                      Loading...
+                    </span>
                   </div>
                 ) : (
-                  <p
-                    className={`text-lg font-bold ${
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white ${
                       isQuotaExhausted
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-(--text-primary)'
+                        ? 'bg-red-500'
+                        : remainingQuota <= 3
+                          ? 'bg-amber-500'
+                          : 'bg-(--color-brand-primary)'
                     }`}
+                    title={`Còn ${remainingQuota} lượt`}
                   >
-                    {remainingQuota ?? '—'}
-                  </p>
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{remainingQuota} lượt</span>
+                  </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-(--color-brand-primary) text-(--color-brand-primary) text-xs font-semibold hover:bg-(--color-brand-primary) hover:text-white transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Mua thêm
+                </button>
               </div>
 
               {/* Context: Selected Patient */}
@@ -587,17 +699,31 @@ export default function OrganisationScreeningPage() {
                           Quota exhausted
                         </p>
                         <p className="text-xs text-red-500 dark:text-red-400 truncate">
-                          Purchase more credits to continue screening.
+                          Mua thêm quota từ ví. Nếu ví không đủ, hãy nạp thêm
+                          tiền vào ví.
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/organisation/wallet')}
-                      className="shrink-0 rounded-lg bg-red-600 hover:bg-red-700 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
-                    >
-                      Top up →
-                    </button>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsQuotaModalOpen(true)}
+                        className="rounded-lg bg-primary hover:bg-primary/90 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
+                      >
+                        Mua quota
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(
+                            resolvePathWithLocale('/organisation/wallet')
+                          )
+                        }
+                        className="rounded-lg bg-red-600 hover:bg-red-700 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
+                      >
+                        Nạp ví
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -647,6 +773,114 @@ export default function OrganisationScreeningPage() {
             </div>
           </div>
         </main>
+
+        {isQuotaModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-(--text-primary)">
+                  Mua thêm quota AI
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(false)}
+                  className="p-1.5 rounded-lg text-(--text-tertiary) hover:bg-(--bg-tertiary)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-(--text-primary)">
+                  Số lượt muốn mua
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={5000}
+                  value={quotaAmountInput}
+                  onChange={(event) => setQuotaAmountInput(event.target.value)}
+                  className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                />
+
+                <div className="rounded-xl border border-(--border-primary) p-3 text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">Đơn giá/lượt</span>
+                    <span className="font-semibold text-(--text-primary)">
+                      {hasValidUnitPrice
+                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">
+                      Tổng thanh toán
+                    </span>
+                    <span className="font-bold text-(--text-primary)">
+                      {selectedTotalCost.toLocaleString('vi-VN')} VND
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">Số dư ví</span>
+                    <span className="font-semibold text-(--text-primary)">
+                      {walletBalance.toLocaleString('vi-VN')} VND
+                    </span>
+                  </div>
+                </div>
+
+                {hasEnoughBalance ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700 text-sm flex items-center gap-2">
+                    <Coins className="w-4 h-4" />
+                    Ví đủ tiền để mua quota.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
+                    Ví không đủ tiền, thiếu{' '}
+                    <span className="font-semibold">
+                      {missingAmount.toLocaleString('vi-VN')} VND
+                    </span>
+                    . Hãy nạp thêm tiền vào ví.
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-(--border-primary) text-sm font-semibold text-(--text-primary) hover:bg-(--bg-tertiary)"
+                >
+                  Đóng
+                </button>
+
+                {hasEnoughBalance ? (
+                  <button
+                    type="button"
+                    onClick={handleBuyQuotaFromModal}
+                    disabled={buyQuotaMutation.isPending || !hasValidUnitPrice}
+                    className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {buyQuotaMutation.isPending ? 'Đang xử lý...' : 'Mua quota'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleTopUpWalletFromModal}
+                    disabled={
+                      createDepositMutation.isPending ||
+                      suggestedTopUpAmount <= 0
+                    }
+                    className="px-4 py-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {createDepositMutation.isPending
+                      ? 'Đang tạo thanh toán...'
+                      : `Nạp ${suggestedTopUpAmount.toLocaleString('vi-VN')} VND`}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

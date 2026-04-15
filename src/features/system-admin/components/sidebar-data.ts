@@ -105,7 +105,7 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
     items: [
       {
         id: 'transaction-ledger',
-        label: 'Transaction Ledger',
+        label: 'Payment Transactions',
         path: '/system-admin/cashflow',
         icon: Wallet,
       },
