@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import { RefreshButton } from '@/components/ui/button/refresh-button';
 import {
   organisationContractApi,
   type OrganisationContractDetailDto,
@@ -414,15 +415,14 @@ export default function OrganisationContractPage() {
                 Xem, tải và upload hợp đồng hợp tác của tổ chức với AURA
               </p>
             </div>
-            <button
-              onClick={() =>
+            <RefreshButton
+              onRefresh={() =>
                 queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY })
               }
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Làm mới
-            </button>
+              label="Làm mới"
+              isRefreshing={isLoading}
+              className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm"
+            />
           </div>
 
           {isLoading && (

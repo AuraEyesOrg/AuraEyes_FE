@@ -331,7 +331,7 @@ export default function OrganisationScreeningPage() {
       }>(uploadResponse);
       setIsUploading(false);
 
-      // Step 2: Create screening session (backend deducts quota atomically)
+      // Step 2: Create screening session (backend handles quota deduction).
       const retinalImages = (uploadData?.uploadedUrls ?? []).map((url, i) => ({
         imageUrl: url,
         eyeSide: validImages[i]?.eyeSide ?? ('Both' as const),
@@ -346,20 +346,25 @@ export default function OrganisationScreeningPage() {
         sessionResponse
       );
 
+      if (!sessionData?.screeningId) {
+        throw new Error('Không thể khởi tạo phiên khám để chạy AI.');
+      }
+
+      // Keep summary in sync after session creation.
       queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
 
-      if (sessionData?.screeningId) {
-        navigate(
-          resolvePathWithLocale(
-            `/organisation/screening/result?id=${sessionData.screeningId}`
-          ),
-          {
-            state: {
-              patientName: selectedPatient.name,
-            },
-          }
-        );
-      }
+      navigate(
+        resolvePathWithLocale(
+          `/organisation/screening/result?id=${sessionData.screeningId}`
+        ),
+        {
+          state: {
+            patientName: selectedPatient.name,
+            autoAnalyze: true,
+            skipQuotaDeduction: true,
+          },
+        }
+      );
     } catch (err) {
       console.error('Screening creation failed:', err);
       let errorMessage =

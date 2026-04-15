@@ -44,7 +44,7 @@ type TabType = 'posts' | 'about';
 function ProfileSkeleton() {
   return (
     <div className="animate-pulse">
-      <div className="h-40 bg-gradient-to-r from-brand-primary/30 to-cyan-200/50" />
+      <div className="h-40 bg-slate-200 dark:bg-slate-800" />
       <div className="relative px-6 pt-4">
         <div className="absolute -top-16 left-6 w-32 h-32 rounded-full bg-gray-200 border-4 border-white" />
         <div className="pt-20 space-y-3">
@@ -71,6 +71,9 @@ function ProfilePage() {
   const isPreviewMode = searchParams.get('preview') === 'true';
   const { user: currentUser } = useAuthStore();
   const currentUserId = currentUser?.id || '';
+  const currentUserRoles = currentUser?.roles ?? [];
+  const isSystemAdminUser = currentUserRoles.includes('SystemAdmin');
+  const isOrganisationUser = currentUserRoles.includes('OrgAdmin');
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -87,6 +90,8 @@ function ProfilePage() {
   const userPosts = postsData?.items ?? [];
 
   const isOwnProfile = id === currentUserId && !isPreviewMode;
+  const isSystemAdminProfileView = isOwnProfile && isSystemAdminUser;
+  const isOrganisationProfileView = isOwnProfile && isOrganisationUser;
   const degreeCertificates = (profile?.certificates ?? []).filter(
     (item) => item.type === 'Degree'
   );
@@ -199,7 +204,13 @@ function ProfilePage() {
 
       {/* Cover & Avatar */}
       <div className="relative">
-        <div className="h-40 bg-gradient-to-r from-brand-primary via-cyan-400 to-teal-400">
+        <div className="relative h-40 bg-slate-100 dark:bg-slate-900 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/70 via-white/30 to-teal-100/70 dark:from-cyan-950/40 dark:via-slate-900 dark:to-teal-950/40" />
+          <img
+            src="/logo.png"
+            alt="AURA"
+            className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 object-contain opacity-35 dark:opacity-25"
+          />
           {isOwnProfile && (
             <button className="absolute top-4 right-4 p-2 bg-black/30 hover:bg-black/50 text-white rounded-lg transition-all">
               <Edit3 className="w-4 h-4" />
@@ -281,11 +292,15 @@ function ProfilePage() {
                           <Copy className="w-4 h-4" />
                           Copy link
                         </button>
-                        <div className="my-1 border-t border-light-border" />
-                        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
-                          <Flag className="w-4 h-4" />
-                          Report
-                        </button>
+                        {!isSystemAdminUser && (
+                          <>
+                            <div className="my-1 border-t border-light-border" />
+                            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
+                              <Flag className="w-4 h-4" />
+                              Report
+                            </button>
+                          </>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -370,119 +385,178 @@ function ProfilePage() {
         {/* About Tab */}
         {activeTab === 'about' && (
           <div className="px-6 py-4 space-y-6">
-            <div>
-              <h3 className="font-bold text-[15px] text-text-main mb-2">Bio</h3>
-              {profile.bio ? (
-                <p className="text-[15px] text-text-main leading-relaxed">
-                  {profile.bio}
+            {isSystemAdminProfileView ? (
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5 bg-(--bg-secondary)">
+                <h3 className="font-bold text-[15px] text-(--text-primary) mb-2">
+                  System Administration Profile
+                </h3>
+                <p className="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Tài khoản System Admin tập trung vào quản trị nền tảng AURA,
+                  kiểm duyệt nội dung network, và điều phối vận hành hệ thống.
                 </p>
-              ) : (
-                <p className="text-[15px] text-text-muted">No bio added yet.</p>
-              )}
-            </div>
-            {profile.yearsOfExperience > 0 && (
-              <div>
-                <h3 className="font-bold text-[15px] text-text-main mb-2">
-                  Experience
-                </h3>
-                <div className="flex items-center gap-2 text-[15px] text-text-main">
-                  <Award className="w-4 h-4 text-brand-primary" />
-                  {profile.yearsOfExperience} years of experience
+                <ul className="mt-4 space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
+                  <li>Moderate and hide violating posts</li>
+                  <li>Review reported content and escalation cases</li>
+                  <li>Maintain policy and safety standards across network</li>
+                </ul>
+              </div>
+            ) : isOrganisationProfileView ? (
+              <>
+                <div>
+                  <h3 className="font-bold text-[15px] text-text-main mb-2">
+                    Giới thiệu phòng khám
+                  </h3>
+                  <p className="text-[15px] text-text-main leading-relaxed">
+                    {profile.bio?.trim() ||
+                      'Phòng khám là đối tác của AURA trong triển khai sàng lọc bệnh võng mạc bằng AI, phối hợp giữa đội ngũ chuyên môn và hệ thống chẩn đoán hỗ trợ quyết định lâm sàng.'}
+                  </p>
                 </div>
-              </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                    <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                      Dịch vụ nổi bật
+                    </h3>
+                    <ul className="space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
+                      <li>Sàng lọc AI bệnh võng mạc tại cơ sở</li>
+                      <li>Tư vấn kết quả và chuyển tuyến phù hợp</li>
+                      <li>Quản lý hồ sơ khám và theo dõi định kỳ</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                    <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                      Cam kết chất lượng
+                    </h3>
+                    <ul className="space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
+                      <li>Tuân thủ quy trình bảo mật dữ liệu bệnh nhân</li>
+                      <li>Kết hợp đánh giá AI với chuyên môn bác sĩ</li>
+                      <li>Tối ưu trải nghiệm khám nhanh và chính xác</li>
+                    </ul>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="font-bold text-[15px] text-text-main mb-2">
+                    Bio
+                  </h3>
+                  {profile.bio ? (
+                    <p className="text-[15px] text-text-main leading-relaxed">
+                      {profile.bio}
+                    </p>
+                  ) : (
+                    <p className="text-[15px] text-text-muted">
+                      No bio added yet.
+                    </p>
+                  )}
+                </div>
+                {profile.yearsOfExperience > 0 && (
+                  <div>
+                    <h3 className="font-bold text-[15px] text-text-main mb-2">
+                      Experience
+                    </h3>
+                    <div className="flex items-center gap-2 text-[15px] text-text-main">
+                      <Award className="w-4 h-4 text-brand-primary" />
+                      {profile.yearsOfExperience} years of experience
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                    <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                      Degrees
+                    </h3>
+                    {degreeCertificates.length === 0 ? (
+                      <p className="text-[14px] text-slate-500 dark:text-slate-400">
+                        No degree records.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {degreeCertificates.map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+                          >
+                            <p className="font-semibold text-sm text-(--text-primary)">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {item.issuingAuthority || 'Unknown authority'}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              Issued:{' '}
+                              {new Date(item.issuedDate).toLocaleDateString()}
+                            </p>
+                            {item.certificateUrl && (
+                              <a
+                                href={item.certificateUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                              >
+                                View file
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
+                    <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
+                      Licenses & Certifications
+                    </h3>
+                    {licenseCertificates.length === 0 ? (
+                      <p className="text-[14px] text-slate-500 dark:text-slate-400">
+                        No license records.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {licenseCertificates.map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+                          >
+                            <p className="font-semibold text-sm text-(--text-primary)">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {item.issuingAuthority || 'Unknown authority'}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              Issued:{' '}
+                              {new Date(item.issuedDate).toLocaleDateString()}
+                            </p>
+                            {item.expiryDate && (
+                              <p className="text-xs text-slate-400 mt-1">
+                                Expires:{' '}
+                                {new Date(item.expiryDate).toLocaleDateString()}
+                              </p>
+                            )}
+                            {item.certificateUrl && (
+                              <a
+                                href={item.certificateUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                              >
+                                View file
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
-                <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                  Degrees
-                </h3>
-                {degreeCertificates.length === 0 ? (
-                  <p className="text-[14px] text-slate-500 dark:text-slate-400">
-                    No degree records.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {degreeCertificates.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
-                      >
-                        <p className="font-semibold text-sm text-(--text-primary)">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {item.issuingAuthority || 'Unknown authority'}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Issued:{' '}
-                          {new Date(item.issuedDate).toLocaleDateString()}
-                        </p>
-                        {item.certificateUrl && (
-                          <a
-                            href={item.certificateUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
-                          >
-                            View file
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
-                <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                  Licenses & Certifications
-                </h3>
-                {licenseCertificates.length === 0 ? (
-                  <p className="text-[14px] text-slate-500 dark:text-slate-400">
-                    No license records.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {licenseCertificates.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
-                      >
-                        <p className="font-semibold text-sm text-(--text-primary)">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {item.issuingAuthority || 'Unknown authority'}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Issued:{' '}
-                          {new Date(item.issuedDate).toLocaleDateString()}
-                        </p>
-                        {item.expiryDate && (
-                          <p className="text-xs text-slate-400 mt-1">
-                            Expires:{' '}
-                            {new Date(item.expiryDate).toLocaleDateString()}
-                          </p>
-                        )}
-                        {item.certificateUrl && (
-                          <a
-                            href={item.certificateUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
-                          >
-                            View file
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         )}
 

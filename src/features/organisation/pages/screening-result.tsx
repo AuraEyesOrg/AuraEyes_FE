@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Bot,
@@ -12,14 +13,21 @@ import {
   Share2,
   Mail,
   Network,
+  Plus,
+  Zap,
+  Coins,
+  X,
 } from 'lucide-react';
+import { isAxiosError } from 'axios';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { OrganisationScreeningStepper } from '../components/OrganisationScreeningStepper';
 import { OrganisationRetinalViewerCard } from '../components/OrganisationRetinalViewerCard';
 import ConfirmModal from '@/components/ui/confirm-modal';
+import { orgBillingApi } from '../api/billing.api';
 import { orgScreeningApi } from '../api/screening.api';
+import { organisationWalletApi } from '../api/wallet.api';
 import { unwrapApiData } from '@/types/api-response';
 import { aiCoreClient } from '@/lib/axios';
 import {
@@ -66,20 +74,120 @@ import {
 // ─── Share modal tab type ────────────────────────────────────────────────────
 type ShareTab = 'email' | 'network';
 
+interface ScreeningResultLocationState {
+  patientName?: string;
+  autoAnalyze?: boolean;
+  skipQuotaDeduction?: boolean;
+}
+
 export default function OrganisationScreeningResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const screeningId = searchParams.get('id');
   const { user } = useAuthStore();
 
-  const locationState = location.state as { patientName?: string } | null;
+  const locationState = location.state as ScreeningResultLocationState | null;
   const locationPatientName = locationState?.patientName?.trim() ?? '';
+  const shouldAutoAnalyze = Boolean(locationState?.autoAnalyze);
+  const skipQuotaDeductionOnAutoAnalyze = Boolean(
+    locationState?.skipQuotaDeduction
+  );
 
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
   );
+
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+  const [quotaAmountInput, setQuotaAmountInput] = useState('50');
+
+  const { data: billingSummary, isLoading: isBillingLoading } = useQuery({
+    queryKey: ['org-billing-summary'],
+    queryFn: () => orgBillingApi.getSummary(),
+  });
+
+  const remainingQuota = billingSummary?.remainingQuota ?? 0;
+  const isQuotaExhausted =
+    !isBillingLoading && remainingQuota !== null && remainingQuota <= 0;
+  const walletBalance = billingSummary?.walletBalance ?? 0;
+  const calculatedOrganisationUnitPriceFromPatient =
+    billingSummary?.patientUnitPrice && billingSummary.patientUnitPrice > 0
+      ? Math.round(billingSummary.patientUnitPrice * 0.6)
+      : 0;
+  const effectiveOrganisationUnitPrice =
+    billingSummary?.organisationUnitPrice &&
+    billingSummary.organisationUnitPrice > 0
+      ? billingSummary.organisationUnitPrice
+      : calculatedOrganisationUnitPriceFromPatient;
+  const hasValidUnitPrice = effectiveOrganisationUnitPrice > 0;
+
+  const parsedQuotaAmount = Number.parseInt(quotaAmountInput, 10);
+  const selectedQuotaAmount = Number.isFinite(parsedQuotaAmount)
+    ? Math.max(1, Math.min(parsedQuotaAmount, 5000))
+    : 1;
+  const selectedTotalCost =
+    selectedQuotaAmount * effectiveOrganisationUnitPrice;
+  const missingAmount = Math.max(0, selectedTotalCost - walletBalance);
+  const hasEnoughBalance = selectedTotalCost > 0 && missingAmount === 0;
+  const suggestedTopUpAmount =
+    missingAmount > 0
+      ? Math.ceil(Math.max(missingAmount, 10000) / 1000) * 1000
+      : 0;
+
+  const buyQuotaMutation = useMutation({
+    mutationFn: (quotaAmount: number) =>
+      orgBillingApi.buyQuota({ quotaAmount }),
+    onSuccess: () => {
+      toast.success(`Mua thành công ${selectedQuotaAmount} lượt quota.`);
+      setIsQuotaModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
+    },
+    onError: (error) => {
+      if (isAxiosError(error) && error.response?.status === 402) {
+        toast.error('Ví không đủ tiền, hãy nạp thêm tiền vào ví.');
+        return;
+      }
+
+      const message =
+        (isAxiosError(error) &&
+          ((error.response?.data as { message?: string; detail?: string })
+            ?.message ||
+            (error.response?.data as { detail?: string })?.detail)) ||
+        'Không thể mua quota. Vui lòng thử lại.';
+
+      toast.error(message);
+    },
+  });
+
+  const createDepositMutation = useMutation({
+    mutationFn: (amountVnd: number) =>
+      organisationWalletApi.createDeposit({
+        amountVnd,
+        description: `Top up for organisation quota purchase (${amountVnd.toLocaleString('vi-VN')} VND)`,
+        returnUrl: window.location.href,
+        cancelUrl: window.location.href,
+      }),
+    onSuccess: (response) => {
+      if (response.paymentUrl) {
+        window.location.href = response.paymentUrl;
+        return;
+      }
+
+      toast.error('Không lấy được link thanh toán. Vui lòng thử lại.');
+    },
+    onError: (error) => {
+      const message =
+        (isAxiosError(error) &&
+          ((error.response?.data as { message?: string; detail?: string })
+            ?.message ||
+            (error.response?.data as { detail?: string })?.detail)) ||
+        'Không thể tạo yêu cầu nạp ví. Vui lòng thử lại.';
+
+      toast.error(message);
+    },
+  });
 
   // ─── Core loading / action states ────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -167,6 +275,7 @@ export default function OrganisationScreeningResultPage() {
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const autoAnalyzeTriggeredRef = useRef(false);
 
   const selectedImage =
     sessionData?.images[selectedImageIndex] ?? sessionData?.images[0];
@@ -177,6 +286,47 @@ export default function OrganisationScreeningResultPage() {
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
   const isWalkInPatient = sessionData?.isWalkIn ?? false;
+  const resultPagePath = screeningId
+    ? resolvePathWithLocale(`/organisation/screening/result?id=${screeningId}`)
+    : resolvePathWithLocale('/organisation/screening/result');
+
+  const emitAnalysisCompletionNotification = useCallback(() => {
+    if (!screeningId || typeof window === 'undefined') return;
+
+    const navigateToResult = () => {
+      navigate(resultPagePath);
+    };
+
+    const createBrowserNotification = () => {
+      const browserNotification = new Notification('AI Screening hoàn tất', {
+        body: `${patientDisplayName}: Nhấn để mở trang kết quả.`,
+        tag: `org-screening-result-${screeningId}`,
+      });
+
+      browserNotification.onclick = () => {
+        window.focus();
+        navigateToResult();
+        browserNotification.close();
+      };
+    };
+
+    if (!('Notification' in window)) {
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      createBrowserNotification();
+      return;
+    }
+
+    if (Notification.permission === 'default') {
+      void Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          createBrowserNotification();
+        }
+      });
+    }
+  }, [navigate, patientDisplayName, resultPagePath, screeningId]);
 
   // ─── Navigation Guard ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -247,7 +397,7 @@ export default function OrganisationScreeningResultPage() {
           setHasHeatmapEdits(false);
         }
       }
-    } catch (e) {
+    } catch {
       // Ignore
     }
   }, [hydrateVisualArtifacts, rawJsonOutput]);
@@ -436,6 +586,24 @@ export default function OrganisationScreeningResultPage() {
     setShareIncludeRetinalImages(false);
   }, [shareModalOpen, sessionData]);
 
+  const handleBuyQuotaFromModal = () => {
+    if (!hasValidUnitPrice) {
+      toast.error('Không lấy được đơn giá quota. Vui lòng thử lại sau.');
+      return;
+    }
+
+    buyQuotaMutation.mutate(selectedQuotaAmount);
+  };
+
+  const handleTopUpWalletFromModal = () => {
+    if (suggestedTopUpAmount <= 0) {
+      toast.error('Số tiền nạp chưa hợp lệ.');
+      return;
+    }
+
+    createDepositMutation.mutate(suggestedTopUpAmount);
+  };
+
   // ─── Draft helpers ────────────────────────────────────────────────────────
   const updateDraft = useCallback(
     <K extends keyof ResultDraft>(key: K, value: ResultDraft[K]) => {
@@ -526,132 +694,228 @@ export default function OrganisationScreeningResultPage() {
     : null;
 
   // ─── AI Analyze ───────────────────────────────────────────────────────────
-  const handleAnalyze = useCallback(async () => {
-    if (
-      isViewOnly ||
-      !sessionData ||
-      sessionData.images.length === 0 ||
-      analyzing
-    )
-      return;
+  const handleAnalyze = useCallback(
+    async (options?: { skipQuotaDeduction?: boolean }) => {
+      if (
+        isViewOnly ||
+        !sessionData ||
+        sessionData.images.length === 0 ||
+        analyzing
+      )
+        return;
 
-    const targetImage =
-      sessionData.images[selectedImageIndex] ?? sessionData.images[0];
-    if (!targetImage) return;
+      if (!screeningId) {
+        toast.error('Không tìm thấy phiên khám để phân tích AI.');
+        return;
+      }
 
-    setAnalyzing(true);
-    try {
-      const imgResponse = await fetch(targetImage.imageUrl);
-      const blob = await imgResponse.blob();
-      const fileName =
-        targetImage.imageUrl.split('/').pop() ??
-        `retinal-org-${Date.now().toString()}.jpg`;
-      const file = new File([blob], fileName, {
-        type: blob.type || 'image/jpeg',
+      const targetImage =
+        sessionData.images[selectedImageIndex] ?? sessionData.images[0];
+      if (!targetImage) return;
+
+      const analysisToastId = toast.loading('Đang phân tích AI...', {
+        closeButton: false,
       });
-      const fastFormData = new FormData();
-      fastFormData.append('file', file);
-      fastFormData.append('topk', '5');
 
-      // Phase 1: fast inference for quicker initial feedback.
-      const { data: fastData } = await aiCoreClient.post<AIStandardResponse>(
-        '/api/v2/diagnosis/v2/analyze/fast',
-        fastFormData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
-
-      const topK = [...(fastData.prediction?.top_k ?? [])]
-        .sort((a, b) => a.rank - b.rank)
-        .slice(0, 6);
-
-      if (topK.length === 0)
-        throw new Error('AI service returned no prediction data.');
-
-      const mappedFindings = mapAiFindings(topK, currentLanguage);
-      const primary = mappedFindings[0];
-      const nextRiskLevel = toRiskLevelFromUrgency(
-        getDiseaseUrgency(primary.name),
-        primary.confidence
-      );
-
-      setAiFindings(mappedFindings);
-      setRawJsonOutput(JSON.stringify(fastData));
-      setShowHighlights(true);
-      setShowHeatmap(false);
-      setDraft({
-        riskLevel: nextRiskLevel,
-        confidenceScore: primary.confidence,
-        summary: buildSummary(nextRiskLevel, primary.localizedName),
-        findings: buildFindingsText(mappedFindings),
-      });
-      setConsultationNote('');
-      setSaved(false);
-      setAnalyzing(false);
-
-      // Phase 2: full inference for localization + heatmap details.
-      setEnhancingAnalysis(true);
+      setAnalyzing(true);
       try {
-        const fullFormData = new FormData();
-        fullFormData.append('file', file);
-        fullFormData.append('threshold', '0.55');
-        fullFormData.append('topk', '5');
+        if (!options?.skipQuotaDeduction) {
+          await orgBillingApi.deductQuota();
+        }
 
-        const { data: fullData } = await aiCoreClient.post<AIStandardResponse>(
-          '/api/v2/diagnosis/v2/analyze',
-          fullFormData,
+        void queryClient.invalidateQueries({
+          queryKey: ['org-billing-summary'],
+        });
+
+        const imgResponse = await fetch(targetImage.imageUrl);
+        const blob = await imgResponse.blob();
+        const fileName =
+          targetImage.imageUrl.split('/').pop() ??
+          `retinal-org-${Date.now().toString()}.jpg`;
+        const file = new File([blob], fileName, {
+          type: blob.type || 'image/jpeg',
+        });
+        const fastFormData = new FormData();
+        fastFormData.append('file', file);
+        fastFormData.append('topk', '5');
+
+        // Phase 1: fast inference for quicker initial feedback.
+        const { data: fastData } = await aiCoreClient.post<AIStandardResponse>(
+          '/api/v2/diagnosis/v2/analyze/fast',
+          fastFormData,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
           }
         );
 
-        const fullTopK = [...(fullData.prediction?.top_k ?? [])]
+        const topK = [...(fastData.prediction?.top_k ?? [])]
           .sort((a, b) => a.rank - b.rank)
           .slice(0, 6);
 
-        if (fullTopK.length > 0) {
-          const mappedFullFindings = mapAiFindings(fullTopK, currentLanguage);
-          const primaryFull = mappedFullFindings[0];
-          const fullRiskLevel = toRiskLevelFromUrgency(
-            getDiseaseUrgency(primaryFull.name),
-            primaryFull.confidence
-          );
+        if (topK.length === 0)
+          throw new Error('AI service returned no prediction data.');
 
-          setAiFindings(mappedFullFindings);
-          setRawJsonOutput(JSON.stringify(fullData));
-          setDraft({
-            riskLevel: fullRiskLevel,
-            confidenceScore: primaryFull.confidence,
-            summary: buildSummary(fullRiskLevel, primaryFull.localizedName),
-            findings: buildFindingsText(mappedFullFindings),
-          });
-        }
-      } catch (fullError) {
-        console.warn(
-          'Full organization AI analyze failed, using fast result:',
-          fullError
+        const mappedFindings = mapAiFindings(topK, currentLanguage);
+        const primary = mappedFindings[0];
+        const nextRiskLevel = toRiskLevelFromUrgency(
+          getDiseaseUrgency(primary.name),
+          primary.confidence
         );
+
+        setAiFindings(mappedFindings);
+        setRawJsonOutput(JSON.stringify(fastData));
+        setShowHighlights(true);
+        setShowHeatmap(false);
+        setDraft({
+          riskLevel: nextRiskLevel,
+          confidenceScore: primary.confidence,
+          summary: buildSummary(nextRiskLevel, primary.localizedName),
+          findings: buildFindingsText(mappedFindings),
+        });
+        setConsultationNote('');
+        setSaved(false);
+
+        // Phase 2: full inference for localization + heatmap details.
+        setEnhancingAnalysis(true);
+        try {
+          const fullFormData = new FormData();
+          fullFormData.append('file', file);
+          fullFormData.append('threshold', '0.55');
+          fullFormData.append('topk', '5');
+
+          const { data: fullData } =
+            await aiCoreClient.post<AIStandardResponse>(
+              '/api/v2/diagnosis/v2/analyze',
+              fullFormData,
+              {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              }
+            );
+
+          const fullTopK = [...(fullData.prediction?.top_k ?? [])]
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, 6);
+
+          if (fullTopK.length > 0) {
+            const mappedFullFindings = mapAiFindings(fullTopK, currentLanguage);
+            const primaryFull = mappedFullFindings[0];
+            const fullRiskLevel = toRiskLevelFromUrgency(
+              getDiseaseUrgency(primaryFull.name),
+              primaryFull.confidence
+            );
+
+            setAiFindings(mappedFullFindings);
+            setRawJsonOutput(JSON.stringify(fullData));
+            setDraft({
+              riskLevel: fullRiskLevel,
+              confidenceScore: primaryFull.confidence,
+              summary: buildSummary(fullRiskLevel, primaryFull.localizedName),
+              findings: buildFindingsText(mappedFullFindings),
+            });
+          }
+        } catch (fullError) {
+          console.warn(
+            'Full organization AI analyze failed, using fast result:',
+            fullError
+          );
+        } finally {
+          setEnhancingAnalysis(false);
+        }
+
+        toast.update(analysisToastId, {
+          render:
+            'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2800,
+          closeButton: true,
+        });
+
+        emitAnalysisCompletionNotification();
+        void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      } catch (error) {
+        console.error('Organisation AI analysis failed:', error);
+
+        if (isAxiosError(error) && error.response?.status === 402) {
+          setIsQuotaModalOpen(true);
+          toast.update(analysisToastId, {
+            render:
+              'Hết quota. Vui lòng mua thêm quota từ ví trước khi phân tích.',
+            type: 'error',
+            isLoading: false,
+            autoClose: 3200,
+            closeButton: true,
+          });
+          return;
+        }
+
+        toast.update(analysisToastId, {
+          render: getErrorMessage(
+            error,
+            'Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.'
+          ),
+          type: 'error',
+          isLoading: false,
+          autoClose: 3200,
+          closeButton: true,
+        });
       } finally {
+        setAnalyzing(false);
         setEnhancingAnalysis(false);
       }
+    },
+    [
+      screeningId,
+      sessionData,
+      selectedImageIndex,
+      analyzing,
+      currentLanguage,
+      emitAnalysisCompletionNotification,
+      isViewOnly,
+      queryClient,
+    ]
+  );
 
-      toast.success(
-        'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.'
-      );
-    } catch (error) {
-      console.error('Organisation AI analysis failed:', error);
-      toast.error(
-        getErrorMessage(
-          error,
-          'Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.'
-        )
-      );
-    } finally {
-      setAnalyzing(false);
-      setEnhancingAnalysis(false);
+  useEffect(() => {
+    if (
+      !shouldAutoAnalyze ||
+      autoAnalyzeTriggeredRef.current ||
+      !sessionData ||
+      isViewOnly ||
+      analyzing ||
+      sessionData.images.length === 0
+    ) {
+      return;
     }
-  }, [sessionData, selectedImageIndex, analyzing, currentLanguage, isViewOnly]);
+
+    const autoAnalyzeStorageKey = screeningId
+      ? `org-screening-auto-analyze:${screeningId}`
+      : '';
+
+    if (
+      autoAnalyzeStorageKey &&
+      window.sessionStorage.getItem(autoAnalyzeStorageKey) === 'done'
+    ) {
+      autoAnalyzeTriggeredRef.current = true;
+      return;
+    }
+
+    autoAnalyzeTriggeredRef.current = true;
+    if (autoAnalyzeStorageKey) {
+      window.sessionStorage.setItem(autoAnalyzeStorageKey, 'done');
+    }
+    void handleAnalyze({
+      skipQuotaDeduction: skipQuotaDeductionOnAutoAnalyze,
+    });
+  }, [
+    screeningId,
+    shouldAutoAnalyze,
+    sessionData,
+    isViewOnly,
+    analyzing,
+    handleAnalyze,
+    skipQuotaDeductionOnAutoAnalyze,
+  ]);
 
   // ─── Download PDF ─────────────────────────────────────────────────────────
   const handleDownloadPdf = useCallback(async () => {
@@ -824,7 +1088,7 @@ export default function OrganisationScreeningResultPage() {
         const parsed = JSON.parse(finalJsonOutput) as Record<string, unknown>;
         parsed.heatmap_data = heatmapData;
         finalJsonOutput = JSON.stringify(parsed);
-      } catch (e) {
+      } catch {
         // Ignore JSON error
       }
     }
@@ -934,7 +1198,10 @@ export default function OrganisationScreeningResultPage() {
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
                         Bệnh nhân: {patientDisplayName} · Phiên{' '}
-                        {screeningId?.slice(0, 8)}… ·{' '}
+                        {screeningId
+                          ? `${screeningId.slice(0, 8)}...`
+                          : 'Nháp mới'}{' '}
+                        ·{' '}
                         {new Date(sessionData.createdAt).toLocaleString(
                           'vi-VN'
                         )}
@@ -944,6 +1211,40 @@ export default function OrganisationScreeningResultPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="inline-flex items-center gap-2">
+                    {isBillingLoading ? (
+                      <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-(--bg-primary) border border-(--border-primary)">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-(--text-secondary)" />
+                        <span className="text-xs text-(--text-tertiary)">
+                          Loading...
+                        </span>
+                      </div>
+                    ) : (
+                      <div
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white ${
+                          isQuotaExhausted
+                            ? 'bg-red-500'
+                            : remainingQuota <= 3
+                              ? 'bg-amber-500'
+                              : 'bg-(--color-brand-primary)'
+                        }`}
+                        title={`Còn ${remainingQuota} lượt`}
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>{remainingQuota} lượt</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setIsQuotaModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-(--color-brand-primary) text-(--color-brand-primary) text-xs font-semibold hover:bg-(--color-brand-primary) hover:text-white transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Mua thêm
+                    </button>
+                  </div>
+
                   {/* Nút Chia sẻ — mở modal tổng hợp */}
                   <button
                     onClick={() => setShareModalOpen(true)}
@@ -994,12 +1295,15 @@ export default function OrganisationScreeningResultPage() {
                   ) : (
                     <>
                       <button
-                        onClick={handleAnalyze}
+                        onClick={() => {
+                          void handleAnalyze();
+                        }}
                         disabled={
                           analyzing ||
                           enhancingAnalysis ||
                           loading ||
-                          !sessionData.images.length
+                          !sessionData.images.length ||
+                          isQuotaExhausted
                         }
                         className="inline-flex min-w-[148px] items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 transition"
                       >
@@ -1012,7 +1316,7 @@ export default function OrganisationScreeningResultPage() {
                           ? 'Đang phân tích…'
                           : enhancingAnalysis
                             ? 'Đang hoàn thiện…'
-                            : 'Phân tích'}
+                            : 'Phân tích lại'}
                       </button>
                       <button
                         onClick={requestSaveResults}
@@ -1323,6 +1627,114 @@ export default function OrganisationScreeningResultPage() {
             void executeSaveResults();
           }}
         />
+
+        {isQuotaModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-(--text-primary)">
+                  Mua thêm quota AI
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(false)}
+                  className="p-1.5 rounded-lg text-(--text-tertiary) hover:bg-(--bg-tertiary)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-(--text-primary)">
+                  Số lượt muốn mua
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={5000}
+                  value={quotaAmountInput}
+                  onChange={(event) => setQuotaAmountInput(event.target.value)}
+                  className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
+                />
+
+                <div className="rounded-xl border border-(--border-primary) p-3 text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">Đơn giá/lượt</span>
+                    <span className="font-semibold text-(--text-primary)">
+                      {hasValidUnitPrice
+                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">
+                      Tổng thanh toán
+                    </span>
+                    <span className="font-bold text-(--text-primary)">
+                      {selectedTotalCost.toLocaleString('vi-VN')} VND
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-(--text-tertiary)">Số dư ví</span>
+                    <span className="font-semibold text-(--text-primary)">
+                      {walletBalance.toLocaleString('vi-VN')} VND
+                    </span>
+                  </div>
+                </div>
+
+                {hasEnoughBalance ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700 text-sm flex items-center gap-2">
+                    <Coins className="w-4 h-4" />
+                    Ví đủ tiền để mua quota.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
+                    Ví không đủ tiền, thiếu{' '}
+                    <span className="font-semibold">
+                      {missingAmount.toLocaleString('vi-VN')} VND
+                    </span>
+                    . Hãy nạp thêm tiền vào ví.
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsQuotaModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-(--border-primary) text-sm font-semibold text-(--text-primary) hover:bg-(--bg-tertiary)"
+                >
+                  Đóng
+                </button>
+
+                {hasEnoughBalance ? (
+                  <button
+                    type="button"
+                    onClick={handleBuyQuotaFromModal}
+                    disabled={buyQuotaMutation.isPending || !hasValidUnitPrice}
+                    className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {buyQuotaMutation.isPending ? 'Đang xử lý...' : 'Mua quota'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleTopUpWalletFromModal}
+                    disabled={
+                      createDepositMutation.isPending ||
+                      suggestedTopUpAmount <= 0
+                    }
+                    className="px-4 py-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {createDepositMutation.isPending
+                      ? 'Đang tạo thanh toán...'
+                      : `Nạp ${suggestedTopUpAmount.toLocaleString('vi-VN')} VND`}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Share modal (email + network trong 1 modal) ── */}
         {shareModalOpen && (

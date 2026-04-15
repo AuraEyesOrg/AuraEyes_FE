@@ -102,7 +102,8 @@ export const postsApi = {
     pageNumber = 1,
     pageSize = 10,
     authorId?: string,
-    hiddenOnly = false
+    hiddenOnly = false,
+    reportedOnly = false
   ) {
     const response = await api.get<ApiResponse<PagedResult<ProfessionalPost>>>(
       NETWORK_ENDPOINTS.POSTS.FEED,
@@ -112,6 +113,7 @@ export const postsApi = {
           pageSize,
           ...(authorId ? { authorId } : {}),
           ...(hiddenOnly ? { hiddenOnly: true } : {}),
+          ...(reportedOnly ? { reportedOnly: true } : {}),
         },
       }
     );
