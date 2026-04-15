@@ -2562,5 +2562,60 @@
       "home": "Home",
       "newScreening": "New Screening"
     }
+  },
+  "Organisation": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "historicalData": "Historical Data",
+      "calendar": "Calendar",
+      "screening": "Screening",
+      "analytics": "Analytics",
+      "slotManagement": "Slot Management",
+      "contract": "Contract",
+      "billing": "Billing",
+      "wallet": "Wallet",
+      "reports": "Reports",
+      "settings": "Settings"
+    }
+  },
+  "SystemAdmin": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groups": {
+        "user-directory": {
+          "label": "User Directory",
+          "description": "Manage user directory"
+        },
+        "contract-management": {
+          "label": "Contract Management",
+          "description": "Manage contracts"
+        },
+        "billing-finance": {
+          "label": "Billing & Finance",
+          "description": "Financial & Billing management"
+        },
+        "system-administration": {
+          "label": "System Administration",
+          "description": "System administration tools"
+        }
+      },
+      "items": {
+        "organisations": "Organisations",
+        "ophthalmologists": "Ophthalmologists",
+        "leave-requests": "Leave Requests",
+        "employment-type-change-requests": "Employment Type Changes",
+        "patients": "Patients",
+        "verifications": "Verifications",
+        "contract-templates": "Contract Templates",
+        "contracts": "Contracts",
+        "transaction-ledger": "Transaction Ledger",
+        "withdrawal-requests": "Withdrawal Requests",
+        "permissions": "Permissions",
+        "audit-logs": "Audit Logs",
+        "settings": "Settings",
+        "aura-network": "Aura Network"
+      }
+    }
   }
 }
