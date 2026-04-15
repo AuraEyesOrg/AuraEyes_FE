@@ -37,6 +37,7 @@ import {
   type FeedbackRatingSummary,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
+import { formatViDate } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
@@ -100,11 +101,7 @@ const mapToUiModel = (
     item.ratingAverage ?? ratingSummary?.ratingAverage ?? 0
   ),
   totalReviews: Number(item.ratingCount ?? ratingSummary?.ratingCount ?? 0),
-  joinedAt: new Date(item.createdAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-  }),
+  joinedAt: formatViDate(item.createdAt),
 });
 
 type TabType = 'overview' | 'requests' | 'feedback';

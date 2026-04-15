@@ -35,6 +35,7 @@ import StatsCard from '../components/StatsCard';
 import StatusBadge from '../components/StatusBadge';
 import { permissionsApi } from '../api/permissions.api';
 import { userApi } from '../api/user.api';
+import { formatViDate } from '@/lib/date-utils';
 import type {
   ApplicationRoleDto,
   CreatePermissionPayload,
@@ -1702,7 +1703,7 @@ export default function PermissionsPage() {
                                         <span className="text-xs text-slate-400">
                                           {ov.isExpired ? 'Expired' : 'Revoked'}
                                           {ov.expiresAt && ov.isExpired
-                                            ? ` · ${new Date(ov.expiresAt).toLocaleDateString()}`
+                                            ? ` · ${formatViDate(ov.expiresAt)}`
                                             : ''}
                                         </span>
                                       </div>

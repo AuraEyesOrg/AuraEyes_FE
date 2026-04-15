@@ -81,9 +81,9 @@ const addDays = (baseDate: Date, days: number) => {
 const formatDayLabel = (date: string) => {
   const parsed = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return parsed.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
   });
 };
 

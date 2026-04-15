@@ -33,6 +33,7 @@ import type {
   Organisation as ApiOrganisation,
   OrganisationOnboardingRequestDto,
 } from '../types/system-admin.types';
+import { formatViDate, formatViTimestamp } from '@/lib/date-utils';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
@@ -92,11 +93,7 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   totalScreenings: 0,
   contractStartDate: item.createdAt,
   contractEndDate: '',
-  createdAt: new Date(item.createdAt).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-  }),
+  createdAt: formatViDate(item.createdAt),
   contactEmail: item.contactEmail || '',
 });
 
@@ -554,7 +551,7 @@ export default function OrganisationsPage() {
       accessor: 'contractStartDate',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {new Date(value as string).toLocaleDateString()}
+          {value ? formatViDate(value as string) : 'N/A'}
         </span>
       ),
     },
@@ -563,7 +560,7 @@ export default function OrganisationsPage() {
       accessor: 'contractEndDate',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {new Date(value as string).toLocaleDateString()}
+          {value ? formatViDate(value as string) : 'N/A'}
         </span>
       ),
     },
@@ -771,9 +768,7 @@ export default function OrganisationsPage() {
                           </div>
                           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {request.orgType} • Gửi lúc{' '}
-                            {new Date(request.createdAt).toLocaleString(
-                              'vi-VN'
-                            )}
+                            {formatViTimestamp(request.createdAt)}
                           </p>
                         </div>
                         <button
@@ -850,7 +845,7 @@ export default function OrganisationsPage() {
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
                   {tab.count !== undefined && (
-                    <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                       {tab.count}
                     </span>
                   )}
@@ -860,7 +855,7 @@ export default function OrganisationsPage() {
 
             {/* Search & Filters */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative flex-1 min-w-70 max-w-lg">
+              <div className="relative flex-1 min-w-[280px] max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"

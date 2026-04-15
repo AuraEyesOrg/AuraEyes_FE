@@ -28,6 +28,7 @@ import {
   type PatientMetricsDto,
 } from '../api/patient.api';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { formatViDate } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
 
@@ -44,9 +45,7 @@ const mapToUiPatient = (item: PatientListItem): Patient => ({
   ...item,
   name: item.fullName,
   status: item.isWalkIn ? 'active' : item.isActive ? 'active' : 'locked',
-  lastScreening: item.lastLoginAt
-    ? new Date(item.lastLoginAt).toLocaleDateString()
-    : undefined,
+  lastScreening: item.lastLoginAt ? formatViDate(item.lastLoginAt) : undefined,
   emailVerified: item.emailConfirmed,
   patientTypeLabel: item.isWalkIn ? 'Walk-in' : 'Registered',
 });
@@ -260,13 +259,17 @@ export default function PatientsPage() {
       ),
     },
     { header: 'Last Login', accessor: 'lastScreening' },
-    { header: 'Joined', accessor: 'createdAt' },
+    {
+      header: 'Joined',
+      accessor: 'createdAt',
+      render: (value) => formatViDate(String(value ?? '')),
+    },
     {
       header: 'Status',
       accessor: 'status',
       render: (value, row) => {
         if (row.isWalkIn) {
-          return <StatusBadge status="info" label="Walk-in" />;
+          return <StatusBadge status="success" label="Active" />;
         }
 
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
