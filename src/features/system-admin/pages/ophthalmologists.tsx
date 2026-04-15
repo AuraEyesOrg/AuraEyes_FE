@@ -811,7 +811,7 @@ export default function OphthalmologistsPage() {
                   <Wallet className="w-5 h-5 text-amber-500" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                  <span className="min-w-0 break-words leading-tight text-3xl font-bold text-slate-900 dark:text-white">
                     {formatCurrency(
                       ophthalmologists.reduce(
                         (sum, o) => sum + o.pendingPayouts,

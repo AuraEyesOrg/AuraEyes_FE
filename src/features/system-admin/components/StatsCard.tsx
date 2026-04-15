@@ -99,11 +99,11 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         )}
       </div>
 
-      <div className="flex items-end justify-between gap-2">
+      <div className="flex min-w-0 items-end justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2 flex-wrap">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-2">
             <p
-              className={`text-slate-900 dark:text-white font-bold tabular-nums ${
+              className={`min-w-0 break-words leading-tight text-slate-900 dark:text-white font-bold tabular-nums ${
                 compact ? 'text-xl' : 'text-3xl'
               }`}
             >

@@ -306,7 +306,7 @@ export default function WithdrawalRequestsPage() {
               <p className="text-sm text-cyan-700 dark:text-cyan-300">
                 Tổng tiền trên trang hiện tại
               </p>
-              <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
+              <p className="min-w-0 break-words leading-tight text-2xl font-bold text-cyan-700 dark:text-cyan-300">
                 {formatMoney(summary.totalAmount)}
               </p>
             </div>
