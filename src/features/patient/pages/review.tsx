@@ -71,6 +71,32 @@ const RISK_STYLE_CONFIG = {
 const FALLBACK_RESOURCE_IMAGE =
   'https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=900&q=80';
 const RESOURCE_SKELETON_COUNT = 3;
+const MOCK_EDUCATIONAL_RESOURCES: PatientEducationalResourceItem[] = [
+  {
+    id: 'mock-eye-health-1',
+    title: 'Huong dan cham soc mat sau khi nhan ket qua AI screening',
+    description:
+      'Cac buoc theo doi trieu chung, lich tai kham, va nhung dau hieu can gap bac si som.',
+    link: 'https://www.nei.nih.gov/learn-about-eye-health',
+    image: null,
+  },
+  {
+    id: 'mock-eye-health-2',
+    title: 'Tong hop benh vong mac thuong gap va cach phong ngua',
+    description:
+      'Kien thuc can ban ve ton thuong vong mac, yeu to nguy co, va khuyen nghi song khoe.',
+    link: 'https://www.who.int/news-room/fact-sheets/detail/blindness-and-vision-impairment',
+    image: null,
+  },
+  {
+    id: 'mock-eye-health-3',
+    title: 'Tai lieu hoi dap de chuan bi khi di kham mat',
+    description:
+      'Danh sach cau hoi nen trao doi voi bac si de hieu ro ket qua va huong dieu tri.',
+    link: 'https://medlineplus.gov/eyediseases.html',
+    image: null,
+  },
+];
 
 export default function ReviewPage() {
   const location = useLocation();
@@ -201,6 +227,7 @@ export default function ReviewPage() {
   const [loadedResourceImageIds, setLoadedResourceImageIds] = useState<
     Record<string, boolean>
   >({});
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const riskLevel =
     activeState?.riskLevel ??
     relevantStoredContext?.riskLevel ??
@@ -327,11 +354,45 @@ export default function ReviewPage() {
   const showEducationalResourcesSkeleton =
     (isEducationalResourcesLoading || isEducationalResourcesFetching) &&
     educationalResources.length === 0;
+  const displayedEducationalResources =
+    educationalResources.length > 0
+      ? educationalResources
+      : MOCK_EDUCATIONAL_RESOURCES;
 
   const markResourceImageReady = (resourceId: string) => {
     setLoadedResourceImageIds((previous) =>
       previous[resourceId] ? previous : { ...previous, [resourceId]: true }
     );
+  };
+
+  const downloadPatientReportPdf = async () => {
+    if (!screeningId || isDownloadingPdf) return;
+    setIsDownloadingPdf(true);
+    try {
+      const { blob, contentDisposition } =
+        await screeningApi.downloadPatientReportPdf(screeningId);
+      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
+      const fileNameFromHeader = contentDisposition
+        ?.split(';')
+        .map((part) => part.trim())
+        .find((part) => part.toLowerCase().startsWith('filename='))
+        ?.split('=')[1]
+        ?.replace(/^"|"$/g, '');
+      const fileName = fileNameFromHeader || fallbackFileName;
+
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Failed to download patient screening PDF', error);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   /* guard: no route state */
@@ -340,7 +401,7 @@ export default function ReviewPage() {
       <FocusModeLayout
         currentStep="review"
         title={t('PatientReview.page.title', 'Review & Next Steps')}
-        exitPath="/patient/screening/new"
+        exitPath="/patient/screening"
         showBreadcrumb={false}
       >
         <div className="flex-1 flex items-center justify-center bg-[var(--bg-primary)]">
@@ -365,7 +426,7 @@ export default function ReviewPage() {
     <FocusModeLayout
       currentStep="review"
       title={t('PatientReview.page.title', 'Review & Next Steps')}
-      exitPath="/patient/screening/new"
+      exitPath="/patient/screening"
       showBreadcrumb={false}
     >
       <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
@@ -379,13 +440,6 @@ export default function ReviewPage() {
                 {t('PatientReview.page.subtitle')}
               </p>
             </div>
-            <button
-              onClick={() => navigate('/patient/dashboard')}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-(--border-color) bg-white hover:bg-slate-50 text-(--text-primary) font-semibold transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('PatientReview.backToDashboard', 'Back to Dashboard')}
-            </button>
           </div>
 
           <div className="w-full surface-primary rounded-2xl shadow-sm surface-border overflow-hidden flex flex-col md:flex-row">
@@ -473,19 +527,17 @@ export default function ReviewPage() {
                 <button
                   onClick={() => {
                     if (!screeningId && images.length === 0) {
-                      navigate('/patient/analysis');
+                      navigate('/patient/screening/new');
                       return;
                     }
-                    navigate('/patient/analysis', {
+                    navigate('/patient/analysis/details', {
                       state: {
                         screeningId,
                         rawJsonOutput: rawJsonForAnalysis,
                         resultsPersisted,
-                        images: images.map((img) => ({
-                          id: img.id,
-                          name: img.name,
-                          preview: img.url,
-                        })),
+                        images,
+                        anomalies,
+                        riskLevel: effectiveRiskLevel,
                       },
                     });
                   }}
@@ -551,9 +603,17 @@ export default function ReviewPage() {
                 <SecondaryActionCard
                   icon={<FileDown className="w-5 h-5" />}
                   iconBg="bg-blue-50 text-blue-600"
-                  title={t('PatientReview.actions.downloadReport')}
+                  title={
+                    isDownloadingPdf
+                      ? t(
+                          'PatientReview.actions.downloadingReport',
+                          'Downloading report...'
+                        )
+                      : t('PatientReview.actions.downloadReport')
+                  }
                   subtitle={t('PatientReview.labels.pdfFormat')}
                   actionIcon={<FileDown className="w-4 h-4" />}
+                  onClick={downloadPatientReportPdf}
                 />
 
                 <SecondaryActionCard
@@ -598,7 +658,7 @@ export default function ReviewPage() {
                       </div>
                     )
                   )
-                : educationalResources.map((resource) => {
+                : displayedEducationalResources.map((resource) => {
                     const resourceId = String(resource.id);
                     const isResourceImageLoaded = Boolean(
                       loadedResourceImageIds[resourceId]

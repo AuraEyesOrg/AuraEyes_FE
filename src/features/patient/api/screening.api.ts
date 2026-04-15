@@ -5,6 +5,7 @@ export const SCREENING_ENDPOINTS = {
   CREATE_SESSION: '/screenings/create-session',
   SAVE_RESULTS: (screeningId: string) =>
     `/screenings/${screeningId}/save-results`,
+  REPORT_PDF: (screeningId: string) => `/screenings/${screeningId}/report-pdf`,
   UPLOAD_IMAGES: '/screenings/upload-images', // No screening ID, just upload without DB save
   RECENT_SESSIONS: '/screenings/recent',
   SESSION_BY_ID: (screeningId: string) => `/screenings/${screeningId}`,
@@ -147,5 +148,21 @@ export const screeningApi = {
       SCREENING_ENDPOINTS.SESSION_BY_ID(screeningId)
     );
     return response.data;
+  },
+
+  async downloadPatientReportPdf(screeningId: string) {
+    const response = await api.get(
+      SCREENING_ENDPOINTS.REPORT_PDF(screeningId),
+      {
+        responseType: 'blob',
+      }
+    );
+    return {
+      blob: response.data as Blob,
+      contentDisposition:
+        typeof response.headers['content-disposition'] === 'string'
+          ? response.headers['content-disposition']
+          : undefined,
+    };
   },
 };

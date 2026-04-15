@@ -96,6 +96,9 @@ const RetinalAnalysisPage = lazy(
   () => import('@/features/patient/pages/retinal-analysis')
 );
 const ReviewPage = lazy(() => import('@/features/patient/pages/review'));
+const AnalysisDetailPage = lazy(
+  () => import('@/features/patient/pages/analysis-detail')
+);
 const BookAppointmentPage = lazy(
   () => import('@/features/patient/pages/book-appointment')
 );
@@ -640,6 +643,15 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/patient/analysis/details"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Patient']}
+              element={<AnalysisDetailPage />}
+            />
+          }
+        />
+        <Route
           path="/:locale/patient/screening/review"
           element={
             <LocalizedPrivateRoute
@@ -1089,6 +1101,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['Patient']}>
               <RetinalAnalysisPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/patient/analysis/details"
+          element={
+            <PrivateRoute allowedRoles={['Patient']}>
+              <AnalysisDetailPage />
             </PrivateRoute>
           }
         />
