@@ -4,41 +4,56 @@ import {
   CalendarCog,
   Settings,
   LogOut,
-  BarChart3,
   FileText,
   Users,
   Globe,
   Wallet,
   FileBarChart,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
+import { persistLocale } from '@/i18n/middleware';
+import type { AppLocale } from '@/i18n/locales';
 
 interface SidebarProps {
   pendingCount?: number;
 }
 
 const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/organisation/dashboard' },
-  { icon: FileText, label: 'Contract', path: '/organisation/contract' },
+  { icon: Home, labelKey: 'dashboard', path: '/organisation/dashboard' },
+  { icon: FileText, labelKey: 'contract', path: '/organisation/contract' },
   {
     icon: Users,
-    label: 'Patients',
+    labelKey: 'patients',
     path: '/organisation/patients',
     hasBadge: true,
   },
-  { icon: BarChart3, label: 'Analytics', path: '/organisation/analytics' },
-  { icon: Wallet, label: 'Wallet', path: '/organisation/wallet' },
-  { icon: FileBarChart, label: 'Reports', path: '/organisation/reports' },
-  { icon: Globe, label: 'Aura Network', path: '/network' },
-  { icon: Calendar, label: 'Calendar', path: '/organisation/calendar' },
-  { icon: CalendarCog, label: 'Slots', path: '/organisation/slots' },
-  { icon: Settings, label: 'Settings', path: '/organisation/settings' },
+  // { icon: BarChart3, labelKey: 'analytics', path: '/organisation/analytics' },
+  { icon: Wallet, labelKey: 'wallet', path: '/organisation/wallet' },
+  { icon: FileBarChart, labelKey: 'reports', path: '/organisation/reports' },
+  {
+    icon: Globe,
+    labelKey: 'auraNetwork',
+    path: '/network',
+  },
+  { icon: Calendar, labelKey: 'calendar', path: '/organisation/calendar' },
+  {
+    icon: CalendarCog,
+    labelKey: 'slotManagement',
+    path: '/organisation/slots',
+  },
+  { icon: Settings, labelKey: 'settings', path: '/organisation/settings' },
 ];
 
 export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
@@ -54,6 +69,18 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
   const handleLogout = () => {
     logout();
     navigate(resolvePathWithLocale('/login'));
+  };
+
+  const { i18n } = useTranslation();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+
+  const handleToggleLanguage = () => {
+    const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
+    persistLocale(newLocale);
+    i18n.changeLanguage(newLocale);
+    const newPath = withLocalePathname(newLocale, location.pathname);
+    navigate(newPath);
   };
 
   return (
@@ -88,9 +115,9 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
                     <item.icon className="w-5 h-5" />
                   </span>
                   <span className="text-sm font-medium">
-                    {item.path === '/network'
+                    {item.labelKey === 'auraNetwork'
                       ? t('Common.sidebar.auraNetwork', 'Aura Network')
-                      : item.label}
+                      : t(`Organisation.sidebar.${item.labelKey}`)}
                   </span>
                 </div>
                 {item.hasBadge && pendingCount > 0 && (
@@ -105,8 +132,8 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
       </nav>
 
       <div className="border-t border-gray-200 px-6 py-4 dark:border-slate-700">
-        <div className="flex items-center gap-3 px-2">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex items-center gap-2 px-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <UserAvatar
               fullName={user?.fullName}
               avatarUrl={user?.avatarUrl}
@@ -122,6 +149,13 @@ export default function Sidebar({ pendingCount = 0 }: SidebarProps) {
               <p className="text-xs text-gray-400 truncate">{displayEmail}</p>
             </div>
           </div>
+          <button
+            onClick={handleToggleLanguage}
+            className="text-gray-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
+            title={t('Common.language', 'Language')}
+          >
+            <Globe className="w-5 h-5" />
+          </button>
           <button
             onClick={handleLogout}
             className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
