@@ -284,6 +284,7 @@
       "appointments": "Appointments",
       "schedules": "Schedules",
       "leaveRequests": "Leave Requests",
+      "employmentTypeChangeRequests": "Employment Type Changes",
       "consultations": "Consultations",
       "contract": "Contract",
       "settings": "Settings",
@@ -318,6 +319,38 @@
         "cancelFailed": "Failed to cancel leave request.",
         "missingFields": "Please provide start date, end date, and reason.",
         "invalidDateRange": "End date must be on or after start date."
+      }
+    },
+    "employmentTypeChangeRequests": {
+      "pageTitle": "Employment Type Change Requests",
+      "submitTitle": "Submit New Request",
+      "submitDescription": "System admin will review your request. Approved requests require signing a new contract.",
+      "currentType": "Current employment type",
+      "targetType": "Target employment type",
+      "reason": "Reason",
+      "reasonPlaceholder": "Describe why you need to change your employment type.",
+      "submitAction": "Submit Request",
+      "historyTitle": "Request History",
+      "empty": "No requests found.",
+      "createdAt": "Created at",
+      "reviewedAt": "Reviewed at",
+      "adminNote": "Admin note",
+      "confirmCancel": "Are you sure you want to cancel this request?",
+      "cancelAction": "Cancel request",
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "toast": {
+        "createSuccess": "Employment type change request submitted successfully.",
+        "createFailed": "Failed to submit employment type change request.",
+        "cancelSuccess": "Employment type change request cancelled successfully.",
+        "cancelFailed": "Failed to cancel employment type change request.",
+        "missingReason": "Please provide a reason.",
+        "sameType": "Target employment type must be different from current type."
       }
     },
     "dashboard": {
@@ -2547,6 +2580,61 @@
     "breadcrumb": {
       "home": "Home",
       "newScreening": "New Screening"
+    }
+  },
+  "Organisation": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "historicalData": "Historical Data",
+      "calendar": "Calendar",
+      "screening": "Screening",
+      "analytics": "Analytics",
+      "slotManagement": "Slot Management",
+      "contract": "Contract",
+      "billing": "Billing",
+      "wallet": "Wallet",
+      "reports": "Reports",
+      "settings": "Settings"
+    }
+  },
+  "SystemAdmin": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groups": {
+        "user-directory": {
+          "label": "User Directory",
+          "description": "Manage user directory"
+        },
+        "contract-management": {
+          "label": "Contract Management",
+          "description": "Manage contracts"
+        },
+        "billing-finance": {
+          "label": "Billing & Finance",
+          "description": "Financial & Billing management"
+        },
+        "system-administration": {
+          "label": "System Administration",
+          "description": "System administration tools"
+        }
+      },
+      "items": {
+        "organisations": "Organisations",
+        "ophthalmologists": "Ophthalmologists",
+        "leave-requests": "Leave Requests",
+        "employment-type-change-requests": "Employment Type Changes",
+        "patients": "Patients",
+        "verifications": "Verifications",
+        "contract-templates": "Contract Templates",
+        "contracts": "Contracts",
+        "transaction-ledger": "Transaction Ledger",
+        "withdrawal-requests": "Withdrawal Requests",
+        "permissions": "Permissions",
+        "audit-logs": "Audit Logs",
+        "settings": "Settings",
+        "aura-network": "Aura Network"
+      }
     }
   }
 }

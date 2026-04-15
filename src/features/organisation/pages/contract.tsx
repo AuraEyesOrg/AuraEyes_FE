@@ -562,15 +562,21 @@ export default function OrganisationContractPage() {
                 )}
               </div>
 
-              {contract.status === 'PendingSignature' && (
+              {(contract.status === 'PendingSignature' ||
+                contract.status === 'Active') && (
                 <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                      Upload hợp đồng đã ký
+                      {contract.scannedDocumentUrl
+                        ? 'Hợp đồng đã ký'
+                        : 'Upload hợp đồng đã ký'}
                     </p>
                     <p className="text-sm text-slate-500">
-                      Tải mẫu, ký đóng dấu rồi upload lại file scan hoặc ảnh
-                      chụp.
+                      {contract.scannedDocumentUrl
+                        ? contract.status === 'Active'
+                          ? 'Bạn hiện đã có thể bắt đầu sử dụng đầy đủ các tính năng của AURA.'
+                          : 'Hợp đồng đã được gửi đi và đang chờ admin phê duyệt.'
+                        : 'Tải mẫu, ký đóng dấu rồi upload lại file scan hoặc ảnh chụp.'}
                     </p>
                   </div>
                   {!contract.scannedDocumentUrl && (

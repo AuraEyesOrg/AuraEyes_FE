@@ -78,6 +78,12 @@ export const API_ENDPOINTS = {
         `/system-admin/ophthalmologists/leave-requests/${requestId}/approve`,
       REJECT_LEAVE_REQUEST: (requestId: string) =>
         `/system-admin/ophthalmologists/leave-requests/${requestId}/reject`,
+      EMPLOYMENT_TYPE_CHANGE_REQUESTS:
+        '/system-admin/ophthalmologists/employment-type-change-requests',
+      APPROVE_EMPLOYMENT_TYPE_CHANGE_REQUEST: (requestId: string) =>
+        `/system-admin/ophthalmologists/employment-type-change-requests/${requestId}/approve`,
+      REJECT_EMPLOYMENT_TYPE_CHANGE_REQUEST: (requestId: string) =>
+        `/system-admin/ophthalmologists/employment-type-change-requests/${requestId}/reject`,
     },
 
     // PayOS Payout Management (automated payout via PayOS API)
@@ -193,6 +199,12 @@ export const API_ENDPOINTS = {
       CREATE: '/ophthalmologist/leave-requests',
       CANCEL: (requestId: string) =>
         `/ophthalmologist/leave-requests/${requestId}/cancel`,
+    },
+    EMPLOYMENT_TYPE_CHANGE_REQUESTS: {
+      LIST: '/ophthalmologist/employment-type-change-requests',
+      CREATE: '/ophthalmologist/employment-type-change-requests',
+      CANCEL: (requestId: string) =>
+        `/ophthalmologist/employment-type-change-requests/${requestId}/cancel`,
     },
     CONTRACT: {
       MY_CONTRACT: '/ophthalmologists/my-contract',

@@ -287,6 +287,7 @@ declare module 'i18next' {
         appointments: string;
         schedules: string;
         leaveRequests: string;
+        employmentTypeChangeRequests: string;
         consultations: string;
         contract: string;
         settings: string;
@@ -321,6 +322,38 @@ declare module 'i18next' {
           cancelFailed: string;
           missingFields: string;
           invalidDateRange: string;
+        };
+      };
+      employmentTypeChangeRequests: {
+        pageTitle: string;
+        submitTitle: string;
+        submitDescription: string;
+        currentType: string;
+        targetType: string;
+        reason: string;
+        reasonPlaceholder: string;
+        submitAction: string;
+        historyTitle: string;
+        empty: string;
+        createdAt: string;
+        reviewedAt: string;
+        adminNote: string;
+        confirmCancel: string;
+        cancelAction: string;
+        status: {
+          all: string;
+          pending: string;
+          approved: string;
+          rejected: string;
+          cancelled: string;
+        };
+        toast: {
+          createSuccess: string;
+          createFailed: string;
+          cancelSuccess: string;
+          cancelFailed: string;
+          missingReason: string;
+          sameType: string;
         };
       };
       dashboard: {
