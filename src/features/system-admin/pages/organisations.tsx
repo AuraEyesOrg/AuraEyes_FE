@@ -218,7 +218,6 @@ export default function OrganisationsPage() {
       await downloadXlsxFile(
         organisationsForExport,
         [
-          { header: 'Organisation ID', value: (row) => row.id },
           { header: 'Name', value: (row) => row.name },
           { header: 'Type', value: (row) => row.orgType ?? '' },
           { header: 'Address', value: (row) => row.address ?? '' },
@@ -291,7 +290,6 @@ export default function OrganisationsPage() {
   } as const;
 
   const organisationColumns: TableColumn<Organisation>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Organisation',
       accessor: 'name',
@@ -433,7 +431,6 @@ export default function OrganisationsPage() {
   ];
 
   const billingColumns: TableColumn<Organisation>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Organisation',
       accessor: 'name',
@@ -538,7 +535,6 @@ export default function OrganisationsPage() {
   ];
 
   const contractColumns: TableColumn<Organisation>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Organisation',
       accessor: 'name',

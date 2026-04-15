@@ -23,6 +23,8 @@ import {
   Circle,
   FileText,
   X,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -38,6 +40,7 @@ import {
 import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
+import ConfirmModal from '@/components/ui/confirm-modal';
 
 type VerificationStatus =
   | 'PendingVerification'
@@ -161,6 +164,12 @@ export default function OphthalmologistsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [payingSalary, setPayingSalary] = useState(false);
   const [updatingEmployment, setUpdatingEmployment] = useState(false);
+  const [actionMenuDoctorId, setActionMenuDoctorId] = useState<string | null>(
+    null
+  );
+  const [deletingDoctorId, setDeletingDoctorId] = useState<string | null>(null);
+  const [deleteTargetDoctor, setDeleteTargetDoctor] =
+    useState<Ophthalmologist | null>(null);
   const [selectedEmploymentType, setSelectedEmploymentType] = useState<
     'FullTime' | 'PartTime'
   >('PartTime');
@@ -347,6 +356,26 @@ export default function OphthalmologistsPage() {
     setUpdatingEmployment(false);
   };
 
+  const handleDeleteDoctor = async () => {
+    if (!deleteTargetDoctor) return;
+
+    setDeletingDoctorId(deleteTargetDoctor.id);
+    try {
+      await ophthalmologistApi.deleteOphthalmologist(deleteTargetDoctor.id);
+      if (selectedDoctor?.id === deleteTargetDoctor.id) {
+        closeDoctorDetail();
+      }
+      toast.success('Doctor deleted successfully.');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to delete doctor:', error);
+      toast.error('Failed to delete doctor. Please try again.');
+    } finally {
+      setDeletingDoctorId(null);
+      setDeleteTargetDoctor(null);
+    }
+  };
+
   const handleRejectClick = (doctor: Ophthalmologist) => {
     setRejectingDoctor(doctor);
     setRejectReason('');
@@ -408,7 +437,6 @@ export default function OphthalmologistsPage() {
         mappedDoctors,
         [
           { header: 'Ophthalmologist ID', value: (row) => row.id },
-          { header: 'User ID', value: (row) => row.userId },
           { header: 'Full Name', value: (row) => row.fullName },
           { header: 'Email', value: (row) => row.email },
           { header: 'Phone', value: (row) => row.phone ?? '' },
@@ -453,7 +481,6 @@ export default function OphthalmologistsPage() {
   } as const;
 
   const ophthalmologistColumns: TableColumn<Ophthalmologist>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Doctor',
       accessor: 'name',
@@ -610,9 +637,44 @@ export default function OphthalmologistsPage() {
               </button>
             </>
           )}
-          <button className="text-slate-500 hover:text-primary transition-colors p-1">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() =>
+                setActionMenuDoctorId((current) =>
+                  current === row.id ? null : row.id
+                )
+              }
+              className="text-slate-500 hover:text-primary transition-colors p-1"
+              title="More actions"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {actionMenuDoctorId === row.id && (
+              <div className="absolute right-0 mt-1 w-44 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-20 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setSelectedDoctor(row);
+                    setActionMenuDoctorId(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Update
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteTargetDoctor(row);
+                    setActionMenuDoctorId(null);
+                  }}
+                  disabled={deletingDoctorId === row.id}
+                  className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deletingDoctorId === row.id ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       ),
     },
@@ -796,7 +858,7 @@ export default function OphthalmologistsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or ID..."
+                  placeholder="Search by name or email..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
@@ -1317,6 +1379,20 @@ export default function OphthalmologistsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deleteTargetDoctor}
+        title="Delete ophthalmologist?"
+        message={`Bạn có chắc muốn xóa bác sĩ ${deleteTargetDoctor?.name ?? ''}? Hồ sơ sẽ được đánh dấu inactive.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        tone="danger"
+        isLoading={
+          !!deleteTargetDoctor && deletingDoctorId === deleteTargetDoctor.id
+        }
+        onCancel={() => setDeleteTargetDoctor(null)}
+        onConfirm={handleDeleteDoctor}
+      />
     </div>
   );
 }

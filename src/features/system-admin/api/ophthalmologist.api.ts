@@ -183,6 +183,13 @@ export const ophthalmologistApi = {
     return response.data;
   },
 
+  async deleteOphthalmologist(id: string) {
+    const response = await api.delete<ApiResponse<string>>(
+      API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.DELETE(id)
+    );
+    return response.data;
+  },
+
   async paySalary(id: string, amount?: number, note?: string) {
     const response = await api.post<ApiResponse<string>>(
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.PAY_SALARY(id),

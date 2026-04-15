@@ -176,8 +176,6 @@ export default function PatientsPage() {
       await downloadXlsxFile(
         patientsForExport,
         [
-          { header: 'Patient ID', value: (row) => row.id },
-          { header: 'User ID', value: (row) => row.userId ?? '' },
           { header: 'Full Name', value: (row) => row.fullName },
           { header: 'Email', value: (row) => row.email ?? '' },
           { header: 'Phone', value: (row) => row.phone ?? '' },
@@ -214,7 +212,6 @@ export default function PatientsPage() {
   };
 
   const patientColumns: TableColumn<Patient>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Patient',
       accessor: 'name',
@@ -398,7 +395,7 @@ export default function PatientsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or ID..."
+                  placeholder="Search by name or email..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
