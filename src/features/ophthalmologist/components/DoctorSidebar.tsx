@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import {
   Calendar,
   CalendarClock,
   CalendarX,
+  ArrowRightLeft,
   LogOut,
   Settings,
   MessagesSquare,
@@ -17,6 +19,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/auth-store';
 import { api } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/endpoints';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -33,10 +36,13 @@ interface DoctorSidebarProps {
   pendingCount?: number;
 }
 
-interface OphthalmologistMeApiResponse {
+interface AuthMeApiResponse {
   success: boolean;
   data?: {
     employmentType?: string | null;
+    contractStatus?: string | null;
+    isVerified?: boolean | null;
+    verificationStatus?: string | null;
   };
 }
 
@@ -92,6 +98,11 @@ const navItems = [
     path: '/ophthalmologist/leave-requests',
   },
   {
+    labelKey: 'Ophthalmologist.sidebar.employmentTypeChangeRequests',
+    icon: ArrowRightLeft,
+    path: '/ophthalmologist/employment-type-change-requests',
+  },
+  {
     labelKey: 'Ophthalmologist.sidebar.consultations',
     icon: MessagesSquare,
     path: '/ophthalmologist/consultations',
@@ -125,7 +136,7 @@ export default function DoctorSidebar({
   const { t } = useSafeTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, setUser, logout } = useAuthStore();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
@@ -135,25 +146,64 @@ export default function DoctorSidebar({
   const displayEmail = user?.email ?? '';
   const authEmploymentType = normalizeEmploymentType(user?.employmentType);
 
-  const { data: latestEmploymentType } = useQuery({
-    queryKey: ['ophthalmologist', 'me', 'employment-type'],
+  const { data: latestAuthSnapshot } = useQuery({
+    queryKey: ['auth', 'me', 'ophthalmologist-sidebar'],
     queryFn: async () => {
-      const response = await api.get<OphthalmologistMeApiResponse>(
-        '/ophthalmologist/profile'
-      );
+      const response = await api.get<AuthMeApiResponse>(API_ENDPOINTS.AUTH.ME);
 
-      return normalizeEmploymentType(response.data?.data?.employmentType);
+      return response.data?.data;
     },
-    enabled: !!user,
+    enabled: !!user?.roles?.includes('Ophthalmologist'),
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+  useEffect(() => {
+    if (!user || !latestAuthSnapshot) {
+      return;
+    }
+
+    const latestEmploymentType = normalizeEmploymentType(
+      latestAuthSnapshot.employmentType
+    );
+    const currentEmploymentType = normalizeEmploymentType(user.employmentType);
+    const nextEmploymentType = latestEmploymentType ?? currentEmploymentType;
+    const nextContractStatus =
+      latestAuthSnapshot.contractStatus ?? user.contractStatus ?? null;
+    const nextVerificationStatus =
+      latestAuthSnapshot.verificationStatus ?? user.verificationStatus ?? null;
+    const nextIsVerified =
+      latestAuthSnapshot.isVerified ?? user.isVerified ?? null;
+
+    const hasAuthDrift =
+      nextEmploymentType !== currentEmploymentType ||
+      nextContractStatus !== (user.contractStatus ?? null) ||
+      nextVerificationStatus !== (user.verificationStatus ?? null) ||
+      nextIsVerified !== (user.isVerified ?? null);
+
+    if (!hasAuthDrift) {
+      return;
+    }
+
+    setUser({
+      ...user,
+      employmentType: nextEmploymentType,
+      contractStatus: nextContractStatus,
+      verificationStatus: nextVerificationStatus,
+      isVerified: nextIsVerified,
+    });
+  }, [latestAuthSnapshot, setUser, user]);
+
+  const latestEmploymentType = normalizeEmploymentType(
+    latestAuthSnapshot?.employmentType
+  );
 
   const isFullTimeDoctor =
     (latestEmploymentType ?? authEmploymentType) === 'FullTime';
 
   // Only show full nav when contract is active; otherwise lock to contract page only
-  const contractApproved = user?.contractStatus === 'Active';
+  const contractApproved =
+    (latestAuthSnapshot?.contractStatus ?? user?.contractStatus) === 'Active';
   const visibleNavItems = contractApproved
     ? navItems.filter(
         (item) =>
@@ -212,7 +262,10 @@ export default function DoctorSidebar({
                         item.labelKey,
                         item.path === '/network'
                           ? 'Aura Network'
-                          : (item.labelKey.split('.').pop() ?? 'Item')
+                          : item.path ===
+                              '/ophthalmologist/employment-type-change-requests'
+                            ? 'Employment Type Changes'
+                            : (item.labelKey.split('.').pop() ?? 'Item')
                       )}
                     </span>
                   </div>
