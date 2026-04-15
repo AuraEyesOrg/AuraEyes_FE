@@ -124,14 +124,10 @@ const ContactPage = () => {
         contactEmail: formData.organizationContactEmail.trim(),
         contactPhone: formData.organizationPhone.trim() || undefined,
         address: formData.organizationLocation.trim() || undefined,
+        licenseNumber: formData.organizationBusinessCode.trim() || undefined,
+        taxCode: formData.organizationTaxCode.trim() || undefined,
         notes:
           [
-            formData.organizationBusinessCode.trim()
-              ? `Business code: ${formData.organizationBusinessCode.trim()}`
-              : null,
-            formData.organizationTaxCode.trim()
-              ? `Tax code: ${formData.organizationTaxCode.trim()}`
-              : null,
             `Role: ${formData.organizationContactRole.trim()}`,
             formData.estimatedVolume
               ? `Estimated monthly screenings: ${formData.estimatedVolume}`

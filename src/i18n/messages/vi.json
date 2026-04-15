@@ -33,9 +33,28 @@
     "bookAppointment": "Đặt lịch khám",
     "findDoctor": "Tìm bác sĩ",
     "learnMore": "Tìm hiểu thêm",
+    "helpTour": "Hướng dẫn",
     "language": "Ngôn ngữ",
     "sidebar": {
       "auraNetwork": "Aura Network"
+    }
+  },
+  "GuestTour": {
+    "controls": {
+      "back": "Quay lại",
+      "close": "Đóng",
+      "last": "Hoàn tất",
+      "next": "Tiếp theo",
+      "skip": "Bỏ qua"
+    },
+    "steps": {
+      "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
+      "navAbout": "Mục Về chúng tôi giới thiệu sứ mệnh AURA và giá trị cốt lõi của nền tảng.",
+      "navHowItWorks": "Mục Cách hoạt động mô tả quy trình từ tải ảnh đáy mắt đến kết quả phân tích AI.",
+      "aboutMission": "Khu vực này tóm tắt sứ mệnh và chức năng chính của AURA: sàng lọc nhanh, chính xác và an toàn.",
+      "contactOrganisation": "Mục Liên hệ dành cho tổ chức/phòng khám muốn hợp tác hoặc nhận tư vấn onboarding.",
+      "getStartedPatient": "Nút Bắt đầu dẫn tới đăng nhập/đăng ký, nơi bệnh nhân có thể tạo tài khoản Patient mới.",
+      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đi tới luồng đăng ký Ophthalmologist để tham gia nền tảng."
     }
   },
   "Auth": {
