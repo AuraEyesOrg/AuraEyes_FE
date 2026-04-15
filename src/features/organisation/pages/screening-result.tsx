@@ -286,47 +286,6 @@ export default function OrganisationScreeningResultPage() {
   const patientDisplayName =
     sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
   const isWalkInPatient = sessionData?.isWalkIn ?? false;
-  const resultPagePath = screeningId
-    ? resolvePathWithLocale(`/organisation/screening/result?id=${screeningId}`)
-    : resolvePathWithLocale('/organisation/screening/result');
-
-  const emitAnalysisCompletionNotification = useCallback(() => {
-    if (!screeningId || typeof window === 'undefined') return;
-
-    const navigateToResult = () => {
-      navigate(resultPagePath);
-    };
-
-    const createBrowserNotification = () => {
-      const browserNotification = new Notification('AI Screening hoàn tất', {
-        body: `${patientDisplayName}: Nhấn để mở trang kết quả.`,
-        tag: `org-screening-result-${screeningId}`,
-      });
-
-      browserNotification.onclick = () => {
-        window.focus();
-        navigateToResult();
-        browserNotification.close();
-      };
-    };
-
-    if (!('Notification' in window)) {
-      return;
-    }
-
-    if (Notification.permission === 'granted') {
-      createBrowserNotification();
-      return;
-    }
-
-    if (Notification.permission === 'default') {
-      void Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          createBrowserNotification();
-        }
-      });
-    }
-  }, [navigate, patientDisplayName, resultPagePath, screeningId]);
 
   // ─── Navigation Guard ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -830,9 +789,6 @@ export default function OrganisationScreeningResultPage() {
           autoClose: 2800,
           closeButton: true,
         });
-
-        emitAnalysisCompletionNotification();
-        void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       } catch (error) {
         console.error('Organisation AI analysis failed:', error);
 
@@ -870,7 +826,6 @@ export default function OrganisationScreeningResultPage() {
       selectedImageIndex,
       analyzing,
       currentLanguage,
-      emitAnalysisCompletionNotification,
       isViewOnly,
       queryClient,
     ]
@@ -1105,6 +1060,10 @@ export default function OrganisationScreeningResultPage() {
       });
       setSaved(true);
       toast.success('Lưu kết quả khám thành công.');
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['notifications', 'unread-count'],
+      });
       await loadSessionDetail(false);
     } catch (err) {
       console.error('Save failed:', err);
