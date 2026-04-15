@@ -114,6 +114,18 @@ export default function OrganisationScreeningResultPage() {
   const [heatmapUrl, setHeatmapUrl] = useState<string | undefined>();
   const [imageLayout, setImageLayout] = useState<ImageLayout | null>(null);
 
+  // Heatmap interactive states
+  const heatmapCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [heatmapData, setHeatmapData] = useState<number[][] | null>(null);
+  const [heatmapOpacity, setHeatmapOpacity] = useState(0.42);
+  const [heatmapThreshold, setHeatmapThreshold] = useState(0.25);
+  const [heatmapEditMode, setHeatmapEditMode] = useState<
+    'draw' | 'erase' | null
+  >(null);
+  const [brushTargetHeat, setBrushTargetHeat] = useState(0.9);
+  const [brushSize, setBrushSize] = useState(3);
+  const [hasHeatmapEdits, setHasHeatmapEdits] = useState(false);
+
   // ─── Annotation editing states ──────────────────────────────────────────
   const [annotationMode, setAnnotationMode] =
     useState<AnnotationMode>('select');
@@ -121,6 +133,37 @@ export default function OrganisationScreeningResultPage() {
   const [labelSelectorBoxId, setLabelSelectorBoxId] = useState<string | null>(
     null
   );
+
+  // ─── Undo/Redo System ───────────────────────────────────────────────────
+  interface EditorSnapshot {
+    detectedBoxes: DetectionBox[];
+    heatmapData: number[][] | null;
+  }
+  const undoStackRef = useRef<EditorSnapshot[]>([]);
+  const MAX_UNDO = 40;
+
+  const pushUndo = useCallback(() => {
+    undoStackRef.current.push({
+      detectedBoxes: detectedBoxes.map((b) => ({
+        ...b,
+        location: { ...b.location },
+      })),
+      heatmapData: heatmapData ? heatmapData.map((row) => [...row]) : null,
+    });
+    if (undoStackRef.current.length > MAX_UNDO) {
+      undoStackRef.current.shift();
+    }
+  }, [detectedBoxes, heatmapData]);
+
+  const handleUndo = useCallback(() => {
+    const snapshot = undoStackRef.current.pop();
+    if (!snapshot) return;
+    setDetectedBoxes(snapshot.detectedBoxes);
+    setHeatmapData(snapshot.heatmapData);
+    setSaved(false);
+  }, []);
+
+  const canUndo = undoStackRef.current.length > 0;
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -192,7 +235,110 @@ export default function OrganisationScreeningResultPage() {
       height: renderedHeight,
     });
     hydrateVisualArtifacts(naturalWidth, naturalHeight);
-  }, [hydrateVisualArtifacts]);
+
+    // Extract heatmap_data for interactive canvas editing
+    try {
+      if (rawJsonOutput) {
+        const parsed = JSON.parse(rawJsonOutput) as {
+          heatmap_data?: number[][];
+        };
+        if (parsed.heatmap_data) {
+          setHeatmapData(parsed.heatmap_data);
+          setHasHeatmapEdits(false);
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }, [hydrateVisualArtifacts, rawJsonOutput]);
+
+  // ─── Render dynamic heatmap lên canvas ────────────────────────────────────
+  useEffect(() => {
+    const canvas = heatmapCanvasRef.current;
+    if (!canvas || !heatmapData || heatmapData.length === 0) return;
+    const rows = heatmapData.length;
+    const cols = heatmapData[0]?.length ?? 0;
+    if (cols === 0) return;
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cols, rows);
+    const imageData = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = Math.max(0, Math.min(1, heatmapData[r]?.[c] ?? 0));
+        const idx = (r * cols + c) * 4;
+
+        if (v <= heatmapThreshold) {
+          imageData.data[idx + 3] = 0;
+        } else {
+          const nv = (v - heatmapThreshold) / (1 - heatmapThreshold);
+          const r4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+          const g4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+          const b4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+          const alpha = Math.min(
+            255,
+            Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+          );
+          imageData.data[idx] = Math.round(r4 * 255);
+          imageData.data[idx + 1] = Math.round(g4 * 255);
+          imageData.data[idx + 2] = Math.round(b4 * 255);
+          imageData.data[idx + 3] = alpha;
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }, [heatmapData, heatmapThreshold]);
+
+  const paintHeatmap = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!heatmapData || !heatmapEditMode) return;
+
+      // Push undo on start of stroke
+      if (e.type === 'pointerdown') {
+        pushUndo();
+      }
+
+      const canvas = e.currentTarget;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const rows = heatmapData.length;
+      const cols = heatmapData[0].length;
+      const c = Math.floor((x / rect.width) * cols);
+      const r = Math.floor((y / rect.height) * rows);
+
+      if (r >= 0 && r < rows && c >= 0 && c < cols) {
+        setHasHeatmapEdits(true);
+        setHeatmapData((prev) => {
+          if (!prev) return prev;
+          const next = prev.map((row) => [...row]);
+          const intensity = 0.15;
+          for (let ir = -brushSize; ir <= brushSize; ir++) {
+            for (let ic = -brushSize; ic <= brushSize; ic++) {
+              const distSq = ir * ir + ic * ic;
+              if (distSq <= brushSize * brushSize) {
+                const nr = r + ir;
+                const nc = c + ic;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                  const dist = Math.sqrt(distSq);
+                  const falloff = Math.pow(1 - dist / brushSize, 1.5);
+                  const current = next[nr][nc];
+                  const target =
+                    heatmapEditMode === 'erase' ? 0 : brushTargetHeat;
+                  next[nr][nc] =
+                    current + (target - current) * (intensity * falloff);
+                }
+              }
+            }
+          }
+          return next;
+        });
+      }
+    },
+    [heatmapData, heatmapEditMode, brushSize, brushTargetHeat, pushUndo]
+  );
 
   // ─── Session hydration ────────────────────────────────────────────────────
   const hydrateStateFromSession = useCallback(
@@ -321,6 +467,7 @@ export default function OrganisationScreeningResultPage() {
   const handleBoxCreate = useCallback(
     (payload: BoxCreatePayload) => {
       if (isViewOnly) return;
+      pushUndo();
       const newBox = createManualBox(payload.location);
       setDetectedBoxes((prev) => {
         const next = [...prev, newBox];
@@ -328,16 +475,16 @@ export default function OrganisationScreeningResultPage() {
         return next;
       });
       setSelectedBoxId(newBox.id);
-      setLabelSelectorBoxId(newBox.id);
       setAnnotationMode('select');
       setSaved(false);
     },
-    [isViewOnly, syncFindingsFromBoxes]
+    [isViewOnly, syncFindingsFromBoxes, pushUndo]
   );
 
   const handleBoxUpdate = useCallback(
     (payload: BoxUpdatePayload) => {
       if (isViewOnly) return;
+      pushUndo();
       setDetectedBoxes((prev) => {
         const next = prev.map((box) =>
           box.id === payload.id ? { ...box, ...payload } : box
@@ -356,6 +503,7 @@ export default function OrganisationScreeningResultPage() {
   const handleBoxDelete = useCallback(
     (id: string) => {
       if (isViewOnly) return;
+      pushUndo();
       setDetectedBoxes((prev) => {
         const next = prev.filter((box) => box.id !== id);
         syncFindingsFromBoxes(next);
@@ -669,7 +817,17 @@ export default function OrganisationScreeningResultPage() {
       return;
     }
 
-    const finalJsonOutput = mergeBoxesIntoRawJson(jsonOutput, detectedBoxes);
+    let finalJsonOutput = mergeBoxesIntoRawJson(jsonOutput, detectedBoxes);
+
+    if (hasHeatmapEdits && heatmapData) {
+      try {
+        const parsed = JSON.parse(finalJsonOutput) as Record<string, unknown>;
+        parsed.heatmap_data = heatmapData;
+        finalJsonOutput = JSON.stringify(parsed);
+      } catch (e) {
+        // Ignore JSON error
+      }
+    }
 
     setSaveConfirmOpen(false);
     setSaving(true);
@@ -903,6 +1061,23 @@ export default function OrganisationScreeningResultPage() {
                     showHighlights={showHighlights}
                     showHeatmap={showHeatmap}
                     heatmapUrl={heatmapUrl}
+                    heatmapCanvasRef={heatmapCanvasRef}
+                    heatmapData={heatmapData}
+                    heatmapOpacity={heatmapOpacity}
+                    heatmapThreshold={heatmapThreshold}
+                    heatmapEditMode={heatmapEditMode}
+                    setHeatmapOpacity={setHeatmapOpacity}
+                    setHeatmapThreshold={setHeatmapThreshold}
+                    setHeatmapEditMode={setHeatmapEditMode}
+                    setHeatmapData={setHeatmapData}
+                    setHasHeatmapEdits={setHasHeatmapEdits}
+                    paintHeatmap={paintHeatmap}
+                    brushSize={brushSize}
+                    setBrushSize={setBrushSize}
+                    brushTargetHeat={brushTargetHeat}
+                    setBrushTargetHeat={setBrushTargetHeat}
+                    onUndo={handleUndo}
+                    canUndo={canUndo}
                     imageLayout={imageLayout}
                     imageContainerRef={imageContainerRef}
                     imageRef={imageRef}
