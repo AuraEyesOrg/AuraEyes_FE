@@ -265,6 +265,7 @@
       "appointments": "Lịch hẹn",
       "schedules": "Lịch làm việc",
       "leaveRequests": "Nghỉ phép",
+      "employmentTypeChangeRequests": "Chuyển loại hình làm việc",
       "consultations": "Tư vấn",
       "contract": "Hợp đồng",
       "settings": "Cài đặt",
@@ -299,6 +300,38 @@
         "cancelFailed": "Không thể hủy đơn nghỉ phép.",
         "missingFields": "Vui lòng nhập ngày bắt đầu, ngày kết thúc và lý do.",
         "invalidDateRange": "Ngày kết thúc phải cùng hoặc sau ngày bắt đầu."
+      }
+    },
+    "employmentTypeChangeRequests": {
+      "pageTitle": "Yêu cầu chuyển loại hình làm việc",
+      "submitTitle": "Gửi yêu cầu mới",
+      "submitDescription": "Quản trị viên hệ thống sẽ duyệt yêu cầu. Nếu được duyệt, bạn cần ký hợp đồng mới.",
+      "currentType": "Loại hình làm việc hiện tại",
+      "targetType": "Loại hình làm việc mong muốn",
+      "reason": "Lý do",
+      "reasonPlaceholder": "Mô tả vì sao bạn cần chuyển loại hình làm việc.",
+      "submitAction": "Gửi yêu cầu",
+      "historyTitle": "Lịch sử yêu cầu",
+      "empty": "Không tìm thấy yêu cầu nào.",
+      "createdAt": "Tạo lúc",
+      "reviewedAt": "Duyệt lúc",
+      "adminNote": "Ghi chú admin",
+      "confirmCancel": "Bạn có chắc muốn hủy yêu cầu này không?",
+      "cancelAction": "Hủy yêu cầu",
+      "status": {
+        "all": "Tất cả trạng thái",
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối",
+        "cancelled": "Đã hủy"
+      },
+      "toast": {
+        "createSuccess": "Đã gửi yêu cầu chuyển loại hình làm việc thành công.",
+        "createFailed": "Không thể gửi yêu cầu chuyển loại hình làm việc.",
+        "cancelSuccess": "Đã hủy yêu cầu chuyển loại hình làm việc thành công.",
+        "cancelFailed": "Không thể hủy yêu cầu chuyển loại hình làm việc.",
+        "missingReason": "Vui lòng nhập lý do.",
+        "sameType": "Loại hình làm việc mong muốn phải khác loại hiện tại."
       }
     },
     "dashboard": {

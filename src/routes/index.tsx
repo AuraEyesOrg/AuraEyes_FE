@@ -187,6 +187,10 @@ const OphthalmologistWalletPage = lazy(
 const OphthalmologistLeaveRequestsPage = lazy(
   () => import('@/features/ophthalmologist/pages/leave-requests')
 );
+const OphthalmologistEmploymentTypeChangeRequestsPage = lazy(
+  () =>
+    import('@/features/ophthalmologist/pages/employment-type-change-requests')
+);
 
 // System Admin pages
 const SystemAdminDashboard = lazy(
@@ -212,6 +216,9 @@ const SystemAdminWithdrawalRequests = lazy(
 );
 const SystemAdminLeaveRequests = lazy(
   () => import('@/features/system-admin/pages/leave-requests')
+);
+const SystemAdminEmploymentTypeChangeRequests = lazy(
+  () => import('@/features/system-admin/pages/employment-type-change-requests')
 );
 const SystemAdminUsers = lazy(
   () => import('@/features/system-admin/pages/users')
@@ -586,6 +593,15 @@ const Router = () => (
             />
           }
         />
+        <Route
+          path="/:locale/ophthalmologist/employment-type-change-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['Ophthalmologist']}
+              element={<OphthalmologistEmploymentTypeChangeRequestsPage />}
+            />
+          }
+        />
 
         <Route
           path="/:locale/patient/dashboard"
@@ -925,6 +941,15 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['SystemAdmin', 'Admin']}
               element={<SystemAdminLeaveRequests />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/employment-type-change-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminEmploymentTypeChangeRequests />}
             />
           }
         />
@@ -1383,6 +1408,14 @@ const Router = () => (
             </PrivateRoute>
           }
         />
+        <Route
+          path="/ophthalmologist/employment-type-change-requests"
+          element={
+            <PrivateRoute allowedRoles={['Ophthalmologist']}>
+              <OphthalmologistEmploymentTypeChangeRequestsPage />
+            </PrivateRoute>
+          }
+        />
 
         {/* ============ SYSTEM ADMIN ROUTES ============ */}
         <Route
@@ -1446,6 +1479,14 @@ const Router = () => (
           element={
             <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
               <SystemAdminLeaveRequests />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/system-admin/employment-type-change-requests"
+          element={
+            <PrivateRoute allowedRoles={['SystemAdmin', 'Admin']}>
+              <SystemAdminEmploymentTypeChangeRequests />
             </PrivateRoute>
           }
         />

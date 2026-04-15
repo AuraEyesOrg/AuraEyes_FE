@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import {
+  ArrowRightLeft,
   BarChart3,
   Building2,
   CalendarX,
@@ -62,6 +63,12 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Leave Requests',
         path: '/system-admin/leave-requests',
         icon: CalendarX,
+      },
+      {
+        id: 'employment-type-change-requests',
+        label: 'Employment Type Changes',
+        path: '/system-admin/employment-type-change-requests',
+        icon: ArrowRightLeft,
       },
       {
         id: 'patients',
