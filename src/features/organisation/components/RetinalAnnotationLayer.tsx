@@ -317,22 +317,6 @@ export function RetinalAnnotationLayer({
         const style = getDetectionStyle(box.type);
         const isSelected = box.id === selectedBoxId;
         const isManual = box.source === 'manual';
-        const rawLabel = box.localizedName
-          ? `${box.localizedName}${isManual ? ' ✎' : ''}`
-          : '';
-        const labelY = Math.max(0, box.location.y - 3.2);
-        const labelMaxWidthByImage = Math.max(8, 100 - box.location.x);
-        const labelWidth = Math.min(
-          rawLabel.length * 1.3 + 2,
-          box.location.width + 8,
-          labelMaxWidthByImage
-        );
-        const labelMaxChars = Math.max(4, Math.floor((labelWidth - 2) / 1.1));
-        const renderedLabel =
-          rawLabel.length > labelMaxChars
-            ? `${rawLabel.slice(0, Math.max(3, labelMaxChars - 1))}…`
-            : rawLabel;
-
         return (
           <g key={box.id}>
             {/* Box fill */}
@@ -358,31 +342,7 @@ export function RetinalAnnotationLayer({
               }}
             />
 
-            {/* Label */}
-            {box.localizedName && (
-              <g>
-                <rect
-                  x={box.location.x}
-                  y={labelY}
-                  width={labelWidth}
-                  height={3}
-                  fill={
-                    isManual ? 'rgba(99, 102, 241, 0.9)' : style.borderColor
-                  }
-                  rx={0.4}
-                />
-                <text
-                  x={box.location.x + 0.8}
-                  y={labelY + 2.2}
-                  fill="white"
-                  fontSize={2}
-                  fontFamily="system-ui, sans-serif"
-                  fontWeight={600}
-                >
-                  {renderedLabel}
-                </text>
-              </g>
-            )}
+            {/* Label display removed as per request */}
 
             {/* Resize handles for selected box */}
             {isSelected && isEditable && mode === 'select' && (

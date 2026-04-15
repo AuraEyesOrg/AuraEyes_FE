@@ -23,15 +23,83 @@ import {
   orgScreeningApi,
   type OrgScreeningHistoryItem,
 } from '../api/screening.api';
-import type {
-  DetectionBox,
-  OrgScreeningSessionDetail,
-} from '../types/screening-result.types';
+import type { OrgScreeningSessionDetail } from '../types/screening-result.types';
 import { aiCoreClient } from '@/lib/axios';
+import { useRef } from 'react';
 import {
   extractVisualArtifactsFromRaw,
   getDetectionStyle,
 } from '../utils/screening-result.util';
+
+function HeatmapStaticThumbnail({
+  data,
+  fallbackUrl,
+  threshold = 0.35,
+}: {
+  data?: number[][] | null;
+  fallbackUrl?: string;
+  threshold?: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data || data.length === 0) return;
+
+    const rows = data.length;
+    const cols = data[0].length;
+    canvas.width = cols;
+    canvas.height = rows;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const imageData = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = Math.max(0, Math.min(1, data[r]?.[c] ?? 0));
+        const idx = (r * cols + c) * 4;
+
+        if (v <= threshold) {
+          imageData.data[idx + 3] = 0;
+        } else {
+          const nv = (v - threshold) / (1 - threshold);
+          const r4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+          const g4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+          const b4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+          const alpha = Math.min(
+            255,
+            Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+          );
+          imageData.data[idx] = Math.round(r4 * 255);
+          imageData.data[idx + 1] = Math.round(g4 * 255);
+          imageData.data[idx + 2] = Math.round(b4 * 255);
+          imageData.data[idx + 3] = alpha;
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }, [data, threshold]);
+
+  if (!data && fallbackUrl) {
+    return (
+      <img
+        src={fallbackUrl}
+        alt="Heatmap"
+        className="h-full w-full object-cover"
+      />
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="h-full w-full object-contain bg-black/20"
+    />
+  );
+}
 
 interface SessionVisualAssets {
   boxedUrl?: string;
@@ -330,10 +398,7 @@ export default function OrganisationPatientHistoryPage() {
     primaryImageSize.height,
   ]);
 
-  const boxedOverlayBoxes = useMemo<DetectionBox[]>(() => {
-    if (sessionVisualAssets.boxedUrl) return [];
-    return generatedArtifacts.boxes;
-  }, [sessionVisualAssets.boxedUrl, generatedArtifacts.boxes]);
+  const boxedOverlayBoxes = generatedArtifacts.boxes;
 
   const resolvedHeatmapUrl =
     sessionVisualAssets.heatmapUrl ?? generatedArtifacts.heatmapUrl;
@@ -562,7 +627,7 @@ export default function OrganisationPatientHistoryPage() {
                           <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
                             <img
                               src={primaryImage?.imageUrl}
-                              alt={`Retinal image ${primaryImage?.eyeSide ?? ''}`}
+                              alt="Retinal image"
                               className="h-44 w-full object-cover"
                               onLoad={(event) => {
                                 const target = event.currentTarget;
@@ -573,64 +638,69 @@ export default function OrganisationPatientHistoryPage() {
                               }}
                             />
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
-                              Original • Eye side: {primaryImage?.eyeSide}
+                              Original image
                             </div>
                           </div>
 
                           <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
-                            {sessionVisualAssets.boxedUrl ? (
+                            <div className="relative h-44 w-full">
                               <img
-                                src={sessionVisualAssets.boxedUrl}
+                                src={primaryImage?.imageUrl}
                                 alt="Boxed retinal image"
                                 className="h-44 w-full object-cover"
                               />
-                            ) : boxedOverlayBoxes.length > 0 && primaryImage ? (
-                              <div className="relative h-44 w-full">
-                                <img
-                                  src={primaryImage.imageUrl}
-                                  alt="Boxed retinal image"
-                                  className="h-44 w-full object-cover"
-                                />
-                                {boxedOverlayBoxes.map((box) => {
-                                  const style = getDetectionStyle(box.type);
-                                  return (
-                                    <div
-                                      key={box.id}
-                                      className="absolute border"
-                                      style={{
-                                        left: `${box.location.x}%`,
-                                        top: `${box.location.y}%`,
-                                        width: `${box.location.width}%`,
-                                        height: `${box.location.height}%`,
-                                        borderColor: style.borderColor,
-                                        backgroundColor: style.backgroundColor,
-                                      }}
-                                    />
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="h-44 p-4 text-xs text-(--text-tertiary) border-b border-dashed border-(--border-primary)">
-                                Boxed image is not available for this session.
-                              </div>
-                            )}
+                              {boxedOverlayBoxes.map((box) => {
+                                const style = getDetectionStyle(box.type);
+                                return (
+                                  <div
+                                    key={box.id}
+                                    className="absolute border"
+                                    style={{
+                                      left: `${box.location.x}%`,
+                                      top: `${box.location.y}%`,
+                                      width: `${box.location.width}%`,
+                                      height: `${box.location.height}%`,
+                                      borderColor: style.borderColor,
+                                      backgroundColor: style.backgroundColor,
+                                    }}
+                                  />
+                                );
+                              })}
+                            </div>
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
                               Boxed
                             </div>
                           </div>
 
                           <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
-                            {resolvedHeatmapUrl ? (
-                              <img
-                                src={resolvedHeatmapUrl}
-                                alt="Heatmap retinal image"
-                                className="h-44 w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-44 p-4 text-xs text-(--text-tertiary) border-b border-dashed border-(--border-primary)">
-                                Heatmap image is not available for this session.
+                            <div className="relative h-44 w-full flex items-center justify-center bg-black/5">
+                              {primaryImage && (
+                                <img
+                                  src={primaryImage.imageUrl}
+                                  alt="Heatmap background"
+                                  className="absolute inset-0 h-full w-full object-cover opacity-40"
+                                />
+                              )}
+                              <div className="relative z-10 w-full h-full">
+                                <HeatmapStaticThumbnail
+                                  data={
+                                    screeningDetailQuery.data?.rawJsonOutput
+                                      ? (() => {
+                                          try {
+                                            return JSON.parse(
+                                              screeningDetailQuery.data
+                                                .rawJsonOutput
+                                            ).heatmap_data;
+                                          } catch {
+                                            return null;
+                                          }
+                                        })()
+                                      : null
+                                  }
+                                  fallbackUrl={resolvedHeatmapUrl}
+                                />
                               </div>
-                            )}
+                            </div>
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
                               Heatmap
                             </div>
@@ -658,11 +728,10 @@ export default function OrganisationPatientHistoryPage() {
                                   >
                                     <img
                                       src={image.imageUrl}
-                                      alt={`Retinal thumbnail ${image.eyeSide}`}
                                       className="h-16 w-full rounded-md object-cover"
                                     />
                                     <p className="mt-1 px-1 text-[11px] text-(--text-secondary)">
-                                      {image.eyeSide}
+                                      Image {index + 1}
                                     </p>
                                   </button>
                                 );

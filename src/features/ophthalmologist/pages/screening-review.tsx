@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import {
@@ -13,7 +13,6 @@ import {
   Eye,
   User,
   Stethoscope,
-  Search as SearchIcon,
   Flag,
   Info,
   Settings2,
@@ -21,6 +20,10 @@ import {
   Save,
   X,
   Calendar,
+  Eraser,
+  PlusSquare,
+  Trash2,
+  Undo2,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -39,6 +42,8 @@ import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+// import { mergeBoxesIntoRawJson } from '@/features/organisation/utils/screening-result.util';
+import type { DetectionBox } from '@/features/organisation/types/screening-result.types';
 
 type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
 type EyeSide = 'Left' | 'Right' | 'Both';
@@ -172,6 +177,7 @@ export default function ScreeningReviewPage() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('exam');
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [findings, setFindings] = useState<DetectedFinding[]>([]);
+  const [sidebarFindings, setSidebarFindings] = useState<DetectedFinding[]>([]);
   const [overlayEditMode, setOverlayEditMode] = useState(false);
   const [boxOverrides, setBoxOverrides] = useState<Record<string, BoxRect>>({});
   const [showOverlay, setShowOverlay] = useState(true);
@@ -190,6 +196,79 @@ export default function ScreeningReviewPage() {
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
   const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
+
+  // ─── Heatmap toolkit draggable state ────────────────────────────────────
+  const [toolkitPos, setToolkitPos] = useState({ x: 0, y: 0 });
+  const [isDraggingToolkit, setIsDraggingToolkit] = useState(false);
+  const handleToolkitDrag = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDraggingToolkit) return;
+      setToolkitPos((prev: { x: number; y: number }) => ({
+        x: prev.x + e.movementX,
+        y: prev.y + e.movementY,
+      }));
+    },
+    [isDraggingToolkit]
+  );
+
+  // ─── Heatmap matrix states ──────────────────────────────────────────────
+  const [heatmapData, setHeatmapData] = useState<number[][] | null>(null);
+  const [heatmapOpacity, setHeatmapOpacity] = useState(0.55);
+  const [heatmapThreshold, setHeatmapThreshold] = useState(0.15);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapEditMode, setHeatmapEditMode] = useState<
+    'draw' | 'erase' | null
+  >(null);
+  const [brushSize, setBrushSize] = useState<number>(5);
+  const [brushTargetHeat, setBrushTargetHeat] = useState<number>(1.0);
+  const [hasHeatmapEdits, setHasHeatmapEdits] = useState(false);
+  const heatmapCanvasRef = useRef<HTMLCanvasElement>(null);
+  const heatmapDragRef = useRef(false);
+
+  // ─── Manual findings states ──────────────────────────────────────────
+  const [newFindingName, setNewFindingName] = useState('');
+  const [newFindingDescription, setNewFindingDescription] = useState('');
+  const [newFindingSeverity, setNewFindingSeverity] = useState<
+    'low' | 'moderate' | 'high'
+  >('moderate');
+  const [isAddingFinding, setIsAddingFinding] = useState(false);
+
+  // ─── Undo stack ────────────────────────────────────────────────────────────
+  interface EditorSnapshot {
+    findings: DetectedFinding[];
+    boxOverrides: Record<string, BoxRect>;
+    heatmapData: number[][] | null;
+  }
+  const undoStackRef = useRef<EditorSnapshot[]>([]);
+  const MAX_UNDO = 50;
+
+  /** Push current state onto undo stack before any mutation */
+  const pushUndo = useCallback(() => {
+    undoStackRef.current.push({
+      findings: findings.map((f) => ({
+        ...f,
+        location: f.location ? { ...f.location } : undefined,
+      })),
+      boxOverrides: Object.fromEntries(
+        Object.entries(boxOverrides).map(([k, v]) => [k, { ...v }])
+      ),
+      heatmapData: heatmapData ? heatmapData.map((row) => [...row]) : null,
+    });
+    if (undoStackRef.current.length > MAX_UNDO) {
+      undoStackRef.current.shift();
+    }
+  }, [findings, boxOverrides, heatmapData]);
+
+  const handleUndo = useCallback(() => {
+    const snapshot = undoStackRef.current.pop();
+    if (!snapshot) return;
+    setFindings(snapshot.findings);
+    setBoxOverrides(snapshot.boxOverrides);
+    setHeatmapData(snapshot.heatmapData);
+    setFocusedFinding(null);
+  }, []);
+
+  const canUndo = undoStackRef.current.length > 0;
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imgOverlayRef = useRef<HTMLDivElement>(null);
@@ -342,7 +421,57 @@ export default function ScreeningReviewPage() {
       selectedImage.imageUrl
     ).then((anomalies) => {
       if (cancelled) return;
-      setFindings(anomalies.map(anomalyToFinding));
+      const mapped = anomalies.map(anomalyToFinding);
+      setSidebarFindings(mapped);
+
+      // Check if doctor bbox overrides were saved previously
+      try {
+        const rawJson = detail?.rawJsonOutput ?? '';
+        if (!rawJson) {
+          setFindings(mapped);
+          return;
+        }
+        const parsed = JSON.parse(rawJson) as Record<string, unknown>;
+        const saved = parsed.doctor_bbox_overrides as
+          | Array<{
+              id: string;
+              name: string;
+              description?: string;
+              confidence: number;
+              severity: 'low' | 'moderate' | 'high';
+              location: { x: number; y: number; width: number; height: number };
+            }>
+          | undefined;
+
+        const manualSaved = parsed.doctor_manual_findings as
+          | DetectedFinding[]
+          | undefined;
+
+        if (saved && Array.isArray(saved) && saved.length > 0) {
+          // Use saved overlay state instead of AI-parsed bboxes
+          setFindings(
+            saved.map((s) => ({
+              id: s.id,
+              name: s.name,
+              description: s.description ?? s.name,
+              confidence: s.confidence,
+              severity: s.severity,
+              location: s.location,
+            }))
+          );
+        } else {
+          setFindings(mapped);
+        }
+
+        if (manualSaved && Array.isArray(manualSaved)) {
+          setSidebarFindings([...mapped, ...manualSaved]);
+        } else {
+          setSidebarFindings(mapped);
+        }
+      } catch {
+        setFindings(mapped);
+        setSidebarFindings(mapped);
+      }
     });
 
     return () => {
@@ -353,6 +482,150 @@ export default function ScreeningReviewPage() {
   useEffect(() => {
     setBoxOverrides({});
   }, [detail?.rawJsonOutput, selectedImage?.imageUrl]);
+
+  // ─── Parse heatmap_data từ rawJsonOutput ──────────────────────────────────
+  useEffect(() => {
+    if (!detail?.rawJsonOutput) {
+      setHeatmapData(null);
+      setShowHeatmap(false);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(detail.rawJsonOutput) as {
+        heatmap_data?: number[][];
+      };
+      const data = parsed.heatmap_data ?? null;
+      setHeatmapData(data);
+      if (!data) setShowHeatmap(false);
+    } catch {
+      setHeatmapData(null);
+    }
+  }, [detail?.rawJsonOutput]);
+
+  // ─── Render dynamic heatmap lên canvas ────────────────────────────────────
+  useEffect(() => {
+    const canvas = heatmapCanvasRef.current;
+    if (!canvas || !heatmapData || heatmapData.length === 0) return;
+    const rows = heatmapData.length;
+    const cols = heatmapData[0]?.length ?? 0;
+    if (cols === 0) return;
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cols, rows);
+    const imageData = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = Math.max(0, Math.min(1, heatmapData[r]?.[c] ?? 0));
+        const idx = (r * cols + c) * 4;
+
+        if (v <= heatmapThreshold) {
+          // Hide cold spots entirely
+          imageData.data[idx + 3] = 0;
+        } else {
+          // Normalize value above threshold
+          const nv = (v - heatmapThreshold) / (1 - heatmapThreshold);
+
+          // JET colormap
+          const r4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+          const g4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+          const b4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+
+          // Alpha scaling for smoother transition
+          const alpha = Math.min(
+            255,
+            Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+          );
+
+          imageData.data[idx] = Math.round(r4 * 255);
+          imageData.data[idx + 1] = Math.round(g4 * 255);
+          imageData.data[idx + 2] = Math.round(b4 * 255);
+          imageData.data[idx + 3] = alpha;
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }, [heatmapData, heatmapThreshold]);
+
+  const paintHeatmap = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!heatmapData || !heatmapEditMode) return;
+      const canvas = e.currentTarget;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const rows = heatmapData.length;
+      const cols = heatmapData[0].length;
+
+      // transform client px to 64x64 grid coordinates
+      const c = Math.floor((x / rect.width) * cols);
+      const r = Math.floor((y / rect.height) * rows);
+
+      if (r >= 0 && r < rows && c >= 0 && c < cols) {
+        setHasHeatmapEdits(true);
+        if (!heatmapDragRef.current) pushUndo();
+        setHeatmapData((prev) => {
+          if (!prev) return prev;
+          const next = prev.map((row) => [...row]); // shallow clone rows
+          const intensity = 0.15; // Speed of blending into target color
+
+          for (let ir = -brushSize; ir <= brushSize; ir++) {
+            for (let ic = -brushSize; ic <= brushSize; ic++) {
+              const distSq = ir * ir + ic * ic;
+              if (distSq <= brushSize * brushSize) {
+                const nr = r + ir;
+                const nc = c + ic;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                  // falloff mượt hơn (Gaussian-like curve)
+                  const dist = Math.sqrt(distSq);
+                  const falloff = Math.pow(1 - dist / brushSize, 1.5);
+
+                  const current = next[nr][nc];
+                  const target =
+                    heatmapEditMode === 'erase' ? 0 : brushTargetHeat;
+
+                  // Trộn dần về target
+                  const blendAmount = intensity * falloff;
+                  next[nr][nc] = current + (target - current) * blendAmount;
+                }
+              }
+            }
+          }
+          return next;
+        });
+      }
+    },
+    [heatmapData, heatmapEditMode, brushSize, brushTargetHeat]
+  );
+
+  /** Convert current findings + boxOverrides → DetectionBox[] để persist về server */
+  const buildDetectionBoxesForSave = useCallback((): DetectionBox[] => {
+    return findings
+      .filter((f) => f.location)
+      .map((f): DetectionBox => {
+        const loc = boxOverrides[f.id] ?? f.location!;
+        return {
+          id: f.id,
+          name: f.name,
+          localizedName: f.name,
+          confidence: f.confidence,
+          type:
+            f.severity === 'high'
+              ? 'warning'
+              : f.severity === 'moderate'
+                ? 'priority_high'
+                : 'info',
+          location: {
+            x: loc.x,
+            y: loc.y,
+            width: loc.width,
+            height: loc.height,
+          },
+          source: 'ai',
+        };
+      });
+  }, [findings, boxOverrides]);
 
   const getEffectiveBox = (findingId: string): BoxRect | undefined => {
     const o = boxOverrides[findingId];
@@ -366,6 +639,8 @@ export default function ScreeningReviewPage() {
     kind: 'move' | 'resize-se'
   ) => {
     if (!overlayEditMode || !imgOverlayRef.current) return;
+    pushUndo();
+    setFocusedFinding(findingId);
     const wrap = imgOverlayRef.current;
     const cr = wrap.getBoundingClientRect();
     const base = getEffectiveBox(findingId);
@@ -419,12 +694,173 @@ export default function ScreeningReviewPage() {
   };
 
   const resetOverlayBoxes = () => {
+    pushUndo();
     setBoxOverrides({});
+    setHasHeatmapEdits(false);
+    if (detail?.rawJsonOutput) {
+      try {
+        const parsed = JSON.parse(detail.rawJsonOutput) as {
+          heatmap_data?: number[][];
+        };
+        setHeatmapData(parsed.heatmap_data ?? null);
+      } catch {
+        setHeatmapData(null);
+      }
+    }
   };
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
   const handleResetZoom = () => setZoom(1);
+
+  const handleAddNewBox = useCallback(() => {
+    pushUndo();
+    const newBoxId = `custom-box-${Date.now()}`;
+    const cx = 40;
+    const cy = 40;
+    const cw = 15;
+    const ch = 15;
+    const newFinding: DetectedFinding = {
+      id: newBoxId,
+      name: 'Custom User Box',
+      description: 'Manual annotation',
+      confidence: 100,
+      severity: 'moderate',
+      location: { x: cx, y: cy, width: cw, height: ch },
+    };
+    setFindings((prev) => [...prev, newFinding]);
+    setBoxOverrides((prev) => ({
+      ...prev,
+      [newBoxId]: { x: cx, y: cy, width: cw, height: ch },
+    }));
+    setOverlayEditMode(true);
+    setFocusedFinding(newBoxId);
+    setShowOverlay(true);
+  }, []);
+
+  const handleChangeFocusedBoxColor = (
+    severity: 'low' | 'moderate' | 'high'
+  ) => {
+    if (!focusedFinding) return;
+    pushUndo();
+    setFindings((prev) =>
+      prev.map((f) => (f.id === focusedFinding ? { ...f, severity } : f))
+    );
+  };
+
+  const handleDeleteFocusedBox = useCallback(() => {
+    if (!focusedFinding) return;
+    pushUndo();
+    setFindings((prev) => prev.filter((f) => f.id !== focusedFinding));
+    setBoxOverrides((prev) => {
+      const next = { ...prev };
+      delete next[focusedFinding];
+      return next;
+    });
+    setFocusedFinding(null);
+  }, [focusedFinding]);
+
+  const handleFullscreen = () => {
+    if (!imageContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      if (imageContainerRef.current.requestFullscreen) {
+        imageContainerRef.current.requestFullscreen().catch(() => {});
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  const [savingEdits, setSavingEdits] = useState(false);
+
+  const handleSaveEdits = useCallback(async () => {
+    if (!screeningId || !detail?.rawJsonOutput) return;
+    setSavingEdits(true);
+    try {
+      // Parse the original JSON, preserve everything, only add our overlay data
+      const parsed = JSON.parse(detail.rawJsonOutput) as Record<
+        string,
+        unknown
+      >;
+
+      // Save bbox state as a separate overlay layer (keeps original AI data intact)
+      const currentBoxes = findings
+        .filter((f) => f.location)
+        .map((f) => {
+          const loc = boxOverrides[f.id] ?? f.location!;
+          return {
+            id: f.id,
+            name: f.name,
+            description: f.description,
+            confidence: f.confidence,
+            severity: f.severity,
+            location: {
+              x: loc.x,
+              y: loc.y,
+              width: loc.width,
+              height: loc.height,
+            },
+          };
+        });
+      parsed.doctor_bbox_overrides = currentBoxes;
+
+      // Write heatmap_data if edited
+      if (hasHeatmapEdits && heatmapData) {
+        parsed.heatmap_data = heatmapData;
+      }
+
+      // Persist manual findings
+      // We identify manual findings by their ID prefix 'manual-find-'
+      parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
+        sf.id.startsWith('manual-find-')
+      );
+
+      const finalJsonString = JSON.stringify(parsed);
+
+      const { api } = await import('@/lib/api');
+      await api.post(`/screenings/${screeningId}/save-results`, {
+        rawJsonOutput: finalJsonString,
+        riskLevel: detail.latestResult?.riskLevel ?? 'Low',
+        confidenceScore: detail.latestResult?.confidenceScore ?? 0,
+        summary: detail.latestResult?.summary,
+        findings: detail.latestResult?.findings,
+      });
+
+      // Cập nhật local state để reflect dữ liệu đã lưu
+      setDetail((prev) =>
+        prev ? { ...prev, rawJsonOutput: finalJsonString } : prev
+      );
+      setBoxOverrides({});
+      setHasHeatmapEdits(false);
+      undoStackRef.current = [];
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.toast.saveSuccess',
+          'Đã lưu chỉnh sửa thành công.'
+        )
+      );
+    } catch (e) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.toast.saveFailed',
+          'Lỗi khi lưu chỉnh sửa.'
+        )
+      );
+    } finally {
+      setSavingEdits(false);
+    }
+  }, [
+    screeningId,
+    detail,
+    hasHeatmapEdits,
+    heatmapData,
+    buildDetectionBoxesForSave,
+    t,
+    sidebarFindings,
+    findings,
+  ]);
 
   const handleFocusFinding = (findingId: string) => {
     setFocusedFinding(findingId);
@@ -441,6 +877,50 @@ export default function ScreeningReviewPage() {
         return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
     }
   };
+
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (downloadingPdf || !screeningId) return;
+    setDownloadingPdf(true);
+    try {
+      const { api } = await import('@/lib/api');
+      const { downloadBlobFile, getFileNameFromContentDisposition } =
+        await import('@/lib/file-export');
+
+      // Attempt to download from common endpoint
+      const response = await api
+        .get(`/screenings/${screeningId}/report-pdf`, { responseType: 'blob' })
+        .catch(() =>
+          api.get(`/organisations/screenings/${screeningId}/report-pdf`, {
+            responseType: 'blob',
+          })
+        );
+
+      const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
+      const fileName =
+        getFileNameFromContentDisposition(
+          response.headers?.['content-disposition'] as string
+        ) || fallbackFileName;
+
+      downloadBlobFile(response.data as Blob, fileName);
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.toast.downloadReportSuccess',
+          'Đã tải báo cáo PDF.'
+        )
+      );
+    } catch (error) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.toast.downloadReportError',
+          'Không thể tải báo cáo PDF.'
+        )
+      );
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [screeningId, downloadingPdf, t]);
 
   useEffect(() => {
     if (!showDiagnosisModal) return;
@@ -538,6 +1018,65 @@ export default function ScreeningReviewPage() {
             ? new Date().toISOString()
             : undefined,
       });
+
+      // Persist bbox/heatmap edits vào rawJsonOutput (nếu có chỉnh sửa và rawJson tồn tại)
+      const hasBoxEdits = Object.keys(boxOverrides).length > 0;
+      if (
+        (hasBoxEdits || hasHeatmapEdits) &&
+        detail?.rawJsonOutput &&
+        screeningId
+      ) {
+        try {
+          // Use the same logic as handleSaveEdits for consistency
+          const currentBoxes = findings
+            .filter((f) => f.location)
+            .map((f) => {
+              const loc = boxOverrides[f.id] ?? f.location!;
+              return {
+                id: f.id,
+                name: f.name,
+                description: f.description,
+                confidence: f.confidence,
+                severity: f.severity,
+                location: {
+                  x: loc.x,
+                  y: loc.y,
+                  width: loc.width,
+                  height: loc.height,
+                },
+              };
+            });
+
+          const parsed = JSON.parse(detail.rawJsonOutput) as Record<
+            string,
+            unknown
+          >;
+          parsed.doctor_bbox_overrides = currentBoxes;
+
+          if (hasHeatmapEdits && heatmapData) {
+            parsed.heatmap_data = heatmapData;
+          }
+
+          parsed.doctor_manual_findings = sidebarFindings.filter((sf) =>
+            sf.id.startsWith('manual-find-')
+          );
+
+          const finalJsonString = JSON.stringify(parsed);
+
+          await import('@/lib/api').then(({ api }) =>
+            api.post(`/screenings/${screeningId}/save-results`, {
+              rawJsonOutput: finalJsonString,
+              riskLevel: detail.latestResult?.riskLevel ?? 'Low',
+              confidenceScore: detail.latestResult?.confidenceScore ?? 0,
+              summary: detail.latestResult?.summary,
+              findings: detail.latestResult?.findings,
+            })
+          );
+        } catch (bboxErr) {
+          // bbox save không nên làm fail toàn bộ flow diagnosis
+          console.warn('Bbox save failed (non-critical):', bboxErr);
+        }
+      }
 
       ophthalToast.success(
         t(
@@ -682,7 +1221,7 @@ export default function ScreeningReviewPage() {
               {/* Main Grid */}
               <div className="grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
                 {/* Left Sidebar - Patient Info */}
-                <div className="col-span-3 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
+                <div className="col-span-2 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
                   {/* Patient Header */}
                   <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
                     <div className="flex items-center gap-3">
@@ -749,65 +1288,6 @@ export default function ScreeningReviewPage() {
                   <div className="flex-1 overflow-y-auto p-4">
                     {activeTab === 'exam' && (
                       <div className="space-y-4">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            {t(
-                              'Ophthalmologist.screeningReview.selectEye',
-                              'Select Eye'
-                            )}
-                          </p>
-                          {retinalImages.length === 0 ? (
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {t(
-                                'Ophthalmologist.screeningReview.noFundusImages',
-                                'No fundus images for this screening.'
-                              )}
-                            </p>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-2">
-                              {retinalImages.map((img) => (
-                                <button
-                                  type="button"
-                                  key={img.id}
-                                  onClick={() => setSelectedImageId(img.id)}
-                                  className={`p-3 rounded-lg border-2 transition-colors ${
-                                    selectedImage?.id === img.id
-                                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
-                                      : 'border-gray-200 dark:border-[#1e3a5f] hover:border-cyan-300'
-                                  }`}
-                                >
-                                  <Eye
-                                    className={`w-5 h-5 mx-auto mb-1 ${
-                                      selectedImage?.id === img.id
-                                        ? 'text-cyan-600 dark:text-cyan-400'
-                                        : 'text-gray-400'
-                                    }`}
-                                  />
-                                  <p
-                                    className={`text-sm font-medium ${
-                                      selectedImage?.id === img.id
-                                        ? 'text-cyan-600 dark:text-cyan-400'
-                                        : 'text-gray-600 dark:text-gray-400'
-                                    }`}
-                                  >
-                                    {img.eyeSide}{' '}
-                                    {t(
-                                      'Ophthalmologist.screeningReview.eye',
-                                      'Eye'
-                                    )}
-                                  </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                                    Q:{' '}
-                                    {img.qualityScore > 0
-                                      ? `${img.qualityScore}%`
-                                      : '—'}
-                                  </p>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
                         <div>
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                             {t(
@@ -966,7 +1446,10 @@ export default function ScreeningReviewPage() {
                 </div>
 
                 {/* Center - Image Viewer */}
-                <div className="col-span-6 bg-[#0d1117] rounded-xl border border-gray-800 overflow-hidden flex flex-col">
+                <div
+                  ref={imageContainerRef}
+                  className="col-span-7 bg-[#0d1117] rounded-xl border border-gray-800 overflow-hidden flex flex-col fullscreen:border-none fullscreen:rounded-none"
+                >
                   {/* Toolbar */}
                   <div className="flex items-center justify-between p-3 border-b border-gray-800">
                     <div className="flex items-center gap-1">
@@ -1011,6 +1494,7 @@ export default function ScreeningReviewPage() {
                         <RotateCcw className="w-5 h-5" />
                       </button>
                       <button
+                        onClick={handleFullscreen}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                         title={t(
                           'Ophthalmologist.screeningReview.toolbar.fullscreen',
@@ -1042,6 +1526,78 @@ export default function ScreeningReviewPage() {
                       >
                         <Pencil className="w-5 h-5" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={handleAddNewBox}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.addNewBox',
+                          'Add new custom bounding box'
+                        )}
+                      >
+                        <PlusSquare className="w-5 h-5" />
+                      </button>
+
+                      {overlayEditMode && focusedFinding ? (
+                        <>
+                          <div className="w-px h-6 bg-gray-700 mx-1" />
+                          <button
+                            type="button"
+                            onClick={() => handleChangeFocusedBoxColor('high')}
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                            title="Change to Red (High)"
+                          >
+                            <div className="w-4 h-4 rounded-full bg-red-400 border border-red-500" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleChangeFocusedBoxColor('moderate')
+                            }
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                            title="Change to Orange (Moderate)"
+                          >
+                            <div className="w-4 h-4 rounded-full bg-orange-400 border border-orange-500" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleChangeFocusedBoxColor('low')}
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                            title="Change to Yellow (Low)"
+                          >
+                            <div className="w-4 h-4 rounded-full bg-yellow-400 border border-yellow-500" />
+                          </button>
+                          <div className="w-px h-6 bg-gray-700 mx-1" />
+                          <button
+                            type="button"
+                            onClick={handleDeleteFocusedBox}
+                            className="p-2 text-red-400 hover:text-white hover:bg-red-900/50 rounded-lg transition-colors"
+                            title={t(
+                              'Ophthalmologist.screeningReview.toolbar.deleteBox',
+                              'Delete selected box'
+                            )}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        onClick={handleUndo}
+                        disabled={!canUndo}
+                        className={`p-2 rounded-lg transition-colors ${
+                          canUndo
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            : 'text-gray-600 cursor-not-allowed opacity-40'
+                        }`}
+                        title={t(
+                          'Ophthalmologist.screeningReview.toolbar.undo',
+                          'Undo last action'
+                        )}
+                      >
+                        <Undo2 className="w-5 h-5" />
+                      </button>
                       {findings.some((f) => f.location) ? (
                         <button
                           type="button"
@@ -1049,7 +1605,7 @@ export default function ScreeningReviewPage() {
                           className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                           title={t(
                             'Ophthalmologist.screeningReview.toolbar.resetAiBoxes',
-                            'Reset boxes to AI positions (this image)'
+                            'Reset all to AI positions'
                           )}
                         >
                           <RotateCcw className="w-5 h-5" />
@@ -1065,19 +1621,10 @@ export default function ScreeningReviewPage() {
                         <Settings2 className="w-5 h-5" />
                       </button>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-400">
-                        {Math.round(zoom * 100)}%
-                      </span>
-                    </div>
                   </div>
 
                   {/* Image Container */}
-                  <div
-                    ref={imageContainerRef}
-                    className="flex-1 relative overflow-hidden flex items-center justify-center bg-black"
-                  >
+                  <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black">
                     <div
                       className="relative transition-transform duration-200 max-w-full max-h-full flex items-center justify-center p-4"
                       style={{ transform: `scale(${zoom})` }}
@@ -1085,12 +1632,12 @@ export default function ScreeningReviewPage() {
                       {selectedImage ? (
                         <div
                           ref={imgOverlayRef}
-                          className="relative inline-block max-w-full max-h-[min(70vh,calc(100vh-280px))] touch-none"
+                          className="relative inline-flex items-center justify-center max-w-[95%] max-h-[95%] w-full h-full touch-none"
                         >
                           <img
                             src={selectedImage.imageUrl}
                             alt={`${selectedImage.eyeSide} eye fundus`}
-                            className="max-w-full max-h-[min(70vh,calc(100vh-280px))] object-contain block rounded-lg select-none pointer-events-none"
+                            className="max-w-full max-h-full object-contain block rounded-lg select-none pointer-events-none"
                             draggable={false}
                           />
                           {overlayEditMode ? (
@@ -1115,18 +1662,20 @@ export default function ScreeningReviewPage() {
                                     if (!overlayEditMode) return;
                                     beginOverlayDrag(e, finding.id, 'move');
                                   }}
-                                  className={`absolute border-2 transition-colors duration-200 ${
+                                  className={`absolute transition-colors duration-200 ${
                                     overlayEditMode
                                       ? 'cursor-grab active:cursor-grabbing'
                                       : 'pointer-events-none'
                                   } ${
+                                    finding.severity === 'high'
+                                      ? 'border-red-400 bg-red-400/25'
+                                      : finding.severity === 'moderate'
+                                        ? 'border-orange-400 bg-orange-400/25'
+                                        : 'border-yellow-400 bg-yellow-400/25'
+                                  } ${
                                     isHighlighted
-                                      ? 'border-cyan-400 bg-cyan-400/20 shadow-lg shadow-cyan-400/50'
-                                      : finding.severity === 'high'
-                                        ? 'border-red-400/70 bg-red-400/25'
-                                        : finding.severity === 'moderate'
-                                          ? 'border-orange-400/70 bg-orange-400/25'
-                                          : 'border-yellow-400/70 bg-yellow-400/25'
+                                      ? 'border-[3px] shadow-[0_0_12px_rgba(255,255,255,0.7)]'
+                                      : 'border-2 opacity-70'
                                   }`}
                                   style={{
                                     left: `${loc.x}%`,
@@ -1171,6 +1720,37 @@ export default function ScreeningReviewPage() {
                       )}
                     </div>
 
+                    {/* Heatmap canvas overlay */}
+                    {showHeatmap && heatmapData && selectedImage && (
+                      <canvas
+                        ref={heatmapCanvasRef}
+                        className={`absolute inset-0 w-full h-full rounded-lg ${
+                          heatmapEditMode
+                            ? 'cursor-crosshair'
+                            : 'pointer-events-none'
+                        }`}
+                        style={{
+                          opacity: heatmapOpacity,
+                          mixBlendMode: 'normal',
+                          touchAction: heatmapEditMode ? 'none' : 'auto',
+                        }}
+                        onPointerDown={(e) => {
+                          if (!heatmapEditMode) return;
+                          heatmapDragRef.current = true;
+                          e.currentTarget.setPointerCapture(e.pointerId);
+                          paintHeatmap(e);
+                        }}
+                        onPointerMove={(e) => {
+                          if (!heatmapDragRef.current || !heatmapEditMode)
+                            return;
+                          paintHeatmap(e);
+                        }}
+                        onPointerUp={(e) => {
+                          heatmapDragRef.current = false;
+                          e.currentTarget.releasePointerCapture(e.pointerId);
+                        }}
+                      />
+                    )}
                     {selectedImage ? (
                       <div className="absolute top-4 left-4 flex items-center gap-2">
                         <span className="px-3 py-1.5 bg-gray-900/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-2">
@@ -1265,8 +1845,8 @@ export default function ScreeningReviewPage() {
                         }`}
                       >
                         {t(
-                          'Ophthalmologist.screeningReview.aiOverlay',
-                          'AI Overlay'
+                          'Ophthalmologist.screeningReview.boundingboxLabel',
+                          'Bounding Box'
                         )}
                       </button>
                       <button
@@ -1282,6 +1862,229 @@ export default function ScreeningReviewPage() {
                           'Original'
                         )}
                       </button>
+                      {heatmapData && (
+                        <>
+                          <button
+                            onClick={() => setShowHeatmap((v) => !v)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              showHeatmap
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-gray-800 text-gray-400 hover:text-white'
+                            }`}
+                            title="Toggle AI heatmap (Grad-CAM)"
+                          >
+                            🌡 Heatmap
+                          </button>
+                          {showHeatmap && (
+                            <div className="flex items-center gap-4 flex-wrap border-l border-gray-700 pl-4 relative">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className="text-xs text-gray-500"
+                                  title="Opacity"
+                                >
+                                  Opa
+                                </span>
+                                <input
+                                  type="range"
+                                  min={0.05}
+                                  max={1}
+                                  step={0.05}
+                                  value={heatmapOpacity}
+                                  onChange={(e) =>
+                                    setHeatmapOpacity(Number(e.target.value))
+                                  }
+                                  className="w-16 h-1.5 accent-orange-500 cursor-pointer"
+                                  title={`Opacity: ${Math.round(heatmapOpacity * 100)}%`}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className="text-xs text-gray-500"
+                                  title="Heat Threshold"
+                                >
+                                  Thr
+                                </span>
+                                <input
+                                  type="range"
+                                  min={0.0}
+                                  max={0.9}
+                                  step={0.05}
+                                  value={heatmapThreshold}
+                                  onChange={(e) =>
+                                    setHeatmapThreshold(Number(e.target.value))
+                                  }
+                                  className="w-16 h-1.5 accent-red-500 cursor-pointer"
+                                  title={`Threshold: ${Math.round(heatmapThreshold * 100)}%`}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1 ml-2">
+                                <button
+                                  onClick={() =>
+                                    setHeatmapEditMode((p) =>
+                                      p !== null ? null : 'draw'
+                                    )
+                                  }
+                                  className={`px-3 py-1 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-all ${
+                                    heatmapEditMode !== null
+                                      ? 'bg-cyan-600 text-white shadow-inner'
+                                      : 'bg-gray-800 text-gray-400 hover:text-white'
+                                  }`}
+                                  title="Mở bộ công cụ vẽ Heatmap"
+                                >
+                                  <svg
+                                    className="w-3.5 h-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                    />
+                                  </svg>
+                                  {heatmapEditMode !== null
+                                    ? 'Đóng Tool'
+                                    : 'Bộ Vẽ Heatmap'}
+                                </button>
+
+                                {heatmapEditMode !== null && (
+                                  <div
+                                    onPointerMove={handleToolkitDrag}
+                                    onPointerUp={() =>
+                                      setIsDraggingToolkit(false)
+                                    }
+                                    onPointerLeave={() =>
+                                      setIsDraggingToolkit(false)
+                                    }
+                                    style={{
+                                      transform: `translate(${toolkitPos.x}px, ${toolkitPos.y}px)`,
+                                    }}
+                                    className="absolute bottom-full mb-3 right-0 flex items-center gap-4 px-4 py-2 border border-gray-700 bg-gray-900/90 rounded-xl backdrop-blur-md shadow-2xl z-50 select-none"
+                                  >
+                                    {/* Drag Handle */}
+                                    <div
+                                      onPointerDown={(e) => {
+                                        e.stopPropagation();
+                                        setIsDraggingToolkit(true);
+                                        (
+                                          e.currentTarget as HTMLElement
+                                        ).setPointerCapture(e.pointerId);
+                                      }}
+                                      className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-gray-500 hover:text-cyan-400 transition-colors"
+                                      title="Kéo để di chuyển bộ công cụ"
+                                    >
+                                      <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 16 16"
+                                        fill="currentColor"
+                                      >
+                                        <circle cx="4" cy="4" r="1.5" />
+                                        <circle cx="4" cy="8" r="1.5" />
+                                        <circle cx="4" cy="12" r="1.5" />
+                                        <circle cx="8" cy="4" r="1.5" />
+                                        <circle cx="8" cy="8" r="1.5" />
+                                        <circle cx="8" cy="12" r="1.5" />
+                                        <circle cx="12" cy="4" r="1.5" />
+                                        <circle cx="12" cy="8" r="1.5" />
+                                        <circle cx="12" cy="12" r="1.5" />
+                                      </svg>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                                        Size
+                                      </span>
+                                      <input
+                                        type="range"
+                                        min="1"
+                                        max="12"
+                                        step="1"
+                                        value={brushSize}
+                                        onChange={(e) =>
+                                          setBrushSize(Number(e.target.value))
+                                        }
+                                        className="w-20 h-1.5 accent-cyan-400 cursor-pointer"
+                                        title={`Cỡ cọ: ${brushSize}`}
+                                      />
+                                    </div>
+                                    <div className="w-px h-5 bg-gray-700 mx-1" />
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mr-1">
+                                        Heat
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          setHeatmapEditMode('draw');
+                                          setBrushTargetHeat(1.0);
+                                        }}
+                                        className={`w-5 h-5 rounded-full bg-red-600 transition-transform shadow-sm ${brushTargetHeat === 1.0 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
+                                        title="Lõi đỏ (Nhiệt cao nhất)"
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          setHeatmapEditMode('draw');
+                                          setBrushTargetHeat(0.7);
+                                        }}
+                                        className={`w-5 h-5 rounded-full bg-orange-500 transition-transform shadow-sm ${brushTargetHeat === 0.7 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
+                                        title="Tỏa cam"
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          setHeatmapEditMode('draw');
+                                          setBrushTargetHeat(0.4);
+                                        }}
+                                        className={`w-5 h-5 rounded-full bg-yellow-400 transition-transform shadow-sm ${brushTargetHeat === 0.4 && heatmapEditMode === 'draw' ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
+                                        title="Lan vàng"
+                                      />
+                                    </div>
+                                    <div className="w-px h-5 bg-gray-700 mx-1" />
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() =>
+                                          setHeatmapEditMode('erase')
+                                        }
+                                        className={`flex items-center justify-center p-1.5 rounded w-max bg-gray-800 text-gray-200 transition-all shadow-sm ${heatmapEditMode === 'erase' ? 'ring-2 ring-cyan-400 text-white bg-gray-600' : 'hover:bg-gray-600 hover:text-white'}`}
+                                        title="Cục Tẩy"
+                                      >
+                                        <Eraser className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={handleUndo}
+                                        disabled={!canUndo}
+                                        className={`p-1.5 rounded transition-all shadow-sm ${
+                                          canUndo
+                                            ? 'bg-gray-700 text-cyan-400 hover:text-white hover:bg-gray-600'
+                                            : 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-40'
+                                        }`}
+                                        title="Hoàn tác"
+                                      >
+                                        <Undo2 className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setHeatmapData((prev) =>
+                                            prev
+                                              ? prev.map((r) => r.map(() => 0))
+                                              : null
+                                          );
+                                          setHasHeatmapEdits(true);
+                                        }}
+                                        className="ml-1 flex items-center gap-1 px-2 py-1 rounded border border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all text-[9px] uppercase font-bold tracking-wider"
+                                        title="Xóa toàn bộ bản đồ nhiệt"
+                                      >
+                                        Clear
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1322,15 +2125,6 @@ export default function ScreeningReviewPage() {
                             >
                               {detail.latestResult.riskLevel}
                             </span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {t(
-                                'Ophthalmologist.screeningReview.modelConfidence',
-                                'Độ tin cậy mô hình:'
-                              )}{' '}
-                              <strong className="text-gray-900 dark:text-white">
-                                {aiConfidencePct}%
-                              </strong>
-                            </span>
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {referralPillLabel}
@@ -1349,15 +2143,118 @@ export default function ScreeningReviewPage() {
 
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      {t(
-                        'Ophthalmologist.screeningReview.detectedFindings',
-                        'Detected Findings'
-                      )}{' '}
-                      ({findings.length})
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {t(
+                          'Ophthalmologist.screeningReview.detectedFindings',
+                          'Detected Findings'
+                        )}{' '}
+                        ({sidebarFindings.length})
+                      </p>
+                      <button
+                        onClick={() => setIsAddingFinding(true)}
+                        className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
+                        title="Thêm thẻ (Add finding)"
+                      >
+                        <PlusSquare className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {isAddingFinding && (
+                      <div className="mb-4 space-y-3 p-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-sm">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase text-gray-400">
+                            Tên bệnh / Dấu hiệu
+                          </label>
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newFindingName}
+                            onChange={(e) => setNewFindingName(e.target.value)}
+                            placeholder="Nhập tên..."
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase text-gray-400">
+                            Mô tả chi tiết
+                          </label>
+                          <textarea
+                            value={newFindingDescription}
+                            onChange={(e) =>
+                              setNewFindingDescription(e.target.value)
+                            }
+                            placeholder="Nhập mô tả..."
+                            rows={2}
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-bold uppercase text-gray-400 mr-1">
+                              Rủi ro:
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('low')}
+                              className={`w-6 h-6 rounded-full bg-yellow-400 border-2 transition-all ${newFindingSeverity === 'low' ? 'border-white ring-2 ring-yellow-400 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="Low (Yellow)"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('moderate')}
+                              className={`w-6 h-6 rounded-full bg-orange-500 border-2 transition-all ${newFindingSeverity === 'moderate' ? 'border-white ring-2 ring-orange-500 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="Moderate (Orange)"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setNewFindingSeverity('high')}
+                              className={`w-6 h-6 rounded-full bg-red-600 border-2 transition-all ${newFindingSeverity === 'high' ? 'border-white ring-2 ring-red-600 scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                              title="High (Red)"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setIsAddingFinding(false)}
+                              className="px-3 py-1.5 text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!newFindingName.trim()) return;
+                                const id = `manual-find-${Date.now()}`;
+                                const newFinding: DetectedFinding = {
+                                  id,
+                                  name: newFindingName.trim(),
+                                  description:
+                                    newFindingDescription.trim() ||
+                                    'Physician indicated finding',
+                                  confidence: 100,
+                                  severity: newFindingSeverity,
+                                };
+                                setSidebarFindings((prev) => [
+                                  ...prev,
+                                  newFinding,
+                                ]);
+                                setFindings((prev) => [...prev, newFinding]);
+                                setNewFindingName('');
+                                setNewFindingDescription('');
+                                setIsAddingFinding(false);
+                              }}
+                              className="px-4 py-1.5 bg-cyan-600 text-white text-[11px] font-bold rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-1.5"
+                            >
+                              <PlusSquare className="w-3.5 h-3.5" /> Thêm
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
-                      {findings.length === 0 ? (
+                      {sidebarFindings.length === 0 ? (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {t(
                             'Ophthalmologist.screeningReview.noStructuredFindings',
@@ -1365,44 +2262,76 @@ export default function ScreeningReviewPage() {
                           )}
                         </p>
                       ) : null}
-                      {findings.map((finding) => (
+                      {sidebarFindings.map((finding) => (
                         <div
                           key={finding.id}
                           className={`border-l-4 rounded-lg p-3 ${getSeverityColor(finding.severity)}`}
                         >
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                              {finding.name}
-                            </h4>
-                            <span
-                              className={`text-xs font-bold ${
-                                finding.confidence >= 90
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : finding.confidence >= 80
-                                    ? 'text-orange-600 dark:text-orange-400'
-                                    : 'text-yellow-600 dark:text-yellow-400'
-                              }`}
+                            <input
+                              type="text"
+                              value={finding.name}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSidebarFindings((prev) =>
+                                  prev.map((f) =>
+                                    f.id === finding.id
+                                      ? { ...f, name: val }
+                                      : f
+                                  )
+                                );
+                                setFindings((prev) =>
+                                  prev.map((f) =>
+                                    f.id === finding.id
+                                      ? { ...f, name: val }
+                                      : f
+                                  )
+                                );
+                              }}
+                              className="font-semibold text-gray-900 dark:text-white text-sm bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded w-full"
+                            />
+                            <button
+                              onClick={() => {
+                                setSidebarFindings((prev) =>
+                                  prev.filter((f) => f.id !== finding.id)
+                                );
+                                setFindings((prev) =>
+                                  prev.filter((f) => f.id !== finding.id)
+                                );
+                              }}
+                              className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-2"
+                              title="Delete Finding"
                             >
-                              {finding.confidence}%{' '}
-                              {t(
-                                'Ophthalmologist.screeningReview.confAbbr',
-                                'Conf.'
-                              )}
-                            </span>
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                            {finding.description}
-                          </p>
-                          <button
-                            onClick={() => handleFocusFinding(finding.id)}
-                            className="flex items-center gap-1 text-xs text-cyan-600 dark:text-cyan-400 hover:underline"
-                          >
-                            <SearchIcon className="w-3 h-3" />
-                            {t(
-                              'Ophthalmologist.screeningReview.clickToFocus',
-                              'CLICK TO FOCUS'
-                            )}
-                          </button>
+                          <textarea
+                            value={finding.description}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSidebarFindings((prev) =>
+                                prev.map((f) =>
+                                  f.id === finding.id
+                                    ? { ...f, description: val }
+                                    : f
+                                )
+                              );
+                              setFindings((prev) =>
+                                prev.map((f) =>
+                                  f.id === finding.id
+                                    ? { ...f, description: val }
+                                    : f
+                                )
+                              );
+                            }}
+                            rows={1}
+                            className="w-full text-xs text-gray-600 dark:text-gray-400 bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded resize-none min-h-[1.25rem] overflow-hidden"
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = 'auto';
+                              target.style.height = `${target.scrollHeight}px`;
+                            }}
+                          />
                         </div>
                       ))}
                     </div>
@@ -1426,12 +2355,27 @@ export default function ScreeningReviewPage() {
 
                   {/* Action Buttons */}
                   <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                       <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors">
                         <Flag className="w-4 h-4" />
                         {t(
                           'Ophthalmologist.screeningReview.flagForReview',
                           'Flag for Review'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleSaveEdits}
+                        disabled={savingEdits}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors disabled:opacity-60"
+                      >
+                        {savingEdits ? (
+                          <Spinner size={16} />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        {t(
+                          'Ophthalmologist.screeningReview.saveButton',
+                          'Save'
                         )}
                       </button>
                       <button
@@ -1767,12 +2711,25 @@ export default function ScreeningReviewPage() {
                 {t('Ophthalmologist.common.cancel', 'Cancel')}
               </button>
               <div className="flex items-center gap-3">
-                <button className="px-6 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-xl font-medium transition-colors flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.exportPdf',
-                    'Export PDF'
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={downloadingPdf}
+                  className="px-6 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {downloadingPdf ? (
+                    <Spinner size={16} />
+                  ) : (
+                    <Download className="w-4 h-4" />
                   )}
+                  {downloadingPdf
+                    ? t(
+                        'Ophthalmologist.screeningReview.modal.exportingPdf',
+                        'Exporting...'
+                      )
+                    : t(
+                        'Ophthalmologist.screeningReview.modal.exportPdf',
+                        'Export PDF'
+                      )}
                 </button>
                 <button
                   onClick={handleSubmitDiagnosis}
