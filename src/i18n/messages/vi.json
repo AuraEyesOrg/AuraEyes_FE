@@ -35,8 +35,293 @@
     "learnMore": "Tìm hiểu thêm",
     "helpTour": "Hướng dẫn",
     "language": "Ngôn ngữ",
+    "toggleMenu": "Chuyển menu",
+    "switchToDark": "Chuyển sang giao diện tối",
+    "switchToLight": "Chuyển sang giao diện sáng",
     "sidebar": {
       "auraNetwork": "Aura Network"
+    }
+  },
+  "GuestFooter": {
+    "platform": "Nền tảng",
+    "services": "Dịch vụ",
+    "reserved": "Tất cả quyền được bảo lưu",
+    "privacy": "Chính sách bảo mật",
+    "terms": "Điều khoản sử dụng",
+    "personalData": "Dữ liệu cá nhân",
+    "security": "Tiêu chuẩn bảo mật",
+    "facebookAriaLabel": "Facebook"
+  },
+  "GuestLegal": {
+    "privacy": {
+      "header": {
+        "title": "Chính Sách Bảo Mật",
+        "subtitle": "Privacy Policy",
+        "lastUpdated": "Cập nhật lần cuối: 13/03/2026"
+      },
+      "intro": {
+        "complianceLabel": "Tiêu chuẩn tuân thủ:",
+        "complianceDescription": "Áp dụng các nguyên tắc bảo vệ dữ liệu theo tiêu chuẩn Y tế số và quy định pháp luật sở tại (bao gồm yêu cầu bảo vệ Dữ liệu cá nhân nhạy cảm).",
+        "commitment": "AURA Eyes nhận thức rõ tầm quan trọng và tính nhạy cảm của Dữ liệu Y tế (Protected Health Information - PHI). Chúng tôi cam kết thiết lập các lớp bảo mật cấp độ doanh nghiệp (Enterprise-grade Security) để bảo vệ quyền riêng tư của bạn."
+      },
+      "sections": {
+        "classification": {
+          "title": "Phân loại dữ liệu thu thập",
+          "description": "Chúng tôi chỉ thu thập các dữ liệu cần thiết phục vụ cho quá trình cung cấp dịch vụ:",
+          "cards": {
+            "pii": {
+              "title": "Dữ liệu Định danh (PII)",
+              "description": "Họ tên, địa chỉ email, số điện thoại, ảnh đại diện, thông tin xác thực tài khoản."
+            },
+            "phi": {
+              "title": "Dữ liệu Y tế Nhạy cảm (PHI)",
+              "description": "Hình ảnh võng mạc được đăng tải (DICOM/JPG/PNG), kết quả phân tích hệ thống (bản đồ nhiệt, chỉ số rủi ro), ghi chú chẩn đoán của bác sĩ, tiền sử khám bệnh và hồ sơ bệnh án điện tử (EMR) được lưu trữ trên nền tảng."
+            },
+            "professional": {
+              "title": "Dữ liệu Chuyên môn",
+              "description": "(Dành cho Bác sĩ) Văn bằng y khoa, chứng chỉ hành nghề, hợp đồng hợp tác dịch vụ số."
+            },
+            "financial": {
+              "title": "Dữ liệu Tài chính",
+              "description": "Lịch sử giao dịch ví điện tử, thông tin thẻ/tài khoản ngân hàng đã mã hóa (phục vụ đối soát và rút tiền)."
+            }
+          }
+        },
+        "usage": {
+          "title": "Mục đích và Phạm vi sử dụng dữ liệu",
+          "items": {
+            "coreOperations": {
+              "title": "Vận hành cốt lõi:",
+              "description": "Phân tích hình ảnh võng mạc qua mô hình AI để cảnh báo rủi ro lâm sàng."
+            },
+            "medicalCoordination": {
+              "title": "Điều phối Y tế:",
+              "description": "Cấp quyền truy cập hồ sơ bệnh án cho Bác sĩ/Cơ sở Y tế cụ thể chỉ khi có sự đồng ý hoặc yêu cầu đặt lịch (booking/request) trực tiếp từ Bệnh nhân."
+            },
+            "aiTraining": {
+              "title": "Huấn luyện Mô hình AI (Machine Learning):",
+              "description": "AURA Eyes có thể sử dụng dữ liệu hình ảnh đáy mắt để cải thiện độ chính xác của AI. Điều kiện tiên quyết: Toàn bộ dữ liệu này phải trải qua quy trình Phi định danh hoàn toàn (De-identification/Anonymization), loại bỏ mọi thông tin có thể truy vết ngược lại danh tính Bệnh nhân."
+            },
+            "communication": {
+              "title": "Giao tiếp & Hệ thống:",
+              "description": "Xử lý thanh toán, gửi thông báo hệ thống (SMS/Email), OTP bảo mật."
+            }
+          }
+        },
+        "commitments": {
+          "title": "Cam kết lưu trữ, Chia sẻ và Bảo mật",
+          "items": {
+            "noCommercialization": {
+              "title": "Không thương mại hóa dữ liệu",
+              "descriptionPrefix": "Chúng tôi tuyệt đối",
+              "highlight": "KHÔNG",
+              "descriptionSuffix": "bán, cho thuê Dữ liệu Định danh hoặc Dữ liệu Y tế của người dùng cho bất kỳ bên thứ ba nào vì mục đích quảng cáo."
+            },
+            "storageStandards": {
+              "title": "Tiêu chuẩn lưu trữ",
+              "description": "Dữ liệu được lưu trữ trên hệ thống điện toán đám mây với cơ chế mã hóa dữ liệu tại chỗ (Data at rest) và mã hóa đường truyền (Data in transit) qua giao thức SSL/TLS."
+            },
+            "dataSubjectRights": {
+              "title": "Quyền của chủ thể dữ liệu",
+              "description": "Người dùng có quyền truy cập, trích xuất (export), yêu cầu chỉnh sửa hoặc xóa bỏ hoàn toàn dữ liệu cá nhân/hồ sơ y tế của mình khỏi hệ thống AURA Eyes bằng cách gửi yêu cầu thông qua bộ phận hỗ trợ."
+            }
+          }
+        }
+      }
+    },
+    "personalData": {
+      "header": {
+        "title": "Quy định Xử lý Dữ liệu Cá nhân",
+        "subtitle": "Personal Data Policy",
+        "lastUpdated": "Cập nhật lần cuối: 02/04/2026"
+      },
+      "intro": {
+        "referenceLabel": "Tài liệu tham chiếu:",
+        "referenceDescription": "Căn cứ theo các tiêu chuẩn bảo vệ dữ liệu cá nhân hiện hành.",
+        "commitment": "Tài liệu này quy định chi tiết về quyền hạn của người dùng (Chủ thể dữ liệu) và các cam kết của AURA Eyes trong tư cách là đơn vị Kiểm soát và Xử lý dữ liệu."
+      },
+      "sections": {
+        "rights": {
+          "title": "Quyền của Chủ thể Dữ liệu",
+          "description": "Người dùng trên nền tảng AURA Eyes có các quyền nhân thân tuyệt đối đối với hồ sơ số của mình, bao gồm:",
+          "items": {
+            "access": {
+              "title": "Quyền truy cập và trích xuất (Right to Access & Portability):",
+              "description": "Người dùng có quyền xem, tải xuống toàn bộ dữ liệu định danh, lịch sử giao dịch và hồ sơ hình ảnh y tế cá nhân dưới định dạng máy tính có thể đọc được (ví dụ: JSON, PDF)."
+            },
+            "rectification": {
+              "title": "Quyền chỉnh sửa (Right to Rectification):",
+              "description": "Người dùng có quyền tự cập nhật hoặc yêu cầu hệ thống đính chính các thông tin cá nhân sai lệch thông qua giao diện quản lý tài khoản."
+            },
+            "erasure": {
+              "title": "Quyền xóa bỏ (Right to Erasure / Right to be Forgotten):",
+              "description": "Người dùng có quyền yêu cầu xóa vĩnh viễn tài khoản và toàn bộ dữ liệu cá nhân/y tế liên quan khỏi hệ thống máy chủ tĩnh của AURA Eyes."
+            },
+            "withdrawConsent": {
+              "title": "Quyền rút lại sự đồng ý (Right to Withdraw Consent):",
+              "description": "Bất cứ lúc nào, người dùng có thể vô hiệu hóa quyền truy cập hồ sơ của Bác sĩ/Phòng khám hoặc từ chối việc sử dụng dữ liệu hình ảnh (dù đã ẩn danh) cho mục đích huấn luyện AI."
+            }
+          }
+        },
+        "retention": {
+          "title": "Vòng đời và Thời hạn Lưu trữ Dữ liệu (Data Retention)",
+          "cards": {
+            "active": {
+              "title": "Dữ liệu Hoạt động",
+              "description": "Dữ liệu cá nhân và hồ sơ y tế được lưu trữ và duy trì liên tục trong suốt thời gian tài khoản của người dùng còn ở trạng thái kích hoạt (Active)."
+            },
+            "deleted": {
+              "title": "Dữ liệu Xóa/Hủy",
+              "description": "Khi có yêu cầu xóa tài khoản, toàn bộ dữ liệu định danh (PII) và Dữ liệu y tế nhạy cảm (PHI) sẽ tự động xóa: 30 ngày (CSDL chính), 90 ngày (Backup)."
+            },
+            "legalFinancial": {
+              "title": "Dữ liệu Pháp lý & Tài chính",
+              "description": "Bản ghi về giao dịch tài chính và chứng nhận đồng ý điều khoản dịch vụ có thể lưu trữ tối đa 05 năm phục vụ kiểm toán và giải quyết tranh chấp."
+            }
+          }
+        },
+        "breach": {
+          "title": "Quy trình phản hồi sự cố Dữ liệu (Data Breach Notification)",
+          "description": "Trong trường hợp phát hiện hệ thống bị xâm nhập trái phép có nguy cơ gây rò rỉ dữ liệu, AURA Eyes cam kết:",
+          "items": {
+            "incidentResponse": "Kích hoạt quy trình phong tỏa hệ thống ngay lập tức (Incident Response Plan).",
+            "notifyAffectedUsers": "Thông báo chính thức đến người dùng bị ảnh hưởng qua Email/SMS trong vòng 72 giờ kể từ khi xác nhận sự cố, kèm theo các biện pháp khắc phục và hướng dẫn bảo vệ tài khoản."
+          }
+        }
+      }
+    },
+    "security": {
+      "header": {
+        "title": "Tiêu chuẩn An toàn & Bảo mật",
+        "subtitle": "Security Policy",
+        "lastUpdated": "Cập nhật lần cuối: 02/04/2026"
+      },
+      "intro": {
+        "title": "Bảo mật là ưu tiên cốt lõi trong thiết kế kiến trúc phần mềm của AURA Eyes.",
+        "description": "Tài liệu này minh bạch hóa các biện pháp kỹ thuật và tổ chức được chúng tôi áp dụng để bảo vệ cơ sở hạ tầng, API và dữ liệu người dùng khỏi các mối đe dọa không gian mạng."
+      },
+      "sections": {
+        "encryption": {
+          "title": "Tiêu chuẩn Mã hóa Dữ liệu (Data Encryption)",
+          "description": "Mọi dữ liệu đi qua và lưu trữ trên hệ thống AURA Eyes đều bị áp đặt các tiêu chuẩn mã hóa quân sự/doanh nghiệp:",
+          "cards": {
+            "dataAtRest": {
+              "title": "Mã hóa khi lưu trữ (Data at Rest)",
+              "description": "Toàn bộ cơ sở dữ liệu cốt lõi (Bao gồm CSDL quan hệ lưu thông tin người dùng và Vector Database lưu tài liệu nội bộ/AI) và hệ thống lưu trữ tệp (File Storage chứa ảnh võng mạc, file DICOM) đều được mã hóa bằng chuẩn AES-256."
+            },
+            "dataInTransit": {
+              "title": "Mã hóa đường truyền (Data in Transit)",
+              "description": "Mọi giao tiếp giữa trình duyệt/ứng dụng của người dùng với máy chủ AURA Eyes, cũng như giao tiếp nội bộ giữa các microservices, đều được bắt buộc thực hiện qua giao thức HTTPS với chuẩn mã hóa TLS 1.2 hoặc TLS 1.3."
+            }
+          }
+        },
+        "accessControl": {
+          "title": "Quản lý Định danh & Kiểm soát Truy cập (IAM & Access Control)",
+          "items": {
+            "rbac": {
+              "title": "Kiểm soát truy cập dựa trên vai trò (RBAC)",
+              "description": "Hệ thống phân quyền chặt chẽ theo nguyên tắc Đặc quyền tối thiểu (Principle of Least Privilege). Bác sĩ hoặc nhân viên phòng khám chỉ được cấp quyền truy cập (Read/Write) vào hồ sơ bệnh án của đúng bệnh nhân mà họ phụ trách."
+            },
+            "mfa": {
+              "title": "Xác thực đa yếu tố (MFA / 2FA)",
+              "description": "Bắt buộc áp dụng phương thức xác thực qua mã OTP (gửi qua Email hoặc SMS) đối với các hành động nhạy cảm như: Rút tiền từ ví điện tử, thay đổi thông tin định danh chuyên gia, hoặc tải xuống hàng loạt hồ sơ y tế."
+            },
+            "sessionManagement": {
+              "title": "Bảo mật phiên làm việc (Session Management)",
+              "description": "Sử dụng JSON Web Token (JWT) với thời gian sống (expiration time) ngắn và cơ chế thu hồi token (Revocation) để chống lại các cuộc tấn công chiếm đoạt phiên làm việc."
+            }
+          }
+        },
+        "infrastructure": {
+          "title": "An ninh Hạ tầng Đám mây (Cloud & Infrastructure Security)",
+          "items": {
+            "certifications": {
+              "label": "Chứng chỉ bảo mật:",
+              "description": "Hệ thống được triển khai trên nền tảng điện toán đám mây đạt chuẩn quốc tế, đảm bảo các chứng chỉ bảo mật vật lý và logic."
+            },
+            "waf": {
+              "label": "Tường lửa ứng dụng web (WAF):",
+              "description": "Tích hợp WAF để chủ động đánh chặn các cuộc tấn công phổ biến như SQL Injection, Cross-Site Scripting (XSS) và phân luồng phòng chống tấn công từ chối dịch vụ (DDoS)."
+            },
+            "isolation": {
+              "label": "Cô lập dữ liệu:",
+              "description": "Kiến trúc cơ sở dữ liệu được cô lập hoàn toàn trong Mạng nội bộ ảo (VPC), không tiếp xúc trực tiếp với internet công cộng."
+            }
+          }
+        },
+        "monitoring": {
+          "title": "Giám sát, Nhật ký và Kiểm toán (Monitoring & Logging)",
+          "items": {
+            "auditLogs": {
+              "title": "Nhật ký truy cập (Audit Logs)",
+              "description": "Mọi thao tác tạo, đọc, sửa, xóa (CRUD) đối với Dữ liệu y tế nhạy cảm (PHI) đều được hệ thống tự động ghi nhật ký không thể chối bỏ (immutable logs) bao gồm: Dấu thời gian, IP truy cập và Định danh tài khoản thực hiện."
+            },
+            "continuousMonitoring": {
+              "title": "Hệ thống giám sát 24/7",
+              "description": "Hệ thống giám sát liên tục giúp phát hiện sớm các lưu lượng truy cập bất thường và tự động cảnh báo cho đội ngũ kỹ sư bảo mật của nền tảng để có phương án phản ứng kịp thời."
+            }
+          }
+        }
+      }
+    },
+    "terms": {
+      "header": {
+        "title": "Điều Khoản Dịch Vụ",
+        "subtitle": "Terms of Service",
+        "lastUpdated": "Cập nhật lần cuối: 13/03/2026",
+        "version": "Phiên bản: 1.0"
+      },
+      "intro": {
+        "welcome": "Chào mừng bạn đến với Hệ thống Sàng lọc Sức khỏe Mạch máu Võng mạc - AURA Eyes (\"Hệ thống\", \"Chúng tôi\", hoặc \"AURA Eyes\").",
+        "description": "Bằng việc tạo tài khoản, truy cập và sử dụng nền tảng của chúng tôi, Người dùng (bao gồm Bệnh nhân, Bác sĩ và Cơ sở Y tế) đồng ý tuân thủ toàn bộ các điều khoản được quy định dưới đây."
+      },
+      "sections": {
+        "serviceNature": {
+          "title": "Bản chất dịch vụ và Miễn trừ trách nhiệm y tế",
+          "description": "AURA Eyes là nền tảng phần mềm dạng dịch vụ (SaaS) cung cấp công cụ Hỗ trợ Quyết định Lâm sàng (CDS). Trí tuệ nhân tạo (AI) của AURA Eyes hoạt động như một hệ thống phân loại sơ bộ, phân tích rủi ro dựa trên hình ảnh đáy mắt (hỗ trợ định dạng tiêu chuẩn như JPG, PNG, DICOM).",
+          "disclaimer": {
+            "title": "Khuyến cáo quan trọng",
+            "descriptionPrefix": "Mọi báo cáo, bản đồ nhiệt, lộ trình rủi ro hoặc điểm số được tạo ra bởi AI của AURA Eyes",
+            "highlight": "KHÔNG mang giá trị chẩn đoán y khoa chính thức",
+            "descriptionSuffix": ", không thay thế cho phác đồ điều trị hoặc đánh giá chuyên môn của Bác sĩ. Chúng tôi miễn trừ mọi trách nhiệm pháp lý đối với bất kỳ quyết định y tế nào được đưa ra chỉ dựa trên kết quả phân tích của hệ thống AI mà không thông qua sự xác nhận của Bác sĩ Nhãn khoa có chuyên môn."
+          }
+        },
+        "userResponsibilities": {
+          "title": "Trách nhiệm của Người dùng",
+          "cards": {
+            "patient": {
+              "title": "Đối với Bệnh nhân / Cá nhân",
+              "description": "Cam kết cung cấp dữ liệu định danh và hình ảnh y tế trung thực. Người dùng hoàn toàn chịu trách nhiệm về tính bảo mật của tài khoản cá nhân, thông tin đăng nhập và mã xác thực (OTP)."
+            },
+            "medicalProfessional": {
+              "title": "Đối với Chuyên gia Y tế",
+              "description": "Cam kết và chịu trách nhiệm pháp lý về tính hợp lệ của bằng cấp. Khi tham gia Mạng lưới Chuyên gia, Bác sĩ có nghĩa vụ tuân thủ nguyên tắc phi định danh (anonymization) tuyệt đối mọi thông tin bệnh nhân."
+            }
+          }
+        },
+        "payment": {
+          "title": "Giao dịch, Thanh toán và Ví điện tử",
+          "items": {
+            "paymentGateway": {
+              "title": "Cổng thanh toán:",
+              "description": "Mọi giao dịch tài chính (nạp tiền, thanh toán phí AI, phí tư vấn chuyên gia, yêu cầu rút tiền) được xử lý thông qua ví điện tử tích hợp và các đối tác thanh toán được cấp phép (ví dụ: PayOS)."
+            },
+            "financialTransparency": {
+              "title": "Minh bạch tài chính:",
+              "description": "Bảng giá dịch vụ được niêm yết công khai trên nền tảng trước khi phát sinh giao dịch. Người dùng nạp tiền vào ví điện tử có thể sử dụng số dư cho mọi dịch vụ nội bộ của AURA Eyes."
+            },
+            "withdrawalPolicy": {
+              "title": "Chính sách rút tiền:",
+              "description": "Đối với Chuyên gia Y tế, các yêu cầu rút tiền từ ví điện tử về tài khoản ngân hàng liên kết sẽ được đối soát và xử lý trong vòng 03 - 05 ngày làm việc theo quy chế vận hành tài chính của AURA Eyes."
+            }
+          }
+        },
+        "intellectualProperty": {
+          "title": "Quyền Sở hữu Trí tuệ (Intellectual Property)",
+          "description": "Toàn bộ mã nguồn, thuật toán AI, thiết kế giao diện, logo và tài liệu kỹ thuật thuộc quyền sở hữu độc quyền của AURA Eyes.",
+          "notice": "Nghiêm cấm mọi hành vi sao chép, dịch ngược mã (reverse engineering) hoặc sử dụng thương mại trái phép."
+        }
+      }
     }
   },
   "GuestTour": {
@@ -910,6 +1195,73 @@
     "primaryCta": "Về trang chủ",
     "secondaryCta": "Khám phá AURA"
   },
+  "GuestEnhancements": {
+    "breadcrumb": {
+      "ariaLabel": "Điều hướng breadcrumb trang guest"
+    },
+    "readingTime": "Đọc trong khoảng {{minutes}} phút",
+    "complexity": {
+      "label": "Mức độ",
+      "basic": "Cơ bản",
+      "moderate": "Trung bình",
+      "advanced": "Chuyên sâu"
+    },
+    "source": {
+      "auraGovernance": "Nguồn: AURA Clinical Governance v2026.1"
+    },
+    "terms": {
+      "fundus": "Đáy mắt (Fundus)",
+      "oct": "OCT",
+      "macular": "Vùng hoàng điểm",
+      "intravitreal": "Tiêm nội nhãn",
+      "avr": "AVR",
+      "microaneurysm": "Vi phình mạch",
+      "tortuosity": "Độ ngoằn ngoèo mạch",
+      "hipaa": "HIPAA",
+      "gdpr": "GDPR",
+      "phi": "PHI",
+      "mfa": "MFA",
+      "rbac": "RBAC"
+    },
+    "tooltips": {
+      "fundus": "Ảnh đáy mắt ghi nhận bề mặt trong của mắt gồm võng mạc, đĩa thị và hoàng điểm.",
+      "oct": "OCT (Optical Coherence Tomography) cho ảnh cắt lớp võng mạc để đánh giá cấu trúc chi tiết.",
+      "macular": "Hoàng điểm là vùng trung tâm võng mạc phụ trách thị lực rõ và nhận diện chi tiết.",
+      "intravitreal": "Tiêm nội nhãn là phương pháp đưa thuốc trực tiếp vào buồng dịch kính.",
+      "avr": "Tỷ lệ động mạch - tĩnh mạch võng mạc (AVR) hỗ trợ đánh giá nguy cơ bệnh mạch máu toàn thân.",
+      "microaneurysm": "Vi phình mạch là tổn thương mạch máu nhỏ, dấu hiệu sớm của bệnh võng mạc do đái tháo đường.",
+      "tortuosity": "Độ ngoằn ngoèo mạch phản ánh biến đổi hình thái mạch liên quan tăng huyết áp và bệnh mạch.",
+      "hipaa": "HIPAA quy định các lớp bảo vệ dữ liệu sức khỏe được bảo hộ trong quy trình y tế.",
+      "gdpr": "GDPR quản lý xử lý dữ liệu cá nhân, nhấn mạnh minh bạch, đồng thuận và quyền người dùng.",
+      "phi": "PHI (Protected Health Information) là dữ liệu sức khỏe có thể định danh một cá nhân.",
+      "mfa": "MFA yêu cầu thêm lớp xác thực ngoài mật khẩu để tăng an toàn tài khoản.",
+      "rbac": "RBAC phân quyền truy cập theo vai trò, bảo đảm nguyên tắc đặc quyền tối thiểu."
+    },
+    "imageMeta": {
+      "highResFundus": "Ảnh đáy mắt độ phân giải cao",
+      "scaleOneToOne": "Tỉ lệ: 1:1",
+      "processedLayer": "Lớp chẩn đoán: AI Overlay"
+    },
+    "ctaSubtext": {
+      "quickAction": "Hoàn tất trong dưới 2 phút",
+      "fastContact": "Phản hồi thường trong 24-48 giờ"
+    },
+    "badges": {
+      "securityControl": "Kiểm soát bảo mật"
+    },
+    "subheadings": {
+      "privacy": "Tóm tắt cách AURA phân loại, sử dụng và bảo vệ dữ liệu y tế nhạy cảm.",
+      "security": "Tổng quan các kiểm soát bảo mật cho định danh, truy cập và hạ tầng vận hành an toàn.",
+      "terms": "Các nguyên tắc pháp lý và vận hành khi sử dụng AURA trong bối cảnh chăm sóc sức khỏe.",
+      "personalData": "Nắm rõ quyền truy cập, chỉnh sửa và yêu cầu xóa dữ liệu sức khỏe cá nhân của bạn.",
+      "status": "Minh bạch vận hành theo thời gian thực với tín hiệu sức khỏe hệ thống phù hợp bối cảnh lâm sàng.",
+      "notFound": "Đường dẫn có thể đã thay đổi sau cập nhật. Hãy dùng liên kết bên dưới để quay lại trang guest tin cậy."
+    },
+    "loading": {
+      "statusTitle": "Đang thu thập trạng thái dịch vụ theo thời gian thực",
+      "statusDescription": "AURA đang kiểm tra endpoint hệ thống và cập nhật trạng thái vận hành mới nhất."
+    }
+  },
   "PatientDoctors": {
     "avatar": {
       "fallbackInitials": "BS"
@@ -1023,7 +1375,35 @@
   },
   "About": {
     "heroTitle": "Định hình tương lai sàng lọc võng mạc",
-    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế có trách nhiệm để cải thiện khả năng tiếp cận chẩn đoán sớm."
+    "heroDescription": "Aura Eyes kết hợp chuyên môn lâm sàng và AI y tế có trách nhiệm để cải thiện khả năng tiếp cận chẩn đoán sớm.",
+    "values": {
+      "badge": "Giá trị cốt lõi",
+      "title": "Xây dựng trên những nguyên tắc quan trọng",
+      "description": "Mọi quyết định của chúng tôi đều được dẫn dắt bởi cam kết về công bằng y tế, quyền riêng tư và tính toàn vẹn khoa học.",
+      "cards": {
+        "healthEquity": {
+          "title": "Tiếp cận y tế công bằng",
+          "description": "Đưa công nghệ sàng lọc võng mạc tiên tiến đến các cộng đồng thiếu nguồn lực trên toàn cầu."
+        },
+        "privacyFirst": {
+          "title": "Ưu tiên quyền riêng tư",
+          "description": "Dữ liệu sức khỏe của bạn luôn được mã hóa, ẩn danh và không bao giờ bị thương mại hóa cho bên thứ ba."
+        },
+        "openSource": {
+          "title": "Mã nguồn mở",
+          "description": "Thuật toán lõi được mở cho phản biện chuyên môn để đảm bảo minh bạch và xây dựng niềm tin."
+        },
+        "collaboration": {
+          "title": "Hợp tác",
+          "description": "Đồng hành cùng các nhà nghiên cứu và bác sĩ lâm sàng trên toàn thế giới để nâng cao sức khỏe võng mạc."
+        }
+      }
+    },
+    "cta": {
+      "title": "Tham gia sứ mệnh của chúng tôi",
+      "description": "Dù bạn là đơn vị y tế, nhà nghiên cứu hay người ủng hộ y tế cộng đồng, luôn có chỗ cho bạn trong cộng đồng AURA.",
+      "primary": "Hợp tác cùng chúng tôi"
+    }
   },
   "HowItWorks": {
     "hero": {
@@ -1031,8 +1411,8 @@
       "titlePrefix": "Giải mã quy trình sàng lọc",
       "titleSuffix": "của chúng tôi",
       "description": "Nền tảng của chúng tôi ứng dụng thị giác máy tính để phân tích ảnh võng mạc, phát hiện sớm bất thường mạch máu. Quy trình không xâm lấn, bảo mật và cho kết quả nhanh.",
-      "primaryCta": "Xem video demo",
-      "secondaryCta": "Xem tài liệu kỹ thuật"
+      "processingStatus": "Trạng thái xử lý",
+      "analyzing": "Đang phân tích"
     },
     "process": {
       "badge": "Hành trình",
@@ -1108,8 +1488,7 @@
       "titlePrefix": "Đồng hành cùng",
       "titleSuffix": "để nâng cao chăm sóc thị lực toàn cầu",
       "description": "Dù bạn là bệnh viện hay chuỗi phòng khám, AURA cung cấp công cụ và hỗ trợ cần thiết để triển khai sàng lọc võng mạc tiên tiến.",
-      "primaryCta": "Đăng ký hợp tác",
-      "secondaryCta": "Đặt lịch demo"
+      "primaryCta": "Đăng ký hợp tác"
     },
     "partnerCard": {
       "title": "Tổ chức y tế (Bệnh viện/Phòng khám)",
@@ -1127,7 +1506,8 @@
       "emailSupport": "Hỗ trợ qua email",
       "responseTime": "Thời gian phản hồi",
       "responseTimeValue": "Trong vòng 24-48 giờ làm việc",
-      "headquarters": "Trụ sở"
+      "headquarters": "Trụ sở",
+      "headquartersValue": "Đại học FPT, TP.HCM, Việt Nam"
     },
     "form": {
       "title": "Hợp tác cùng AURA",
@@ -1138,6 +1518,7 @@
       "workEmail": "Email công việc",
       "workEmailPlaceholder": "contact@organization.com",
       "phone": "Số điện thoại",
+      "phonePlaceholder": "+84 ...",
       "organizationDetails": "Thông tin tổ chức",
       "organizationName": "Tên tổ chức",
       "organizationType": "Loại hình tổ chức",
@@ -1403,8 +1784,7 @@
     "cta": {
       "title": "Hợp tác cùng AURA",
       "description": "Gia nhập mạng lưới thực hành AI có đạo đức. Chúng tôi cung cấp tài liệu đầy đủ và API cho nghiên cứu y tế có trách nhiệm.",
-      "primary": "Yêu cầu quyền truy cập cho nhà phát triển",
-      "secondary": "Liên hệ hội đồng đạo đức"
+      "primary": "Yêu cầu quyền truy cập cho nhà phát triển"
     }
   },
   "Compliance": {

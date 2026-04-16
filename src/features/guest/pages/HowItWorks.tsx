@@ -1,9 +1,15 @@
 import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,6 +18,10 @@ const HowItWorksPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -121,8 +131,6 @@ const HowItWorksPage = () => {
           />
         </svg>
       ),
-      image:
-        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop',
     },
     {
       number: '02',
@@ -143,8 +151,6 @@ const HowItWorksPage = () => {
           />
         </svg>
       ),
-      image:
-        'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop',
     },
     {
       number: '03',
@@ -165,8 +171,6 @@ const HowItWorksPage = () => {
           />
         </svg>
       ),
-      image:
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop',
     },
     {
       number: '04',
@@ -187,8 +191,6 @@ const HowItWorksPage = () => {
           />
         </svg>
       ),
-      image:
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     },
   ];
 
@@ -264,6 +266,12 @@ const HowItWorksPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.howItWorks')}
+        readingTimeMinutes={6}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -310,30 +318,19 @@ const HowItWorksPage = () => {
                 <p className="text-lg text-[var(--color-text-muted)] leading-relaxed">
                   {t('HowItWorks.hero.description')}
                 </p>
-
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <button className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg">
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {t('HowItWorks.hero.primaryCta')}
-                  </button>
-                  <button className="inline-flex items-center gap-2 rounded-lg border-2 border-[var(--color-medical-border)] px-6 py-3 text-base font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
-                    {t('HowItWorks.hero.secondaryCta')}
-                  </button>
-                </div>
               </div>
 
               {/* Hero Image */}
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[var(--color-medical-border)]">
+                <div className="absolute left-4 top-4 z-20 flex flex-col gap-1">
+                  <span className="guest-image-metadata">
+                    {t('GuestEnhancements.imageMeta.highResFundus')}
+                  </span>
+                  <span className="guest-image-metadata">
+                    {t('GuestEnhancements.imageMeta.processedLayer')}
+                  </span>
+                </div>
+
                 <div className="aspect-video bg-gradient-to-br from-[var(--color-brand-dark)] via-[var(--color-brand-primary)] to-[#0F172A] relative">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {/* Animated Eye Scanner */}
@@ -356,11 +353,11 @@ const HowItWorksPage = () => {
                   <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase">
-                        Processing Status
+                        {t('HowItWorks.hero.processingStatus')}
                       </span>
                       <span className="text-xs font-medium text-green-600 flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        Analyzing
+                        {t('HowItWorks.hero.analyzing')}
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -448,6 +445,25 @@ const HowItWorksPage = () => {
                 <p className="text-lg text-[var(--color-text-muted)] mb-6 leading-relaxed">
                   {t('HowItWorks.ai.description')}
                 </p>
+
+                <div className="mb-4 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.avr')}
+                    description={t('GuestEnhancements.tooltips.avr')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.microaneurysm')}
+                    description={t('GuestEnhancements.tooltips.microaneurysm')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.tortuosity')}
+                    description={t('GuestEnhancements.tooltips.tortuosity')}
+                  />
+                </div>
+
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
 
                 <div className="flex flex-wrap gap-3">
                   <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-primary)]/10 text-sm font-medium text-[var(--color-brand-primary)]">
@@ -583,12 +599,21 @@ const HowItWorksPage = () => {
               {t('HowItWorks.cta.description')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-4 text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1">
-                {t('HowItWorks.cta.primary')}
-              </button>
-              <button className="rounded-lg border-2 border-[var(--color-medical-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors">
+              <Link
+                to={resolvePathWithLocale('/login')}
+                className="inline-flex min-h-14 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-8 py-3 text-left text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1"
+              >
+                <span>{t('HowItWorks.cta.primary')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.quickAction')}
+                </span>
+              </Link>
+              <Link
+                to={resolvePathWithLocale('/contact')}
+                className="rounded-lg border-2 border-[var(--color-medical-border)] px-8 py-4 text-lg font-bold text-[var(--color-brand-dark)] hover:border-[var(--color-brand-primary)] transition-colors"
+              >
                 {t('HowItWorks.cta.secondary')}
-              </button>
+              </Link>
             </div>
           </div>
         </section>

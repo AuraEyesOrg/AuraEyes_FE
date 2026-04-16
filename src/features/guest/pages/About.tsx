@@ -2,8 +2,14 @@ import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,6 +18,10 @@ const AboutPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -24,25 +34,6 @@ const AboutPage = () => {
         '.about-hero-desc',
         { opacity: 0, y: 30 },
         { opacity: 1, y: 0, duration: 0.8, delay: 0.3, ease: 'power3.out' }
-      );
-
-      // Team cards stagger
-      gsap.fromTo(
-        '.team-card',
-        { opacity: 0, y: 60, scale: 0.95 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: 'back.out(1.5)',
-          scrollTrigger: {
-            trigger: '.team-section',
-            start: 'top 75%',
-            toggleActions: 'play none none reverse',
-          },
-        }
       );
 
       // Values cards
@@ -61,71 +52,10 @@ const AboutPage = () => {
           },
         }
       );
-
-      // Stats counter animation
-      gsap.fromTo(
-        '.stat-item',
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          scrollTrigger: {
-            trigger: '.stats-section',
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
-
-      // Timeline animation
-      gsap.fromTo(
-        '.timeline-item',
-        { opacity: 0, x: -30 },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.6,
-          stagger: 0.2,
-          scrollTrigger: {
-            trigger: '.timeline-section',
-            start: 'top 75%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
-
-  const teamMembers = [
-    {
-      name: 'Dr. Sarah An',
-      role: 'Chief Medical Officer',
-      image: 'https://avatars.githubusercontent.com/u/165766167?v=4',
-      bio: 'Board-certified ophthalmologist with 15+ years in retinal diagnostics.',
-    },
-    {
-      name: 'Dr. Michael Phuoc',
-      role: 'Head of AI Research',
-      image: 'https://avatars.githubusercontent.com/u/153256952?v=4',
-      bio: 'PhD in Computer Vision from MIT, specializing in medical imaging AI.',
-    },
-    {
-      name: 'Dr. Viet Nakamura',
-      role: 'Director of Clinical Validation',
-      image: 'https://avatars.githubusercontent.com/u/157226403?v=4',
-      bio: 'Expert in clinical trials and FDA regulatory pathways for medical devices.',
-    },
-    {
-      name: 'Dr. James Thinh',
-      role: 'Chief Technology Officer',
-      image: 'https://avatars.githubusercontent.com/u/156297768?v=4',
-      bio: 'Former Google Health engineer with expertise in scalable medical platforms.',
-    },
-  ];
 
   const values = [
     {
@@ -144,9 +74,8 @@ const AboutPage = () => {
           />
         </svg>
       ),
-      title: 'Health Equity',
-      description:
-        'Making advanced retinal screening accessible to underserved communities worldwide.',
+      title: t('About.values.cards.healthEquity.title'),
+      description: t('About.values.cards.healthEquity.description'),
     },
     {
       icon: (
@@ -164,9 +93,8 @@ const AboutPage = () => {
           />
         </svg>
       ),
-      title: 'Privacy First',
-      description:
-        'Your health data is encrypted, anonymized, and never sold to third parties.',
+      title: t('About.values.cards.privacyFirst.title'),
+      description: t('About.values.cards.privacyFirst.description'),
     },
     {
       icon: (
@@ -184,9 +112,8 @@ const AboutPage = () => {
           />
         </svg>
       ),
-      title: 'Open Source',
-      description:
-        'Our core algorithms are open for peer review, ensuring transparency and trust.',
+      title: t('About.values.cards.openSource.title'),
+      description: t('About.values.cards.openSource.description'),
     },
     {
       icon: (
@@ -204,42 +131,8 @@ const AboutPage = () => {
           />
         </svg>
       ),
-      title: 'Collaboration',
-      description:
-        'Partnering with researchers and clinicians globally to advance retinal health.',
-    },
-  ];
-
-  const timeline = [
-    {
-      year: '2020',
-      title: 'Founded',
-      description:
-        'AURA was founded with a mission to democratize retinal health screening.',
-    },
-    {
-      year: '2021',
-      title: 'First Model',
-      description:
-        'Released our first AI model for diabetic retinopathy detection.',
-    },
-    {
-      year: '2022',
-      title: 'FDA Breakthrough',
-      description:
-        'Received FDA Breakthrough Device Designation for our screening platform.',
-    },
-    {
-      year: '2023',
-      title: 'Global Expansion',
-      description:
-        'Expanded to 30+ countries, partnering with 200+ healthcare institutions.',
-    },
-    {
-      year: '2024',
-      title: '1M Screenings',
-      description:
-        'Reached 1 million retinal screenings, helping detect early-stage diseases.',
+      title: t('About.values.cards.collaboration.title'),
+      description: t('About.values.cards.collaboration.description'),
     },
   ];
 
@@ -249,6 +142,12 @@ const AboutPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.about')}
+        readingTimeMinutes={3}
+        complexity="basic"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -275,45 +174,15 @@ const AboutPage = () => {
               <p className="about-hero-desc text-lg lg:text-xl text-gray-300 leading-relaxed">
                 {t('About.heroDescription')}
               </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="stats-section py-16 bg-white border-b border-[var(--color-medical-border)]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                  1M+
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  Screenings Completed
-                </div>
-              </div>
-              <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                  30+
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  Countries Reached
-                </div>
-              </div>
-              <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                  200+
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  Partner Institutions
-                </div>
-              </div>
-              <div className="stat-item text-center p-6">
-                <div className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                  98.5%
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  Detection Accuracy
-                </div>
+              <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-gray-200">
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.macular')}
+                  description={t('GuestEnhancements.tooltips.macular')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.intravitreal')}
+                  description={t('GuestEnhancements.tooltips.intravitreal')}
+                />
               </div>
             </div>
           </div>
@@ -324,15 +193,19 @@ const AboutPage = () => {
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                Our Values
+                {t('About.values.badge')}
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-                Built on Principles That Matter
+                {t('About.values.title')}
               </h2>
               <p className="text-lg text-[var(--color-text-muted)]">
-                Every decision we make is guided by our commitment to health
-                equity, privacy, and scientific integrity.
+                {t('About.values.description')}
               </p>
+              <div className="mt-5 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -356,104 +229,25 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* Team Section */}
-        <section className="team-section py-20 bg-white">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                Leadership
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
-                Meet Our Team
-              </h2>
-              <p className="text-lg text-[var(--color-text-muted)]">
-                World-class experts in ophthalmology, AI, and global health
-                working together.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {teamMembers.map((member, index) => (
-                <div key={index} className="team-card group">
-                  <div className="relative overflow-hidden rounded-xl mb-4">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                      <p className="text-white text-sm">{member.bio}</p>
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-[var(--color-brand-dark)]">
-                    {member.name}
-                  </h3>
-                  <p className="text-sm text-[var(--color-brand-primary)] font-medium">
-                    {member.role}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Timeline Section */}
-        <section className="timeline-section py-20 bg-[var(--color-medical-bg)]">
-          <div className="mx-auto max-w-4xl px-6 lg:px-10">
-            <div className="text-center mb-16">
-              <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)] mb-2 block">
-                Our Journey
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)]">
-                Milestones & Achievements
-              </h2>
-            </div>
-
-            <div className="relative">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[var(--color-medical-border)]" />
-              <div className="space-y-8">
-                {timeline.map((item, index) => (
-                  <div
-                    key={index}
-                    className="timeline-item relative flex gap-6 pl-8"
-                  >
-                    <div className="absolute left-0 w-16 h-16 rounded-full bg-white border-4 border-[var(--color-brand-primary)]/20 flex items-center justify-center z-10">
-                      <span className="text-sm font-bold text-[var(--color-brand-primary)]">
-                        {item.year}
-                      </span>
-                    </div>
-                    <div className="flex-1 bg-white rounded-xl p-6 border border-[var(--color-medical-border)] ml-12 hover:shadow-md transition-shadow">
-                      <h3 className="text-lg font-bold text-[var(--color-brand-dark)] mb-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* CTA Section */}
         <section className="py-20 bg-gradient-to-br from-[var(--color-brand-dark)] to-[#0F172A] text-white">
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Join Our Mission
+              {t('About.cta.title')}
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8">
-              Whether you're a healthcare provider, researcher, or advocate,
-              there's a place for you in the AURA community.
+              {t('About.cta.description')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg">
-                Partner With Us
-              </button>
-              <button className="rounded-lg border-2 border-white/30 bg-transparent px-8 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors">
-                View Open Positions
-              </button>
+              <Link
+                to={resolvePathWithLocale('/contact')}
+                className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-8 py-2 text-left text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+              >
+                <span>{t('About.cta.primary')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.fastContact')}
+                </span>
+              </Link>
             </div>
           </div>
         </section>

@@ -1,14 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Contact,
-  Facebook,
-  Linkedin,
-  Mail,
-  MapPin,
-  Phone,
-  Twitter,
-} from 'lucide-react';
+import { Contact, Facebook, Mail, MapPin, Phone } from 'lucide-react';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import {
   DEFAULT_LOCALE,
@@ -20,84 +12,45 @@ export const Footer = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const isVietnamese = locale === 'vi';
-
-  const footerLabels = isVietnamese
-    ? {
-        platform: 'Khóa học',
-        services: 'Dịch vụ',
-        reserved: 'Tất cả quyền được bảo lưu',
-        privacy: 'Chính sách bảo mật',
-        terms: 'Điều khoản sử dụng',
-        personalData: 'Dữ liệu cá nhân',
-        security: 'Tiêu chuẩn bảo mật',
-      }
-    : {
-        platform: 'Platform',
-        services: 'Services',
-        reserved: 'All rights reserved',
-        privacy: 'Privacy policy',
-        terms: 'Terms of use',
-        personalData: 'Personal data',
-        security: 'Security policy',
-      };
 
   return (
-    <footer className="border-t border-[#D8E0EA] bg-[#EEF2F7]">
+    <footer className="border-t border-[#D2DCE8] bg-[#ECF1F7] dark:border-slate-700 dark:bg-[#0f172a]">
       <div className="mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 lg:px-8">
         <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="max-w-sm">
             <div className="mb-5">
               <AuraLogo
-                variant="dark"
+                variant="auto"
                 size="sm"
                 to={withLocalePathname(locale)}
               />
             </div>
-            <p className="text-[15px] leading-8 text-[#4A5568]">
+            <p className="text-[15px] leading-8 text-[#4A5568] dark:text-slate-300">
               {t('GuestHome.description')}
             </p>
             <div className="mt-6 flex items-center gap-5">
               <a
-                aria-label="Facebook"
-                className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
+                aria-label={t('GuestFooter.facebookAriaLabel')}
+                className="rounded-md text-[#4E647D] transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                 href="https://www.facebook.com/profile.php?id=61582143393953"
                 rel="noreferrer"
                 target="_blank"
               >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a
-                aria-label="Twitter"
-                className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
-                href="https://x.com"
-                rel="noreferrer"
-                target="_blank"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                aria-label="LinkedIn"
-                className="text-[#64748B] transition-colors hover:text-[#2B6CB0]"
-                href="https://www.linkedin.com"
-                rel="noreferrer"
-                target="_blank"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
             </div>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C]">
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
               {t('Navigation.contact')}
             </h4>
-            <ul className="space-y-3 text-sm leading-9 text-[#334E68]">
+            <ul className="space-y-3 text-sm leading-9 text-[#334E68] dark:text-slate-300">
               <li>
                 <a
-                  className="flex items-start gap-3 transition-colors hover:text-[#2B6CB0]"
+                  className="flex items-start gap-3 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   href="tel:19002115"
                 >
                   <Phone className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
@@ -106,7 +59,7 @@ export const Footer = () => {
               </li>
               <li>
                 <a
-                  className="flex items-start gap-3 transition-colors hover:text-[#2B6CB0]"
+                  className="flex items-start gap-3 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   href="mailto:auraeyes4se@gmail.com"
                 >
                   <Mail className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
@@ -123,7 +76,7 @@ export const Footer = () => {
                 <div className="flex items-start gap-3">
                   <Contact className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
                   <Link
-                    className="transition-colors hover:text-[#2B6CB0]"
+                    className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                     to={withLocalePathname(locale, '/contact')}
                   >
                     {t('Navigation.contact')}
@@ -135,13 +88,13 @@ export const Footer = () => {
 
           {/* Services */}
           <div>
-            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C]">
-              {footerLabels.services}
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
+              {t('GuestFooter.services')}
             </h4>
-            <ul className="space-y-2 text-sm leading-9 text-[#334E68]">
+            <ul className="space-y-2 text-sm leading-9 text-[#334E68] dark:text-slate-300">
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/about')}
                 >
                   {t('Navigation.about')}
@@ -149,7 +102,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/ethics')}
                 >
                   {t('Navigation.ethicsPrivacy')}
@@ -157,7 +110,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/compliance')}
                 >
                   {t('Navigation.compliance')}
@@ -168,13 +121,13 @@ export const Footer = () => {
 
           {/* Platform */}
           <div>
-            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C]">
-              {footerLabels.platform}
+            <h4 className="mb-4 text-xl font-semibold leading-tight text-[#1A202C] dark:text-slate-100">
+              {t('GuestFooter.platform')}
             </h4>
-            <ul className="space-y-2 text-sm leading-9 text-[#334E68]">
+            <ul className="space-y-2 text-sm leading-9 text-[#334E68] dark:text-slate-300">
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/how-it-works')}
                 >
                   {t('Navigation.howItWorks')}
@@ -182,7 +135,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/status')}
                 >
                   {t('Navigation.status')}
@@ -190,7 +143,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  className="transition-colors hover:text-[#2B6CB0]"
+                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/compliance')}
                 >
                   {t('Navigation.compliance')}
@@ -202,48 +155,50 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col gap-4 border-t border-[#D8E0EA] pt-8 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-[#5E7290]">
-            2026 © AURA Health. {footerLabels.reserved}
+        <div className="flex flex-col gap-4 border-t border-[#D8E0EA] pt-8 dark:border-slate-700 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-[#5E7290] dark:text-slate-400">
+            2026 © AURA Health. {t('GuestFooter.reserved')}
           </p>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#5E7290]">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#5E7290] dark:text-slate-400">
             <Link
-              className="transition-colors hover:text-[#2B6CB0]"
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/personal-data')}
             >
-              {footerLabels.personalData}
+              {t('GuestFooter.personalData')}
             </Link>
             <Link
-              className="transition-colors hover:text-[#2B6CB0]"
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/privacy')}
             >
-              {footerLabels.privacy}
+              {t('GuestFooter.privacy')}
             </Link>
             <Link
-              className="transition-colors hover:text-[#2B6CB0]"
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/security')}
             >
-              {footerLabels.security}
+              {t('GuestFooter.security')}
             </Link>
             <Link
-              className="transition-colors hover:text-[#2B6CB0]"
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/terms')}
             >
-              {footerLabels.terms}
+              {t('GuestFooter.terms')}
             </Link>
             <Link
-              className="transition-colors hover:text-[#2B6CB0]"
+              className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/about')}
             >
               {t('Navigation.about')}
             </Link>
-            <Link
-              className="inline-flex items-center gap-2 transition-colors hover:text-[#2B6CB0]"
-              to="https://status.auraeyes.site"
+            <a
+              className="inline-flex items-center gap-2 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              href="https://status.auraeyes.site"
+              target="_blank"
+              rel="noreferrer"
             >
               <span className="h-2.5 w-2.5 rounded-full bg-[#12B76A]" />
               {t('Navigation.status')}
-            </Link>
+            </a>
           </div>
         </div>
       </div>

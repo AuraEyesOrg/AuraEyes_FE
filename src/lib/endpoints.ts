@@ -188,6 +188,22 @@ export const API_ENDPOINTS = {
     APPOINTMENTS: '/patient/appointments',
   },
 
+  // Public endpoints used by guest-facing pages
+  PUBLIC: {
+    HEALTH: {
+      ROOT: '/health',
+    },
+    SYSTEM_SETTINGS: '/system-settings',
+    PATIENT_SEARCH: {
+      OPHTHALMOLOGISTS: '/patient/search/ophthalmologists',
+      ORGANISATIONS: '/patient/search/organisations',
+      AVAILABLE_SLOTS: '/patient/search/available-slots',
+    },
+    RESOURCES: {
+      EYE_HEALTH: '/patient/resources/eye-health',
+    },
+  },
+
   // Ophthalmologist features
   OPHTHALMOLOGIST: {
     DASHBOARD_METRICS: '/ophthalmologists/dashboard-metrics',

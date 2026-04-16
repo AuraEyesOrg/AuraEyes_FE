@@ -21,6 +21,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '@/styles/auth-animations.css';
 import { AuraLogo } from '@/components/ui/aura-logo';
+import { PremiumLanguageSwitcher } from '@/components/ui/PremiumLanguageSwitcher';
+import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   DEFAULT_LOCALE,
@@ -73,6 +76,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
+  const { theme } = useTheme();
   const { login: authLogin } = useAuthStore();
   const resolvedLanguage = (i18n.resolvedLanguage ?? i18n.language ?? '').split(
     '-'
@@ -470,7 +474,15 @@ const LoginPage = () => {
       </div>
 
       {/* Right Panel: Interaction Workspace */}
-      <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto">
+      <div
+        className="lg:w-[60%] w-full bg-white dark:bg-[#020617] flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto"
+        data-auth-shell
+      >
+        <div className="absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-6 sm:top-6">
+          <PremiumLanguageSwitcher />
+          <ThemeToggleButton />
+        </div>
+
         <div className="w-full max-w-[480px] flex flex-col gap-8">
           {/* Auth Toggle / Tabs */}
           <div className="w-full">
@@ -622,7 +634,9 @@ const LoginPage = () => {
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="login-password"
                       name="password"
-                      placeholder="••••••••"
+                      placeholder={t(
+                        'AuthPages.login.loginForm.passwordPlaceholder'
+                      )}
                       type={showPassword ? 'text' : 'password'}
                     />
                     <button
@@ -651,6 +665,7 @@ const LoginPage = () => {
                     ref={recaptchaRef}
                     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                     hl={uiLocale}
+                    theme={theme === 'dark' ? 'dark' : 'light'}
                     onChange={(token) => setRecaptchaToken(token)}
                     onExpired={() => setRecaptchaToken(null)}
                     onErrored={() => setRecaptchaToken(null)}
@@ -693,7 +708,7 @@ const LoginPage = () => {
                       text="signin_with"
                       shape="circle"
                       width="280"
-                      theme="outline"
+                      theme={theme === 'dark' ? 'filled_black' : 'outline'}
                     />
                   </div>
                 </div>
@@ -866,7 +881,9 @@ const LoginPage = () => {
                       })}
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-password"
-                      placeholder="••••••••"
+                      placeholder={t(
+                        'AuthPages.login.registerForm.passwordPlaceholder'
+                      )}
                       type={showPassword ? 'text' : 'password'}
                     />
                     <button
@@ -911,7 +928,9 @@ const LoginPage = () => {
                       })}
                       className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                       id="register-confirm-password"
-                      placeholder="••••••••"
+                      placeholder={t(
+                        'AuthPages.login.registerForm.confirmPasswordPlaceholder'
+                      )}
                       type={showConfirmPassword ? 'text' : 'password'}
                     />
                     <button
@@ -951,14 +970,14 @@ const LoginPage = () => {
                   >
                     {t('AuthPages.login.registerForm.agreePrefix')}{' '}
                     <Link
-                      to="/terms"
+                      to={toLocalizedAuthPath('/terms')}
                       className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
                     >
                       {t('AuthPages.shared.termsOfService')}
                     </Link>{' '}
                     {t('AuthPages.login.registerForm.and')}{' '}
                     <Link
-                      to="/privacy"
+                      to={toLocalizedAuthPath('/privacy')}
                       className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
                     >
                       {t('AuthPages.shared.privacyPolicy')}
@@ -1003,7 +1022,7 @@ const LoginPage = () => {
                       {t('AuthPages.login.registerForm.doctorCardDescription')}
                     </p>
                     <Link
-                      to="/register-doctor"
+                      to={toLocalizedAuthPath('/register-doctor')}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
                     >
                       <Stethoscope className="h-4 w-4" />

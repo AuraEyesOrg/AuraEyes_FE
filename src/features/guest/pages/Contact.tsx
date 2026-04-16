@@ -9,6 +9,13 @@ import { Footer } from '../components/Footer';
 import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import {
+  getAdaptiveScrollBehavior,
+  prefersReducedMotion,
+} from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -32,6 +39,10 @@ const ContactPage = () => {
   });
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -71,24 +82,6 @@ const ContactPage = () => {
           scrollTrigger: {
             trigger: '.form-section',
             start: 'top 70%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      );
-
-      // Impact stats
-      gsap.fromTo(
-        '.impact-stat',
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.impact-section',
-            start: 'top 80%',
             toggleActions: 'play none none reverse',
           },
         }
@@ -186,19 +179,18 @@ const ContactPage = () => {
     ],
   };
 
-  const impactStats = [
-    { value: '120+', label: t('Contact.impact.partnerClinics') },
-    { value: '50K+', label: t('Contact.impact.screeningsPerformed') },
-    { value: '15+', label: t('Contact.impact.countriesReached') },
-    { value: '100%', label: t('Contact.impact.freeForNonProfits') },
-  ];
-
   return (
     <div
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.contact')}
+        readingTimeMinutes={5}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -245,17 +237,18 @@ const ContactPage = () => {
 
               <div className="flex flex-wrap justify-center gap-4">
                 <button
+                  type="button"
                   onClick={() =>
-                    document
-                      .getElementById('contact-form')
-                      ?.scrollIntoView({ behavior: 'smooth' })
+                    document.getElementById('contact-form')?.scrollIntoView({
+                      behavior: getAdaptiveScrollBehavior(),
+                    })
                   }
-                  className="rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+                  className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-left text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                 >
-                  {t('Contact.hero.primaryCta')}
-                </button>
-                <button className="rounded-lg border-2 border-white/30 px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-colors">
-                  {t('Contact.hero.secondaryCta')}
+                  <span>{t('Contact.hero.primaryCta')}</span>
+                  <span className="guest-cta-subtext">
+                    {t('GuestEnhancements.ctaSubtext.fastContact')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -281,6 +274,10 @@ const ContactPage = () => {
                 <p className="text-[var(--color-text-muted)] mb-4">
                   {partnerCard.description}
                 </p>
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                  className="mb-4"
+                />
 
                 <ul className="space-y-2">
                   {partnerCard.benefits.map((benefit, i) => (
@@ -317,6 +314,17 @@ const ContactPage = () => {
                 <p className="text-lg text-body mb-8 leading-relaxed">
                   {t('Contact.info.description')}
                 </p>
+
+                <div className="mb-6 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.fundus')}
+                    description={t('GuestEnhancements.tooltips.fundus')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.oct')}
+                    description={t('GuestEnhancements.tooltips.oct')}
+                  />
+                </div>
 
                 <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-medical-border)]">
                   <div className="flex items-start gap-4">
@@ -398,7 +406,7 @@ const ContactPage = () => {
                         {t('Contact.info.headquarters')}
                       </p>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        FPT University, HCM, VN
+                        {t('Contact.info.headquartersValue')}
                       </p>
                     </div>
                   </div>
@@ -420,6 +428,11 @@ const ContactPage = () => {
                     <p className="text-[var(--color-text-muted)]">
                       {t('Contact.form.description')}
                     </p>
+                    <div className="mt-3">
+                      <SourceVerificationTag
+                        label={t('GuestEnhancements.source.auraGovernance')}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -482,7 +495,7 @@ const ContactPage = () => {
                           value={formData.organizationPhone}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 rounded-lg border border-[var(--color-medical-border)] focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 outline-none transition-all text-[var(--color-brand-dark)]"
-                          placeholder="+84 ..."
+                          placeholder={t('Contact.form.phonePlaceholder')}
                         />
                       </div>
                     </div>
@@ -652,41 +665,21 @@ const ContactPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-4 rounded-lg bg-[var(--color-brand-primary)] text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+                    className="inline-flex w-full min-h-14 flex-col items-center justify-center rounded-lg bg-[var(--color-brand-primary)] py-2 text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                   >
-                    {isSubmitting
-                      ? t('Contact.form.sending')
-                      : t('Contact.form.send')}
+                    <span>
+                      {isSubmitting
+                        ? t('Contact.form.sending')
+                        : t('Contact.form.send')}
+                    </span>
+                    {!isSubmitting ? (
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.fastContact')}
+                      </span>
+                    ) : null}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </section>
-
-        {/* Impact Section */}
-        <section className="impact-section py-16 bg-white border-t border-[var(--color-medical-border)]">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold text-[var(--color-brand-dark)] mb-2">
-                {t('Contact.impact.title')}
-              </h2>
-              <p className="text-[var(--color-text-muted)]">
-                {t('Contact.impact.description')}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {impactStats.map((stat, index) => (
-                <div key={index} className="impact-stat text-center">
-                  <p className="text-4xl font-black text-[var(--color-brand-primary)] mb-2">
-                    {stat.value}
-                  </p>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

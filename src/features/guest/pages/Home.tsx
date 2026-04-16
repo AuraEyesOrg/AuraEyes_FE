@@ -1,15 +1,26 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import i18n, { resources } from '@/i18n/i18n';
+import {
+  fetchGuestOverviewMetrics,
+  type GuestOverviewMetrics,
+} from '../api/guest.api';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HomePage = () => {
   const { t: i18nT } = useTranslation();
+  const navigate = useNavigate();
 
   const resolveResourceValue = (locale: 'vi' | 'en', key: string) => {
     return key.split('.').reduce<unknown>((accumulator, segment) => {
@@ -67,6 +78,9 @@ const HomePage = () => {
     heroTitleHighlight.trim().length > 0 &&
     heroTitleHighlight !== 'Home.hero.titleHighlight';
 
+  const [overviewMetrics, setOverviewMetrics] =
+    useState<GuestOverviewMetrics | null>(null);
+
   // Refs for animations
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -80,7 +94,71 @@ const HomePage = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const floatingParticlesRef = useRef<HTMLDivElement>(null);
 
+  const formatMetricValue = (value: number | null): string => {
+    if (value === null) {
+      return '--';
+    }
+
+    return new Intl.NumberFormat(
+      i18n.resolvedLanguage?.startsWith('vi') ? 'vi-VN' : 'en-US',
+      {
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1,
+      }
+    ).format(value);
+  };
+
+  const liveStats = useMemo(
+    () => [
+      {
+        value: overviewMetrics?.ophthalmologistCount ?? null,
+        label: t(
+          'Home.liveStats.ophthalmologists',
+          'Verified ophthalmologists'
+        ),
+      },
+      {
+        value: overviewMetrics?.organisationCount ?? null,
+        label: t('Home.liveStats.organisations', 'Partner organisations'),
+      },
+      {
+        value: overviewMetrics?.availableSlotCount ?? null,
+        label: t('Home.liveStats.availableSlots', 'Available booking slots'),
+      },
+      {
+        value: overviewMetrics?.eyeHealthResourceCount ?? null,
+        label: t('Home.liveStats.resources', 'Eye health resources'),
+      },
+    ],
+    [overviewMetrics, i18n.language]
+  );
+
+  const hasLiveStats = liveStats.some((stat) => stat.value !== null);
+
   useEffect(() => {
+    let isMounted = true;
+
+    const loadOverview = async () => {
+      const metrics = await fetchGuestOverviewMetrics();
+
+      if (isMounted) {
+        setOverviewMetrics(metrics);
+      }
+    };
+
+    void loadOverview();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       const particles =
         floatingParticlesRef.current?.querySelectorAll('.particle');
@@ -142,14 +220,6 @@ const HomePage = () => {
         '-=0.4'
       );
 
-      // Avatars
-      heroTl.fromTo(
-        '.hero-avatars > div',
-        { opacity: 0, x: -20, scale: 0 },
-        { opacity: 1, x: 0, scale: 1, duration: 0.4, stagger: 0.1 },
-        '-=0.3'
-      );
-
       // Hero image 3D entrance
       heroTl.fromTo(
         '.hero-image-container',
@@ -169,22 +239,6 @@ const HomePage = () => {
           ease: 'back.out(1.2)',
         },
         '-=1'
-      );
-
-      // Floating card overlay
-      heroTl.fromTo(
-        '.hero-analysis-card',
-        { opacity: 0, y: 40, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8 },
-        '-=0.4'
-      );
-
-      // Progress bar animation
-      heroTl.fromTo(
-        '.progress-bar-fill',
-        { width: '0%' },
-        { width: '99.2%', duration: 1.5, ease: 'power2.out' },
-        '-=0.3'
       );
 
       gsap.to('.hero-image-container', {
@@ -371,36 +425,9 @@ const HomePage = () => {
         }
       );
 
-      const statNumbers = document.querySelectorAll('.stat-number');
-      statNumbers.forEach((stat) => {
-        const target = stat.getAttribute('data-value') || '0';
-        const suffix = stat.getAttribute('data-suffix') || '';
-        const numValue = parseInt(target.replace(/\D/g, ''), 10);
-
-        gsap.fromTo(
-          stat,
-          { innerText: '0' },
-          {
-            innerText: numValue,
-            duration: 2,
-            ease: 'power2.out',
-            snap: { innerText: 1 },
-            scrollTrigger: {
-              trigger: statsRef.current,
-              start: 'top 80%',
-              toggleActions: 'play none none reverse',
-            },
-            onUpdate: function () {
-              const current = Math.round(parseFloat(stat.textContent || '0'));
-              stat.textContent = current + suffix;
-            },
-          }
-        );
-      });
-
       // Stats cards stagger
       gsap.fromTo(
-        '.stat-item',
+        '.live-stat-card',
         { opacity: 0, y: 40, scale: 0.9 },
         {
           opacity: 1,
@@ -473,6 +500,12 @@ const HomePage = () => {
       </div>
 
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.home')}
+        readingTimeMinutes={4}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section
@@ -536,39 +569,38 @@ const HomePage = () => {
                 <p className="hero-description max-w-xl text-lg text-[var(--color-text-muted)]">
                   {t('Home.hero.description')}
                 </p>
-                <div className="hero-buttons flex flex-wrap gap-4">
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30">
-                    {t('Home.hero.primaryCta')}
-                  </button>
-                  <button className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg border border-[var(--color-medical-border)] bg-transparent px-6 text-base font-bold text-[var(--color-brand-dark)] hover:bg-gray-50 transition-all hover:border-[var(--color-brand-primary)]">
-                    {t('Home.hero.secondaryCta')}
-                  </button>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.fundus')}
+                    description={t('GuestEnhancements.tooltips.fundus')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.oct')}
+                    description={t('GuestEnhancements.tooltips.oct')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.macular')}
+                    description={t('GuestEnhancements.tooltips.macular')}
+                  />
                 </div>
-                <div className="flex items-center gap-4 text-sm text-[var(--color-text-muted)] pt-2">
-                  <div className="hero-avatars flex -space-x-2">
-                    <div
-                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
-                      style={{
-                        backgroundImage:
-                          "url('https://i.pravatar.cc/150?img=1')",
-                      }}
-                    ></div>
-                    <div
-                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
-                      style={{
-                        backgroundImage:
-                          "url('https://i.pravatar.cc/150?img=2')",
-                      }}
-                    ></div>
-                    <div
-                      className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white bg-cover bg-center"
-                      style={{
-                        backgroundImage:
-                          "url('https://i.pravatar.cc/150?img=3')",
-                      }}
-                    ></div>
-                  </div>
-                  <span>{t('Home.hero.socialProof')}</span>
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+                <div className="hero-buttons flex flex-wrap gap-4">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(resolvePathWithLocale('/how-it-works'))
+                    }
+                    className="magnetic-btn inline-flex min-h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30"
+                  >
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>{t('Home.hero.primaryCta')}</span>
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.quickAction')}
+                      </span>
+                    </span>
+                  </button>
                 </div>
               </div>
               <div
@@ -581,6 +613,15 @@ const HomePage = () => {
                   className="hero-image-container relative w-[400px] h-[400px] lg:w-[480px] lg:h-[480px]"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
+                  <div className="absolute left-4 top-4 z-20 flex flex-col gap-1">
+                    <span className="guest-image-metadata">
+                      {t('GuestEnhancements.imageMeta.highResFundus')}
+                    </span>
+                    <span className="guest-image-metadata">
+                      {t('GuestEnhancements.imageMeta.scaleOneToOne')}
+                    </span>
+                  </div>
+
                   {/* Outer glow ring */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5] opacity-20 blur-xl animate-pulse" />
 
@@ -686,33 +727,6 @@ const HomePage = () => {
                           style={{ animationDelay: '0.4s' }}
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Floating UI Card overlay - positioned below the eye */}
-                  <div className="hero-analysis-card absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-xl bg-white/95 backdrop-blur-sm p-5 shadow-lg border border-[var(--color-medical-border)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                        {t('Home.hero.analysisResult')}
-                      </span>
-                      <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
-                        {t('Home.hero.lowRisk')}
-                      </span>
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <span className="text-3xl font-bold text-[var(--color-brand-dark)]">
-                        99.2%
-                      </span>
-                      <span className="text-sm font-medium text-[var(--color-text-muted)] mb-1">
-                        {t('Home.hero.confidenceScore')}
-                      </span>
-                    </div>
-                    <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className="progress-bar-fill h-full bg-[var(--color-brand-primary)] rounded-full"
-                        style={{ width: '0%' }}
-                      ></div>
                     </div>
                   </div>
                 </div>
@@ -1008,10 +1022,20 @@ const HomePage = () => {
                     {t('Home.mission.description')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button className="magnetic-btn flex items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30 w-fit">
+                    <button
+                      type="button"
+                      onClick={() => navigate(resolvePathWithLocale('/about'))}
+                      className="magnetic-btn flex items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30 w-fit"
+                    >
                       {t('Home.mission.primaryCta')}
                     </button>
-                    <button className="magnetic-btn flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-all w-fit">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(resolvePathWithLocale('/contact'))
+                      }
+                      className="magnetic-btn flex items-center justify-center rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-base font-bold text-white hover:bg-white/10 transition-all w-fit"
+                    >
                       {t('Home.mission.secondaryCta')}
                     </button>
                   </div>
@@ -1074,61 +1098,24 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Stats / Trust Section */}
-        <section ref={statsRef} className="py-16 bg-white">
-          <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[var(--color-medical-border)]">
-              <div className="stat-item p-4">
-                <div
-                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
-                  data-value="50000"
-                  data-suffix="k+"
-                >
-                  50k+
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.scansAnalyzed')}
-                </div>
-              </div>
-              <div className="stat-item p-4">
-                <div
-                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
-                  data-value="98"
-                  data-suffix="%"
-                >
-                  98%
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.accuracyRate')}
-                </div>
-              </div>
-              <div className="stat-item p-4">
-                <div
-                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
-                  data-value="30"
-                  data-suffix="+"
-                >
-                  30+
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.countriesReached')}
-                </div>
-              </div>
-              <div className="stat-item p-4">
-                <div
-                  className="stat-number text-4xl font-black text-[var(--color-brand-primary)] mb-2"
-                  data-value="100"
-                  data-suffix="%"
-                >
-                  100%
-                </div>
-                <div className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {t('Home.stats.nonProfit')}
-                </div>
+        {hasLiveStats ? (
+          <section ref={statsRef} className="bg-white py-16">
+            <div className="mx-auto max-w-[1280px] px-6 lg:px-10">
+              <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4 md:divide-x md:divide-[var(--color-medical-border)]">
+                {liveStats.map((stat, index) => (
+                  <div key={index} className="live-stat-card p-4">
+                    <div className="mb-2 text-4xl font-black text-[var(--color-brand-primary)]">
+                      {formatMetricValue(stat.value)}
+                    </div>
+                    <div className="text-sm font-medium text-[var(--color-text-muted)]">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </main>
 
       <Footer />

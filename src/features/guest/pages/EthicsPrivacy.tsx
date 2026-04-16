@@ -1,9 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router-dom';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import {
+  getAdaptiveScrollBehavior,
+  prefersReducedMotion,
+} from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,44 +22,16 @@ const EthicsPrivacyPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
         '.hero-content > *',
         { opacity: 0, y: 30 },
         { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: 'power2.out' }
-      );
-
-      // Hero image
-      gsap.fromTo(
-        '.hero-image',
-        { opacity: 0, scale: 0.95, x: 30 },
-        {
-          opacity: 1,
-          scale: 1,
-          x: 0,
-          duration: 0.8,
-          delay: 0.3,
-          ease: 'power2.out',
-        }
-      );
-
-      // Compliance badges
-      gsap.fromTo(
-        '.compliance-item',
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.compliance-section',
-            start: 'top 85%',
-            toggleActions: 'play none none reverse',
-          },
-        }
       );
 
       // Pillar cards
@@ -291,19 +272,18 @@ const EthicsPrivacyPage = () => {
     },
   ];
 
-  const complianceItems = [
-    { name: 'HIPAA', icon: 'verified_user' },
-    { name: 'GDPR', icon: 'security' },
-    { name: 'SOC2', icon: 'policy' },
-    { name: 'ISO 27001', icon: 'health_and_safety' },
-  ];
-
   return (
     <div
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.ethicsPrivacy')}
+        readingTimeMinutes={7}
+        complexity="advanced"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -317,9 +297,9 @@ const EthicsPrivacyPage = () => {
           />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 relative z-10">
-            <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
+            <div className="mx-auto max-w-4xl">
               {/* Left Content */}
-              <div className="hero-content lg:col-span-6 text-center lg:text-left">
+              <div className="hero-content text-center">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-brand-primary)]/10 px-3 py-1 text-sm font-medium text-[var(--color-brand-primary)] mb-6 ring-1 ring-inset ring-[var(--color-brand-primary)]/20">
                   <span className="h-2 w-2 rounded-full bg-[var(--color-brand-primary)]"></span>
                   {t('EthicsPrivacy.hero.badge')}
@@ -333,15 +313,43 @@ const EthicsPrivacyPage = () => {
                   </span>
                 </h1>
 
-                <p className="text-lg text-[var(--color-text-muted)] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                <p className="text-lg text-[var(--color-text-muted)] leading-relaxed mb-8 max-w-xl mx-auto">
                   {t('EthicsPrivacy.hero.description')}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <button className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors">
+                <div className="mb-6 flex flex-wrap justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.hipaa')}
+                    description={t('GuestEnhancements.tooltips.hipaa')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.phi')}
+                    description={t('GuestEnhancements.tooltips.phi')}
+                  />
+                </div>
+
+                <div className="mb-6 flex justify-center">
+                  <SourceVerificationTag
+                    label={t('GuestEnhancements.source.auraGovernance')}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.getElementById('principles')?.scrollIntoView({
+                        behavior: getAdaptiveScrollBehavior(),
+                      });
+                    }}
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors"
+                  >
                     {t('EthicsPrivacy.hero.primaryCta')}
                   </button>
-                  <button className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-medical-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-medical-bg)] transition-colors">
+                  <Link
+                    to={resolvePathWithLocale('/privacy')}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg text-[var(--color-brand-dark)] border border-[var(--color-medical-border)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-medical-bg)] transition-colors"
+                  >
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -352,92 +360,28 @@ const EthicsPrivacyPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        d="M12 3l7 4v5c0 5-3.5 9.74-7 11-3.5-1.26-7-6-7-11V7l7-4z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4"
                       />
                     </svg>
                     {t('EthicsPrivacy.hero.secondaryCta')}
-                  </button>
+                  </Link>
                 </div>
               </div>
-
-              {/* Right Image */}
-              <div className="hero-image mt-12 lg:mt-0 lg:col-span-6 flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-md rounded-2xl shadow-xl overflow-hidden ring-1 ring-[var(--color-medical-border)]">
-                  <div className="aspect-[4/3] bg-[var(--color-medical-bg)]">
-                    <img
-                      src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=450&fit=crop"
-                      alt="Secure digital data network"
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-brand-dark)]/70 to-transparent flex items-end p-6">
-                      <div className="text-white">
-                        <div className="flex items-center gap-2 mb-1">
-                          <svg
-                            className="w-5 h-5 text-[var(--color-brand-primary)]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                          </svg>
-                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--color-brand-primary)]">
-                            {t('EthicsPrivacy.hero.secureEnclave')}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-300">
-                          {t('EthicsPrivacy.hero.processingNode')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Compliance Banner */}
-        <section className="compliance-section bg-white border-y border-[var(--color-medical-border)] py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-6">
-              {t('EthicsPrivacy.compliance.title')}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-              {complianceItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="compliance-item flex justify-center items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors"
-                >
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  <span className="font-bold text-xl text-[var(--color-brand-dark)]">
-                    {item.name}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         </section>
 
         {/* Three Pillars Section */}
-        <section className="pillars-section py-20 bg-[var(--color-medical-bg)]">
+        <section
+          id="principles"
+          className="pillars-section py-20 bg-[var(--color-medical-bg)]"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-dark)] mb-4">
@@ -446,6 +390,11 @@ const EthicsPrivacyPage = () => {
               <p className="text-lg text-[var(--color-text-muted)]">
                 {t('EthicsPrivacy.pillarsSection.description')}
               </p>
+              <div className="mt-4 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -481,8 +430,18 @@ const EthicsPrivacyPage = () => {
                 <p className="text-[var(--color-text-muted)] mb-8 leading-relaxed">
                   {t('EthicsPrivacy.journey.description')}
                 </p>
-                <a
-                  href="#"
+                <div className="mb-5 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.gdpr')}
+                    description={t('GuestEnhancements.tooltips.gdpr')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.rbac')}
+                    description={t('GuestEnhancements.tooltips.rbac')}
+                  />
+                </div>
+                <Link
+                  to={resolvePathWithLocale('/security')}
                   className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] font-bold hover:text-[var(--color-brand-primary)] transition-colors"
                 >
                   {t('EthicsPrivacy.journey.link')}
@@ -499,7 +458,7 @@ const EthicsPrivacyPage = () => {
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                </a>
+                </Link>
               </div>
 
               {/* Timeline Right Side */}
@@ -617,12 +576,15 @@ const EthicsPrivacyPage = () => {
                     {t('EthicsPrivacy.cta.description')}
                   </p>
                   <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                    <button className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                      {t('EthicsPrivacy.cta.primary')}
-                    </button>
-                    <button className="bg-transparent border border-gray-600 text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
-                      {t('EthicsPrivacy.cta.secondary')}
-                    </button>
+                    <Link
+                      to={`${resolvePathWithLocale('/contact')}#contact-form`}
+                      className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-left text-white font-bold hover:bg-[var(--color-brand-primary)] transition-colors"
+                    >
+                      <span>{t('EthicsPrivacy.cta.primary')}</span>
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.fastContact')}
+                      </span>
+                    </Link>
                   </div>
                 </div>
 
