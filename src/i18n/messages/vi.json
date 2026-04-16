@@ -3330,14 +3330,27 @@
     "common": {
       "cancel": "Hủy",
       "close": "Đóng",
+      "daysOfWeek": {
+        "friday": "Thứ Sáu",
+        "monday": "Thứ Hai",
+        "saturday": "Thứ Bảy",
+        "sunday": "Chủ Nhật",
+        "thursday": "Thứ Năm",
+        "tuesday": "Thứ Ba",
+        "wednesday": "Thứ Tư"
+      },
       "gender": {
         "female": "Nữ",
         "male": "Nam"
       },
       "idLabel": "ID",
       "loading": "Đang tải...",
+      "next": "Tiếp",
       "notAvailable": "N/A",
+      "previous": "Trước",
       "processing": "Đang xử lý...",
+      "refresh": "Làm mới",
+      "today": "Hôm nay",
       "yearsAbbr": "tuổi"
     },
     "screening": {
@@ -3536,6 +3549,187 @@
         "shareNetworkSuccess": "Đã đăng ca khám lên Professional Network.",
         "shareSelectAtLeastOne": "Vui lòng chọn ít nhất một nội dung để chia sẻ.",
         "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in."
+      }
+    },
+    "wallet": {
+      "actions": {
+        "buy": "Mua",
+        "confirmPurchase": "Xác nhận mua",
+        "creatingPayment": "Đang tạo thanh toán...",
+        "topUpAmount": "Nạp {{amount}} VND"
+      },
+      "alert": {
+        "billingLoadFailedTitle": "Không thể tải dữ liệu đơn giá thanh toán.",
+        "refreshHint": "Vui lòng làm mới và thử lại."
+      },
+      "header": {
+        "subtitle": "Quản lý số dư ví, lịch sử giao dịch và mua gói quota.",
+        "title": "Ví tổ chức"
+      },
+      "pageName": "Ví",
+      "purchase": {
+        "customPackage": "Gói tùy chỉnh (10 - 5000)",
+        "packageCredits": "{{count}} lượt",
+        "priceUnavailable": "Chưa có đơn giá",
+        "title": "Mua quota sàng lọc"
+      },
+      "purchaseModal": {
+        "balanceInsufficientPrefix": "Số dư không đủ, bạn còn thiếu",
+        "balanceSufficient": "Số dư hiện tại đủ để thực hiện giao dịch này.",
+        "quotaAmount": "Số lượt quota",
+        "title": "Xác nhận mua quota",
+        "totalCost": "Tổng chi phí",
+        "unitPrice": "Đơn giá",
+        "walletBalance": "Số dư ví"
+      },
+      "sources": {
+        "monthlyContract": "Hợp đồng theo tháng",
+        "monthlySpent": "Chi trong tháng",
+        "purchased": "Đã mua thêm",
+        "title": "Nguồn quota",
+        "unitPrice": "Đơn giá"
+      },
+      "stats": {
+        "balance": "Số dư ví",
+        "monthlyIn": "Nạp trong tháng",
+        "monthlyUsed": "Đã dùng trong tháng",
+        "remainingQuota": "Quota còn lại"
+      },
+      "toast": {
+        "createTopUpFailed": "Không thể tạo yêu cầu nạp tiền. Vui lòng thử lại.",
+        "customQuotaRange": "Quota tùy chỉnh phải nằm trong khoảng 10 đến 5000.",
+        "insufficientBalance": "Số dư không đủ. Vui lòng nạp thêm tiền vào ví.",
+        "invalidQuotaAmount": "Vui lòng nhập số lượng quota hợp lệ.",
+        "paymentLinkUnavailable": "Không lấy được link thanh toán. Vui lòng thử lại.",
+        "purchaseQuotaFailed": "Không thể mua quota. Vui lòng thử lại.",
+        "purchaseQuotaSuccess": "Mua thành công {{count}} lượt. Số dư ví: {{balance}} VND",
+        "unitPriceUnavailable": "Đơn giá hiện chưa sẵn sàng. Vui lòng làm mới và thử lại."
+      },
+      "topUpDescription": "Nạp ví để mua quota cho tổ chức ({{amount}} VND)",
+      "transactionTypes": {
+        "bonus": "Thưởng",
+        "deposit": "Nạp tiền",
+        "payment": "Thanh toán",
+        "refund": "Hoàn tiền",
+        "transaction": "Giao dịch",
+        "transfer": "Chuyển khoản",
+        "withdrawal": "Rút tiền"
+      },
+      "transactions": {
+        "empty": "Chưa có giao dịch nào.",
+        "loading": "Đang tải giao dịch...",
+        "pageIndicator": "Trang {{current}}/{{total}}",
+        "quotaPurchase": "Mua quota",
+        "title": "Giao dịch ví"
+      }
+    },
+    "slotManagement": {
+      "actions": {
+        "block": "Khóa",
+        "complete": "Hoàn tất",
+        "createTemplate": "Tạo mẫu lịch",
+        "delete": "Xóa",
+        "generateSlots": "Tạo slot",
+        "noShow": "Vắng mặt",
+        "unblock": "Mở khóa"
+      },
+      "common": {
+        "free": "Miễn phí"
+      },
+      "confirmDelete": {
+        "cancelLabel": "Giữ lại mẫu",
+        "confirmLabel": "Xóa mẫu",
+        "message": "Mẫu này sẽ bị xóa vĩnh viễn. Các slot đã được tạo trước đó sẽ không bị ảnh hưởng.",
+        "title": "Xóa mẫu"
+      },
+      "generate": {
+        "capacityOption": " (sức chứa {{capacity}})",
+        "fromDate": "Từ ngày",
+        "selectTemplate": "Chọn mẫu lịch...",
+        "subtitle": "Các slot theo thứ tương ứng của mẫu sẽ được tạo cho mọi ngày phù hợp trong khoảng thời gian đã chọn.",
+        "template": "Mẫu lịch",
+        "title": "Tạo slot",
+        "toDate": "Đến ngày",
+        "useCurrentWeek": "Dùng tuần hiện tại"
+      },
+      "navigation": {
+        "jumpTo": "Nhảy tới"
+      },
+      "pageName": "Quản lý slot",
+      "quickPicker": {
+        "createFirst": "Tạo mẫu trước.",
+        "optionMeta": "{{duration}} phút · sức chứa {{capacity}}",
+        "subtitle": "Bấm để chọn nhanh một mẫu lịch.",
+        "title": "Chọn nhanh mẫu lịch"
+      },
+      "states": {
+        "generateFromTemplate": "Tạo từ mẫu lịch?",
+        "loadingSlots": "Đang tải slot...",
+        "loadingTemplates": "Đang tải mẫu lịch...",
+        "noOrganisationLinked": "Tài khoản này chưa liên kết tổ chức. Không thể sử dụng quản lý slot.",
+        "noSlotsThisDay": "Không có slot trong ngày này.",
+        "noTemplates": "Chưa có mẫu lịch nào."
+      },
+      "stats": {
+        "available": "Có sẵn",
+        "blocked": "Đã khóa",
+        "booked": "Đã đặt",
+        "totalThisWeek": "Tổng tuần này"
+      },
+      "status": {
+        "available": "Có sẵn",
+        "blocked": "Đã khóa",
+        "booked": "Đã đặt",
+        "cancelled": "Đã hủy",
+        "completed": "Đã hoàn tất",
+        "expired": "Đã hết hạn",
+        "noShow": "Vắng mặt",
+        "reserved": "Đang giữ chỗ"
+      },
+      "summary": {
+        "dayBooked": "{{count}} đã đặt",
+        "daySlots": "{{count}} slot"
+      },
+      "table": {
+        "actions": "Thao tác",
+        "capacity": "Sức chứa",
+        "deposit": "Đặt cọc",
+        "status": "Trạng thái",
+        "time": "Thời gian"
+      },
+      "tabs": {
+        "dailySlots": "Slot theo ngày",
+        "generateSchedule": "Tạo lịch",
+        "templateSetup": "Thiết lập mẫu"
+      },
+      "template": {
+        "createTitle": "Tạo mẫu lịch mới",
+        "dayOfWeek": "Thứ trong tuần",
+        "depositFee": "Phí đặt cọc (VND)",
+        "depositHint": "Bệnh nhân sẽ bị tính phí đặt cọc này khi đặt lịch để hạn chế đặt ảo.",
+        "depositPlaceholder": "0 = miễn phí",
+        "depositValue": "{{amount}}₫ đặt cọc",
+        "endTime": "Giờ kết thúc",
+        "existingTitle": "Mẫu lịch hiện có",
+        "maxCapacity": "Sức chứa tối đa mỗi slot",
+        "slotDuration": "Thời lượng slot (phút)",
+        "startTime": "Giờ bắt đầu",
+        "templateSummary": "{{duration}} phút mỗi slot · sức chứa {{capacity}}"
+      },
+      "toast": {
+        "generateSlotsFailed": "Không thể tạo slot.",
+        "generatedSlots": "Đã tạo {{count}} slot.",
+        "invalidDateRange": "Ngày bắt đầu không thể sau ngày kết thúc.",
+        "invalidMaxCapacity": "Sức chứa tối đa phải lớn hơn hoặc bằng 1.",
+        "invalidSlotDuration": "Thời lượng slot phải là bội số của 5 phút.",
+        "invalidTimeRange": "Giờ kết thúc phải lớn hơn giờ bắt đầu.",
+        "selectTemplateFirst": "Vui lòng chọn mẫu lịch trước khi tạo slot.",
+        "slotStatusUpdateFailed": "Không thể cập nhật trạng thái slot.",
+        "slotStatusUpdated": "Đã cập nhật trạng thái slot.",
+        "templateCreateFailed": "Không thể tạo mẫu lịch.",
+        "templateCreated": "Tạo mẫu lịch thành công.",
+        "templateDeleteFailed": "Không thể xóa mẫu lịch.",
+        "templateDeleted": "Đã xóa mẫu lịch."
       }
     }
   },

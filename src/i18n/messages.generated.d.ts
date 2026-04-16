@@ -3333,14 +3333,27 @@ declare module 'i18next' {
       common: {
         cancel: string;
         close: string;
+        daysOfWeek: {
+          friday: string;
+          monday: string;
+          saturday: string;
+          sunday: string;
+          thursday: string;
+          tuesday: string;
+          wednesday: string;
+        };
         gender: {
           female: string;
           male: string;
         };
         idLabel: string;
         loading: string;
+        next: string;
         notAvailable: string;
+        previous: string;
         processing: string;
+        refresh: string;
+        today: string;
         yearsAbbr: string;
       };
       screening: {
@@ -3539,6 +3552,187 @@ declare module 'i18next' {
           shareNetworkSuccess: string;
           shareSelectAtLeastOne: string;
           shareWalkInEmailRequired: string;
+        };
+      };
+      wallet: {
+        actions: {
+          buy: string;
+          confirmPurchase: string;
+          creatingPayment: string;
+          topUpAmount: string;
+        };
+        alert: {
+          billingLoadFailedTitle: string;
+          refreshHint: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        purchase: {
+          customPackage: string;
+          packageCredits: string;
+          priceUnavailable: string;
+          title: string;
+        };
+        purchaseModal: {
+          balanceInsufficientPrefix: string;
+          balanceSufficient: string;
+          quotaAmount: string;
+          title: string;
+          totalCost: string;
+          unitPrice: string;
+          walletBalance: string;
+        };
+        sources: {
+          monthlyContract: string;
+          monthlySpent: string;
+          purchased: string;
+          title: string;
+          unitPrice: string;
+        };
+        stats: {
+          balance: string;
+          monthlyIn: string;
+          monthlyUsed: string;
+          remainingQuota: string;
+        };
+        toast: {
+          createTopUpFailed: string;
+          customQuotaRange: string;
+          insufficientBalance: string;
+          invalidQuotaAmount: string;
+          paymentLinkUnavailable: string;
+          purchaseQuotaFailed: string;
+          purchaseQuotaSuccess: string;
+          unitPriceUnavailable: string;
+        };
+        topUpDescription: string;
+        transactionTypes: {
+          bonus: string;
+          deposit: string;
+          payment: string;
+          refund: string;
+          transaction: string;
+          transfer: string;
+          withdrawal: string;
+        };
+        transactions: {
+          empty: string;
+          loading: string;
+          pageIndicator: string;
+          quotaPurchase: string;
+          title: string;
+        };
+      };
+      slotManagement: {
+        actions: {
+          block: string;
+          complete: string;
+          createTemplate: string;
+          delete: string;
+          generateSlots: string;
+          noShow: string;
+          unblock: string;
+        };
+        common: {
+          free: string;
+        };
+        confirmDelete: {
+          cancelLabel: string;
+          confirmLabel: string;
+          message: string;
+          title: string;
+        };
+        generate: {
+          capacityOption: string;
+          fromDate: string;
+          selectTemplate: string;
+          subtitle: string;
+          template: string;
+          title: string;
+          toDate: string;
+          useCurrentWeek: string;
+        };
+        navigation: {
+          jumpTo: string;
+        };
+        pageName: string;
+        quickPicker: {
+          createFirst: string;
+          optionMeta: string;
+          subtitle: string;
+          title: string;
+        };
+        states: {
+          generateFromTemplate: string;
+          loadingSlots: string;
+          loadingTemplates: string;
+          noOrganisationLinked: string;
+          noSlotsThisDay: string;
+          noTemplates: string;
+        };
+        stats: {
+          available: string;
+          blocked: string;
+          booked: string;
+          totalThisWeek: string;
+        };
+        status: {
+          available: string;
+          blocked: string;
+          booked: string;
+          cancelled: string;
+          completed: string;
+          expired: string;
+          noShow: string;
+          reserved: string;
+        };
+        summary: {
+          dayBooked: string;
+          daySlots: string;
+        };
+        table: {
+          actions: string;
+          capacity: string;
+          deposit: string;
+          status: string;
+          time: string;
+        };
+        tabs: {
+          dailySlots: string;
+          generateSchedule: string;
+          templateSetup: string;
+        };
+        template: {
+          createTitle: string;
+          dayOfWeek: string;
+          depositFee: string;
+          depositHint: string;
+          depositPlaceholder: string;
+          depositValue: string;
+          endTime: string;
+          existingTitle: string;
+          maxCapacity: string;
+          slotDuration: string;
+          startTime: string;
+          templateSummary: string;
+        };
+        toast: {
+          generateSlotsFailed: string;
+          generatedSlots: string;
+          invalidDateRange: string;
+          invalidMaxCapacity: string;
+          invalidSlotDuration: string;
+          invalidTimeRange: string;
+          selectTemplateFirst: string;
+          slotStatusUpdateFailed: string;
+          slotStatusUpdated: string;
+          templateCreateFailed: string;
+          templateCreated: string;
+          templateDeleteFailed: string;
+          templateDeleted: string;
         };
       };
     };

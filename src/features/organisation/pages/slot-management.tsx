@@ -31,21 +31,11 @@ import {
   useOrganisationTemplates,
   useUpdateOrganisationSlotStatus,
 } from '../hooks/use-organisation-booking';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const DAYS_PER_WEEK = 7;
 
-const dayOptions = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 0, label: 'Sunday' },
-];
-
-const getDayOfWeekLabel = (dayOfWeek: string) =>
-  dayOptions.find((d) => d.value === Number(dayOfWeek))?.label ?? dayOfWeek;
+const dayOptions = [1, 2, 3, 4, 5, 6, 0] as const;
 
 type WorkspaceTab = 'slots' | 'templates' | 'generate';
 
@@ -68,6 +58,56 @@ const statusBadge: Record<string, string> = {
 export default function OrganisationSlotManagementPage() {
   const { user } = useAuthStore();
   const organisationId = user?.organizationId ?? '';
+  const { t } = useSafeTranslation();
+
+  const getDayOfWeekLabel = (dayOfWeekValue: string | number): string => {
+    switch (Number(dayOfWeekValue)) {
+      case 1:
+        return t('Organisation.common.daysOfWeek.monday', 'Monday');
+      case 2:
+        return t('Organisation.common.daysOfWeek.tuesday', 'Tuesday');
+      case 3:
+        return t('Organisation.common.daysOfWeek.wednesday', 'Wednesday');
+      case 4:
+        return t('Organisation.common.daysOfWeek.thursday', 'Thursday');
+      case 5:
+        return t('Organisation.common.daysOfWeek.friday', 'Friday');
+      case 6:
+        return t('Organisation.common.daysOfWeek.saturday', 'Saturday');
+      case 0:
+        return t('Organisation.common.daysOfWeek.sunday', 'Sunday');
+      default:
+        return String(dayOfWeekValue);
+    }
+  };
+
+  const getSlotStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'Available':
+        return t('Organisation.slotManagement.status.available', 'Available');
+      case 'Reserved':
+        return t('Organisation.slotManagement.status.reserved', 'Reserved');
+      case 'Booked':
+        return t('Organisation.slotManagement.status.booked', 'Booked');
+      case 'Blocked':
+        return t('Organisation.slotManagement.status.blocked', 'Blocked');
+      case 'Completed':
+        return t('Organisation.slotManagement.status.completed', 'Completed');
+      case 'Cancelled':
+        return t('Organisation.slotManagement.status.cancelled', 'Cancelled');
+      case 'NoShow':
+        return t('Organisation.slotManagement.status.noShow', 'No-show');
+      case 'Expired':
+        return t('Organisation.slotManagement.status.expired', 'Expired');
+      default:
+        return status;
+    }
+  };
+
+  const dayOptionItems = dayOptions.map((value) => ({
+    value,
+    label: getDayOfWeekLabel(value),
+  }));
 
   const todayKey = toLocalDateKey(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
@@ -172,15 +212,30 @@ export default function OrganisationSlotManagementPage() {
   const handleCreateTemplate = async () => {
     if (!organisationId) return;
     if (startTime >= endTime) {
-      toast.error('End time must be later than start time.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.invalidTimeRange',
+          'End time must be later than start time.'
+        )
+      );
       return;
     }
     if (slotDuration < 5 || slotDuration % 5 !== 0) {
-      toast.error('Slot duration must be a multiple of 5 minutes.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.invalidSlotDuration',
+          'Slot duration must be a multiple of 5 minutes.'
+        )
+      );
       return;
     }
     if (maxCapacity < 1) {
-      toast.error('Max capacity must be at least 1.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.invalidMaxCapacity',
+          'Max capacity must be at least 1.'
+        )
+      );
       return;
     }
     try {
@@ -195,19 +250,39 @@ export default function OrganisationSlotManagementPage() {
           cost: cost && cost > 0 ? cost : null,
         },
       });
-      toast.success('Template created successfully.');
+      toast.success(
+        t(
+          'Organisation.slotManagement.toast.templateCreated',
+          'Template created successfully.'
+        )
+      );
     } catch {
-      toast.error('Failed to create template.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.templateCreateFailed',
+          'Failed to create template.'
+        )
+      );
     }
   };
 
   const handleGenerateSlots = async () => {
     if (!templateId) {
-      toast.error('Please select a template before generating slots.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.selectTemplateFirst',
+          'Please select a template before generating slots.'
+        )
+      );
       return;
     }
     if (fromDate > toDate) {
-      toast.error('From date cannot be later than to date.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.invalidDateRange',
+          'From date cannot be later than to date.'
+        )
+      );
       return;
     }
     try {
@@ -217,9 +292,22 @@ export default function OrganisationSlotManagementPage() {
         toDate,
         skipExistingDates: true,
       });
-      toast.success(`Generated ${count} slots.`);
+      toast.success(
+        t(
+          'Organisation.slotManagement.toast.generatedSlots',
+          'Generated {{count}} slots.',
+          {
+            count,
+          }
+        )
+      );
     } catch {
-      toast.error('Failed to generate slots.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.generateSlotsFailed',
+          'Failed to generate slots.'
+        )
+      );
     }
   };
 
@@ -230,19 +318,39 @@ export default function OrganisationSlotManagementPage() {
         templateId: templateToDeleteId,
         orgId: organisationId,
       });
-      toast.success('Template deleted.');
+      toast.success(
+        t(
+          'Organisation.slotManagement.toast.templateDeleted',
+          'Template deleted.'
+        )
+      );
       setTemplateToDeleteId(null);
     } catch {
-      toast.error('Failed to delete template.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.templateDeleteFailed',
+          'Failed to delete template.'
+        )
+      );
     }
   };
 
   const updateSlotStatus = async (slotId: string, newStatus: number) => {
     try {
       await updateSlotStatusMutation.mutateAsync({ slotId, newStatus });
-      toast.success('Slot status updated.');
+      toast.success(
+        t(
+          'Organisation.slotManagement.toast.slotStatusUpdated',
+          'Slot status updated.'
+        )
+      );
     } catch {
-      toast.error('Failed to update slot status.');
+      toast.error(
+        t(
+          'Organisation.slotManagement.toast.slotStatusUpdateFailed',
+          'Failed to update slot status.'
+        )
+      );
     }
   };
 
@@ -252,22 +360,44 @@ export default function OrganisationSlotManagementPage() {
   };
 
   const tabs: { id: WorkspaceTab; label: string }[] = [
-    { id: 'slots', label: 'Daily slots' },
-    { id: 'templates', label: 'Template setup' },
-    { id: 'generate', label: 'Generate schedule' },
+    {
+      id: 'slots',
+      label: t('Organisation.slotManagement.tabs.dailySlots', 'Daily slots'),
+    },
+    {
+      id: 'templates',
+      label: t(
+        'Organisation.slotManagement.tabs.templateSetup',
+        'Template setup'
+      ),
+    },
+    {
+      id: 'generate',
+      label: t(
+        'Organisation.slotManagement.tabs.generateSchedule',
+        'Generate schedule'
+      ),
+    },
   ];
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="h-full flex-1 overflow-y-auto">
-        <OrganisationHeader pageName="Slot Management" />
+        <OrganisationHeader
+          pageName={t(
+            'Organisation.slotManagement.pageName',
+            'Slot Management'
+          )}
+        />
 
         <main className="p-6">
           {!organisationId && (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-              No organisation linked to this account. Slot management is
-              unavailable.
+              {t(
+                'Organisation.slotManagement.states.noOrganisationLinked',
+                'No organisation linked to this account. Slot management is unavailable.'
+              )}
             </div>
           )}
 
@@ -297,22 +427,34 @@ export default function OrganisationSlotManagementPage() {
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {[
                   {
-                    label: 'Total this week',
+                    label: t(
+                      'Organisation.slotManagement.stats.totalThisWeek',
+                      'Total this week'
+                    ),
                     value: stats.total,
                     color: 'text-(--text-primary)',
                   },
                   {
-                    label: 'Available',
+                    label: t(
+                      'Organisation.slotManagement.stats.available',
+                      'Available'
+                    ),
                     value: stats.available,
                     color: 'text-emerald-600 dark:text-emerald-400',
                   },
                   {
-                    label: 'Booked',
+                    label: t(
+                      'Organisation.slotManagement.stats.booked',
+                      'Booked'
+                    ),
                     value: stats.booked,
                     color: 'text-blue-600 dark:text-blue-400',
                   },
                   {
-                    label: 'Blocked',
+                    label: t(
+                      'Organisation.slotManagement.stats.blocked',
+                      'Blocked'
+                    ),
                     value: stats.blocked,
                     color: 'text-slate-600 dark:text-slate-300',
                   },
@@ -337,7 +479,8 @@ export default function OrganisationSlotManagementPage() {
                     onClick={() => setCurrentWeekOffset((p) => p - 1)}
                     className="inline-flex items-center gap-1 rounded-lg border border-(--border-color) px-3 py-1.5 text-sm text-(--text-secondary) transition hover:bg-(--bg-secondary)"
                   >
-                    <ChevronLeft className="h-4 w-4" /> Prev
+                    <ChevronLeft className="h-4 w-4" />
+                    {t('Organisation.common.previous', 'Previous')}
                   </button>
                   <p className="flex-1 text-center text-sm font-medium text-(--text-primary)">
                     {weekWindow.label}
@@ -347,7 +490,8 @@ export default function OrganisationSlotManagementPage() {
                     onClick={() => setCurrentWeekOffset((p) => p + 1)}
                     className="inline-flex items-center gap-1 rounded-lg border border-(--border-color) px-3 py-1.5 text-sm text-(--text-secondary) transition hover:bg-(--bg-secondary)"
                   >
-                    Next <ChevronRight className="h-4 w-4" />
+                    {t('Organisation.common.next', 'Next')}{' '}
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
@@ -357,10 +501,13 @@ export default function OrganisationSlotManagementPage() {
                     }}
                     className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-medium text-cyan-700 transition hover:bg-cyan-100 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300"
                   >
-                    Today
+                    {t('Organisation.common.today', 'Today')}
                   </button>
                   <label className="text-xs text-(--text-muted)">
-                    Jump to
+                    {t(
+                      'Organisation.slotManagement.navigation.jumpTo',
+                      'Jump to'
+                    )}
                     <input
                       type="date"
                       value={selectedDate}
@@ -397,10 +544,22 @@ export default function OrganisationSlotManagementPage() {
                           {day.dayNumber}
                         </p>
                         <p className="mt-1 text-[11px] text-(--text-muted)">
-                          {day.total} slots
+                          {t(
+                            'Organisation.slotManagement.summary.daySlots',
+                            '{{count}} slots',
+                            {
+                              count: day.total,
+                            }
+                          )}
                         </p>
                         <p className="text-[11px] text-blue-600 dark:text-blue-400">
-                          {day.booked} booked
+                          {t(
+                            'Organisation.slotManagement.summary.dayBooked',
+                            '{{count}} booked',
+                            {
+                              count: day.booked,
+                            }
+                          )}
                         </p>
                         {day.isToday && (
                           <span className="mt-1.5 inline-block h-1.5 w-1.5 rounded-full bg-cyan-500" />
@@ -418,23 +577,39 @@ export default function OrganisationSlotManagementPage() {
                     {formatDate(selectedDate, 'long')}
                   </h2>
                   <span className="rounded-full bg-(--bg-secondary) px-3 py-1 text-xs text-(--text-secondary)">
-                    {daySlots.length} slots
+                    {t(
+                      'Organisation.slotManagement.summary.daySlots',
+                      '{{count}} slots',
+                      {
+                        count: daySlots.length,
+                      }
+                    )}
                   </span>
                 </div>
 
                 {slotsLoading ? (
                   <div className="flex items-center gap-2 py-8 text-sm text-(--text-secondary)">
-                    <Spinner /> Loading slots...
+                    <Spinner />
+                    {t(
+                      'Organisation.slotManagement.states.loadingSlots',
+                      'Loading slots...'
+                    )}
                   </div>
                 ) : daySlots.length === 0 ? (
                   <div className="py-10 text-center text-sm text-(--text-muted)">
-                    No slots on this day.{' '}
+                    {t(
+                      'Organisation.slotManagement.states.noSlotsThisDay',
+                      'No slots on this day.'
+                    )}{' '}
                     <button
                       type="button"
                       className="text-cyan-600 underline underline-offset-2"
                       onClick={() => setActiveTab('generate')}
                     >
-                      Generate from a template?
+                      {t(
+                        'Organisation.slotManagement.states.generateFromTemplate',
+                        'Generate from a template?'
+                      )}
                     </button>
                   </div>
                 ) : (
@@ -443,19 +618,34 @@ export default function OrganisationSlotManagementPage() {
                       <thead>
                         <tr className="border-b border-(--border-color) text-left">
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
-                            Time
+                            {t(
+                              'Organisation.slotManagement.table.time',
+                              'Time'
+                            )}
                           </th>
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
-                            Status
+                            {t(
+                              'Organisation.slotManagement.table.status',
+                              'Status'
+                            )}
                           </th>
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
-                            Capacity
+                            {t(
+                              'Organisation.slotManagement.table.capacity',
+                              'Capacity'
+                            )}
                           </th>
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
-                            Deposit
+                            {t(
+                              'Organisation.slotManagement.table.deposit',
+                              'Deposit'
+                            )}
                           </th>
                           <th className="px-3 py-2 text-[11px] font-medium text-(--text-muted)">
-                            Actions
+                            {t(
+                              'Organisation.slotManagement.table.actions',
+                              'Actions'
+                            )}
                           </th>
                         </tr>
                       </thead>
@@ -487,7 +677,7 @@ export default function OrganisationSlotManagementPage() {
                                 <span
                                   className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadge[slot.status] ?? statusBadge.Available}`}
                                 >
-                                  {slot.status}
+                                  {getSlotStatusLabel(slot.status)}
                                 </span>
                               </td>
                               <td className="px-3 py-3">
@@ -510,7 +700,10 @@ export default function OrganisationSlotManagementPage() {
                                   </span>
                                 ) : (
                                   <span className="text-xs text-(--text-muted)">
-                                    Free
+                                    {t(
+                                      'Organisation.slotManagement.common.free',
+                                      'Free'
+                                    )}
                                   </span>
                                 )}
                               </td>
@@ -527,7 +720,11 @@ export default function OrganisationSlotManagementPage() {
                                     }
                                     className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
                                   >
-                                    <Ban className="h-3 w-3" /> Block
+                                    <Ban className="h-3 w-3" />
+                                    {t(
+                                      'Organisation.slotManagement.actions.block',
+                                      'Block'
+                                    )}
                                   </button>
                                   <button
                                     type="button"
@@ -540,7 +737,11 @@ export default function OrganisationSlotManagementPage() {
                                     }
                                     className="inline-flex items-center gap-1 rounded-md border border-emerald-200 px-2 py-1 text-xs text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-40 dark:border-emerald-800 dark:text-emerald-400"
                                   >
-                                    <CheckCircle className="h-3 w-3" /> Unblock
+                                    <CheckCircle className="h-3 w-3" />
+                                    {t(
+                                      'Organisation.slotManagement.actions.unblock',
+                                      'Unblock'
+                                    )}
                                   </button>
                                   <button
                                     type="button"
@@ -552,7 +753,11 @@ export default function OrganisationSlotManagementPage() {
                                     }
                                     className="inline-flex items-center gap-1 rounded-md border border-cyan-200 px-2 py-1 text-xs text-cyan-700 transition hover:bg-cyan-50 disabled:opacity-40 dark:border-cyan-800 dark:text-cyan-400"
                                   >
-                                    <Calendar className="h-3 w-3" /> Complete
+                                    <Calendar className="h-3 w-3" />
+                                    {t(
+                                      'Organisation.slotManagement.actions.complete',
+                                      'Complete'
+                                    )}
                                   </button>
                                   <button
                                     type="button"
@@ -564,7 +769,11 @@ export default function OrganisationSlotManagementPage() {
                                     }
                                     className="inline-flex items-center gap-1 rounded-md border border-violet-200 px-2 py-1 text-xs text-violet-700 transition hover:bg-violet-50 disabled:opacity-40 dark:border-violet-800 dark:text-violet-400"
                                   >
-                                    <UserX className="h-3 w-3" /> No-show
+                                    <UserX className="h-3 w-3" />
+                                    {t(
+                                      'Organisation.slotManagement.actions.noShow',
+                                      'No-show'
+                                    )}
                                   </button>
                                 </div>
                               </td>
@@ -585,17 +794,23 @@ export default function OrganisationSlotManagementPage() {
               <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-5">
                 <h2 className="mb-4 flex items-center gap-2 text-base font-medium text-(--text-primary)">
                   <CalendarPlus className="h-4 w-4 text-cyan-600" />
-                  Create new template
+                  {t(
+                    'Organisation.slotManagement.template.createTitle',
+                    'Create new template'
+                  )}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    Day of week
+                    {t(
+                      'Organisation.slotManagement.template.dayOfWeek',
+                      'Day of week'
+                    )}
                     <select
                       value={dayOfWeek}
                       onChange={(e) => setDayOfWeek(Number(e.target.value))}
                       className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                     >
-                      {dayOptions.map((opt) => (
+                      {dayOptionItems.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
@@ -603,7 +818,10 @@ export default function OrganisationSlotManagementPage() {
                     </select>
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    Slot duration (minutes)
+                    {t(
+                      'Organisation.slotManagement.template.slotDuration',
+                      'Slot duration (minutes)'
+                    )}
                     <input
                       type="number"
                       min={5}
@@ -614,7 +832,10 @@ export default function OrganisationSlotManagementPage() {
                     />
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    Start time
+                    {t(
+                      'Organisation.slotManagement.template.startTime',
+                      'Start time'
+                    )}
                     <input
                       type="time"
                       value={startTime}
@@ -623,7 +844,10 @@ export default function OrganisationSlotManagementPage() {
                     />
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    End time
+                    {t(
+                      'Organisation.slotManagement.template.endTime',
+                      'End time'
+                    )}
                     <input
                       type="time"
                       value={endTime}
@@ -632,7 +856,10 @@ export default function OrganisationSlotManagementPage() {
                     />
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    Max capacity per slot
+                    {t(
+                      'Organisation.slotManagement.template.maxCapacity',
+                      'Max capacity per slot'
+                    )}
                     <input
                       type="number"
                       min={1}
@@ -642,7 +869,10 @@ export default function OrganisationSlotManagementPage() {
                     />
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    Deposit fee (VND)
+                    {t(
+                      'Organisation.slotManagement.template.depositFee',
+                      'Deposit fee (VND)'
+                    )}
                     <input
                       type="number"
                       min={0}
@@ -653,12 +883,17 @@ export default function OrganisationSlotManagementPage() {
                           e.target.value === '' ? null : Number(e.target.value)
                         )
                       }
-                      placeholder="0 = free"
+                      placeholder={t(
+                        'Organisation.slotManagement.template.depositPlaceholder',
+                        '0 = free'
+                      )}
                       className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                     />
                     <span className="mt-1 block text-[11px] text-(--text-muted)">
-                      Patients will be charged this deposit when booking to
-                      prevent spam.
+                      {t(
+                        'Organisation.slotManagement.template.depositHint',
+                        'Patients will be charged this deposit when booking to prevent spam.'
+                      )}
                     </span>
                   </label>
                 </div>
@@ -673,21 +908,34 @@ export default function OrganisationSlotManagementPage() {
                   ) : (
                     <Calendar className="h-4 w-4" />
                   )}
-                  Create template
+                  {t(
+                    'Organisation.slotManagement.actions.createTemplate',
+                    'Create template'
+                  )}
                 </button>
               </div>
 
               <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-5">
                 <h2 className="mb-4 text-base font-medium text-(--text-primary)">
-                  Existing templates
+                  {t(
+                    'Organisation.slotManagement.template.existingTitle',
+                    'Existing templates'
+                  )}
                 </h2>
                 {templatesLoading ? (
                   <div className="flex items-center gap-2 py-6 text-sm text-(--text-secondary)">
-                    <Spinner /> Loading templates...
+                    <Spinner />
+                    {t(
+                      'Organisation.slotManagement.states.loadingTemplates',
+                      'Loading templates...'
+                    )}
                   </div>
                 ) : templates.length === 0 ? (
                   <p className="py-6 text-center text-sm text-(--text-muted)">
-                    No templates yet.
+                    {t(
+                      'Organisation.slotManagement.states.noTemplates',
+                      'No templates yet.'
+                    )}
                   </p>
                 ) : (
                   <div className="divide-y divide-(--border-color)">
@@ -704,13 +952,25 @@ export default function OrganisationSlotManagementPage() {
                             {formatSlotTimeShort(tpl.endTime)}
                           </p>
                           <p className="mt-0.5 text-xs text-(--text-muted)">
-                            {tpl.slotDuration} min per slot · capacity{' '}
-                            {tpl.maxCapacity}
+                            {t(
+                              'Organisation.slotManagement.template.templateSummary',
+                              '{{duration}} min per slot · capacity {{capacity}}',
+                              {
+                                duration: tpl.slotDuration,
+                                capacity: tpl.maxCapacity,
+                              }
+                            )}
                             {tpl.cost != null && tpl.cost > 0 && (
                               <>
                                 {' · '}
                                 <span className="font-medium text-amber-600 dark:text-amber-400">
-                                  {tpl.cost.toLocaleString('vi-VN')}₫ deposit
+                                  {t(
+                                    'Organisation.slotManagement.template.depositValue',
+                                    '{{amount}}₫ deposit',
+                                    {
+                                      amount: tpl.cost.toLocaleString('vi-VN'),
+                                    }
+                                  )}
                                 </span>
                               </>
                             )}
@@ -721,7 +981,11 @@ export default function OrganisationSlotManagementPage() {
                           onClick={() => setTemplateToDeleteId(tpl.id)}
                           className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-600 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400"
                         >
-                          <Ban className="h-3 w-3" /> Delete
+                          <Ban className="h-3 w-3" />
+                          {t(
+                            'Organisation.slotManagement.actions.delete',
+                            'Delete'
+                          )}
                         </button>
                       </div>
                     ))}
@@ -737,29 +1001,46 @@ export default function OrganisationSlotManagementPage() {
               <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-5">
                 <h2 className="mb-1 flex items-center gap-2 text-base font-medium text-(--text-primary)">
                   <Calendar className="h-4 w-4 text-cyan-500" />
-                  Generate slots
+                  {t(
+                    'Organisation.slotManagement.generate.title',
+                    'Generate slots'
+                  )}
                 </h2>
                 <p className="mb-4 text-xs text-(--text-muted)">
-                  Slots matching the template's day-of-week will be created for
-                  every matching date in the range.
+                  {t(
+                    'Organisation.slotManagement.generate.subtitle',
+                    "Slots matching the template's day-of-week will be created for every matching date in the range."
+                  )}
                 </p>
 
                 <label className="mb-3 block text-xs font-medium text-(--text-secondary)">
-                  Template
+                  {t(
+                    'Organisation.slotManagement.generate.template',
+                    'Template'
+                  )}
                   <select
                     value={templateId}
                     onChange={(e) => setTemplateId(e.target.value)}
                     className="mt-1.5 w-full rounded-lg border border-(--border-color) bg-(--bg-secondary) px-3 py-2 text-sm text-(--text-primary)"
                   >
-                    <option value="">Select a template…</option>
+                    <option value="">
+                      {t(
+                        'Organisation.slotManagement.generate.selectTemplate',
+                        'Select a template...'
+                      )}
+                    </option>
                     {templates.map((tpl) => (
                       <option key={tpl.id} value={tpl.id}>
                         {getDayOfWeekLabel(tpl.dayOfWeek)} ·{' '}
                         {formatSlotTimeShort(tpl.startTime)}–
                         {formatSlotTimeShort(tpl.endTime)}
-                        {' (cap '}
-                        {tpl.maxCapacity}
-                        {')'}
+                        {t(
+                          'Organisation.slotManagement.generate.capacityOption',
+                          ' (cap {{capacity}})',
+                          {
+                            capacity: tpl.maxCapacity,
+                          }
+                        )}
                       </option>
                     ))}
                   </select>
@@ -767,7 +1048,10 @@ export default function OrganisationSlotManagementPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    From date
+                    {t(
+                      'Organisation.slotManagement.generate.fromDate',
+                      'From date'
+                    )}
                     <input
                       type="date"
                       value={fromDate}
@@ -776,7 +1060,10 @@ export default function OrganisationSlotManagementPage() {
                     />
                   </label>
                   <label className="block text-xs font-medium text-(--text-secondary)">
-                    To date
+                    {t(
+                      'Organisation.slotManagement.generate.toDate',
+                      'To date'
+                    )}
                     <input
                       type="date"
                       value={toDate}
@@ -795,7 +1082,10 @@ export default function OrganisationSlotManagementPage() {
                     }}
                     className="rounded-lg border border-(--border-color) px-3 py-2 text-sm text-(--text-secondary) transition hover:bg-(--bg-secondary)"
                   >
-                    Use current week
+                    {t(
+                      'Organisation.slotManagement.generate.useCurrentWeek',
+                      'Use current week'
+                    )}
                   </button>
                   <button
                     type="button"
@@ -810,7 +1100,10 @@ export default function OrganisationSlotManagementPage() {
                     ) : (
                       <CalendarPlus className="h-4 w-4" />
                     )}
-                    Generate slots
+                    {t(
+                      'Organisation.slotManagement.actions.generateSlots',
+                      'Generate slots'
+                    )}
                   </button>
                 </div>
               </div>
@@ -818,24 +1111,36 @@ export default function OrganisationSlotManagementPage() {
               {/* Quick template picker */}
               <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-5">
                 <h3 className="mb-1 text-sm font-medium text-(--text-primary)">
-                  Quick template picker
+                  {t(
+                    'Organisation.slotManagement.quickPicker.title',
+                    'Quick template picker'
+                  )}
                 </h3>
                 <p className="mb-3 text-xs text-(--text-muted)">
-                  Click to pre-select a template.
+                  {t(
+                    'Organisation.slotManagement.quickPicker.subtitle',
+                    'Click to pre-select a template.'
+                  )}
                 </p>
                 {templatesLoading ? (
                   <div className="flex items-center gap-2 py-4 text-sm text-(--text-secondary)">
-                    <Spinner /> Loading...
+                    <Spinner /> {t('Organisation.common.loading', 'Loading...')}
                   </div>
                 ) : templates.length === 0 ? (
                   <p className="py-4 text-center text-sm text-(--text-muted)">
-                    No templates.{' '}
+                    {t(
+                      'Organisation.slotManagement.states.noTemplates',
+                      'No templates yet.'
+                    )}{' '}
                     <button
                       type="button"
                       className="text-cyan-600 underline underline-offset-2"
                       onClick={() => setActiveTab('templates')}
                     >
-                      Create one first.
+                      {t(
+                        'Organisation.slotManagement.quickPicker.createFirst',
+                        'Create one first.'
+                      )}
                     </button>
                   </p>
                 ) : (
@@ -865,7 +1170,14 @@ export default function OrganisationSlotManagementPage() {
                             {formatSlotTimeShort(tpl.startTime)}–
                             {formatSlotTimeShort(tpl.endTime)}
                             {' · '}
-                            {tpl.slotDuration} min · cap {tpl.maxCapacity}
+                            {t(
+                              'Organisation.slotManagement.quickPicker.optionMeta',
+                              '{{duration}} min · cap {{capacity}}',
+                              {
+                                duration: tpl.slotDuration,
+                                capacity: tpl.maxCapacity,
+                              }
+                            )}
                             {tpl.cost != null && tpl.cost > 0 && (
                               <>
                                 {' · '}
@@ -884,10 +1196,22 @@ export default function OrganisationSlotManagementPage() {
 
           <ConfirmModal
             open={!!templateToDeleteId}
-            title="Delete template"
-            message="This template will be permanently removed. Existing generated slots are not affected."
-            confirmLabel="Delete template"
-            cancelLabel="Keep template"
+            title={t(
+              'Organisation.slotManagement.confirmDelete.title',
+              'Delete template'
+            )}
+            message={t(
+              'Organisation.slotManagement.confirmDelete.message',
+              'This template will be permanently removed. Existing generated slots are not affected.'
+            )}
+            confirmLabel={t(
+              'Organisation.slotManagement.confirmDelete.confirmLabel',
+              'Delete template'
+            )}
+            cancelLabel={t(
+              'Organisation.slotManagement.confirmDelete.cancelLabel',
+              'Keep template'
+            )}
             tone="danger"
             isLoading={deleteTemplateMutation.isPending}
             onCancel={() => {

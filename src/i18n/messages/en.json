@@ -3320,14 +3320,27 @@
     "common": {
       "cancel": "Cancel",
       "close": "Close",
+      "daysOfWeek": {
+        "friday": "Friday",
+        "monday": "Monday",
+        "saturday": "Saturday",
+        "sunday": "Sunday",
+        "thursday": "Thursday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday"
+      },
       "gender": {
         "female": "Female",
         "male": "Male"
       },
       "idLabel": "ID",
       "loading": "Loading...",
+      "next": "Next",
       "notAvailable": "N/A",
+      "previous": "Previous",
       "processing": "Processing...",
+      "refresh": "Refresh",
+      "today": "Today",
       "yearsAbbr": "yrs"
     },
     "screening": {
@@ -3526,6 +3539,187 @@
         "shareNetworkSuccess": "Case shared to Professional Network successfully.",
         "shareSelectAtLeastOne": "Please select at least one item to share.",
         "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient."
+      }
+    },
+    "wallet": {
+      "actions": {
+        "buy": "Buy",
+        "confirmPurchase": "Confirm Purchase",
+        "creatingPayment": "Creating payment...",
+        "topUpAmount": "Top Up {{amount}} VND"
+      },
+      "alert": {
+        "billingLoadFailedTitle": "Unable to load billing pricing data.",
+        "refreshHint": "Please refresh and try again."
+      },
+      "header": {
+        "subtitle": "Manage wallet balance, transactions, and buy quota packages.",
+        "title": "Organisation Wallet"
+      },
+      "pageName": "Wallet",
+      "purchase": {
+        "customPackage": "Custom package (10 - 5000)",
+        "packageCredits": "{{count}} credits",
+        "priceUnavailable": "Price unavailable",
+        "title": "Buy Screening Quota"
+      },
+      "purchaseModal": {
+        "balanceInsufficientPrefix": "Insufficient balance. You are missing",
+        "balanceSufficient": "Your balance is sufficient for this purchase.",
+        "quotaAmount": "Quota amount",
+        "title": "Confirm Quota Purchase",
+        "totalCost": "Total cost",
+        "unitPrice": "Unit price",
+        "walletBalance": "Wallet balance"
+      },
+      "sources": {
+        "monthlyContract": "Monthly contract",
+        "monthlySpent": "Monthly Spent",
+        "purchased": "Purchased",
+        "title": "Quota Sources",
+        "unitPrice": "Unit Price"
+      },
+      "stats": {
+        "balance": "Wallet Balance",
+        "monthlyIn": "This Month In",
+        "monthlyUsed": "Monthly Used",
+        "remainingQuota": "Remaining Quota"
+      },
+      "toast": {
+        "createTopUpFailed": "Unable to create top-up payment. Please try again.",
+        "customQuotaRange": "Custom quota must be between 10 and 5000.",
+        "insufficientBalance": "Insufficient balance. Please top up your wallet first.",
+        "invalidQuotaAmount": "Please provide a valid quota amount.",
+        "paymentLinkUnavailable": "Unable to get payment link. Please try again.",
+        "purchaseQuotaFailed": "Unable to purchase quota. Please try again.",
+        "purchaseQuotaSuccess": "Purchased {{count}} credits successfully. Wallet balance: {{balance}} VND",
+        "unitPriceUnavailable": "Unit price is unavailable. Please refresh and try again."
+      },
+      "topUpDescription": "Top up for organisation quota purchase ({{amount}} VND)",
+      "transactionTypes": {
+        "bonus": "Bonus",
+        "deposit": "Deposit",
+        "payment": "Payment",
+        "refund": "Refund",
+        "transaction": "Transaction",
+        "transfer": "Transfer",
+        "withdrawal": "Withdrawal"
+      },
+      "transactions": {
+        "empty": "No transactions yet.",
+        "loading": "Loading transactions...",
+        "pageIndicator": "Page {{current}}/{{total}}",
+        "quotaPurchase": "Quota purchase",
+        "title": "Wallet Transactions"
+      }
+    },
+    "slotManagement": {
+      "actions": {
+        "block": "Block",
+        "complete": "Complete",
+        "createTemplate": "Create template",
+        "delete": "Delete",
+        "generateSlots": "Generate slots",
+        "noShow": "No-show",
+        "unblock": "Unblock"
+      },
+      "common": {
+        "free": "Free"
+      },
+      "confirmDelete": {
+        "cancelLabel": "Keep template",
+        "confirmLabel": "Delete template",
+        "message": "This template will be permanently removed. Existing generated slots are not affected.",
+        "title": "Delete template"
+      },
+      "generate": {
+        "capacityOption": " (cap {{capacity}})",
+        "fromDate": "From date",
+        "selectTemplate": "Select a template...",
+        "subtitle": "Slots matching the template's day-of-week will be created for every matching date in the range.",
+        "template": "Template",
+        "title": "Generate slots",
+        "toDate": "To date",
+        "useCurrentWeek": "Use current week"
+      },
+      "navigation": {
+        "jumpTo": "Jump to"
+      },
+      "pageName": "Slot Management",
+      "quickPicker": {
+        "createFirst": "Create one first.",
+        "optionMeta": "{{duration}} min · cap {{capacity}}",
+        "subtitle": "Click to pre-select a template.",
+        "title": "Quick template picker"
+      },
+      "states": {
+        "generateFromTemplate": "Generate from a template?",
+        "loadingSlots": "Loading slots...",
+        "loadingTemplates": "Loading templates...",
+        "noOrganisationLinked": "No organisation linked to this account. Slot management is unavailable.",
+        "noSlotsThisDay": "No slots on this day.",
+        "noTemplates": "No templates yet."
+      },
+      "stats": {
+        "available": "Available",
+        "blocked": "Blocked",
+        "booked": "Booked",
+        "totalThisWeek": "Total this week"
+      },
+      "status": {
+        "available": "Available",
+        "blocked": "Blocked",
+        "booked": "Booked",
+        "cancelled": "Cancelled",
+        "completed": "Completed",
+        "expired": "Expired",
+        "noShow": "No-show",
+        "reserved": "Reserved"
+      },
+      "summary": {
+        "dayBooked": "{{count}} booked",
+        "daySlots": "{{count}} slots"
+      },
+      "table": {
+        "actions": "Actions",
+        "capacity": "Capacity",
+        "deposit": "Deposit",
+        "status": "Status",
+        "time": "Time"
+      },
+      "tabs": {
+        "dailySlots": "Daily slots",
+        "generateSchedule": "Generate schedule",
+        "templateSetup": "Template setup"
+      },
+      "template": {
+        "createTitle": "Create new template",
+        "dayOfWeek": "Day of week",
+        "depositFee": "Deposit fee (VND)",
+        "depositHint": "Patients will be charged this deposit when booking to prevent spam.",
+        "depositPlaceholder": "0 = free",
+        "depositValue": "{{amount}}₫ deposit",
+        "endTime": "End time",
+        "existingTitle": "Existing templates",
+        "maxCapacity": "Max capacity per slot",
+        "slotDuration": "Slot duration (minutes)",
+        "startTime": "Start time",
+        "templateSummary": "{{duration}} min per slot · capacity {{capacity}}"
+      },
+      "toast": {
+        "generateSlotsFailed": "Failed to generate slots.",
+        "generatedSlots": "Generated {{count}} slots.",
+        "invalidDateRange": "From date cannot be later than to date.",
+        "invalidMaxCapacity": "Max capacity must be at least 1.",
+        "invalidSlotDuration": "Slot duration must be a multiple of 5 minutes.",
+        "invalidTimeRange": "End time must be later than start time.",
+        "selectTemplateFirst": "Please select a template before generating slots.",
+        "slotStatusUpdateFailed": "Failed to update slot status.",
+        "slotStatusUpdated": "Slot status updated.",
+        "templateCreateFailed": "Failed to create template.",
+        "templateCreated": "Template created successfully.",
+        "templateDeleteFailed": "Failed to delete template.",
+        "templateDeleted": "Template deleted."
       }
     }
   },
