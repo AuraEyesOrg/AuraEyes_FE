@@ -240,6 +240,7 @@ export interface HealthRoadmap {
   id: string;
   patientId: string;
   medicalDiagnosisId: string;
+  screeningId?: string;
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   summary: string;
   nextSteps: string[];
