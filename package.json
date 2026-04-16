@@ -26,6 +26,7 @@
     "test:e2e:module:consultation": "playwright test --grep @module-consultation",
     "test:e2e:module:feedback": "playwright test --grep @module-feedback",
     "test:e2e:module:wallet": "playwright test --grep @module-wallet",
+    "test:e2e:module:booking": "playwright test --grep @module-booking",
     "test:e2e:module:org-screening": "playwright test --grep @module-org-screening",
     "test:e2e:module:network": "playwright test --grep @module-network",
     "test:e2e:ui": "playwright test --ui",

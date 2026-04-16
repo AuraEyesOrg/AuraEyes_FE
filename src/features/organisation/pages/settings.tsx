@@ -12,6 +12,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
 import {
   getOrganisationSettings,
@@ -37,6 +38,24 @@ type SettingsForm = {
   avatarUrl: string;
 };
 
+const SETTINGS_TOAST_IDS = {
+  save: 'organisation-settings-save',
+  avatarUpload: 'organisation-settings-avatar-upload',
+} as const;
+
+const SETTINGS_FORM_KEYS: Array<keyof SettingsForm> = [
+  'name',
+  'orgType',
+  'address',
+  'licenseNumber',
+  'taxCode',
+  'description',
+  'contactFullName',
+  'contactEmail',
+  'contactPhone',
+  'avatarUrl',
+];
+
 const mapSettingsToForm = (
   settings: OrganisationSettingsDto
 ): SettingsForm => ({
@@ -55,6 +74,7 @@ const mapSettingsToForm = (
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('clinic');
+  const [initialForm, setInitialForm] = useState<SettingsForm | null>(null);
   const [form, setForm] = useState<SettingsForm>({
     name: '',
     orgType: '',
@@ -86,13 +106,25 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!settingsQuery.data) return;
-    setForm(mapSettingsToForm(settingsQuery.data));
+    const mapped = mapSettingsToForm(settingsQuery.data);
+    setForm(mapped);
+    setInitialForm(mapped);
   }, [settingsQuery.data]);
+
+  const isDirty = useMemo(() => {
+    if (!initialForm) {
+      return false;
+    }
+
+    return SETTINGS_FORM_KEYS.some((key) => form[key] !== initialForm[key]);
+  }, [form, initialForm]);
 
   const saveMutation = useMutation({
     mutationFn: updateOrganisationSettings,
     onSuccess: (updated) => {
-      setForm(mapSettingsToForm(updated));
+      const mapped = mapSettingsToForm(updated);
+      setForm(mapped);
+      setInitialForm(mapped);
 
       if (user) {
         setUser({
@@ -103,11 +135,17 @@ export default function SettingsPage() {
         });
       }
 
-      toast.success('Organisation settings updated successfully.');
+      toast.success('Organisation settings updated successfully.', {
+        toastId: SETTINGS_TOAST_IDS.save,
+      });
     },
     onError: (error) => {
       toast.error(
-        extractApiErrorMessage(error, 'Failed to update organisation settings.')
+        extractApiErrorMessage(
+          error,
+          'Failed to update organisation settings.'
+        ),
+        { toastId: SETTINGS_TOAST_IDS.save }
       );
     },
   });
@@ -117,11 +155,16 @@ export default function SettingsPage() {
     onSuccess: (avatarUrl) => {
       setForm((prev) => ({ ...prev, avatarUrl }));
       toast.success(
-        'Avatar uploaded. Save changes to persist profile mapping.'
+        'Avatar uploaded. Save changes to persist profile mapping.',
+        {
+          toastId: SETTINGS_TOAST_IDS.avatarUpload,
+        }
       );
     },
     onError: (error) => {
-      toast.error(extractApiErrorMessage(error, 'Failed to upload avatar.'));
+      toast.error(extractApiErrorMessage(error, 'Failed to upload avatar.'), {
+        toastId: SETTINGS_TOAST_IDS.avatarUpload,
+      });
     },
   });
 
@@ -147,6 +190,15 @@ export default function SettingsPage() {
   };
 
   const handleSave = () => {
+    if (
+      !isDirty ||
+      isSaving ||
+      settingsQuery.isLoading ||
+      settingsQuery.isError
+    ) {
+      return;
+    }
+
     saveMutation.mutate({
       name: form.name.trim(),
       address: form.address.trim() || undefined,
@@ -219,7 +271,13 @@ export default function SettingsPage() {
                         Organisation Information
                       </h3>
 
-                      <div className="grid gap-4 md:grid-cols-[120px_1fr] items-start">
+                      <div className="relative grid gap-4 md:grid-cols-[120px_1fr] items-start">
+                        {uploadAvatarMutation.isPending && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-(--bg-primary)/70 backdrop-blur-[1px]">
+                            <Spinner size={28} className="text-primary" />
+                          </div>
+                        )}
+
                         <img
                           src={displayAvatar}
                           alt="Organisation avatar"
@@ -327,6 +385,7 @@ export default function SettingsPage() {
                     onClick={handleSave}
                     disabled={
                       isSaving ||
+                      !isDirty ||
                       settingsQuery.isLoading ||
                       settingsQuery.isError
                     }

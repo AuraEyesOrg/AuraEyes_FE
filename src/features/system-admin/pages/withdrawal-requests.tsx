@@ -32,6 +32,13 @@ const statusOptions: Array<{
   { label: 'Đã hủy', value: 'Cancelled' },
 ];
 
+const WITHDRAWAL_TOAST_IDS = {
+  confirm: 'system-admin-withdraw-confirm',
+  reject: 'system-admin-withdraw-reject',
+  payosPayout: 'system-admin-withdraw-payos-payout',
+  payosSync: 'system-admin-withdraw-payos-sync',
+} as const;
+
 const formatMoney = (value: number) =>
   value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
@@ -138,7 +145,9 @@ export default function WithdrawalRequestsPage() {
         note: adminNote.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success('Đã xác nhận chuyển khoản thành công.');
+      toast.success('Đã xác nhận chuyển khoản thành công.', {
+        toastId: WITHDRAWAL_TOAST_IDS.confirm,
+      });
       setConfirmingId(null);
       setTransferReference('');
       setAdminNote('');
@@ -149,7 +158,9 @@ export default function WithdrawalRequestsPage() {
     onError: (error) => {
       const message =
         error instanceof Error ? error.message : 'Không thể xác nhận yêu cầu.';
-      toast.error(message);
+      toast.error(message, {
+        toastId: WITHDRAWAL_TOAST_IDS.confirm,
+      });
     },
   });
 
@@ -159,7 +170,9 @@ export default function WithdrawalRequestsPage() {
         reason: rejectReason.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success('Đã từ chối yêu cầu rút tiền.');
+      toast.success('Đã từ chối yêu cầu rút tiền.', {
+        toastId: WITHDRAWAL_TOAST_IDS.reject,
+      });
       setRejectingId(null);
       setRejectReason('');
       queryClient.invalidateQueries({
@@ -169,7 +182,9 @@ export default function WithdrawalRequestsPage() {
     onError: (error) => {
       const message =
         error instanceof Error ? error.message : 'Không thể từ chối yêu cầu.';
-      toast.error(message);
+      toast.error(message, {
+        toastId: WITHDRAWAL_TOAST_IDS.reject,
+      });
     },
   });
 
@@ -183,7 +198,8 @@ export default function WithdrawalRequestsPage() {
     onSuccess: (data) => {
       const state = data.approvalState ?? 'UNKNOWN';
       toast.success(
-        `Chi qua PayOS thành công. Trạng thái: ${state}. PayOS ID: ${data.externalPayoutId}`
+        `Chi qua PayOS thành công. Trạng thái: ${state}. PayOS ID: ${data.externalPayoutId}`,
+        { toastId: WITHDRAWAL_TOAST_IDS.payosPayout }
       );
       setPayosProcessingId(null);
       queryClient.invalidateQueries({
@@ -195,7 +211,9 @@ export default function WithdrawalRequestsPage() {
         error instanceof Error
           ? error.message
           : 'Không thể thực hiện lệnh chi qua PayOS.';
-      toast.error(message);
+      toast.error(message, {
+        toastId: WITHDRAWAL_TOAST_IDS.payosPayout,
+      });
       setPayosProcessingId(null);
     },
   });
@@ -209,7 +227,8 @@ export default function WithdrawalRequestsPage() {
       ophthalmologistApi.syncPayoutStatus(requestId),
     onSuccess: (data) => {
       toast.success(
-        `Đã đồng bộ trạng thái: ${data.approvalState} → Rút tiền: ${data.withdrawalStatus}`
+        `Đã đồng bộ trạng thái: ${data.approvalState} → Rút tiền: ${data.withdrawalStatus}`,
+        { toastId: WITHDRAWAL_TOAST_IDS.payosSync }
       );
       setPayosSyncingId(null);
       queryClient.invalidateQueries({
@@ -221,7 +240,9 @@ export default function WithdrawalRequestsPage() {
         error instanceof Error
           ? error.message
           : 'Không thể đồng bộ trạng thái PayOS.';
-      toast.error(message);
+      toast.error(message, {
+        toastId: WITHDRAWAL_TOAST_IDS.payosSync,
+      });
       setPayosSyncingId(null);
     },
   });
