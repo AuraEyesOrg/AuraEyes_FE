@@ -45,6 +45,7 @@ export interface OphthalmologistScreeningDetailDto {
   createdAt: string;
   processedAt?: string | null;
   rawJsonOutput?: string | null;
+  reviewStatus: string;
   images: OphthalmologistRetinalImageDto[];
   latestResult?: OphthalmologistScreeningResultDto | null;
 }

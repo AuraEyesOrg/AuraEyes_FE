@@ -68,6 +68,14 @@ interface DetectedFinding {
 
 type BoxRect = { x: number; y: number; width: number; height: number };
 type TranslateFn = (key: string, fallback: string) => string;
+type ShareAssetKind = 'retinal' | 'heatmap' | 'annotated' | 'boxed-generated';
+type ShareAssetOption = {
+  id: string;
+  label: string;
+  previewUrl: string;
+  kind: ShareAssetKind;
+  sourceImageUrl?: string;
+};
 
 const DIAGNOSIS_CODE_PRESETS = [
   { value: 'H35.9', label: 'H35.9 - Retinal disorder, unspecified' },
@@ -92,6 +100,15 @@ const RECOMMENDATION_PRESETS = [
   'Report immediately if vision becomes blurred or distorted.',
   'Maintain blood sugar and blood pressure control.',
   'Avoid delaying specialist consultation.',
+] as const;
+
+const FINDING_NAME_SUGGESTIONS = [
+  'Diabetic Retinopathy',
+  'Macular Edema',
+  'Glaucoma Suspect',
+  'Retinal Hemorrhage',
+  'Cotton Wool Spot',
+  'Age-related Macular Degeneration',
 ] as const;
 
 function isUuid(s: string): boolean {
@@ -223,7 +240,12 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const [isDiagnosisLocked, setIsDiagnosisLocked] = useState(false);
   const [sharingImages, setSharingImages] = useState(false);
+  const [showShareImagePicker, setShowShareImagePicker] = useState(false);
+  const [shareCandidateAssetId, setShareCandidateAssetId] = useState<
+    string | null
+  >(null);
   const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   // ─── Heatmap toolkit draggable state ────────────────────────────────────
@@ -340,11 +362,80 @@ export default function ScreeningReviewPage() {
   const reportableSession = verificationSession ?? videoCallSession;
 
   const reportableSessionId = reportableSession?.id ?? null;
+  const isFinalizedDiagnosis =
+    isDiagnosisLocked || detail?.reviewStatus?.toLowerCase() === 'approved';
   const resolvedDoctorId =
     doctorFilterId ||
     reportableSession?.ophthalmologistId ||
     linkedSession?.ophthalmologistId ||
     '';
+
+  const shareableAssets = useMemo<ShareAssetOption[]>(() => {
+    const assets: ShareAssetOption[] = [];
+    const retinalSources = detail?.images.slice(0, 3) ?? [];
+    retinalSources.forEach((image, index) => {
+      assets.push({
+        id: `retinal-${image.id}`,
+        label: `Retinal image ${index + 1} (${image.eyeSide})`,
+        previewUrl: image.imageUrl,
+        kind: 'retinal',
+      });
+    });
+
+    const rawJson = detail?.rawJsonOutput;
+    if (!rawJson) return assets;
+
+    try {
+      const parsed = JSON.parse(rawJson) as {
+        heatmap_url?: string;
+        heatmapUrl?: string;
+        annotated_image_url?: string;
+        annotatedImageUrl?: string;
+        image_url?: string;
+        doctor_bbox_overrides?: Array<{ location?: BoxRect }>;
+      };
+
+      const heatmapUrl = parsed.heatmap_url ?? parsed.heatmapUrl;
+      if (heatmapUrl) {
+        assets.push({
+          id: 'heatmap-url',
+          label: 'Heatmap image',
+          previewUrl: heatmapUrl,
+          kind: 'heatmap',
+        });
+      }
+
+      const annotatedUrl =
+        parsed.annotated_image_url ??
+        parsed.annotatedImageUrl ??
+        parsed.image_url;
+      if (annotatedUrl) {
+        assets.push({
+          id: 'annotated-url',
+          label: 'AI annotated image',
+          previewUrl: annotatedUrl,
+          kind: 'annotated',
+        });
+      }
+
+      if (
+        (parsed.doctor_bbox_overrides?.length ?? 0) > 0 &&
+        retinalSources[0]
+      ) {
+        assets.push({
+          id: 'boxed-generated',
+          label: 'Doctor boxed overlay',
+          previewUrl: retinalSources[0].imageUrl,
+          kind: 'boxed-generated',
+          sourceImageUrl: retinalSources[0].imageUrl,
+        });
+      }
+    } catch {
+      // ignore malformed rawJson
+    }
+
+    return assets;
+  }, [detail?.images, detail?.rawJsonOutput]);
 
   const selectedImage = useMemo(() => {
     return (
@@ -806,6 +897,15 @@ export default function ScreeningReviewPage() {
 
   const handleSaveEdits = useCallback(async () => {
     if (!screeningId || !detail?.rawJsonOutput) return;
+    if (isFinalizedDiagnosis) {
+      ophthalToast.info(
+        t(
+          'Ophthalmologist.screeningReview.status.finalizedLocked',
+          'This case is finalized. Editing is locked.'
+        )
+      );
+      return;
+    }
     setSavingEdits(true);
     try {
       // Parse the original JSON, preserve everything, only add our overlay data
@@ -883,6 +983,7 @@ export default function ScreeningReviewPage() {
   }, [
     screeningId,
     detail,
+    isFinalizedDiagnosis,
     hasHeatmapEdits,
     heatmapData,
     buildDetectionBoxesForSave,
@@ -912,10 +1013,7 @@ export default function ScreeningReviewPage() {
     if (findings.length === 0) return '';
     return findings
       .slice(0, 5)
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.name} (${Math.round(item.confidence)}%)`
-      )
+      .map((item) => item.name)
       .join('\n');
   }, [findings]);
 
@@ -996,6 +1094,16 @@ export default function ScreeningReviewPage() {
   }, [showDiagnosisModal, clinicalFindings, aiFindingsNarrative]);
 
   const handleSubmitDiagnosis = async () => {
+    if (isFinalizedDiagnosis) {
+      ophthalToast.info(
+        t(
+          'Ophthalmologist.screeningReview.status.finalizedLocked',
+          'This case is finalized. Editing is locked.'
+        )
+      );
+      return;
+    }
+
     if (
       consultationSessionsQuery.isLoading ||
       consultationSessionsQuery.isFetching
@@ -1150,6 +1258,9 @@ export default function ScreeningReviewPage() {
           'Diagnosis report saved successfully.'
         )
       );
+      if (diagnosisStatus.trim().toLowerCase() === 'finalized') {
+        setIsDiagnosisLocked(true);
+      }
       setShowDiagnosisModal(false);
     } catch (error) {
       const message =
@@ -1164,7 +1275,7 @@ export default function ScreeningReviewPage() {
     }
   };
 
-  const handleShareRetinalImages = useCallback(async () => {
+  const handleOpenShareImagePicker = useCallback(() => {
     if (!reportableSessionId) {
       ophthalToast.error(
         t(
@@ -1175,8 +1286,7 @@ export default function ScreeningReviewPage() {
       return;
     }
 
-    const topImages = (detail?.images ?? []).slice(0, 3);
-    if (topImages.length === 0) {
+    if (shareableAssets.length === 0) {
       ophthalToast.error(
         t(
           'Ophthalmologist.screeningReview.share.noImages',
@@ -1185,33 +1295,125 @@ export default function ScreeningReviewPage() {
       );
       return;
     }
+    setShareCandidateAssetId(shareableAssets[0].id);
+    setShowShareImagePicker(true);
+  }, [reportableSessionId, shareableAssets, t]);
+
+  const handleShareRetinalImage = useCallback(async () => {
+    if (!reportableSessionId || !shareCandidateAssetId) return;
+    const selectedAsset = shareableAssets.find(
+      (asset) => asset.id === shareCandidateAssetId
+    );
+    if (!selectedAsset) return;
 
     setSharingImages(true);
     try {
-      const { sendSessionMessage } =
+      const { sendSessionMessage, uploadChatImages } =
         await import('@/features/consultation/api/consultation.api');
+
+      const uploadGeneratedBoxedImage = async (
+        sourceImageUrl: string
+      ): Promise<string | null> => {
+        const rawJson = detail?.rawJsonOutput;
+        if (!rawJson) return null;
+        const parsed = JSON.parse(rawJson) as {
+          doctor_bbox_overrides?: Array<{
+            location?: { x: number; y: number; width: number; height: number };
+          }>;
+        };
+        const boxes = parsed.doctor_bbox_overrides ?? [];
+        if (boxes.length === 0) return null;
+
+        const imageElement = await new Promise<HTMLImageElement>(
+          (resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () =>
+              reject(new Error('Failed to load source image'));
+            img.src = sourceImageUrl;
+          }
+        );
+
+        const canvas = document.createElement('canvas');
+        canvas.width = imageElement.width;
+        canvas.height = imageElement.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        ctx.drawImage(imageElement, 0, 0);
+        ctx.lineWidth = Math.max(
+          2,
+          Math.round(Math.min(canvas.width, canvas.height) * 0.004)
+        );
+        ctx.strokeStyle = '#ef4444';
+        ctx.fillStyle = 'rgba(239,68,68,0.18)';
+
+        boxes.forEach((item) => {
+          const loc = item.location;
+          if (!loc) return;
+          const isPercent =
+            loc.x <= 100 &&
+            loc.y <= 100 &&
+            loc.width <= 100 &&
+            loc.height <= 100;
+          const x = isPercent ? (loc.x / 100) * canvas.width : loc.x;
+          const y = isPercent ? (loc.y / 100) * canvas.height : loc.y;
+          const width = isPercent
+            ? (loc.width / 100) * canvas.width
+            : loc.width;
+          const height = isPercent
+            ? (loc.height / 100) * canvas.height
+            : loc.height;
+          if (width <= 0 || height <= 0) return;
+          ctx.fillRect(x, y, width, height);
+          ctx.strokeRect(x, y, width, height);
+        });
+
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/png')
+        );
+        if (!blob) return null;
+
+        const boxedFile = new File([blob], `doctor-boxed-${Date.now()}.png`, {
+          type: 'image/png',
+        });
+        const uploadResult = await uploadChatImages([boxedFile]);
+        return uploadResult.uploadedUrls[0] ?? null;
+      };
 
       await sendSessionMessage(reportableSessionId, {
         message: t(
           'Ophthalmologist.screeningReview.share.header',
-          'Shared retinal images for this screening review:'
+          'Shared retinal image for this screening review:'
         ),
       });
 
-      for (let i = 0; i < topImages.length; i += 1) {
-        const image = topImages[i];
-        const attachmentName = `Retinal image ${i + 1} (${image.eyeSide})`;
-        await sendSessionMessage(reportableSessionId, {
-          message: `[Image Attached: ${image.imageUrl} | Name: ${attachmentName}]`,
-        });
+      let finalUrl = selectedAsset.previewUrl;
+      if (
+        selectedAsset.kind === 'boxed-generated' &&
+        selectedAsset.sourceImageUrl
+      ) {
+        const uploadedUrl = await uploadGeneratedBoxedImage(
+          selectedAsset.sourceImageUrl
+        );
+        if (uploadedUrl) {
+          finalUrl = uploadedUrl;
+        }
       }
+
+      await sendSessionMessage(reportableSessionId, {
+        message: `[Image Attached: ${finalUrl} | Name: ${selectedAsset.label}]`,
+      });
 
       ophthalToast.success(
         t(
           'Ophthalmologist.screeningReview.share.success',
-          'Shared retinal images to consultation chat.'
+          'Shared retinal image to consultation chat.'
         )
       );
+      setShowShareImagePicker(false);
+      setShareCandidateAssetId(null);
     } catch (error) {
       ophthalToast.error(
         t(
@@ -1222,7 +1424,13 @@ export default function ScreeningReviewPage() {
     } finally {
       setSharingImages(false);
     }
-  }, [detail?.images, reportableSessionId, t]);
+  }, [
+    detail?.rawJsonOutput,
+    reportableSessionId,
+    shareCandidateAssetId,
+    shareableAssets,
+    t,
+  ]);
 
   const sidebarTabs = [
     {
@@ -2278,8 +2486,11 @@ export default function ScreeningReviewPage() {
                         ({sidebarFindings.length})
                       </p>
                       <button
-                        onClick={() => setIsAddingFinding(true)}
-                        className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
+                        onClick={() => {
+                          if (!isFinalizedDiagnosis) setIsAddingFinding(true);
+                        }}
+                        disabled={isFinalizedDiagnosis}
+                        className="p-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors disabled:opacity-50"
                         title="Thêm thẻ (Add finding)"
                       >
                         <PlusSquare className="w-4 h-4" />
@@ -2297,9 +2508,20 @@ export default function ScreeningReviewPage() {
                             autoFocus
                             value={newFindingName}
                             onChange={(e) => setNewFindingName(e.target.value)}
+                            list="finding-name-suggestions"
                             placeholder="Nhập tên..."
                             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#0a1f44] border border-gray-200 dark:border-[#1e3a5f] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                           />
+                          <datalist id="finding-name-suggestions">
+                            {[
+                              ...new Set([
+                                ...FINDING_NAME_SUGGESTIONS,
+                                ...findings.map((f) => f.name),
+                              ]),
+                            ].map((option) => (
+                              <option key={option} value={option} />
+                            ))}
+                          </datalist>
                         </div>
 
                         <div className="space-y-2">
@@ -2371,6 +2593,7 @@ export default function ScreeningReviewPage() {
                                 setIsAddingFinding(false);
                               }}
                               className="px-4 py-1.5 bg-cyan-600 text-white text-[11px] font-bold rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-1.5"
+                              disabled={isFinalizedDiagnosis}
                             >
                               <PlusSquare className="w-3.5 h-3.5" /> Thêm
                             </button>
@@ -2397,6 +2620,7 @@ export default function ScreeningReviewPage() {
                             <input
                               type="text"
                               value={finding.name}
+                              list="finding-name-suggestions"
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setSidebarFindings((prev) =>
@@ -2414,6 +2638,7 @@ export default function ScreeningReviewPage() {
                                   )
                                 );
                               }}
+                              disabled={isFinalizedDiagnosis}
                               className="font-semibold text-gray-900 dark:text-white text-sm bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded w-full"
                             />
                             <button
@@ -2425,6 +2650,7 @@ export default function ScreeningReviewPage() {
                                   prev.filter((f) => f.id !== finding.id)
                                 );
                               }}
+                              disabled={isFinalizedDiagnosis}
                               className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-2"
                               title="Delete Finding"
                             >
@@ -2450,6 +2676,7 @@ export default function ScreeningReviewPage() {
                                 )
                               );
                             }}
+                            disabled={isFinalizedDiagnosis}
                             rows={1}
                             className="w-full text-xs text-gray-600 dark:text-gray-400 bg-transparent border-none p-0 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 rounded resize-none min-h-[1.25rem] overflow-hidden"
                             onInput={(e) => {
@@ -2481,10 +2708,18 @@ export default function ScreeningReviewPage() {
 
                   {/* Action Buttons */}
                   <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
+                    {isFinalizedDiagnosis ? (
+                      <p className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                        {t(
+                          'Ophthalmologist.screeningReview.status.finalizedLocked',
+                          'This case is finalized. Editing is locked.'
+                        )}
+                      </p>
+                    ) : null}
                     <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={handleSaveEdits}
-                        disabled={savingEdits}
+                        disabled={savingEdits || isFinalizedDiagnosis}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors disabled:opacity-60"
                       >
                         {savingEdits ? (
@@ -2498,8 +2733,12 @@ export default function ScreeningReviewPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => setShowDiagnosisModal(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors"
+                        onClick={() => {
+                          if (!isFinalizedDiagnosis)
+                            setShowDiagnosisModal(true);
+                        }}
+                        disabled={isFinalizedDiagnosis}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60"
                       >
                         <FileText className="w-4 h-4" />
                         {t(
@@ -2508,7 +2747,7 @@ export default function ScreeningReviewPage() {
                         )}
                       </button>
                       <button
-                        onClick={handleShareRetinalImages}
+                        onClick={handleOpenShareImagePicker}
                         disabled={sharingImages}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60"
                       >
@@ -2530,6 +2769,80 @@ export default function ScreeningReviewPage() {
           ) : null}
         </main>
       </div>
+
+      {showShareImagePicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0a1f44] rounded-2xl w-full max-w-xl shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
+            <div className="p-5 border-b border-gray-200 dark:border-[#1e3a5f]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {t(
+                    'Ophthalmologist.screeningReview.share.selectImageTitle',
+                    'Select retinal image to share'
+                  )}
+                </h3>
+                <button
+                  onClick={() => setShowShareImagePicker(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-3">
+              {shareableAssets.map((asset, index) => (
+                <label
+                  key={asset.id}
+                  className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                    shareCandidateAssetId === asset.id
+                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
+                      : 'border-gray-200 dark:border-[#1e3a5f]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="share-retinal-image"
+                    checked={shareCandidateAssetId === asset.id}
+                    onChange={() => setShareCandidateAssetId(asset.id)}
+                  />
+                  <img
+                    src={asset.previewUrl}
+                    alt={`Retinal image ${index + 1}`}
+                    className="h-14 w-14 rounded-lg object-cover border border-gray-200 dark:border-[#1e3a5f]"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {asset.label}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="p-5 border-t border-gray-200 dark:border-[#1e3a5f] flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowShareImagePicker(false)}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300"
+              >
+                {t('Ophthalmologist.common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleShareRetinalImage}
+                disabled={sharingImages || !shareCandidateAssetId}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-60"
+              >
+                {sharingImages
+                  ? t('Ophthalmologist.common.saving', 'Saving...')
+                  : t(
+                      'Ophthalmologist.screeningReview.share.sendSelected',
+                      'Send selected image'
+                    )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Diagnosis Modal */}
       {showDiagnosisModal && (
