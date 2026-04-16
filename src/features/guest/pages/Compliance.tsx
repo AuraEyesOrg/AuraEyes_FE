@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +18,10 @@ const CompliancePage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -172,6 +180,12 @@ const CompliancePage = () => {
       className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.compliance')}
+        readingTimeMinutes={5}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section className="py-20 lg:py-28 bg-white">
@@ -187,12 +201,36 @@ const CompliancePage = () => {
               {t('Compliance.hero.description')}
             </p>
 
+            <div className="mb-8 flex flex-wrap justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+              <MedicalTermTooltip
+                term={t('GuestEnhancements.terms.hipaa')}
+                description={t('GuestEnhancements.tooltips.hipaa')}
+              />
+              <MedicalTermTooltip
+                term={t('GuestEnhancements.terms.mfa')}
+                description={t('GuestEnhancements.tooltips.mfa')}
+              />
+              <MedicalTermTooltip
+                term={t('GuestEnhancements.terms.rbac')}
+                description={t('GuestEnhancements.tooltips.rbac')}
+              />
+            </div>
+
+            <div className="mb-8 flex justify-center">
+              <SourceVerificationTag
+                label={t('GuestEnhancements.source.auraGovernance')}
+              />
+            </div>
+
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="#security"
-                className="inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-semibold text-white hover:opacity-90 transition-opacity"
+                className="inline-flex min-h-12 flex-col items-start justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-left text-base font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                {t('Compliance.hero.primaryCta')}
+                <span>{t('Compliance.hero.primaryCta')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.quickAction')}
+                </span>
               </a>
               <Link
                 to={resolvePathWithLocale('/contact')}
@@ -214,6 +252,11 @@ const CompliancePage = () => {
               <p className="text-[var(--color-text-muted)] max-w-2xl mx-auto">
                 {t('Compliance.security.description')}
               </p>
+              <div className="mt-4 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -226,6 +269,9 @@ const CompliancePage = () => {
                     {feature.icon}
                   </div>
                   <div>
+                    <span className="mb-2 inline-flex rounded-full bg-[var(--color-brand-primary)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--color-brand-primary)]">
+                      {t('GuestEnhancements.badges.securityControl')}
+                    </span>
                     <h3 className="text-lg font-semibold text-[var(--color-brand-dark)] mb-1">
                       {feature.title}
                     </h3>

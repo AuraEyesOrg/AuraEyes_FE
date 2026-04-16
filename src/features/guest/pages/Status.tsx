@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import Spinner from '@/components/ui/spinner';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import {
@@ -10,7 +10,10 @@ import {
   type GuestServiceHealthStatus,
 } from '../api/guest.api';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
 import { Header } from '../components/Header';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
 
 interface ServiceDescriptor {
   name: string;
@@ -31,7 +34,7 @@ type OverallStatus = 'operational' | 'degraded' | 'outage' | 'checking';
 const STATUS_REFRESH_INTERVAL_MS = 60_000;
 
 const StatusPage = () => {
-  const { t } = useTranslation();
+  const { t } = useSafeTranslation();
 
   const serviceDescriptors = useMemo<ServiceDescriptor[]>(
     () => [
@@ -335,10 +338,16 @@ const StatusPage = () => {
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)]">
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.status')}
+        readingTimeMinutes={4}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main className="flex w-full flex-grow flex-col items-center px-4 py-8 md:py-12">
         <div className="flex w-full max-w-5xl flex-col gap-12">
-          <section className="flex flex-col gap-8">
+          <section className="flex flex-col gap-8" data-guest-reveal>
             <div className="flex flex-col gap-2">
               <h1 className="text-4xl font-black tracking-tight text-[var(--color-brand-dark)] md:text-5xl">
                 {t('Status.hero.title')}
@@ -346,6 +355,24 @@ const StatusPage = () => {
               <p className="max-w-2xl text-lg text-[var(--color-text-muted)]">
                 {t('Status.hero.description')}
               </p>
+              <p className="max-w-2xl text-sm text-[var(--color-text-muted)]">
+                {t('GuestEnhancements.subheadings.status')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.rbac')}
+                  description={t('GuestEnhancements.tooltips.rbac')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.mfa')}
+                  description={t('GuestEnhancements.tooltips.mfa')}
+                />
+              </div>
+              <div className="mt-2">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="relative flex flex-col items-center justify-center gap-6 overflow-hidden rounded-2xl border border-[var(--color-medical-border)] bg-white p-8 text-center shadow-sm md:p-12">
@@ -392,7 +419,41 @@ const StatusPage = () => {
             </div>
           </section>
 
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {checkedCount === 0 ? (
+            <section
+              className="relative overflow-hidden rounded-2xl border border-[var(--color-medical-border)] bg-white p-6"
+              data-guest-reveal
+            >
+              <div className="absolute inset-0 opacity-20">
+                <div
+                  className="h-full w-full"
+                  style={{
+                    backgroundImage:
+                      'radial-gradient(circle at 1px 1px, var(--color-brand-primary) 1px, transparent 0)',
+                    backgroundSize: '16px 16px',
+                  }}
+                />
+              </div>
+              <div className="relative z-10 flex items-start gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
+                  <Spinner size={20} />
+                </div>
+                <div>
+                  <p className="font-semibold text-[var(--color-brand-dark)]">
+                    {t('GuestEnhancements.loading.statusTitle')}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                    {t('GuestEnhancements.loading.statusDescription')}
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          <section
+            className="grid grid-cols-1 gap-6 md:grid-cols-3"
+            data-guest-reveal
+          >
             <div className="flex h-full flex-col justify-between rounded-2xl border border-[var(--color-medical-border)] bg-white p-6 transition-all hover:border-[var(--color-brand-primary)]/30 hover:shadow-lg">
               <div className="mb-4 flex items-start justify-between">
                 <p className="text-sm font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
@@ -501,7 +562,7 @@ const StatusPage = () => {
             </div>
           </section>
 
-          <section className="flex flex-col gap-5">
+          <section className="flex flex-col gap-5" data-guest-reveal>
             <h3 className="px-1 text-2xl font-bold text-[var(--color-brand-dark)]">
               {t('Status.componentStatus.title')}
             </h3>
@@ -613,7 +674,7 @@ const StatusPage = () => {
             </div>
           </section>
 
-          <section className="flex flex-col gap-6 pt-6">
+          <section className="flex flex-col gap-6 pt-6" data-guest-reveal>
             <div className="flex items-center gap-3">
               <h3 className="text-2xl font-bold text-[var(--color-brand-dark)]">
                 {t('Status.trust.title')}

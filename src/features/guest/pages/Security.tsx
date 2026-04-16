@@ -2,6 +2,9 @@ import React, { useEffect } from 'react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
 
 const SecurityPage = () => {
   const { t } = useSafeTranslation();
@@ -13,14 +16,29 @@ const SecurityPage = () => {
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('GuestFooter.security')}
+        readingTimeMinutes={7}
+        complexity="advanced"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-[var(--color-medical-border)] overflow-hidden">
+        <div
+          className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-[var(--color-medical-border)] overflow-hidden"
+          data-guest-reveal
+        >
           {/* Header Area */}
-          <div className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center">
+          <div
+            className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center"
+            data-guest-reveal
+          >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
               {t('GuestLegal.security.header.title')}
             </h1>
+            <p className="mx-auto mb-4 max-w-2xl text-sm text-white/75">
+              {t('GuestEnhancements.subheadings.security')}
+            </p>
             <p className="text-[var(--color-brand-primary)] font-medium tracking-widest uppercase">
               {t('GuestLegal.security.header.subtitle')}
             </p>
@@ -44,7 +62,10 @@ const SecurityPage = () => {
 
           {/* Content Area */}
           <div className="px-8 py-10 md:px-16 md:py-14 space-y-12">
-            <section className="bg-[var(--color-medical-bg)] p-6 md:p-8 rounded-2xl border border-[var(--color-medical-border)] text-center">
+            <section
+              className="bg-[var(--color-medical-bg)] p-6 md:p-8 rounded-2xl border border-[var(--color-medical-border)] text-center"
+              data-guest-reveal
+            >
               <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
                   className="w-8 h-8"
@@ -66,9 +87,28 @@ const SecurityPage = () => {
               <p className="mt-4 text-base text-[var(--color-text-muted)] leading-relaxed">
                 {t('GuestLegal.security.intro.description')}
               </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.mfa')}
+                  description={t('GuestEnhancements.tooltips.mfa')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.rbac')}
+                  description={t('GuestEnhancements.tooltips.rbac')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.hipaa')}
+                  description={t('GuestEnhancements.tooltips.hipaa')}
+                />
+              </div>
+              <div className="mt-4 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </section>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   1
@@ -130,11 +170,16 @@ const SecurityPage = () => {
                   </p>
                 </div>
               </div>
+              <div className="mt-6">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </section>
 
             <div className="w-full h-px bg-[var(--color-medical-border)]"></div>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   2
@@ -183,7 +228,7 @@ const SecurityPage = () => {
 
             <div className="w-full h-px bg-[var(--color-medical-border)]"></div>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   3
@@ -226,7 +271,7 @@ const SecurityPage = () => {
 
             <div className="w-full h-px bg-[var(--color-medical-border)]"></div>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   4

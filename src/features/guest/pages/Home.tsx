@@ -11,6 +11,10 @@ import {
 } from '../api/guest.api';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -151,6 +155,10 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       const particles =
         floatingParticlesRef.current?.querySelectorAll('.particle');
@@ -492,6 +500,12 @@ const HomePage = () => {
       </div>
 
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.home')}
+        readingTimeMinutes={4}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
       <main className="flex-1 relative z-10">
         {/* Hero Section */}
         <section
@@ -555,15 +569,37 @@ const HomePage = () => {
                 <p className="hero-description max-w-xl text-lg text-[var(--color-text-muted)]">
                   {t('Home.hero.description')}
                 </p>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.fundus')}
+                    description={t('GuestEnhancements.tooltips.fundus')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.oct')}
+                    description={t('GuestEnhancements.tooltips.oct')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.macular')}
+                    description={t('GuestEnhancements.tooltips.macular')}
+                  />
+                </div>
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
                 <div className="hero-buttons flex flex-wrap gap-4">
                   <button
                     type="button"
                     onClick={() =>
                       navigate(resolvePathWithLocale('/how-it-works'))
                     }
-                    className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30"
+                    className="magnetic-btn inline-flex min-h-12 items-center justify-center rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-base font-bold text-white hover:brightness-110 transition-all hover:shadow-lg hover:shadow-[var(--color-brand-primary)]/30"
                   >
-                    {t('Home.hero.primaryCta')}
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>{t('Home.hero.primaryCta')}</span>
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.quickAction')}
+                      </span>
+                    </span>
                   </button>
                 </div>
               </div>
@@ -577,6 +613,15 @@ const HomePage = () => {
                   className="hero-image-container relative w-[400px] h-[400px] lg:w-[480px] lg:h-[480px]"
                   style={{ transformStyle: 'preserve-3d' }}
                 >
+                  <div className="absolute left-4 top-4 z-20 flex flex-col gap-1">
+                    <span className="guest-image-metadata">
+                      {t('GuestEnhancements.imageMeta.highResFundus')}
+                    </span>
+                    <span className="guest-image-metadata">
+                      {t('GuestEnhancements.imageMeta.scaleOneToOne')}
+                    </span>
+                  </div>
+
                   {/* Outer glow ring */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[var(--color-brand-primary)] to-[#0EA5A5] opacity-20 blur-xl animate-pulse" />
 

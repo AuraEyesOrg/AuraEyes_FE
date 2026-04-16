@@ -6,6 +6,13 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import {
+  getAdaptiveScrollBehavior,
+  prefersReducedMotion,
+} from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +22,10 @@ const EthicsPrivacyPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -267,6 +278,12 @@ const EthicsPrivacyPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.ethicsPrivacy')}
+        readingTimeMinutes={7}
+        complexity="advanced"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -300,13 +317,30 @@ const EthicsPrivacyPage = () => {
                   {t('EthicsPrivacy.hero.description')}
                 </p>
 
+                <div className="mb-6 flex flex-wrap justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.hipaa')}
+                    description={t('GuestEnhancements.tooltips.hipaa')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.phi')}
+                    description={t('GuestEnhancements.tooltips.phi')}
+                  />
+                </div>
+
+                <div className="mb-6 flex justify-center">
+                  <SourceVerificationTag
+                    label={t('GuestEnhancements.source.auraGovernance')}
+                  />
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     type="button"
                     onClick={() => {
-                      document
-                        .getElementById('principles')
-                        ?.scrollIntoView({ behavior: 'smooth' });
+                      document.getElementById('principles')?.scrollIntoView({
+                        behavior: getAdaptiveScrollBehavior(),
+                      });
                     }}
                     className="inline-flex items-center justify-center px-6 py-3 text-base font-bold rounded-lg text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] transition-colors"
                   >
@@ -356,6 +390,11 @@ const EthicsPrivacyPage = () => {
               <p className="text-lg text-[var(--color-text-muted)]">
                 {t('EthicsPrivacy.pillarsSection.description')}
               </p>
+              <div className="mt-4 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -391,6 +430,16 @@ const EthicsPrivacyPage = () => {
                 <p className="text-[var(--color-text-muted)] mb-8 leading-relaxed">
                   {t('EthicsPrivacy.journey.description')}
                 </p>
+                <div className="mb-5 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.gdpr')}
+                    description={t('GuestEnhancements.tooltips.gdpr')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.rbac')}
+                    description={t('GuestEnhancements.tooltips.rbac')}
+                  />
+                </div>
                 <Link
                   to={resolvePathWithLocale('/security')}
                   className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] font-bold hover:text-[var(--color-brand-primary)] transition-colors"
@@ -529,9 +578,12 @@ const EthicsPrivacyPage = () => {
                   <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                     <Link
                       to={`${resolvePathWithLocale('/contact')}#contact-form`}
-                      className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)] text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                      className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-left text-white font-bold hover:bg-[var(--color-brand-primary)] transition-colors"
                     >
-                      {t('EthicsPrivacy.cta.primary')}
+                      <span>{t('EthicsPrivacy.cta.primary')}</span>
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.fastContact')}
+                      </span>
                     </Link>
                   </div>
                 </div>

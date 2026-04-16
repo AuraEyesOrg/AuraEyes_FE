@@ -9,6 +9,13 @@ import { Footer } from '../components/Footer';
 import { registerOrganisation } from '@/features/auth/api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import {
+  getAdaptiveScrollBehavior,
+  prefersReducedMotion,
+} from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -32,6 +39,10 @@ const ContactPage = () => {
   });
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -178,6 +189,12 @@ const ContactPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.contact')}
+        readingTimeMinutes={5}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -226,13 +243,16 @@ const ContactPage = () => {
                 <button
                   type="button"
                   onClick={() =>
-                    document
-                      .getElementById('contact-form')
-                      ?.scrollIntoView({ behavior: 'smooth' })
+                    document.getElementById('contact-form')?.scrollIntoView({
+                      behavior: getAdaptiveScrollBehavior(),
+                    })
                   }
-                  className="rounded-lg bg-[var(--color-brand-primary)] px-6 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+                  className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-6 py-2 text-left text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                 >
-                  {t('Contact.hero.primaryCta')}
+                  <span>{t('Contact.hero.primaryCta')}</span>
+                  <span className="guest-cta-subtext">
+                    {t('GuestEnhancements.ctaSubtext.fastContact')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -258,6 +278,10 @@ const ContactPage = () => {
                 <p className="text-[var(--color-text-muted)] mb-4">
                   {partnerCard.description}
                 </p>
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                  className="mb-4"
+                />
 
                 <ul className="space-y-2">
                   {partnerCard.benefits.map((benefit, i) => (
@@ -294,6 +318,17 @@ const ContactPage = () => {
                 <p className="text-lg text-body mb-8 leading-relaxed">
                   {t('Contact.info.description')}
                 </p>
+
+                <div className="mb-6 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.fundus')}
+                    description={t('GuestEnhancements.tooltips.fundus')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.oct')}
+                    description={t('GuestEnhancements.tooltips.oct')}
+                  />
+                </div>
 
                 <div className="space-y-6 p-6 bg-white rounded-xl border border-[var(--color-medical-border)]">
                   <div className="flex items-start gap-4">
@@ -397,6 +432,11 @@ const ContactPage = () => {
                     <p className="text-[var(--color-text-muted)]">
                       {t('Contact.form.description')}
                     </p>
+                    <div className="mt-3">
+                      <SourceVerificationTag
+                        label={t('GuestEnhancements.source.auraGovernance')}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -629,11 +669,18 @@ const ContactPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-4 rounded-lg bg-[var(--color-brand-primary)] text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+                    className="inline-flex w-full min-h-14 flex-col items-center justify-center rounded-lg bg-[var(--color-brand-primary)] py-2 text-white font-bold text-base hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
                   >
-                    {isSubmitting
-                      ? t('Contact.form.sending')
-                      : t('Contact.form.send')}
+                    <span>
+                      {isSubmitting
+                        ? t('Contact.form.sending')
+                        : t('Contact.form.send')}
+                    </span>
+                    {!isSubmitting ? (
+                      <span className="guest-cta-subtext">
+                        {t('GuestEnhancements.ctaSubtext.fastContact')}
+                      </span>
+                    ) : null}
                   </button>
                 </div>
               </form>

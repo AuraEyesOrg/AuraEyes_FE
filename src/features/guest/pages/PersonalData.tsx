@@ -2,6 +2,9 @@ import React, { useEffect } from 'react';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
 
 const PersonalDataPage = () => {
   const { t } = useSafeTranslation();
@@ -13,14 +16,29 @@ const PersonalDataPage = () => {
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('GuestFooter.personalData')}
+        readingTimeMinutes={7}
+        complexity="advanced"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main className="flex-grow py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-[var(--color-medical-border)] overflow-hidden">
+        <div
+          className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-[var(--color-medical-border)] overflow-hidden"
+          data-guest-reveal
+        >
           {/* Header Area */}
-          <div className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center">
+          <div
+            className="bg-[var(--color-brand-dark)] px-8 py-12 md:px-16 md:py-16 text-center"
+            data-guest-reveal
+          >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
               {t('GuestLegal.personalData.header.title')}
             </h1>
+            <p className="mx-auto mb-4 max-w-2xl text-sm text-white/75">
+              {t('GuestEnhancements.subheadings.personalData')}
+            </p>
             <p className="text-[var(--color-brand-primary)] font-medium tracking-widest uppercase">
               {t('GuestLegal.personalData.header.subtitle')}
             </p>
@@ -44,20 +62,38 @@ const PersonalDataPage = () => {
 
           {/* Content Area */}
           <div className="px-8 py-10 md:px-16 md:py-14 space-y-12">
-            <section className="bg-[var(--color-medical-bg)] p-6 rounded-2xl border border-[var(--color-medical-border)]">
+            <section
+              className="bg-[var(--color-medical-bg)] p-6 rounded-2xl border border-[var(--color-medical-border)]"
+              data-guest-reveal
+            >
               <p className="text-base text-[var(--color-text-muted)] leading-relaxed">
                 <strong className="text-[var(--color-brand-dark)]">
                   {t('GuestLegal.personalData.intro.referenceLabel')}
                 </strong>{' '}
                 {t('GuestLegal.personalData.intro.referenceDescription')}
               </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.gdpr')}
+                  description={t('GuestEnhancements.tooltips.gdpr')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.phi')}
+                  description={t('GuestEnhancements.tooltips.phi')}
+                />
+              </div>
+              <div className="mt-4">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
               <div className="my-4 w-12 h-1 bg-[var(--color-brand-primary)] rounded-full"></div>
               <p className="text-lg text-[var(--color-brand-dark)] font-medium leading-relaxed">
                 {t('GuestLegal.personalData.intro.commitment')}
               </p>
             </section>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   1
@@ -121,7 +157,7 @@ const PersonalDataPage = () => {
 
             <div className="w-full h-px bg-[var(--color-medical-border)]"></div>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   2
@@ -215,7 +251,7 @@ const PersonalDataPage = () => {
 
             <div className="w-full h-px bg-[var(--color-medical-border)]"></div>
 
-            <section>
+            <section data-guest-reveal>
               <h2 className="flex items-center gap-3 text-2xl font-bold text-[var(--color-brand-dark)] mb-6">
                 <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] text-lg">
                   3
@@ -247,6 +283,11 @@ const PersonalDataPage = () => {
                   </span>
                 </li>
               </ul>
+              <div className="mt-6">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </section>
           </div>
         </div>

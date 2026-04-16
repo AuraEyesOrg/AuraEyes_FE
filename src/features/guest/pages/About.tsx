@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +18,10 @@ const AboutPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -134,6 +142,12 @@ const AboutPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.about')}
+        readingTimeMinutes={3}
+        complexity="basic"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -160,6 +174,16 @@ const AboutPage = () => {
               <p className="about-hero-desc text-lg lg:text-xl text-gray-300 leading-relaxed">
                 {t('About.heroDescription')}
               </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-gray-200">
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.macular')}
+                  description={t('GuestEnhancements.tooltips.macular')}
+                />
+                <MedicalTermTooltip
+                  term={t('GuestEnhancements.terms.intravitreal')}
+                  description={t('GuestEnhancements.tooltips.intravitreal')}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -177,6 +201,11 @@ const AboutPage = () => {
               <p className="text-lg text-[var(--color-text-muted)]">
                 {t('About.values.description')}
               </p>
+              <div className="mt-5 flex justify-center">
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -212,9 +241,12 @@ const AboutPage = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to={resolvePathWithLocale('/contact')}
-                className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-3 text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
+                className="inline-flex min-h-12 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-8 py-2 text-left text-base font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-lg"
               >
-                {t('About.cta.primary')}
+                <span>{t('About.cta.primary')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.fastContact')}
+                </span>
               </Link>
             </div>
           </div>

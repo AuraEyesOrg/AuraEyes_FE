@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import SourceVerificationTag from '../components/SourceVerificationTag';
 
 export default function MaintenancePage() {
   const { t } = useTranslation();
@@ -11,6 +13,12 @@ export default function MaintenancePage() {
   return (
     <div className="min-h-screen bg-(--bg-primary) text-(--text-primary)">
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('GuestMaintenance.badge')}
+        readingTimeMinutes={2}
+        complexity="basic"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main className="relative overflow-hidden px-6 pb-20 pt-24">
         <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -19,7 +27,10 @@ export default function MaintenancePage() {
           <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-emerald-300/20 blur-3xl" />
         </div>
 
-        <section className="relative mx-auto grid w-full max-w-6xl gap-10 rounded-3xl border border-(--border-color) bg-white/70 p-8 shadow-2xl backdrop-blur-sm dark:bg-slate-900/70 md:grid-cols-2 md:p-12">
+        <section
+          className="relative mx-auto grid w-full max-w-6xl gap-10 rounded-3xl border border-(--border-color) bg-white/70 p-8 shadow-2xl backdrop-blur-sm dark:bg-slate-900/70 md:grid-cols-2 md:p-12"
+          data-guest-reveal
+        >
           <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-200">
               <Settings2 className="h-3.5 w-3.5" />
@@ -33,13 +44,19 @@ export default function MaintenancePage() {
             <p className="max-w-xl text-base leading-relaxed text-(--text-secondary)">
               {t('GuestMaintenance.description')}
             </p>
+            <SourceVerificationTag
+              label={t('GuestEnhancements.source.auraGovernance')}
+            />
 
             <div className="flex flex-wrap gap-3">
               <Link
                 to={resolvePathWithLocale('/')}
-                className="inline-flex items-center rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand/90"
+                className="inline-flex min-h-12 flex-col items-start rounded-xl bg-brand px-5 py-2 text-left text-sm font-semibold text-white transition hover:bg-brand/90"
               >
-                {t('GuestMaintenance.primaryCta')}
+                <span>{t('GuestMaintenance.primaryCta')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.quickAction')}
+                </span>
               </Link>
               <a
                 href="https://status.auraeyes.site/"

@@ -6,6 +6,10 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import GuestPageContextBar from '../components/GuestPageContextBar';
+import MedicalTermTooltip from '../components/MedicalTermTooltip';
+import SourceVerificationTag from '../components/SourceVerificationTag';
+import { prefersReducedMotion } from '../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +18,10 @@ const HowItWorksPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion()) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // Hero animations
       gsap.fromTo(
@@ -258,6 +266,12 @@ const HowItWorksPage = () => {
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
       <Header />
+      <GuestPageContextBar
+        currentLabel={t('Navigation.howItWorks')}
+        readingTimeMinutes={6}
+        complexity="moderate"
+        sourceLabel={t('GuestEnhancements.source.auraGovernance')}
+      />
 
       <main>
         {/* Hero Section */}
@@ -308,6 +322,15 @@ const HowItWorksPage = () => {
 
               {/* Hero Image */}
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[var(--color-medical-border)]">
+                <div className="absolute left-4 top-4 z-20 flex flex-col gap-1">
+                  <span className="guest-image-metadata">
+                    {t('GuestEnhancements.imageMeta.highResFundus')}
+                  </span>
+                  <span className="guest-image-metadata">
+                    {t('GuestEnhancements.imageMeta.processedLayer')}
+                  </span>
+                </div>
+
                 <div className="aspect-video bg-gradient-to-br from-[var(--color-brand-dark)] via-[var(--color-brand-primary)] to-[#0F172A] relative">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {/* Animated Eye Scanner */}
@@ -422,6 +445,25 @@ const HowItWorksPage = () => {
                 <p className="text-lg text-[var(--color-text-muted)] mb-6 leading-relaxed">
                   {t('HowItWorks.ai.description')}
                 </p>
+
+                <div className="mb-4 flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.avr')}
+                    description={t('GuestEnhancements.tooltips.avr')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.microaneurysm')}
+                    description={t('GuestEnhancements.tooltips.microaneurysm')}
+                  />
+                  <MedicalTermTooltip
+                    term={t('GuestEnhancements.terms.tortuosity')}
+                    description={t('GuestEnhancements.tooltips.tortuosity')}
+                  />
+                </div>
+
+                <SourceVerificationTag
+                  label={t('GuestEnhancements.source.auraGovernance')}
+                />
 
                 <div className="flex flex-wrap gap-3">
                   <span className="px-3 py-1.5 rounded-full bg-[var(--color-brand-primary)]/10 text-sm font-medium text-[var(--color-brand-primary)]">
@@ -559,9 +601,12 @@ const HowItWorksPage = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to={resolvePathWithLocale('/login')}
-                className="rounded-lg bg-[var(--color-brand-primary)] px-8 py-4 text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex min-h-14 flex-col items-start rounded-lg bg-[var(--color-brand-primary)] px-8 py-3 text-left text-lg font-bold text-white hover:bg-[var(--color-brand-primary)] transition-all hover:shadow-xl hover:-translate-y-1"
               >
-                {t('HowItWorks.cta.primary')}
+                <span>{t('HowItWorks.cta.primary')}</span>
+                <span className="guest-cta-subtext">
+                  {t('GuestEnhancements.ctaSubtext.quickAction')}
+                </span>
               </Link>
               <Link
                 to={resolvePathWithLocale('/contact')}
