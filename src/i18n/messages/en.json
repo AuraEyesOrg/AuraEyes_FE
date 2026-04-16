@@ -1594,8 +1594,12 @@
       "totalScreeningsTrend": "+12% this month",
       "aiModelVersion": "AI Model Version",
       "fdaCleared": "FDA Cleared Class II",
+      "servicesOnline": "Services online",
+      "servicesChecked": "{{checked}} services checked",
       "avgProcessing": "Avg. Processing",
-      "avgProcessingDetail": "Per high-res retinal scan"
+      "avgProcessingDetail": "Per high-res retinal scan",
+      "currentState": "Current state",
+      "lastCheckText": "Last full check: {{time}}"
     },
     "componentStatus": {
       "title": "Component Status",
@@ -1606,19 +1610,23 @@
     "services": {
       "aiCore": {
         "name": "AI Core Analysis Engine",
-        "description": "AI-powered retinal analysis"
+        "description": "AI-powered retinal analysis",
+        "region": "Global"
       },
       "imageApi": {
         "name": "Image Ingestion API",
-        "description": "Image upload and processing"
+        "description": "Image upload and processing",
+        "region": "API Gateway"
       },
       "providerPortal": {
         "name": "Provider Portal",
-        "description": "Authentication and user management"
+        "description": "Authentication and user management",
+        "region": "Public Search"
       },
       "patientStore": {
         "name": "Patient Data Store",
-        "description": "Encrypted database storage"
+        "description": "Encrypted database storage",
+        "region": "Knowledge Base"
       }
     },
     "trust": {
@@ -1708,6 +1716,12 @@
       "accuracyRate": "Accuracy Rate",
       "countriesReached": "Countries Reached",
       "nonProfit": "Non-Profit"
+    },
+    "liveStats": {
+      "ophthalmologists": "Verified ophthalmologists",
+      "organisations": "Partner organisations",
+      "availableSlots": "Available booking slots",
+      "resources": "Eye health resources"
     }
   },
   "EthicsPrivacy": {

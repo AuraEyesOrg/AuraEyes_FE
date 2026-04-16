@@ -1597,8 +1597,12 @@ declare module 'i18next' {
         totalScreeningsTrend: string;
         aiModelVersion: string;
         fdaCleared: string;
+        servicesOnline: string;
+        servicesChecked: string;
         avgProcessing: string;
         avgProcessingDetail: string;
+        currentState: string;
+        lastCheckText: string;
       };
       componentStatus: {
         title: string;
@@ -1610,18 +1614,22 @@ declare module 'i18next' {
         aiCore: {
           name: string;
           description: string;
+          region: string;
         };
         imageApi: {
           name: string;
           description: string;
+          region: string;
         };
         providerPortal: {
           name: string;
           description: string;
+          region: string;
         };
         patientStore: {
           name: string;
           description: string;
+          region: string;
         };
       };
       trust: {
@@ -1711,6 +1719,12 @@ declare module 'i18next' {
         accuracyRate: string;
         countriesReached: string;
         nonProfit: string;
+      };
+      liveStats: {
+        ophthalmologists: string;
+        organisations: string;
+        availableSlots: string;
+        resources: string;
       };
     };
     EthicsPrivacy: {

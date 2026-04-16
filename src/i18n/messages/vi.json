@@ -1594,8 +1594,12 @@
       "totalScreeningsTrend": "+12% trong tháng này",
       "aiModelVersion": "Phiên bản mô hình AI",
       "fdaCleared": "FDA Class II đã phê duyệt",
+      "servicesOnline": "Dịch vụ đang hoạt động",
+      "servicesChecked": "Đã kiểm tra {{checked}} dịch vụ",
       "avgProcessing": "Xử lý trung bình",
-      "avgProcessingDetail": "Mỗi ảnh võng mạc độ phân giải cao"
+      "avgProcessingDetail": "Mỗi ảnh võng mạc độ phân giải cao",
+      "currentState": "Trạng thái hiện tại",
+      "lastCheckText": "Lần kiểm tra đầy đủ gần nhất: {{time}}"
     },
     "componentStatus": {
       "title": "Trạng thái thành phần",
@@ -1606,19 +1610,23 @@
     "services": {
       "aiCore": {
         "name": "Nhân phân tích AI lõi",
-        "description": "Phân tích võng mạc bằng AI"
+        "description": "Phân tích võng mạc bằng AI",
+        "region": "Toàn cầu"
       },
       "imageApi": {
         "name": "API tiếp nhận ảnh",
-        "description": "Tải lên và xử lý hình ảnh"
+        "description": "Tải lên và xử lý hình ảnh",
+        "region": "Cổng API"
       },
       "providerPortal": {
         "name": "Cổng nhà cung cấp",
-        "description": "Xác thực và quản lý người dùng"
+        "description": "Xác thực và quản lý người dùng",
+        "region": "Tra cứu công khai"
       },
       "patientStore": {
         "name": "Kho dữ liệu bệnh nhân",
-        "description": "Lưu trữ dữ liệu được mã hóa"
+        "description": "Lưu trữ dữ liệu được mã hóa",
+        "region": "Kho tri thức"
       }
     },
     "trust": {
@@ -1708,6 +1716,12 @@
       "accuracyRate": "Tỷ lệ chính xác",
       "countriesReached": "Quốc gia đã triển khai",
       "nonProfit": "Phi lợi nhuận"
+    },
+    "liveStats": {
+      "ophthalmologists": "Bác sĩ đã xác minh",
+      "organisations": "Tổ chức đối tác",
+      "availableSlots": "Khung giờ còn trống",
+      "resources": "Tài liệu sức khỏe mắt"
     }
   },
   "EthicsPrivacy": {
