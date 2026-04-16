@@ -13,6 +13,7 @@ import {
   Shield,
   SlidersHorizontal,
   RefreshCw,
+  MessageCircle,
 } from 'lucide-react';
 import { DoctorSidebar, DoctorHeader } from '../components';
 import {
@@ -20,7 +21,11 @@ import {
   type OphthalmologistScreeningListItemDto,
 } from '../api/ophthalmologist-screenings.api';
 import { useConsultationSessions } from '@/features/consultation/hooks/use-consultation';
-import { SessionStatus } from '@/types/consultation';
+import {
+  ChatStatus,
+  SessionStatus,
+  type ConsultationSessionListDto,
+} from '@/types/consultation';
 import useAuthStore from '@/store/auth-store';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
@@ -196,6 +201,29 @@ function aiLabelForRow(
   return t('Ophthalmologist.screenings.pendingAnalysis', 'Pending analysis');
 }
 
+function toTimestamp(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
+
+function sessionSortPriority(
+  session: ConsultationSessionListDto,
+  nowMs: number
+): { bucket: number; weight: number } {
+  const appointmentMs = toTimestamp(session.appointmentTime);
+  if (appointmentMs != null && appointmentMs >= nowMs) {
+    // Upcoming consultation should be shown first.
+    return { bucket: 0, weight: appointmentMs };
+  }
+  if (appointmentMs != null) {
+    // Past consultations sorted by most recent first.
+    return { bucket: 1, weight: -appointmentMs };
+  }
+  const createdMs = toTimestamp(session.createdAt);
+  return { bucket: 2, weight: -(createdMs ?? 0) };
+}
+
 type SortMode = 'priority' | 'date';
 const SCREENINGS_PAGE_SIZE = 8;
 
@@ -253,24 +281,112 @@ export default function ScreeningsPage() {
     }
   }, [loadError]);
 
-  const completedConsultationByScreeningId = useMemo(() => {
+  const sessionInsights = useMemo(() => {
     const sessionItems = consultationSessionsQuery.data?.items ?? [];
+    const nowMs = Date.now();
     const completedMap = new Map<string, boolean>();
+    const bestSessionByScreeningId = new Map<
+      string,
+      ConsultationSessionListDto
+    >();
+    const bestSessionByPatientId = new Map<
+      string,
+      ConsultationSessionListDto
+    >();
 
     sessionItems.forEach((session) => {
-      if (session.status !== SessionStatus.Completed) return;
-
       const sessionScreeningId =
         session.caseSnapshot?.screeningId ??
         (session as { aiScreeningId?: string | null }).aiScreeningId ??
         null;
 
       if (!sessionScreeningId) return;
-      completedMap.set(sessionScreeningId.toLowerCase(), true);
+      const screeningKey = sessionScreeningId.toLowerCase();
+      const isConsultationSession =
+        session.chatStatus === ChatStatus.Open ||
+        session.chatStatus === ChatStatus.Locked ||
+        session.chatStatus === ChatStatus.MemoOnly ||
+        session.status === SessionStatus.Pending ||
+        session.status === SessionStatus.Confirmed ||
+        session.status === SessionStatus.Completed;
+
+      if (session.status === SessionStatus.Completed) {
+        completedMap.set(screeningKey, true);
+      }
+
+      if (
+        !isConsultationSession ||
+        session.status === SessionStatus.Cancelled
+      ) {
+        return;
+      }
+
+      const existing = bestSessionByScreeningId.get(screeningKey);
+      if (!existing) {
+        bestSessionByScreeningId.set(screeningKey, session);
+        return;
+      }
+
+      const nextRank = sessionSortPriority(session, nowMs);
+      const currentRank = sessionSortPriority(existing, nowMs);
+      if (
+        nextRank.bucket < currentRank.bucket ||
+        (nextRank.bucket === currentRank.bucket &&
+          nextRank.weight < currentRank.weight)
+      ) {
+        bestSessionByScreeningId.set(screeningKey, session);
+      }
     });
 
-    return completedMap;
+    sessionItems.forEach((session) => {
+      if (!session.patientId) return;
+      if (session.status === SessionStatus.Cancelled) return;
+      const patientKey = session.patientId.toLowerCase();
+      const existing = bestSessionByPatientId.get(patientKey);
+      if (!existing) {
+        bestSessionByPatientId.set(patientKey, session);
+        return;
+      }
+      const nextRank = sessionSortPriority(session, nowMs);
+      const currentRank = sessionSortPriority(existing, nowMs);
+      if (
+        nextRank.bucket < currentRank.bucket ||
+        (nextRank.bucket === currentRank.bucket &&
+          nextRank.weight < currentRank.weight)
+      ) {
+        bestSessionByPatientId.set(patientKey, session);
+      }
+    });
+
+    return { completedMap, bestSessionByScreeningId, bestSessionByPatientId };
   }, [consultationSessionsQuery.data?.items]);
+
+  const completedConsultationByScreeningId = sessionInsights.completedMap;
+  const linkedSessionByScreeningId = sessionInsights.bestSessionByScreeningId;
+  const linkedSessionByPatientId = sessionInsights.bestSessionByPatientId;
+
+  const getLinkedSession = useCallback(
+    (
+      row: OphthalmologistScreeningListItemDto
+    ): ConsultationSessionListDto | null => {
+      const screeningKey = row.screeningId.toLowerCase();
+      const direct = linkedSessionByScreeningId.get(screeningKey);
+      if (direct) return direct;
+      const patientKey = row.patientId.toLowerCase();
+      return linkedSessionByPatientId.get(patientKey) ?? null;
+    },
+    [linkedSessionByPatientId, linkedSessionByScreeningId]
+  );
+
+  const getSortTimestamp = useCallback(
+    (row: OphthalmologistScreeningListItemDto): number => {
+      const linkedSession = getLinkedSession(row);
+      const appointmentMs = toTimestamp(linkedSession?.appointmentTime);
+      if (appointmentMs != null) return appointmentMs;
+      return toTimestamp(row.createdAt) ?? 0;
+    },
+    [getLinkedSession]
+  );
 
   const getEffectiveReviewStatus = useCallback(
     (row: OphthalmologistScreeningListItemDto): string => {
@@ -321,15 +437,10 @@ export default function ScreeningsPage() {
         const riskA = getRiskLevel(a, t).priority;
         const riskB = getRiskLevel(b, t).priority;
         if (riskA !== riskB) return riskA - riskB;
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        return getSortTimestamp(a) - getSortTimestamp(b);
       });
     } else {
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      filtered.sort((a, b) => getSortTimestamp(a) - getSortTimestamp(b));
     }
 
     return filtered;
@@ -340,6 +451,7 @@ export default function ScreeningsPage() {
     selectedStatus,
     sortMode,
     t,
+    getSortTimestamp,
   ]);
 
   useEffect(() => {
@@ -587,15 +699,33 @@ export default function ScreeningsPage() {
                 const confidenceColor = getConfidenceColor(confidence);
                 const confidenceLabel = getConfidenceLabel(confidence, t);
                 const created = new Date(screening.createdAt);
-                const dateStr = created.toLocaleDateString(undefined, {
+                const linkedSession = getLinkedSession(screening);
+                const consultationTimeMs = toTimestamp(
+                  linkedSession?.appointmentTime
+                );
+                const dateSource =
+                  consultationTimeMs != null
+                    ? new Date(consultationTimeMs)
+                    : created;
+                const dateStr = dateSource.toLocaleDateString(undefined, {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
                 });
-                const timeStr = created.toLocaleTimeString(undefined, {
+                const timeStr = dateSource.toLocaleTimeString(undefined, {
                   hour: '2-digit',
                   minute: '2-digit',
                 });
+                const dateTitle =
+                  consultationTimeMs != null
+                    ? t(
+                        'Ophthalmologist.screenings.consultationDate',
+                        'Consultation date'
+                      )
+                    : t(
+                        'Ophthalmologist.screenings.createdDate',
+                        'Created date'
+                      );
                 const aiLabel = aiLabelForRow(screening, t);
                 const isPending = effectiveReviewStatus === 'pending-review';
                 const isFlagged = effectiveReviewStatus === 'flagged';
@@ -666,12 +796,6 @@ export default function ScreeningsPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {t(
-                                  'Ophthalmologist.screenings.confidence',
-                                  'Confidence'
-                                )}
-                              </span>
                               <div className="flex items-center gap-2">
                                 <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                   <div
@@ -702,7 +826,7 @@ export default function ScreeningsPage() {
                           <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
                             <span className="flex items-center gap-1.5">
                               <Calendar size={12} />
-                              {dateStr}
+                              {dateTitle}: {dateStr}
                             </span>
                             <span className="flex items-center gap-1.5">
                               <Clock size={12} />
@@ -720,41 +844,69 @@ export default function ScreeningsPage() {
                         </div>
 
                         {/* Action button */}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(
-                              `/ophthalmologist/screenings/${screening.screeningId}/review`
-                            )
-                          }
-                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0 ${
-                            isPending
-                              ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-sm hover:shadow-md hover:shadow-cyan-500/25'
-                              : isFlagged
-                                ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
-                          }`}
-                        >
-                          {isPending ? (
-                            <>
-                              <Eye className="w-4 h-4" />
-                              {t(
-                                'Ophthalmologist.screenings.reviewNow',
-                                'Review Now'
-                              )}
-                            </>
-                          ) : isFlagged ? (
-                            <>
-                              <AlertTriangle className="w-4 h-4" />
-                              {t('Ophthalmologist.screenings.review', 'Review')}
-                            </>
-                          ) : (
-                            <>
-                              {t('Ophthalmologist.common.view', 'View')}
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </>
-                          )}
-                        </button>
+                        <div className="flex shrink-0 flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/ophthalmologist/screenings/${screening.screeningId}/review`
+                              )
+                            }
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                              isPending
+                                ? 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-sm hover:shadow-md hover:shadow-cyan-500/25'
+                                : isFlagged
+                                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
+                                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1e3a5f]'
+                            }`}
+                          >
+                            {isPending ? (
+                              <>
+                                <Eye className="w-4 h-4" />
+                                {t(
+                                  'Ophthalmologist.screenings.reviewNow',
+                                  'Review Now'
+                                )}
+                              </>
+                            ) : isFlagged ? (
+                              <>
+                                <AlertTriangle className="w-4 h-4" />
+                                {t(
+                                  'Ophthalmologist.screenings.review',
+                                  'Review'
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {t('Ophthalmologist.common.view', 'View')}
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const patientId = encodeURIComponent(
+                                screening.patientId
+                              );
+                              const sessionId = linkedSession?.id
+                                ? encodeURIComponent(linkedSession.id)
+                                : null;
+                              const base = `/ophthalmologist/consultations?patientId=${patientId}`;
+                              const url = sessionId
+                                ? `${base}&sessionId=${sessionId}`
+                                : base;
+                              navigate(url);
+                            }}
+                            className="flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/30"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            {t(
+                              'Ophthalmologist.screenings.openChat',
+                              'Open Chat'
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

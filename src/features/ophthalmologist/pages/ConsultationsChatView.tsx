@@ -10,6 +10,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Activity,
   Archive,
@@ -764,6 +765,8 @@ export default function ConsultationsChatView({
   sessionsLoading,
 }: ConsultationsChatViewProps) {
   const { t } = useSafeTranslation();
+  const [searchParams] = useSearchParams();
+  const urlSessionId = searchParams.get('sessionId');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
@@ -972,10 +975,18 @@ export default function ConsultationsChatView({
       return;
     }
 
+    if (
+      urlSessionId &&
+      chatSessions.some((session) => session.id === urlSessionId)
+    ) {
+      setSelectedSessionId(urlSessionId);
+      return;
+    }
+
     if (chatSessions.length > 0) {
       setSelectedSessionId(chatSessions[0].id);
     }
-  }, [chatSessions, selectedSessionId]);
+  }, [chatSessions, selectedSessionId, urlSessionId]);
 
   useEffect(() => {
     setSessionUnreadMap((previous) => {
@@ -1715,9 +1726,9 @@ export default function ConsultationsChatView({
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="flex flex-col items-start gap-1 sm:items-end">
-                  <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center sm:gap-2">
+                <div className="flex w-full flex-col items-start gap-1 sm:w-auto sm:items-end">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                     {canCancelCurrentSession && (
                       <button
                         onClick={() => handleCancelSession(currentSession.id)}
@@ -1832,7 +1843,7 @@ export default function ConsultationsChatView({
                           'Show session overview'
                         )
                   }
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:text-cyan-600 dark:bg-[#0a1f44] dark:border-[#1e3a5f] dark:text-gray-300"
                 >
                   {isSessionOverviewOpen ? (
                     <X className="h-4 w-4" />

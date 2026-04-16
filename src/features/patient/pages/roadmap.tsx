@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -11,9 +11,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import PatientLayout from '../components/PatientLayout';
 import { formatShortDate } from '@/lib/date-utils';
 import { getRoadmaps } from '../api/patient.api';
+import { generateHealthRoadmapPdf } from '../utils/roadmapPdfGenerator';
 import type { HealthRoadmap } from '../types';
 import { getLocaleFromPathname, withLocalePathname } from '@/i18n/locales';
 
@@ -103,6 +105,7 @@ const highlightMedicalKeywords = (text: string) => {
 export default function RoadmapPage() {
   const location = useLocation();
   const currentLocale = getLocaleFromPathname(location.pathname) ?? 'vi';
+  const [isDownloadingRoadmapPdf, setIsDownloadingRoadmapPdf] = useState(false);
 
   const roadmapQuery = useQuery({
     queryKey: ['patient', 'roadmaps'],
@@ -117,13 +120,32 @@ export default function RoadmapPage() {
   const localizedPath = (pathname: string) =>
     withLocalePathname(currentLocale, pathname);
 
-  const ctaLinks = useMemo(
-    () => ({
-      viewDiagnosis: `${localizedPath('/patient/screening')}?openDiagnosis=latest`,
-      downloadReport: `${localizedPath('/patient/screening')}?diagnosisId=${latestRoadmap?.medicalDiagnosisId ?? ''}`,
-    }),
-    [currentLocale, latestRoadmap?.medicalDiagnosisId]
-  );
+  const ctaLinks = useMemo(() => {
+    const fallbackDiagnosisPath = `${localizedPath('/patient/screening')}?openDiagnosis=latest`;
+
+    return {
+      viewDiagnosis: latestRoadmap?.screeningId
+        ? `${localizedPath('/patient/screening')}?screeningId=${latestRoadmap.screeningId}`
+        : fallbackDiagnosisPath,
+    };
+  }, [currentLocale, latestRoadmap?.screeningId]);
+
+  const handleDownloadRoadmapPdf = async () => {
+    if (!latestRoadmap || isDownloadingRoadmapPdf) {
+      return;
+    }
+
+    try {
+      setIsDownloadingRoadmapPdf(true);
+      await generateHealthRoadmapPdf(latestRoadmap);
+      toast.success('Roadmap PDF downloaded successfully.');
+    } catch (error) {
+      console.error('Failed to download roadmap PDF:', error);
+      toast.error('Failed to download roadmap PDF. Please try again.');
+    } finally {
+      setIsDownloadingRoadmapPdf(false);
+    }
+  };
 
   const timelineItems = useMemo(() => {
     if (!latestRoadmap) {
@@ -281,13 +303,15 @@ export default function RoadmapPage() {
                 <FileSearch className="w-4.5 h-4.5" />
                 View Diagnosis
               </Link>
-              <Link
-                to={ctaLinks.downloadReport}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
+              <button
+                type="button"
+                onClick={handleDownloadRoadmapPdf}
+                disabled={isDownloadingRoadmapPdf}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FileDown className="w-4.5 h-4.5" />
-                Download Report
-              </Link>
+                {isDownloadingRoadmapPdf ? 'Preparing PDF...' : 'Download PDF'}
+              </button>
             </div>
           </div>
         </section>

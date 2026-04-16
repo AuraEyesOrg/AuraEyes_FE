@@ -727,20 +727,6 @@ export default function ScreeningPage() {
                         <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
                           <p className="text-(--text-muted) text-xs uppercase tracking-wide">
                             {t(
-                              'PatientScreening.diagnosis.fields.confidenceLevel',
-                              'Confidence Level'
-                            )}
-                          </p>
-                          <p className="text-(--text-primary) mt-1">
-                            {selectedReport.medicalDiagnosis?.confidenceLevel !=
-                            null
-                              ? `${selectedReport.medicalDiagnosis.confidenceLevel}%`
-                              : diagnosisNotAvailable}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-(--border-color) bg-(--bg-secondary) p-3">
-                          <p className="text-(--text-muted) text-xs uppercase tracking-wide">
-                            {t(
                               'PatientScreening.diagnosis.fields.clinicalStatus',
                               'Clinical Status'
                             )}

@@ -325,7 +325,9 @@ function SummaryCard({
         <Wallet className="w-4 h-4" />
         <p className="text-sm">{title}</p>
       </div>
-      <p className="text-xl font-bold">{value}</p>
+      <p className="min-w-0 break-words leading-tight text-xl font-bold">
+        {value}
+      </p>
     </div>
   );
 }

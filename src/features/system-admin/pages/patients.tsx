@@ -28,6 +28,7 @@ import {
   type PatientMetricsDto,
 } from '../api/patient.api';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { formatViDate } from '@/lib/date-utils';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
 
@@ -44,9 +45,7 @@ const mapToUiPatient = (item: PatientListItem): Patient => ({
   ...item,
   name: item.fullName,
   status: item.isWalkIn ? 'active' : item.isActive ? 'active' : 'locked',
-  lastScreening: item.lastLoginAt
-    ? new Date(item.lastLoginAt).toLocaleDateString()
-    : undefined,
+  lastScreening: item.lastLoginAt ? formatViDate(item.lastLoginAt) : undefined,
   emailVerified: item.emailConfirmed,
   patientTypeLabel: item.isWalkIn ? 'Walk-in' : 'Registered',
 });
@@ -176,8 +175,6 @@ export default function PatientsPage() {
       await downloadXlsxFile(
         patientsForExport,
         [
-          { header: 'Patient ID', value: (row) => row.id },
-          { header: 'User ID', value: (row) => row.userId ?? '' },
           { header: 'Full Name', value: (row) => row.fullName },
           { header: 'Email', value: (row) => row.email ?? '' },
           { header: 'Phone', value: (row) => row.phone ?? '' },
@@ -214,7 +211,6 @@ export default function PatientsPage() {
   };
 
   const patientColumns: TableColumn<Patient>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
       header: 'Patient',
       accessor: 'name',
@@ -263,13 +259,17 @@ export default function PatientsPage() {
       ),
     },
     { header: 'Last Login', accessor: 'lastScreening' },
-    { header: 'Joined', accessor: 'createdAt' },
+    {
+      header: 'Joined',
+      accessor: 'createdAt',
+      render: (value) => formatViDate(String(value ?? '')),
+    },
     {
       header: 'Status',
       accessor: 'status',
       render: (value, row) => {
         if (row.isWalkIn) {
-          return <StatusBadge status="info" label="Walk-in" />;
+          return <StatusBadge status="success" label="Active" />;
         }
 
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
@@ -398,7 +398,7 @@ export default function PatientsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or ID..."
+                  placeholder="Search by name or email..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
