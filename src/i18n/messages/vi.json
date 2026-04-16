@@ -546,7 +546,9 @@
       "saving": "Đang lưu...",
       "severity": {
         "mild": "Nhẹ",
-        "severe": "Nặng"
+        "severe": "Nặng",
+        "critical": "Critical",
+        "moderate": "Moderate"
       },
       "showing": "Hiển thị",
       "status": {
@@ -555,7 +557,14 @@
         "reviewed": "Đã rà soát"
       },
       "submitting": "Đang gửi...",
-      "view": "Xem"
+      "view": "Xem",
+      "confirm": "Confirm",
+      "fullName": "Full Name",
+      "loading": "Loading...",
+      "nextPage": "Next",
+      "notAvailable": "N/A",
+      "previousPage": "Previous",
+      "submitRequest": "Submit Request"
     },
     "header": {
       "pages": "Trang",
@@ -664,6 +673,17 @@
       "operationalSummary": {
         "title": "Tóm tắt vận hành",
         "description": "Bảng điều khiển này lấy dữ liệu trực tiếp từ các phiên tư vấn, kết quả sàng lọc, lịch hẹn và slot lịch làm việc. Dữ liệu giả của hàng đợi sàng lọc và cảnh báo khẩn đã được loại bỏ để trang chỉ phản ánh trạng thái backend hiện tại."
+      },
+      "priorityList": {
+        "confidence": "AI confidence",
+        "description": "Prioritized queue from pending consultations linked to high-risk AI results.",
+        "empty": "No pending high-risk or critical consultation at the moment.",
+        "noSchedule": "No fixed schedule",
+        "patient": "Patient",
+        "schedule": "Schedule",
+        "sessionId": "Session",
+        "title": "Priority List - High Risk / Critical Cases",
+        "viewAll": "View all consultations"
       }
     },
     "settings": {
@@ -761,6 +781,24 @@
         "title": "Vùng nguy hiểm",
         "deactivate": "Vô hiệu hóa tài khoản",
         "description": "Tạm thời vô hiệu hóa tài khoản của bạn"
+      },
+      "editModal": {
+        "bioDescription": "Bio / Description",
+        "fullName": "Full Name",
+        "phoneNumber": "Phone Number",
+        "saveChanges": "Save Changes",
+        "title": "Edit Profile Information"
+      },
+      "toast": {
+        "avatarUploaded": "Avatar uploaded successfully.",
+        "avatarUploadFailed": "Unable to upload avatar right now. Please try again.",
+        "fullNameRequired": "Full name is required.",
+        "profileUpdated": "Profile updated successfully.",
+        "profileUpdateFailed": "Unable to update profile right now. Please try again."
+      },
+      "validation": {
+        "avatarFileSize": "File must be smaller than 5MB",
+        "avatarFileType": "Invalid file type. Supported: JPG, PNG, GIF, WebP"
       }
     },
     "appointments": {
@@ -811,7 +849,20 @@
         "past": "Đã qua",
         "today": "Hôm nay",
         "upcoming": "Sắp tới"
-      }
+      },
+      "countdown": {
+        "daysShort": "d",
+        "hoursShort": "h",
+        "in": "In",
+        "minutesShort": "m",
+        "startsIn": "Starts in"
+      },
+      "emptySearch": "No results match your search. Try different keywords.",
+      "emptyTab": "No appointments in this category yet.",
+      "joinCall": "Join Call",
+      "now": "Now",
+      "openPatientConversation": "Patient Chat",
+      "todayTimeline": "Today"
     },
     "schedules": {
       "title": "Quản lý lịch làm việc",
@@ -844,6 +895,16 @@
         "slotType": "Loại slot",
         "costOptional": "Chi phí (tùy chọn)",
         "createSlot": "Tạo cuộc hẹn"
+      },
+      "toast": {
+        "cancelError": "Failed to cancel slot. Please try again.",
+        "cancelSuccess": "Slot cancelled successfully.",
+        "createSuccess": "Time slot created successfully."
+      },
+      "validation": {
+        "invalidCost": "Cost must be a non-negative number.",
+        "invalidRange": "End time must be after start time.",
+        "missingDateTime": "Please select date and time range."
       }
     },
     "consultations": {
@@ -1003,7 +1064,14 @@
         "pastOnly": "Chỉ đã qua"
       },
       "emptyTitle": "Không tìm thấy bệnh nhân",
-      "message": "Nhắn tin"
+      "message": "Nhắn tin",
+      "chart": {
+        "oneMonthAgo": "1 mo",
+        "thisMonth": "This",
+        "twoMonthsAgo": "2 mo"
+      },
+      "emptySearch": "No patients match your search. Try different keywords.",
+      "lastDiagnosis": "Last diagnosis:"
     },
     "slotManagement": {
       "title": "Slot lịch hẹn",
@@ -1078,6 +1146,17 @@
         "missingGenerateInputs": "Vui lòng chọn mẫu và khoảng ngày trước khi sinh slot.",
         "failedGenerate": "Không thể sinh slot.",
         "failedDeleteTemplate": "Không thể xóa mẫu."
+      },
+      "pricing": {
+        "allowedRangeHint": "Allowed Range Hint",
+        "allowedRangeLabel": "Allowed Range Label",
+        "costRequired": "Cost is required for part-time doctors.",
+        "experienceLabel": "Experience Label",
+        "outOfRange": "Out Of Range",
+        "positiveIntegerOnly": "Cost must be a positive integer.",
+        "rangeLoadFailed": "Unable to load your allowed price range. Please refresh and try again.",
+        "rangeLoading": "Pricing range is loading. Please try again in a moment.",
+        "suggestedHint": "Suggested Hint"
       }
     },
     "contract": {
@@ -1133,9 +1212,12 @@
           "downloadPrint": "Tải và in hợp đồng",
           "signStamp": "Ký tên và đóng dấu",
           "captureUpload": "Chụp ảnh và upload"
-        }
+        },
+        "uploadSuccess": "Signed contract uploaded successfully."
       },
-      "commission": "Hoa hồng"
+      "commission": "Hoa hồng",
+      "actualSalary": "Actual salary",
+      "pendingDeal": "Pending deal"
     },
     "screeningReview": {
       "note": "Lưu ý:",
@@ -1297,9 +1379,26 @@
         "approved": "Đã duyệt",
         "flagged": "Cần chú ý",
         "rejected": "Từ chối",
-        "reviewed": "Đã rà soát"
+        "reviewed": "Đã rà soát",
+        "pendingReview": "Pending Review"
       },
-      "title": "Sàng lọc"
+      "title": "Sàng lọc",
+      "aiPrediction": "AI Prediction",
+      "consultationDate": "Consultation date",
+      "createdDate": "Created date",
+      "empty": {
+        "default": "Screenings appear here when a patient books a consultation that includes an AI screening linked to you.",
+        "filtered": "No screenings match your current filters. Try adjusting your search or status filter.",
+        "title": "No Screenings Found"
+      },
+      "loadError": "Could not load screenings. Please try again.",
+      "loading": "Loading screenings...",
+      "needsAttention": "Needs attention",
+      "openChat": "Open Chat",
+      "reviewNow": "Review Now",
+      "searchPlaceholder": "Search by patient name or screening ID...",
+      "subtitle": "AI screening results for your patients - sorted by urgency",
+      "toggleSortOrder": "Toggle sort order"
     },
     "wallet": {
       "balance": "Số dư hiện tại",

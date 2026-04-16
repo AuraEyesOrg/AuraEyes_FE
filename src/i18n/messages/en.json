@@ -546,7 +546,9 @@
       "saving": "Saving...",
       "severity": {
         "mild": "Mild",
-        "severe": "Severe"
+        "severe": "Severe",
+        "critical": "Critical",
+        "moderate": "Moderate"
       },
       "showing": "Showing",
       "status": {
@@ -555,7 +557,14 @@
         "reviewed": "Reviewed"
       },
       "submitting": "Submitting...",
-      "view": "View"
+      "view": "View",
+      "confirm": "Confirm",
+      "fullName": "Full Name",
+      "loading": "Loading...",
+      "nextPage": "Next",
+      "notAvailable": "N/A",
+      "previousPage": "Previous",
+      "submitRequest": "Submit Request"
     },
     "header": {
       "pages": "Pages",
@@ -664,6 +673,17 @@
       "operationalSummary": {
         "title": "Operational Summary",
         "description": "This dashboard now streams data from consultation sessions, screening outcomes, appointment bookings, and schedule slots. Mock screening queue and urgent alert metrics were removed so the page reflects current backend state only."
+      },
+      "priorityList": {
+        "confidence": "AI confidence",
+        "description": "Prioritized queue from pending consultations linked to high-risk AI results.",
+        "empty": "No pending high-risk or critical consultation at the moment.",
+        "noSchedule": "No fixed schedule",
+        "patient": "Patient",
+        "schedule": "Schedule",
+        "sessionId": "Session",
+        "title": "Priority List - High Risk / Critical Cases",
+        "viewAll": "View all consultations"
       }
     },
     "settings": {
@@ -761,6 +781,24 @@
         "title": "Danger Zone",
         "deactivate": "Deactivate Account",
         "description": "Temporarily deactivate your account"
+      },
+      "editModal": {
+        "bioDescription": "Bio / Description",
+        "fullName": "Full Name",
+        "phoneNumber": "Phone Number",
+        "saveChanges": "Save Changes",
+        "title": "Edit Profile Information"
+      },
+      "toast": {
+        "avatarUploaded": "Avatar uploaded successfully.",
+        "avatarUploadFailed": "Unable to upload avatar right now. Please try again.",
+        "fullNameRequired": "Full name is required.",
+        "profileUpdated": "Profile updated successfully.",
+        "profileUpdateFailed": "Unable to update profile right now. Please try again."
+      },
+      "validation": {
+        "avatarFileSize": "File must be smaller than 5MB",
+        "avatarFileType": "Invalid file type. Supported: JPG, PNG, GIF, WebP"
       }
     },
     "appointments": {
@@ -811,7 +849,20 @@
         "past": "Past",
         "today": "Today",
         "upcoming": "Upcoming"
-      }
+      },
+      "countdown": {
+        "daysShort": "d",
+        "hoursShort": "h",
+        "in": "In",
+        "minutesShort": "m",
+        "startsIn": "Starts in"
+      },
+      "emptySearch": "No results match your search. Try different keywords.",
+      "emptyTab": "No appointments in this category yet.",
+      "joinCall": "Join Call",
+      "now": "Now",
+      "openPatientConversation": "Patient Chat",
+      "todayTimeline": "Today"
     },
     "schedules": {
       "title": "Schedule Management",
@@ -844,6 +895,16 @@
         "slotType": "Slot Type",
         "costOptional": "Cost (optional)",
         "createSlot": "Create Slot"
+      },
+      "toast": {
+        "cancelError": "Failed to cancel slot. Please try again.",
+        "cancelSuccess": "Slot cancelled successfully.",
+        "createSuccess": "Time slot created successfully."
+      },
+      "validation": {
+        "invalidCost": "Cost must be a non-negative number.",
+        "invalidRange": "End time must be after start time.",
+        "missingDateTime": "Please select date and time range."
       }
     },
     "consultations": {
@@ -1003,7 +1064,14 @@
         "pastOnly": "Past Only"
       },
       "emptyTitle": "No Patients Found",
-      "message": "Message"
+      "message": "Message",
+      "chart": {
+        "oneMonthAgo": "1 mo",
+        "thisMonth": "This",
+        "twoMonthsAgo": "2 mo"
+      },
+      "emptySearch": "No patients match your search. Try different keywords.",
+      "lastDiagnosis": "Last diagnosis:"
     },
     "slotManagement": {
       "title": "Appointment Slots",
@@ -1078,6 +1146,17 @@
         "missingGenerateInputs": "Please choose a template and date range before generating.",
         "failedGenerate": "Failed to generate slots.",
         "failedDeleteTemplate": "Failed to delete template."
+      },
+      "pricing": {
+        "allowedRangeHint": "Allowed Range Hint",
+        "allowedRangeLabel": "Allowed Range Label",
+        "costRequired": "Cost is required for part-time doctors.",
+        "experienceLabel": "Experience Label",
+        "outOfRange": "Out Of Range",
+        "positiveIntegerOnly": "Cost must be a positive integer.",
+        "rangeLoadFailed": "Unable to load your allowed price range. Please refresh and try again.",
+        "rangeLoading": "Pricing range is loading. Please try again in a moment.",
+        "suggestedHint": "Suggested Hint"
       }
     },
     "contract": {
@@ -1133,9 +1212,12 @@
           "downloadPrint": "Download and print contract",
           "signStamp": "Sign and stamp",
           "captureUpload": "Capture and upload"
-        }
+        },
+        "uploadSuccess": "Signed contract uploaded successfully."
       },
-      "commission": "Commission"
+      "commission": "Commission",
+      "actualSalary": "Actual salary",
+      "pendingDeal": "Pending deal"
     },
     "screeningReview": {
       "note": "Note:",
@@ -1297,9 +1379,26 @@
         "approved": "Approved",
         "flagged": "Flagged",
         "rejected": "Rejected",
-        "reviewed": "Reviewed"
+        "reviewed": "Reviewed",
+        "pendingReview": "Pending Review"
       },
-      "title": "Screenings"
+      "title": "Screenings",
+      "aiPrediction": "AI Prediction",
+      "consultationDate": "Consultation date",
+      "createdDate": "Created date",
+      "empty": {
+        "default": "Screenings appear here when a patient books a consultation that includes an AI screening linked to you.",
+        "filtered": "No screenings match your current filters. Try adjusting your search or status filter.",
+        "title": "No Screenings Found"
+      },
+      "loadError": "Could not load screenings. Please try again.",
+      "loading": "Loading screenings...",
+      "needsAttention": "Needs attention",
+      "openChat": "Open Chat",
+      "reviewNow": "Review Now",
+      "searchPlaceholder": "Search by patient name or screening ID...",
+      "subtitle": "AI screening results for your patients - sorted by urgency",
+      "toggleSortOrder": "Toggle sort order"
     },
     "wallet": {
       "balance": "Current balance",

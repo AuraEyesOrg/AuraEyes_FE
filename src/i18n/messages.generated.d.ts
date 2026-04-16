@@ -550,6 +550,8 @@ declare module 'i18next' {
         severity: {
           mild: string;
           severe: string;
+          critical: string;
+          moderate: string;
         };
         showing: string;
         status: {
@@ -559,6 +561,13 @@ declare module 'i18next' {
         };
         submitting: string;
         view: string;
+        confirm: string;
+        fullName: string;
+        loading: string;
+        nextPage: string;
+        notAvailable: string;
+        previousPage: string;
+        submitRequest: string;
       };
       header: {
         pages: string;
@@ -668,6 +677,17 @@ declare module 'i18next' {
           title: string;
           description: string;
         };
+        priorityList: {
+          confidence: string;
+          description: string;
+          empty: string;
+          noSchedule: string;
+          patient: string;
+          schedule: string;
+          sessionId: string;
+          title: string;
+          viewAll: string;
+        };
       };
       settings: {
         defaults: {
@@ -765,6 +785,24 @@ declare module 'i18next' {
           deactivate: string;
           description: string;
         };
+        editModal: {
+          bioDescription: string;
+          fullName: string;
+          phoneNumber: string;
+          saveChanges: string;
+          title: string;
+        };
+        toast: {
+          avatarUploaded: string;
+          avatarUploadFailed: string;
+          fullNameRequired: string;
+          profileUpdated: string;
+          profileUpdateFailed: string;
+        };
+        validation: {
+          avatarFileSize: string;
+          avatarFileType: string;
+        };
       };
       appointments: {
         title: string;
@@ -815,6 +853,19 @@ declare module 'i18next' {
           today: string;
           upcoming: string;
         };
+        countdown: {
+          daysShort: string;
+          hoursShort: string;
+          in: string;
+          minutesShort: string;
+          startsIn: string;
+        };
+        emptySearch: string;
+        emptyTab: string;
+        joinCall: string;
+        now: string;
+        openPatientConversation: string;
+        todayTimeline: string;
       };
       schedules: {
         title: string;
@@ -847,6 +898,16 @@ declare module 'i18next' {
           slotType: string;
           costOptional: string;
           createSlot: string;
+        };
+        toast: {
+          cancelError: string;
+          cancelSuccess: string;
+          createSuccess: string;
+        };
+        validation: {
+          invalidCost: string;
+          invalidRange: string;
+          missingDateTime: string;
         };
       };
       consultations: {
@@ -1007,6 +1068,13 @@ declare module 'i18next' {
         };
         emptyTitle: string;
         message: string;
+        chart: {
+          oneMonthAgo: string;
+          thisMonth: string;
+          twoMonthsAgo: string;
+        };
+        emptySearch: string;
+        lastDiagnosis: string;
       };
       slotManagement: {
         title: string;
@@ -1082,6 +1150,17 @@ declare module 'i18next' {
           failedGenerate: string;
           failedDeleteTemplate: string;
         };
+        pricing: {
+          allowedRangeHint: string;
+          allowedRangeLabel: string;
+          costRequired: string;
+          experienceLabel: string;
+          outOfRange: string;
+          positiveIntegerOnly: string;
+          rangeLoadFailed: string;
+          rangeLoading: string;
+          suggestedHint: string;
+        };
       };
       contract: {
         title: string;
@@ -1137,8 +1216,11 @@ declare module 'i18next' {
             signStamp: string;
             captureUpload: string;
           };
+          uploadSuccess: string;
         };
         commission: string;
+        actualSalary: string;
+        pendingDeal: string;
       };
       screeningReview: {
         note: string;
@@ -1301,8 +1383,25 @@ declare module 'i18next' {
           flagged: string;
           rejected: string;
           reviewed: string;
+          pendingReview: string;
         };
         title: string;
+        aiPrediction: string;
+        consultationDate: string;
+        createdDate: string;
+        empty: {
+          default: string;
+          filtered: string;
+          title: string;
+        };
+        loadError: string;
+        loading: string;
+        needsAttention: string;
+        openChat: string;
+        reviewNow: string;
+        searchPlaceholder: string;
+        subtitle: string;
+        toggleSortOrder: string;
       };
       wallet: {
         balance: string;
