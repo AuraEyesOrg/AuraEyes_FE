@@ -23,6 +23,7 @@ import '@/styles/auth-animations.css';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { PremiumLanguageSwitcher } from '@/components/ui/PremiumLanguageSwitcher';
 import { ThemeToggleButton } from '@/components/ui/theme-toggle-button';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   DEFAULT_LOCALE,
@@ -75,6 +76,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
+  const { theme } = useTheme();
   const { login: authLogin } = useAuthStore();
   const resolvedLanguage = (i18n.resolvedLanguage ?? i18n.language ?? '').split(
     '-'
@@ -472,7 +474,10 @@ const LoginPage = () => {
       </div>
 
       {/* Right Panel: Interaction Workspace */}
-      <div className="lg:w-[60%] w-full bg-white flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto">
+      <div
+        className="lg:w-[60%] w-full bg-white dark:bg-[#020617] flex flex-col items-center justify-center p-6 sm:p-12 lg:p-24 relative overflow-y-auto"
+        data-auth-shell
+      >
         <div className="absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-6 sm:top-6">
           <PremiumLanguageSwitcher />
           <ThemeToggleButton />
@@ -660,6 +665,7 @@ const LoginPage = () => {
                     ref={recaptchaRef}
                     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                     hl={uiLocale}
+                    theme={theme === 'dark' ? 'dark' : 'light'}
                     onChange={(token) => setRecaptchaToken(token)}
                     onExpired={() => setRecaptchaToken(null)}
                     onErrored={() => setRecaptchaToken(null)}
@@ -702,7 +708,7 @@ const LoginPage = () => {
                       text="signin_with"
                       shape="circle"
                       width="280"
-                      theme="outline"
+                      theme={theme === 'dark' ? 'filled_black' : 'outline'}
                     />
                   </div>
                 </div>

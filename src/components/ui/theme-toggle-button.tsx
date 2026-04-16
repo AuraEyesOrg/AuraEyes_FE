@@ -27,7 +27,7 @@ export const ThemeToggleButton = ({
       aria-label={buttonLabel}
       title={buttonLabel}
       className={clsx(
-        'inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#BFD8E3] bg-white px-3 text-[#2E5C6E] transition-colors hover:bg-[#F3F8FA] hover:text-[#18495C]',
+        'inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[#BFD8E3] bg-white px-3 text-[#2E5C6E] transition-colors hover:bg-[#F3F8FA] hover:text-[#18495C] dark:border-slate-600 dark:bg-slate-900 dark:text-cyan-200 dark:hover:bg-slate-800 dark:hover:text-cyan-100',
         className
       )}
     >
