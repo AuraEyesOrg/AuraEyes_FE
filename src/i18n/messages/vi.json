@@ -3326,6 +3326,217 @@
       "wallet": "Ví",
       "reports": "Báo cáo",
       "settings": "Cài đặt"
+    },
+    "common": {
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "gender": {
+        "female": "Nữ",
+        "male": "Nam"
+      },
+      "idLabel": "ID",
+      "loading": "Đang tải...",
+      "notAvailable": "N/A",
+      "processing": "Đang xử lý...",
+      "yearsAbbr": "tuổi"
+    },
+    "screening": {
+      "actions": {
+        "buyMoreQuota": "Mua thêm",
+        "buyQuota": "Mua quota",
+        "topUpWallet": "Nạp ví"
+      },
+      "badges": {
+        "remainingQuota": "Còn {{count}} lượt"
+      },
+      "header": {
+        "subtitle": "Tải lên ảnh DICOM hoặc ảnh đáy mắt độ phân giải cao để AI sàng lọc. Hãy đảm bảo ảnh rõ nét trước khi chạy thuật toán.",
+        "title": "Sàng lọc võng mạc bằng AI"
+      },
+      "launch": {
+        "clinicalAdvisory": {
+          "description": "Kết quả AI Aura chỉ mang tính sàng lọc sơ bộ và không thay thế chẩn đoán chính thức từ bác sĩ nhãn khoa hoặc chuyên gia lâm sàng.",
+          "title": "Khuyến cáo lâm sàng"
+        },
+        "includedScans": "Ảnh được đưa vào phân tích",
+        "readyDescription": "Hệ thống đã sẵn sàng xử lý {{count}} ảnh{{suffix}}. Thao tác này sẽ tiêu tốn 1 lượt quota AI.",
+        "title": "Khởi chạy mô hình chẩn đoán"
+      },
+      "navigation": {
+        "cancelAndReturn": "Hủy và quay lại",
+        "executingAiModel": "Đang chạy mô hình AI...",
+        "proceedToReview": "Tiếp tục đến bước đánh giá",
+        "startAiAnalysis": "Bắt đầu phân tích AI",
+        "transferringFiles": "Đang truyền tệp..."
+      },
+      "pageName": "Sàng lọc",
+      "quotaBanner": {
+        "description": "Hãy mua thêm quota từ ví. Nếu số dư ví chưa đủ, vui lòng nạp thêm tiền vào ví.",
+        "title": "Đã hết quota"
+      },
+      "quotaModal": {
+        "creatingPayment": "Đang tạo thanh toán...",
+        "quantityLabel": "Số lượt muốn mua",
+        "title": "Mua thêm quota AI",
+        "topUpAction": "Nạp {{amount}} VND",
+        "totalPaymentLabel": "Tổng thanh toán",
+        "unitPriceLabel": "Đơn giá/lượt",
+        "walletBalanceLabel": "Số dư ví",
+        "walletInsufficientPrefix": "Ví không đủ tiền, còn thiếu",
+        "walletInsufficientSuffix": "Vui lòng nạp thêm tiền vào ví.",
+        "walletSufficient": "Ví đủ tiền để mua quota."
+      },
+      "stepper": {
+        "launchAi": "Chạy AI",
+        "reviewAndSave": "Đánh giá và lưu",
+        "selectPatient": "Xác minh bệnh nhân",
+        "uploadImages": "Tải ảnh"
+      },
+      "toast": {
+        "buyQuotaFailed": "Không thể mua quota. Vui lòng thử lại.",
+        "buyQuotaSuccess": "Mua thành công {{count}} lượt quota AI.",
+        "createSessionFailed": "Không thể khởi tạo phiên khám để chạy AI.",
+        "createSessionFailedGeneric": "Không thể tạo phiên khám. Vui lòng thử lại.",
+        "createTopUpFailed": "Không thể tạo yêu cầu nạp ví. Vui lòng thử lại.",
+        "invalidTopUpAmount": "Số tiền nạp chưa hợp lệ.",
+        "noPatientSelected": "Chưa chọn bệnh nhân",
+        "paymentLinkUnavailable": "Không lấy được link thanh toán. Vui lòng thử lại.",
+        "quotaExhausted": "Đã hết quota. Vui lòng mua thêm quota hoặc nạp ví.",
+        "quotaUnitPriceUnavailable": "Không lấy được đơn giá quota. Vui lòng thử lại sau.",
+        "walletInsufficient": "Ví không đủ tiền, vui lòng nạp thêm vào ví."
+      },
+      "upload": {
+        "analyzingQuality": "Đang phân tích chất lượng ảnh...",
+        "dropzone": {
+          "supportedFormats": "Định dạng hỗ trợ: JPG, PNG, TIFF (Tối đa 50MB mỗi tệp)",
+          "title": "Kéo thả tệp hoặc bấm để chọn"
+        },
+        "inventoryFiles": "{{count}} tệp",
+        "inventoryTitle": "Danh sách ảnh quét",
+        "subtitle": "Chọn hoặc kéo thả ảnh võng mạc để xử lý.",
+        "title": "Thu nhận ảnh"
+      },
+      "wallet": {
+        "topUpDescription": "Nạp ví để mua quota cho tổ chức ({{amount}} VND)"
+      }
+    },
+    "screeningResult": {
+      "actions": {
+        "analyzing": "Đang phân tích...",
+        "backToScreening": "Quay lại danh sách khám",
+        "downloadPdf": "Tải PDF",
+        "downloadPdfDisabledTitle": "Vui lòng lưu hồ sơ trước khi xuất PDF.",
+        "downloadPdfTitle": "Tải báo cáo PDF",
+        "generatingPdf": "Đang tạo PDF...",
+        "printPdf": "In PDF",
+        "reanalyze": "Phân tích lại",
+        "refining": "Đang hoàn thiện...",
+        "saved": "Đã lưu",
+        "saveRecord": "Lưu hồ sơ",
+        "saving": "Đang lưu...",
+        "share": "Chia sẻ",
+        "shareDisabledTitle": "Vui lòng lưu hồ sơ trước khi chia sẻ.",
+        "shareResultTitle": "Chia sẻ kết quả"
+      },
+      "aiResults": {
+        "emptyState": "Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.",
+        "primaryFinding": "Phát hiện chính",
+        "title": "Kết quả phân tích AI"
+      },
+      "badges": {
+        "viewOnly": "Chế độ xem - hồ sơ đã được lưu"
+      },
+      "confirmSave": {
+        "cancelLabel": "Kiểm tra lại",
+        "confirmLabel": "Lưu kết quả",
+        "message": "Bạn có chắc muốn lưu kết quả khám này không? Sau khi lưu, phiên này sẽ chuyển sang chế độ chỉ xem và không thể chỉnh sửa.",
+        "title": "Xác nhận lưu kết quả"
+      },
+      "editable": {
+        "consultationHint": "Ghi chú này là bắt buộc và sẽ được lưu cùng hồ sơ.",
+        "consultationPlaceholder": "Nhập ghi chú tư vấn cho phiên khám này...",
+        "consultationTitle": "Ghi chú tư vấn tổ chức (bắt buộc)",
+        "diagnosisTitle": "Kết quả chẩn đoán (có thể chỉnh sửa)",
+        "summaryTitle": "Tóm tắt AI (có thể chỉnh sửa)"
+      },
+      "header": {
+        "newDraft": "Nháp mới",
+        "patientLabel": "Bệnh nhân",
+        "sessionLabel": "Phiên",
+        "title": "Kết quả khám"
+      },
+      "network": {
+        "consultationNote": "Ghi chú tư vấn: {{note}}",
+        "noAbnormalFindings": "Chưa ghi nhận bất thường rõ ràng",
+        "notProvidedYet": "Chưa cập nhật",
+        "riskLevel": "Mức rủi ro: {{risk}}",
+        "session": "Phiên: {{id}}...",
+        "summary": "Tóm tắt:",
+        "title": "Ca sàng lọc AI được chia sẻ từ tổ chức",
+        "topFindings": "Phát hiện nổi bật:"
+      },
+      "pageName": "Kết quả khám",
+      "patientFallback": "Bệnh nhân",
+      "riskCard": {
+        "title": "Mức độ rủi ro"
+      },
+      "sessionInfo": {
+        "createdAt": "Ngày tạo",
+        "imageCount": "Số ảnh",
+        "lastAssessed": "Đánh giá lần cuối",
+        "model": "Mô hình",
+        "sessionCode": "Mã phiên",
+        "title": "Thông tin phiên khám"
+      },
+      "shareModal": {
+        "email": {
+          "attachPdf": "Đính kèm báo cáo PDF",
+          "attachRetinalImages": "Chia sẻ đường dẫn ảnh võng mạc",
+          "auraHint": "Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.",
+          "placeholder": "patient@example.com",
+          "recipientLabel": "Email người nhận",
+          "send": "Gửi chia sẻ",
+          "walkInHint": "Bệnh nhân walk-in: nhập email nhận kết quả."
+        },
+        "network": {
+          "intro": "Đăng ca khám này lên Professional Network dưới dạng case presentation. Ảnh võng mạc đang được chọn sẽ được đính kèm.",
+          "noDraft": "Chưa có kết quả AI. Vui lòng chạy phân tích trước.",
+          "post": "Đăng lên Network",
+          "riskLabel": "Mức rủi ro:",
+          "summaryLabel": "Tóm tắt:"
+        },
+        "tabs": {
+          "email": "Gửi email bệnh nhân",
+          "network": "Đăng lên Network"
+        },
+        "title": "Chia sẻ kết quả khám"
+      },
+      "states": {
+        "loading": "Đang tải kết quả khám...",
+        "noAiDraft": "Chưa có kết quả AI. Nhấn \"Phân tích lại\" để chạy AI và chuẩn bị kết quả có thể chỉnh sửa.",
+        "notFound": "Không tìm thấy phiên khám"
+      },
+      "toast": {
+        "analyzeBeforeSave": "Vui lòng chạy phân tích AI trước khi lưu hồ sơ.",
+        "analyzeCompleted": "Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.",
+        "analyzeFailed": "Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.",
+        "analyzingAi": "Đang phân tích AI...",
+        "downloadPdfFailed": "Không thể tải báo cáo PDF.",
+        "downloadPdfSuccess": "Đã tải báo cáo PDF.",
+        "loadResultFailed": "Không thể tải kết quả khám.",
+        "noteRequiredBeforeSave": "Vui lòng thêm ghi chú tư vấn trước khi lưu.",
+        "quotaExhaustedForAnalyze": "Đã hết quota. Vui lòng mua thêm quota từ ví trước khi phân tích.",
+        "saveBeforePdf": "Vui lòng lưu hồ sơ trước khi xuất PDF.",
+        "saveFailed": "Không thể lưu kết quả. Vui lòng thử lại.",
+        "saveSuccess": "Lưu kết quả khám thành công.",
+        "sessionNotFoundForAi": "Không tìm thấy phiên khám để phân tích AI.",
+        "shareEmailFailed": "Không thể chia sẻ kết quả lúc này.",
+        "shareEmailSuccess": "Đã gửi kết quả đến {{email}}.",
+        "shareNetworkFailed": "Không thể đăng lên Professional Network. Vui lòng thử lại.",
+        "shareNetworkSuccess": "Đã đăng ca khám lên Professional Network.",
+        "shareSelectAtLeastOne": "Vui lòng chọn ít nhất một nội dung để chia sẻ.",
+        "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in."
+      }
     }
   },
   "SystemAdmin": {

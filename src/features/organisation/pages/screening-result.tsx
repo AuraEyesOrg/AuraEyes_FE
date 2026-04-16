@@ -35,6 +35,7 @@ import {
   getFileNameFromContentDisposition,
 } from '@/lib/file-export';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getDiseaseUrgency } from '@/features/patient/mock/disease-mapping';
 import i18n from '@/i18n/i18n';
 import { postsApi } from '@/features/professional-network/api/network.api';
@@ -94,6 +95,7 @@ export default function OrganisationScreeningResultPage() {
   const skipQuotaDeductionOnAutoAnalyze = Boolean(
     locationState?.skipQuotaDeduction
   );
+  const { t } = useSafeTranslation();
 
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
@@ -140,13 +142,26 @@ export default function OrganisationScreeningResultPage() {
     mutationFn: (quotaAmount: number) =>
       orgBillingApi.buyQuota({ quotaAmount }),
     onSuccess: () => {
-      toast.success(`Mua thành công ${selectedQuotaAmount} lượt quota.`);
+      toast.success(
+        t(
+          'Organisation.screening.toast.buyQuotaSuccess',
+          'Purchased {{count}} AI quota credits successfully.',
+          {
+            count: selectedQuotaAmount,
+          }
+        )
+      );
       setIsQuotaModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
     },
     onError: (error) => {
       if (isAxiosError(error) && error.response?.status === 402) {
-        toast.error('Ví không đủ tiền, hãy nạp thêm tiền vào ví.');
+        toast.error(
+          t(
+            'Organisation.screening.toast.walletInsufficient',
+            'Insufficient wallet balance. Please top up your wallet.'
+          )
+        );
         return;
       }
 
@@ -155,7 +170,10 @@ export default function OrganisationScreeningResultPage() {
           ((error.response?.data as { message?: string; detail?: string })
             ?.message ||
             (error.response?.data as { detail?: string })?.detail)) ||
-        'Không thể mua quota. Vui lòng thử lại.';
+        t(
+          'Organisation.screening.toast.buyQuotaFailed',
+          'Unable to buy quota. Please try again.'
+        );
 
       toast.error(message);
     },
@@ -165,7 +183,13 @@ export default function OrganisationScreeningResultPage() {
     mutationFn: (amountVnd: number) =>
       organisationWalletApi.createDeposit({
         amountVnd,
-        description: `Top up for organisation quota purchase (${amountVnd.toLocaleString('vi-VN')} VND)`,
+        description: t(
+          'Organisation.screening.wallet.topUpDescription',
+          'Top up for organisation quota purchase ({{amount}} VND)',
+          {
+            amount: amountVnd.toLocaleString('vi-VN'),
+          }
+        ),
         returnUrl: window.location.href,
         cancelUrl: window.location.href,
       }),
@@ -175,7 +199,12 @@ export default function OrganisationScreeningResultPage() {
         return;
       }
 
-      toast.error('Không lấy được link thanh toán. Vui lòng thử lại.');
+      toast.error(
+        t(
+          'Organisation.screening.toast.paymentLinkUnavailable',
+          'Unable to get payment link. Please try again.'
+        )
+      );
     },
     onError: (error) => {
       const message =
@@ -183,7 +212,10 @@ export default function OrganisationScreeningResultPage() {
           ((error.response?.data as { message?: string; detail?: string })
             ?.message ||
             (error.response?.data as { detail?: string })?.detail)) ||
-        'Không thể tạo yêu cầu nạp ví. Vui lòng thử lại.';
+        t(
+          'Organisation.screening.toast.createTopUpFailed',
+          'Unable to create top-up request. Please try again.'
+        );
 
       toast.error(message);
     },
@@ -284,7 +316,9 @@ export default function OrganisationScreeningResultPage() {
   const canShareResult = Boolean(screeningId && sessionData?.latestResult);
   const hasUnsavedRecord = Boolean(draft) && !saved && !isViewOnly;
   const patientDisplayName =
-    sessionData?.patientName?.trim() || locationPatientName || 'Bệnh nhân';
+    sessionData?.patientName?.trim() ||
+    locationPatientName ||
+    t('Organisation.screeningResult.patientFallback', 'Patient');
   const isWalkInPatient = sessionData?.isWalkIn ?? false;
 
   // ─── Navigation Guard ─────────────────────────────────────────────────────
@@ -510,12 +544,20 @@ export default function OrganisationScreeningResultPage() {
       } catch (error) {
         console.error('Failed to load organization screening detail:', error);
         setSessionData(null);
-        toast.error(getErrorMessage(error, 'Không thể tải kết quả khám.'));
+        toast.error(
+          getErrorMessage(
+            error,
+            t(
+              'Organisation.screeningResult.toast.loadResultFailed',
+              'Unable to load screening result.'
+            )
+          )
+        );
       } finally {
         if (showLoader) setLoading(false);
       }
     },
-    [screeningId, hydrateStateFromSession]
+    [screeningId, hydrateStateFromSession, t]
   );
 
   // ─── Effects ──────────────────────────────────────────────────────────────
@@ -547,7 +589,12 @@ export default function OrganisationScreeningResultPage() {
 
   const handleBuyQuotaFromModal = () => {
     if (!hasValidUnitPrice) {
-      toast.error('Không lấy được đơn giá quota. Vui lòng thử lại sau.');
+      toast.error(
+        t(
+          'Organisation.screening.toast.quotaUnitPriceUnavailable',
+          'Quota unit price is unavailable. Please try again later.'
+        )
+      );
       return;
     }
 
@@ -556,7 +603,12 @@ export default function OrganisationScreeningResultPage() {
 
   const handleTopUpWalletFromModal = () => {
     if (suggestedTopUpAmount <= 0) {
-      toast.error('Số tiền nạp chưa hợp lệ.');
+      toast.error(
+        t(
+          'Organisation.screening.toast.invalidTopUpAmount',
+          'Invalid top-up amount.'
+        )
+      );
       return;
     }
 
@@ -664,7 +716,12 @@ export default function OrganisationScreeningResultPage() {
         return;
 
       if (!screeningId) {
-        toast.error('Không tìm thấy phiên khám để phân tích AI.');
+        toast.error(
+          t(
+            'Organisation.screeningResult.toast.sessionNotFoundForAi',
+            'No screening session found for AI analysis.'
+          )
+        );
         return;
       }
 
@@ -672,9 +729,12 @@ export default function OrganisationScreeningResultPage() {
         sessionData.images[selectedImageIndex] ?? sessionData.images[0];
       if (!targetImage) return;
 
-      const analysisToastId = toast.loading('Đang phân tích AI...', {
-        closeButton: false,
-      });
+      const analysisToastId = toast.loading(
+        t('Organisation.screeningResult.toast.analyzingAi', 'Analyzing AI...'),
+        {
+          closeButton: false,
+        }
+      );
 
       setAnalyzing(true);
       try {
@@ -782,8 +842,10 @@ export default function OrganisationScreeningResultPage() {
         }
 
         toast.update(analysisToastId, {
-          render:
-            'Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.',
+          render: t(
+            'Organisation.screeningResult.toast.analyzeCompleted',
+            'AI analysis completed. You can edit the result before saving.'
+          ),
           type: 'success',
           isLoading: false,
           autoClose: 2800,
@@ -795,8 +857,10 @@ export default function OrganisationScreeningResultPage() {
         if (isAxiosError(error) && error.response?.status === 402) {
           setIsQuotaModalOpen(true);
           toast.update(analysisToastId, {
-            render:
-              'Hết quota. Vui lòng mua thêm quota từ ví trước khi phân tích.',
+            render: t(
+              'Organisation.screeningResult.toast.quotaExhaustedForAnalyze',
+              'Quota exhausted. Please buy more quota from wallet before analysis.'
+            ),
             type: 'error',
             isLoading: false,
             autoClose: 3200,
@@ -808,7 +872,10 @@ export default function OrganisationScreeningResultPage() {
         toast.update(analysisToastId, {
           render: getErrorMessage(
             error,
-            'Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.'
+            t(
+              'Organisation.screeningResult.toast.analyzeFailed',
+              'AI analysis failed. Please verify AI service and try again.'
+            )
           ),
           type: 'error',
           isLoading: false,
@@ -828,6 +895,7 @@ export default function OrganisationScreeningResultPage() {
       currentLanguage,
       isViewOnly,
       queryClient,
+      t,
     ]
   );
 
@@ -876,7 +944,12 @@ export default function OrganisationScreeningResultPage() {
   const handleDownloadPdf = useCallback(async () => {
     if (downloadingPdf || !screeningId) return;
     if (!canDownloadPdf) {
-      toast.info('Vui lòng lưu hồ sơ trước khi in PDF.');
+      toast.info(
+        t(
+          'Organisation.screeningResult.toast.saveBeforePdf',
+          'Please save the record before exporting PDF.'
+        )
+      );
       return;
     }
     setDownloadingPdf(true);
@@ -888,25 +961,48 @@ export default function OrganisationScreeningResultPage() {
         getFileNameFromContentDisposition(contentDisposition) ||
         fallbackFileName;
       downloadBlobFile(blob, fileName);
-      toast.success('Đã tải báo cáo PDF.');
+      toast.success(
+        t(
+          'Organisation.screeningResult.toast.downloadPdfSuccess',
+          'PDF report downloaded successfully.'
+        )
+      );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Không thể tải báo cáo PDF.'));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            'Organisation.screeningResult.toast.downloadPdfFailed',
+            'Unable to download PDF report.'
+          )
+        )
+      );
     } finally {
       setDownloadingPdf(false);
     }
-  }, [screeningId, downloadingPdf, canDownloadPdf]);
+  }, [screeningId, downloadingPdf, canDownloadPdf, t]);
 
   // ─── Share via email ──────────────────────────────────────────────────────
   const handleShareEmail = useCallback(async () => {
     if (!screeningId || !sessionData || sharingEmail) return;
 
     if (!shareIncludePdf && !shareIncludeRetinalImages) {
-      toast.error('Vui lòng chọn ít nhất một nội dung để chia sẻ.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.shareSelectAtLeastOne',
+          'Please select at least one item to share.'
+        )
+      );
       return;
     }
     const trimmedEmail = shareEmail.trim();
     if (isWalkInPatient && !trimmedEmail) {
-      toast.error('Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.shareWalkInEmailRequired',
+          'Please enter recipient email for walk-in patient.'
+        )
+      );
       return;
     }
 
@@ -918,10 +1014,26 @@ export default function OrganisationScreeningResultPage() {
         includeRetinalImages: shareIncludeRetinalImages,
       });
       const shareResult = unwrapApiData(response);
-      toast.success(`Đã gửi kết quả đến ${shareResult.recipientEmail}.`);
+      toast.success(
+        t(
+          'Organisation.screeningResult.toast.shareEmailSuccess',
+          'Result sent to {{email}}.',
+          {
+            email: shareResult.recipientEmail,
+          }
+        )
+      );
       setShareModalOpen(false);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Không thể chia sẻ kết quả lúc này.'));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            'Organisation.screeningResult.toast.shareEmailFailed',
+            'Unable to share result at this time.'
+          )
+        )
+      );
     } finally {
       setSharingEmail(false);
     }
@@ -933,6 +1045,7 @@ export default function OrganisationScreeningResultPage() {
     shareIncludeRetinalImages,
     shareEmail,
     isWalkInPatient,
+    t,
   ]);
 
   // ─── Share to Professional Network ───────────────────────────────────────
@@ -942,22 +1055,47 @@ export default function OrganisationScreeningResultPage() {
     const findingText =
       topFindings.length > 0
         ? topFindings.map((f) => `- ${f.localizedName}`).join('\n')
-        : '- No clear abnormal findings';
+        : `- ${t(
+            'Organisation.screeningResult.network.noAbnormalFindings',
+            'No clear abnormal findings'
+          )}`;
 
     return [
-      'AI screening case shared by organisation',
-      `Session: ${sessionData.screeningId.slice(0, 8)}...`,
-      `Risk level: ${draft.riskLevel}`,
+      t(
+        'Organisation.screeningResult.network.title',
+        'AI screening case shared by organisation'
+      ),
+      t('Organisation.screeningResult.network.session', 'Session: {{id}}...', {
+        id: sessionData.screeningId.slice(0, 8),
+      }),
+      t(
+        'Organisation.screeningResult.network.riskLevel',
+        'Risk level: {{risk}}',
+        {
+          risk: draft.riskLevel,
+        }
+      ),
       '',
-      'Summary:',
+      t('Organisation.screeningResult.network.summary', 'Summary:'),
       draft.summary,
       '',
-      'Top findings:',
+      t('Organisation.screeningResult.network.topFindings', 'Top findings:'),
       findingText,
       '',
-      `Consultation note: ${consultationNote.trim() || 'Not provided yet'}`,
+      t(
+        'Organisation.screeningResult.network.consultationNote',
+        'Consultation note: {{note}}',
+        {
+          note:
+            consultationNote.trim() ||
+            t(
+              'Organisation.screeningResult.network.notProvidedYet',
+              'Not provided yet'
+            ),
+        }
+      ),
     ].join('\n');
-  }, [aiFindings, consultationNote, draft, sessionData]);
+  }, [aiFindings, consultationNote, draft, sessionData, t]);
 
   const handleShareToNetwork = useCallback(async () => {
     if (!sessionData || !draft || sharingNetwork) return;
@@ -999,14 +1137,22 @@ export default function OrganisationScreeningResultPage() {
       }
 
       await postsApi.createPost(formData);
-      toast.success('Đã đăng ca khám lên Professional Network.');
+      toast.success(
+        t(
+          'Organisation.screeningResult.toast.shareNetworkSuccess',
+          'Case shared to Professional Network successfully.'
+        )
+      );
       setShareModalOpen(false);
     } catch (error) {
       console.error('Failed to share organisation screening case:', error);
       toast.error(
         getErrorMessage(
           error,
-          'Không thể đăng lên Professional Network. Vui lòng thử lại.'
+          t(
+            'Organisation.screeningResult.toast.shareNetworkFailed',
+            'Unable to post to Professional Network. Please try again.'
+          )
         )
       );
     } finally {
@@ -1019,6 +1165,7 @@ export default function OrganisationScreeningResultPage() {
     sessionData,
     sharingNetwork,
     user?.roles,
+    t,
   ]);
 
   // ─── Save results ─────────────────────────────────────────────────────────
@@ -1027,12 +1174,22 @@ export default function OrganisationScreeningResultPage() {
 
     const note = consultationNote.trim();
     if (!note) {
-      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.noteRequiredBeforeSave',
+          'Please add consultation note before saving.'
+        )
+      );
       return;
     }
     const jsonOutput = rawJsonOutput ?? sessionData.rawJsonOutput;
     if (!jsonOutput) {
-      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.analyzeBeforeSave',
+          'Please run AI analysis before saving the record.'
+        )
+      );
       return;
     }
 
@@ -1059,7 +1216,12 @@ export default function OrganisationScreeningResultPage() {
         findings: composeFindingsWithNote(draft.findings, note),
       });
       setSaved(true);
-      toast.success('Lưu kết quả khám thành công.');
+      toast.success(
+        t(
+          'Organisation.screeningResult.toast.saveSuccess',
+          'Screening result saved successfully.'
+        )
+      );
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       void queryClient.invalidateQueries({
         queryKey: ['notifications', 'unread-count'],
@@ -1068,7 +1230,13 @@ export default function OrganisationScreeningResultPage() {
     } catch (err) {
       console.error('Save failed:', err);
       toast.error(
-        getErrorMessage(err, 'Không thể lưu kết quả. Vui lòng thử lại.')
+        getErrorMessage(
+          err,
+          t(
+            'Organisation.screeningResult.toast.saveFailed',
+            'Unable to save result. Please try again.'
+          )
+        )
       );
     } finally {
       setSaving(false);
@@ -1079,11 +1247,21 @@ export default function OrganisationScreeningResultPage() {
     if (!screeningId || !sessionData || !draft || isViewOnly) return;
     const note = consultationNote.trim();
     if (!note) {
-      toast.error('Vui lòng thêm ghi chú tư vấn trước khi lưu.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.noteRequiredBeforeSave',
+          'Please add consultation note before saving.'
+        )
+      );
       return;
     }
     if (!(rawJsonOutput ?? sessionData.rawJsonOutput)) {
-      toast.error('Vui lòng chạy phân tích AI trước khi lưu hồ sơ.');
+      toast.error(
+        t(
+          'Organisation.screeningResult.toast.analyzeBeforeSave',
+          'Please run AI analysis before saving the record.'
+        )
+      );
       return;
     }
     setSaveConfirmOpen(true);
@@ -1099,11 +1277,21 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader pageName="Kết quả khám" />
+          <OrganisationHeader
+            pageName={t(
+              'Organisation.screeningResult.pageName',
+              'Screening Result'
+            )}
+          />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-(--text-secondary)">Đang tải kết quả khám…</p>
+              <p className="text-(--text-secondary)">
+                {t(
+                  'Organisation.screeningResult.states.loading',
+                  'Loading screening result...'
+                )}
+              </p>
             </div>
           </main>
         </div>
@@ -1116,12 +1304,20 @@ export default function OrganisationScreeningResultPage() {
       <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <OrganisationHeader pageName="Kết quả khám" />
+          <OrganisationHeader
+            pageName={t(
+              'Organisation.screeningResult.pageName',
+              'Screening Result'
+            )}
+          />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
               <p className="text-(--text-primary) font-semibold">
-                Không tìm thấy phiên khám
+                {t(
+                  'Organisation.screeningResult.states.notFound',
+                  'Screening session not found'
+                )}
               </p>
               <button
                 onClick={() =>
@@ -1129,7 +1325,10 @@ export default function OrganisationScreeningResultPage() {
                 }
                 className="mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium"
               >
-                Quay lại danh sách khám
+                {t(
+                  'Organisation.screeningResult.actions.backToScreening',
+                  'Back to screening list'
+                )}
               </button>
             </div>
           </main>
@@ -1143,7 +1342,12 @@ export default function OrganisationScreeningResultPage() {
     <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader pageName="Kết quả khám" />
+        <OrganisationHeader
+          pageName={t(
+            'Organisation.screeningResult.pageName',
+            'Screening Result'
+          )}
+        />
         <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6">
           <div className="mx-auto w-full max-w-[1400px] space-y-6">
             {/* ── Header section ── */}
@@ -1153,13 +1357,27 @@ export default function OrganisationScreeningResultPage() {
                   <div className="flex items-center gap-3">
                     <div>
                       <h1 className="text-2xl font-bold text-(--text-primary)">
-                        Kết quả khám
+                        {t(
+                          'Organisation.screeningResult.header.title',
+                          'Screening Result'
+                        )}
                       </h1>
                       <p className="text-sm text-(--text-tertiary)">
-                        Bệnh nhân: {patientDisplayName} · Phiên{' '}
+                        {t(
+                          'Organisation.screeningResult.header.patientLabel',
+                          'Patient'
+                        )}
+                        : {patientDisplayName} ·{' '}
+                        {t(
+                          'Organisation.screeningResult.header.sessionLabel',
+                          'Session'
+                        )}{' '}
                         {screeningId
                           ? `${screeningId.slice(0, 8)}...`
-                          : 'Nháp mới'}{' '}
+                          : t(
+                              'Organisation.screeningResult.header.newDraft',
+                              'New draft'
+                            )}{' '}
                         ·{' '}
                         {new Date(sessionData.createdAt).toLocaleString(
                           'vi-VN'
@@ -1175,7 +1393,7 @@ export default function OrganisationScreeningResultPage() {
                       <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-(--bg-primary) border border-(--border-primary)">
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-(--text-secondary)" />
                         <span className="text-xs text-(--text-tertiary)">
-                          Loading...
+                          {t('Organisation.common.loading', 'Loading...')}
                         </span>
                       </div>
                     ) : (
@@ -1187,10 +1405,24 @@ export default function OrganisationScreeningResultPage() {
                               ? 'bg-amber-500'
                               : 'bg-(--color-brand-primary)'
                         }`}
-                        title={`Còn ${remainingQuota} lượt`}
+                        title={t(
+                          'Organisation.screening.badges.remainingQuota',
+                          '{{count}} credits left',
+                          {
+                            count: remainingQuota,
+                          }
+                        )}
                       >
                         <Zap className="w-3.5 h-3.5" />
-                        <span>{remainingQuota} lượt</span>
+                        <span>
+                          {t(
+                            'Organisation.screening.badges.remainingQuota',
+                            '{{count}} credits left',
+                            {
+                              count: remainingQuota,
+                            }
+                          )}
+                        </span>
                       </div>
                     )}
 
@@ -1200,7 +1432,10 @@ export default function OrganisationScreeningResultPage() {
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-(--color-brand-primary) text-(--color-brand-primary) text-xs font-semibold hover:bg-(--color-brand-primary) hover:text-white transition-all"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Mua thêm
+                      {t(
+                        'Organisation.screening.actions.buyMoreQuota',
+                        'Buy more'
+                      )}
                     </button>
                   </div>
 
@@ -1210,13 +1445,19 @@ export default function OrganisationScreeningResultPage() {
                     disabled={!canShareResult}
                     title={
                       canShareResult
-                        ? 'Chia sẻ kết quả'
-                        : 'Vui lòng lưu hồ sơ trước khi chia sẻ.'
+                        ? t(
+                            'Organisation.screeningResult.actions.shareResultTitle',
+                            'Share result'
+                          )
+                        : t(
+                            'Organisation.screeningResult.actions.shareDisabledTitle',
+                            'Please save the record before sharing.'
+                          )
                     }
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
                     <Share2 className="w-4 h-4" />
-                    Chia sẻ
+                    {t('Organisation.screeningResult.actions.share', 'Share')}
                   </button>
 
                   {/* Nút Tải PDF */}
@@ -1230,8 +1471,14 @@ export default function OrganisationScreeningResultPage() {
                     }
                     title={
                       canDownloadPdf
-                        ? 'Tải báo cáo PDF'
-                        : 'Vui lòng lưu hồ sơ trước khi in PDF.'
+                        ? t(
+                            'Organisation.screeningResult.actions.downloadPdfTitle',
+                            'Download PDF report'
+                          )
+                        : t(
+                            'Organisation.screeningResult.actions.downloadPdfDisabledTitle',
+                            'Please save the record before exporting PDF.'
+                          )
                     }
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--bg-primary) border border-(--border-primary) text-sm font-medium text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-60 disabled:cursor-not-allowed transition"
                   >
@@ -1241,15 +1488,27 @@ export default function OrganisationScreeningResultPage() {
                       <Printer className="w-4 h-4" />
                     )}
                     {downloadingPdf
-                      ? 'Đang tạo PDF…'
+                      ? t(
+                          'Organisation.screeningResult.actions.generatingPdf',
+                          'Generating PDF...'
+                        )
                       : canDownloadPdf
-                        ? 'Tải PDF'
-                        : 'In PDF'}
+                        ? t(
+                            'Organisation.screeningResult.actions.downloadPdf',
+                            'Download PDF'
+                          )
+                        : t(
+                            'Organisation.screeningResult.actions.printPdf',
+                            'Print PDF'
+                          )}
                   </button>
 
                   {isViewOnly ? (
                     <span className="inline-flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-                      Chế độ xem — hồ sơ đã được lưu
+                      {t(
+                        'Organisation.screeningResult.badges.viewOnly',
+                        'View mode - record has been saved'
+                      )}
                     </span>
                   ) : (
                     <>
@@ -1272,10 +1531,19 @@ export default function OrganisationScreeningResultPage() {
                           <RefreshCw className="w-4 h-4" />
                         )}
                         {analyzing
-                          ? 'Đang phân tích…'
+                          ? t(
+                              'Organisation.screeningResult.actions.analyzing',
+                              'Analyzing...'
+                            )
                           : enhancingAnalysis
-                            ? 'Đang hoàn thiện…'
-                            : 'Phân tích lại'}
+                            ? t(
+                                'Organisation.screeningResult.actions.refining',
+                                'Refining...'
+                              )
+                            : t(
+                                'Organisation.screeningResult.actions.reanalyze',
+                                'Re-analyze'
+                              )}
                       </button>
                       <button
                         onClick={requestSaveResults}
@@ -1297,10 +1565,19 @@ export default function OrganisationScreeningResultPage() {
                           <Save className="w-4 h-4" />
                         )}
                         {saved && !saving
-                          ? 'Đã lưu'
+                          ? t(
+                              'Organisation.screeningResult.actions.saved',
+                              'Saved'
+                            )
                           : saving
-                            ? 'Đang lưu…'
-                            : 'Lưu hồ sơ'}
+                            ? t(
+                                'Organisation.screeningResult.actions.saving',
+                                'Saving...'
+                              )
+                            : t(
+                                'Organisation.screeningResult.actions.saveRecord',
+                                'Save record'
+                              )}
                       </button>
                     </>
                   )}
@@ -1384,7 +1661,10 @@ export default function OrganisationScreeningResultPage() {
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
                     <Bot className="w-4 h-4 text-primary" />
-                    Kết quả phân tích AI
+                    {t(
+                      'Organisation.screeningResult.aiResults.title',
+                      'AI Analysis Results'
+                    )}
                   </h3>
                   {aiFindings.length > 0 ? (
                     <div className="grid gap-2 sm:grid-cols-2">
@@ -1395,7 +1675,10 @@ export default function OrganisationScreeningResultPage() {
                         >
                           {index === 0 && (
                             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                              Primary Finding
+                              {t(
+                                'Organisation.screeningResult.aiResults.primaryFinding',
+                                'Primary Finding'
+                              )}
                             </p>
                           )}
                           <p className="text-sm font-medium text-(--text-primary) truncate">
@@ -1406,7 +1689,10 @@ export default function OrganisationScreeningResultPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-(--text-secondary)">
-                      Kết quả phân tích sẽ hiển thị ở đây sau khi AI hoàn tất.
+                      {t(
+                        'Organisation.screeningResult.aiResults.emptyState',
+                        'Analysis results will appear here after AI processing is complete.'
+                      )}
                     </p>
                   )}
                 </div>
@@ -1426,7 +1712,10 @@ export default function OrganisationScreeningResultPage() {
                     </div>
                     <div>
                       <p className="text-sm text-(--text-tertiary)">
-                        Mức độ rủi ro
+                        {t(
+                          'Organisation.screeningResult.riskCard.title',
+                          'Risk level'
+                        )}
                       </p>
                       <p className={`text-2xl font-bold ${risk.color}`}>
                         {riskLevel}
@@ -1462,7 +1751,10 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-primary" />
-                      Tóm tắt AI (có thể chỉnh sửa)
+                      {t(
+                        'Organisation.screeningResult.editable.summaryTitle',
+                        'AI Summary (editable)'
+                      )}
                     </h3>
                     <textarea
                       value={draft.summary}
@@ -1477,10 +1769,16 @@ export default function OrganisationScreeningResultPage() {
                 {draft && (
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-1">
-                      Ghi chú tư vấn tổ chức (bắt buộc)
+                      {t(
+                        'Organisation.screeningResult.editable.consultationTitle',
+                        'Organisation consultation note (required)'
+                      )}
                     </h3>
                     <p className="text-xs text-(--text-tertiary)">
-                      Ghi chú này là bắt buộc và sẽ được lưu cùng hồ sơ.
+                      {t(
+                        'Organisation.screeningResult.editable.consultationHint',
+                        'This note is required and will be stored with the record.'
+                      )}
                     </p>
                     <textarea
                       value={consultationNote}
@@ -1488,7 +1786,10 @@ export default function OrganisationScreeningResultPage() {
                       onChange={(e) => handleNoteChange(e.target.value)}
                       rows={4}
                       className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary)"
-                      placeholder="Nhập ghi chú tư vấn cho phiên khám này…"
+                      placeholder={t(
+                        'Organisation.screeningResult.editable.consultationPlaceholder',
+                        'Enter consultation note for this screening session...'
+                      )}
                     />
                   </div>
                 )}
@@ -1497,7 +1798,10 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                     <h3 className="text-sm font-semibold text-(--text-primary) mb-2 flex items-center gap-2">
                       <Bot className="w-4 h-4 text-primary" />
-                      Kết quả chẩn đoán (có thể chỉnh sửa)
+                      {t(
+                        'Organisation.screeningResult.editable.diagnosisTitle',
+                        'Diagnosis result (editable)'
+                      )}
                     </h3>
                     <textarea
                       value={draft.findings}
@@ -1513,8 +1817,10 @@ export default function OrganisationScreeningResultPage() {
                   <div className="rounded-2xl border border-dashed border-(--border-primary) bg-(--bg-secondary) p-5">
                     <p className="text-sm text-(--text-secondary)">
                       <Sparkles className="inline w-4 h-4 mr-1" />
-                      Chưa có kết quả AI. Nhấn "Phân tích lại" để chạy AI và
-                      chuẩn bị kết quả có thể chỉnh sửa.
+                      {t(
+                        'Organisation.screeningResult.states.noAiDraft',
+                        'No AI result yet. Press "Re-analyze" to run AI and prepare editable results.'
+                      )}
                     </p>
                   </div>
                 )}
@@ -1522,23 +1828,41 @@ export default function OrganisationScreeningResultPage() {
                 {/* Session info */}
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-5 space-y-3">
                   <h3 className="text-sm font-semibold text-(--text-primary)">
-                    Thông tin phiên khám
+                    {t(
+                      'Organisation.screeningResult.sessionInfo.title',
+                      'Session Information'
+                    )}
                   </h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Mô hình</span>
+                      <span className="text-(--text-tertiary)">
+                        {t(
+                          'Organisation.screeningResult.sessionInfo.model',
+                          'Model'
+                        )}
+                      </span>
                       <span className="text-(--text-primary) font-medium">
                         {sessionData.modelVersion}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Số ảnh</span>
+                      <span className="text-(--text-tertiary)">
+                        {t(
+                          'Organisation.screeningResult.sessionInfo.imageCount',
+                          'Image count'
+                        )}
+                      </span>
                       <span className="text-(--text-primary) font-medium">
                         {sessionData.images.length}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Ngày tạo</span>
+                      <span className="text-(--text-tertiary)">
+                        {t(
+                          'Organisation.screeningResult.sessionInfo.createdAt',
+                          'Created at'
+                        )}
+                      </span>
                       <span className="text-(--text-primary) font-medium">
                         {new Date(sessionData.createdAt).toLocaleDateString(
                           'vi-VN'
@@ -1548,7 +1872,10 @@ export default function OrganisationScreeningResultPage() {
                     {sessionData.latestResult?.assessedAt && (
                       <div className="flex justify-between">
                         <span className="text-(--text-tertiary)">
-                          Đánh giá lần cuối
+                          {t(
+                            'Organisation.screeningResult.sessionInfo.lastAssessed',
+                            'Last assessed'
+                          )}
                         </span>
                         <span className="text-(--text-primary) font-medium">
                           {new Date(
@@ -1558,7 +1885,12 @@ export default function OrganisationScreeningResultPage() {
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-(--text-tertiary)">Mã phiên</span>
+                      <span className="text-(--text-tertiary)">
+                        {t(
+                          'Organisation.screeningResult.sessionInfo.sessionCode',
+                          'Session code'
+                        )}
+                      </span>
                       <span className="text-(--text-primary) font-medium text-xs">
                         {sessionData.screeningId.slice(0, 8)}…
                       </span>
@@ -1573,10 +1905,22 @@ export default function OrganisationScreeningResultPage() {
         {/* ── Confirm save modal ── */}
         <ConfirmModal
           open={saveConfirmOpen}
-          title="Xác nhận lưu kết quả"
-          message="Bạn có chắc muốn lưu kết quả khám này không? Sau khi lưu, phiên này sẽ chuyển sang chế độ chỉ xem và không thể chỉnh sửa."
-          confirmLabel="Lưu kết quả"
-          cancelLabel="Kiểm tra lại"
+          title={t(
+            'Organisation.screeningResult.confirmSave.title',
+            'Confirm result save'
+          )}
+          message={t(
+            'Organisation.screeningResult.confirmSave.message',
+            'Are you sure you want to save this screening result? After saving, this session will become view-only and cannot be edited.'
+          )}
+          confirmLabel={t(
+            'Organisation.screeningResult.confirmSave.confirmLabel',
+            'Save result'
+          )}
+          cancelLabel={t(
+            'Organisation.screeningResult.confirmSave.cancelLabel',
+            'Review again'
+          )}
           tone="default"
           isLoading={saving}
           onCancel={() => {
@@ -1592,7 +1936,10 @@ export default function OrganisationScreeningResultPage() {
             <div className="w-full max-w-md rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6 shadow-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-(--text-primary)">
-                  Mua thêm quota AI
+                  {t(
+                    'Organisation.screening.quotaModal.title',
+                    'Buy more AI quota'
+                  )}
                 </h3>
                 <button
                   type="button"
@@ -1605,7 +1952,10 @@ export default function OrganisationScreeningResultPage() {
 
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-(--text-primary)">
-                  Số lượt muốn mua
+                  {t(
+                    'Organisation.screening.quotaModal.quantityLabel',
+                    'Number of credits to purchase'
+                  )}
                 </label>
                 <input
                   type="number"
@@ -1618,23 +1968,36 @@ export default function OrganisationScreeningResultPage() {
 
                 <div className="rounded-xl border border-(--border-primary) p-3 text-sm space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Đơn giá/lượt</span>
+                    <span className="text-(--text-tertiary)">
+                      {t(
+                        'Organisation.screening.quotaModal.unitPriceLabel',
+                        'Unit price/credit'
+                      )}
+                    </span>
                     <span className="font-semibold text-(--text-primary)">
                       {hasValidUnitPrice
                         ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
-                        : 'N/A'}
+                        : t('Organisation.common.notAvailable', 'N/A')}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-(--text-tertiary)">
-                      Tổng thanh toán
+                      {t(
+                        'Organisation.screening.quotaModal.totalPaymentLabel',
+                        'Total payment'
+                      )}
                     </span>
                     <span className="font-bold text-(--text-primary)">
                       {selectedTotalCost.toLocaleString('vi-VN')} VND
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-(--text-tertiary)">Số dư ví</span>
+                    <span className="text-(--text-tertiary)">
+                      {t(
+                        'Organisation.screening.quotaModal.walletBalanceLabel',
+                        'Wallet balance'
+                      )}
+                    </span>
                     <span className="font-semibold text-(--text-primary)">
                       {walletBalance.toLocaleString('vi-VN')} VND
                     </span>
@@ -1644,15 +2007,25 @@ export default function OrganisationScreeningResultPage() {
                 {hasEnoughBalance ? (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700 text-sm flex items-center gap-2">
                     <Coins className="w-4 h-4" />
-                    Ví đủ tiền để mua quota.
+                    {t(
+                      'Organisation.screening.quotaModal.walletSufficient',
+                      'Your wallet has sufficient balance to buy quota.'
+                    )}
                   </div>
                 ) : (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
-                    Ví không đủ tiền, thiếu{' '}
+                    {t(
+                      'Organisation.screening.quotaModal.walletInsufficientPrefix',
+                      'Insufficient balance. Missing'
+                    )}{' '}
                     <span className="font-semibold">
                       {missingAmount.toLocaleString('vi-VN')} VND
                     </span>
-                    . Hãy nạp thêm tiền vào ví.
+                    .{' '}
+                    {t(
+                      'Organisation.screening.quotaModal.walletInsufficientSuffix',
+                      'Please top up your wallet.'
+                    )}
                   </div>
                 )}
               </div>
@@ -1663,7 +2036,7 @@ export default function OrganisationScreeningResultPage() {
                   onClick={() => setIsQuotaModalOpen(false)}
                   className="px-4 py-2 rounded-lg border border-(--border-primary) text-sm font-semibold text-(--text-primary) hover:bg-(--bg-tertiary)"
                 >
-                  Đóng
+                  {t('Organisation.common.close', 'Close')}
                 </button>
 
                 {hasEnoughBalance ? (
@@ -1673,7 +2046,12 @@ export default function OrganisationScreeningResultPage() {
                     disabled={buyQuotaMutation.isPending || !hasValidUnitPrice}
                     className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
                   >
-                    {buyQuotaMutation.isPending ? 'Đang xử lý...' : 'Mua quota'}
+                    {buyQuotaMutation.isPending
+                      ? t('Organisation.common.processing', 'Processing...')
+                      : t(
+                          'Organisation.screening.actions.buyQuota',
+                          'Buy quota'
+                        )}
                   </button>
                 ) : (
                   <button
@@ -1686,8 +2064,18 @@ export default function OrganisationScreeningResultPage() {
                     className="px-4 py-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                   >
                     {createDepositMutation.isPending
-                      ? 'Đang tạo thanh toán...'
-                      : `Nạp ${suggestedTopUpAmount.toLocaleString('vi-VN')} VND`}
+                      ? t(
+                          'Organisation.screening.quotaModal.creatingPayment',
+                          'Creating payment...'
+                        )
+                      : t(
+                          'Organisation.screening.quotaModal.topUpAction',
+                          'Top up {{amount}} VND',
+                          {
+                            amount:
+                              suggestedTopUpAmount.toLocaleString('vi-VN'),
+                          }
+                        )}
                   </button>
                 )}
               </div>
@@ -1700,7 +2088,10 @@ export default function OrganisationScreeningResultPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
             <div className="w-full max-w-lg rounded-2xl border border-(--border-primary) bg-(--bg-secondary) p-5 shadow-xl">
               <h3 className="text-lg font-semibold text-(--text-primary)">
-                Chia sẻ kết quả khám
+                {t(
+                  'Organisation.screeningResult.shareModal.title',
+                  'Share screening result'
+                )}
               </h3>
 
               {/* Tab switcher */}
@@ -1714,7 +2105,10 @@ export default function OrganisationScreeningResultPage() {
                   }`}
                 >
                   <Mail className="w-4 h-4" />
-                  Gửi email bệnh nhân
+                  {t(
+                    'Organisation.screeningResult.shareModal.tabs.email',
+                    'Send email to patient'
+                  )}
                 </button>
                 <button
                   onClick={() => setShareTab('network')}
@@ -1725,7 +2119,10 @@ export default function OrganisationScreeningResultPage() {
                   }`}
                 >
                   <Network className="w-4 h-4" />
-                  Đăng lên Network
+                  {t(
+                    'Organisation.screeningResult.shareModal.tabs.network',
+                    'Post to Network'
+                  )}
                 </button>
               </div>
 
@@ -1734,12 +2131,21 @@ export default function OrganisationScreeningResultPage() {
                 <div className="mt-4 space-y-4">
                   <p className="text-sm text-(--text-secondary)">
                     {isWalkInPatient
-                      ? 'Bệnh nhân walk-in: nhập email nhận kết quả.'
-                      : 'Bệnh nhân Aura: email đã được điền sẵn, có thể chỉnh sửa.'}
+                      ? t(
+                          'Organisation.screeningResult.shareModal.email.walkInHint',
+                          'Walk-in patient: enter recipient email for result delivery.'
+                        )
+                      : t(
+                          'Organisation.screeningResult.shareModal.email.auraHint',
+                          'Aura patient: email is prefilled and can be edited.'
+                        )}
                   </p>
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-(--text-tertiary)">
-                      Email người nhận
+                      {t(
+                        'Organisation.screeningResult.shareModal.email.recipientLabel',
+                        'Recipient email'
+                      )}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-tertiary)" />
@@ -1747,7 +2153,10 @@ export default function OrganisationScreeningResultPage() {
                         type="email"
                         value={shareEmail}
                         onChange={(e) => setShareEmail(e.target.value)}
-                        placeholder="patient@example.com"
+                        placeholder={t(
+                          'Organisation.screeningResult.shareModal.email.placeholder',
+                          'patient@example.com'
+                        )}
                         className="w-full rounded-xl border border-(--border-primary) bg-(--bg-primary) py-2 pl-10 pr-3 text-sm text-(--text-primary)"
                       />
                     </div>
@@ -1760,7 +2169,10 @@ export default function OrganisationScreeningResultPage() {
                         onChange={(e) => setShareIncludePdf(e.target.checked)}
                         className="h-4 w-4"
                       />
-                      Đính kèm báo cáo PDF
+                      {t(
+                        'Organisation.screeningResult.shareModal.email.attachPdf',
+                        'Attach PDF report'
+                      )}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-(--text-primary)">
                       <input
@@ -1771,7 +2183,10 @@ export default function OrganisationScreeningResultPage() {
                         }
                         className="h-4 w-4"
                       />
-                      Chia sẻ đường dẫn ảnh võng mạc
+                      {t(
+                        'Organisation.screeningResult.shareModal.email.attachRetinalImages',
+                        'Share retinal image links'
+                      )}
                     </label>
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
@@ -1783,7 +2198,7 @@ export default function OrganisationScreeningResultPage() {
                       disabled={sharingEmail}
                       className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary)"
                     >
-                      Hủy
+                      {t('Organisation.common.cancel', 'Cancel')}
                     </button>
                     <button
                       type="button"
@@ -1794,7 +2209,10 @@ export default function OrganisationScreeningResultPage() {
                       {sharingEmail && (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       )}
-                      Gửi chia sẻ
+                      {t(
+                        'Organisation.screeningResult.shareModal.email.send',
+                        'Send share'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1804,27 +2222,38 @@ export default function OrganisationScreeningResultPage() {
               {shareTab === 'network' && (
                 <div className="mt-4 space-y-4">
                   <p className="text-sm text-(--text-secondary)">
-                    Đăng ca khám này lên Professional Network dưới dạng Case
-                    Presentation. Ảnh võng mạc đang được chọn sẽ được đính kèm.
+                    {t(
+                      'Organisation.screeningResult.shareModal.network.intro',
+                      'Post this screening case to Professional Network as a case presentation. The selected retinal image will be attached.'
+                    )}
                   </p>
                   {draft ? (
                     <div className="rounded-xl border border-(--border-primary) bg-(--bg-primary) p-3 space-y-1 text-xs text-(--text-secondary)">
                       <p>
                         <span className="font-semibold text-(--text-primary)">
-                          Mức rủi ro:
+                          {t(
+                            'Organisation.screeningResult.shareModal.network.riskLabel',
+                            'Risk level:'
+                          )}
                         </span>{' '}
                         {draft.riskLevel}
                       </p>
                       <p className="line-clamp-2">
                         <span className="font-semibold text-(--text-primary)">
-                          Tóm tắt:
+                          {t(
+                            'Organisation.screeningResult.shareModal.network.summaryLabel',
+                            'Summary:'
+                          )}
                         </span>{' '}
                         {draft.summary}
                       </p>
                     </div>
                   ) : (
                     <p className="text-sm text-amber-600 dark:text-amber-400">
-                      Chưa có kết quả AI. Vui lòng chạy phân tích trước.
+                      {t(
+                        'Organisation.screeningResult.shareModal.network.noDraft',
+                        'No AI result yet. Please run analysis first.'
+                      )}
                     </p>
                   )}
                   <div className="flex justify-end gap-2 pt-1">
@@ -1836,7 +2265,7 @@ export default function OrganisationScreeningResultPage() {
                       disabled={sharingNetwork}
                       className="rounded-xl border border-(--border-primary) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-secondary)"
                     >
-                      Hủy
+                      {t('Organisation.common.cancel', 'Cancel')}
                     </button>
                     <button
                       type="button"
@@ -1847,7 +2276,10 @@ export default function OrganisationScreeningResultPage() {
                       {sharingNetwork && (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       )}
-                      Đăng lên Network
+                      {t(
+                        'Organisation.screeningResult.shareModal.network.post',
+                        'Post to Network'
+                      )}
                     </button>
                   </div>
                 </div>

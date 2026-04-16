@@ -3330,6 +3330,217 @@ declare module 'i18next' {
         reports: string;
         settings: string;
       };
+      common: {
+        cancel: string;
+        close: string;
+        gender: {
+          female: string;
+          male: string;
+        };
+        idLabel: string;
+        loading: string;
+        notAvailable: string;
+        processing: string;
+        yearsAbbr: string;
+      };
+      screening: {
+        actions: {
+          buyMoreQuota: string;
+          buyQuota: string;
+          topUpWallet: string;
+        };
+        badges: {
+          remainingQuota: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        launch: {
+          clinicalAdvisory: {
+            description: string;
+            title: string;
+          };
+          includedScans: string;
+          readyDescription: string;
+          title: string;
+        };
+        navigation: {
+          cancelAndReturn: string;
+          executingAiModel: string;
+          proceedToReview: string;
+          startAiAnalysis: string;
+          transferringFiles: string;
+        };
+        pageName: string;
+        quotaBanner: {
+          description: string;
+          title: string;
+        };
+        quotaModal: {
+          creatingPayment: string;
+          quantityLabel: string;
+          title: string;
+          topUpAction: string;
+          totalPaymentLabel: string;
+          unitPriceLabel: string;
+          walletBalanceLabel: string;
+          walletInsufficientPrefix: string;
+          walletInsufficientSuffix: string;
+          walletSufficient: string;
+        };
+        stepper: {
+          launchAi: string;
+          reviewAndSave: string;
+          selectPatient: string;
+          uploadImages: string;
+        };
+        toast: {
+          buyQuotaFailed: string;
+          buyQuotaSuccess: string;
+          createSessionFailed: string;
+          createSessionFailedGeneric: string;
+          createTopUpFailed: string;
+          invalidTopUpAmount: string;
+          noPatientSelected: string;
+          paymentLinkUnavailable: string;
+          quotaExhausted: string;
+          quotaUnitPriceUnavailable: string;
+          walletInsufficient: string;
+        };
+        upload: {
+          analyzingQuality: string;
+          dropzone: {
+            supportedFormats: string;
+            title: string;
+          };
+          inventoryFiles: string;
+          inventoryTitle: string;
+          subtitle: string;
+          title: string;
+        };
+        wallet: {
+          topUpDescription: string;
+        };
+      };
+      screeningResult: {
+        actions: {
+          analyzing: string;
+          backToScreening: string;
+          downloadPdf: string;
+          downloadPdfDisabledTitle: string;
+          downloadPdfTitle: string;
+          generatingPdf: string;
+          printPdf: string;
+          reanalyze: string;
+          refining: string;
+          saved: string;
+          saveRecord: string;
+          saving: string;
+          share: string;
+          shareDisabledTitle: string;
+          shareResultTitle: string;
+        };
+        aiResults: {
+          emptyState: string;
+          primaryFinding: string;
+          title: string;
+        };
+        badges: {
+          viewOnly: string;
+        };
+        confirmSave: {
+          cancelLabel: string;
+          confirmLabel: string;
+          message: string;
+          title: string;
+        };
+        editable: {
+          consultationHint: string;
+          consultationPlaceholder: string;
+          consultationTitle: string;
+          diagnosisTitle: string;
+          summaryTitle: string;
+        };
+        header: {
+          newDraft: string;
+          patientLabel: string;
+          sessionLabel: string;
+          title: string;
+        };
+        network: {
+          consultationNote: string;
+          noAbnormalFindings: string;
+          notProvidedYet: string;
+          riskLevel: string;
+          session: string;
+          summary: string;
+          title: string;
+          topFindings: string;
+        };
+        pageName: string;
+        patientFallback: string;
+        riskCard: {
+          title: string;
+        };
+        sessionInfo: {
+          createdAt: string;
+          imageCount: string;
+          lastAssessed: string;
+          model: string;
+          sessionCode: string;
+          title: string;
+        };
+        shareModal: {
+          email: {
+            attachPdf: string;
+            attachRetinalImages: string;
+            auraHint: string;
+            placeholder: string;
+            recipientLabel: string;
+            send: string;
+            walkInHint: string;
+          };
+          network: {
+            intro: string;
+            noDraft: string;
+            post: string;
+            riskLabel: string;
+            summaryLabel: string;
+          };
+          tabs: {
+            email: string;
+            network: string;
+          };
+          title: string;
+        };
+        states: {
+          loading: string;
+          noAiDraft: string;
+          notFound: string;
+        };
+        toast: {
+          analyzeBeforeSave: string;
+          analyzeCompleted: string;
+          analyzeFailed: string;
+          analyzingAi: string;
+          downloadPdfFailed: string;
+          downloadPdfSuccess: string;
+          loadResultFailed: string;
+          noteRequiredBeforeSave: string;
+          quotaExhaustedForAnalyze: string;
+          saveBeforePdf: string;
+          saveFailed: string;
+          saveSuccess: string;
+          sessionNotFoundForAi: string;
+          shareEmailFailed: string;
+          shareEmailSuccess: string;
+          shareNetworkFailed: string;
+          shareNetworkSuccess: string;
+          shareSelectAtLeastOne: string;
+          shareWalkInEmailRequired: string;
+        };
+      };
     };
     SystemAdmin: {
       sidebar: {

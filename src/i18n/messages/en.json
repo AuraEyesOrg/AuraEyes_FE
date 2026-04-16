@@ -3316,6 +3316,217 @@
       "wallet": "Wallet",
       "reports": "Reports",
       "settings": "Settings"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "close": "Close",
+      "gender": {
+        "female": "Female",
+        "male": "Male"
+      },
+      "idLabel": "ID",
+      "loading": "Loading...",
+      "notAvailable": "N/A",
+      "processing": "Processing...",
+      "yearsAbbr": "yrs"
+    },
+    "screening": {
+      "actions": {
+        "buyMoreQuota": "Buy more",
+        "buyQuota": "Buy quota",
+        "topUpWallet": "Top up wallet"
+      },
+      "badges": {
+        "remainingQuota": "{{count}} credits left"
+      },
+      "header": {
+        "subtitle": "Upload high-resolution DICOM or fundus images for diagnostic AI triage. Ensure image clarity before proceeding to the algorithm.",
+        "title": "AI Retinal Screening"
+      },
+      "launch": {
+        "clinicalAdvisory": {
+          "description": "Aura AI triage results provide preliminary probabilities. They are not intended to replace formal diagnosis by an ophthalmologist or clinical specialist.",
+          "title": "Clinical Advisory"
+        },
+        "includedScans": "Included Scans",
+        "readyDescription": "System is ready to process {{count}} scan{{suffix}}. This will consume 1 AI screening credit.",
+        "title": "Launch Diagnostic Model"
+      },
+      "navigation": {
+        "cancelAndReturn": "Cancel & Return",
+        "executingAiModel": "Executing AI Model...",
+        "proceedToReview": "Proceed to Review",
+        "startAiAnalysis": "Start AI Analysis",
+        "transferringFiles": "Transferring Files..."
+      },
+      "pageName": "Screening",
+      "quotaBanner": {
+        "description": "Buy more quota from wallet. If your balance is insufficient, top up your wallet first.",
+        "title": "Quota exhausted"
+      },
+      "quotaModal": {
+        "creatingPayment": "Creating payment...",
+        "quantityLabel": "Number of credits to purchase",
+        "title": "Buy more AI quota",
+        "topUpAction": "Top up {{amount}} VND",
+        "totalPaymentLabel": "Total payment",
+        "unitPriceLabel": "Unit price/credit",
+        "walletBalanceLabel": "Wallet balance",
+        "walletInsufficientPrefix": "Insufficient balance. Missing",
+        "walletInsufficientSuffix": "Please top up your wallet.",
+        "walletSufficient": "Your wallet has sufficient balance to buy quota."
+      },
+      "stepper": {
+        "launchAi": "Launch AI",
+        "reviewAndSave": "Review & Save",
+        "selectPatient": "Patient Verification",
+        "uploadImages": "Upload Images"
+      },
+      "toast": {
+        "buyQuotaFailed": "Unable to buy quota. Please try again.",
+        "buyQuotaSuccess": "Purchased {{count}} AI quota credits successfully.",
+        "createSessionFailed": "Unable to create screening session for AI analysis.",
+        "createSessionFailedGeneric": "Failed to create screening session. Please try again.",
+        "createTopUpFailed": "Unable to create top-up request. Please try again.",
+        "invalidTopUpAmount": "Invalid top-up amount.",
+        "noPatientSelected": "No patient selected",
+        "paymentLinkUnavailable": "Unable to get payment link. Please try again.",
+        "quotaExhausted": "Quota exhausted. Please buy more quota from wallet or top up your balance.",
+        "quotaUnitPriceUnavailable": "Quota unit price is unavailable. Please try again later.",
+        "walletInsufficient": "Insufficient wallet balance. Please top up your wallet."
+      },
+      "upload": {
+        "analyzingQuality": "Analyzing image quality...",
+        "dropzone": {
+          "supportedFormats": "Supported formats: JPG, PNG, TIFF (Max 50MB per file)",
+          "title": "Drag files or click to browse"
+        },
+        "inventoryFiles": "{{count}} files",
+        "inventoryTitle": "Scan Inventory",
+        "subtitle": "Select or drag retinal scan files for processing.",
+        "title": "Image Acquisition"
+      },
+      "wallet": {
+        "topUpDescription": "Top up for organisation quota purchase ({{amount}} VND)"
+      }
+    },
+    "screeningResult": {
+      "actions": {
+        "analyzing": "Analyzing...",
+        "backToScreening": "Back to screening list",
+        "downloadPdf": "Download PDF",
+        "downloadPdfDisabledTitle": "Please save the record before exporting PDF.",
+        "downloadPdfTitle": "Download PDF report",
+        "generatingPdf": "Generating PDF...",
+        "printPdf": "Print PDF",
+        "reanalyze": "Re-analyze",
+        "refining": "Refining...",
+        "saved": "Saved",
+        "saveRecord": "Save record",
+        "saving": "Saving...",
+        "share": "Share",
+        "shareDisabledTitle": "Please save the record before sharing.",
+        "shareResultTitle": "Share result"
+      },
+      "aiResults": {
+        "emptyState": "Analysis results will appear here after AI processing is complete.",
+        "primaryFinding": "Primary Finding",
+        "title": "AI Analysis Results"
+      },
+      "badges": {
+        "viewOnly": "View mode - record has been saved"
+      },
+      "confirmSave": {
+        "cancelLabel": "Review again",
+        "confirmLabel": "Save result",
+        "message": "Are you sure you want to save this screening result? After saving, this session will become view-only and cannot be edited.",
+        "title": "Confirm result save"
+      },
+      "editable": {
+        "consultationHint": "This note is required and will be stored with the record.",
+        "consultationPlaceholder": "Enter consultation note for this screening session...",
+        "consultationTitle": "Organisation consultation note (required)",
+        "diagnosisTitle": "Diagnosis result (editable)",
+        "summaryTitle": "AI Summary (editable)"
+      },
+      "header": {
+        "newDraft": "New draft",
+        "patientLabel": "Patient",
+        "sessionLabel": "Session",
+        "title": "Screening Result"
+      },
+      "network": {
+        "consultationNote": "Consultation note: {{note}}",
+        "noAbnormalFindings": "No clear abnormal findings",
+        "notProvidedYet": "Not provided yet",
+        "riskLevel": "Risk level: {{risk}}",
+        "session": "Session: {{id}}...",
+        "summary": "Summary:",
+        "title": "AI screening case shared by organisation",
+        "topFindings": "Top findings:"
+      },
+      "pageName": "Screening Result",
+      "patientFallback": "Patient",
+      "riskCard": {
+        "title": "Risk level"
+      },
+      "sessionInfo": {
+        "createdAt": "Created at",
+        "imageCount": "Image count",
+        "lastAssessed": "Last assessed",
+        "model": "Model",
+        "sessionCode": "Session code",
+        "title": "Session Information"
+      },
+      "shareModal": {
+        "email": {
+          "attachPdf": "Attach PDF report",
+          "attachRetinalImages": "Share retinal image links",
+          "auraHint": "Aura patient: email is prefilled and can be edited.",
+          "placeholder": "patient@example.com",
+          "recipientLabel": "Recipient email",
+          "send": "Send share",
+          "walkInHint": "Walk-in patient: enter recipient email for result delivery."
+        },
+        "network": {
+          "intro": "Post this screening case to Professional Network as a case presentation. The selected retinal image will be attached.",
+          "noDraft": "No AI result yet. Please run analysis first.",
+          "post": "Post to Network",
+          "riskLabel": "Risk level:",
+          "summaryLabel": "Summary:"
+        },
+        "tabs": {
+          "email": "Send email to patient",
+          "network": "Post to Network"
+        },
+        "title": "Share screening result"
+      },
+      "states": {
+        "loading": "Loading screening result...",
+        "noAiDraft": "No AI result yet. Press \"Re-analyze\" to run AI and prepare editable results.",
+        "notFound": "Screening session not found"
+      },
+      "toast": {
+        "analyzeBeforeSave": "Please run AI analysis before saving the record.",
+        "analyzeCompleted": "AI analysis completed. You can edit the result before saving.",
+        "analyzeFailed": "AI analysis failed. Please verify AI service and try again.",
+        "analyzingAi": "Analyzing AI...",
+        "downloadPdfFailed": "Unable to download PDF report.",
+        "downloadPdfSuccess": "PDF report downloaded successfully.",
+        "loadResultFailed": "Unable to load screening result.",
+        "noteRequiredBeforeSave": "Please add consultation note before saving.",
+        "quotaExhaustedForAnalyze": "Quota exhausted. Please buy more quota from wallet before analysis.",
+        "saveBeforePdf": "Please save the record before exporting PDF.",
+        "saveFailed": "Unable to save result. Please try again.",
+        "saveSuccess": "Screening result saved successfully.",
+        "sessionNotFoundForAi": "No screening session found for AI analysis.",
+        "shareEmailFailed": "Unable to share result at this time.",
+        "shareEmailSuccess": "Result sent to {{email}}.",
+        "shareNetworkFailed": "Unable to post to Professional Network. Please try again.",
+        "shareNetworkSuccess": "Case shared to Professional Network successfully.",
+        "shareSelectAtLeastOne": "Please select at least one item to share.",
+        "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient."
+      }
     }
   },
   "SystemAdmin": {
