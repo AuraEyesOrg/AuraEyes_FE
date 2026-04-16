@@ -342,7 +342,6 @@ export default function ScreeningReviewPage() {
   const [codingSystem, setCodingSystem] = useState('ICD-10');
   const [clinicalFindings, setClinicalFindings] = useState('');
   const [severityLevel, setSeverityLevel] = useState('Moderate');
-  const [confidenceLevel, setConfidenceLevel] = useState('');
   const [treatmentPlan, setTreatmentPlan] = useState('');
   const [recommendations, setRecommendations] = useState('');
   const [isUrgent, setIsUrgent] = useState(false);
@@ -1215,13 +1214,6 @@ export default function ScreeningReviewPage() {
   }, [diagnosisCodePreset, customDiagnosisCode]);
 
   useEffect(() => {
-    if (!showDiagnosisModal) return;
-    if (confidenceLevel.trim().length > 0) return;
-    if (aiConfidencePct <= 0) return;
-    setConfidenceLevel(String(aiConfidencePct));
-  }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
-
-  useEffect(() => {
     if (!showDiagnosisModal) {
       didAutoFillClinicalFindingsRef.current = false;
       return;
@@ -1293,23 +1285,6 @@ export default function ScreeningReviewPage() {
       return;
     }
 
-    const parsedConfidence =
-      confidenceLevel.trim().length > 0 ? Number(confidenceLevel) : undefined;
-
-    if (
-      parsedConfidence !== undefined &&
-      (!Number.isFinite(parsedConfidence) ||
-        parsedConfidence < 0 ||
-        parsedConfidence > 100)
-    ) {
-      const message = t(
-        'Ophthalmologist.screeningReview.validation.confidenceRange',
-        'Confidence level must be between 0 and 100.'
-      );
-      ophthalToast.error(message);
-      return;
-    }
-
     try {
       await submitVerificationReportMutation.mutateAsync({
         sessionId: reportableSessionId,
@@ -1320,7 +1295,6 @@ export default function ScreeningReviewPage() {
         clinicalFindings: normalizedFindings,
         diagnosesText: normalizedFindings,
         severityLevel: severityLevel.trim() || undefined,
-        confidenceLevel: parsedConfidence,
         treatmentPlan: treatmentPlan.trim() || undefined,
         recommendations: recommendations.trim() || undefined,
         isUrgent,
@@ -2898,11 +2872,11 @@ export default function ScreeningReviewPage() {
                         )}
                       </p>
                     ) : null}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                       <button
                         onClick={handleSaveEdits}
                         disabled={savingEdits || isFinalizedDiagnosis}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-gray-50 hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#2a4e75] dark:bg-[#11315b] dark:text-gray-200 dark:hover:bg-[#1c3f67]"
                       >
                         {savingEdits ? (
                           <Spinner size={16} />
@@ -2920,7 +2894,7 @@ export default function ScreeningReviewPage() {
                             setShowDiagnosisModal(true);
                         }}
                         disabled={isFinalizedDiagnosis}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white shadow-sm shadow-cyan-600/25 transition-all hover:-translate-y-0.5 hover:bg-cyan-700 hover:shadow-md hover:shadow-cyan-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <FileText className="w-4 h-4" />
                         {t(
@@ -2931,7 +2905,7 @@ export default function ScreeningReviewPage() {
                       <button
                         onClick={handleOpenShareImagePicker}
                         disabled={sharingImages}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {sharingImages ? (
                           <Spinner size={16} />
@@ -3249,28 +3223,6 @@ export default function ScreeningReviewPage() {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Confidence */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                  {t(
-                    'Ophthalmologist.screeningReview.modal.confidenceLevel',
-                    'Confidence Level (0 - 100)'
-                  )}
-                </h4>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={confidenceLevel}
-                  onChange={(e) => setConfidenceLevel(e.target.value)}
-                  placeholder={t(
-                    'Ophthalmologist.screeningReview.modal.confidenceExample',
-                    'e.g., 92'
-                  )}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                />
               </div>
 
               {/* Treatment and recommendations */}
