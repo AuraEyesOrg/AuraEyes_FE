@@ -5,7 +5,7 @@ import PatientImageViewer from '../components/ImageViewer';
 import PatientFindings from '../components/AnalysisSidebar';
 import PatientImageStrip from '../components/ReadOnlyImageGallery';
 import { screeningApi } from '../api/screening.api';
-import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
+import { hydrateFullScreeningData } from './retinal-analysis';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { Anomaly, RetinalImage, ToggleState } from '../types/type';
 import { getDiseaseUrgency } from '../mock';
@@ -88,6 +88,32 @@ export default function AnalysisDetailPage() {
   const [showHeatmap, setShowHeatmap] = useState(false);
 
   useEffect(() => {
+    const rawJson = routeState?.rawJsonOutput;
+    const hasRouteImages = (routeState?.images?.length ?? 0) > 0;
+
+    if (hasRouteImages && rawJson) {
+      const firstImageUrl = routeState!.images![0]?.url;
+      hydrateFullScreeningData(rawJson, firstImageUrl).then(
+        ({ anomalies: hydrated, heatmapUrl: heatmap, heatmapData: matrix }) => {
+          const enrichedImages = routeState!.images!.map((img, idx) =>
+            idx === 0
+              ? {
+                  ...img,
+                  analyzed: true,
+                  anomalies: hydrated,
+                  heatmapUrl: heatmap,
+                  heatmapData: matrix,
+                }
+              : { ...img, analyzed: true }
+          );
+          setImages(enrichedImages);
+          setSelectedImageId(enrichedImages[0]?.id ?? null);
+          setAnomalies(hydrated);
+        }
+      );
+      return;
+    }
+
     const screeningId = routeState?.screeningId;
     if (!screeningId || images.length > 0) return;
 
@@ -98,6 +124,7 @@ export default function AnalysisDetailPage() {
         const session = response.data;
         if (!session) return;
 
+        const mergedRawJson = rawJson ?? session.rawJsonOutput;
         const mappedImages: RetinalImage[] = (session.images ?? []).map(
           (img) => ({
             id: img.id,
@@ -111,14 +138,26 @@ export default function AnalysisDetailPage() {
         );
 
         const firstImageUrl = mappedImages[0]?.url;
-        const hydratedAnomalies = await hydrateConsultationPreviewAnomalies(
-          routeState?.rawJsonOutput ?? session.rawJsonOutput,
-          firstImageUrl
+        const {
+          anomalies: hydrated,
+          heatmapUrl: heatmap,
+          heatmapData: matrix,
+        } = await hydrateFullScreeningData(mergedRawJson, firstImageUrl);
+
+        const enrichedImages = mappedImages.map((img, idx) =>
+          idx === 0
+            ? {
+                ...img,
+                anomalies: hydrated,
+                heatmapUrl: heatmap,
+                heatmapData: matrix,
+              }
+            : img
         );
 
-        setImages(mappedImages);
-        setSelectedImageId(mappedImages[0]?.id ?? null);
-        setAnomalies(hydratedAnomalies);
+        setImages(enrichedImages);
+        setSelectedImageId(enrichedImages[0]?.id ?? null);
+        setAnomalies(hydrated);
       } catch (error) {
         console.error('Failed to load patient analysis detail session', error);
       } finally {
@@ -127,18 +166,26 @@ export default function AnalysisDetailPage() {
     };
 
     void loadSession();
-  }, [routeState?.screeningId, routeState?.rawJsonOutput, images.length]);
+  }, [
+    routeState?.screeningId,
+    routeState?.rawJsonOutput,
+    routeState?.images,
+    images.length,
+  ]);
 
   const currentImage =
     images.find((image) => image.id === selectedImageId) ?? images[0] ?? null;
   const heatmapUrl = currentImage?.heatmapUrl;
+  const heatmapData = currentImage?.heatmapData ?? null;
+  const hasAnyHeatmap =
+    Boolean(heatmapUrl) || (heatmapData != null && heatmapData.length > 0);
   const hasBoundingBoxes = anomalies.some((anomaly) =>
     Boolean(anomaly.location)
   );
 
   useEffect(() => {
-    if (!heatmapUrl) setShowHeatmap(false);
-  }, [heatmapUrl]);
+    if (!hasAnyHeatmap) setShowHeatmap(false);
+  }, [hasAnyHeatmap]);
 
   const dominantAnomaly =
     anomalies.length > 0
@@ -240,7 +287,7 @@ export default function AnalysisDetailPage() {
       </header>
 
       <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f2f5]">
-        {(hasBoundingBoxes || heatmapUrl) && (
+        {(hasBoundingBoxes || hasAnyHeatmap) && (
           <div className="flex-shrink-0 flex justify-center items-center gap-3 px-4 py-2 bg-[#f0f2f5] border-b border-slate-200/60 z-10">
             <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
               <span className="text-sm font-medium text-slate-600">
@@ -266,7 +313,7 @@ export default function AnalysisDetailPage() {
                 />
               </button>
             </label>
-            {heatmapUrl && (
+            {hasAnyHeatmap && (
               <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
                 <span className="text-sm font-medium text-slate-600">
                   {t('PatientRetinalAnalysis.toggles.showHeatmap')}
@@ -306,6 +353,7 @@ export default function AnalysisDetailPage() {
                 showHighlights={showHighlights}
                 showHeatmap={showHeatmap}
                 heatmapUrl={heatmapUrl}
+                heatmapData={heatmapData}
               />
             </div>
             {images.length > 1 && (

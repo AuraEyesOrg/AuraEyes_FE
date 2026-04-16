@@ -29,7 +29,7 @@ import {
   getEyeHealthResourcesForPatient,
   type PatientEducationalResourceItem,
 } from '../api/patient.api';
-import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
+import { hydrateFullScreeningData } from './retinal-analysis';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import i18n from '@/i18n/i18n';
 import {
@@ -162,9 +162,13 @@ export default function ReviewPage() {
       );
 
       const firstImageUrl = mappedImages[0]?.url;
-      const anomalies = await hydrateConsultationPreviewAnomalies(
-        session.rawJsonOutput,
-        firstImageUrl
+      const { anomalies, heatmapUrl, heatmapData } =
+        await hydrateFullScreeningData(session.rawJsonOutput, firstImageUrl);
+
+      const enrichedImages = mappedImages.map((img, idx) =>
+        idx === 0
+          ? { ...img, analyzed: true, anomalies, heatmapUrl, heatmapData }
+          : { ...img, analyzed: true }
       );
 
       const normalizedRiskLevel =
@@ -178,7 +182,7 @@ export default function ReviewPage() {
 
       return {
         screeningId: session.screeningId,
-        images: mappedImages,
+        images: enrichedImages,
         anomalies,
         riskLevel,
         riskScore: session.latestResult?.confidenceScore,

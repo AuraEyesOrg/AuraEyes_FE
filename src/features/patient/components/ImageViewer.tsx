@@ -10,7 +10,13 @@ interface ImageViewerProps {
   showHighlights: boolean;
   showHeatmap?: boolean;
   heatmapUrl?: string;
+  heatmapData?: number[][] | null;
+  heatmapOpacity?: number;
+  heatmapThreshold?: number;
 }
+
+const HEATMAP_DEFAULT_OPACITY = 0.55;
+const HEATMAP_DEFAULT_THRESHOLD = 0.15;
 
 const ImageViewer: React.FC<ImageViewerProps> = ({
   toggles,
@@ -20,6 +26,9 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   showHighlights = false,
   showHeatmap = false,
   heatmapUrl,
+  heatmapData = null,
+  heatmapOpacity = HEATMAP_DEFAULT_OPACITY,
+  heatmapThreshold = HEATMAP_DEFAULT_THRESHOLD,
 }) => {
   const [imgRect, setImgRect] = useState<{
     offsetX: number;
@@ -30,6 +39,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const heatmapCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const updateImgRect = useCallback(() => {
     const img = imgRef.current;
@@ -75,6 +85,47 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     return () => ro.disconnect();
   }, [updateImgRect]);
 
+  // Render heatmap_data matrix onto canvas using JET colormap (matches ophthalmologist view)
+  useEffect(() => {
+    const canvas = heatmapCanvasRef.current;
+    if (!canvas || !heatmapData || heatmapData.length === 0) return;
+    const rows = heatmapData.length;
+    const cols = heatmapData[0]?.length ?? 0;
+    if (cols === 0) return;
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cols, rows);
+    const imageData = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = Math.max(0, Math.min(1, heatmapData[r]?.[c] ?? 0));
+        const idx = (r * cols + c) * 4;
+        if (v <= heatmapThreshold) {
+          imageData.data[idx + 3] = 0;
+        } else {
+          const nv = (v - heatmapThreshold) / (1 - heatmapThreshold);
+          const r4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+          const g4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+          const b4 = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+          const alpha = Math.min(
+            255,
+            Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+          );
+          imageData.data[idx] = Math.round(r4 * 255);
+          imageData.data[idx + 1] = Math.round(g4 * 255);
+          imageData.data[idx + 2] = Math.round(b4 * 255);
+          imageData.data[idx + 3] = alpha;
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    // showHeatmap in deps ensures the effect re-runs after the canvas mounts
+  }, [heatmapData, heatmapThreshold, showHeatmap]);
+
+  const hasHeatmapMatrix = heatmapData != null && heatmapData.length > 0;
+
   const getAnnotationStyle = (type: string, isHighest?: boolean) => {
     if (isHighest)
       return {
@@ -118,8 +169,23 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         onLoad={updateImgRect}
       />
 
-      {/* Heatmap overlay — MUST use same offset box as bbox layer */}
-      {showHeatmap && heatmapUrl && imgRect && (
+      {/* Heatmap overlay — canvas (matrix) takes priority over static URL */}
+      {showHeatmap && hasHeatmapMatrix && imgRect && (
+        <canvas
+          ref={heatmapCanvasRef}
+          className="absolute pointer-events-none"
+          style={{
+            left: imgRect.offsetX,
+            top: imgRect.offsetY,
+            width: imgRect.width,
+            height: imgRect.height,
+            opacity: heatmapOpacity,
+            mixBlendMode: 'normal',
+            zIndex: 15,
+          }}
+        />
+      )}
+      {showHeatmap && !hasHeatmapMatrix && heatmapUrl && imgRect && (
         <img
           src={heatmapUrl}
           alt="AI heatmap overlay"

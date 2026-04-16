@@ -488,6 +488,146 @@ export async function hydrateConsultationPreviewAnomalies(
   return anomalies;
 }
 
+export interface HydratedScreeningData {
+  anomalies: Anomaly[];
+  heatmapUrl: string | undefined;
+  heatmapData: number[][] | null;
+}
+
+/**
+ * Extract doctor_bbox_overrides from rawJsonOutput.
+ * When a doctor reviews and adjusts bounding boxes, they are persisted
+ * as `doctor_bbox_overrides` inside the JSON — these take priority
+ * over the original AI-generated `localization.all_lesions`.
+ */
+function extractDoctorBboxOverrides(rawJsonOutput: string): Anomaly[] | null {
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const saved = parsed.doctor_bbox_overrides as
+      | Array<{
+          id: string;
+          name: string;
+          description?: string;
+          confidence: number;
+          severity?: 'low' | 'moderate' | 'high';
+          location?: { x: number; y: number; width: number; height: number };
+        }>
+      | undefined;
+
+    if (!saved || !Array.isArray(saved) || saved.length === 0) return null;
+
+    return saved.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.name,
+      confidence: s.confidence,
+      description: s.description ?? s.name,
+      friendlyName: s.name,
+      friendlyDescription: s.description ?? s.name,
+      color: '',
+      type:
+        s.severity === 'high'
+          ? 'warning'
+          : s.severity === 'moderate'
+            ? 'priority_high'
+            : 'info',
+      isHighest: false,
+      location: s.location,
+    })) as Anomaly[];
+  } catch {
+    return null;
+  }
+}
+
+function extractHeatmapMatrix(rawJsonOutput: string): number[][] | null {
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as { heatmap_data?: number[][] };
+    const data = parsed.heatmap_data;
+    if (Array.isArray(data) && data.length > 0) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function hydrateFullScreeningData(
+  rawJsonOutput: string | undefined,
+  imageUrl: string | undefined
+): Promise<HydratedScreeningData> {
+  if (!rawJsonOutput || !imageUrl) {
+    return { anomalies: [], heatmapUrl: undefined, heatmapData: null };
+  }
+
+  const doctorBoxes = extractDoctorBboxOverrides(rawJsonOutput);
+  const { anomalies: aiAnomalies } = await mapSavedAnomaliesFromRaw(
+    rawJsonOutput,
+    imageUrl
+  );
+
+  let anomalies: Anomaly[];
+  if (doctorBoxes && doctorBoxes.length > 0) {
+    const aiLookup = new Map(aiAnomalies.map((a) => [a.id, a]));
+    anomalies = doctorBoxes.map((db) => {
+      const aiMatch = aiLookup.get(db.id);
+      if (aiMatch) {
+        return { ...aiMatch, location: db.location };
+      }
+      return db;
+    });
+  } else {
+    anomalies = aiAnomalies;
+  }
+
+  // Append doctor's manually-added findings (ID prefix 'manual-find-')
+  try {
+    const parsed = JSON.parse(rawJsonOutput) as Record<string, unknown>;
+    const manual = parsed.doctor_manual_findings as
+      | Array<{
+          id: string;
+          name: string;
+          description?: string;
+          confidence: number;
+          severity?: 'low' | 'moderate' | 'high';
+          location?: { x: number; y: number; width: number; height: number };
+        }>
+      | undefined;
+
+    if (manual && Array.isArray(manual)) {
+      const existingIds = new Set(anomalies.map((a) => a.id));
+      for (const m of manual) {
+        if (existingIds.has(m.id)) continue;
+        anomalies.push({
+          id: m.id,
+          name: m.name,
+          code: m.name,
+          confidence: m.confidence,
+          description: m.description ?? m.name,
+          friendlyName: m.name,
+          friendlyDescription: m.description ?? m.name,
+          color: '',
+          type:
+            m.severity === 'high'
+              ? 'warning'
+              : m.severity === 'moderate'
+                ? 'priority_high'
+                : 'info',
+          isHighest: false,
+          location: m.location,
+        });
+      }
+    }
+  } catch {
+    // ignore parse errors for manual findings
+  }
+
+  const heatmapData = extractHeatmapMatrix(rawJsonOutput);
+  const heatmapUrl = heatmapData
+    ? undefined
+    : extractHeatmapUrlFromRaw(rawJsonOutput);
+
+  return { anomalies, heatmapUrl, heatmapData };
+}
+
 // --- Helpers: use AI-generated friendly fields, fallback to raw name/description ---
 function friendlyName(anomaly: Anomaly): string {
   return anomaly.friendlyName || anomaly.name;
@@ -721,7 +861,6 @@ export default function RetinalAnalysis() {
 
         const mergedRawJson =
           response.data?.rawJsonOutput ?? routeState?.rawJsonOutput;
-        const restoredHeatmapUrl = extractHeatmapUrlFromRaw(mergedRawJson);
         setRawJsonOutput(mergedRawJson);
         setResultsPersisted(Boolean(response.data?.latestResult));
 
@@ -731,11 +870,11 @@ export default function RetinalAnalysis() {
         }
 
         const restoreUrl = sessionImages[0]?.url;
-        const restored = await mapSavedAnomaliesFromRaw(
+        const hydrated = await hydrateFullScreeningData(
           mergedRawJson,
           restoreUrl
         );
-        const restoredAnomalies = restored.anomalies;
+        const restoredAnomalies = hydrated.anomalies;
         const fallbackAnomalies =
           restoredAnomalies.length > 0
             ? restoredAnomalies
@@ -750,7 +889,8 @@ export default function RetinalAnalysis() {
                 ...img,
                 analyzed: isSessionAnalyzed,
                 anomalies: hydratedAnomalies,
-                heatmapUrl: restoredHeatmapUrl,
+                heatmapUrl: hydrated.heatmapUrl,
+                heatmapData: hydrated.heatmapData,
               }
             : img
         );
@@ -1114,15 +1254,19 @@ export default function RetinalAnalysis() {
 
   const [showHeatmap, setShowHeatmap] = useState(false);
   const heatmapUrl = currentImage?.heatmapUrl;
+  const heatmapDataMatrix = currentImage?.heatmapData ?? null;
+  const hasAnyHeatmap =
+    Boolean(heatmapUrl) ||
+    (heatmapDataMatrix != null && heatmapDataMatrix.length > 0);
   const hasBoundingBoxes = anomalies.some((a) => Boolean(a.location));
   const canShowOverlayControls =
-    analyzed && hasBoundingBoxes && Boolean(heatmapUrl) && !isEnhancingResults;
+    analyzed && hasBoundingBoxes && hasAnyHeatmap && !isEnhancingResults;
   useEffect(() => {
-    if (!heatmapUrl) {
+    if (!hasAnyHeatmap) {
       setShowHeatmap(false);
       return;
     }
-  }, [heatmapUrl]);
+  }, [hasAnyHeatmap]);
   if (images.length === 0) {
     return null;
   }
@@ -1166,7 +1310,7 @@ export default function RetinalAnalysis() {
             </label>
 
             {/* Heatmap toggle */}
-            {heatmapUrl && (
+            {hasAnyHeatmap && (
               <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm border border-slate-200/60">
                 <span className="text-sm font-medium text-slate-600">
                   {t('PatientRetinalAnalysis.toggles.showHeatmap')}
@@ -1174,9 +1318,7 @@ export default function RetinalAnalysis() {
                 <button
                   role="switch"
                   aria-checked={showHeatmap}
-                  onClick={() => {
-                    if (heatmapUrl) setShowHeatmap(!showHeatmap);
-                  }}
+                  onClick={() => setShowHeatmap(!showHeatmap)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
                     showHeatmap ? 'bg-orange-400' : 'bg-slate-300'
                   }`}
@@ -1215,6 +1357,7 @@ export default function RetinalAnalysis() {
                 showHighlights={showHighlights}
                 showHeatmap={showHeatmap}
                 heatmapUrl={heatmapUrl}
+                heatmapData={heatmapDataMatrix}
               />
             </div>
 
