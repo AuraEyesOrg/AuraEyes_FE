@@ -10,6 +10,7 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Activity,
   Archive,
@@ -764,6 +765,8 @@ export default function ConsultationsChatView({
   sessionsLoading,
 }: ConsultationsChatViewProps) {
   const { t } = useSafeTranslation();
+  const [searchParams] = useSearchParams();
+  const urlSessionId = searchParams.get('sessionId');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const currentDoctorId = user?.roleId ?? '';
@@ -972,10 +975,18 @@ export default function ConsultationsChatView({
       return;
     }
 
+    if (
+      urlSessionId &&
+      chatSessions.some((session) => session.id === urlSessionId)
+    ) {
+      setSelectedSessionId(urlSessionId);
+      return;
+    }
+
     if (chatSessions.length > 0) {
       setSelectedSessionId(chatSessions[0].id);
     }
-  }, [chatSessions, selectedSessionId]);
+  }, [chatSessions, selectedSessionId, urlSessionId]);
 
   useEffect(() => {
     setSessionUnreadMap((previous) => {

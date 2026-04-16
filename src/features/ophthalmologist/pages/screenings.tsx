@@ -289,6 +289,10 @@ export default function ScreeningsPage() {
       string,
       ConsultationSessionListDto
     >();
+    const bestSessionByPatientId = new Map<
+      string,
+      ConsultationSessionListDto
+    >();
 
     sessionItems.forEach((session) => {
       const sessionScreeningId =
@@ -334,21 +338,54 @@ export default function ScreeningsPage() {
       }
     });
 
-    return { completedMap, bestSessionByScreeningId };
+    sessionItems.forEach((session) => {
+      if (!session.patientId) return;
+      if (session.status === SessionStatus.Cancelled) return;
+      const patientKey = session.patientId.toLowerCase();
+      const existing = bestSessionByPatientId.get(patientKey);
+      if (!existing) {
+        bestSessionByPatientId.set(patientKey, session);
+        return;
+      }
+      const nextRank = sessionSortPriority(session, nowMs);
+      const currentRank = sessionSortPriority(existing, nowMs);
+      if (
+        nextRank.bucket < currentRank.bucket ||
+        (nextRank.bucket === currentRank.bucket &&
+          nextRank.weight < currentRank.weight)
+      ) {
+        bestSessionByPatientId.set(patientKey, session);
+      }
+    });
+
+    return { completedMap, bestSessionByScreeningId, bestSessionByPatientId };
   }, [consultationSessionsQuery.data?.items]);
 
   const completedConsultationByScreeningId = sessionInsights.completedMap;
   const linkedSessionByScreeningId = sessionInsights.bestSessionByScreeningId;
+  const linkedSessionByPatientId = sessionInsights.bestSessionByPatientId;
+
+  const getLinkedSession = useCallback(
+    (
+      row: OphthalmologistScreeningListItemDto
+    ): ConsultationSessionListDto | null => {
+      const screeningKey = row.screeningId.toLowerCase();
+      const direct = linkedSessionByScreeningId.get(screeningKey);
+      if (direct) return direct;
+      const patientKey = row.patientId.toLowerCase();
+      return linkedSessionByPatientId.get(patientKey) ?? null;
+    },
+    [linkedSessionByPatientId, linkedSessionByScreeningId]
+  );
 
   const getSortTimestamp = useCallback(
     (row: OphthalmologistScreeningListItemDto): number => {
-      const screeningKey = row.screeningId.toLowerCase();
-      const linkedSession = linkedSessionByScreeningId.get(screeningKey);
+      const linkedSession = getLinkedSession(row);
       const appointmentMs = toTimestamp(linkedSession?.appointmentTime);
       if (appointmentMs != null) return appointmentMs;
       return toTimestamp(row.createdAt) ?? 0;
     },
-    [linkedSessionByScreeningId]
+    [getLinkedSession]
   );
 
   const getEffectiveReviewStatus = useCallback(
@@ -662,9 +699,7 @@ export default function ScreeningsPage() {
                 const confidenceColor = getConfidenceColor(confidence);
                 const confidenceLabel = getConfidenceLabel(confidence, t);
                 const created = new Date(screening.createdAt);
-                const linkedSession = linkedSessionByScreeningId.get(
-                  screening.screeningId.toLowerCase()
-                );
+                const linkedSession = getLinkedSession(screening);
                 const consultationTimeMs = toTimestamp(
                   linkedSession?.appointmentTime
                 );
@@ -761,12 +796,6 @@ export default function ScreeningsPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {t(
-                                  'Ophthalmologist.screenings.confidence',
-                                  'Confidence'
-                                )}
-                              </span>
                               <div className="flex items-center gap-2">
                                 <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                   <div
@@ -856,13 +885,19 @@ export default function ScreeningsPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              navigate(
-                                `/ophthalmologist/consultations?patientId=${encodeURIComponent(
-                                  screening.patientId
-                                )}`
-                              )
-                            }
+                            onClick={() => {
+                              const patientId = encodeURIComponent(
+                                screening.patientId
+                              );
+                              const sessionId = linkedSession?.id
+                                ? encodeURIComponent(linkedSession.id)
+                                : null;
+                              const base = `/ophthalmologist/consultations?patientId=${patientId}`;
+                              const url = sessionId
+                                ? `${base}&sessionId=${sessionId}`
+                                : base;
+                              navigate(url);
+                            }}
                             className="flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300 dark:hover:bg-cyan-900/30"
                           >
                             <MessageCircle className="h-4 w-4" />

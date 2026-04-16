@@ -39,6 +39,7 @@ import { ConsultationSessionType } from '@/types/consultation';
 import { hydrateConsultationPreviewAnomalies } from '@/features/patient/pages/retinal-analysis';
 import type { Anomaly } from '@/features/patient/types/type';
 import useAuthStore from '@/store/auth-store';
+import i18n from '@/i18n/i18n';
 import Spinner from '@/components/ui/spinner';
 import { ophthalToast } from '@/features/ophthalmologist/lib/ophthal-toast';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -107,14 +108,117 @@ const RECOMMENDATION_PRESETS = [
   'Avoid delaying specialist consultation.',
 ] as const;
 
-const FINDING_NAME_SUGGESTIONS = [
-  'Diabetic Retinopathy',
-  'Macular Edema',
-  'Glaucoma Suspect',
-  'Retinal Hemorrhage',
-  'Cotton Wool Spot',
-  'Age-related Macular Degeneration',
-] as const;
+type FindingLexiconEntry = {
+  en: string;
+  vi: string;
+  synonyms: string[];
+};
+
+const FINDING_LEXICON: FindingLexiconEntry[] = [
+  {
+    en: 'Diabetic Retinopathy',
+    vi: 'Benh vong mac do dai thao duong',
+    synonyms: ['diabetic retinopathy', 'dr', 'benh vong mac tieu duong'],
+  },
+  {
+    en: 'Macular Edema',
+    vi: 'Phu hoang diem',
+    synonyms: ['macular edema', 'edema', 'phu diem vang'],
+  },
+  {
+    en: 'Glaucoma Suspect',
+    vi: 'Nghi ngo glaucoma',
+    synonyms: ['glaucoma suspect', 'nghi ngo tang nhan ap', 'glaucoma'],
+  },
+  {
+    en: 'Retinal Hemorrhage',
+    vi: 'Xuat huyet vong mac',
+    synonyms: ['retinal hemorrhage', 'hemorrhage', 'xuat huyet day mat'],
+  },
+  {
+    en: 'Cotton Wool Spot',
+    vi: 'Dom bong gon',
+    synonyms: ['cotton wool spot', 'cws', 'dom bong', 'dom trang mem'],
+  },
+  {
+    en: 'Age-related Macular Degeneration',
+    vi: 'Thoai hoa hoang diem tuoi gia',
+    synonyms: [
+      'age-related macular degeneration',
+      'amd',
+      'thoai hoa diem vang',
+    ],
+  },
+  {
+    en: 'Hard Exudates',
+    vi: 'Xuat tiet cung',
+    synonyms: ['hard exudates', 'hard exudate', 'xuat tiet cung', 'exudate'],
+  },
+  {
+    en: 'Fundus Neoplasm',
+    vi: 'U day mat',
+    synonyms: ['fundus neoplasm', 'retinal tumor', 'u day mat'],
+  },
+  {
+    en: 'Congenital Disc Abnormality',
+    vi: 'Bat thuong gai thi bam sinh',
+    synonyms: [
+      'congenital disc abnormality',
+      'optic disc anomaly',
+      'bat thuong gai thi',
+    ],
+  },
+  {
+    en: 'Myelinated Nerve Fibers',
+    vi: 'Tho than kinh co myelin',
+    synonyms: [
+      'myelinated nerve fibers',
+      'myelinated nerve fibre',
+      'day than kinh co myelin',
+    ],
+  },
+];
+
+const FINDING_NAME_SUGGESTIONS = Array.from(
+  new Set(FINDING_LEXICON.flatMap((item) => [item.en, item.vi]))
+);
+
+function normalizeFindingToken(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function resolveFindingLocale(): 'vi' | 'en' {
+  const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en').toLowerCase();
+  return lang.startsWith('vi') ? 'vi' : 'en';
+}
+
+function canonicalizeFindingName(name: string, locale: 'vi' | 'en'): string {
+  const normalizedName = normalizeFindingToken(name);
+  if (!normalizedName) return name.trim();
+
+  for (const entry of FINDING_LEXICON) {
+    const candidates = [entry.en, entry.vi, ...entry.synonyms].map(
+      normalizeFindingToken
+    );
+    const isMatched = candidates.some(
+      (candidate) =>
+        normalizedName === candidate ||
+        normalizedName.includes(candidate) ||
+        candidate.includes(normalizedName)
+    );
+    if (isMatched) {
+      return locale === 'vi' ? entry.vi : entry.en;
+    }
+  }
+
+  return name.trim();
+}
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -288,6 +392,7 @@ export default function ScreeningReviewPage() {
     'low' | 'moderate' | 'high'
   >('moderate');
   const [isAddingFinding, setIsAddingFinding] = useState(false);
+  const didAutoFillClinicalFindingsRef = useRef(false);
 
   // ─── Undo stack ────────────────────────────────────────────────────────────
   interface EditorSnapshot {
@@ -470,7 +575,6 @@ export default function ScreeningReviewPage() {
   );
   const aiConfidencePct = useMemo(() => {
     // Derived from the same `Detected Findings` that we show in the right panel
-    // (based on `rawJsonOutput`) so it matches the Patient view.
     if (findings.length === 0) return confidencePct;
     const max = Math.max(...findings.map((f) => f.confidence ?? 0));
     if (!Number.isFinite(max)) return confidencePct;
@@ -1029,12 +1133,24 @@ export default function ScreeningReviewPage() {
 
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const aiFindingsNarrative = useMemo(() => {
-    if (findings.length === 0) return '';
-    return findings
-      .slice(0, 5)
-      .map((item) => item.name)
-      .join('\n');
-  }, [findings]);
+    if (sidebarFindings.length === 0) return '';
+    const locale = resolveFindingLocale();
+    const normalizedSet = new Set<string>();
+    const lines: string[] = [];
+
+    for (const item of sidebarFindings) {
+      const canonicalName = canonicalizeFindingName(item.name, locale);
+      const dedupeKey = normalizeFindingToken(canonicalName);
+      if (!dedupeKey || normalizedSet.has(dedupeKey)) {
+        continue;
+      }
+      normalizedSet.add(dedupeKey);
+      lines.push(canonicalName);
+      if (lines.length >= 8) break;
+    }
+
+    return lines.join('\n');
+  }, [sidebarFindings]);
 
   const handleDownloadPdf = useCallback(async () => {
     if (downloadingPdf || !screeningId) return;
@@ -1106,10 +1222,17 @@ export default function ScreeningReviewPage() {
   }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
 
   useEffect(() => {
-    if (!showDiagnosisModal) return;
+    if (!showDiagnosisModal) {
+      didAutoFillClinicalFindingsRef.current = false;
+      return;
+    }
+
+    if (didAutoFillClinicalFindingsRef.current) return;
     if (clinicalFindings.trim().length > 0) return;
     if (!aiFindingsNarrative) return;
+
     setClinicalFindings(aiFindingsNarrative);
+    didAutoFillClinicalFindingsRef.current = true;
   }, [showDiagnosisModal, clinicalFindings, aiFindingsNarrative]);
 
   const handleSubmitDiagnosis = async () => {
@@ -2534,56 +2657,6 @@ export default function ScreeningReviewPage() {
 
                 {/* Right Panel - AI screening */}
                 <div className="col-span-3 bg-white dark:bg-[#0a1f44] rounded-xl border border-gray-200 dark:border-[#1e3a5f] overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-gray-200 dark:border-[#1e3a5f]">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                      {t(
-                        'Ophthalmologist.screeningReview.savedAiResult',
-                        'Kết quả đã lưu (AI)'
-                      )}
-                    </h3>
-
-                    <div className="bg-gray-50 dark:bg-[#1e3a5f]/50 rounded-xl p-4 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          Mức rủi ro & độ tin cậy lấy từ bản ghi screening khi
-                          phân tích xong — không phải “điểm AURA” riêng từ trang
-                          này.
-                        </span>
-                        <span
-                          className="shrink-0 text-gray-400"
-                          title={t(
-                            'Ophthalmologist.screeningReview.riskConfidenceHint',
-                            'Risk level và confidence là trường đã lưu trong ScreeningResult trên server. Trước đây số /10 là công thức ước lượng gây hiểu nhầm nên đã bỏ.'
-                          )}
-                        >
-                          <Info className="w-4 h-4" />
-                        </span>
-                      </div>
-
-                      {detail.latestResult ? (
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${riskLevelConfig[riskLevelUi].bg} ${riskLevelConfig[riskLevelUi].color}`}
-                            >
-                              {detail.latestResult.riskLevel}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {referralPillLabel}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {t(
-                            'Ophthalmologist.screeningReview.noSavedResult',
-                            'Chưa có kết quả screening đã lưu cho ca này.'
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Detected Findings */}
                   <div className="flex-1 overflow-y-auto p-4">
                     <div className="flex items-center justify-between mb-3">
