@@ -16,6 +16,7 @@ import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
+  stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
 import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
@@ -27,7 +28,7 @@ export default function Sidebar() {
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
 
-  const activePath = location.pathname;
+  const activePath = stripLocaleFromPathname(location.pathname);
   const activeGroupIds = useMemo(
     () =>
       sidebarNavGroups

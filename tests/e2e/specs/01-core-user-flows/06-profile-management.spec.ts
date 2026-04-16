@@ -11,7 +11,7 @@ test.describe('Flow 06 - Profile Management (Standardized)', () => {
     await resetAndSeed(request);
   });
 
-  test('@module-profile PROFILE_01 - patient updates profile information and avatar from /patient/profile', async ({
+  test('@round-2 @module-profile PROFILE_01 - patient updates profile information and avatar from /patient/profile', async ({
     browser,
   }) => {
     test.setTimeout(180_000);
@@ -73,7 +73,7 @@ test.describe('Flow 06 - Profile Management (Standardized)', () => {
     await ctx.close();
   });
 
-  test('@module-profile PROFILE_02 - patient cannot change password with wrong current password', async ({
+  test('@round-3 @module-profile PROFILE_02 - patient cannot change password with wrong current password', async ({
     browser,
   }) => {
     test.setTimeout(120_000);

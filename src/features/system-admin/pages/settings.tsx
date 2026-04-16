@@ -88,6 +88,10 @@ const SYSTEM_LANGUAGE_OPTIONS = [
   },
 ] as const;
 
+const SETTINGS_TOAST_IDS = {
+  save: 'system-admin-settings-save',
+} as const;
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
@@ -237,10 +241,14 @@ export default function SettingsPage() {
         );
       }
 
-      toast.success('Settings saved successfully');
+      toast.success('Settings saved successfully', {
+        toastId: SETTINGS_TOAST_IDS.save,
+      });
     } catch (error) {
       console.error(error);
-      toast.error('Failed to save settings');
+      toast.error('Failed to save settings', {
+        toastId: SETTINGS_TOAST_IDS.save,
+      });
     } finally {
       setIsSaving(false);
     }

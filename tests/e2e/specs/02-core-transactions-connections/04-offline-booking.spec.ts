@@ -12,7 +12,7 @@ test.describe('Flow 04 - Organisation Slot Booking and Offline Appointment', () 
     await resetAndSeed(request);
   });
 
-  test('patient reviews organisation slots and completes offline appointment booking from clinics page', async ({
+  test('@round-1 @module-booking BOOK_01 - patient reviews organisation slots and completes offline appointment booking from clinics page', async ({
     browser,
   }) => {
     test.setTimeout(240_000);
@@ -97,7 +97,7 @@ test.describe('Flow 04 - Organisation Slot Booking and Offline Appointment', () 
     await ctx.close();
   });
 
-  test('should show validation when booking reason is missing', async ({
+  test('@round-2 @module-booking BOOK_02 - should show validation when booking reason is missing', async ({
     browser,
   }) => {
     const orgRows = await query<{ OrgName: string }>(

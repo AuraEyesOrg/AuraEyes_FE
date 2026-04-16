@@ -939,6 +939,51 @@ const Router = () => (
           }
         />
         <Route
+          path="/:locale/system-admin/organisations"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminOrganisations />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/patients"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminPatients />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/ophthalmologists"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminOphthalmologists />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/verifications"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminVerificationRequests />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/withdrawal-requests"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminWithdrawalRequests />}
+            />
+          }
+        />
+        <Route
           path="/:locale/system-admin/cashflow"
           element={
             <LocalizedPrivateRoute
@@ -962,6 +1007,78 @@ const Router = () => (
             <LocalizedPrivateRoute
               allowedRoles={['SystemAdmin', 'Admin']}
               element={<SystemAdminEmploymentTypeChangeRequests />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/users"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminUsers />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/audit-logs"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminAuditLogs />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/settings"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminSettings />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/permissions"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminPermissions />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/contract-templates"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminContractTemplates />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/contract-templates/:id/edit"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminContractTemplateEditor />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/contract-templates/new"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminContractTemplateEditor />}
+            />
+          }
+        />
+        <Route
+          path="/:locale/system-admin/contracts"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['SystemAdmin', 'Admin']}
+              element={<SystemAdminContracts />}
             />
           }
         />

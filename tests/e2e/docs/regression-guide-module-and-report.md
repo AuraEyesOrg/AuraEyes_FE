@@ -27,6 +27,7 @@ Goal:
 | Wallet Operations      | WALLET\_                  | @module-wallet        |
 | Organisation Screening | ORG*PATIENT*, ORG*SCREEN* | @module-org-screening |
 | Professional Network   | NETWORK\_                 | @module-network       |
+| Booking                | BOOK\_                    | @module-booking       |
 
 ## 3. Trigger Conditions
 
@@ -52,11 +53,12 @@ Run this checklist when:
 3. npm run test:e2e:module:consultation
 4. npm run test:e2e:module:feedback
 5. npm run test:e2e:module:wallet
-6. npm run test:e2e:module:org-screening
-7. npm run test:e2e:module:network
-8. npm run test:e2e:round1
-9. npm run test:e2e:round2
-10. npm run test:e2e:round3
+6. npm run test:e2e:module:booking
+7. npm run test:e2e:module:org-screening
+8. npm run test:e2e:module:network
+9. npm run test:e2e:round1
+10. npm run test:e2e:round2
+11. npm run test:e2e:round3
 
 ## 6. Exit Criteria
 
