@@ -68,7 +68,12 @@ interface DetectedFinding {
 
 type BoxRect = { x: number; y: number; width: number; height: number };
 type TranslateFn = (key: string, fallback: string) => string;
-type ShareAssetKind = 'retinal' | 'heatmap' | 'annotated' | 'boxed-generated';
+type ShareAssetKind =
+  | 'retinal'
+  | 'heatmap-matrix'
+  | 'heatmap-url'
+  | 'annotated'
+  | 'boxed-generated';
 type ShareAssetOption = {
   id: string;
   label: string;
@@ -389,6 +394,7 @@ export default function ScreeningReviewPage() {
       const parsed = JSON.parse(rawJson) as {
         heatmap_url?: string;
         heatmapUrl?: string;
+        heatmap_data?: number[][];
         annotated_image_url?: string;
         annotatedImageUrl?: string;
         image_url?: string;
@@ -396,12 +402,25 @@ export default function ScreeningReviewPage() {
       };
 
       const heatmapUrl = parsed.heatmap_url ?? parsed.heatmapUrl;
-      if (heatmapUrl) {
+      const hasHeatmapMatrix =
+        Array.isArray(parsed.heatmap_data) && parsed.heatmap_data.length > 0;
+
+      // Prefer the live matrix (reflects doctor edits) over the static Cloudinary URL
+      if (hasHeatmapMatrix && retinalSources[0]) {
+        assets.push({
+          id: 'heatmap-matrix',
+          label: 'Heatmap (edited view)',
+          // Use static URL as thumbnail in the picker; actual share renders from matrix
+          previewUrl: heatmapUrl ?? retinalSources[0].imageUrl,
+          kind: 'heatmap-matrix',
+          sourceImageUrl: retinalSources[0].imageUrl,
+        });
+      } else if (heatmapUrl) {
         assets.push({
           id: 'heatmap-url',
-          label: 'Heatmap image',
+          label: 'Heatmap image (original)',
           previewUrl: heatmapUrl,
-          kind: 'heatmap',
+          kind: 'heatmap-url',
         });
       }
 
@@ -435,7 +454,7 @@ export default function ScreeningReviewPage() {
     }
 
     return assets;
-  }, [detail?.images, detail?.rawJsonOutput]);
+  }, [detail?.images, detail?.rawJsonOutput, heatmapData]);
 
   const selectedImage = useMemo(() => {
     return (
@@ -1311,6 +1330,81 @@ export default function ScreeningReviewPage() {
       const { sendSessionMessage, uploadChatImages } =
         await import('@/features/consultation/api/consultation.api');
 
+      // Composite heatmap matrix + retinal image → upload
+      const uploadHeatmapComposite = async (
+        sourceImageUrl: string,
+        currentHeatmapData: number[][],
+        opacity: number,
+        threshold: number
+      ): Promise<string | null> => {
+        const rows = currentHeatmapData.length;
+        const cols = currentHeatmapData[0]?.length ?? 0;
+        if (rows === 0 || cols === 0) return null;
+
+        const imageElement = await new Promise<HTMLImageElement>(
+          (resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () =>
+              reject(new Error('Failed to load source image'));
+            img.src = sourceImageUrl;
+          }
+        );
+
+        // Render the heatmap matrix to an offscreen canvas (same JET algorithm)
+        const heatCanvas = document.createElement('canvas');
+        heatCanvas.width = cols;
+        heatCanvas.height = rows;
+        const heatCtx = heatCanvas.getContext('2d');
+        if (!heatCtx) return null;
+        const heatImageData = heatCtx.createImageData(cols, rows);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const v = Math.max(0, Math.min(1, currentHeatmapData[r]?.[c] ?? 0));
+            const idx = (r * cols + c) * 4;
+            if (v <= threshold) {
+              heatImageData.data[idx + 3] = 0;
+            } else {
+              const nv = (v - threshold) / (1 - threshold);
+              const rr = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 3)));
+              const gg = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 2)));
+              const bb = Math.min(1, Math.max(0, 1.5 - Math.abs(4 * nv - 1)));
+              const alpha = Math.min(
+                255,
+                Math.max(0, Math.round((0.3 + 0.7 * nv) * 255))
+              );
+              heatImageData.data[idx] = Math.round(rr * 255);
+              heatImageData.data[idx + 1] = Math.round(gg * 255);
+              heatImageData.data[idx + 2] = Math.round(bb * 255);
+              heatImageData.data[idx + 3] = alpha;
+            }
+          }
+        }
+        heatCtx.putImageData(heatImageData, 0, 0);
+
+        // Composite: retinal image below, heatmap on top
+        const composite = document.createElement('canvas');
+        composite.width = imageElement.width;
+        composite.height = imageElement.height;
+        const ctx = composite.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(imageElement, 0, 0);
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(heatCanvas, 0, 0, composite.width, composite.height);
+        ctx.globalAlpha = 1;
+
+        const blob = await new Promise<Blob | null>((resolve) =>
+          composite.toBlob(resolve, 'image/png')
+        );
+        if (!blob) return null;
+        const file = new File([blob], `heatmap-composite-${Date.now()}.png`, {
+          type: 'image/png',
+        });
+        const uploadResult = await uploadChatImages([file]);
+        return uploadResult.uploadedUrls[0] ?? null;
+      };
+
       const uploadGeneratedBoxedImage = async (
         sourceImageUrl: string
       ): Promise<string | null> => {
@@ -1391,6 +1485,21 @@ export default function ScreeningReviewPage() {
 
       let finalUrl = selectedAsset.previewUrl;
       if (
+        selectedAsset.kind === 'heatmap-matrix' &&
+        selectedAsset.sourceImageUrl &&
+        heatmapData &&
+        heatmapData.length > 0
+      ) {
+        const uploadedUrl = await uploadHeatmapComposite(
+          selectedAsset.sourceImageUrl,
+          heatmapData,
+          heatmapOpacity,
+          heatmapThreshold
+        );
+        if (uploadedUrl) {
+          finalUrl = uploadedUrl;
+        }
+      } else if (
         selectedAsset.kind === 'boxed-generated' &&
         selectedAsset.sourceImageUrl
       ) {
