@@ -33,6 +33,7 @@
     "bookAppointment": "Book Appointment",
     "findDoctor": "Find a Doctor",
     "learnMore": "Learn More",
+    "helpTour": "Guide",
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "switchToDark": "Switch to dark mode",
@@ -321,6 +322,24 @@
           "notice": "Any copying, reverse engineering, or unauthorized commercial usage is strictly prohibited."
         }
       }
+    }
+  },
+  "GuestTour": {
+    "controls": {
+      "back": "Back",
+      "close": "Close",
+      "last": "Finish",
+      "next": "Next",
+      "skip": "Skip"
+    },
+    "steps": {
+      "logo": "Click the logo anytime to return to the home page.",
+      "navAbout": "About Us explains AURA's mission and how the platform supports AI-powered retinal screening.",
+      "navHowItWorks": "How It Works shows the journey from retinal image upload to AI screening report.",
+      "aboutMission": "This section highlights AURA's mission and core value: fast, accurate, and safe ophthalmology screening.",
+      "contactOrganisation": "Use Contact if your clinic or organization wants onboarding support or partnership registration.",
+      "getStartedPatient": "Get Started leads to login/register, where a new Patient account can be created.",
+      "getStartedDoctor": "From Get Started, ophthalmologists can continue to the dedicated doctor registration flow."
     }
   },
   "Auth": {
@@ -2941,6 +2960,61 @@
     "breadcrumb": {
       "home": "Home",
       "newScreening": "New Screening"
+    }
+  },
+  "Organisation": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "historicalData": "Historical Data",
+      "calendar": "Calendar",
+      "screening": "Screening",
+      "analytics": "Analytics",
+      "slotManagement": "Slot Management",
+      "contract": "Contract",
+      "billing": "Billing",
+      "wallet": "Wallet",
+      "reports": "Reports",
+      "settings": "Settings"
+    }
+  },
+  "SystemAdmin": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "groups": {
+        "user-directory": {
+          "label": "User Directory",
+          "description": "Manage user directory"
+        },
+        "contract-management": {
+          "label": "Contract Management",
+          "description": "Manage contracts"
+        },
+        "billing-finance": {
+          "label": "Billing & Finance",
+          "description": "Financial & Billing management"
+        },
+        "system-administration": {
+          "label": "System Administration",
+          "description": "System administration tools"
+        }
+      },
+      "items": {
+        "organisations": "Organisations",
+        "ophthalmologists": "Ophthalmologists",
+        "leave-requests": "Leave Requests",
+        "employment-type-change-requests": "Employment Type Changes",
+        "patients": "Patients",
+        "verifications": "Verifications",
+        "contract-templates": "Contract Templates",
+        "contracts": "Contracts",
+        "transaction-ledger": "Transaction Ledger",
+        "withdrawal-requests": "Withdrawal Requests",
+        "permissions": "Permissions",
+        "audit-logs": "Audit Logs",
+        "settings": "Settings",
+        "aura-network": "Aura Network"
+      }
     }
   }
 }

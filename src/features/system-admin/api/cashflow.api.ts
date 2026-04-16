@@ -9,7 +9,40 @@ export type CashflowActorRole =
   | 'Organisation'
   | 'System';
 
-export type CashflowStatus = 'Pending' | 'Completed' | 'Failed' | 'Cancelled';
+export type CashflowStatus =
+  | 'Pending'
+  | 'Processing'
+  | 'Completed'
+  | 'Failed'
+  | 'Cancelled'
+  | 'Refunded';
+
+export interface CashflowWithdrawalDetail {
+  withdrawalBankName?: string | null;
+  withdrawalBankAccountNumber?: string | null;
+  withdrawalAccountHolderName?: string | null;
+  withdrawalBankBin?: string | null;
+  withdrawalTransferReference?: string | null;
+  withdrawalProcessedByAdminId?: string | null;
+  withdrawalProcessedAt?: string | null;
+  withdrawalExternalPayoutId?: string | null;
+  withdrawalPayOSReferenceId?: string | null;
+  withdrawalPayOSTransactionId?: string | null;
+  withdrawalPayOSApprovalState?: string | null;
+  withdrawalFee?: number | null;
+}
+
+export interface CashflowDepositDetail {
+  depositOrderCode?: string | null;
+  depositPaymentMethod?: string | null;
+  depositPaymentUrl?: string | null;
+  depositProviderTxnRef?: string | null;
+  depositProviderResponse?: string | null;
+  depositReturnUrl?: string | null;
+  depositCancelUrl?: string | null;
+  depositFailureReason?: string | null;
+  depositCompletedAt?: string | null;
+}
 
 export interface CashflowTransactionItem {
   id: string;
@@ -25,6 +58,10 @@ export interface CashflowTransactionItem {
   description?: string | null;
   createdAt: string;
 }
+
+export type CashflowTransactionDetail = CashflowTransactionItem &
+  CashflowWithdrawalDetail &
+  CashflowDepositDetail;
 
 export interface CashflowTransactionsParams {
   pageNumber?: number;
@@ -49,11 +86,11 @@ export interface PagedResult<T> {
 export const cashflowApi = {
   async getTransactions(params: CashflowTransactionsParams = {}) {
     const response = await api.get<
-      ApiResponse<PagedResult<CashflowTransactionItem>>
+      ApiResponse<PagedResult<CashflowTransactionDetail>>
     >(API_ENDPOINTS.SYSTEM_ADMIN.CASHFLOW.TRANSACTIONS, {
       params,
     });
 
-    return unwrapApiData<PagedResult<CashflowTransactionItem>>(response.data);
+    return unwrapApiData<PagedResult<CashflowTransactionDetail>>(response.data);
   },
 };

@@ -423,15 +423,21 @@ export function getNotificationRoute(
 
   switch (normalizedType) {
     case NotificationType.AiScreeningCompleted: {
+      if (isOrgAdmin && screeningId) {
+        return appendIdQuery(
+          '/organisation/screening/result',
+          'id',
+          screeningId
+        );
+      }
+
       const base = isPatient
         ? '/patient/screening'
         : isDoctor
           ? '/ophthalmologist/screenings'
-          : isOrgAdmin
-            ? '/organisation/patients'
-            : isSystemAdmin
-              ? '/system-admin/dashboard'
-              : fallbackHome;
+          : isSystemAdmin
+            ? '/system-admin/dashboard'
+            : fallbackHome;
       return appendIdQuery(base, 'screeningId', screeningId);
     }
 

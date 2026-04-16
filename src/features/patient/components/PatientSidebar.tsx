@@ -9,14 +9,22 @@ import {
   MessageCircle,
   Milestone,
   MessageSquareHeart,
+  Globe,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { useTranslation } from 'react-i18next';
 import { useProfile } from '../hooks/useProfile';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
+import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
+import type { AppLocale } from '@/i18n/locales';
 
 export default function PatientSidebar() {
   const { t: i18nT } = useTranslation();
@@ -96,6 +104,18 @@ export default function PatientSidebar() {
     navigate('/login');
   };
 
+  const { i18n } = useTranslation();
+  const location = useLocation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+
+  const handleToggleLanguage = () => {
+    const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
+    persistLocale(newLocale);
+    i18n.changeLanguage(newLocale);
+    const newPath = withLocalePathname(newLocale, location.pathname);
+    navigate(newPath);
+  };
+
   return (
     <aside className="w-64 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-50 h-screen">
       <div className="p-6 flex flex-col h-full">
@@ -113,7 +133,7 @@ export default function PatientSidebar() {
           {navItems.map((item) => (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={resolvePathWithLocale(item.path)}
               className={({ isActive }) =>
                 `flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
@@ -136,7 +156,7 @@ export default function PatientSidebar() {
 
         {/* User Profile Footer */}
         <div className="mt-auto pt-6 border-t border-gray-700">
-          <div className="flex items-center gap-3 px-2">
+          <div className="flex items-center gap-2 px-1">
             <NavLink
               to="/patient/profile"
               className="flex items-center gap-3 flex-1 min-w-0 group cursor-pointer"
@@ -159,6 +179,13 @@ export default function PatientSidebar() {
                 <p className="text-xs text-gray-400 truncate">{userEmail}</p>
               </div>
             </NavLink>
+            <button
+              onClick={handleToggleLanguage}
+              className="text-gray-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
+              title={t('Common.language', 'Language')}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"

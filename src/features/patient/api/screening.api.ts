@@ -36,7 +36,7 @@ export interface SaveAiScreeningResultsResponse {
 
 export interface CreateAiScreeningSessionPayload {
   modelVersion?: string;
-  retinalImages: RetinalImageData[]; // Image URLs already uploaded to Supabase
+  retinalImages: RetinalImageData[]; // Image URLs already uploaded to Cloudinary
 }
 
 export interface CreateAiScreeningSessionResponse {
@@ -91,7 +91,7 @@ export interface ScreeningSessionDetail {
 
 export const screeningApi = {
   /**
-   * Upload retinal images to Supabase storage (no DB save yet).
+   * Upload retinal images to Cloudinary storage (no DB save yet).
    * Returns URLs only. Call this BEFORE creating session.
    */
   async uploadRetinalImages(files: File[]) {

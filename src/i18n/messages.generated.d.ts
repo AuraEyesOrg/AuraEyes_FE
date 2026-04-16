@@ -36,6 +36,7 @@ declare module 'i18next' {
       bookAppointment: string;
       findDoctor: string;
       learnMore: string;
+      helpTour: string;
       language: string;
       toggleMenu: string;
       switchToDark: string;
@@ -324,6 +325,24 @@ declare module 'i18next' {
             notice: string;
           };
         };
+      };
+    };
+    GuestTour: {
+      controls: {
+        back: string;
+        close: string;
+        last: string;
+        next: string;
+        skip: string;
+      };
+      steps: {
+        logo: string;
+        navAbout: string;
+        navHowItWorks: string;
+        aboutMission: string;
+        contactOrganisation: string;
+        getStartedPatient: string;
+        getStartedDoctor: string;
       };
     };
     Auth: {
@@ -2954,6 +2973,61 @@ declare module 'i18next' {
         appointment: string;
         wallet: string;
         notification: string;
+      };
+    };
+    Organisation: {
+      sidebar: {
+        dashboard: string;
+        patients: string;
+        historicalData: string;
+        calendar: string;
+        screening: string;
+        analytics: string;
+        slotManagement: string;
+        contract: string;
+        billing: string;
+        wallet: string;
+        reports: string;
+        settings: string;
+      };
+    };
+    SystemAdmin: {
+      sidebar: {
+        dashboard: string;
+        groups: {
+          'user-directory': {
+            label: string;
+            description: string;
+          };
+          'contract-management': {
+            label: string;
+            description: string;
+          };
+          'billing-finance': {
+            label: string;
+            description: string;
+          };
+          'system-administration': {
+            label: string;
+            description: string;
+          };
+        };
+        items: {
+          organisations: string;
+          ophthalmologists: string;
+          'leave-requests': string;
+          'employment-type-change-requests': string;
+          patients: string;
+          verifications: string;
+          'contract-templates': string;
+          contracts: string;
+          'transaction-ledger': string;
+          'withdrawal-requests': string;
+          permissions: string;
+          'audit-logs': string;
+          settings: string;
+          'aura-network': string;
+        };
       };
     };
   }

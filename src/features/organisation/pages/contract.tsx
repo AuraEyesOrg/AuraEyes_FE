@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
+import { RefreshButton } from '@/components/ui/button/refresh-button';
 import {
   organisationContractApi,
   type OrganisationContractDetailDto,
@@ -414,15 +415,14 @@ export default function OrganisationContractPage() {
                 Xem, tải và upload hợp đồng hợp tác của tổ chức với AURA
               </p>
             </div>
-            <button
-              onClick={() =>
+            <RefreshButton
+              onRefresh={() =>
                 queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY })
               }
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Làm mới
-            </button>
+              label="Làm mới"
+              isRefreshing={isLoading}
+              className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm"
+            />
           </div>
 
           {isLoading && (
@@ -562,15 +562,21 @@ export default function OrganisationContractPage() {
                 )}
               </div>
 
-              {contract.status === 'PendingSignature' && (
+              {(contract.status === 'PendingSignature' ||
+                contract.status === 'Active') && (
                 <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                      Upload hợp đồng đã ký
+                      {contract.scannedDocumentUrl
+                        ? 'Hợp đồng đã ký'
+                        : 'Upload hợp đồng đã ký'}
                     </p>
                     <p className="text-sm text-slate-500">
-                      Tải mẫu, ký đóng dấu rồi upload lại file scan hoặc ảnh
-                      chụp.
+                      {contract.scannedDocumentUrl
+                        ? contract.status === 'Active'
+                          ? 'Bạn hiện đã có thể bắt đầu sử dụng đầy đủ các tính năng của AURA.'
+                          : 'Hợp đồng đã được gửi đi và đang chờ admin phê duyệt.'
+                        : 'Tải mẫu, ký đóng dấu rồi upload lại file scan hoặc ảnh chụp.'}
                     </p>
                   </div>
                   {!contract.scannedDocumentUrl && (

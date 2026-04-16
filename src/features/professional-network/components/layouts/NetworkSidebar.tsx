@@ -4,7 +4,7 @@
  * Same width (w-64), bg, padding, and user profile at bottom
  */
 
-import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Compass,
@@ -48,17 +48,54 @@ export function NetworkSidebar() {
           : '/';
   const localizedDashboardRoute = toLocalizedPath(dashboardRoute);
 
+  const networkRootPath = toLocalizedPath('/network');
+  const networkFeedPath = toLocalizedPath('/network/feed');
+  const isManageSearch =
+    new URLSearchParams(location.search).get('tab') === 'manage';
+
   const navItems = [
-    { to: '/network', icon: Home, label: 'Feed', end: true },
-    { to: '/network/discover', icon: Compass, label: 'Discover' },
-    { to: '/network/saved', icon: Bookmark, label: 'Saved' },
+    {
+      to: '/network',
+      icon: Home,
+      label: 'Feed',
+      isActive: () =>
+        (location.pathname === networkRootPath ||
+          location.pathname === networkFeedPath) &&
+        !isManageSearch,
+    },
+    {
+      to: '/network/discover',
+      icon: Compass,
+      label: 'Discover',
+      isActive: () =>
+        location.pathname === toLocalizedPath('/network/discover'),
+    },
+    {
+      to: '/network/saved',
+      icon: Bookmark,
+      label: 'Saved',
+      isActive: () => location.pathname === toLocalizedPath('/network/saved'),
+    },
     ...(user?.roles?.includes('SystemAdmin')
-      ? [{ to: '/network?tab=manage', icon: Shield, label: 'Manage Posts' }]
+      ? [
+          {
+            to: '/network?tab=manage',
+            icon: Shield,
+            label: 'Manage Posts',
+            isActive: () =>
+              (location.pathname === networkRootPath ||
+                location.pathname === networkFeedPath) &&
+              isManageSearch,
+          },
+        ]
       : []),
     {
       to: `/network/profile/${user?.id || 'me'}`,
       icon: User,
       label: 'Profile',
+      isActive: () =>
+        location.pathname ===
+        toLocalizedPath(`/network/profile/${user?.id || 'me'}`),
     },
   ];
 
@@ -103,21 +140,18 @@ export function NetworkSidebar() {
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
           {navItems.map((item) => (
-            <NavLink
+            <Link
               key={item.to}
               to={toLocalizedPath(item.to)}
-              end={item.end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                }`
-              }
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                item.isActive()
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
             >
               <item.icon className="w-5 h-5" />
               <span className="text-sm font-medium">{item.label}</span>
-            </NavLink>
+            </Link>
           ))}
 
           {/* Theme Toggle */}

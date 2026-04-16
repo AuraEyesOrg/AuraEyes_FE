@@ -25,6 +25,20 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
     return children;
   }
 
+  const isOrganisationAdmin =
+    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
+  const mustChangePassword = isOrganisationAdmin && user?.mustChangePassword;
+
+  if (mustChangePassword) {
+    if (normalizedPath === '/force-change-password') {
+      return children;
+    }
+
+    return (
+      <Navigate to={resolvePathWithLocale('/force-change-password')} replace />
+    );
+  }
+
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
   const isPendingVerification =
     user?.verificationStatus === 'PendingVerification' ||

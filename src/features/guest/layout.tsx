@@ -6,6 +6,7 @@ import {
   stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { GuestTourProvider } from './tour';
 import { detectPreferredLocale } from '@/i18n/middleware';
 import GuestScrollProgress from './components/GuestScrollProgress';
 import { prefersReducedMotion } from './utils/motion';
@@ -73,11 +74,16 @@ export const GuestLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-medical-bg)]" data-guest-shell>
-      <GuestScrollProgress />
-      <LocaleSync />
-      <Outlet />
-    </div>
+    <GuestTourProvider>
+      <div
+        className="min-h-screen bg-[var(--color-medical-bg)]"
+        data-guest-shell
+      >
+        <GuestScrollProgress />
+        <LocaleSync />
+        <Outlet />
+      </div>
+    </GuestTourProvider>
   );
 };
 

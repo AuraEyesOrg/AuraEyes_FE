@@ -22,7 +22,6 @@ import {
 import type { ReactionType } from '../types';
 
 function FeedPage() {
-  const [activeTab, setActiveTab] = useState<'feed' | 'manage'>('feed');
   const [page, setPage] = useState(1);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,22 +31,44 @@ function FeedPage() {
     withLocalePathname(locale, pathname);
   const isSystemAdmin = user?.roles?.includes('SystemAdmin') ?? false;
   const isManageQuery = searchParams.get('tab') === 'manage';
-  const effectiveTab: 'feed' | 'manage' =
-    isManageQuery || activeTab === 'manage' ? 'manage' : 'feed';
-  const isManageMode = isSystemAdmin && effectiveTab === 'manage';
+  const isManageMode = isSystemAdmin && isManageQuery;
 
-  const {
-    data: feedData,
-    isLoading,
-    isError,
-    error,
-  } = useFeedPosts(page, 10, isManageMode);
+  const feedQuery = useFeedPosts(page, 10, { enabled: !isManageMode });
+  const hiddenPostsQuery = useFeedPosts(page, 10, {
+    hiddenOnly: true,
+    enabled: isManageMode,
+  });
+  const reportedPostsQuery = useFeedPosts(page, 10, {
+    reportedOnly: true,
+    enabled: isManageMode,
+  });
+
   const { data: trendingData } = useTrendingTopics();
   const toggleReaction = useToggleReaction();
   const toggleSave = useToggleSavePost();
   const hidePost = useHidePost();
 
-  const posts = feedData?.items ?? [];
+  const feedData = feedQuery.data;
+  const feedPosts = feedData?.items ?? [];
+  const hiddenPosts = hiddenPostsQuery.data?.items ?? [];
+  const reportedPosts = (reportedPostsQuery.data?.items ?? []).filter(
+    (post) =>
+      !post.isHidden &&
+      ((post.reportCount ?? 0) > 0 || !!post.latestReportReason)
+  );
+  const posts = isManageMode ? [...reportedPosts, ...hiddenPosts] : feedPosts;
+
+  const isLoading = isManageMode
+    ? hiddenPostsQuery.isLoading || reportedPostsQuery.isLoading
+    : feedQuery.isLoading;
+
+  const isError = isManageMode
+    ? hiddenPostsQuery.isError || reportedPostsQuery.isError
+    : feedQuery.isError;
+
+  const error = isManageMode
+    ? hiddenPostsQuery.error || reportedPostsQuery.error
+    : feedQuery.error;
   const trendingTopicsFromApi = trendingData ?? [];
 
   const fallbackTrending = Object.entries(
@@ -99,12 +120,11 @@ function FeedPage() {
         <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 p-1 bg-(--bg-secondary)">
           <button
             onClick={() => {
-              setActiveTab('feed');
               setPage(1);
               setSearchParams({});
             }}
             className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-              effectiveTab === 'feed'
+              !isManageMode
                 ? 'bg-primary/10 text-primary font-semibold'
                 : 'text-slate-500 dark:text-slate-400'
             }`}
@@ -113,12 +133,11 @@ function FeedPage() {
           </button>
           <button
             onClick={() => {
-              setActiveTab('manage');
               setPage(1);
               setSearchParams({ tab: 'manage' });
             }}
             className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-              effectiveTab === 'manage'
+              isManageMode
                 ? 'bg-primary/10 text-primary font-semibold'
                 : 'text-slate-500 dark:text-slate-400'
             }`}
@@ -132,9 +151,11 @@ function FeedPage() {
         {/* Feed Column */}
         <div className="xl:col-span-2 space-y-4">
           {/* Post Composer */}
-          <div className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <PostComposer />
-          </div>
+          {!isManageMode && (
+            <div className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <PostComposer />
+            </div>
+          )}
 
           {/* Loading State */}
           {isLoading && <FeedSkeleton count={3} />}
@@ -157,6 +178,7 @@ function FeedPage() {
           {/* Posts */}
           {!isLoading &&
             !isError &&
+            !isManageMode &&
             posts.length > 0 &&
             posts.map((post) => (
               <div
@@ -175,8 +197,66 @@ function FeedPage() {
               </div>
             ))}
 
+          {!isLoading && !isError && isManageMode && (
+            <>
+              <section className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="text-sm font-bold text-(--text-primary)">
+                    Reported Posts ({reportedPosts.length})
+                  </h3>
+                </div>
+
+                {reportedPosts.length > 0 ? (
+                  reportedPosts.map((post) => (
+                    <PostCard
+                      key={`reported-${post.id}`}
+                      post={post}
+                      onReaction={handleReaction}
+                      onSave={handleSave}
+                      onHidePost={handleHidePost}
+                      canModerate={true}
+                      isHidingPost={hidePost.isPending}
+                      currentUserId={user?.id}
+                    />
+                  ))
+                ) : (
+                  <p className="px-5 py-6 text-sm text-slate-500 dark:text-slate-400">
+                    Không có bài viết bị report trong thời điểm hiện tại.
+                  </p>
+                )}
+              </section>
+
+              <section className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="text-sm font-bold text-(--text-primary)">
+                    Hidden Posts ({hiddenPosts.length})
+                  </h3>
+                </div>
+
+                {hiddenPosts.length > 0 ? (
+                  hiddenPosts.map((post) => (
+                    <PostCard
+                      key={`hidden-${post.id}`}
+                      post={post}
+                      onReaction={handleReaction}
+                      onSave={handleSave}
+                      onHidePost={handleHidePost}
+                      canModerate={true}
+                      isHidingPost={hidePost.isPending}
+                      currentUserId={user?.id}
+                    />
+                  ))
+                ) : (
+                  <p className="px-5 py-6 text-sm text-slate-500 dark:text-slate-400">
+                    Chưa có bài viết nào bị ẩn.
+                  </p>
+                )}
+              </section>
+            </>
+          )}
+
           {/* Empty State */}
-          {!isLoading && !isError && posts.length === 0 && (
+          {!isLoading && !isError && !isManageMode && posts.length === 0 && (
             <div className="rounded-2xl bg-(--bg-secondary) border border-slate-200 dark:border-slate-800 p-12 text-center">
               <p className="text-slate-500 dark:text-slate-400">
                 No posts yet. Be the first to share!
@@ -185,7 +265,7 @@ function FeedPage() {
           )}
 
           {/* Pagination */}
-          {feedData && feedData.totalPages > 1 && (
+          {!isManageMode && feedData && feedData.totalPages > 1 && (
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}

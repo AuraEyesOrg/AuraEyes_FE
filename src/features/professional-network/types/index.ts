@@ -105,6 +105,8 @@ export interface ProfessionalPost {
   attachments: PostAttachment[];
   currentUserReaction?: ReactionType;
   isBookmarked: boolean;
+  reportCount?: number;
+  latestReportReason?: string;
   isHidden: boolean;
   hideReason?: string;
   createdAt: string;

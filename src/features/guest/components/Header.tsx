@@ -10,10 +10,12 @@ import {
   stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useGuestTour } from '../tour';
 
 export const Header = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const { startTourFromHelp } = useGuestTour();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -35,19 +37,31 @@ export const Header = () => {
     return currentPath.startsWith(href);
   };
 
+  const getTourSelectorByHref = (href: string) => {
+    if (href === '/about') return 'guest-nav-about';
+    if (href === '/how-it-works') return 'guest-nav-how-it-works';
+    if (href === '/contact') return 'guest-nav-contact-orga';
+    return undefined;
+  };
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-[#D4DEE8] bg-white/96 backdrop-blur-md dark:border-slate-700 dark:bg-[#0f172a]/95">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <AuraLogo variant="auto" size="md" to={withLocalePathname(locale)} />
+          <div data-tour="guest-logo-home">
+            <AuraLogo
+              variant="auto"
+              size="md"
+              to={withLocalePathname(locale)}
+            />
+          </div>
 
-          {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={withLocalePathname(locale, link.href)}
+                data-tour={getTourSelectorByHref(link.href)}
                 className={`rounded-md px-1.5 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 ${
                   isActive(link.href)
                     ? 'font-semibold text-[#319795] dark:text-cyan-300'
@@ -59,19 +73,26 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* CTA Button */}
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={startTourFromHelp}
+              className="hidden items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 sm:inline-flex"
+            >
+              {t('Common.helpTour', { defaultValue: 'Huong dan' })}
+            </button>
+
             <ThemeToggleButton className="hidden sm:inline-flex" />
             <PremiumLanguageSwitcher className="hidden sm:inline-flex" />
 
             <Link
               to={withLocalePathname(locale, '/login')}
+              data-tour="guest-cta-get-started"
               className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-(--color-brand-primary) px-6 text-base font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-(--color-brand-primary)/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
             >
               {t('Common.getStarted')}
             </Link>
 
-            {/* Mobile Menu Button */}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen((open) => !open)}
@@ -122,9 +143,21 @@ export const Header = () => {
               <ThemeToggleButton />
             </div>
 
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                startTourFromHelp();
+              }}
+              className="mt-1 inline-flex h-11 items-center justify-center rounded-lg border border-[#D6E3F0] px-4 text-sm font-semibold text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+            >
+              {t('Common.helpTour', { defaultValue: 'Huong dan' })}
+            </button>
+
             <Link
               to={withLocalePathname(locale, '/login')}
-              className="mt-2 inline-flex h-11 items-center justify-center rounded-lg bg-(--color-brand-primary) px-4 text-sm font-bold text-white hover:brightness-110 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+              data-tour="guest-cta-get-started"
+              className="mt-2 inline-flex h-11 items-center justify-center rounded-lg bg-(--color-brand-primary) px-4 text-sm font-bold text-white transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {t('Common.getStarted')}
