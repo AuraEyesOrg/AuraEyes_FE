@@ -920,8 +920,54 @@
           "finalDiagnosis": "Chẩn đoán cuối",
           "patient": "Bệnh nhân",
           "riskLevel": "Mức độ nguy cơ",
-          "summary": "Tóm tắt"
-        }
+          "summary": "Tóm tắt",
+          "contentPlaceholder": "Enter clinical notes to share with the doctor network...",
+          "description": "Share anonymized cases to Aura Network with a clinical post layout.",
+          "doctorContent": "Doctor Content",
+          "notEligible": "This consultation has no retinal snapshot or final diagnosis yet, so it cannot be shared.",
+          "preview": "Post Preview",
+          "previewTitle": "Anonymized clinical case post",
+          "retinalImages": "Retinal Images",
+          "sharing": "Sharing case...",
+          "success": "Đã chia sẻ ca lên mạng lưới chuyên môn.",
+          "title": "Share Case To Network"
+        },
+        "aiAnnotated": "AI Annotated",
+        "aiCaseSnapshot": "AI Case Snapshot",
+        "cancelSessionTitle": "Cancel session?",
+        "characterLimitReached": "Character limit reached.",
+        "closeSessionOverview": "Close session overview",
+        "completeConsultationTitle": "Complete consultation?",
+        "completedPlaceholder": "Consultation completed. Messages are read-only.",
+        "confidence": "Độ tin cậy",
+        "encryptionNoticeShort": "Encrypted",
+        "imageAttached": "image attached",
+        "invalidSchedule": "Schedule is unavailable",
+        "join": "Join",
+        "na": "N/A",
+        "noOriginalImage": "No original image",
+        "original": "Original",
+        "originalRetinalImage": "Original retinal image",
+        "patientTyping": "Patient is typing...",
+        "pendingImage": "Pending image",
+        "previewCompletedEmpty": "Session completed — no messages",
+        "previewImageAttachment": "Image attachment shared",
+        "previewLocked": "Chat opens at appointment time",
+        "previewNewMessage": "New message",
+        "previewPreVisitEmpty": "Awaiting patient pre-visit notes…",
+        "previewScanAttachment": "Retinal scan shared",
+        "previewUnavailable": "No messages yet",
+        "preVisitPlaceholder": "Review patient notes and leave guidance before session opens...",
+        "readyToShareImage": "Ready to share image",
+        "risk": "Nguy cơ",
+        "saveResult": {
+          "aiSummary": "Tóm tắt AI",
+          "doctorSays": "Bác sĩ nói rằng",
+          "finalDiagnosis": "Chẩn đoán cuối"
+        },
+        "sharedImage": "Ảnh đã chia sẻ",
+        "unknown": "Không rõ",
+        "unreadActivity": "Unread activity"
       }
     },
     "patients": {
@@ -1092,7 +1138,127 @@
       "commission": "Hoa hồng"
     },
     "screeningReview": {
-      "note": "Lưu ý:"
+      "note": "Lưu ý:",
+      "aiDisclaimer": "AI generated insights are screening aids only. Final diagnosis requires physician review.",
+      "aiModel": "AI Model",
+      "attentionNeeded": "ATTENTION NEEDED",
+      "backToScreenings": "Back to screenings",
+      "boundingboxLabel": "Bounding Box",
+      "captured": "Captured",
+      "demographics": "Demographics",
+      "detectedFindings": "Detected Findings",
+      "device": "Device",
+      "generateReport": "Generate Report",
+      "imageDetails": "Image Details",
+      "invalidIdentifier": "Invalid screening identifier.",
+      "loadFailed": "Could not load screening. Please try again.",
+      "loading": "Loading screening...",
+      "magnification": "Magnification",
+      "medicalConditions": "Medical Conditions",
+      "medicalConditionsHint": "Full medical history is available from the patient chart. This screening view only includes AI summary text when present.",
+      "modal": {
+        "aiSummary": "AI Analysis Summary",
+        "clinicalFindings": "Clinical Findings",
+        "clinicalFindingsHint": "Auto-filled from AI findings. You can adjust before saving.",
+        "clinicalFindingsPlaceholder": "Document physician findings and interpretation...",
+        "completeDiagnosis": "Complete Diagnosis",
+        "confidence": "Confidence",
+        "confirmAndSave": "Confirm & Save",
+        "description": "Review AI findings and provide your clinical assessment",
+        "diagnosisCode": "Diagnosis code",
+        "diagnosisCore": "Diagnosis Core",
+        "exportingPdf": "Exporting...",
+        "exportPdf": "Export PDF",
+        "followUpDate": "Follow-up Date",
+        "linkingSession": "Linking session...",
+        "noAiSummary": "No AI summary stored for this screening.",
+        "recommendations": "Recommendations for patient and follow-up care...",
+        "referralHint": "Recommend specialist consultation",
+        "referralRequired": "Referral Required",
+        "riskLevel": "Risk Level",
+        "selectRecommendationTemplate": "Select a recommendation template",
+        "selectTreatmentTemplate": "Select a treatment template",
+        "severityLevel": "Severity Level",
+        "treatmentAdvice": "Treatment and Advice",
+        "treatmentPlan": "Treatment plan...",
+        "urgentCase": "Urgent Case",
+        "urgentCaseHint": "Mark if immediate attention is required"
+      },
+      "modalityColorFundus": "Modality: Color Fundus",
+      "noSelectedFundusImage": "No fundus image selected. Uploads attached to this screening will appear here.",
+      "noStructuredFindings": "No structured findings for this image. If AI raw output exists, try another eye image or confirm results were saved for this screening.",
+      "notFound": "Screening not found or you do not have access.",
+      "original": "Original",
+      "overlayEditHint": "Kéo khung để di chuyển · Kéo ô vuông góc phải dưới để phóng to/thu nhỏ. Chỉnh sửa chỉ lưu trên trình duyệt (chưa gửi server).",
+      "previousScans": "Previous Scans",
+      "previousScansHint": "Prior screenings are not listed in this view yet.",
+      "quality": "Quality",
+      "qualityGood": "Good",
+      "qualityOptimal": "Optimal",
+      "qualityPoor": "Poor",
+      "qualityUnknown": "Unknown",
+      "referral": {
+        "monitor": "Monitor closely",
+        "recommended": "Referral Recommended",
+        "routine": "Routine follow-up"
+      },
+      "risk": {
+        "critical": "Critical",
+        "high": "High Risk",
+        "low": "Low Risk",
+        "moderate": "Moderate",
+        "none": "No Risk"
+      },
+      "saveButton": "Save",
+      "screeningAi": "Screening AI",
+      "selectImageForDetails": "Select an image to see capture details.",
+      "sessionLinkLoading": "Still loading linked consultation session. Please retry in a moment.",
+      "share": {
+        "failed": "Unable to share retinal images right now.",
+        "header": "Shared retinal image for this screening review:",
+        "noImages": "No retinal images available to share.",
+        "selectImageTitle": "Select retinal image to share",
+        "sendSelected": "Send selected image",
+        "success": "Shared retinal image to consultation chat."
+      },
+      "shareButton": "Share",
+      "status": {
+        "finalizedLocked": "This case is finalized. Editing is locked."
+      },
+      "subtitle": "Case details and AI findings",
+      "tabs": {
+        "currentExam": "Current Exam",
+        "medicalHistory": "Medical History",
+        "patientSummary": "Patient Summary",
+        "previousReports": "Previous Reports"
+      },
+      "title": "Screening Review",
+      "toast": {
+        "downloadReportError": "Không thể tải báo cáo PDF.",
+        "downloadReportSuccess": "Đã tải báo cáo PDF.",
+        "saveFailed": "Lỗi khi lưu chỉnh sửa.",
+        "saveSuccess": "Đã lưu chỉnh sửa thành công."
+      },
+      "toolbar": {
+        "addNewBox": "Add new custom bounding box",
+        "deleteBox": "Delete selected box",
+        "editOverlay": "Edit AI boxes: drag to move, drag corner to resize",
+        "exitOverlayEdit": "Exit overlay edit (drag / resize handles)",
+        "fullscreen": "Fullscreen",
+        "measure": "Measure",
+        "pan": "Pan",
+        "reset": "Reset",
+        "resetAiBoxes": "Reset all to AI positions",
+        "undo": "Undo last action",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out"
+      },
+      "validation": {
+        "invalidLinkedSession": "Invalid Linked Session",
+        "missingDoctorIdentity": "Missing doctor identity.",
+        "noLinkedSession": "No linked Verification or VideoCall session was found for this screening.",
+        "requiredDiagnosisAndFindings": "Diagnosis code and clinical findings are required before saving."
+      }
     },
     "screenings": {
       "confidence": {
@@ -1144,7 +1310,9 @@
         "deposit": "Nạp tiền",
         "payment": "Thanh toán",
         "refund": "Hoàn tiền",
-        "transfer": "Chuyển khoản"
+        "transfer": "Chuyển khoản",
+        "transaction": "Transaction",
+        "withdrawal": "Withdrawal"
       },
       "transactions": "Lịch sử giao dịch",
       "withdraw": {
@@ -1152,10 +1320,55 @@
           "cancelled": "Đã hủy",
           "failed": "Từ chối",
           "pending": "Đang chờ",
-          "processing": "Đang xử lý"
+          "processing": "Đang xử lý",
+          "completed": "Completed"
         }
       },
-      "yourNote": "Ghi chú của bạn"
+      "yourNote": "Ghi chú của bạn",
+      "actions": {
+        "createWithdrawRequest": "Create withdrawal request"
+      },
+      "adminNote": "Admin note",
+      "consultationIncome": "Thu nhập tư vấn (trang hiện tại)",
+      "consultationIncomeShort": "Consultation income",
+      "contractNumberPlaceholder": "AURA-OPH-...",
+      "contractReference": "Contract reference",
+      "loadError": "Không thể tải dữ liệu ví. Vui lòng thử lại.",
+      "noTransactions": "Chưa có giao dịch nào.",
+      "noWithdrawRequests": "No withdrawal requests yet.",
+      "pendingWithdrawRequests": "Pending withdrawal requests",
+      "requestsProcessing": "requests processing",
+      "submittedAt": "Submitted at",
+      "subtitle": "Theo dõi thu nhập tư vấn và các giao dịch ví của bạn.",
+      "thisMonthIn": "Tiền vào ví tháng này",
+      "thisMonthInDescription": "Includes top-ups, bonuses, refunds, and consultation income",
+      "toast": {
+        "invalidWithdrawAmount": "Invalid withdrawal amount.",
+        "missingBankBin": "Please provide the bank BIN code for automated PayOS payout.",
+        "missingBankInfo": "Please provide complete recipient bank information.",
+        "withdrawExceedsBalance": "Withdrawal amount exceeds current wallet balance.",
+        "withdrawSubmitFailed": "Unable to submit withdrawal request.",
+        "withdrawSubmitted": "Withdrawal request submitted. Please wait for admin confirmation."
+      },
+      "transactionsInMonth": "transactions this month",
+      "transferReference": "Transfer reference",
+      "withdrawModal": {
+        "accountHolderLabel": "Account Holder Name",
+        "accountHolderPlaceholder": "As stated in contract",
+        "accountNumberLabel": "Account Number",
+        "accountNumberPlaceholder": "Enter account number",
+        "amountLabel": "Withdrawal Amount (VND)",
+        "amountPlaceholder": "Example: 500000",
+        "bankLabel": "Bank",
+        "bankPlaceholder": "Search and select bank…",
+        "bankSearchPlaceholder": "Search bank name or BIN…",
+        "contractLabel": "Contract Number (optional)",
+        "noBankFound": "No bank found.",
+        "noteLabel": "Note",
+        "notePlaceholder": "Additional note for admin (optional)",
+        "title": "Create Withdrawal Request"
+      },
+      "withdrawRequestsTitle": "Withdrawal Requests"
     }
   },
   "MedicalTerms": {
