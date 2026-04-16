@@ -79,7 +79,7 @@ export const Header = () => {
               onClick={startTourFromHelp}
               className="hidden items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 sm:inline-flex"
             >
-              {t('Common.helpTour', { defaultValue: 'Huong dan' })}
+              {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
             </button>
 
             <ThemeToggleButton className="hidden sm:inline-flex" />
@@ -127,6 +127,7 @@ export const Header = () => {
               <Link
                 key={link.href}
                 to={withLocalePathname(locale, link.href)}
+                data-tour={getTourSelectorByHref(link.href)}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 ${
                   isActive(link.href)
                     ? 'bg-[#E6FFFA] text-[#319795] dark:bg-cyan-900/30 dark:text-cyan-200'
@@ -151,7 +152,7 @@ export const Header = () => {
               }}
               className="mt-1 inline-flex h-11 items-center justify-center rounded-lg border border-[#D6E3F0] px-4 text-sm font-semibold text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800"
             >
-              {t('Common.helpTour', { defaultValue: 'Huong dan' })}
+              {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
             </button>
 
             <Link
