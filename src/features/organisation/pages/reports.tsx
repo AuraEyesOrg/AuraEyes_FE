@@ -9,11 +9,13 @@ import {
   BarChart3,
   PieChart,
 } from 'lucide-react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import { orgReportsApi } from '../api/billing.api';
 
 export default function OrganisationReportsPage() {
+  const { t } = useSafeTranslation();
   const { data: report, isLoading } = useQuery({
     queryKey: ['org-screening-reports'],
     queryFn: () => orgReportsApi.getScreeningReports(),
@@ -28,7 +30,10 @@ export default function OrganisationReportsPage() {
   const handleExport = () => {
     if (!report) return;
     const csvRows = [
-      'Month,Total,High Risk,Moderate Risk,Low Risk',
+      t(
+        'Organisation.reports.export.csvHeader',
+        'Month,Total,High Risk,Moderate Risk,Low Risk'
+      ),
       ...(report.monthlyBreakdown ?? []).map(
         (m) =>
           `${m.month},${m.count},${m.highRisk},${m.moderateRisk},${m.lowRisk}`
@@ -38,7 +43,10 @@ export default function OrganisationReportsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'screening-report.csv';
+    a.download = t(
+      'Organisation.reports.export.fileName',
+      'screening-report.csv'
+    );
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -47,17 +55,22 @@ export default function OrganisationReportsPage() {
     <div className="flex h-screen overflow-hidden bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <OrganisationHeader pageName="Reports" />
+        <OrganisationHeader
+          pageName={t('Organisation.reports.pageName', 'Reports')}
+        />
         <main className="flex-1 overflow-y-auto p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-(--text-primary)">
-                  Screening Reports
+                  {t('Organisation.reports.header.title', 'Screening Reports')}
                 </h1>
                 <p className="text-sm text-(--text-secondary)">
-                  Aggregate analytics and insights from AI screenings
+                  {t(
+                    'Organisation.reports.header.subtitle',
+                    'Aggregate analytics and insights from AI screenings'
+                  )}
                 </p>
               </div>
             </div>
@@ -66,7 +79,8 @@ export default function OrganisationReportsPage() {
               disabled={!report}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition shadow-lg shadow-primary/25"
             >
-              <Download className="w-4 h-4" /> Export CSV
+              <Download className="w-4 h-4" />
+              {t('Organisation.reports.actions.exportCsv', 'Export CSV')}
             </button>
           </div>
 
@@ -80,28 +94,40 @@ export default function OrganisationReportsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <MetricCard
                   icon={BarChart3}
-                  label="Total Screenings"
+                  label={t(
+                    'Organisation.reports.metrics.totalScreenings',
+                    'Total Screenings'
+                  )}
                   value={report?.totalScreenings ?? 0}
                   iconBg="bg-blue-500/10"
                   iconColor="text-blue-500"
                 />
                 <MetricCard
                   icon={AlertTriangle}
-                  label="High Risk Cases"
+                  label={t(
+                    'Organisation.reports.metrics.highRiskCases',
+                    'High Risk Cases'
+                  )}
                   value={report?.highRiskCount ?? 0}
                   iconBg="bg-red-500/10"
                   iconColor="text-red-500"
                 />
                 <MetricCard
                   icon={ShieldCheck}
-                  label="Low Risk Cases"
+                  label={t(
+                    'Organisation.reports.metrics.lowRiskCases',
+                    'Low Risk Cases'
+                  )}
                   value={report?.lowRiskCount ?? 0}
                   iconBg="bg-emerald-500/10"
                   iconColor="text-emerald-500"
                 />
                 <MetricCard
                   icon={Activity}
-                  label="Avg. Confidence"
+                  label={t(
+                    'Organisation.reports.metrics.averageConfidence',
+                    'Avg. Confidence'
+                  )}
                   value={`${report?.averageConfidence ?? 0}%`}
                   iconBg="bg-purple-500/10"
                   iconColor="text-purple-500"
@@ -113,23 +139,35 @@ export default function OrganisationReportsPage() {
                 <div className="rounded-2xl bg-(--bg-secondary) border border-(--border-primary) p-6">
                   <h3 className="text-base font-bold text-(--text-primary) mb-6 flex items-center gap-2">
                     <PieChart className="w-4 h-4 text-primary" />
-                    Risk Distribution
+                    {t(
+                      'Organisation.reports.riskDistribution.title',
+                      'Risk Distribution'
+                    )}
                   </h3>
                   <div className="space-y-4">
                     <DistributionBar
-                      label="High Risk"
+                      label={t(
+                        'Organisation.reports.riskDistribution.high',
+                        'High Risk'
+                      )}
                       count={report?.highRiskCount ?? 0}
                       percentage={highPct}
                       color="bg-red-500"
                     />
                     <DistributionBar
-                      label="Moderate Risk"
+                      label={t(
+                        'Organisation.reports.riskDistribution.moderate',
+                        'Moderate Risk'
+                      )}
                       count={report?.moderateRiskCount ?? 0}
                       percentage={modPct}
                       color="bg-amber-500"
                     />
                     <DistributionBar
-                      label="Low Risk"
+                      label={t(
+                        'Organisation.reports.riskDistribution.low',
+                        'Low Risk'
+                      )}
                       count={report?.lowRiskCount ?? 0}
                       percentage={lowPct}
                       color="bg-emerald-500"
@@ -142,7 +180,10 @@ export default function OrganisationReportsPage() {
                   <div className="px-6 py-4 border-b border-(--border-primary)">
                     <h3 className="text-base font-bold text-(--text-primary) flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-primary" />
-                      Monthly Breakdown
+                      {t(
+                        'Organisation.reports.monthlyBreakdown.title',
+                        'Monthly Breakdown'
+                      )}
                     </h3>
                   </div>
                   <div className="overflow-x-auto">
@@ -150,19 +191,22 @@ export default function OrganisationReportsPage() {
                       <thead>
                         <tr className="border-b border-(--border-primary)">
                           <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                            Month
+                            {t('Organisation.reports.table.month', 'Month')}
                           </th>
                           <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                            Total
+                            {t('Organisation.reports.table.total', 'Total')}
                           </th>
                           <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                            High
+                            {t('Organisation.reports.table.high', 'High')}
                           </th>
                           <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                            Moderate
+                            {t(
+                              'Organisation.reports.table.moderate',
+                              'Moderate'
+                            )}
                           </th>
                           <th className="text-left px-6 py-3 text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                            Low
+                            {t('Organisation.reports.table.low', 'Low')}
                           </th>
                         </tr>
                       </thead>
@@ -173,7 +217,10 @@ export default function OrganisationReportsPage() {
                               colSpan={5}
                               className="px-6 py-12 text-center text-(--text-tertiary)"
                             >
-                              No data available yet
+                              {t(
+                                'Organisation.reports.table.noData',
+                                'No data available yet'
+                              )}
                             </td>
                           </tr>
                         ) : (

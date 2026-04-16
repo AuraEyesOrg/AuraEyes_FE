@@ -3356,6 +3356,147 @@ declare module 'i18next' {
         today: string;
         yearsAbbr: string;
       };
+      dashboard: {
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        identity: {
+          defaultAdmin: string;
+        };
+        labels: {
+          remainingAiQuota: string;
+          utilizationRateToday: string;
+        };
+        pageName: string;
+        sections: {
+          appointmentStatus: {
+            subtitle: string;
+            title: string;
+          };
+          utilization: {
+            subtitle: string;
+            title: string;
+          };
+        };
+        states: {
+          unavailable: string;
+        };
+        stats: {
+          pendingConfirmed: {
+            change: string;
+            title: string;
+          };
+          remainingAiQuota: {
+            change: string;
+            title: string;
+          };
+          totalAppointments: {
+            change: string;
+            title: string;
+          };
+          utilizationRate: {
+            change: string;
+            title: string;
+          };
+        };
+        status: {
+          cancelled: string;
+          completed: string;
+          confirmed: string;
+          noShow: string;
+          pending: string;
+        };
+        toast: {
+          loadFailed: string;
+        };
+      };
+      settings: {
+        actions: {
+          saveChanges: string;
+          saving: string;
+        };
+        avatar: {
+          alt: string;
+          hint: string;
+          uploadAction: string;
+        };
+        form: {
+          aboutDescription: string;
+          address: string;
+          contactEmail: string;
+          contactFullName: string;
+          contactPhone: string;
+          descriptionPlaceholder: string;
+          licenseNumber: string;
+          organisationName: string;
+          taxCode: string;
+          type: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        sections: {
+          organisationInfo: string;
+        };
+        states: {
+          loadFailed: string;
+          loading: string;
+          sectionInProgress: string;
+        };
+        tabs: {
+          clinic: string;
+          data: string;
+          notifications: string;
+          security: string;
+          users: string;
+        };
+        toast: {
+          avatarUploadFailed: string;
+          avatarUploadSuccess: string;
+          updateFailed: string;
+          updateSuccess: string;
+        };
+      };
+      reports: {
+        actions: {
+          exportCsv: string;
+        };
+        export: {
+          csvHeader: string;
+          fileName: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        metrics: {
+          averageConfidence: string;
+          highRiskCases: string;
+          lowRiskCases: string;
+          totalScreenings: string;
+        };
+        monthlyBreakdown: {
+          title: string;
+        };
+        pageName: string;
+        riskDistribution: {
+          high: string;
+          low: string;
+          moderate: string;
+          title: string;
+        };
+        table: {
+          high: string;
+          low: string;
+          moderate: string;
+          month: string;
+          noData: string;
+          total: string;
+        };
+      };
       screening: {
         actions: {
           buyMoreQuota: string;

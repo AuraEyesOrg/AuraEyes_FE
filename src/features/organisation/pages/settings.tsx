@@ -22,6 +22,7 @@ import {
 import { uploadAvatar } from '@/features/patient/api/patient.api';
 import { resolveAvatarUrl } from '@/lib/user-avatar';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type SettingsTab = 'clinic' | 'users' | 'notifications' | 'security' | 'data';
 
@@ -73,6 +74,7 @@ const mapSettingsToForm = (
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
+  const { t } = useSafeTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>('clinic');
   const [initialForm, setInitialForm] = useState<SettingsForm | null>(null);
   const [form, setForm] = useState<SettingsForm>({
@@ -90,13 +92,33 @@ export default function SettingsPage() {
 
   const tabs = useMemo(
     () => [
-      { id: 'clinic' as const, label: 'Clinic Info', icon: Building },
-      { id: 'users' as const, label: 'Users & Roles', icon: Users },
-      { id: 'notifications' as const, label: 'Notifications', icon: Bell },
-      { id: 'security' as const, label: 'Security', icon: Lock },
-      { id: 'data' as const, label: 'Data Management', icon: Database },
+      {
+        id: 'clinic' as const,
+        label: t('Organisation.settings.tabs.clinic', 'Clinic Info'),
+        icon: Building,
+      },
+      {
+        id: 'users' as const,
+        label: t('Organisation.settings.tabs.users', 'Users & Roles'),
+        icon: Users,
+      },
+      {
+        id: 'notifications' as const,
+        label: t('Organisation.settings.tabs.notifications', 'Notifications'),
+        icon: Bell,
+      },
+      {
+        id: 'security' as const,
+        label: t('Organisation.settings.tabs.security', 'Security'),
+        icon: Lock,
+      },
+      {
+        id: 'data' as const,
+        label: t('Organisation.settings.tabs.data', 'Data Management'),
+        icon: Database,
+      },
     ],
-    []
+    [t]
   );
 
   const settingsQuery = useQuery({
@@ -135,15 +157,24 @@ export default function SettingsPage() {
         });
       }
 
-      toast.success('Organisation settings updated successfully.', {
-        toastId: SETTINGS_TOAST_IDS.save,
-      });
+      toast.success(
+        t(
+          'Organisation.settings.toast.updateSuccess',
+          'Organisation settings updated successfully.'
+        ),
+        {
+          toastId: SETTINGS_TOAST_IDS.save,
+        }
+      );
     },
     onError: (error) => {
       toast.error(
         extractApiErrorMessage(
           error,
-          'Failed to update organisation settings.'
+          t(
+            'Organisation.settings.toast.updateFailed',
+            'Failed to update organisation settings.'
+          )
         ),
         { toastId: SETTINGS_TOAST_IDS.save }
       );
@@ -155,16 +186,28 @@ export default function SettingsPage() {
     onSuccess: (avatarUrl) => {
       setForm((prev) => ({ ...prev, avatarUrl }));
       toast.success(
-        'Avatar uploaded. Save changes to persist profile mapping.',
+        t(
+          'Organisation.settings.toast.avatarUploadSuccess',
+          'Avatar uploaded. Save changes to persist profile mapping.'
+        ),
         {
           toastId: SETTINGS_TOAST_IDS.avatarUpload,
         }
       );
     },
     onError: (error) => {
-      toast.error(extractApiErrorMessage(error, 'Failed to upload avatar.'), {
-        toastId: SETTINGS_TOAST_IDS.avatarUpload,
-      });
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'Organisation.settings.toast.avatarUploadFailed',
+            'Failed to upload avatar.'
+          )
+        ),
+        {
+          toastId: SETTINGS_TOAST_IDS.avatarUpload,
+        }
+      );
     },
   });
 
@@ -217,15 +260,20 @@ export default function SettingsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader pageName="Settings" />
+        <OrganisationHeader
+          pageName={t('Organisation.settings.pageName', 'Settings')}
+        />
 
         <main className="p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-              Settings
+              {t('Organisation.settings.header.title', 'Settings')}
             </h1>
             <p className="text-(--text-secondary)">
-              Manage your organisation profile and contact configuration.
+              {t(
+                'Organisation.settings.header.subtitle',
+                'Manage your organisation profile and contact configuration.'
+              )}
             </p>
           </div>
 
@@ -253,13 +301,19 @@ export default function SettingsPage() {
               <div className="bg-(--bg-secondary) rounded-xl p-6 border border-(--border-primary)">
                 {settingsQuery.isLoading && (
                   <p className="text-sm text-(--text-secondary)">
-                    Loading organisation settings...
+                    {t(
+                      'Organisation.settings.states.loading',
+                      'Loading organisation settings...'
+                    )}
                   </p>
                 )}
 
                 {settingsQuery.isError && (
                   <p className="text-sm text-red-500">
-                    Unable to load settings. Please refresh and try again.
+                    {t(
+                      'Organisation.settings.states.loadFailed',
+                      'Unable to load settings. Please refresh and try again.'
+                    )}
                   </p>
                 )}
 
@@ -268,7 +322,10 @@ export default function SettingsPage() {
                   activeTab === 'clinic' && (
                     <div className="space-y-6">
                       <h3 className="text-lg font-semibold text-(--text-primary)">
-                        Organisation Information
+                        {t(
+                          'Organisation.settings.sections.organisationInfo',
+                          'Organisation Information'
+                        )}
                       </h3>
 
                       <div className="relative grid gap-4 md:grid-cols-[120px_1fr] items-start">
@@ -280,17 +337,25 @@ export default function SettingsPage() {
 
                         <img
                           src={displayAvatar}
-                          alt="Organisation avatar"
+                          alt={t(
+                            'Organisation.settings.avatar.alt',
+                            'Organisation avatar'
+                          )}
                           className="h-24 w-24 rounded-2xl border border-(--border-primary) object-cover"
                         />
                         <div className="space-y-3">
                           <p className="text-xs text-(--text-tertiary)">
-                            Avatar is synced to network profile and organisation
-                            about section.
+                            {t(
+                              'Organisation.settings.avatar.hint',
+                              'Avatar is synced to network profile and organisation about section.'
+                            )}
                           </p>
                           <label className="inline-flex items-center gap-2 rounded-lg border border-(--border-primary) px-4 py-2 text-sm font-medium text-(--text-primary) hover:bg-(--bg-tertiary) cursor-pointer transition-colors">
                             <Upload size={16} />
-                            Upload avatar
+                            {t(
+                              'Organisation.settings.avatar.uploadAction',
+                              'Upload avatar'
+                            )}
                             <input
                               type="file"
                               accept="image/*"
@@ -304,51 +369,72 @@ export default function SettingsPage() {
 
                       <div className="grid gap-4 md:grid-cols-2">
                         <InputField
-                          label="Organisation Name"
+                          label={t(
+                            'Organisation.settings.form.organisationName',
+                            'Organisation Name'
+                          )}
                           name="name"
                           value={form.name}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Type"
+                          label={t('Organisation.settings.form.type', 'Type')}
                           name="orgType"
                           value={form.orgType}
                           onChange={handleInputChange}
                           readOnly
                         />
                         <InputField
-                          label="License Number"
+                          label={t(
+                            'Organisation.settings.form.licenseNumber',
+                            'License Number'
+                          )}
                           name="licenseNumber"
                           value={form.licenseNumber}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Tax Code"
+                          label={t(
+                            'Organisation.settings.form.taxCode',
+                            'Tax Code'
+                          )}
                           name="taxCode"
                           value={form.taxCode}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Contact Full Name"
+                          label={t(
+                            'Organisation.settings.form.contactFullName',
+                            'Contact Full Name'
+                          )}
                           name="contactFullName"
                           value={form.contactFullName}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Contact Email"
+                          label={t(
+                            'Organisation.settings.form.contactEmail',
+                            'Contact Email'
+                          )}
                           name="contactEmail"
                           type="email"
                           value={form.contactEmail}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Contact Phone"
+                          label={t(
+                            'Organisation.settings.form.contactPhone',
+                            'Contact Phone'
+                          )}
                           name="contactPhone"
                           value={form.contactPhone}
                           onChange={handleInputChange}
                         />
                         <InputField
-                          label="Address"
+                          label={t(
+                            'Organisation.settings.form.address',
+                            'Address'
+                          )}
                           name="address"
                           value={form.address}
                           onChange={handleInputChange}
@@ -357,7 +443,10 @@ export default function SettingsPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          About / Description
+                          {t(
+                            'Organisation.settings.form.aboutDescription',
+                            'About / Description'
+                          )}
                         </label>
                         <textarea
                           name="description"
@@ -365,7 +454,10 @@ export default function SettingsPage() {
                           value={form.description}
                           onChange={handleInputChange}
                           className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-3 text-(--text-primary) focus:outline-none focus:border-primary"
-                          placeholder="Brief organisation profile shown in network about section"
+                          placeholder={t(
+                            'Organisation.settings.form.descriptionPlaceholder',
+                            'Brief organisation profile shown in network about section'
+                          )}
                         />
                       </div>
                     </div>
@@ -375,8 +467,10 @@ export default function SettingsPage() {
                   !settingsQuery.isError &&
                   activeTab !== 'clinic' && (
                     <div className="rounded-lg border border-dashed border-(--border-primary) p-6 text-sm text-(--text-secondary)">
-                      This section is currently in progress. Core organisation
-                      profile settings are available in Clinic Info.
+                      {t(
+                        'Organisation.settings.states.sectionInProgress',
+                        'This section is currently in progress. Core organisation profile settings are available in Clinic Info.'
+                      )}
                     </div>
                   )}
 
@@ -392,7 +486,12 @@ export default function SettingsPage() {
                     className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Save size={18} />
-                    {isSaving ? 'Saving...' : 'Save Changes'}
+                    {isSaving
+                      ? t('Organisation.settings.actions.saving', 'Saving...')
+                      : t(
+                          'Organisation.settings.actions.saveChanges',
+                          'Save Changes'
+                        )}
                   </button>
                 </div>
               </div>

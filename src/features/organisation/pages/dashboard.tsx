@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useEffect } from 'react';
 import Spinner from '@/components/ui/spinner';
 import useAuthStore from '@/store/auth-store';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import StatsCard from '../components/StatsCard';
@@ -11,6 +12,7 @@ import { getOrganisationDashboardMetrics } from '../api/dashboard.api';
 
 export default function OrganisationDashboard() {
   const { user } = useAuthStore();
+  const { t } = useSafeTranslation();
   const metricsQuery = useQuery({
     queryKey: ['organisation-dashboard', 'metrics'],
     queryFn: getOrganisationDashboardMetrics,
@@ -18,9 +20,14 @@ export default function OrganisationDashboard() {
 
   useEffect(() => {
     if (metricsQuery.isError) {
-      toast.error('Unable to load the live organisation dashboard.');
+      toast.error(
+        t(
+          'Organisation.dashboard.toast.loadFailed',
+          'Unable to load the live organisation dashboard.'
+        )
+      );
     }
-  }, [metricsQuery.isError]);
+  }, [metricsQuery.isError, t]);
 
   if (metricsQuery.isLoading || !metricsQuery.data) {
     return (
@@ -34,7 +41,10 @@ export default function OrganisationDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-screen w-full bg-(--bg-primary)">
         <div className="text-slate-500 font-medium dark:text-slate-400">
-          Dashboard data is currently unavailable.
+          {t(
+            'Organisation.dashboard.states.unavailable',
+            'Dashboard data is currently unavailable.'
+          )}
         </div>
       </div>
     );
@@ -43,35 +53,37 @@ export default function OrganisationDashboard() {
   const metrics = metricsQuery.data;
   const pendingWorkload =
     metrics.appointmentStatus.pending + metrics.appointmentStatus.confirmed;
-  const displayName = user?.fullName || 'Organisation Admin';
+  const displayName =
+    user?.fullName ||
+    t('Organisation.dashboard.identity.defaultAdmin', 'Organisation Admin');
 
   const statusItems = [
     {
-      label: 'Pending',
+      label: t('Organisation.dashboard.status.pending', 'Pending'),
       value: metrics.appointmentStatus.pending,
       colorClass: 'bg-amber-500',
       textClass: 'text-amber-700 dark:text-amber-400',
     },
     {
-      label: 'Confirmed',
+      label: t('Organisation.dashboard.status.confirmed', 'Confirmed'),
       value: metrics.appointmentStatus.confirmed,
       colorClass: 'bg-blue-500',
       textClass: 'text-blue-700 dark:text-blue-400',
     },
     {
-      label: 'Completed',
+      label: t('Organisation.dashboard.status.completed', 'Completed'),
       value: metrics.appointmentStatus.completed,
       colorClass: 'bg-emerald-500',
       textClass: 'text-emerald-700 dark:text-emerald-400',
     },
     {
-      label: 'Cancelled',
+      label: t('Organisation.dashboard.status.cancelled', 'Cancelled'),
       value: metrics.appointmentStatus.cancelled,
       colorClass: 'bg-rose-500',
       textClass: 'text-rose-700 dark:text-rose-400',
     },
     {
-      label: 'No Show',
+      label: t('Organisation.dashboard.status.noShow', 'No Show'),
       value: metrics.appointmentStatus.noShow,
       colorClass: 'bg-slate-500',
       textClass: 'text-slate-700 dark:text-slate-300',
@@ -89,49 +101,84 @@ export default function OrganisationDashboard() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader pageName="Dashboard" />
+        <OrganisationHeader
+          pageName={t('Organisation.dashboard.pageName', 'Dashboard')}
+        />
 
         <main className="p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-(--text-primary) mb-2">
-              Welcome back, {displayName}
+              {t(
+                'Organisation.dashboard.header.title',
+                'Welcome back, {{name}}',
+                {
+                  name: displayName,
+                }
+              )}
             </h1>
             <p className="text-(--text-secondary)">
-              Here's your live dashboard for <b>{displayName}</b>. Monitor key
-              metrics and manage your organisation.
+              {t(
+                'Organisation.dashboard.header.subtitle',
+                "Here's your live dashboard for {{name}}. Monitor key metrics and manage your organisation.",
+                { name: displayName }
+              )}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatsCard
               icon={CalendarDays}
-              title="Total Appointments"
+              title={t(
+                'Organisation.dashboard.stats.totalAppointments.title',
+                'Total Appointments'
+              )}
               value={metrics.totalAppointments}
-              change="Live total"
+              change={t(
+                'Organisation.dashboard.stats.totalAppointments.change',
+                'Live total'
+              )}
               trend="stable"
               color="#3b82f6"
             />
             <StatsCard
               icon={Clock3}
-              title="Pending + Confirmed"
+              title={t(
+                'Organisation.dashboard.stats.pendingConfirmed.title',
+                'Pending + Confirmed'
+              )}
               value={pendingWorkload}
-              change="Need active handling"
+              change={t(
+                'Organisation.dashboard.stats.pendingConfirmed.change',
+                'Need active handling'
+              )}
               trend="stable"
               color="#f59e0b"
             />
             <StatsCard
               icon={Activity}
-              title="Utilization Rate"
+              title={t(
+                'Organisation.dashboard.stats.utilizationRate.title',
+                'Utilization Rate'
+              )}
               value={`${safeUtilization.toFixed(1)}%`}
-              change="Today's booked/capacity"
+              change={t(
+                'Organisation.dashboard.stats.utilizationRate.change',
+                "Today's booked/capacity"
+              )}
               trend="stable"
               color="#10b981"
             />
             <StatsCard
               icon={Cpu}
-              title="Remaining AI Quota"
+              title={t(
+                'Organisation.dashboard.stats.remainingAiQuota.title',
+                'Remaining AI Quota'
+              )}
               value={metrics.remainingAiQuota}
-              change="Credits available now"
+              change={t(
+                'Organisation.dashboard.stats.remainingAiQuota.change',
+                'Credits available now'
+              )}
               trend="stable"
               color="#ef4444"
             />
@@ -145,10 +192,16 @@ export default function OrganisationDashboard() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-(--text-primary)">
-                    Appointment Status Tracking
+                    {t(
+                      'Organisation.dashboard.sections.appointmentStatus.title',
+                      'Appointment Status Tracking'
+                    )}
                   </h2>
                   <p className="text-sm text-(--text-secondary)">
-                    Real-time appointment lifecycle across your organisation.
+                    {t(
+                      'Organisation.dashboard.sections.appointmentStatus.subtitle',
+                      'Real-time appointment lifecycle across your organisation.'
+                    )}
                   </p>
                 </div>
               </div>
@@ -189,10 +242,16 @@ export default function OrganisationDashboard() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-(--text-primary)">
-                    Organisation Utilization & AI Quota
+                    {t(
+                      'Organisation.dashboard.sections.utilization.title',
+                      'Organisation Utilization & AI Quota'
+                    )}
                   </h2>
                   <p className="text-sm text-(--text-secondary)">
-                    Capacity consumption and AI credits for daily operations.
+                    {t(
+                      'Organisation.dashboard.sections.utilization.subtitle',
+                      'Capacity consumption and AI credits for daily operations.'
+                    )}
                   </p>
                 </div>
               </div>
@@ -200,7 +259,10 @@ export default function OrganisationDashboard() {
                 <div className="rounded-lg bg-(--bg-primary) p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-(--text-tertiary)">
-                      Utilization rate today
+                      {t(
+                        'Organisation.dashboard.labels.utilizationRateToday',
+                        'Utilization rate today'
+                      )}
                     </p>
                     <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                       {safeUtilization.toFixed(1)}%
@@ -215,7 +277,10 @@ export default function OrganisationDashboard() {
                 </div>
                 <div className="rounded-lg bg-(--bg-primary) p-4">
                   <p className="text-sm text-(--text-tertiary)">
-                    Remaining AI quota
+                    {t(
+                      'Organisation.dashboard.labels.remainingAiQuota',
+                      'Remaining AI quota'
+                    )}
                   </p>
                   <p className="mt-2 text-3xl font-bold text-(--text-primary)">
                     {metrics.remainingAiQuota}

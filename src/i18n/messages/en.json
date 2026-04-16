@@ -3343,6 +3343,147 @@
       "today": "Today",
       "yearsAbbr": "yrs"
     },
+    "dashboard": {
+      "header": {
+        "subtitle": "Here's your live dashboard for {{name}}. Monitor key metrics and manage your organisation.",
+        "title": "Welcome back, {{name}}"
+      },
+      "identity": {
+        "defaultAdmin": "Organisation Admin"
+      },
+      "labels": {
+        "remainingAiQuota": "Remaining AI quota",
+        "utilizationRateToday": "Utilization rate today"
+      },
+      "pageName": "Dashboard",
+      "sections": {
+        "appointmentStatus": {
+          "subtitle": "Real-time appointment lifecycle across your organisation.",
+          "title": "Appointment Status Tracking"
+        },
+        "utilization": {
+          "subtitle": "Capacity consumption and AI credits for daily operations.",
+          "title": "Organisation Utilization & AI Quota"
+        }
+      },
+      "states": {
+        "unavailable": "Dashboard data is currently unavailable."
+      },
+      "stats": {
+        "pendingConfirmed": {
+          "change": "Need active handling",
+          "title": "Pending + Confirmed"
+        },
+        "remainingAiQuota": {
+          "change": "Credits available now",
+          "title": "Remaining AI Quota"
+        },
+        "totalAppointments": {
+          "change": "Live total",
+          "title": "Total Appointments"
+        },
+        "utilizationRate": {
+          "change": "Today's booked/capacity",
+          "title": "Utilization Rate"
+        }
+      },
+      "status": {
+        "cancelled": "Cancelled",
+        "completed": "Completed",
+        "confirmed": "Confirmed",
+        "noShow": "No Show",
+        "pending": "Pending"
+      },
+      "toast": {
+        "loadFailed": "Unable to load the live organisation dashboard."
+      }
+    },
+    "settings": {
+      "actions": {
+        "saveChanges": "Save Changes",
+        "saving": "Saving..."
+      },
+      "avatar": {
+        "alt": "Organisation avatar",
+        "hint": "Avatar is synced to network profile and organisation about section.",
+        "uploadAction": "Upload avatar"
+      },
+      "form": {
+        "aboutDescription": "About / Description",
+        "address": "Address",
+        "contactEmail": "Contact Email",
+        "contactFullName": "Contact Full Name",
+        "contactPhone": "Contact Phone",
+        "descriptionPlaceholder": "Brief organisation profile shown in network about section",
+        "licenseNumber": "License Number",
+        "organisationName": "Organisation Name",
+        "taxCode": "Tax Code",
+        "type": "Type"
+      },
+      "header": {
+        "subtitle": "Manage your organisation profile and contact configuration.",
+        "title": "Settings"
+      },
+      "pageName": "Settings",
+      "sections": {
+        "organisationInfo": "Organisation Information"
+      },
+      "states": {
+        "loadFailed": "Unable to load settings. Please refresh and try again.",
+        "loading": "Loading organisation settings...",
+        "sectionInProgress": "This section is currently in progress. Core organisation profile settings are available in Clinic Info."
+      },
+      "tabs": {
+        "clinic": "Clinic Info",
+        "data": "Data Management",
+        "notifications": "Notifications",
+        "security": "Security",
+        "users": "Users & Roles"
+      },
+      "toast": {
+        "avatarUploadFailed": "Failed to upload avatar.",
+        "avatarUploadSuccess": "Avatar uploaded. Save changes to persist profile mapping.",
+        "updateFailed": "Failed to update organisation settings.",
+        "updateSuccess": "Organisation settings updated successfully."
+      }
+    },
+    "reports": {
+      "actions": {
+        "exportCsv": "Export CSV"
+      },
+      "export": {
+        "csvHeader": "Month,Total,High Risk,Moderate Risk,Low Risk",
+        "fileName": "screening-report.csv"
+      },
+      "header": {
+        "subtitle": "Aggregate analytics and insights from AI screenings",
+        "title": "Screening Reports"
+      },
+      "metrics": {
+        "averageConfidence": "Avg. Confidence",
+        "highRiskCases": "High Risk Cases",
+        "lowRiskCases": "Low Risk Cases",
+        "totalScreenings": "Total Screenings"
+      },
+      "monthlyBreakdown": {
+        "title": "Monthly Breakdown"
+      },
+      "pageName": "Reports",
+      "riskDistribution": {
+        "high": "High Risk",
+        "low": "Low Risk",
+        "moderate": "Moderate Risk",
+        "title": "Risk Distribution"
+      },
+      "table": {
+        "high": "High",
+        "low": "Low",
+        "moderate": "Moderate",
+        "month": "Month",
+        "noData": "No data available yet",
+        "total": "Total"
+      }
+    },
     "screening": {
       "actions": {
         "buyMoreQuota": "Buy more",
