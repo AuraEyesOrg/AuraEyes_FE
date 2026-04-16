@@ -1179,6 +1179,73 @@ declare module 'i18next' {
       primaryCta: string;
       secondaryCta: string;
     };
+    GuestEnhancements: {
+      breadcrumb: {
+        ariaLabel: string;
+      };
+      readingTime: string;
+      complexity: {
+        label: string;
+        basic: string;
+        moderate: string;
+        advanced: string;
+      };
+      source: {
+        auraGovernance: string;
+      };
+      terms: {
+        fundus: string;
+        oct: string;
+        macular: string;
+        intravitreal: string;
+        avr: string;
+        microaneurysm: string;
+        tortuosity: string;
+        hipaa: string;
+        gdpr: string;
+        phi: string;
+        mfa: string;
+        rbac: string;
+      };
+      tooltips: {
+        fundus: string;
+        oct: string;
+        macular: string;
+        intravitreal: string;
+        avr: string;
+        microaneurysm: string;
+        tortuosity: string;
+        hipaa: string;
+        gdpr: string;
+        phi: string;
+        mfa: string;
+        rbac: string;
+      };
+      imageMeta: {
+        highResFundus: string;
+        scaleOneToOne: string;
+        processedLayer: string;
+      };
+      ctaSubtext: {
+        quickAction: string;
+        fastContact: string;
+      };
+      badges: {
+        securityControl: string;
+      };
+      subheadings: {
+        privacy: string;
+        security: string;
+        terms: string;
+        personalData: string;
+        status: string;
+        notFound: string;
+      };
+      loading: {
+        statusTitle: string;
+        statusDescription: string;
+      };
+    };
     PatientDoctors: {
       avatar: {
         fallbackInitials: string;

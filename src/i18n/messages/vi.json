@@ -1176,6 +1176,73 @@
     "primaryCta": "Về trang chủ",
     "secondaryCta": "Khám phá AURA"
   },
+  "GuestEnhancements": {
+    "breadcrumb": {
+      "ariaLabel": "Điều hướng breadcrumb trang guest"
+    },
+    "readingTime": "Đọc trong khoảng {{minutes}} phút",
+    "complexity": {
+      "label": "Mức độ",
+      "basic": "Cơ bản",
+      "moderate": "Trung bình",
+      "advanced": "Chuyên sâu"
+    },
+    "source": {
+      "auraGovernance": "Nguồn: AURA Clinical Governance v2026.1"
+    },
+    "terms": {
+      "fundus": "Đáy mắt (Fundus)",
+      "oct": "OCT",
+      "macular": "Vùng hoàng điểm",
+      "intravitreal": "Tiêm nội nhãn",
+      "avr": "AVR",
+      "microaneurysm": "Vi phình mạch",
+      "tortuosity": "Độ ngoằn ngoèo mạch",
+      "hipaa": "HIPAA",
+      "gdpr": "GDPR",
+      "phi": "PHI",
+      "mfa": "MFA",
+      "rbac": "RBAC"
+    },
+    "tooltips": {
+      "fundus": "Ảnh đáy mắt ghi nhận bề mặt trong của mắt gồm võng mạc, đĩa thị và hoàng điểm.",
+      "oct": "OCT (Optical Coherence Tomography) cho ảnh cắt lớp võng mạc để đánh giá cấu trúc chi tiết.",
+      "macular": "Hoàng điểm là vùng trung tâm võng mạc phụ trách thị lực rõ và nhận diện chi tiết.",
+      "intravitreal": "Tiêm nội nhãn là phương pháp đưa thuốc trực tiếp vào buồng dịch kính.",
+      "avr": "Tỷ lệ động mạch - tĩnh mạch võng mạc (AVR) hỗ trợ đánh giá nguy cơ bệnh mạch máu toàn thân.",
+      "microaneurysm": "Vi phình mạch là tổn thương mạch máu nhỏ, dấu hiệu sớm của bệnh võng mạc do đái tháo đường.",
+      "tortuosity": "Độ ngoằn ngoèo mạch phản ánh biến đổi hình thái mạch liên quan tăng huyết áp và bệnh mạch.",
+      "hipaa": "HIPAA quy định các lớp bảo vệ dữ liệu sức khỏe được bảo hộ trong quy trình y tế.",
+      "gdpr": "GDPR quản lý xử lý dữ liệu cá nhân, nhấn mạnh minh bạch, đồng thuận và quyền người dùng.",
+      "phi": "PHI (Protected Health Information) là dữ liệu sức khỏe có thể định danh một cá nhân.",
+      "mfa": "MFA yêu cầu thêm lớp xác thực ngoài mật khẩu để tăng an toàn tài khoản.",
+      "rbac": "RBAC phân quyền truy cập theo vai trò, bảo đảm nguyên tắc đặc quyền tối thiểu."
+    },
+    "imageMeta": {
+      "highResFundus": "Ảnh đáy mắt độ phân giải cao",
+      "scaleOneToOne": "Tỉ lệ: 1:1",
+      "processedLayer": "Lớp chẩn đoán: AI Overlay"
+    },
+    "ctaSubtext": {
+      "quickAction": "Hoàn tất trong dưới 2 phút",
+      "fastContact": "Phản hồi thường trong 24-48 giờ"
+    },
+    "badges": {
+      "securityControl": "Kiểm soát bảo mật"
+    },
+    "subheadings": {
+      "privacy": "Tóm tắt cách AURA phân loại, sử dụng và bảo vệ dữ liệu y tế nhạy cảm.",
+      "security": "Tổng quan các kiểm soát bảo mật cho định danh, truy cập và hạ tầng vận hành an toàn.",
+      "terms": "Các nguyên tắc pháp lý và vận hành khi sử dụng AURA trong bối cảnh chăm sóc sức khỏe.",
+      "personalData": "Nắm rõ quyền truy cập, chỉnh sửa và yêu cầu xóa dữ liệu sức khỏe cá nhân của bạn.",
+      "status": "Minh bạch vận hành theo thời gian thực với tín hiệu sức khỏe hệ thống phù hợp bối cảnh lâm sàng.",
+      "notFound": "Đường dẫn có thể đã thay đổi sau cập nhật. Hãy dùng liên kết bên dưới để quay lại trang guest tin cậy."
+    },
+    "loading": {
+      "statusTitle": "Đang thu thập trạng thái dịch vụ theo thời gian thực",
+      "statusDescription": "AURA đang kiểm tra endpoint hệ thống và cập nhật trạng thái vận hành mới nhất."
+    }
+  },
   "PatientDoctors": {
     "avatar": {
       "fallbackInitials": "BS"

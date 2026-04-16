@@ -1176,6 +1176,73 @@
     "primaryCta": "Back to Home",
     "secondaryCta": "Explore AURA"
   },
+  "GuestEnhancements": {
+    "breadcrumb": {
+      "ariaLabel": "Guest page breadcrumb"
+    },
+    "readingTime": "{{minutes}} min read",
+    "complexity": {
+      "label": "Complexity",
+      "basic": "Basic",
+      "moderate": "Moderate",
+      "advanced": "Advanced"
+    },
+    "source": {
+      "auraGovernance": "Source: AURA Clinical Governance v2026.1"
+    },
+    "terms": {
+      "fundus": "Fundus",
+      "oct": "OCT",
+      "macular": "Macular",
+      "intravitreal": "Intravitreal",
+      "avr": "AVR",
+      "microaneurysm": "Microaneurysm",
+      "tortuosity": "Tortuosity",
+      "hipaa": "HIPAA",
+      "gdpr": "GDPR",
+      "phi": "PHI",
+      "mfa": "MFA",
+      "rbac": "RBAC"
+    },
+    "tooltips": {
+      "fundus": "Fundus imaging captures the inner eye surface, including retina, optic disc, and macula.",
+      "oct": "Optical Coherence Tomography (OCT) provides cross-sectional retinal layers for structural assessment.",
+      "macular": "The macula is the central retinal area responsible for sharp and detailed vision.",
+      "intravitreal": "Intravitreal refers to treatment delivered directly into the vitreous cavity of the eye.",
+      "avr": "Arteriovenous Ratio compares retinal artery and vein calibers to assess systemic vascular risk.",
+      "microaneurysm": "Microaneurysms are tiny vascular outpouchings and an early indicator of diabetic retinopathy.",
+      "tortuosity": "Tortuosity measures vessel twisting patterns associated with hypertension and vascular disease.",
+      "hipaa": "HIPAA defines baseline safeguards for handling protected health data in healthcare workflows.",
+      "gdpr": "GDPR regulates personal data processing and reinforces transparency, consent, and user rights.",
+      "phi": "Protected Health Information (PHI) includes identifiable health records tied to an individual.",
+      "mfa": "Multi-Factor Authentication adds extra verification steps beyond passwords for account access.",
+      "rbac": "Role-Based Access Control limits data actions to approved user roles and least-privilege policies."
+    },
+    "imageMeta": {
+      "highResFundus": "High-Res Fundus Image",
+      "scaleOneToOne": "Scale: 1:1",
+      "processedLayer": "Diagnostic Layer: AI Overlay"
+    },
+    "ctaSubtext": {
+      "quickAction": "Takes less than 2 mins",
+      "fastContact": "Typical response in 24-48h"
+    },
+    "badges": {
+      "securityControl": "Security Control"
+    },
+    "subheadings": {
+      "privacy": "A concise view of how AURA classifies, uses, and protects sensitive medical information.",
+      "security": "Security controls mapped to practical safeguards for identity, access, and infrastructure resilience.",
+      "terms": "Operational and legal expectations for using AURA responsibly across healthcare roles.",
+      "personalData": "Understand your rights to access, correct, and request removal of personal health data.",
+      "status": "Operational transparency with service health signals aligned to clinical trust expectations.",
+      "notFound": "This route may have changed after a release. Use the links below to return to trusted guest pages."
+    },
+    "loading": {
+      "statusTitle": "Collecting real-time health checks",
+      "statusDescription": "AURA is validating service endpoints and publishing the latest operational state."
+    }
+  },
   "PatientDoctors": {
     "avatar": {
       "fallbackInitials": "DR"
