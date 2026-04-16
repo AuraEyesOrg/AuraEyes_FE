@@ -2185,6 +2185,17 @@
       "secondary": "Xem chính sách quyền riêng tư"
     }
   },
+  "PatientAnalysisDetail": {
+    "page": {
+      "title": "Chi tiết phân tích"
+    },
+    "summary": {
+      "title": "Phát hiện AI chi tiết"
+    },
+    "actions": {
+      "backToReview": "Quay lại đánh giá"
+    }
+  },
   "PatientReview": {
     "page": {
       "title": "Đánh giá & Bước tiếp theo",
@@ -2225,6 +2236,7 @@
       "startNewAnalysis": "Bắt đầu phân tích mới"
     },
     "findingsDetected": "Các dấu hiệu phát hiện gồm:",
+    "findingsMore": " và {{count}} dấu hiệu khác",
     "backToDashboard": "Về Dashboard",
     "sessionLabel": "Phiên",
     "actions": {
@@ -2235,6 +2247,7 @@
       "findSpecialist": "Tìm bác sĩ chuyên khoa",
       "askAuraAssistant": "Hỏi trợ lý AI AURA",
       "downloadReport": "Tải báo cáo",
+      "downloadingReport": "Đang tải báo cáo...",
       "newScan": "Lượt quét mới",
       "viewAllResources": "Xem tất cả tài liệu"
     },
@@ -3002,7 +3015,8 @@
     "summary": {
       "title": "Tóm tắt sức khỏe võng mạc",
       "preAnalyzeDescription": "AI sẽ phân tích ảnh võng mạc của bạn để tìm các dấu hiệu cần chú ý. Quá trình này thường chỉ mất vài giây.",
-      "analyzing": "Đang phân tích ảnh võng mạc của bạn..."
+      "analyzing": "Đang phân tích ảnh võng mạc của bạn...",
+      "waitingOverlay": "Chẩn đoán chính đã sẵn sàng. Lớp phủ chi tiết vẫn đang được xử lý..."
     },
     "actions": {
       "preparingSession": "Đang chuẩn bị phiên...",

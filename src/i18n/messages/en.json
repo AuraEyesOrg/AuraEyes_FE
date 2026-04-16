@@ -2185,6 +2185,17 @@
       "secondary": "View Privacy Policy"
     }
   },
+  "PatientAnalysisDetail": {
+    "page": {
+      "title": "Analysis Details"
+    },
+    "summary": {
+      "title": "Detailed AI Findings"
+    },
+    "actions": {
+      "backToReview": "Back to Review"
+    }
+  },
   "PatientReview": {
     "page": {
       "title": "Review & Next Steps",
@@ -2225,6 +2236,7 @@
       "startNewAnalysis": "Start a new analysis"
     },
     "findingsDetected": "Detected findings include:",
+    "findingsMore": " and {{count}} more findings",
     "backToDashboard": "Back to Dashboard",
     "sessionLabel": "Session",
     "actions": {
@@ -2235,6 +2247,7 @@
       "findSpecialist": "Find a Specialist",
       "askAuraAssistant": "Ask AURA AI Assistant",
       "downloadReport": "Download Report",
+      "downloadingReport": "Downloading report...",
       "newScan": "New Scan",
       "viewAllResources": "View all resources"
     },
@@ -3002,7 +3015,8 @@
     "summary": {
       "title": "Your Retinal Health Summary",
       "preAnalyzeDescription": "Our AI will examine your retinal images for any signs that need attention. This usually takes just a few seconds.",
-      "analyzing": "Analyzing your retinal scan..."
+      "analyzing": "Analyzing your retinal scan...",
+      "waitingOverlay": "Primary diagnosis is ready. Detailed overlay is still processing..."
     },
     "actions": {
       "preparingSession": "Preparing session...",

@@ -2188,6 +2188,17 @@ declare module 'i18next' {
         secondary: string;
       };
     };
+    PatientAnalysisDetail: {
+      page: {
+        title: string;
+      };
+      summary: {
+        title: string;
+      };
+      actions: {
+        backToReview: string;
+      };
+    };
     PatientReview: {
       page: {
         title: string;
@@ -2228,6 +2239,7 @@ declare module 'i18next' {
         startNewAnalysis: string;
       };
       findingsDetected: string;
+      findingsMore: string;
       backToDashboard: string;
       sessionLabel: string;
       actions: {
@@ -2238,6 +2250,7 @@ declare module 'i18next' {
         findSpecialist: string;
         askAuraAssistant: string;
         downloadReport: string;
+        downloadingReport: string;
         newScan: string;
         viewAllResources: string;
       };
@@ -3006,6 +3019,7 @@ declare module 'i18next' {
         title: string;
         preAnalyzeDescription: string;
         analyzing: string;
+        waitingOverlay: string;
       };
       actions: {
         preparingSession: string;
