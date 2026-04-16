@@ -32,6 +32,16 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
+  const isOrganisationAdmin =
+    user?.roles?.includes('OrgAdmin') || user?.roles?.includes('Organization');
+  const mustChangePassword = isOrganisationAdmin && user?.mustChangePassword;
+
+  if (mustChangePassword && normalizedPath !== '/force-change-password') {
+    return (
+      <Navigate to={resolvePathWithLocale('/force-change-password')} replace />
+    );
+  }
+
   // Redirect unverified ophthalmologists to pending approval page
   const isOphthalmologist = user?.roles?.includes('Ophthalmologist');
   const isPendingApproval = isOphthalmologist && isPendingVerification;

@@ -156,6 +156,7 @@ export interface Organisation {
   name: string;
   address?: string;
   licenseNumber?: string;
+  taxCode?: string;
   orgType: string;
   deviceCount: number;
   purchasedAiQuota?: number;
@@ -220,6 +221,7 @@ export interface OrganisationOnboardingRequestDto {
   contactPhone?: string | null;
   address?: string | null;
   licenseNumber?: string | null;
+  taxCode?: string | null;
   notes?: string | null;
   status: string;
   createdAt: string;

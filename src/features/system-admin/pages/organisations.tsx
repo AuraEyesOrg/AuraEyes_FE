@@ -227,6 +227,10 @@ export default function OrganisationsPage() {
             header: 'License Number',
             value: (row) => row.licenseNumber ?? '',
           },
+          {
+            header: 'Tax Code',
+            value: (row) => row.taxCode ?? '',
+          },
           { header: 'Device Count', value: (row) => row.deviceCount ?? 0 },
           { header: 'Users Count', value: (row) => row.usersCount ?? 0 },
           {
@@ -792,7 +796,7 @@ export default function OrganisationsPage() {
                         </button>
                       </div>
 
-                      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                         <InfoTile
                           icon={Mail}
                           label="Email"
@@ -810,6 +814,10 @@ export default function OrganisationsPage() {
                         <InfoTile
                           label="Giấy phép"
                           value={request.licenseNumber || 'Chưa cung cấp'}
+                        />
+                        <InfoTile
+                          label="Mã số thuế"
+                          value={request.taxCode || 'Chưa cung cấp'}
                         />
                       </div>
 

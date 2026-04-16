@@ -10,10 +10,12 @@ import {
   stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useGuestTour } from '../tour';
 
 export const Header = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const { startTourFromHelp } = useGuestTour();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -33,6 +35,13 @@ export const Header = () => {
     }
 
     return currentPath.startsWith(href);
+  };
+
+  const getTourSelectorByHref = (href: string) => {
+    if (href === '/about') return 'guest-nav-about';
+    if (href === '/how-it-works') return 'guest-nav-how-it-works';
+    if (href === '/contact') return 'guest-nav-contact-orga';
+    return undefined;
   };
 
   return (
@@ -59,69 +68,145 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="flex items-center gap-4">
-            <ThemeToggleButton className="hidden sm:inline-flex" />
-            <PremiumLanguageSwitcher className="hidden sm:inline-flex" />
+        {/* CTA Button */}
+<div className="flex items-center gap-4">
+  {/* Help Tour (từ develop) */}
+  <button
+    type="button"
+    onClick={startTourFromHelp}
+    className="hidden sm:inline-flex items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] hover:border-[#A6C2DC] hover:bg-[#F7FAFC] transition-colors"
+  >
+    {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
+  </button>
 
-            <Link
-              to={withLocalePathname(locale, '/login')}
-              className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-(--color-brand-primary) px-6 text-base font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-(--color-brand-primary)/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
-            >
-              {t('Common.getStarted')}
-            </Link>
+  {/* Theme + Language (giữ từ branch bạn) */}
+  <ThemeToggleButton className="hidden sm:inline-flex" />
+  <PremiumLanguageSwitcher className="hidden sm:inline-flex" />
 
-            {/* Mobile Menu Button */}
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen((open) => !open)}
-              className="rounded-md p-2 text-[#4A5568] transition-colors hover:text-[#1A202C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:text-slate-100 md:hidden"
-              aria-label={t('Common.toggleMenu')}
-              aria-expanded={isMobileMenuOpen}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
+  {/* CTA Get Started (merge cả 2) */}
+  <Link
+    to={withLocalePathname(locale, '/login')}
+    data-tour="guest-cta-get-started"
+    className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-(--color-brand-primary) px-6 text-base font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-(--color-brand-primary)/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
+  >
+    {t('Common.getStarted')}
+  </Link>
 
-      <div aria-hidden="true" className="h-16 w-full shrink-0" />
+  {/* Mobile Menu Button */}
+  <button
+    type="button"
+    onClick={() => setIsMobileMenuOpen((open) => !open)}
+    className="rounded-md p-2 text-[#4A5568] transition-colors hover:text-[#1A202C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:text-slate-100 md:hidden"
+    aria-label={t('Common.toggleMenu')}
+    aria-expanded={isMobileMenuOpen}
+  >
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  </button>
+</div>
+{/* CTA + Actions */}
+<div className="flex items-center gap-4">
+  {/* Help Tour */}
+  <button
+    type="button"
+    onClick={startTourFromHelp}
+    className="hidden sm:inline-flex items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] hover:border-[#A6C2DC] hover:bg-[#F7FAFC] transition-colors"
+  >
+    {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
+  </button>
 
-      {isMobileMenuOpen ? (
-        <div className="fixed inset-x-0 top-16 z-40 border-t border-[#E2E8F0] bg-white dark:border-slate-700 dark:bg-[#0f172a] md:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={withLocalePathname(locale, link.href)}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 ${
-                  isActive(link.href)
-                    ? 'bg-[#E6FFFA] text-[#319795] dark:bg-cyan-900/30 dark:text-cyan-200'
-                    : 'text-text-muted hover:bg-[#F7FAFC] hover:text-[#2C5282] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-200'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+  {/* Language + Theme */}
+  <PremiumLanguageSwitcher className="hidden sm:inline-flex" />
+  <ThemeToggleButton className="hidden sm:inline-flex" />
 
-            <div className="mt-2 flex items-center gap-2">
-              <PremiumLanguageSwitcher className="flex-1" />
-              <ThemeToggleButton />
-            </div>
+  {/* CTA */}
+  <Link
+    to={withLocalePathname(locale, '/login')}
+    data-tour="guest-cta-get-started"
+    className="magnetic-btn inline-flex h-12 items-center justify-center rounded-lg bg-(--color-brand-primary) px-6 text-base font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-(--color-brand-primary)/30"
+  >
+    {t('Common.getStarted')}
+  </Link>
 
+  {/* Mobile Menu Button */}
+  <button
+    type="button"
+    onClick={() => setIsMobileMenuOpen((open) => !open)}
+    className="rounded-md p-2 text-[#4A5568] transition-colors hover:text-[#1A202C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:text-slate-100 md:hidden"
+    aria-label={t('Common.toggleMenu')}
+    aria-expanded={isMobileMenuOpen}
+  >
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  </button>
+</div>
+</div>
+</div>
+</header>
+
+{/* Spacer */}
+<div aria-hidden="true" className="h-16 w-full shrink-0" />
+
+{/* Mobile Menu */}
+{isMobileMenuOpen ? (
+  <div className="fixed inset-x-0 top-16 z-40 border-t border-[#E2E8F0] bg-white dark:border-slate-700 dark:bg-[#0f172a] md:hidden">
+    <nav className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
+      {navLinks.map((link) => (
+        <Link
+          key={link.href}
+          to={withLocalePathname(locale, link.href)}
+          data-tour={getTourSelectorByHref(link.href)}
+          className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            isActive(link.href)
+              ? 'bg-[#E6FFFA] text-[#319795] dark:bg-cyan-900/30 dark:text-cyan-200'
+              : 'text-text-muted hover:bg-[#F7FAFC] hover:text-[#2C5282] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-cyan-200'
+          }`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          {link.label}
+        </Link>
+      ))}
+
+      {/* Mobile actions */}
+      <div className="mt-2 flex items-center gap-2">
+        <PremiumLanguageSwitcher className="flex-1" />
+        <ThemeToggleButton />
+      </div>
+
+      {/* Mobile CTA */}
+      <Link
+        to={withLocalePathname(locale, '/login')}
+        data-tour="guest-cta-get-started"
+        className="mt-2 inline-flex h-11 items-center justify-center rounded-lg bg-(--color-brand-primary) px-4 text-sm font-bold text-white hover:brightness-110 transition-all"
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        {t('Common.getStarted')}
+      </Link>
+    </nav>
+  </div>
+) : null}
             <Link
               to={withLocalePathname(locale, '/login')}
               className="mt-2 inline-flex h-11 items-center justify-center rounded-lg bg-(--color-brand-primary) px-4 text-sm font-bold text-white hover:brightness-110 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"

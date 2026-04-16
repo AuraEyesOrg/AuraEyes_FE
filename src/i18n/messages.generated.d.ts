@@ -36,6 +36,7 @@ declare module 'i18next' {
       bookAppointment: string;
       findDoctor: string;
       learnMore: string;
+      helpTour: string;
       language: string;
       toggleMenu: string;
       switchToDark: string;
@@ -324,6 +325,22 @@ declare module 'i18next' {
             notice: string;
           };
         };
+    GuestTour: {
+      controls: {
+        back: string;
+        close: string;
+        last: string;
+        next: string;
+        skip: string;
+      };
+      steps: {
+        logo: string;
+        navAbout: string;
+        navHowItWorks: string;
+        aboutMission: string;
+        contactOrganisation: string;
+        getStartedPatient: string;
+        getStartedDoctor: string;
       };
     };
     Auth: {

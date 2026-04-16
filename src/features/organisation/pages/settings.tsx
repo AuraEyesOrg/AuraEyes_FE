@@ -1,22 +1,164 @@
-import { useState } from 'react';
-import { Save, Building, Users, Bell, Lock, Database } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Save,
+  Building,
+  Users,
+  Bell,
+  Lock,
+  Database,
+  Upload,
+} from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import useAuthStore from '@/store/auth-store';
+import {
+  getOrganisationSettings,
+  updateOrganisationSettings,
+  type OrganisationSettingsDto,
+} from '../api/settings.api';
+import { uploadAvatar } from '@/features/patient/api/patient.api';
+import { resolveAvatarUrl } from '@/lib/user-avatar';
+import { extractApiErrorMessage } from '@/lib/api-error';
+
+type SettingsTab = 'clinic' | 'users' | 'notifications' | 'security' | 'data';
+
+type SettingsForm = {
+  name: string;
+  orgType: string;
+  address: string;
+  licenseNumber: string;
+  taxCode: string;
+  description: string;
+  contactFullName: string;
+  contactEmail: string;
+  contactPhone: string;
+  avatarUrl: string;
+};
+
+const mapSettingsToForm = (
+  settings: OrganisationSettingsDto
+): SettingsForm => ({
+  name: settings.name ?? '',
+  orgType: settings.orgType ?? '',
+  address: settings.address ?? '',
+  licenseNumber: settings.licenseNumber ?? '',
+  taxCode: settings.taxCode ?? '',
+  description: settings.description ?? '',
+  contactFullName: settings.contactFullName ?? '',
+  contactEmail: settings.contactEmail ?? '',
+  contactPhone: settings.contactPhone ?? '',
+  avatarUrl: settings.avatarUrl ?? '',
+});
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('clinic');
-  const displayName = user?.fullName ?? 'Organisation';
-  const displayEmail = user?.email ?? '';
+  const { user, setUser } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('clinic');
+  const [form, setForm] = useState<SettingsForm>({
+    name: '',
+    orgType: '',
+    address: '',
+    licenseNumber: '',
+    taxCode: '',
+    description: '',
+    contactFullName: '',
+    contactEmail: '',
+    contactPhone: '',
+    avatarUrl: '',
+  });
 
-  const tabs = [
-    { id: 'clinic', label: 'Clinic Info', icon: Building },
-    { id: 'users', label: 'Users & Roles', icon: Users },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'data', label: 'Data Management', icon: Database },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: 'clinic' as const, label: 'Clinic Info', icon: Building },
+      { id: 'users' as const, label: 'Users & Roles', icon: Users },
+      { id: 'notifications' as const, label: 'Notifications', icon: Bell },
+      { id: 'security' as const, label: 'Security', icon: Lock },
+      { id: 'data' as const, label: 'Data Management', icon: Database },
+    ],
+    []
+  );
+
+  const settingsQuery = useQuery({
+    queryKey: ['organisation-settings'],
+    queryFn: getOrganisationSettings,
+  });
+
+  useEffect(() => {
+    if (!settingsQuery.data) return;
+    setForm(mapSettingsToForm(settingsQuery.data));
+  }, [settingsQuery.data]);
+
+  const saveMutation = useMutation({
+    mutationFn: updateOrganisationSettings,
+    onSuccess: (updated) => {
+      setForm(mapSettingsToForm(updated));
+
+      if (user) {
+        setUser({
+          ...user,
+          fullName: updated.contactFullName || user.fullName,
+          email: updated.contactEmail || user.email,
+          avatarUrl: resolveAvatarUrl(updated.avatarUrl) ?? user.avatarUrl,
+        });
+      }
+
+      toast.success('Organisation settings updated successfully.');
+    },
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(error, 'Failed to update organisation settings.')
+      );
+    },
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: uploadAvatar,
+    onSuccess: (avatarUrl) => {
+      setForm((prev) => ({ ...prev, avatarUrl }));
+      toast.success(
+        'Avatar uploaded. Save changes to persist profile mapping.'
+      );
+    },
+    onError: (error) => {
+      toast.error(extractApiErrorMessage(error, 'Failed to upload avatar.'));
+    },
+  });
+
+  const isSaving = saveMutation.isPending || uploadAvatarMutation.isPending;
+  const displayAvatar = resolveAvatarUrl(form.avatarUrl) ?? '/logo.png';
+
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAvatarFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    uploadAvatarMutation.mutate(file);
+  };
+
+  const handleSave = () => {
+    saveMutation.mutate({
+      name: form.name.trim(),
+      address: form.address.trim() || undefined,
+      licenseNumber: form.licenseNumber.trim() || undefined,
+      taxCode: form.taxCode.trim() || undefined,
+      description: form.description.trim() || undefined,
+      contactFullName: form.contactFullName.trim() || undefined,
+      contactEmail: form.contactEmail.trim() || undefined,
+      contactPhone: form.contactPhone.trim() || undefined,
+      avatarUrl: form.avatarUrl || undefined,
+    });
+  };
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
@@ -31,12 +173,11 @@ export default function SettingsPage() {
               Settings
             </h1>
             <p className="text-(--text-secondary)">
-              Manage your organisation configuration and preferences
+              Manage your organisation profile and contact configuration.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Tabs Sidebar */}
             <div className="bg-(--bg-secondary) rounded-xl p-4 border border-(--border-primary) h-fit">
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -56,222 +197,143 @@ export default function SettingsPage() {
               </nav>
             </div>
 
-            {/* Content Area */}
             <div className="lg:col-span-3">
               <div className="bg-(--bg-secondary) rounded-xl p-6 border border-(--border-primary)">
-                {activeTab === 'clinic' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-(--text-primary) mb-4">
-                      Organisation Information
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Organisation Name
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue={displayName}
-                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Location
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Enter clinic location"
-                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Administrator
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue={displayName}
-                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Contact Email
-                        </label>
-                        <input
-                          type="email"
-                          defaultValue={displayEmail}
-                          placeholder="clinic@auraeyes.vn"
-                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="+84 28 xxxx xxxx"
-                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                {settingsQuery.isLoading && (
+                  <p className="text-sm text-(--text-secondary)">
+                    Loading organisation settings...
+                  </p>
                 )}
 
-                {activeTab === 'users' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-(--text-primary) mb-4">
-                      Team Members
-                    </h3>
-                    <p className="text-sm text-(--text-secondary)">
-                      Team member management coming soon.
-                    </p>
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-(--bg-primary) border-2 border-dashed border-(--border-primary) rounded-lg text-(--text-tertiary) hover:border-primary hover:text-primary transition-colors">
-                      <Users size={20} />
-                      Add Team Member
-                    </button>
-                  </div>
+                {settingsQuery.isError && (
+                  <p className="text-sm text-red-500">
+                    Unable to load settings. Please refresh and try again.
+                  </p>
                 )}
 
-                {activeTab === 'notifications' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-(--text-primary) mb-4">
-                      Notification Preferences
-                    </h3>
+                {!settingsQuery.isLoading &&
+                  !settingsQuery.isError &&
+                  activeTab === 'clinic' && (
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-(--text-primary)">
+                        Organisation Information
+                      </h3>
 
-                    <div className="space-y-4">
-                      {[
-                        {
-                          label: 'Critical case alerts',
-                          description:
-                            'Immediate notification for high-priority cases',
-                        },
-                        {
-                          label: 'Daily summary reports',
-                          description: 'Daily digest of screening activities',
-                        },
-                        {
-                          label: 'Appointment reminders',
-                          description: 'Reminders for upcoming appointments',
-                        },
-                        {
-                          label: 'System maintenance alerts',
-                          description:
-                            'Notifications about scheduled maintenance',
-                        },
-                      ].map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-4 rounded-lg bg-(--bg-primary) border border-(--border-primary)"
-                        >
-                          <div>
-                            <div className="text-sm font-semibold text-(--text-primary) mb-1">
-                              {item.label}
-                            </div>
-                            <div className="text-xs text-(--text-tertiary)">
-                              {item.description}
-                            </div>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
+                      <div className="grid gap-4 md:grid-cols-[120px_1fr] items-start">
+                        <img
+                          src={displayAvatar}
+                          alt="Organisation avatar"
+                          className="h-24 w-24 rounded-2xl border border-(--border-primary) object-cover"
+                        />
+                        <div className="space-y-3">
+                          <p className="text-xs text-(--text-tertiary)">
+                            Avatar is synced to network profile and organisation
+                            about section.
+                          </p>
+                          <label className="inline-flex items-center gap-2 rounded-lg border border-(--border-primary) px-4 py-2 text-sm font-medium text-(--text-primary) hover:bg-(--bg-tertiary) cursor-pointer transition-colors">
+                            <Upload size={16} />
+                            Upload avatar
                             <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              defaultChecked
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleAvatarFileChange}
+                              disabled={isSaving}
                             />
-                            <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                           </label>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
 
-                {activeTab === 'security' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-(--text-primary) mb-4">
-                      Security Settings
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Two-Factor Authentication
-                        </label>
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-(--bg-primary) border border-(--border-primary)">
-                          <span className="text-sm text-(--text-secondary)">
-                            Enable 2FA for enhanced security
-                          </span>
-                          <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors text-sm">
-                            Enable
-                          </button>
-                        </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <InputField
+                          label="Organisation Name"
+                          name="name"
+                          value={form.name}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Type"
+                          name="orgType"
+                          value={form.orgType}
+                          onChange={handleInputChange}
+                          readOnly
+                        />
+                        <InputField
+                          label="License Number"
+                          name="licenseNumber"
+                          value={form.licenseNumber}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Tax Code"
+                          name="taxCode"
+                          value={form.taxCode}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Contact Full Name"
+                          name="contactFullName"
+                          value={form.contactFullName}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Contact Email"
+                          name="contactEmail"
+                          type="email"
+                          value={form.contactEmail}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Contact Phone"
+                          name="contactPhone"
+                          value={form.contactPhone}
+                          onChange={handleInputChange}
+                        />
+                        <InputField
+                          label="Address"
+                          name="address"
+                          value={form.address}
+                          onChange={handleInputChange}
+                        />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
-                          Session Timeout
+                          About / Description
                         </label>
-                        <select className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary">
-                          <option>15 minutes</option>
-                          <option>30 minutes</option>
-                          <option>1 hour</option>
-                          <option>2 hours</option>
-                        </select>
+                        <textarea
+                          name="description"
+                          rows={4}
+                          value={form.description}
+                          onChange={handleInputChange}
+                          className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-3 text-(--text-primary) focus:outline-none focus:border-primary"
+                          placeholder="Brief organisation profile shown in network about section"
+                        />
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {activeTab === 'data' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-(--text-primary) mb-4">
-                      Data Management
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-lg bg-(--bg-primary) border border-(--border-primary)">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-(--text-primary)">
-                            Export Patient Data
-                          </span>
-                          <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors text-sm">
-                            Export
-                          </button>
-                        </div>
-                        <p className="text-xs text-(--text-tertiary)">
-                          Download all patient records and screening results
-                        </p>
-                      </div>
-
-                      <div className="p-4 rounded-lg bg-(--bg-primary) border border-(--border-primary)">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-(--text-primary)">
-                            Data Retention Policy
-                          </span>
-                          <button className="px-4 py-2 bg-(--bg-secondary) border border-(--border-primary) text-(--text-primary) rounded-lg hover:border-primary transition-colors text-sm">
-                            Configure
-                          </button>
-                        </div>
-                        <p className="text-xs text-(--text-tertiary)">
-                          Set how long patient data is stored
-                        </p>
-                      </div>
+                {!settingsQuery.isLoading &&
+                  !settingsQuery.isError &&
+                  activeTab !== 'clinic' && (
+                    <div className="rounded-lg border border-dashed border-(--border-primary) p-6 text-sm text-(--text-secondary)">
+                      This section is currently in progress. Core organisation
+                      profile settings are available in Clinic Info.
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Save Button */}
                 <div className="mt-6 pt-6 border-t border-(--border-primary)">
-                  <button className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors">
+                  <button
+                    onClick={handleSave}
+                    disabled={
+                      isSaving ||
+                      settingsQuery.isLoading ||
+                      settingsQuery.isError
+                    }
+                    className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                  >
                     <Save size={18} />
-                    Save Changes
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </div>
@@ -279,6 +341,40 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+type InputFieldProps = {
+  label: string;
+  name: keyof SettingsForm;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  readOnly?: boolean;
+};
+
+function InputField({
+  label,
+  name,
+  value,
+  onChange,
+  type = 'text',
+  readOnly = false,
+}: InputFieldProps) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-(--text-tertiary) mb-2">
+        {label}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
+        className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-lg px-4 py-2 text-(--text-primary) focus:outline-none focus:border-primary read-only:opacity-70"
+      />
     </div>
   );
 }

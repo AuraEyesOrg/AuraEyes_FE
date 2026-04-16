@@ -193,6 +193,7 @@ export function PostCard({
       : null;
 
   const isOwnPost = !!currentUserId && post.author.id === currentUserId;
+  const canReportPost = !canModerate && !isOwnPost && !post.isHidden;
   const parsedInternalCase = post.isInternalCase
     ? parseInternalCaseSections(post.content)
     : null;
@@ -342,11 +343,15 @@ export function PostCard({
                           Hide post
                         </button>
                       )}
-                      <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
-                        <Flag className="w-4 h-4" />
-                        Report post
-                      </button>
+                      {canReportPost && (
+                        <>
+                          <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
+                            <Flag className="w-4 h-4" />
+                            Report post
+                          </button>
+                        </>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
