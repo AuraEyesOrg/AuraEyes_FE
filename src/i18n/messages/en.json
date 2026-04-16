@@ -759,7 +759,7 @@
         "passwordChanged": "Password changed successfully.",
         "passwordChangeFailed": "Unable to change password right now. Please try again.",
         "language": "Language",
-        "languageVi": "Tiếng Việt (VN)",
+        "languageVi": "Vietnamese (VN)",
         "languageEn": "English (US)"
       },
       "appearance": {
@@ -990,7 +990,7 @@
           "previewTitle": "Anonymized clinical case post",
           "retinalImages": "Retinal Images",
           "sharing": "Sharing case...",
-          "success": "Đã chia sẻ ca lên mạng lưới chuyên môn.",
+          "success": "Case shared to the professional network.",
           "title": "Share Case To Network"
         },
         "aiAnnotated": "AI Annotated",
@@ -1000,7 +1000,7 @@
         "closeSessionOverview": "Close session overview",
         "completeConsultationTitle": "Complete consultation?",
         "completedPlaceholder": "Consultation completed. Messages are read-only.",
-        "confidence": "Độ tin cậy",
+        "confidence": "Confidence",
         "encryptionNoticeShort": "Encrypted",
         "imageAttached": "image attached",
         "invalidSchedule": "Schedule is unavailable",
@@ -1020,14 +1020,14 @@
         "previewUnavailable": "No messages yet",
         "preVisitPlaceholder": "Review patient notes and leave guidance before session opens...",
         "readyToShareImage": "Ready to share image",
-        "risk": "Nguy cơ",
+        "risk": "Risk",
         "saveResult": {
-          "aiSummary": "Tóm tắt AI",
-          "doctorSays": "Bác sĩ nói rằng",
-          "finalDiagnosis": "Chẩn đoán cuối"
+          "aiSummary": "AI Summary",
+          "doctorSays": "Doctor Says",
+          "finalDiagnosis": "Final Diagnosis"
         },
-        "sharedImage": "Ảnh đã chia sẻ",
-        "unknown": "Không rõ",
+        "sharedImage": "Shared image",
+        "unknown": "Unknown",
         "unreadActivity": "Unread activity"
       }
     },
@@ -1271,7 +1271,7 @@
       "noStructuredFindings": "No structured findings for this image. If AI raw output exists, try another eye image or confirm results were saved for this screening.",
       "notFound": "Screening not found or you do not have access.",
       "original": "Original",
-      "overlayEditHint": "Kéo khung để di chuyển · Kéo ô vuông góc phải dưới để phóng to/thu nhỏ. Chỉnh sửa chỉ lưu trên trình duyệt (chưa gửi server).",
+      "overlayEditHint": "Drag box to move; drag bottom-right handle to resize. Edits are saved in browser only (not sent to server).",
       "previousScans": "Previous Scans",
       "previousScansHint": "Prior screenings are not listed in this view yet.",
       "quality": "Quality",
@@ -1316,10 +1316,10 @@
       },
       "title": "Screening Review",
       "toast": {
-        "downloadReportError": "Không thể tải báo cáo PDF.",
-        "downloadReportSuccess": "Đã tải báo cáo PDF.",
-        "saveFailed": "Lỗi khi lưu chỉnh sửa.",
-        "saveSuccess": "Đã lưu chỉnh sửa thành công."
+        "downloadReportError": "Unable to download PDF report.",
+        "downloadReportSuccess": "PDF report downloaded successfully.",
+        "saveFailed": "Failed to save changes.",
+        "saveSuccess": "Changes saved successfully."
       },
       "toolbar": {
         "addNewBox": "Add new custom bounding box",
@@ -1428,18 +1428,18 @@
         "createWithdrawRequest": "Create withdrawal request"
       },
       "adminNote": "Admin note",
-      "consultationIncome": "Thu nhập tư vấn (trang hiện tại)",
+      "consultationIncome": "Consultation income (current page)",
       "consultationIncomeShort": "Consultation income",
       "contractNumberPlaceholder": "AURA-OPH-...",
       "contractReference": "Contract reference",
-      "loadError": "Không thể tải dữ liệu ví. Vui lòng thử lại.",
-      "noTransactions": "Chưa có giao dịch nào.",
+      "loadError": "Unable to load wallet data. Please try again.",
+      "noTransactions": "No transactions yet.",
       "noWithdrawRequests": "No withdrawal requests yet.",
       "pendingWithdrawRequests": "Pending withdrawal requests",
       "requestsProcessing": "requests processing",
       "submittedAt": "Submitted at",
-      "subtitle": "Theo dõi thu nhập tư vấn và các giao dịch ví của bạn.",
-      "thisMonthIn": "Tiền vào ví tháng này",
+      "subtitle": "Track your consultation income and wallet transactions.",
+      "thisMonthIn": "This Month In",
       "thisMonthInDescription": "Includes top-ups, bonuses, refunds, and consultation income",
       "toast": {
         "invalidWithdrawAmount": "Invalid withdrawal amount.",
