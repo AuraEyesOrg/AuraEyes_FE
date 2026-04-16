@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Wallet,
-  RefreshCw,
   ShoppingCart,
   Coins,
   ArrowDownLeft,
@@ -31,13 +30,16 @@ import {
   useOrganisationWallet,
   useOrganisationWalletTransactions,
 } from '../hooks/use-wallet';
+import { RefreshButton } from '@/components/ui/button/refresh-button';
 import { formatCurrency } from '@/lib/helper';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 
 const vndCurrencyOptions = {
   locale: 'vi-VN',
-  currency: 'VND',
+  useCurrencyStyle: false,
   minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+  suffix: ' VND',
 } as const;
 
 const getTransactionLabel = (type: TransactionType): string => {
@@ -215,11 +217,13 @@ export default function OrganisationWalletPage() {
     createDepositMutation.mutate(suggestedTopUpAmount);
   };
 
-  const handleRefresh = () => {
-    refetchBilling();
-    walletQuery.refetch();
-    transactionsQuery.refetch();
-    queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] });
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchBilling(),
+      walletQuery.refetch(),
+      transactionsQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ['org-billing-summary'] }),
+    ]);
   };
 
   const isLoading = isLoadingBilling || walletQuery.isLoading;
@@ -261,13 +265,15 @@ export default function OrganisationWalletPage() {
               </div>
             </div>
 
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-(--border-primary) text-sm font-semibold text-(--text-primary) hover:bg-(--bg-tertiary) transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
+            <RefreshButton
+              onRefresh={handleRefresh}
+              label="Refresh"
+              isRefreshing={
+                transactionsQuery.isFetching ||
+                walletQuery.isFetching ||
+                isLoadingBilling
+              }
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

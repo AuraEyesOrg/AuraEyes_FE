@@ -86,7 +86,7 @@ export default function OrganisationDashboard() {
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
-      <Sidebar pendingCount={pendingWorkload} />
+      <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
         <OrganisationHeader pageName="Dashboard" />

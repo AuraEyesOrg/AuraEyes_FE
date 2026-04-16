@@ -982,6 +982,7 @@ const HomePage = () => {
         {/* Mission Section */}
         <section
           ref={missionRef}
+          data-tour="guest-home-mission"
           className="py-20 bg-[var(--color-medical-bg)] border-t border-[var(--color-medical-border)]"
         >
           <div className="mx-auto max-w-[1280px] px-6 lg:px-10">

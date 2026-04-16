@@ -58,6 +58,9 @@ const ForgotPasswordPage = lazy(
 const ResetPasswordPage = lazy(
   () => import('@/features/auth/pages/reset-password')
 );
+const ForceChangePasswordPage = lazy(
+  () => import('@/features/auth/pages/force-change-password')
+);
 const RegisterDoctorPage = lazy(
   () => import('@/features/auth/pages/register-doctor')
 );
@@ -454,6 +457,15 @@ const Router = () => (
         <Route
           path="/:locale/two-factor-verify"
           element={<LocalizedPublicRoute element={<TwoFactorVerifyPage />} />}
+        />
+        <Route
+          path="/:locale/force-change-password"
+          element={
+            <LocalizedPrivateRoute
+              allowedRoles={['OrgAdmin', 'Organization']}
+              element={<ForceChangePasswordPage />}
+            />
+          }
         />
         <Route
           path="/:locale/ophthalmologist/pending-approval"
@@ -1054,6 +1066,14 @@ const Router = () => (
             <PublicRoute>
               <TwoFactorVerifyPage />
             </PublicRoute>
+          }
+        />
+        <Route
+          path="/force-change-password"
+          element={
+            <PrivateRoute allowedRoles={['OrgAdmin', 'Organization']}>
+              <ForceChangePasswordPage />
+            </PrivateRoute>
           }
         />
         <Route

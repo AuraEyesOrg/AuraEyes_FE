@@ -33,9 +33,28 @@
     "bookAppointment": "Đặt lịch khám",
     "findDoctor": "Tìm bác sĩ",
     "learnMore": "Tìm hiểu thêm",
+    "helpTour": "Hướng dẫn",
     "language": "Ngôn ngữ",
     "sidebar": {
       "auraNetwork": "Aura Network"
+    }
+  },
+  "GuestTour": {
+    "controls": {
+      "back": "Quay lại",
+      "close": "Đóng",
+      "last": "Hoàn tất",
+      "next": "Tiếp theo",
+      "skip": "Bỏ qua"
+    },
+    "steps": {
+      "logo": "Nhấn vào logo để quay về Trang chủ bất cứ lúc nào.",
+      "navAbout": "Mục Về chúng tôi giới thiệu sứ mệnh AURA và giá trị cốt lõi của nền tảng.",
+      "navHowItWorks": "Mục Cách hoạt động mô tả quy trình từ tải ảnh đáy mắt đến kết quả phân tích AI.",
+      "aboutMission": "Khu vực này tóm tắt sứ mệnh và chức năng chính của AURA: sàng lọc nhanh, chính xác và an toàn.",
+      "contactOrganisation": "Mục Liên hệ dành cho tổ chức/phòng khám muốn hợp tác hoặc nhận tư vấn onboarding.",
+      "getStartedPatient": "Nút Bắt đầu dẫn tới đăng nhập/đăng ký, nơi bệnh nhân có thể tạo tài khoản Patient mới.",
+      "getStartedDoctor": "Từ nút Bắt đầu, bác sĩ có thể đi tới luồng đăng ký Ophthalmologist để tham gia nền tảng."
     }
   },
   "Auth": {
@@ -2571,6 +2590,61 @@
       "appointment": "Lịch hẹn",
       "wallet": "Ví điện tử",
       "notification": "Thông báo"
+    }
+  },
+  "Organisation": {
+    "sidebar": {
+      "dashboard": "Tổng quan",
+      "patients": "Bệnh nhân",
+      "historicalData": "Dữ liệu lịch sử",
+      "calendar": "Lịch",
+      "screening": "Sàng lọc",
+      "analytics": "Phân tích",
+      "slotManagement": "Quản lý Slot",
+      "contract": "Hợp đồng",
+      "billing": "Thanh toán",
+      "wallet": "Ví",
+      "reports": "Báo cáo",
+      "settings": "Cài đặt"
+    }
+  },
+  "SystemAdmin": {
+    "sidebar": {
+      "dashboard": "Tổng quan",
+      "groups": {
+        "user-directory": {
+          "label": "Danh bạ người dùng",
+          "description": "Quản lý danh bạ người dùng"
+        },
+        "contract-management": {
+          "label": "Quản lý hợp đồng",
+          "description": "Quản lý hợp đồng"
+        },
+        "billing-finance": {
+          "label": "Tài chính & Thanh toán",
+          "description": "Tài chính & Thanh toán"
+        },
+        "system-administration": {
+          "label": "Quản trị hệ thống",
+          "description": "Quản trị hệ thống"
+        }
+      },
+      "items": {
+        "organisations": "Tổ chức",
+        "ophthalmologists": "Bác sĩ nhãn khoa",
+        "leave-requests": "Đơn nghỉ phép",
+        "employment-type-change-requests": "Chuyển loại hình làm việc",
+        "patients": "Bệnh nhân",
+        "verifications": "Xác minh",
+        "contract-templates": "Mẫu hợp đồng",
+        "contracts": "Hợp đồng",
+        "transaction-ledger": "Sổ cái giao dịch",
+        "withdrawal-requests": "Yêu cầu rút tiền",
+        "permissions": "Quyền truy cập",
+        "audit-logs": "Nhật ký hệ thống",
+        "settings": "Cài đặt",
+        "aura-network": "Aura Network"
+      }
     }
   }
 }

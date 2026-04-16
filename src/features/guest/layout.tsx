@@ -5,6 +5,7 @@ import {
   stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { GuestTourProvider } from './tour';
 import { detectPreferredLocale } from '@/i18n/middleware';
 
 export const GuestLayout = () => {
@@ -28,10 +29,12 @@ export const GuestLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-medical-bg)]">
-      <LocaleSync />
-      <Outlet />
-    </div>
+    <GuestTourProvider>
+      <div className="min-h-screen bg-[var(--color-medical-bg)]">
+        <LocaleSync />
+        <Outlet />
+      </div>
+    </GuestTourProvider>
   );
 };
 

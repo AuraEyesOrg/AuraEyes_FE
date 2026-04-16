@@ -5,13 +5,21 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut } from 'lucide-react';
+import { ChevronRight, LogOut, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth-store';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
 import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
+import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
+import type { AppLocale } from '@/i18n/locales';
 
 export default function Sidebar() {
   const location = useLocation();
@@ -64,6 +72,17 @@ export default function Sidebar() {
     navigate('/login');
   };
 
+  const { i18n } = useTranslation();
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+
+  const handleToggleLanguage = () => {
+    const newLocale: AppLocale = locale === 'en' ? 'vi' : 'en';
+    persistLocale(newLocale);
+    i18n.changeLanguage(newLocale);
+    const newPath = withLocalePathname(newLocale, location.pathname);
+    navigate(newPath);
+  };
+
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
@@ -86,7 +105,7 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto pr-1">
           <NavLink
-            to={dashboardNavItem.path}
+            to={resolvePathWithLocale(dashboardNavItem.path)}
             className={({ isActive }) =>
               `group flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
                 isActive
@@ -107,7 +126,7 @@ export default function Sidebar() {
                   <dashboardNavItem.icon className="w-4 h-4" />
                 </span>
                 <span className="text-sm font-medium">
-                  {dashboardNavItem.label}
+                  {t('SystemAdmin.sidebar.dashboard', 'Dashboard')}
                 </span>
               </>
             )}
@@ -143,10 +162,16 @@ export default function Sidebar() {
                     />
                     <div className="text-left min-w-0">
                       <p className="text-sm font-semibold leading-5 truncate">
-                        {group.label}
+                        {t(
+                          `SystemAdmin.sidebar.groups.${group.id}.label`,
+                          group.label
+                        )}
                       </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
-                        {group.description}
+                        {t(
+                          `SystemAdmin.sidebar.groups.${group.id}.description`,
+                          group.description
+                        )}
                       </p>
                     </div>
                   </div>
@@ -169,7 +194,7 @@ export default function Sidebar() {
                     {group.items.map((item) => (
                       <NavLink
                         key={item.path}
-                        to={item.path}
+                        to={resolvePathWithLocale(item.path)}
                         className={({ isActive }) =>
                           `group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-200 ${
                             isActive
@@ -188,12 +213,15 @@ export default function Sidebar() {
                               }`}
                             />
                             <span className="text-sm truncate">
-                              {item.path === '/network'
+                              {item.id === 'aura-network'
                                 ? t(
                                     'Common.sidebar.auraNetwork',
                                     'Aura Network'
                                   )
-                                : item.label}
+                                : t(
+                                    `SystemAdmin.sidebar.items.${item.id}`,
+                                    item.label
+                                  )}
                             </span>
                           </>
                         )}
@@ -208,7 +236,7 @@ export default function Sidebar() {
 
         {/* User Profile Footer */}
         <div className="mt-auto pt-6 border-t border-gray-700">
-          <div className="flex items-center gap-3 px-2">
+          <div className="flex items-center gap-2 px-1">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <UserAvatar
                 fullName={user?.fullName}
@@ -227,6 +255,13 @@ export default function Sidebar() {
                 </p>
               </div>
             </div>
+            <button
+              onClick={handleToggleLanguage}
+              className="text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10"
+              title={t('Common.language', 'Language')}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
             <button
               onClick={handleLogout}
               className="text-slate-500 hover:text-rose-400 transition-colors p-2 rounded-lg hover:bg-rose-500/10"

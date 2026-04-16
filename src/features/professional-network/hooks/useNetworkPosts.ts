@@ -9,8 +9,21 @@ import {
 
 export const networkKeys = {
   all: ['network'] as const,
-  feed: (page: number, pageSize: number, hiddenOnly = false) =>
-    [...networkKeys.all, 'feed', { page, pageSize, hiddenOnly }] as const,
+  feed: (
+    page: number,
+    pageSize: number,
+    options?: { hiddenOnly?: boolean; reportedOnly?: boolean }
+  ) =>
+    [
+      ...networkKeys.all,
+      'feed',
+      {
+        page,
+        pageSize,
+        hiddenOnly: options?.hiddenOnly ?? false,
+        reportedOnly: options?.reportedOnly ?? false,
+      },
+    ] as const,
   post: (id: string) => [...networkKeys.all, 'post', id] as const,
   trending: () => [...networkKeys.all, 'trending'] as const,
   profile: (userId: string) => [...networkKeys.all, 'profile', userId] as const,
@@ -37,10 +50,20 @@ export const networkKeys = {
     ] as const,
 };
 
-export function useFeedPosts(page = 1, pageSize = 10, hiddenOnly = false) {
+export function useFeedPosts(
+  page = 1,
+  pageSize = 10,
+  options?: { hiddenOnly?: boolean; reportedOnly?: boolean; enabled?: boolean }
+) {
+  const hiddenOnly = options?.hiddenOnly ?? false;
+  const reportedOnly = options?.reportedOnly ?? false;
+  const enabled = options?.enabled ?? true;
+
   return useQuery({
-    queryKey: networkKeys.feed(page, pageSize, hiddenOnly),
-    queryFn: () => postsApi.getFeed(page, pageSize, undefined, hiddenOnly),
+    queryKey: networkKeys.feed(page, pageSize, options),
+    queryFn: () =>
+      postsApi.getFeed(page, pageSize, undefined, hiddenOnly, reportedOnly),
+    enabled,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

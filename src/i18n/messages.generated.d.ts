@@ -36,9 +36,28 @@ declare module 'i18next' {
       bookAppointment: string;
       findDoctor: string;
       learnMore: string;
+      helpTour: string;
       language: string;
       sidebar: {
         auraNetwork: string;
+      };
+    };
+    GuestTour: {
+      controls: {
+        back: string;
+        close: string;
+        last: string;
+        next: string;
+        skip: string;
+      };
+      steps: {
+        logo: string;
+        navAbout: string;
+        navHowItWorks: string;
+        aboutMission: string;
+        contactOrganisation: string;
+        getStartedPatient: string;
+        getStartedDoctor: string;
       };
     };
     Auth: {

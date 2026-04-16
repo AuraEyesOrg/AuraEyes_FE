@@ -6,6 +6,7 @@ import { unwrapApiData } from '@/types/api-response';
 export interface OrganisationDashboardMetrics {
   utilizationRatePercent: number;
   remainingAiQuota: number;
+  totalPatients: number;
   totalAppointments: number;
   appointmentStatus: {
     pending: number;
