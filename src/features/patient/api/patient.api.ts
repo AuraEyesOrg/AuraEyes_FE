@@ -543,6 +543,8 @@ interface ScreeningSessionDetail {
     assessedAt: string;
   };
   latestDiagnosis?: {
+    reportedByDoctorId?: string;
+    reportedByDoctorName?: string;
     diagnosisCode?: string;
     codingSystem?: string;
     clinicalFindings?: string;
@@ -680,8 +682,12 @@ const mapSessionDetailToReport = (
     patientId: detail.patientId,
     imageId: detail.screeningId,
     analysisId: detail.latestResult?.screeningResultId ?? detail.screeningId,
-    type: 'AI_SCREENING',
-    status: detail.latestResult ? 'completed' : 'pending',
+    type: detail.latestDiagnosis ? 'OPHTHALMOLOGIST_VERIFIED' : 'AI_SCREENING',
+    status: detail.latestDiagnosis
+      ? 'verified'
+      : detail.latestResult
+        ? 'completed'
+        : 'pending',
     riskLevel,
     summary:
       detail.latestResult?.summary?.trim() ||
@@ -693,6 +699,15 @@ const mapSessionDetailToReport = (
         ? diagnosisRecommendations
         : inferReportRecommendations(riskLevel),
     createdAt: detail.latestResult?.assessedAt ?? detail.createdAt,
+    verifiedBy: detail.latestDiagnosis?.reportedByDoctorName
+      ? {
+          id: detail.latestDiagnosis.reportedByDoctorId ?? '',
+          fullName: detail.latestDiagnosis.reportedByDoctorName,
+          title: 'Ophthalmologist',
+          specialty: 'Retina',
+          clinicName: 'AuraEyes',
+        }
+      : undefined,
     medicalDiagnosis: detail.latestDiagnosis
       ? {
           diagnosisCode: detail.latestDiagnosis.diagnosisCode,

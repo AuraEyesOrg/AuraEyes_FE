@@ -13,11 +13,11 @@ import {
   Eye,
   User,
   Stethoscope,
-  Flag,
   Info,
   Settings2,
   Pencil,
   Save,
+  Share2,
   X,
   Calendar,
   Eraser,
@@ -68,6 +68,31 @@ interface DetectedFinding {
 
 type BoxRect = { x: number; y: number; width: number; height: number };
 type TranslateFn = (key: string, fallback: string) => string;
+
+const DIAGNOSIS_CODE_PRESETS = [
+  { value: 'H35.9', label: 'H35.9 - Retinal disorder, unspecified' },
+  {
+    value: 'E11.311',
+    label: 'E11.311 - Type 2 diabetic retinopathy with macular edema',
+  },
+  { value: 'H34.9', label: 'H34.9 - Retinal vascular occlusion, unspecified' },
+  { value: 'H40.9', label: 'H40.9 - Glaucoma, unspecified' },
+  { value: 'OTHER', label: 'Other diagnosis code' },
+] as const;
+
+const TREATMENT_PLAN_PRESETS = [
+  'Monitor and re-evaluate in 4-6 weeks.',
+  'Refer to retina specialist for further evaluation.',
+  'Initiate urgent in-person ophthalmic assessment within 24 hours.',
+  'Continue current treatment and monitor progression.',
+] as const;
+
+const RECOMMENDATION_PRESETS = [
+  'Schedule follow-up fundus imaging as advised.',
+  'Report immediately if vision becomes blurred or distorted.',
+  'Maintain blood sugar and blood pressure control.',
+  'Avoid delaying specialist consultation.',
+] as const;
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -184,7 +209,10 @@ export default function ScreeningReviewPage() {
   const [zoom, setZoom] = useState(1);
   const [focusedFinding, setFocusedFinding] = useState<string | null>(null);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
-  const [diagnosisCode, setDiagnosisCode] = useState('');
+  const [diagnosisCodePreset, setDiagnosisCodePreset] =
+    useState<(typeof DIAGNOSIS_CODE_PRESETS)[number]['value']>('H35.9');
+  const [customDiagnosisCode, setCustomDiagnosisCode] = useState('');
+  const [diagnosisCode, setDiagnosisCode] = useState('H35.9');
   const [codingSystem, setCodingSystem] = useState('ICD-10');
   const [clinicalFindings, setClinicalFindings] = useState('');
   const [severityLevel, setSeverityLevel] = useState('Moderate');
@@ -195,6 +223,7 @@ export default function ScreeningReviewPage() {
   const [diagnosisStatus, setDiagnosisStatus] = useState('Draft');
   const [referralRequired, setReferralRequired] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
+  const [sharingImages, setSharingImages] = useState(false);
   const riskLevelConfig = useMemo(() => getRiskLevelConfig(t), [t]);
 
   // ─── Heatmap toolkit draggable state ────────────────────────────────────
@@ -879,6 +908,16 @@ export default function ScreeningReviewPage() {
   };
 
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const aiFindingsNarrative = useMemo(() => {
+    if (findings.length === 0) return '';
+    return findings
+      .slice(0, 5)
+      .map(
+        (item, index) =>
+          `${index + 1}. ${item.name} (${Math.round(item.confidence)}%)`
+      )
+      .join('\n');
+  }, [findings]);
 
   const handleDownloadPdf = useCallback(async () => {
     if (downloadingPdf || !screeningId) return;
@@ -889,13 +928,25 @@ export default function ScreeningReviewPage() {
         await import('@/lib/file-export');
 
       // Attempt to download from common endpoint
-      const response = await api
-        .get(`/screenings/${screeningId}/report-pdf`, { responseType: 'blob' })
-        .catch(() =>
-          api.get(`/organisations/screenings/${screeningId}/report-pdf`, {
-            responseType: 'blob',
-          })
-        );
+      const response = reportableSessionId
+        ? await api
+            .get(`/consultation-sessions/${reportableSessionId}/report-pdf`, {
+              responseType: 'blob',
+            })
+            .catch(() =>
+              api.get(`/screenings/${screeningId}/report-pdf`, {
+                responseType: 'blob',
+              })
+            )
+        : await api
+            .get(`/screenings/${screeningId}/report-pdf`, {
+              responseType: 'blob',
+            })
+            .catch(() =>
+              api.get(`/organisations/screenings/${screeningId}/report-pdf`, {
+                responseType: 'blob',
+              })
+            );
 
       const fallbackFileName = `screening-report-${screeningId.slice(0, 8)}.pdf`;
       const fileName =
@@ -920,7 +971,15 @@ export default function ScreeningReviewPage() {
     } finally {
       setDownloadingPdf(false);
     }
-  }, [screeningId, downloadingPdf, t]);
+  }, [screeningId, downloadingPdf, reportableSessionId, t]);
+
+  useEffect(() => {
+    const effectiveCode =
+      diagnosisCodePreset === 'OTHER'
+        ? customDiagnosisCode.trim()
+        : diagnosisCodePreset;
+    setDiagnosisCode(effectiveCode);
+  }, [diagnosisCodePreset, customDiagnosisCode]);
 
   useEffect(() => {
     if (!showDiagnosisModal) return;
@@ -928,6 +987,13 @@ export default function ScreeningReviewPage() {
     if (aiConfidencePct <= 0) return;
     setConfidenceLevel(String(aiConfidencePct));
   }, [showDiagnosisModal, confidenceLevel, aiConfidencePct]);
+
+  useEffect(() => {
+    if (!showDiagnosisModal) return;
+    if (clinicalFindings.trim().length > 0) return;
+    if (!aiFindingsNarrative) return;
+    setClinicalFindings(aiFindingsNarrative);
+  }, [showDiagnosisModal, clinicalFindings, aiFindingsNarrative]);
 
   const handleSubmitDiagnosis = async () => {
     if (
@@ -1097,6 +1163,66 @@ export default function ScreeningReviewPage() {
       ophthalToast.error(message);
     }
   };
+
+  const handleShareRetinalImages = useCallback(async () => {
+    if (!reportableSessionId) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.validation.noLinkedSession',
+          'No linked Verification or VideoCall session was found for this screening.'
+        )
+      );
+      return;
+    }
+
+    const topImages = (detail?.images ?? []).slice(0, 3);
+    if (topImages.length === 0) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.share.noImages',
+          'No retinal images available to share.'
+        )
+      );
+      return;
+    }
+
+    setSharingImages(true);
+    try {
+      const { sendSessionMessage } =
+        await import('@/features/consultation/api/consultation.api');
+
+      await sendSessionMessage(reportableSessionId, {
+        message: t(
+          'Ophthalmologist.screeningReview.share.header',
+          'Shared retinal images for this screening review:'
+        ),
+      });
+
+      for (let i = 0; i < topImages.length; i += 1) {
+        const image = topImages[i];
+        const attachmentName = `Retinal image ${i + 1} (${image.eyeSide})`;
+        await sendSessionMessage(reportableSessionId, {
+          message: `[Image Attached: ${image.imageUrl} | Name: ${attachmentName}]`,
+        });
+      }
+
+      ophthalToast.success(
+        t(
+          'Ophthalmologist.screeningReview.share.success',
+          'Shared retinal images to consultation chat.'
+        )
+      );
+    } catch (error) {
+      ophthalToast.error(
+        t(
+          'Ophthalmologist.screeningReview.share.failed',
+          'Unable to share retinal images right now.'
+        )
+      );
+    } finally {
+      setSharingImages(false);
+    }
+  }, [detail?.images, reportableSessionId, t]);
 
   const sidebarTabs = [
     {
@@ -2356,13 +2482,6 @@ export default function ScreeningReviewPage() {
                   {/* Action Buttons */}
                   <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
                     <div className="grid grid-cols-3 gap-2">
-                      <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-[#1e3a5f] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2d4a6f] rounded-lg font-medium transition-colors">
-                        <Flag className="w-4 h-4" />
-                        {t(
-                          'Ophthalmologist.screeningReview.flagForReview',
-                          'Flag for Review'
-                        )}
-                      </button>
                       <button
                         onClick={handleSaveEdits}
                         disabled={savingEdits}
@@ -2386,6 +2505,21 @@ export default function ScreeningReviewPage() {
                         {t(
                           'Ophthalmologist.screeningReview.generateReport',
                           'Generate Report'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleShareRetinalImages}
+                        disabled={sharingImages}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60"
+                      >
+                        {sharingImages ? (
+                          <Spinner size={16} />
+                        ) : (
+                          <Share2 className="w-4 h-4" />
+                        )}
+                        {t(
+                          'Ophthalmologist.screeningReview.shareButton',
+                          'Share'
                         )}
                       </button>
                     </div>
@@ -2472,16 +2606,22 @@ export default function ScreeningReviewPage() {
                   )}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    value={diagnosisCode}
-                    onChange={(e) => setDiagnosisCode(e.target.value)}
-                    placeholder={t(
-                      'Ophthalmologist.screeningReview.modal.diagnosisCode',
-                      'Diagnosis code'
-                    )}
-                    className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  />
+                  <select
+                    value={diagnosisCodePreset}
+                    onChange={(e) =>
+                      setDiagnosisCodePreset(
+                        e.target
+                          .value as (typeof DIAGNOSIS_CODE_PRESETS)[number]['value']
+                      )
+                    }
+                    className="md:col-span-2 px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  >
+                    {DIAGNOSIS_CODE_PRESETS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     value={codingSystem}
                     onChange={(e) => setCodingSystem(e.target.value)}
@@ -2494,6 +2634,18 @@ export default function ScreeningReviewPage() {
                     </option>
                   </select>
                 </div>
+                {diagnosisCodePreset === 'OTHER' && (
+                  <input
+                    type="text"
+                    value={customDiagnosisCode}
+                    onChange={(e) => setCustomDiagnosisCode(e.target.value)}
+                    placeholder={t(
+                      'Ophthalmologist.screeningReview.modal.diagnosisCode',
+                      'Diagnosis code'
+                    )}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  />
+                )}
                 <select
                   value={diagnosisStatus}
                   onChange={(e) => setDiagnosisStatus(e.target.value)}
@@ -2519,6 +2671,12 @@ export default function ScreeningReviewPage() {
                     'Clinical Findings'
                   )}
                 </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  {t(
+                    'Ophthalmologist.screeningReview.modal.clinicalFindingsHint',
+                    'Auto-filled from AI findings. You can adjust before saving.'
+                  )}
+                </p>
                 <textarea
                   value={clinicalFindings}
                   onChange={(e) => setClinicalFindings(e.target.value)}
@@ -2628,6 +2786,25 @@ export default function ScreeningReviewPage() {
                     'Treatment and Advice'
                   )}
                 </h4>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) setTreatmentPlan(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="">
+                    {t(
+                      'Ophthalmologist.screeningReview.modal.selectTreatmentTemplate',
+                      'Select a treatment template'
+                    )}
+                  </option>
+                  {TREATMENT_PLAN_PRESETS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
                 <textarea
                   value={treatmentPlan}
                   onChange={(e) => setTreatmentPlan(e.target.value)}
@@ -2638,6 +2815,25 @@ export default function ScreeningReviewPage() {
                   rows={3}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 />
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) setRecommendations(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#1e3a5f]/50 border border-gray-200 dark:border-[#1e3a5f] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="">
+                    {t(
+                      'Ophthalmologist.screeningReview.modal.selectRecommendationTemplate',
+                      'Select a recommendation template'
+                    )}
+                  </option>
+                  {RECOMMENDATION_PRESETS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
                 <textarea
                   value={recommendations}
                   onChange={(e) => setRecommendations(e.target.value)}
