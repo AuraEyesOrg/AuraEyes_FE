@@ -3353,6 +3353,172 @@
       "today": "Hôm nay",
       "yearsAbbr": "tuổi"
     },
+    "header": {
+      "actions": {
+        "toggleTheme": "Chuyển giao diện"
+      },
+      "breadcrumb": {
+        "pages": "Trang"
+      },
+      "defaultPageName": "Tổng quan",
+      "searchPlaceholder": "Tìm bệnh nhân, mã ID..."
+    },
+    "walkInPatientModal": {
+      "actions": {
+        "createPatient": "Tạo bệnh nhân"
+      },
+      "form": {
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Số nhà, phường/xã, quận/huyện, tỉnh/thành phố",
+        "citizenId": "CCCD",
+        "citizenIdPlaceholder": "vd. 001099000000",
+        "dateOfBirth": "Ngày sinh *",
+        "fullName": "Họ và tên *",
+        "fullNamePlaceholder": "vd. Nguyễn Văn A",
+        "gender": "Giới tính *",
+        "genderOther": "Khác",
+        "phoneNumber": "Số điện thoại",
+        "phonePlaceholder": "0901 234 567"
+      },
+      "header": {
+        "subtitle": "Đăng ký nhanh bệnh nhân mới",
+        "title": "Tạo bệnh nhân walk-in"
+      },
+      "scan": {
+        "action": "Quét mã QR VNeID / CCCD",
+        "cancel": "Hủy quét",
+        "hint": "Tự động điền thông tin bệnh nhân chính xác"
+      },
+      "toast": {
+        "createSuccess": "Tạo bệnh nhân walk-in thành công!",
+        "invalidQr": "Mã QR không hợp lệ hoặc không đúng định dạng CCCD/VNeID.",
+        "qrExtractSuccess": "Trích xuất hồ sơ công dân thành công!"
+      }
+    },
+    "calendar": {
+      "actions": {
+        "completeVisit": "Hoàn tất khám",
+        "noShow": "Vắng mặt",
+        "scanQrCheckIn": "Quét QR check-in",
+        "startConsultation": "Bắt đầu tư vấn"
+      },
+      "pageName": "Lịch",
+      "patient": {
+        "fallback": "Bệnh nhân {{id}}"
+      },
+      "qrModal": {
+        "subtitle": "Hướng camera vào mã QR lịch hẹn của bệnh nhân.",
+        "title": "Quét QR để check-in"
+      },
+      "states": {
+        "loadingAppointments": "Đang tải lịch hẹn...",
+        "noAppointments": "Không có lịch hẹn trong ngày này.",
+        "terminal": {
+          "cancelled": "Lịch hẹn đã hủy",
+          "completed": "Đã hoàn tất lượt khám",
+          "noShow": "Đã đánh dấu vắng mặt"
+        }
+      },
+      "stats": {
+        "checkedIn": "Đã check-in",
+        "inProgress": "Đang tư vấn",
+        "pending": "Chờ xác nhận",
+        "total": "Tổng"
+      },
+      "status": {
+        "cancelled": "Đã hủy",
+        "checkedIn": "Đã check-in",
+        "completed": "Hoàn tất",
+        "confirmed": "Đã xác nhận",
+        "inProgress": "Đang tư vấn",
+        "noShow": "Vắng mặt",
+        "pending": "Chờ xác nhận"
+      },
+      "summary": {
+        "records": "{{count}} hồ sơ"
+      },
+      "toast": {
+        "consultationStarted": "Đã bắt đầu tư vấn.",
+        "invalidQr": "Mã QR check-in không hợp lệ.",
+        "markedNoShow": "Đã đánh dấu vắng mặt.",
+        "qrCheckInSuccess": "Check-in qua QR thành công.",
+        "qrNotBelongOrganisation": "Mã QR này không thuộc tổ chức của bạn.",
+        "qrNotMatchAppointment": "Mã QR này không khớp lịch hẹn đã chọn.",
+        "visitCompleted": "Đã hoàn tất lượt khám."
+      }
+    },
+    "contract": {
+      "actions": {
+        "cancelReupload": "Hủy và quay lại hợp đồng đã nộp",
+        "downloadTemplate": "Tải mẫu hợp đồng",
+        "downloadTemplateHint": "Tải file gốc để in và ký.",
+        "openOriginalFile": "Mở file gốc",
+        "reupload": "Tải lại",
+        "uploadSignedContract": "Tải lên hợp đồng đã ký",
+        "viewTemplate": "Xem mẫu hợp đồng",
+        "viewTemplateHint": "Mở trực tiếp file hợp đồng ở tab mới."
+      },
+      "fields": {
+        "contactPerson": "Người liên hệ",
+        "createdAt": "Ngày tạo",
+        "email": "Email",
+        "organisationType": "Tổ chức y tế",
+        "template": "Mẫu",
+        "type": "Loại"
+      },
+      "header": {
+        "subtitle": "Xem, tải và tải lên hợp đồng hợp tác của tổ chức với AURA.",
+        "title": "Hợp đồng tổ chức"
+      },
+      "pageName": "Hợp đồng",
+      "sections": {
+        "actions": "Hành động",
+        "contractInfo": "Thông tin hợp đồng",
+        "organisationAccount": "Tài khoản tổ chức",
+        "signedContract": "Hợp đồng đã ký",
+        "signedDescriptionActive": "Hiện tại bạn đã có thể sử dụng đầy đủ tính năng của AURA.",
+        "signedDescriptionPending": "Hợp đồng đã được gửi và đang chờ admin phê duyệt.",
+        "uploadDescription": "Tải mẫu, ký đóng dấu rồi tải lên file scan hoặc ảnh chụp.",
+        "uploadSignedContract": "Tải lên hợp đồng đã ký"
+      },
+      "status": {
+        "active": "Đang hiệu lực",
+        "pendingReview": "Đã upload - Chờ admin duyệt",
+        "pendingSignature": "Chờ ký hợp đồng"
+      },
+      "states": {
+        "loading": "Đang tải thông tin hợp đồng...",
+        "noContractDescription": "Tài khoản đã được cấp nhưng hợp đồng chưa được System Admin khởi tạo.",
+        "noContractTitle": "Chưa có hợp đồng"
+      },
+      "steps": {
+        "captureAndUpload": "Chụp ảnh & tải lên",
+        "downloadAndPrint": "Tải & in hợp đồng",
+        "signAndStamp": "Ký tên & đóng dấu"
+      },
+      "summary": {
+        "contractCode": "Mã hợp đồng",
+        "redirectIn": "Tự động chuyển tới bảng điều khiển sau {{seconds}} giây."
+      },
+      "toast": {
+        "downloadTemplateFailed": "Không thể tải file mẫu hợp đồng.",
+        "fileTooLarge": "Kích thước file không được vượt quá 10MB.",
+        "invalidFileType": "Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF."
+      },
+      "upload": {
+        "activatedDescription": "Tổ chức có thể bắt đầu sử dụng đầy đủ tính năng trên AURA.",
+        "activatedTitle": "Hợp đồng đã được kích hoạt",
+        "activeContractHint": "Tổ chức đã hoàn tất ký kết và hợp đồng đang ở trạng thái hiệu lực.",
+        "awaitingAdminDescription": "Hợp đồng của tổ chức đã được gửi đi và đang chờ duyệt.",
+        "awaitingAdminTitle": "Đang chờ admin xác nhận",
+        "dropzonePrefix": "Kéo thả hợp đồng đã ký hoặc",
+        "pdfUploaded": "Đã upload file PDF",
+        "previewAlt": "Xem trước",
+        "selectFileAction": "chọn file",
+        "signedContractAlt": "Hợp đồng đã ký",
+        "supportedFormats": "JPEG, PNG, WebP hoặc PDF - Tối đa 10MB"
+      }
+    },
     "dashboard": {
       "header": {
         "subtitle": "Đây là bảng điều khiển trực tiếp của {{name}}. Theo dõi các chỉ số quan trọng và quản lý tổ chức của bạn.",

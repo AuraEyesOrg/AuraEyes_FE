@@ -3356,6 +3356,172 @@ declare module 'i18next' {
         today: string;
         yearsAbbr: string;
       };
+      header: {
+        actions: {
+          toggleTheme: string;
+        };
+        breadcrumb: {
+          pages: string;
+        };
+        defaultPageName: string;
+        searchPlaceholder: string;
+      };
+      walkInPatientModal: {
+        actions: {
+          createPatient: string;
+        };
+        form: {
+          address: string;
+          addressPlaceholder: string;
+          citizenId: string;
+          citizenIdPlaceholder: string;
+          dateOfBirth: string;
+          fullName: string;
+          fullNamePlaceholder: string;
+          gender: string;
+          genderOther: string;
+          phoneNumber: string;
+          phonePlaceholder: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        scan: {
+          action: string;
+          cancel: string;
+          hint: string;
+        };
+        toast: {
+          createSuccess: string;
+          invalidQr: string;
+          qrExtractSuccess: string;
+        };
+      };
+      calendar: {
+        actions: {
+          completeVisit: string;
+          noShow: string;
+          scanQrCheckIn: string;
+          startConsultation: string;
+        };
+        pageName: string;
+        patient: {
+          fallback: string;
+        };
+        qrModal: {
+          subtitle: string;
+          title: string;
+        };
+        states: {
+          loadingAppointments: string;
+          noAppointments: string;
+          terminal: {
+            cancelled: string;
+            completed: string;
+            noShow: string;
+          };
+        };
+        stats: {
+          checkedIn: string;
+          inProgress: string;
+          pending: string;
+          total: string;
+        };
+        status: {
+          cancelled: string;
+          checkedIn: string;
+          completed: string;
+          confirmed: string;
+          inProgress: string;
+          noShow: string;
+          pending: string;
+        };
+        summary: {
+          records: string;
+        };
+        toast: {
+          consultationStarted: string;
+          invalidQr: string;
+          markedNoShow: string;
+          qrCheckInSuccess: string;
+          qrNotBelongOrganisation: string;
+          qrNotMatchAppointment: string;
+          visitCompleted: string;
+        };
+      };
+      contract: {
+        actions: {
+          cancelReupload: string;
+          downloadTemplate: string;
+          downloadTemplateHint: string;
+          openOriginalFile: string;
+          reupload: string;
+          uploadSignedContract: string;
+          viewTemplate: string;
+          viewTemplateHint: string;
+        };
+        fields: {
+          contactPerson: string;
+          createdAt: string;
+          email: string;
+          organisationType: string;
+          template: string;
+          type: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        sections: {
+          actions: string;
+          contractInfo: string;
+          organisationAccount: string;
+          signedContract: string;
+          signedDescriptionActive: string;
+          signedDescriptionPending: string;
+          uploadDescription: string;
+          uploadSignedContract: string;
+        };
+        status: {
+          active: string;
+          pendingReview: string;
+          pendingSignature: string;
+        };
+        states: {
+          loading: string;
+          noContractDescription: string;
+          noContractTitle: string;
+        };
+        steps: {
+          captureAndUpload: string;
+          downloadAndPrint: string;
+          signAndStamp: string;
+        };
+        summary: {
+          contractCode: string;
+          redirectIn: string;
+        };
+        toast: {
+          downloadTemplateFailed: string;
+          fileTooLarge: string;
+          invalidFileType: string;
+        };
+        upload: {
+          activatedDescription: string;
+          activatedTitle: string;
+          activeContractHint: string;
+          awaitingAdminDescription: string;
+          awaitingAdminTitle: string;
+          dropzonePrefix: string;
+          pdfUploaded: string;
+          previewAlt: string;
+          selectFileAction: string;
+          signedContractAlt: string;
+          supportedFormats: string;
+        };
+      };
       dashboard: {
         header: {
           subtitle: string;

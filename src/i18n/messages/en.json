@@ -3343,6 +3343,172 @@
       "today": "Today",
       "yearsAbbr": "yrs"
     },
+    "header": {
+      "actions": {
+        "toggleTheme": "Toggle theme"
+      },
+      "breadcrumb": {
+        "pages": "Pages"
+      },
+      "defaultPageName": "Dashboard",
+      "searchPlaceholder": "Search patients, ID..."
+    },
+    "walkInPatientModal": {
+      "actions": {
+        "createPatient": "Create Patient"
+      },
+      "form": {
+        "address": "Address",
+        "addressPlaceholder": "Street, ward, district, city",
+        "citizenId": "Citizen ID (CCCD)",
+        "citizenIdPlaceholder": "e.g. 001099000000",
+        "dateOfBirth": "Date of Birth *",
+        "fullName": "Full Name *",
+        "fullNamePlaceholder": "e.g. John Doe",
+        "gender": "Gender *",
+        "genderOther": "Other",
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "+1 (555) 000-0000"
+      },
+      "header": {
+        "subtitle": "Quickly register a new patient",
+        "title": "Create Walk-in Patient"
+      },
+      "scan": {
+        "action": "Scan VNeID / CCCD QR Code",
+        "cancel": "Cancel Scanning",
+        "hint": "Autofill patient details accurately"
+      },
+      "toast": {
+        "createSuccess": "Walk-in patient created successfully!",
+        "invalidQr": "Invalid QR code or unsupported CCCD/VNeID format.",
+        "qrExtractSuccess": "Citizen profile extracted successfully!"
+      }
+    },
+    "calendar": {
+      "actions": {
+        "completeVisit": "Complete visit",
+        "noShow": "No-show",
+        "scanQrCheckIn": "Scan QR check-in",
+        "startConsultation": "Start consultation"
+      },
+      "pageName": "Calendar",
+      "patient": {
+        "fallback": "Patient {{id}}"
+      },
+      "qrModal": {
+        "subtitle": "Point the camera at the patient appointment QR code.",
+        "title": "Scan QR for check-in"
+      },
+      "states": {
+        "loadingAppointments": "Loading appointments...",
+        "noAppointments": "No appointments on this day.",
+        "terminal": {
+          "cancelled": "Appointment cancelled",
+          "completed": "Visit completed",
+          "noShow": "Marked as no-show"
+        }
+      },
+      "stats": {
+        "checkedIn": "Checked in",
+        "inProgress": "In progress",
+        "pending": "Pending",
+        "total": "Total"
+      },
+      "status": {
+        "cancelled": "Cancelled",
+        "checkedIn": "Checked in",
+        "completed": "Completed",
+        "confirmed": "Confirmed",
+        "inProgress": "In progress",
+        "noShow": "No-show",
+        "pending": "Pending"
+      },
+      "summary": {
+        "records": "{{count}} records"
+      },
+      "toast": {
+        "consultationStarted": "Consultation started.",
+        "invalidQr": "Invalid clinic check-in QR code.",
+        "markedNoShow": "Marked as no-show.",
+        "qrCheckInSuccess": "Check-in successful via QR.",
+        "qrNotBelongOrganisation": "This QR code does not belong to your organisation.",
+        "qrNotMatchAppointment": "This QR code does not match the selected appointment.",
+        "visitCompleted": "Visit completed."
+      }
+    },
+    "contract": {
+      "actions": {
+        "cancelReupload": "Cancel and go back to the submitted contract",
+        "downloadTemplate": "Download contract template",
+        "downloadTemplateHint": "Download the original file for printing and signing.",
+        "openOriginalFile": "Open original file",
+        "reupload": "Re-upload",
+        "uploadSignedContract": "Upload signed contract",
+        "viewTemplate": "View contract template",
+        "viewTemplateHint": "Open the contract file directly in a new tab."
+      },
+      "fields": {
+        "contactPerson": "Contact Person",
+        "createdAt": "Created At",
+        "email": "Email",
+        "organisationType": "Medical organisation",
+        "template": "Template",
+        "type": "Type"
+      },
+      "header": {
+        "subtitle": "View, download, and upload your organisation cooperation contract with AURA.",
+        "title": "Organisation Contract"
+      },
+      "pageName": "Contract",
+      "sections": {
+        "actions": "Actions",
+        "contractInfo": "Contract Information",
+        "organisationAccount": "Organisation Account",
+        "signedContract": "Signed Contract",
+        "signedDescriptionActive": "You can now start using all AURA features.",
+        "signedDescriptionPending": "The contract has been submitted and is awaiting admin approval.",
+        "uploadDescription": "Download, sign, stamp, and upload the scanned file or photo.",
+        "uploadSignedContract": "Upload Signed Contract"
+      },
+      "status": {
+        "active": "Active",
+        "pendingReview": "Uploaded - Awaiting admin review",
+        "pendingSignature": "Pending contract signature"
+      },
+      "states": {
+        "loading": "Loading contract details...",
+        "noContractDescription": "Your account is provisioned, but the contract has not been created by System Admin yet.",
+        "noContractTitle": "No contract found"
+      },
+      "steps": {
+        "captureAndUpload": "Capture & upload",
+        "downloadAndPrint": "Download & print contract",
+        "signAndStamp": "Sign & stamp"
+      },
+      "summary": {
+        "contractCode": "Contract code",
+        "redirectIn": "Auto redirect to dashboard in {{seconds}} seconds."
+      },
+      "toast": {
+        "downloadTemplateFailed": "Unable to download contract template file.",
+        "fileTooLarge": "File size must not exceed 10MB.",
+        "invalidFileType": "Only JPEG, PNG, WebP, or PDF files are accepted."
+      },
+      "upload": {
+        "activatedDescription": "Your organisation can now use all AURA features.",
+        "activatedTitle": "Contract has been activated",
+        "activeContractHint": "The organisation has completed signing and the contract is currently active.",
+        "awaitingAdminDescription": "The organisation contract has been submitted for review.",
+        "awaitingAdminTitle": "Awaiting admin confirmation",
+        "dropzonePrefix": "Drag and drop the signed contract or",
+        "pdfUploaded": "Uploaded PDF file",
+        "previewAlt": "Preview",
+        "selectFileAction": "select file",
+        "signedContractAlt": "Signed contract",
+        "supportedFormats": "JPEG, PNG, WebP, or PDF - Max 10MB"
+      }
+    },
     "dashboard": {
       "header": {
         "subtitle": "Here's your live dashboard for {{name}}. Monitor key metrics and manage your organisation.",
