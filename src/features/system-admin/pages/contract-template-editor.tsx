@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -14,11 +15,29 @@ import {
 import Sidebar from '../components/Sidebar';
 import { contractTemplatesApi } from '../api/contract-templates.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { EmploymentTypeValue } from '../types/system-admin.types';
+
+const formatDateTime = (
+  dateText: string | undefined | null,
+  locale: string,
+  fallback: string
+) => {
+  if (!dateText) return fallback;
+  const parsed = new Date(dateText);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleString(locale);
+};
 
 export default function ContractTemplateEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === 'new';
 
@@ -70,12 +89,27 @@ export default function ContractTemplateEditorPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!title.trim()) throw new Error('Template name is required.');
+      if (!title.trim()) {
+        throw new Error(
+          t(
+            'SystemAdmin.contractTemplateEditor.errors.templateNameRequired',
+            'Template name is required.'
+          )
+        );
+      }
       if (!contractVersion.trim())
-        throw new Error('Contract version is required.');
+        throw new Error(
+          t(
+            'SystemAdmin.contractTemplateEditor.errors.contractVersionRequired',
+            'Contract version is required.'
+          )
+        );
       if (contractType === 1 && !employmentType) {
         throw new Error(
-          'Please select Full-time or Part-time for ophthalmologist templates.'
+          t(
+            'SystemAdmin.contractTemplateEditor.errors.employmentTypeRequired',
+            'Please select Full-time or Part-time for ophthalmologist templates.'
+          )
         );
       }
 
@@ -90,7 +124,12 @@ export default function ContractTemplateEditorPage() {
 
       if (isNew) {
         if (!templateFile)
-          throw new Error('Please upload a DOCX template file.');
+          throw new Error(
+            t(
+              'SystemAdmin.contractTemplateEditor.errors.docxRequired',
+              'Please upload a DOCX template file.'
+            )
+          );
         return contractTemplatesApi.createContractTemplate({
           ...payload,
           templateFile,
@@ -129,7 +168,10 @@ export default function ContractTemplateEditorPage() {
   const saveErrorMessage = saveMutation.error
     ? extractApiErrorMessage(
         saveMutation.error,
-        'Could not save contract template. Please try again.'
+        t(
+          'SystemAdmin.contractTemplateEditor.errors.saveFailed',
+          'Could not save contract template. Please try again.'
+        )
       )
     : null;
 
@@ -141,16 +183,31 @@ export default function ContractTemplateEditorPage() {
         <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <button
             onClick={() => navigate('/system-admin/contract-templates')}
+            aria-label={t(
+              'SystemAdmin.contractTemplateEditor.actions.backToTemplates',
+              'Back to contract templates'
+            )}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-              {isNew ? 'Create Contract Template' : 'Contract Template Detail'}
+              {isNew
+                ? t(
+                    'SystemAdmin.contractTemplateEditor.titleCreate',
+                    'Create Contract Template'
+                  )
+                : t(
+                    'SystemAdmin.contractTemplateEditor.titleDetail',
+                    'Contract Template Detail'
+                  )}
             </h1>
             <p className="text-xs text-slate-500">
-              Upload DOCX only. No HTML or variable configuration.
+              {t(
+                'SystemAdmin.contractTemplateEditor.subtitle',
+                'Upload DOCX only. No HTML or variable configuration.'
+              )}
             </p>
           </div>
 
@@ -168,7 +225,15 @@ export default function ContractTemplateEditorPage() {
                 ) : (
                   <XCircle className="w-3 h-3" />
                 )}
-                {active ? 'Active' : 'Inactive'}
+                {active
+                  ? t(
+                      'SystemAdmin.contractTemplateEditor.status.active',
+                      'Active'
+                    )
+                  : t(
+                      'SystemAdmin.contractTemplateEditor.status.inactive',
+                      'Inactive'
+                    )}
               </span>
               <button
                 onClick={() => statusMutation.mutate(!active)}
@@ -176,10 +241,19 @@ export default function ContractTemplateEditorPage() {
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-300 hover:bg-slate-50 disabled:opacity-60"
               >
                 {statusMutation.isPending
-                  ? 'Updating...'
+                  ? t(
+                      'SystemAdmin.contractTemplateEditor.actions.updatingStatus',
+                      'Updating...'
+                    )
                   : active
-                    ? 'Deactivate'
-                    : 'Activate'}
+                    ? t(
+                        'SystemAdmin.contractTemplateEditor.actions.deactivate',
+                        'Deactivate'
+                      )
+                    : t(
+                        'SystemAdmin.contractTemplateEditor.actions.activate',
+                        'Activate'
+                      )}
               </button>
             </div>
           )}
@@ -193,13 +267,21 @@ export default function ContractTemplateEditorPage() {
           <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Template File
+                {t(
+                  'SystemAdmin.contractTemplateEditor.sections.templateFile',
+                  'Template File'
+                )}
               </h2>
 
               <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition-colors">
                 <Upload className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {templateFile ? templateFile.name : 'Upload DOCX file'}
+                  {templateFile
+                    ? templateFile.name
+                    : t(
+                        'SystemAdmin.contractTemplateEditor.actions.uploadDocxFile',
+                        'Upload DOCX file'
+                      )}
                 </span>
                 <input
                   type="file"
@@ -218,7 +300,10 @@ export default function ContractTemplateEditorPage() {
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"
                   >
                     <Eye className="w-4 h-4" />
-                    Preview uploaded file
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.links.previewUploadedFile',
+                      'Preview uploaded file'
+                    )}
                   </a>
                 )}
 
@@ -230,7 +315,10 @@ export default function ContractTemplateEditorPage() {
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-50"
                   >
                     <LinkIcon className="w-4 h-4" />
-                    Open current template file
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.links.openCurrentTemplateFile',
+                      'Open current template file'
+                    )}
                   </a>
                 )}
               </div>
@@ -238,21 +326,37 @@ export default function ContractTemplateEditorPage() {
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Template Metadata
+                {t(
+                  'SystemAdmin.contractTemplateEditor.sections.templateMetadata',
+                  'Template Metadata'
+                )}
               </h2>
 
               <div>
-                <label className="text-xs text-slate-500">Title</label>
+                <label className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.contractTemplateEditor.fields.title.label',
+                    'Title'
+                  )}
+                </label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
-                  placeholder="Template title"
+                  placeholder={t(
+                    'SystemAdmin.contractTemplateEditor.fields.title.placeholder',
+                    'Template title'
+                  )}
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-500">Type</label>
+                <label className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.contractTemplateEditor.fields.type.label',
+                    'Type'
+                  )}
+                </label>
                 <select
                   value={contractType}
                   onChange={(e) =>
@@ -260,15 +364,28 @@ export default function ContractTemplateEditorPage() {
                   }
                   className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
                 >
-                  <option value={1}>Ophthalmologist</option>
-                  <option value={2}>Medical Organization</option>
+                  <option value={1}>
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.fields.type.ophthalmologist',
+                      'Ophthalmologist'
+                    )}
+                  </option>
+                  <option value={2}>
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.fields.type.medicalOrganization',
+                      'Medical Organization'
+                    )}
+                  </option>
                 </select>
               </div>
 
               {contractType === 1 && (
                 <div>
                   <label className="text-xs text-slate-500">
-                    Employment Mode
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.fields.employmentMode.label',
+                      'Employment Mode'
+                    )}
                   </label>
                   <select
                     value={employmentType}
@@ -277,24 +394,47 @@ export default function ContractTemplateEditorPage() {
                     }
                     className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
                   >
-                    <option value="FullTime">Full-time</option>
-                    <option value="PartTime">Part-time</option>
+                    <option value="FullTime">
+                      {t(
+                        'SystemAdmin.contractTemplateEditor.fields.employmentMode.fullTime',
+                        'Full-time'
+                      )}
+                    </option>
+                    <option value="PartTime">
+                      {t(
+                        'SystemAdmin.contractTemplateEditor.fields.employmentMode.partTime',
+                        'Part-time'
+                      )}
+                    </option>
                   </select>
                 </div>
               )}
 
               <div>
-                <label className="text-xs text-slate-500">Version</label>
+                <label className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.contractTemplateEditor.fields.version.label',
+                    'Version'
+                  )}
+                </label>
                 <input
                   value={contractVersion}
                   onChange={(e) => setContractVersion(e.target.value)}
                   className="mt-1 w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
-                  placeholder="2026"
+                  placeholder={t(
+                    'SystemAdmin.contractTemplateEditor.fields.version.placeholder',
+                    '2026'
+                  )}
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-500">Effective Date</label>
+                <label className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.contractTemplateEditor.fields.effectiveDate.label',
+                    'Effective Date'
+                  )}
+                </label>
                 <input
                   type="date"
                   value={effectiveDate}
@@ -313,7 +453,15 @@ export default function ContractTemplateEditorPage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {isNew ? 'Create Template' : 'Save Changes'}
+                {isNew
+                  ? t(
+                      'SystemAdmin.contractTemplateEditor.actions.createTemplate',
+                      'Create Template'
+                    )
+                  : t(
+                      'SystemAdmin.contractTemplateEditor.actions.saveChanges',
+                      'Save Changes'
+                    )}
               </button>
 
               {saveErrorMessage && (
@@ -323,18 +471,38 @@ export default function ContractTemplateEditorPage() {
               {!isNew && existingTemplate && (
                 <div className="pt-2 text-xs text-slate-500 space-y-1">
                   <p>
-                    Created:{' '}
-                    {new Date(existingTemplate.createdAt).toLocaleString(
-                      'vi-VN'
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.metadata.createdAt',
+                      'Created'
+                    )}
+                    :{' '}
+                    {formatDateTime(
+                      existingTemplate.createdAt,
+                      dateLocale,
+                      notAvailableLabel
                     )}
                   </p>
                   <p>
-                    Updated:{' '}
-                    {new Date(
-                      existingTemplate.updatedAt ?? existingTemplate.createdAt
-                    ).toLocaleString('vi-VN')}
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.metadata.updatedAt',
+                      'Updated'
+                    )}
+                    :{' '}
+                    {formatDateTime(
+                      existingTemplate.updatedAt ?? existingTemplate.createdAt,
+                      dateLocale,
+                      notAvailableLabel
+                    )}
                   </p>
-                  <p>Contracts using template: {existingTemplate.usageCount}</p>
+                  <p>
+                    {t(
+                      'SystemAdmin.contractTemplateEditor.metadata.contractsUsingTemplate',
+                      'Contracts using template: {{count}}',
+                      {
+                        count: existingTemplate.usageCount,
+                      }
+                    )}
+                  </p>
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock3, RefreshCw, Search, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -10,6 +11,7 @@ import {
   type OphthalmologistLeaveRequestStatus,
 } from '../api/leave-requests.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type StatusFilter = OphthalmologistLeaveRequestStatus | 'all';
 type ReviewAction = 'approve' | 'reject';
@@ -18,14 +20,6 @@ interface ReviewDialogState {
   action: ReviewAction;
   request: AdminLeaveRequestItem;
 }
-
-const statusOptions: Array<{ value: StatusFilter; label: string }> = [
-  { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'Pending', label: 'Đang chờ duyệt' },
-  { value: 'Approved', label: 'Đã duyệt' },
-  { value: 'Rejected', label: 'Đã từ chối' },
-  { value: 'Cancelled', label: 'Đã hủy' },
-];
 
 const statusBadgeClass: Record<OphthalmologistLeaveRequestStatus, string> = {
   Pending:
@@ -37,28 +31,61 @@ const statusBadgeClass: Record<OphthalmologistLeaveRequestStatus, string> = {
     'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
 };
 
-const statusLabel: Record<OphthalmologistLeaveRequestStatus, string> = {
-  Pending: 'Đang chờ duyệt',
-  Approved: 'Đã duyệt',
-  Rejected: 'Đã từ chối',
-  Cancelled: 'Đã hủy',
+const formatDate = (dateText: string, locale: string, fallback: string) => {
+  const parsed = new Date(dateText);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleDateString(locale);
 };
 
-const formatDate = (dateText: string) => {
+const formatDateTime = (
+  dateText: string | undefined | null,
+  locale: string,
+  fallback: string
+) => {
+  if (!dateText) return fallback;
   const parsed = new Date(dateText);
-  if (Number.isNaN(parsed.getTime())) return dateText;
-  return parsed.toLocaleDateString('vi-VN');
-};
-
-const formatDateTime = (dateText?: string | null) => {
-  if (!dateText) return 'N/A';
-  const parsed = new Date(dateText);
-  if (Number.isNaN(parsed.getTime())) return 'N/A';
-  return parsed.toLocaleString('vi-VN');
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleString(locale);
 };
 
 export default function SystemAdminLeaveRequestsPage() {
   const queryClient = useQueryClient();
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+
+  const statusOptions: Array<{ value: StatusFilter; label: string }> = [
+    {
+      value: 'all',
+      label: t('SystemAdmin.leaveRequests.filters.status.all', 'All statuses'),
+    },
+    {
+      value: 'Pending',
+      label: t('SystemAdmin.common.status.pending', 'Pending'),
+    },
+    {
+      value: 'Approved',
+      label: t('SystemAdmin.common.status.approved', 'Approved'),
+    },
+    {
+      value: 'Rejected',
+      label: t('SystemAdmin.common.status.rejected', 'Rejected'),
+    },
+    {
+      value: 'Cancelled',
+      label: t('SystemAdmin.common.status.cancelled', 'Cancelled'),
+    },
+  ];
+
+  const statusLabel: Record<OphthalmologistLeaveRequestStatus, string> = {
+    Pending: t('SystemAdmin.common.status.pending', 'Pending'),
+    Approved: t('SystemAdmin.common.status.approved', 'Approved'),
+    Rejected: t('SystemAdmin.common.status.rejected', 'Rejected'),
+    Cancelled: t('SystemAdmin.common.status.cancelled', 'Cancelled'),
+  };
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
@@ -89,7 +116,15 @@ export default function SystemAdminLeaveRequestsPage() {
       adminLeaveRequestsApi.approveLeaveRequest(requestId, note),
     onSuccess: (result) => {
       toast.success(
-        `Đã duyệt đơn nghỉ phép. Hệ thống đã hủy ${result.cancelledConsultationSessions} phiên tư vấn, ${result.cancelledAppointments} lịch hẹn và chặn ${result.blockedSlots} slot.`
+        t(
+          'SystemAdmin.leaveRequests.toasts.approveSuccess',
+          'Leave request approved. The system cancelled {{cancelledSessions}} consultation sessions, {{cancelledAppointments}} appointments, and blocked {{blockedSlots}} slots.',
+          {
+            cancelledSessions: result.cancelledConsultationSessions,
+            cancelledAppointments: result.cancelledAppointments,
+            blockedSlots: result.blockedSlots,
+          }
+        )
       );
       setReviewDialog(null);
       setAdminNote('');
@@ -99,7 +134,13 @@ export default function SystemAdminLeaveRequestsPage() {
     },
     onError: (error) => {
       toast.error(
-        extractApiErrorMessage(error, 'Không thể duyệt đơn nghỉ phép.')
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.leaveRequests.toasts.approveError',
+            'Unable to approve leave request.'
+          )
+        )
       );
     },
   });
@@ -108,7 +149,12 @@ export default function SystemAdminLeaveRequestsPage() {
     mutationFn: ({ requestId, note }: { requestId: string; note: string }) =>
       adminLeaveRequestsApi.rejectLeaveRequest(requestId, note),
     onSuccess: () => {
-      toast.success('Đã từ chối đơn nghỉ phép.');
+      toast.success(
+        t(
+          'SystemAdmin.leaveRequests.toasts.rejectSuccess',
+          'Leave request rejected.'
+        )
+      );
       setReviewDialog(null);
       setAdminNote('');
       queryClient.invalidateQueries({
@@ -117,7 +163,13 @@ export default function SystemAdminLeaveRequestsPage() {
     },
     onError: (error) => {
       toast.error(
-        extractApiErrorMessage(error, 'Không thể từ chối đơn nghỉ phép.')
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.leaveRequests.toasts.rejectError',
+            'Unable to reject leave request.'
+          )
+        )
       );
     },
   });
@@ -178,15 +230,18 @@ export default function SystemAdminLeaveRequestsPage() {
 
       <div className="flex-1 h-full overflow-y-auto">
         <PageHeader
-          title="Leave Requests"
-          description="Duyệt và quản lý đơn xin nghỉ phép của bác sĩ toàn thời gian"
+          title={t('SystemAdmin.leaveRequests.title', 'Leave Requests')}
+          description={t(
+            'SystemAdmin.leaveRequests.description',
+            'Review and manage leave requests from full-time ophthalmologists'
+          )}
         />
 
         <main className="p-6 space-y-6">
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                Đang chờ duyệt
+                {t('SystemAdmin.leaveRequests.summary.pending', 'Pending')}
               </p>
               <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                 {summary.pendingCount}
@@ -195,7 +250,7 @@ export default function SystemAdminLeaveRequestsPage() {
 
             <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4">
               <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                Đã duyệt
+                {t('SystemAdmin.leaveRequests.summary.approved', 'Approved')}
               </p>
               <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                 {summary.approvedCount}
@@ -204,7 +259,7 @@ export default function SystemAdminLeaveRequestsPage() {
 
             <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 p-4">
               <p className="text-sm text-sky-700 dark:text-sky-300">
-                Tổng số đơn
+                {t('SystemAdmin.leaveRequests.summary.total', 'Total requests')}
               </p>
               <p className="text-2xl font-bold text-sky-700 dark:text-sky-300">
                 {summary.totalCount}
@@ -219,7 +274,10 @@ export default function SystemAdminLeaveRequestsPage() {
                 <input
                   value={searchKeyword}
                   onChange={(event) => setSearchKeyword(event.target.value)}
-                  placeholder="Tìm bác sĩ, email, lý do nghỉ phép..."
+                  placeholder={t(
+                    'SystemAdmin.leaveRequests.filters.searchPlaceholder',
+                    'Search doctor, email, leave reason...'
+                  )}
                   className="bg-transparent outline-none text-sm w-full"
                 />
               </div>
@@ -245,18 +303,21 @@ export default function SystemAdminLeaveRequestsPage() {
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Làm mới
+                  {t('SystemAdmin.common.actions.refresh', 'Refresh')}
                 </button>
               </div>
             </div>
 
             {listQuery.isLoading ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                Đang tải dữ liệu...
+                {t('SystemAdmin.common.loadingData', 'Loading data...')}
               </div>
             ) : filteredItems.length === 0 ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                Không có đơn nghỉ phép nào.
+                {t(
+                  'SystemAdmin.leaveRequests.states.empty',
+                  'No leave requests found.'
+                )}
               </div>
             ) : (
               <div className="space-y-3">
@@ -277,23 +338,47 @@ export default function SystemAdminLeaveRequestsPage() {
                             {item.doctorEmail}
                           </p>
                           <p className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                            {formatDate(item.startDate)} -{' '}
-                            {formatDate(item.endDate)}
+                            {formatDate(
+                              item.startDate,
+                              dateLocale,
+                              notAvailableLabel
+                            )}{' '}
+                            -{' '}
+                            {formatDate(
+                              item.endDate,
+                              dateLocale,
+                              notAvailableLabel
+                            )}
                           </p>
                           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
                             {item.reason}
                           </p>
                           <p className="mt-2 text-xs text-slate-500">
-                            Tạo lúc: {formatDateTime(item.createdAt)}
+                            {t('SystemAdmin.common.createdAt', 'Created at')}:{' '}
+                            {formatDateTime(
+                              item.createdAt,
+                              dateLocale,
+                              notAvailableLabel
+                            )}
                           </p>
                           {item.reviewedAt ? (
                             <p className="mt-1 text-xs text-slate-500">
-                              Duyệt lúc: {formatDateTime(item.reviewedAt)}
+                              {t(
+                                'SystemAdmin.common.reviewedAt',
+                                'Reviewed at'
+                              )}
+                              :{' '}
+                              {formatDateTime(
+                                item.reviewedAt,
+                                dateLocale,
+                                notAvailableLabel
+                              )}
                             </p>
                           ) : null}
                           {item.adminNote ? (
                             <p className="mt-1 text-xs text-slate-500">
-                              Ghi chú admin: {item.adminNote}
+                              {t('SystemAdmin.common.adminNote', 'Admin note')}:{' '}
+                              {item.adminNote}
                             </p>
                           ) : null}
                         </div>
@@ -318,7 +403,10 @@ export default function SystemAdminLeaveRequestsPage() {
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-300 px-3 py-1.5 text-xs font-semibold"
                               >
                                 <CheckCircle2 className="w-4 h-4" />
-                                Duyệt
+                                {t(
+                                  'SystemAdmin.common.actions.approve',
+                                  'Approve'
+                                )}
                               </button>
                               <button
                                 onClick={() => {
@@ -331,13 +419,19 @@ export default function SystemAdminLeaveRequestsPage() {
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-300 px-3 py-1.5 text-xs font-semibold"
                               >
                                 <XCircle className="w-4 h-4" />
-                                Từ chối
+                                {t(
+                                  'SystemAdmin.common.actions.reject',
+                                  'Reject'
+                                )}
                               </button>
                             </div>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-slate-500">
                               <Clock3 className="w-3.5 h-3.5" />
-                              Không còn thao tác
+                              {t(
+                                'SystemAdmin.leaveRequests.states.noActionAvailable',
+                                'No actions available'
+                              )}
                             </span>
                           )}
                         </div>
@@ -355,11 +449,18 @@ export default function SystemAdminLeaveRequestsPage() {
                   disabled={!listQuery.data.hasPrevious}
                   className="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 disabled:opacity-50"
                 >
-                  Trang trước
+                  {t('SystemAdmin.common.pagination.previous', 'Previous page')}
                 </button>
 
                 <span className="text-slate-500">
-                  Trang {pageNumber}/{listQuery.data.totalPages}
+                  {t(
+                    'SystemAdmin.common.pagination.label',
+                    'Page {{page}}/{{total}}',
+                    {
+                      page: pageNumber,
+                      total: listQuery.data.totalPages,
+                    }
+                  )}
                 </span>
 
                 <button
@@ -371,7 +472,7 @@ export default function SystemAdminLeaveRequestsPage() {
                   disabled={!listQuery.data.hasNext}
                   className="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 disabled:opacity-50"
                 >
-                  Trang sau
+                  {t('SystemAdmin.common.pagination.next', 'Next page')}
                 </button>
               </div>
             ) : null}
@@ -384,27 +485,50 @@ export default function SystemAdminLeaveRequestsPage() {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               {reviewDialog.action === 'approve'
-                ? 'Duyệt đơn nghỉ phép'
-                : 'Từ chối đơn nghỉ phép'}
+                ? t(
+                    'SystemAdmin.leaveRequests.dialog.approveTitle',
+                    'Approve leave request'
+                  )
+                : t(
+                    'SystemAdmin.leaveRequests.dialog.rejectTitle',
+                    'Reject leave request'
+                  )}
             </h3>
 
             <p className="mt-2 text-sm text-slate-500">
-              Bác sĩ: <strong>{reviewDialog.request.doctorFullName}</strong>
+              {t('SystemAdmin.common.doctor', 'Doctor')}:{' '}
+              <strong>{reviewDialog.request.doctorFullName}</strong>
             </p>
             <p className="text-sm text-slate-500">
-              Thời gian: {formatDate(reviewDialog.request.startDate)} -{' '}
-              {formatDate(reviewDialog.request.endDate)}
+              {t('SystemAdmin.leaveRequests.dialog.period', 'Period')}:{' '}
+              {formatDate(
+                reviewDialog.request.startDate,
+                dateLocale,
+                notAvailableLabel
+              )}{' '}
+              -{' '}
+              {formatDate(
+                reviewDialog.request.endDate,
+                dateLocale,
+                notAvailableLabel
+              )}
             </p>
 
             <label className="mt-4 block text-sm text-slate-700 dark:text-slate-300">
               <span className="block mb-1.5">
-                Ghi chú admin (không bắt buộc)
+                {t(
+                  'SystemAdmin.leaveRequests.dialog.adminNoteOptional',
+                  'Admin note (optional)'
+                )}
               </span>
               <textarea
                 rows={4}
                 value={adminNote}
                 onChange={(event) => setAdminNote(event.target.value)}
-                placeholder="Nhập ghi chú để bác sĩ hiểu rõ quyết định của bạn"
+                placeholder={t(
+                  'SystemAdmin.leaveRequests.dialog.adminNotePlaceholder',
+                  'Add a note to explain your decision to the doctor'
+                )}
                 className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2"
               />
             </label>
@@ -420,7 +544,7 @@ export default function SystemAdminLeaveRequestsPage() {
                 className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm"
                 disabled={isSubmittingReview}
               >
-                Hủy
+                {t('SystemAdmin.common.actions.cancel', 'Cancel')}
               </button>
 
               <button
@@ -433,10 +557,16 @@ export default function SystemAdminLeaveRequestsPage() {
                 }`}
               >
                 {isSubmittingReview
-                  ? 'Đang xử lý...'
+                  ? t('SystemAdmin.common.actions.processing', 'Processing...')
                   : reviewDialog.action === 'approve'
-                    ? 'Xác nhận duyệt'
-                    : 'Xác nhận từ chối'}
+                    ? t(
+                        'SystemAdmin.common.actions.confirmApprove',
+                        'Confirm approval'
+                      )
+                    : t(
+                        'SystemAdmin.common.actions.confirmReject',
+                        'Confirm rejection'
+                      )}
               </button>
             </div>
           </div>

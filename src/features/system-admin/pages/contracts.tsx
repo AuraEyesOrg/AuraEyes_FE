@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   Eye,
@@ -22,7 +23,7 @@ import {
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import { contractsApi } from '../api/contracts.api';
-import { formatViDate } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type {
   ContractDto,
   ContractStatusValue,
@@ -31,45 +32,68 @@ import type {
 
 const CONTRACTS_QUERY_KEY = 'admin-contracts';
 
+const formatDate = (
+  value: string | undefined | null,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleDateString(locale);
+};
+
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
 const statusConfigs: Record<
   ContractStatusValue,
-  { label: string; bg: string; text: string; icon: typeof CheckCircle }
+  {
+    labelKey: string;
+    labelFallback: string;
+    bg: string;
+    text: string;
+    icon: typeof CheckCircle;
+  }
 > = {
   Draft: {
-    label: 'Nháp',
+    labelKey: 'SystemAdmin.contracts.status.draft',
+    labelFallback: 'Draft',
     bg: 'bg-slate-100',
     text: 'text-slate-600',
     icon: FileText,
   },
   PendingSignature: {
-    label: 'Chờ ký',
+    labelKey: 'SystemAdmin.contracts.status.pendingSignature',
+    labelFallback: 'Pending signature',
     bg: 'bg-amber-100',
     text: 'text-amber-700',
     icon: Clock,
   },
   Active: {
-    label: 'Hiệu lực',
+    labelKey: 'SystemAdmin.contracts.status.active',
+    labelFallback: 'Active',
     bg: 'bg-emerald-100',
     text: 'text-emerald-700',
     icon: CheckCircle,
   },
   Expired: {
-    label: 'Hết hạn',
+    labelKey: 'SystemAdmin.contracts.status.expired',
+    labelFallback: 'Expired',
     bg: 'bg-red-100',
     text: 'text-red-700',
     icon: XCircle,
   },
   Terminated: {
-    label: 'Đã hủy',
+    labelKey: 'SystemAdmin.contracts.status.terminated',
+    labelFallback: 'Terminated',
     bg: 'bg-rose-100',
     text: 'text-rose-700',
     icon: XCircle,
   },
   Cancelled: {
-    label: 'Đã hủy bỏ',
+    labelKey: 'SystemAdmin.contracts.status.cancelled',
+    labelFallback: 'Cancelled',
     bg: 'bg-gray-100',
     text: 'text-gray-600',
     icon: XCircle,
@@ -77,6 +101,7 @@ const statusConfigs: Record<
 };
 
 function StatusBadge({ status }: { status: ContractStatusValue }) {
+  const { t } = useSafeTranslation();
   const cfg = statusConfigs[status] ?? statusConfigs.Draft;
   const Icon = cfg.icon;
   return (
@@ -84,23 +109,25 @@ function StatusBadge({ status }: { status: ContractStatusValue }) {
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.text}`}
     >
       <Icon className="w-3 h-3" />
-      {cfg.label}
+      {t(cfg.labelKey, cfg.labelFallback)}
     </span>
   );
 }
 
 function UploadBadge({ hasUpload }: { hasUpload: boolean }) {
+  const { t } = useSafeTranslation();
+
   if (hasUpload) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
         <CheckCircle className="w-3 h-3" />
-        Đã upload
+        {t('SystemAdmin.contracts.upload.uploaded', 'Uploaded')}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
-      Chưa upload
+      {t('SystemAdmin.contracts.upload.missing', 'Not uploaded')}
     </span>
   );
 }
@@ -121,6 +148,12 @@ function ContractDetailDialog({
     queryKey: [CONTRACTS_QUERY_KEY, contractId],
     queryFn: () => contractsApi.getContractById(contractId),
   });
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
 
   const [commissionRate, setCommissionRate] = useState<string>('');
   const [actualMonthlySalary, setActualMonthlySalary] = useState<string>('');
@@ -157,6 +190,8 @@ function ContractDetailDialog({
   const canVerify = isOrganisationContract
     ? canVerifyWithMonthlyQuota
     : canVerifyWithDeal;
+  const commissionDisplayValue =
+    contract?.commissionRate ?? contract?.platformCommissionRate;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -168,10 +203,14 @@ function ContractDetailDialog({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Chi tiết hợp đồng
+            {t('SystemAdmin.contracts.detailDialog.title', 'Contract details')}
           </h3>
           <button
             onClick={onClose}
+            aria-label={t(
+              'SystemAdmin.contracts.detailDialog.closeAriaLabel',
+              'Close contract details'
+            )}
             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5 text-slate-500" />
@@ -189,44 +228,111 @@ function ContractDetailDialog({
             <>
               {/* Contract info grid */}
               <div className="grid grid-cols-2 gap-4">
-                <InfoRow label="Mã hợp đồng" value={contract.contractNumber} />
-                <InfoRow label="Trạng thái">
+                <InfoRow
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.contractNumber',
+                    'Contract number'
+                  )}
+                  value={contract.contractNumber}
+                />
+                <InfoRow
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.status',
+                    'Status'
+                  )}
+                >
                   <StatusBadge
                     status={contract.status as ContractStatusValue}
                   />
                 </InfoRow>
-                <InfoRow label="Họ tên" value={contract.userFullName} />
-                <InfoRow label="Email" value={contract.userEmail} />
-                <InfoRow label="Mẫu hợp đồng" value={contract.templateTitle} />
                 <InfoRow
-                  label="Ngày tạo"
-                  value={formatViDate(contract.createdAt)}
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.fullName',
+                    'Full name'
+                  )}
+                  value={contract.userFullName}
+                />
+                <InfoRow
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.email',
+                    'Email'
+                  )}
+                  value={contract.userEmail}
+                />
+                <InfoRow
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.template',
+                    'Contract template'
+                  )}
+                  value={contract.templateTitle}
+                />
+                <InfoRow
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.createdDate',
+                    'Created date'
+                  )}
+                  value={formatDate(
+                    contract.createdAt,
+                    dateLocale,
+                    notAvailableLabel
+                  )}
                 />
                 {contract.signedDate && (
                   <InfoRow
-                    label="Ngày ký"
-                    value={formatViDate(contract.signedDate)}
+                    label={t(
+                      'SystemAdmin.contracts.detailDialog.fields.signedDate',
+                      'Signed date'
+                    )}
+                    value={formatDate(
+                      contract.signedDate,
+                      dateLocale,
+                      notAvailableLabel
+                    )}
                   />
                 )}
                 <InfoRow
-                  label="AI Quota"
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.aiQuota',
+                    'AI quota'
+                  )}
                   value={String(contract.aiQuotaLimit)}
                 />
                 <InfoRow
-                  label="Monthly AI quota"
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.monthlyAiQuota',
+                    'Monthly AI quota'
+                  )}
                   value={String(contract.monthlyQuotaLimit ?? 0)}
                 />
                 <InfoRow
-                  label="Hoa hồng"
-                  value={`${(contract.commissionRate ?? contract.platformCommissionRate).toString()}%`}
+                  label={t(
+                    'SystemAdmin.contracts.detailDialog.fields.commission',
+                    'Commission'
+                  )}
+                  value={
+                    commissionDisplayValue != null
+                      ? `${commissionDisplayValue}%`
+                      : notAvailableLabel
+                  }
                 />
                 {!isOrganisationContract && (
                   <InfoRow
-                    label="Lương deal"
+                    label={t(
+                      'SystemAdmin.contracts.detailDialog.fields.actualMonthlySalary',
+                      'Actual monthly salary'
+                    )}
                     value={
                       contract.actualMonthlySalary != null
-                        ? `${contract.actualMonthlySalary.toLocaleString('vi-VN')} VND`
-                        : 'Chưa chốt'
+                        ? `${contract.actualMonthlySalary.toLocaleString(
+                            dateLocale
+                          )} ${t(
+                            'SystemAdmin.contracts.detailDialog.currency.vnd',
+                            'VND'
+                          )}`
+                        : t(
+                            'SystemAdmin.contracts.detailDialog.notFinalized',
+                            'Not finalized yet'
+                          )
                     }
                   />
                 )}
@@ -237,13 +343,22 @@ function ContractDetailDialog({
                   <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       {isOrganisationContract
-                        ? 'Quota Terms (Admin xác nhận)'
-                        : 'Deal Terms (Admin xác nhận)'}
+                        ? t(
+                            'SystemAdmin.contracts.detailDialog.sections.quotaTerms',
+                            'Quota terms (admin confirmation)'
+                          )
+                        : t(
+                            'SystemAdmin.contracts.detailDialog.sections.dealTerms',
+                            'Deal terms (admin confirmation)'
+                          )}
                     </p>
                     {isOrganisationContract ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="text-sm text-slate-600 dark:text-slate-300">
-                          Confirmed monthly quota
+                          {t(
+                            'SystemAdmin.contracts.detailDialog.fields.confirmedMonthlyQuota',
+                            'Confirmed monthly quota'
+                          )}
                           <input
                             type="number"
                             min={1}
@@ -259,7 +374,10 @@ function ContractDetailDialog({
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="text-sm text-slate-600 dark:text-slate-300">
-                          Hoa hồng (%)
+                          {t(
+                            'SystemAdmin.contracts.detailDialog.fields.commissionRatePercent',
+                            'Commission rate (%)'
+                          )}
                           <input
                             type="number"
                             min={0}
@@ -271,7 +389,10 @@ function ContractDetailDialog({
                           />
                         </label>
                         <label className="text-sm text-slate-600 dark:text-slate-300">
-                          Actual monthly salary (VND)
+                          {t(
+                            'SystemAdmin.contracts.detailDialog.fields.actualMonthlySalaryVnd',
+                            'Actual monthly salary (VND)'
+                          )}
                           <input
                             type="number"
                             min={0}
@@ -288,8 +409,14 @@ function ContractDetailDialog({
                     {!canVerify && (
                       <p className="text-xs text-red-500">
                         {isOrganisationContract
-                          ? 'Nhập Monthly quota lớn hơn 0 trước khi xác nhận hợp đồng.'
-                          : 'Nhập Commission rate (0-100) và lương thực tế trước khi xác nhận hợp đồng.'}
+                          ? t(
+                              'SystemAdmin.contracts.detailDialog.validation.monthlyQuotaRequired',
+                              'Enter a monthly quota greater than 0 before confirming the contract.'
+                            )
+                          : t(
+                              'SystemAdmin.contracts.detailDialog.validation.dealTermsRequired',
+                              'Enter commission rate (0-100) and actual monthly salary before confirming the contract.'
+                            )}
                       </p>
                     )}
                   </div>
@@ -299,7 +426,10 @@ function ContractDetailDialog({
               {contract.scannedDocumentUrl && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Hợp đồng đã ký
+                    {t(
+                      'SystemAdmin.contracts.detailDialog.sections.signedContract',
+                      'Signed contract'
+                    )}
                   </p>
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                     {/\.(jpe?g|png|webp|gif)(\?|$)/i.test(
@@ -307,14 +437,20 @@ function ContractDetailDialog({
                     ) ? (
                       <img
                         src={contract.scannedDocumentUrl}
-                        alt="Scanned contract"
-                        className="w-full max-h-[400px] object-contain bg-slate-50"
+                        alt={t(
+                          'SystemAdmin.contracts.detailDialog.scannedContractAlt',
+                          'Scanned contract'
+                        )}
+                        className="w-full max-h-100 object-contain bg-slate-50"
                       />
                     ) : (
                       <div className="flex items-center justify-center h-32 bg-slate-50 dark:bg-slate-800 gap-3">
                         <FileText className="w-10 h-10 text-slate-400" />
                         <p className="text-sm text-slate-500">
-                          File PDF — nhấn liên kết bên dưới để mở
+                          {t(
+                            'SystemAdmin.contracts.detailDialog.pdfHint',
+                            'PDF file. Click the link below to open it.'
+                          )}
                         </p>
                       </div>
                     )}
@@ -326,7 +462,10 @@ function ContractDetailDialog({
                     className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Mở file gốc trong tab mới
+                    {t(
+                      'SystemAdmin.contracts.detailDialog.actions.openOriginalFile',
+                      'Open original file in new tab'
+                    )}
                   </a>
                 </div>
               )}
@@ -335,7 +474,10 @@ function ContractDetailDialog({
               {contract.signedContent && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Mẫu hợp đồng (DOCX)
+                    {t(
+                      'SystemAdmin.contracts.detailDialog.sections.templateDocx',
+                      'Contract template (DOCX)'
+                    )}
                   </p>
                   <a
                     href={contract.signedContent}
@@ -344,7 +486,10 @@ function ContractDetailDialog({
                     className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Mở file mẫu hợp đồng
+                    {t(
+                      'SystemAdmin.contracts.detailDialog.actions.openTemplateFile',
+                      'Open contract template file'
+                    )}
                   </a>
                 </div>
               )}
@@ -361,7 +506,7 @@ function ContractDetailDialog({
                 onClick={onClose}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors"
               >
-                Đóng
+                {t('SystemAdmin.contracts.detailDialog.actions.close', 'Close')}
               </button>
               <button
                 onClick={() =>
@@ -387,7 +532,10 @@ function ContractDetailDialog({
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
               >
                 <CheckCircle className="w-4 h-4" />
-                Xác nhận hợp đồng
+                {t(
+                  'SystemAdmin.contracts.detailDialog.actions.confirmContract',
+                  'Confirm contract'
+                )}
               </button>
             </div>
           )}
@@ -405,12 +553,14 @@ function InfoRow({
   value?: string;
   children?: React.ReactNode;
 }) {
+  const { t } = useSafeTranslation();
+
   return (
     <div>
       <p className="text-xs text-slate-400 mb-0.5">{label}</p>
       {children ?? (
         <p className="text-sm font-medium text-slate-900 dark:text-white">
-          {value || '—'}
+          {value || t('SystemAdmin.contracts.states.emptyValue', '—')}
         </p>
       )}
     </div>
@@ -420,17 +570,51 @@ function InfoRow({
 // ─────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────
-const STATUS_FILTERS: { label: string; value: string }[] = [
-  { label: 'Tất cả', value: '' },
-  { label: 'Chờ ký', value: 'PendingSignature' },
-  { label: 'Hiệu lực', value: 'Active' },
-  { label: 'Nháp', value: 'Draft' },
-  { label: 'Hết hạn', value: 'Expired' },
-  { label: 'Đã hủy', value: 'Terminated' },
+const STATUS_FILTERS: {
+  value: string;
+  labelKey: string;
+  labelFallback: string;
+}[] = [
+  {
+    value: '',
+    labelKey: 'SystemAdmin.contracts.filters.status.all',
+    labelFallback: 'All',
+  },
+  {
+    value: 'PendingSignature',
+    labelKey: 'SystemAdmin.contracts.status.pendingSignature',
+    labelFallback: 'Pending signature',
+  },
+  {
+    value: 'Active',
+    labelKey: 'SystemAdmin.contracts.status.active',
+    labelFallback: 'Active',
+  },
+  {
+    value: 'Draft',
+    labelKey: 'SystemAdmin.contracts.status.draft',
+    labelFallback: 'Draft',
+  },
+  {
+    value: 'Expired',
+    labelKey: 'SystemAdmin.contracts.status.expired',
+    labelFallback: 'Expired',
+  },
+  {
+    value: 'Terminated',
+    labelKey: 'SystemAdmin.contracts.status.terminated',
+    labelFallback: 'Terminated',
+  },
 ];
 
 export default function ContractsPage() {
   const queryClient = useQueryClient();
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -480,33 +664,45 @@ export default function ContractsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Quản lý hợp đồng"
-          description="Xem danh sách, xác nhận hợp đồng đã ký của bác sĩ nhãn khoa"
+          title={t('SystemAdmin.contracts.title', 'Contract Management')}
+          description={t(
+            'SystemAdmin.contracts.description',
+            'Review contracts and verify signed contracts from ophthalmologists'
+          )}
         />
 
         <div className="flex-1 overflow-y-auto px-6 md:px-10 py-8 space-y-6">
           {/* Stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
-              label="Tổng hợp đồng"
+              label={t(
+                'SystemAdmin.contracts.summary.totalContracts',
+                'Total contracts'
+              )}
               value={data?.totalCount ?? 0}
               icon={FileText}
               color="text-slate-600 bg-slate-100"
             />
             <StatCard
-              label="Chờ xác nhận"
+              label={t(
+                'SystemAdmin.contracts.summary.pendingVerification',
+                'Pending verification'
+              )}
               value={pendingWithUpload}
               icon={AlertTriangle}
               color="text-amber-600 bg-amber-100"
             />
             <StatCard
-              label="Hiệu lực"
+              label={t('SystemAdmin.contracts.status.active', 'Active')}
               value={contracts.filter((c) => c.status === 'Active').length}
               icon={CheckCircle}
               color="text-emerald-600 bg-emerald-100"
             />
             <StatCard
-              label="Chờ upload"
+              label={t(
+                'SystemAdmin.contracts.summary.pendingUpload',
+                'Pending upload'
+              )}
               value={
                 contracts.filter(
                   (c) =>
@@ -524,7 +720,10 @@ export default function ContractsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Tìm theo tên, email, mã hợp đồng..."
+                placeholder={t(
+                  'SystemAdmin.contracts.filters.searchPlaceholder',
+                  'Search by name, email, contract number...'
+                )}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -548,7 +747,7 @@ export default function ContractsPage() {
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                   }`}
                 >
-                  {f.label}
+                  {t(f.labelKey, f.labelFallback)}
                 </button>
               ))}
             </div>
@@ -562,19 +761,51 @@ export default function ContractsPage() {
           ) : contracts.length === 0 ? (
             <div className="text-center py-20">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">Không tìm thấy hợp đồng nào.</p>
+              <p className="text-slate-500">
+                {t('SystemAdmin.contracts.states.empty', 'No contracts found.')}
+              </p>
             </div>
           ) : (
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="px-5 py-3">Mã HĐ</th>
-                    <th className="px-5 py-3">Bác sĩ</th>
-                    <th className="px-5 py-3">Trạng thái</th>
-                    <th className="px-5 py-3">Upload</th>
-                    <th className="px-5 py-3">Ngày tạo</th>
-                    <th className="px-5 py-3 text-right">Hành động</th>
+                    <th className="px-5 py-3">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.contractCode',
+                        'Contract code'
+                      )}
+                    </th>
+                    <th className="px-5 py-3">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.doctor',
+                        'Doctor'
+                      )}
+                    </th>
+                    <th className="px-5 py-3">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.status',
+                        'Status'
+                      )}
+                    </th>
+                    <th className="px-5 py-3">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.upload',
+                        'Upload'
+                      )}
+                    </th>
+                    <th className="px-5 py-3">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.createdDate',
+                        'Created date'
+                      )}
+                    </th>
+                    <th className="px-5 py-3 text-right">
+                      {t(
+                        'SystemAdmin.contracts.table.columns.actions',
+                        'Actions'
+                      )}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -603,14 +834,17 @@ export default function ContractsPage() {
                         <UploadBadge hasUpload={!!c.scannedDocumentUrl} />
                       </td>
                       <td className="px-5 py-3.5 text-sm text-slate-500">
-                        {formatViDate(c.createdAt)}
+                        {formatDate(c.createdAt, dateLocale, notAvailableLabel)}
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setSelectedId(c.id)}
                             className="p-2 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors"
-                            title="Xem chi tiết"
+                            title={t(
+                              'SystemAdmin.contracts.table.actions.viewDetails',
+                              'View details'
+                            )}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -620,10 +854,16 @@ export default function ContractsPage() {
                                 onClick={() => setSelectedId(c.id)}
                                 disabled={signMutation.isPending}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                                title="Nhập deal và xác nhận hợp đồng"
+                                title={t(
+                                  'SystemAdmin.contracts.table.actions.verifyContract',
+                                  'Enter deal terms and verify contract'
+                                )}
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
-                                Deal & xác nhận
+                                {t(
+                                  'SystemAdmin.contracts.table.actions.dealAndVerify',
+                                  'Deal & verify'
+                                )}
                               </button>
                             )}
                         </div>
@@ -637,12 +877,23 @@ export default function ContractsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-slate-800">
                   <p className="text-xs text-slate-400">
-                    Trang {page} / {totalPages}
+                    {t(
+                      'SystemAdmin.contracts.pagination.label',
+                      'Page {{page}} / {{totalPages}}',
+                      {
+                        page,
+                        totalPages,
+                      }
+                    )}
                   </p>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page <= 1}
+                      aria-label={t(
+                        'SystemAdmin.common.pagination.previous',
+                        'Previous page'
+                      )}
                       className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors"
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -652,6 +903,10 @@ export default function ContractsPage() {
                         setPage((p) => Math.min(totalPages, p + 1))
                       }
                       disabled={page >= totalPages}
+                      aria-label={t(
+                        'SystemAdmin.common.pagination.next',
+                        'Next page'
+                      )}
                       className="p-1.5 rounded-lg hover:bg-slate-100 disabled:opacity-30 transition-colors"
                     >
                       <ChevronRight className="w-4 h-4" />
