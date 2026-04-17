@@ -31,6 +31,7 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 import { persistLocale } from '@/i18n/middleware';
+import usePermissions from '@/hooks/use-permissions';
 
 interface DoctorSidebarProps {
   pendingCount?: number;
@@ -70,43 +71,51 @@ const navItems = [
     labelKey: 'Ophthalmologist.sidebar.dashboard',
     icon: LayoutDashboard,
     path: '/ophthalmologist/dashboard',
+    requiredPermission: 'DashboardRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.patients',
     icon: Users,
     path: '/ophthalmologist/patients',
+    requiredPermission: 'PatientsRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.screenings',
     icon: Eye,
     path: '/ophthalmologist/screenings',
     hasBadge: true,
+    requiredPermission: 'ScreeningsRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.appointments',
     icon: Calendar,
     path: '/ophthalmologist/appointments',
+    requiredPermission: 'AppointmentsRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.schedules',
     icon: CalendarClock,
     path: '/ophthalmologist/schedules',
+    requiredPermission: 'SchedulesRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.leaveRequests',
     icon: CalendarX,
     path: '/ophthalmologist/leave-requests',
+    requiredPermission: 'SchedulesManage',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.employmentTypeChangeRequests',
     icon: ArrowRightLeft,
     path: '/ophthalmologist/employment-type-change-requests',
+    requiredPermission: 'OphthalmologistsUpdate',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.consultations',
     icon: MessagesSquare,
     path: '/ophthalmologist/consultations',
     hasBadge: true,
+    requiredPermission: 'ConsultationsRead',
   },
   {
     labelKey: 'Common.sidebar.auraNetwork',
@@ -117,16 +126,19 @@ const navItems = [
     labelKey: 'Ophthalmologist.sidebar.contract',
     icon: FileText,
     path: '/ophthalmologist/contract',
+    requiredPermission: 'ContractsRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.wallet',
     icon: Wallet,
     path: '/ophthalmologist/wallet',
+    requiredPermission: 'WalletsRead',
   },
   {
     labelKey: 'Ophthalmologist.sidebar.settings',
     icon: Settings,
     path: '/ophthalmologist/settings',
+    requiredPermission: 'SettingsRead',
   },
 ];
 
@@ -137,6 +149,7 @@ export default function DoctorSidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuthStore();
+  const { hasPermission } = usePermissions();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
@@ -204,12 +217,16 @@ export default function DoctorSidebar({
   // Only show full nav when contract is active; otherwise lock to contract page only
   const contractApproved =
     (latestAuthSnapshot?.contractStatus ?? user?.contractStatus) === 'Active';
-  const visibleNavItems = contractApproved
-    ? navItems.filter(
-        (item) =>
-          item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
-      )
-    : navItems.filter((item) => item.path === '/ophthalmologist/contract');
+  const visibleNavItems = (
+    contractApproved
+      ? navItems.filter(
+          (item) =>
+            item.path !== '/ophthalmologist/leave-requests' || isFullTimeDoctor
+        )
+      : navItems.filter((item) => item.path === '/ophthalmologist/contract')
+  ).filter((item) =>
+    item.requiredPermission ? hasPermission(item.requiredPermission) : true
+  );
 
   const handleLogout = () => {
     logout();
