@@ -31,6 +31,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type CommentDto = {
   id: string;
@@ -55,6 +56,7 @@ function CommentRepliesList({
   postId: string;
   parentCommentId: string;
 }) {
+  const { t } = useSafeTranslation();
   const { data: repliesPage, isLoading } = useCommentReplies(
     postId,
     parentCommentId
@@ -66,7 +68,10 @@ function CommentRepliesList({
     return (
       <div className="ml-11 py-2 flex items-center gap-2 text-text-muted text-[13px]">
         <Loader2 className="w-3 h-3 animate-spin" />
-        Loading replies...
+        {t(
+          'ProfessionalNetwork.postDetail.states.loadingReplies',
+          'Loading replies...'
+        )}
       </div>
     );
   }
@@ -95,6 +100,7 @@ function CommentRepliesList({
 function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const { t } = useSafeTranslation();
   const [commentText, setCommentText] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -166,7 +172,9 @@ function PostDetailPage() {
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
             </Link>
-            <h2 className="text-xl font-bold text-text-main">Post</h2>
+            <h2 className="text-xl font-bold text-text-main">
+              {t('ProfessionalNetwork.postDetail.title', 'Post')}
+            </h2>
           </div>
         </header>
         <div className="flex justify-center py-12">
@@ -187,12 +195,19 @@ function PostDetailPage() {
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
             </Link>
-            <h2 className="text-xl font-bold text-text-main">Post</h2>
+            <h2 className="text-xl font-bold text-text-main">
+              {t('ProfessionalNetwork.postDetail.title', 'Post')}
+            </h2>
           </div>
         </header>
         <div className="text-center py-12 px-4">
           <MessageCircle className="w-12 h-12 text-text-muted mx-auto mb-3" />
-          <p className="text-text-muted">Post not found</p>
+          <p className="text-text-muted">
+            {t(
+              'ProfessionalNetwork.postDetail.states.notFound',
+              'Post not found'
+            )}
+          </p>
         </div>
       </>
     );
@@ -209,7 +224,9 @@ function PostDetailPage() {
           >
             <ArrowLeft className="w-5 h-5 text-text-main" />
           </Link>
-          <h2 className="text-xl font-bold text-text-main">Post</h2>
+          <h2 className="text-xl font-bold text-text-main">
+            {t('ProfessionalNetwork.postDetail.title', 'Post')}
+          </h2>
         </div>
       </header>
 
@@ -225,7 +242,7 @@ function PostDetailPage() {
         <UserAvatar
           fullName={user?.fullName}
           avatarUrl={user?.avatarUrl}
-          fallbackName="User"
+          fallbackName={t('ProfessionalNetwork.common.user', 'User')}
           size="md"
           className="shrink-0"
           fallbackClassName="bg-brand/20 text-brand"
@@ -233,7 +250,10 @@ function PostDetailPage() {
         <div className="flex-1 flex gap-2">
           <input
             type="text"
-            placeholder="Add a comment..."
+            placeholder={t(
+              'ProfessionalNetwork.postDetail.inputs.addCommentPlaceholder',
+              'Add a comment...'
+            )}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
@@ -255,7 +275,11 @@ function PostDetailPage() {
       <div className="divide-y divide-light-border">
         <div className="px-4 py-3">
           <h3 className="font-bold text-[15px] text-text-main">
-            Comments ({post.commentCount})
+            {t(
+              'ProfessionalNetwork.postDetail.comments.title',
+              'Comments ({{count}})',
+              { count: post.commentCount }
+            )}
           </h3>
         </div>
 
@@ -265,7 +289,10 @@ function PostDetailPage() {
           </div>
         ) : comments.length === 0 ? (
           <p className="text-center py-12 px-4 text-text-muted">
-            No comments yet. Be the first to comment!
+            {t(
+              'ProfessionalNetwork.postDetail.states.noComments',
+              'No comments yet. Be the first to comment!'
+            )}
           </p>
         ) : (
           comments.map((comment) => (
@@ -298,7 +325,7 @@ function PostDetailPage() {
                   }}
                   className="text-[13px] font-semibold text-text-muted hover:text-brand-primary hover-animation"
                 >
-                  Reply
+                  {t('ProfessionalNetwork.postDetail.actions.reply', 'Reply')}
                 </button>
                 {comment.replyCount > 0 && (
                   <button
@@ -306,9 +333,22 @@ function PostDetailPage() {
                     className="flex items-center gap-1 text-[13px] font-semibold text-brand-primary hover-animation"
                   >
                     <CornerDownRight className="w-3 h-3" />
-                    {expandedReplies.has(comment.id) ? 'Hide' : 'View'}{' '}
-                    {comment.replyCount}{' '}
-                    {comment.replyCount === 1 ? 'reply' : 'replies'}
+                    {expandedReplies.has(comment.id)
+                      ? t('ProfessionalNetwork.postDetail.actions.hide', 'Hide')
+                      : t(
+                          'ProfessionalNetwork.postDetail.actions.view',
+                          'View'
+                        )}{' '}
+                    {comment.replyCount === 1
+                      ? t(
+                          'ProfessionalNetwork.postDetail.replies.one',
+                          '1 reply'
+                        )
+                      : t(
+                          'ProfessionalNetwork.postDetail.replies.many',
+                          '{{count}} replies',
+                          { count: comment.replyCount }
+                        )}
                   </button>
                 )}
               </div>
@@ -319,7 +359,7 @@ function PostDetailPage() {
                   <UserAvatar
                     fullName={user?.fullName}
                     avatarUrl={user?.avatarUrl}
-                    fallbackName="User"
+                    fallbackName={t('ProfessionalNetwork.common.user', 'User')}
                     size="sm"
                     className="shrink-0"
                     fallbackClassName="bg-brand/20 text-brand"
@@ -327,7 +367,11 @@ function PostDetailPage() {
                   <div className="flex-1 flex gap-2">
                     <input
                       type="text"
-                      placeholder={`Reply to ${comment.author.fullName}...`}
+                      placeholder={t(
+                        'ProfessionalNetwork.postDetail.inputs.replyTo',
+                        'Reply to {{name}}...',
+                        { name: comment.author.fullName }
+                      )}
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       onKeyDown={(e) =>

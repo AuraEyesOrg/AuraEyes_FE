@@ -11,18 +11,15 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedAccreditation } from '../../utils/accreditationLocalization';
 
 interface Props {
   organisation: Organisation;
 }
 
-const orgTypeLabels = {
-  hospital: 'Hospital',
-  clinic: 'Clinic',
-  research_center: 'Research Center',
-};
-
 export function OrganisationCard({ organisation }: Props) {
+  const { t } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
@@ -32,7 +29,16 @@ export function OrganisationCard({ organisation }: Props) {
   const displayName =
     organisation.name ??
     (organisation as unknown as { fullName?: string }).fullName ??
-    'Unknown';
+    t('ProfessionalNetwork.common.unknownAuthor', 'Unknown');
+
+  const orgTypeLabels = {
+    hospital: t('ProfessionalNetwork.organisation.types.hospital', 'Hospital'),
+    clinic: t('ProfessionalNetwork.organisation.types.clinic', 'Clinic'),
+    research_center: t(
+      'ProfessionalNetwork.organisation.types.researchCenter',
+      'Research Center'
+    ),
+  };
 
   return (
     <div className="px-4 py-3">
@@ -98,21 +104,34 @@ export function OrganisationCard({ organisation }: Props) {
               </span>
             )}
             {organisation.memberCount !== undefined && (
-              <span>{organisation.memberCount} members</span>
+              <span>
+                {t(
+                  'ProfessionalNetwork.organisation.stats.members',
+                  '{{count}} members',
+                  { count: organisation.memberCount }
+                )}
+              </span>
             )}
           </div>
 
           {/* Accreditations */}
           {organisation.accreditations?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {organisation.accreditations.map((acc) => (
-                <span
-                  key={acc}
-                  className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded-full"
-                >
-                  {acc}
-                </span>
-              ))}
+              {organisation.accreditations.map((accreditation) => {
+                const displayAccreditation = getLocalizedAccreditation(
+                  t,
+                  accreditation
+                );
+
+                return (
+                  <span
+                    key={accreditation}
+                    className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded-full"
+                  >
+                    {displayAccreditation}
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>

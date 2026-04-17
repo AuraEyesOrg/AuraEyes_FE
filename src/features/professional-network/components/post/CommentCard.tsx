@@ -12,6 +12,8 @@ import {
   PartyPopper,
 } from 'lucide-react';
 import type { PostComment as PostCommentType, ReactionType } from '../../types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedSpecialty } from '../../utils/specialtyLocalization';
 
 interface Props {
   comment: PostCommentType;
@@ -30,6 +32,11 @@ const _reactionConfig: Record<
 };
 
 export function CommentCard({ comment, isReply = false }: Props) {
+  const { t } = useSafeTranslation();
+  const displaySpecialty = getLocalizedSpecialty(
+    t,
+    comment.author.specialty[0]
+  );
   const [showReplies, setShowReplies] = useState(false);
   const [userReaction, setUserReaction] = useState<ReactionType | undefined>(
     comment.userReaction
@@ -49,9 +56,11 @@ export function CommentCard({ comment, isReply = false }: Props) {
               {comment.author.fullName}
             </span>
             <span className="text-text-muted truncate">
-              · {comment.author.specialty[0]}
+              · {displaySpecialty}
             </span>
-            <span className="text-text-muted shrink-0">· 2h</span>
+            <span className="text-text-muted shrink-0">
+              · {t('ProfessionalNetwork.commentCard.time.recentFallback', '2h')}
+            </span>
           </div>
           <p className="mt-1 text-[15px] text-text-main leading-normal">
             {comment.content}
@@ -65,19 +74,38 @@ export function CommentCard({ comment, isReply = false }: Props) {
               }
               className={`font-medium hover-animation ${userReaction ? 'text-brand-primary' : 'text-text-muted hover:text-brand-primary'}`}
             >
-              {userReaction ? 'Reacted' : 'React'}{' '}
+              {userReaction
+                ? t(
+                    'ProfessionalNetwork.commentCard.actions.reacted',
+                    'Reacted'
+                  )
+                : t(
+                    'ProfessionalNetwork.commentCard.actions.react',
+                    'React'
+                  )}{' '}
               {comment.totalReactions > 0 && `(${comment.totalReactions})`}
             </button>
             <button className="font-medium text-text-muted hover:text-brand-primary hover-animation">
-              Reply
+              {t('ProfessionalNetwork.commentCard.actions.reply', 'Reply')}
             </button>
             {comment.replyCount > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
                 className="font-medium text-brand-primary hover:underline"
               >
-                {showReplies ? 'Hide' : 'View'} {comment.replyCount}{' '}
-                {comment.replyCount === 1 ? 'reply' : 'replies'}
+                {showReplies
+                  ? t('ProfessionalNetwork.commentCard.actions.hide', 'Hide')
+                  : t(
+                      'ProfessionalNetwork.commentCard.actions.view',
+                      'View'
+                    )}{' '}
+                {comment.replyCount === 1
+                  ? t('ProfessionalNetwork.commentCard.replies.one', '1 reply')
+                  : t(
+                      'ProfessionalNetwork.commentCard.replies.many',
+                      '{{count}} replies',
+                      { count: comment.replyCount }
+                    )}
               </button>
             )}
           </div>

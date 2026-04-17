@@ -14,26 +14,31 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const postTypeConfig = {
   CasePresentation: {
     icon: FlaskConical,
-    label: 'Case Presentation',
+    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
+    labelFallback: 'Case Presentation',
     color: 'text-purple-500 bg-purple-50',
   },
   PeerDiscussion: {
     icon: HelpingHand,
-    label: 'Peer Discussion',
+    labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
+    labelFallback: 'Peer Discussion',
     color: 'text-amber-500 bg-amber-50',
   },
   KnowledgeShare: {
     icon: FileText,
-    label: 'Knowledge Share',
+    labelKey: 'ProfessionalNetwork.postTypes.knowledgeShare',
+    labelFallback: 'Knowledge Share',
     color: 'text-blue-500 bg-blue-50',
   },
   Announcement: {
     icon: Newspaper,
-    label: 'Announcement',
+    labelKey: 'ProfessionalNetwork.postTypes.announcement',
+    labelFallback: 'Announcement',
     color: 'text-red-500 bg-red-50',
   },
 } as const;
@@ -43,6 +48,7 @@ interface Props {
 }
 
 export function CompactPostCard({ post }: Props) {
+  const { t } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
@@ -53,7 +59,9 @@ export function CompactPostCard({ post }: Props) {
     postTypeConfig.KnowledgeShare;
   const TypeIcon = typeConfig.icon;
 
-  const authorName = post.author?.fullName ?? 'Unknown';
+  const authorName =
+    post.author?.fullName ??
+    t('ProfessionalNetwork.common.unknownAuthor', 'Unknown');
   const authorAvatar = post.author?.avatarUrl;
 
   return (
@@ -85,7 +93,7 @@ export function CompactPostCard({ post }: Props) {
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${typeConfig.color}`}
           >
             <TypeIcon className="w-3 h-3" />
-            {typeConfig.label}
+            {t(typeConfig.labelKey, typeConfig.labelFallback)}
           </span>
         </div>
 

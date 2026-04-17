@@ -37,8 +37,10 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type TabType = 'posts' | 'about';
+const BRAND_NAME = 'AURA';
 
 // Profile header skeleton shown while loading
 function ProfileSkeleton() {
@@ -65,7 +67,9 @@ function ProfilePage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const dateLocale = locale === 'en' ? 'en-US' : 'vi-VN';
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
   const isPreviewMode = searchParams.get('preview') === 'true';
@@ -113,7 +117,9 @@ function ProfilePage() {
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
             </Link>
-            <h2 className="text-xl font-bold text-text-main">Profile</h2>
+            <h2 className="text-xl font-bold text-text-main">
+              {t('ProfessionalNetwork.profile.title', 'Profile')}
+            </h2>
           </div>
         </header>
         <ProfileSkeleton />
@@ -138,12 +144,19 @@ function ProfilePage() {
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
             </Link>
-            <h2 className="text-xl font-bold text-text-main">Profile</h2>
+            <h2 className="text-xl font-bold text-text-main">
+              {t('ProfessionalNetwork.profile.title', 'Profile')}
+            </h2>
           </div>
         </header>
         <div className="text-center py-12 px-4">
           <Users className="w-12 h-12 text-text-muted mx-auto mb-3" />
-          <p className="text-text-muted">Profile not found</p>
+          <p className="text-text-muted">
+            {t(
+              'ProfessionalNetwork.profile.states.notFound',
+              'Profile not found'
+            )}
+          </p>
         </div>
       </>
     );
@@ -158,7 +171,10 @@ function ProfilePage() {
           <div className="flex items-center gap-2 text-amber-800">
             <Eye className="w-5 h-5" />
             <span className="font-medium">
-              You're viewing your profile as others see it
+              {t(
+                'ProfessionalNetwork.profile.preview.banner',
+                "You're viewing your profile as others see it"
+              )}
             </span>
           </div>
           <Link
@@ -166,7 +182,7 @@ function ProfilePage() {
             className="flex items-center gap-1.5 text-sm font-medium text-amber-800 hover:text-amber-900"
           >
             <X className="w-4 h-4" />
-            Exit Preview
+            {t('ProfessionalNetwork.profile.preview.exit', 'Exit Preview')}
           </Link>
         </div>
       )}
@@ -185,7 +201,13 @@ function ProfilePage() {
               {profile.fullName}
             </h2>
             <p className="text-[13px] text-text-muted">
-              {profile.postCount} posts
+              {t(
+                'ProfessionalNetwork.profile.stats.postsCount',
+                '{{count}} posts',
+                {
+                  count: profile.postCount,
+                }
+              )}
             </p>
           </div>
           {isOwnProfile && (
@@ -196,7 +218,7 @@ function ProfilePage() {
               className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-brand-primary hover-animation"
             >
               <Eye className="w-4 h-4" />
-              Preview
+              {t('ProfessionalNetwork.profile.preview.label', 'Preview')}
             </Link>
           )}
         </div>
@@ -208,7 +230,7 @@ function ProfilePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/70 via-white/30 to-teal-100/70 dark:from-cyan-950/40 dark:via-slate-900 dark:to-teal-950/40" />
           <img
             src="/logo.png"
-            alt="AURA"
+            alt={BRAND_NAME}
             className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 object-contain opacity-35 dark:opacity-25"
           />
           {isOwnProfile && (
@@ -245,7 +267,7 @@ function ProfilePage() {
               {profile.isVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-soft text-brand-primary text-xs font-medium rounded-full">
                   <BadgeCheck className="w-3 h-3" />
-                  Verified
+                  {t('ProfessionalNetwork.profile.verified', 'Verified')}
                 </span>
               )}
             </div>
@@ -263,7 +285,7 @@ function ProfilePage() {
                 className="flex items-center gap-1.5 text-sm font-medium text-text-muted border border-light-border rounded-lg px-3 py-2 hover:bg-main-search-background transition-all"
               >
                 <Eye className="w-4 h-4" />
-                Preview
+                {t('ProfessionalNetwork.profile.preview.label', 'Preview')}
               </Link>
             ) : (
               <>
@@ -286,18 +308,27 @@ function ProfilePage() {
                       >
                         <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all">
                           <Share2 className="w-4 h-4" />
-                          Share profile
+                          {t(
+                            'ProfessionalNetwork.profile.actions.shareProfile',
+                            'Share profile'
+                          )}
                         </button>
                         <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-text-main hover:bg-main-search-background transition-all">
                           <Copy className="w-4 h-4" />
-                          Copy link
+                          {t(
+                            'ProfessionalNetwork.postCard.menu.copyLink',
+                            'Copy link'
+                          )}
                         </button>
                         {!isSystemAdminUser && (
                           <>
                             <div className="my-1 border-t border-light-border" />
                             <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                               <Flag className="w-4 h-4" />
-                              Report
+                              {t(
+                                'ProfessionalNetwork.profile.actions.report',
+                                'Report'
+                              )}
                             </button>
                           </>
                         )}
@@ -322,7 +353,11 @@ function ProfilePage() {
           {profile.yearsOfExperience > 0 && (
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              {profile.yearsOfExperience} years experience
+              {t(
+                'ProfessionalNetwork.profile.stats.yearsExperience',
+                '{{years}} years experience',
+                { years: profile.yearsOfExperience }
+              )}
             </span>
           )}
         </div>
@@ -333,7 +368,9 @@ function ProfilePage() {
             <span className="font-bold text-text-main">
               {profile.postCount}
             </span>
-            <span className="text-text-muted ml-1">Posts</span>
+            <span className="text-text-muted ml-1">
+              {t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')}
+            </span>
           </div>
         </div>
 
@@ -349,7 +386,9 @@ function ProfilePage() {
                   : 'text-text-muted'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'posts'
+                ? t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')
+                : t('ProfessionalNetwork.organisation.tabs.about', 'About')}
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-1 bg-brand-primary rounded-full" />
               )}
@@ -376,7 +415,12 @@ function ProfilePage() {
             ) : (
               <div className="text-center py-12 px-4">
                 <FileText className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No posts yet</p>
+                <p className="text-text-muted">
+                  {t(
+                    'ProfessionalNetwork.profile.states.noPosts',
+                    'No posts yet'
+                  )}
+                </p>
               </div>
             )}
           </div>
@@ -388,50 +432,112 @@ function ProfilePage() {
             {isSystemAdminProfileView ? (
               <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5 bg-(--bg-secondary)">
                 <h3 className="font-bold text-[15px] text-(--text-primary) mb-2">
-                  System Administration Profile
+                  {t(
+                    'ProfessionalNetwork.profile.systemAdmin.title',
+                    'System Administration Profile'
+                  )}
                 </h3>
                 <p className="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Tài khoản System Admin tập trung vào quản trị nền tảng AURA,
-                  kiểm duyệt nội dung network, và điều phối vận hành hệ thống.
+                  {t(
+                    'ProfessionalNetwork.profile.systemAdmin.description',
+                    'System Admin account focuses on AURA platform governance, network moderation, and system operations coordination.'
+                  )}
                 </p>
                 <ul className="mt-4 space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
-                  <li>Moderate and hide violating posts</li>
-                  <li>Review reported content and escalation cases</li>
-                  <li>Maintain policy and safety standards across network</li>
+                  <li>
+                    {t(
+                      'ProfessionalNetwork.profile.systemAdmin.items.moderatePosts',
+                      'Moderate and hide violating posts'
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      'ProfessionalNetwork.profile.systemAdmin.items.reviewReports',
+                      'Review reported content and escalation cases'
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      'ProfessionalNetwork.profile.systemAdmin.items.maintainStandards',
+                      'Maintain policy and safety standards across network'
+                    )}
+                  </li>
                 </ul>
               </div>
             ) : isOrganisationProfileView ? (
               <>
                 <div>
                   <h3 className="font-bold text-[15px] text-text-main mb-2">
-                    Giới thiệu phòng khám
+                    {t(
+                      'ProfessionalNetwork.profile.organisation.introductionTitle',
+                      'Clinic introduction'
+                    )}
                   </h3>
                   <p className="text-[15px] text-text-main leading-relaxed">
                     {profile.bio?.trim() ||
-                      'Phòng khám là đối tác của AURA trong triển khai sàng lọc bệnh võng mạc bằng AI, phối hợp giữa đội ngũ chuyên môn và hệ thống chẩn đoán hỗ trợ quyết định lâm sàng.'}
+                      t(
+                        'ProfessionalNetwork.profile.organisation.defaultBio',
+                        'The clinic partners with AURA to deploy AI retinal screening, combining specialist expertise and clinical decision support diagnostics.'
+                      )}
                   </p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
                     <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                      Dịch vụ nổi bật
+                      {t(
+                        'ProfessionalNetwork.profile.organisation.featuredServicesTitle',
+                        'Featured services'
+                      )}
                     </h3>
                     <ul className="space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
-                      <li>Sàng lọc AI bệnh võng mạc tại cơ sở</li>
-                      <li>Tư vấn kết quả và chuyển tuyến phù hợp</li>
-                      <li>Quản lý hồ sơ khám và theo dõi định kỳ</li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.featuredServices.items.aiScreening',
+                          'AI retinal screening at facility level'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.featuredServices.items.consultationAndReferral',
+                          'Result consultation and appropriate referral'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.featuredServices.items.recordsAndFollowUp',
+                          'Medical record management and periodic follow-up'
+                        )}
+                      </li>
                     </ul>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
                     <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                      Cam kết chất lượng
+                      {t(
+                        'ProfessionalNetwork.profile.organisation.qualityCommitmentTitle',
+                        'Quality commitments'
+                      )}
                     </h3>
                     <ul className="space-y-2 text-[14px] text-slate-600 dark:text-slate-300 list-disc pl-5">
-                      <li>Tuân thủ quy trình bảo mật dữ liệu bệnh nhân</li>
-                      <li>Kết hợp đánh giá AI với chuyên môn bác sĩ</li>
-                      <li>Tối ưu trải nghiệm khám nhanh và chính xác</li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.qualityCommitment.items.dataPrivacy',
+                          'Comply with patient data privacy procedures'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.qualityCommitment.items.aiAndClinical',
+                          'Combine AI assessment with clinical expertise'
+                        )}
+                      </li>
+                      <li>
+                        {t(
+                          'ProfessionalNetwork.profile.organisation.qualityCommitment.items.fastAccurateCare',
+                          'Optimize fast and accurate care experience'
+                        )}
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -440,7 +546,7 @@ function ProfilePage() {
               <>
                 <div>
                   <h3 className="font-bold text-[15px] text-text-main mb-2">
-                    Bio
+                    {t('ProfessionalNetwork.profile.about.bioTitle', 'Bio')}
                   </h3>
                   {profile.bio ? (
                     <p className="text-[15px] text-text-main leading-relaxed">
@@ -448,18 +554,28 @@ function ProfilePage() {
                     </p>
                   ) : (
                     <p className="text-[15px] text-text-muted">
-                      No bio added yet.
+                      {t(
+                        'ProfessionalNetwork.profile.about.noBio',
+                        'No bio added yet.'
+                      )}
                     </p>
                   )}
                 </div>
                 {profile.yearsOfExperience > 0 && (
                   <div>
                     <h3 className="font-bold text-[15px] text-text-main mb-2">
-                      Experience
+                      {t(
+                        'ProfessionalNetwork.profile.about.experienceTitle',
+                        'Experience'
+                      )}
                     </h3>
                     <div className="flex items-center gap-2 text-[15px] text-text-main">
                       <Award className="w-4 h-4 text-brand-primary" />
-                      {profile.yearsOfExperience} years of experience
+                      {t(
+                        'ProfessionalNetwork.profile.about.experienceValue',
+                        '{{years}} years of experience',
+                        { years: profile.yearsOfExperience }
+                      )}
                     </div>
                   </div>
                 )}
@@ -467,11 +583,17 @@ function ProfilePage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
                     <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                      Degrees
+                      {t(
+                        'ProfessionalNetwork.profile.about.degreesTitle',
+                        'Degrees'
+                      )}
                     </h3>
                     {degreeCertificates.length === 0 ? (
                       <p className="text-[14px] text-slate-500 dark:text-slate-400">
-                        No degree records.
+                        {t(
+                          'ProfessionalNetwork.profile.about.noDegreeRecords',
+                          'No degree records.'
+                        )}
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -484,11 +606,21 @@ function ProfilePage() {
                               {item.name}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              {item.issuingAuthority || 'Unknown authority'}
+                              {item.issuingAuthority ||
+                                t(
+                                  'ProfessionalNetwork.profile.about.unknownAuthority',
+                                  'Unknown authority'
+                                )}
                             </p>
                             <p className="text-xs text-slate-400 mt-1">
-                              Issued:{' '}
-                              {new Date(item.issuedDate).toLocaleDateString()}
+                              {t(
+                                'ProfessionalNetwork.profile.about.issued',
+                                'Issued'
+                              )}
+                              :{' '}
+                              {new Date(item.issuedDate).toLocaleDateString(
+                                dateLocale
+                              )}
                             </p>
                             {item.certificateUrl && (
                               <a
@@ -497,7 +629,10 @@ function ProfilePage() {
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
                               >
-                                View file
+                                {t(
+                                  'ProfessionalNetwork.profile.about.viewFile',
+                                  'View file'
+                                )}
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             )}
@@ -509,11 +644,17 @@ function ProfilePage() {
 
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-(--bg-secondary)">
                     <h3 className="font-bold text-[15px] text-(--text-primary) mb-3">
-                      Licenses & Certifications
+                      {t(
+                        'ProfessionalNetwork.profile.about.licensesTitle',
+                        'Licenses and Certifications'
+                      )}
                     </h3>
                     {licenseCertificates.length === 0 ? (
                       <p className="text-[14px] text-slate-500 dark:text-slate-400">
-                        No license records.
+                        {t(
+                          'ProfessionalNetwork.profile.about.noLicenseRecords',
+                          'No license records.'
+                        )}
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -526,16 +667,32 @@ function ProfilePage() {
                               {item.name}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              {item.issuingAuthority || 'Unknown authority'}
+                              {item.issuingAuthority ||
+                                t(
+                                  'ProfessionalNetwork.profile.about.unknownAuthority',
+                                  'Unknown authority'
+                                )}
                             </p>
                             <p className="text-xs text-slate-400 mt-1">
-                              Issued:{' '}
-                              {new Date(item.issuedDate).toLocaleDateString()}
+                              {t(
+                                'ProfessionalNetwork.profile.about.issued',
+                                'Issued'
+                              )}
+                              :{' '}
+                              {new Date(item.issuedDate).toLocaleDateString(
+                                dateLocale
+                              )}
                             </p>
                             {item.expiryDate && (
                               <p className="text-xs text-slate-400 mt-1">
-                                Expires:{' '}
-                                {new Date(item.expiryDate).toLocaleDateString()}
+                                {t(
+                                  'ProfessionalNetwork.profile.about.expires',
+                                  'Expires'
+                                )}
+                                :{' '}
+                                {new Date(item.expiryDate).toLocaleDateString(
+                                  dateLocale
+                                )}
                               </p>
                             )}
                             {item.certificateUrl && (
@@ -545,7 +702,10 @@ function ProfilePage() {
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
                               >
-                                View file
+                                {t(
+                                  'ProfessionalNetwork.profile.about.viewFile',
+                                  'View file'
+                                )}
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             )}

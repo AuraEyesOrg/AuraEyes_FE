@@ -38,6 +38,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface Props {
   post: ProfessionalPost;
@@ -52,45 +53,67 @@ interface Props {
 const postTypeConfig = {
   CasePresentation: {
     icon: FlaskConical,
-    label: 'Case Presentation',
+    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
+    labelFallback: 'Case Presentation',
     color: 'text-purple-500 bg-purple-50',
   },
   PeerDiscussion: {
     icon: HelpingHand,
-    label: 'Peer Discussion',
+    labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
+    labelFallback: 'Peer Discussion',
     color: 'text-amber-500 bg-amber-50',
   },
   KnowledgeShare: {
     icon: FileText,
-    label: 'Knowledge Share',
+    labelKey: 'ProfessionalNetwork.postTypes.knowledgeShare',
+    labelFallback: 'Knowledge Share',
     color: 'text-blue-500 bg-blue-50',
   },
   Announcement: {
     icon: Newspaper,
-    label: 'Announcement',
+    labelKey: 'ProfessionalNetwork.postTypes.announcement',
+    labelFallback: 'Announcement',
     color: 'text-red-500 bg-red-50',
   },
 };
 
 const reactionConfig: Record<
   ReactionType,
-  { icon: React.ElementType; label: string; color: string }
+  {
+    icon: React.ElementType;
+    labelKey: string;
+    labelFallback: string;
+    color: string;
+  }
 > = {
   Insightful: {
     icon: Lightbulb,
-    label: 'Insightful',
+    labelKey: 'ProfessionalNetwork.reactions.insightful',
+    labelFallback: 'Insightful',
     color: 'text-reaction-insightful',
   },
-  Agree: { icon: ThumbsUp, label: 'Agree', color: 'text-reaction-agree' },
-  Helpful: { icon: Heart, label: 'Helpful', color: 'text-reaction-helpful' },
+  Agree: {
+    icon: ThumbsUp,
+    labelKey: 'ProfessionalNetwork.reactions.agree',
+    labelFallback: 'Agree',
+    color: 'text-reaction-agree',
+  },
+  Helpful: {
+    icon: Heart,
+    labelKey: 'ProfessionalNetwork.reactions.helpful',
+    labelFallback: 'Helpful',
+    color: 'text-reaction-helpful',
+  },
   Question: {
     icon: HelpCircle,
-    label: 'Question',
+    labelKey: 'ProfessionalNetwork.reactions.question',
+    labelFallback: 'Question',
     color: 'text-reaction-question',
   },
   Celebrate: {
     icon: PartyPopper,
-    label: 'Celebrate',
+    labelKey: 'ProfessionalNetwork.reactions.celebrate',
+    labelFallback: 'Celebrate',
     color: 'text-reaction-celebrate',
   },
 };
@@ -123,6 +146,7 @@ export function PostCard({
   isHidingPost = false,
 }: Props) {
   const { user } = useAuthStore();
+  const { t } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
@@ -243,7 +267,12 @@ export function PostCard({
           <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="text-xs font-semibold">Hidden by moderation</p>
+              <p className="text-xs font-semibold">
+                {t(
+                  'ProfessionalNetwork.postCard.states.hiddenByModeration',
+                  'Hidden by moderation'
+                )}
+              </p>
               {post.hideReason && (
                 <p className="text-xs opacity-90 mt-0.5">{post.hideReason}</p>
               )}
@@ -258,7 +287,7 @@ export function PostCard({
               <span className="font-semibold text-(--text-primary)">
                 {post.author.fullName}
               </span>{' '}
-              đã chia sẻ
+              {t('ProfessionalNetwork.postCard.repost.shared', 'shared')}
             </span>
           </div>
         )}
@@ -319,7 +348,10 @@ export function PostCard({
                     >
                       <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-(--text-primary) hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                         <Copy className="w-4 h-4" />
-                        Copy link
+                        {t(
+                          'ProfessionalNetwork.postCard.menu.copyLink',
+                          'Copy link'
+                        )}
                       </button>
                       {!isOwnPost && !isSystemAdmin && (
                         <button
@@ -331,7 +363,15 @@ export function PostCard({
                           ) : (
                             <Bookmark className="w-4 h-4" />
                           )}
-                          {isSaved ? 'Saved' : 'Save post'}
+                          {isSaved
+                            ? t(
+                                'ProfessionalNetwork.postCard.menu.saved',
+                                'Saved'
+                              )
+                            : t(
+                                'ProfessionalNetwork.postCard.menu.savePost',
+                                'Save post'
+                              )}
                         </button>
                       )}
                       {canModerate && !post.isHidden && (
@@ -340,7 +380,10 @@ export function PostCard({
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-amber-700 hover:bg-amber-50 transition-all"
                         >
                           <ShieldAlert className="w-4 h-4" />
-                          Hide post
+                          {t(
+                            'ProfessionalNetwork.postCard.menu.hidePost',
+                            'Hide post'
+                          )}
                         </button>
                       )}
                       {canReportPost && (
@@ -348,7 +391,10 @@ export function PostCard({
                           <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
                           <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] text-red-500 hover:bg-red-50 transition-all">
                             <Flag className="w-4 h-4" />
-                            Report post
+                            {t(
+                              'ProfessionalNetwork.postCard.menu.reportPost',
+                              'Report post'
+                            )}
                           </button>
                         </>
                       )}
@@ -363,7 +409,7 @@ export function PostCard({
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-medium ${TypeConfig.color} mt-1 w-fit`}
             >
               <TypeIcon className="w-3 h-3" />
-              {TypeConfig.label}
+              {t(TypeConfig.labelKey, TypeConfig.labelFallback)}
             </span>
 
             {/* ── Phase 3: Repost comment (quote text) ── */}
@@ -401,7 +447,12 @@ export function PostCard({
 
                   {post.originalPost.isHidden ? (
                     <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800 text-xs">
-                      <p className="font-semibold">Original post hidden</p>
+                      <p className="font-semibold">
+                        {t(
+                          'ProfessionalNetwork.postCard.states.originalPostHidden',
+                          'Original post hidden'
+                        )}
+                      </p>
                       {post.originalPost.hideReason && (
                         <p className="mt-0.5 opacity-90">
                           {post.originalPost.hideReason}
@@ -457,20 +508,33 @@ export function PostCard({
                     <div className="space-y-3">
                       <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
-                          Case Result and Diagnosis
+                          {t(
+                            'ProfessionalNetwork.postCard.internalCase.caseResultAndDiagnosis',
+                            'Case Result and Diagnosis'
+                          )}
                         </p>
                         <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
                           {parsedInternalCase.caseResult ||
-                            'No AI summary or diagnosis provided.'}
+                            t(
+                              'ProfessionalNetwork.postCard.internalCase.noAiSummary',
+                              'No AI summary or diagnosis provided.'
+                            )}
                         </p>
                       </div>
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/60">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
-                          Doctor Note
+                          {t(
+                            'ProfessionalNetwork.postCard.internalCase.doctorNote',
+                            'Doctor Note'
+                          )}
                         </p>
                         <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-slate-800 dark:text-slate-100">
                           {parsedInternalCase.doctorNote ||
-                            `${post.author.fullName}: "No note provided."`}
+                            t(
+                              'ProfessionalNetwork.postCard.internalCase.noDoctorNote',
+                              '{{name}}: "No note provided."',
+                              { name: post.author.fullName }
+                            )}
                         </p>
                       </div>
                     </div>
@@ -557,7 +621,7 @@ export function PostCard({
                       <span
                         key={type}
                         className={`flex items-center gap-0.5 ${config.color}`}
-                        title={config.label}
+                        title={t(config.labelKey, config.labelFallback)}
                       >
                         <Icon className="w-4 h-4" />
                       </span>
@@ -641,7 +705,7 @@ export function PostCard({
                                     ? `${config.color} bg-slate-100 dark:bg-slate-800`
                                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
-                                title={config.label}
+                                title={t(config.labelKey, config.labelFallback)}
                               >
                                 <Icon
                                   className={`w-5 h-5 ${isSelected ? config.color : ''}`}
@@ -677,7 +741,10 @@ export function PostCard({
                       ? 'text-emerald-600'
                       : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
-                  title="Chia sẻ bài viết"
+                  title={t(
+                    'ProfessionalNetwork.postCard.actions.sharePost',
+                    'Share post'
+                  )}
                 >
                   <Repeat2 className="w-[18px] h-[18px]" />
                   <span className="text-[13px]">
@@ -733,7 +800,10 @@ export function PostCard({
               >
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                   <h2 className="text-[17px] font-bold text-(--text-primary)">
-                    Hide this post
+                    {t(
+                      'ProfessionalNetwork.postCard.hideDialog.title',
+                      'Hide this post'
+                    )}
                   </h2>
                   <button
                     onClick={() => setShowHideDialog(false)}
@@ -745,13 +815,18 @@ export function PostCard({
 
                 <div className="p-5 space-y-4">
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Hidden posts are visible only to their author and System
-                    Admin.
+                    {t(
+                      'ProfessionalNetwork.postCard.hideDialog.description',
+                      'Hidden posts are visible only to their author and System Admin.'
+                    )}
                   </p>
                   <textarea
                     value={hideReason}
                     onChange={(e) => setHideReason(e.target.value)}
-                    placeholder="Reason for hiding (optional)"
+                    placeholder={t(
+                      'ProfessionalNetwork.postCard.hideDialog.reasonPlaceholder',
+                      'Reason for hiding (optional)'
+                    )}
                     rows={3}
                     className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[15px] text-(--text-primary) placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                   />
@@ -762,7 +837,7 @@ export function PostCard({
                     onClick={() => setShowHideDialog(false)}
                     className="px-4 py-2 rounded-full text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                   >
-                    Cancel
+                    {t('ProfessionalNetwork.common.actions.cancel', 'Cancel')}
                   </button>
                   <LoadingButton
                     onClick={handleSubmitHidePost}
@@ -770,7 +845,10 @@ export function PostCard({
                     className="flex items-center gap-2 px-5 py-2 rounded-full bg-amber-600 text-white text-[14px] font-semibold hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                   >
                     <ShieldAlert className="w-4 h-4" />
-                    Hide Post
+                    {t(
+                      'ProfessionalNetwork.postCard.menu.hidePost',
+                      'Hide post'
+                    )}
                   </LoadingButton>
                 </div>
               </div>
@@ -807,7 +885,10 @@ export function PostCard({
                 {/* Dialog header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                   <h2 className="text-[17px] font-bold text-(--text-primary)">
-                    Chia sẻ bài viết này
+                    {t(
+                      'ProfessionalNetwork.postCard.shareDialog.title',
+                      'Share this post'
+                    )}
                   </h2>
                   <button
                     onClick={handleCloseShareDialog}
@@ -823,7 +904,10 @@ export function PostCard({
                   <textarea
                     value={repostComment}
                     onChange={(e) => setRepostComment(e.target.value)}
-                    placeholder="Thêm lời bình luận của bạn... (tuỳ chọn)"
+                    placeholder={t(
+                      'ProfessionalNetwork.postCard.shareDialog.commentPlaceholder',
+                      'Add your comment... (optional)'
+                    )}
                     rows={3}
                     className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-[15px] text-(--text-primary) placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                   />
@@ -861,7 +945,10 @@ export function PostCard({
                           post.attachments.filter((a) => a.type === 'Image')[0]
                             .fileUrl
                         }
-                        alt="preview"
+                        alt={t(
+                          'ProfessionalNetwork.postCard.shareDialog.previewAlt',
+                          'preview'
+                        )}
                         className="w-full h-36 object-cover"
                       />
                     )}
@@ -874,7 +961,7 @@ export function PostCard({
                     onClick={handleCloseShareDialog}
                     className="px-4 py-2 rounded-full text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                   >
-                    Hủy
+                    {t('ProfessionalNetwork.common.actions.cancel', 'Cancel')}
                   </button>
                   <LoadingButton
                     onClick={handleSubmitRepost}
@@ -882,7 +969,10 @@ export function PostCard({
                     className="flex items-center gap-2 px-5 py-2 rounded-full bg-brand-primary text-white text-[14px] font-semibold hover:bg-brand-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                   >
                     <Repeat2 className="w-4 h-4" />
-                    Chia sẻ
+                    {t(
+                      'ProfessionalNetwork.postCard.shareDialog.share',
+                      'Share'
+                    )}
                   </LoadingButton>
                 </div>
               </div>

@@ -23,19 +23,42 @@ import { getConsultationSessions } from '@/features/consultation/api/consultatio
 import { SessionStatus } from '@/types/consultation';
 import { ShareClinicCaseModal } from './ShareClinicCaseModal';
 import { resolveAuthorType } from '../../utils/authorType';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const postTypes: {
   type: PostCategory;
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
+  labelFallback: string;
 }[] = [
-  { type: 'KnowledgeShare', icon: FileText, label: 'Knowledge Share' },
-  { type: 'CasePresentation', icon: FlaskConical, label: 'Case Presentation' },
-  { type: 'PeerDiscussion', icon: HelpCircle, label: 'Peer Discussion' },
-  { type: 'Announcement', icon: FileText, label: 'Announcement' },
+  {
+    type: 'KnowledgeShare',
+    icon: FileText,
+    labelKey: 'ProfessionalNetwork.postTypes.knowledgeShare',
+    labelFallback: 'Knowledge Share',
+  },
+  {
+    type: 'CasePresentation',
+    icon: FlaskConical,
+    labelKey: 'ProfessionalNetwork.postTypes.casePresentation',
+    labelFallback: 'Case Presentation',
+  },
+  {
+    type: 'PeerDiscussion',
+    icon: HelpCircle,
+    labelKey: 'ProfessionalNetwork.postTypes.peerDiscussion',
+    labelFallback: 'Peer Discussion',
+  },
+  {
+    type: 'Announcement',
+    icon: FileText,
+    labelKey: 'ProfessionalNetwork.postTypes.announcement',
+    labelFallback: 'Announcement',
+  },
 ];
 
 export function PostComposer() {
+  const { t } = useSafeTranslation();
   const [content, setContent] = useState('');
   const [selectedType, setSelectedType] =
     useState<PostCategory>('KnowledgeShare');
@@ -232,14 +255,17 @@ export function PostComposer() {
       <UserAvatar
         fullName={user?.fullName}
         avatarUrl={user?.avatarUrl}
-        fallbackName="User"
+        fallbackName={t('ProfessionalNetwork.common.user', 'User')}
         size="md"
         className="shrink-0"
         fallbackClassName="bg-brand/20 text-brand"
       />
       <div className="flex-1 min-w-0">
         <textarea
-          placeholder="Share insights with your network..."
+          placeholder={t(
+            'ProfessionalNetwork.postComposer.placeholder',
+            'Share insights with your network...'
+          )}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onFocus={() => setIsExpanded(true)}
@@ -284,29 +310,36 @@ export function PostComposer() {
           <>
             {/* Post Type Selection */}
             <div className="flex items-center gap-2 mt-3 pb-3 border-b border-light-border">
-              <span className="text-[13px] text-text-muted">Type:</span>
+              <span className="text-[13px] text-text-muted">
+                {t('ProfessionalNetwork.postComposer.typeLabel', 'Type:')}
+              </span>
               <div className="flex gap-1">
-                {postTypes.map(({ type, icon: Icon, label }) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedType(type)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium hover-animation ${
-                      selectedType === type
-                        ? 'bg-brand-primary text-white'
-                        : 'bg-main-search-background text-text-muted hover:bg-brand-soft'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    {label}
-                  </button>
-                ))}
+                {postTypes.map(
+                  ({ type, icon: Icon, labelKey, labelFallback }) => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedType(type)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium hover-animation ${
+                        selectedType === type
+                          ? 'bg-brand-primary text-white'
+                          : 'bg-main-search-background text-text-muted hover:bg-brand-soft'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {t(labelKey, labelFallback)}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
             {isCasePresentation && (
               <div className="mt-3 space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
                 <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
-                  Case source
+                  {t(
+                    'ProfessionalNetwork.postComposer.caseSource.title',
+                    'Case source'
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -318,7 +351,10 @@ export function PostComposer() {
                         : 'bg-white text-cyan-800 border border-cyan-200 dark:bg-slate-900 dark:text-cyan-200 dark:border-cyan-700'
                     }`}
                   >
-                    External Case
+                    {t(
+                      'ProfessionalNetwork.postComposer.caseSource.externalCase',
+                      'External Case'
+                    )}
                   </button>
                   <button
                     type="button"
@@ -329,14 +365,20 @@ export function PostComposer() {
                         : 'bg-white text-cyan-800 border border-cyan-200 dark:bg-slate-900 dark:text-cyan-200 dark:border-cyan-700'
                     }`}
                   >
-                    Internal Case
+                    {t(
+                      'ProfessionalNetwork.postComposer.caseSource.internalCase',
+                      'Internal Case'
+                    )}
                   </button>
                 </div>
 
                 {caseSource === 'internal' && (
                   <div className="space-y-3 rounded-lg border border-cyan-200 bg-white p-3 dark:border-cyan-800 dark:bg-slate-900/40">
                     <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-200">
-                      Select consultation case
+                      {t(
+                        'ProfessionalNetwork.postComposer.internal.selectConsultationCase',
+                        'Select consultation case'
+                      )}
                     </label>
                     <select
                       value={selectedInternalSessionId}
@@ -347,14 +389,32 @@ export function PostComposer() {
                     >
                       <option value="">
                         {isInternalSessionsLoading
-                          ? 'Loading internal cases...'
-                          : 'Choose an internal case'}
+                          ? t(
+                              'ProfessionalNetwork.postComposer.internal.loadingInternalCases',
+                              'Loading internal cases...'
+                            )
+                          : t(
+                              'ProfessionalNetwork.postComposer.internal.chooseInternalCase',
+                              'Choose an internal case'
+                            )}
                       </option>
                       {internalSessions.map((session) => (
                         <option key={session.id} value={session.id}>
-                          {session.patientName || 'Anonymous patient'} •{' '}
-                          {session.typeName} • {session.statusName} • #
-                          {session.id.slice(0, 8).toUpperCase()}
+                          {t(
+                            'ProfessionalNetwork.postComposer.internal.caseOptionLabel',
+                            '{{patient}} - {{type}} - {{status}} - #{{id}}',
+                            {
+                              patient:
+                                session.patientName ||
+                                t(
+                                  'ProfessionalNetwork.postComposer.internal.anonymousPatient',
+                                  'Anonymous patient'
+                                ),
+                              type: session.typeName,
+                              status: session.statusName,
+                              id: session.id.slice(0, 8).toUpperCase(),
+                            }
+                          )}
                         </option>
                       ))}
                     </select>
@@ -362,42 +422,62 @@ export function PostComposer() {
                     {selectedCaseSnapshot && (
                       <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
                         <p className="text-[12px] font-semibold text-cyan-900 dark:text-cyan-200">
-                          Internal case preview (anonymized)
+                          {t(
+                            'ProfessionalNetwork.postComposer.internal.previewTitle',
+                            'Internal case preview (anonymized)'
+                          )}
                         </p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           <div className="overflow-hidden rounded-lg border border-cyan-200 bg-white dark:border-cyan-800 dark:bg-slate-900">
                             {selectedCaseSnapshot.originalImageUrls?.[0] ? (
                               <img
                                 src={selectedCaseSnapshot.originalImageUrls[0]}
-                                alt="Retinal case preview"
+                                alt={t(
+                                  'ProfessionalNetwork.postComposer.internal.retinalCasePreviewAlt',
+                                  'Retinal case preview'
+                                )}
                                 className="h-24 w-full object-cover"
                               />
                             ) : (
                               <div className="flex h-24 items-center justify-center text-xs text-cyan-800 dark:text-cyan-300">
-                                No image preview
+                                {t(
+                                  'ProfessionalNetwork.postComposer.internal.noImagePreview',
+                                  'No image preview'
+                                )}
                               </div>
                             )}
                           </div>
                           <div className="rounded-lg border border-cyan-200 bg-white p-2 dark:border-cyan-800 dark:bg-slate-900">
                             <p className="text-[11px] font-semibold text-cyan-800 dark:text-cyan-200">
-                              Medical diagnosis
+                              {t(
+                                'ProfessionalNetwork.postComposer.internal.medicalDiagnosis',
+                                'Medical diagnosis'
+                              )}
                             </p>
                             <p className="mt-1 text-[11px] leading-snug text-cyan-900 dark:text-cyan-100 line-clamp-5">
                               {selectedCaseDiagnosis ||
-                                'No final doctor diagnosis available for this case.'}
+                                t(
+                                  'ProfessionalNetwork.postComposer.internal.noFinalDiagnosis',
+                                  'No final doctor diagnosis available for this case.'
+                                )}
                             </p>
                           </div>
                         </div>
                         <p className="mt-2 text-[11px] text-cyan-800 dark:text-cyan-200">
-                          Patient identity is hidden. Only medical snapshot is
-                          shared.
+                          {t(
+                            'ProfessionalNetwork.postComposer.internal.patientIdentityHidden',
+                            'Patient identity is hidden. Only medical snapshot is shared.'
+                          )}
                         </p>
                         <button
                           type="button"
                           onClick={() => setIsShareClinicCaseModalOpen(true)}
                           className="mt-3 w-full rounded-lg bg-cyan-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600"
                         >
-                          ✎ Add doctor notes
+                          {t(
+                            'ProfessionalNetwork.postComposer.internal.addDoctorNotes',
+                            'Add doctor notes'
+                          )}
                         </button>
                       </div>
                     )}
@@ -407,7 +487,10 @@ export function PostComposer() {
                 {caseSource === 'external' && (
                   <>
                     <p className="text-[13px] font-semibold text-cyan-800 dark:text-cyan-200">
-                      Allowed anonymized patient info (optional)
+                      {t(
+                        'ProfessionalNetwork.postComposer.external.allowedInfoOptional',
+                        'Allowed anonymized patient info (optional)'
+                      )}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <input
@@ -416,7 +499,10 @@ export function PostComposer() {
                         max={120}
                         value={patientAge}
                         onChange={(e) => setPatientAge(e.target.value)}
-                        placeholder="Patient age"
+                        placeholder={t(
+                          'ProfessionalNetwork.postComposer.external.patientAge',
+                          'Patient age'
+                        )}
                         className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
                       />
                       <select
@@ -424,15 +510,34 @@ export function PostComposer() {
                         onChange={(e) => setPatientGender(e.target.value)}
                         className="w-full rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-cyan-800 dark:bg-slate-900"
                       >
-                        <option value="">Patient gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="">
+                          {t(
+                            'ProfessionalNetwork.postComposer.external.patientGender',
+                            'Patient gender'
+                          )}
+                        </option>
+                        <option value="Male">
+                          {t('ProfessionalNetwork.common.gender.male', 'Male')}
+                        </option>
+                        <option value="Female">
+                          {t(
+                            'ProfessionalNetwork.common.gender.female',
+                            'Female'
+                          )}
+                        </option>
+                        <option value="Other">
+                          {t(
+                            'ProfessionalNetwork.common.gender.other',
+                            'Other'
+                          )}
+                        </option>
                       </select>
                     </div>
                     <div className="rounded-lg border border-cyan-200 bg-white p-2 text-[11px] text-cyan-800 dark:border-cyan-800 dark:bg-slate-900 dark:text-cyan-200">
-                      Allowed only: age, gender, and medical images. Do not
-                      include name, address, or phone number.
+                      {t(
+                        'ProfessionalNetwork.postComposer.external.allowedDataHint',
+                        'Allowed only: age, gender, and medical images. Do not include name, address, or phone number.'
+                      )}
                     </div>
                   </>
                 )}
@@ -446,8 +551,10 @@ export function PostComposer() {
                     className="mt-0.5 w-4 h-4 rounded border-cyan-300 text-cyan-600 focus:ring-cyan-500"
                   />
                   <span className="text-[12px] leading-snug text-cyan-800 dark:text-cyan-200">
-                    I confirm this case is anonymized and shared for
-                    professional educational discussion only.
+                    {t(
+                      'ProfessionalNetwork.postComposer.caseDisclosureConsent',
+                      'I confirm this case is anonymized and shared for professional educational discussion only.'
+                    )}
                   </span>
                 </label>
               </div>
@@ -465,8 +572,10 @@ export function PostComposer() {
                   className="mt-0.5 w-4 h-4 rounded border-amber-300 text-brand-primary focus:ring-brand-primary"
                 />
                 <span className="text-[13px] text-amber-800 dark:text-amber-200 leading-snug">
-                  Tôi cam kết hình ảnh đính kèm không chứa thông tin định danh
-                  của bệnh nhân
+                  {t(
+                    'ProfessionalNetwork.postComposer.fileAnonymizationConsent',
+                    'I confirm attached files do not contain patient-identifying information.'
+                  )}
                 </span>
               </label>
             )}
@@ -486,20 +595,29 @@ export function PostComposer() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
-                  title="Add Image"
+                  title={t(
+                    'ProfessionalNetwork.postComposer.actions.addImage',
+                    'Add Image'
+                  )}
                 >
                   <Image className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
-                  title="Attach Document"
+                  title={t(
+                    'ProfessionalNetwork.postComposer.actions.attachDocument',
+                    'Attach Document'
+                  )}
                 >
                   <FileText className="w-5 h-5" />
                 </button>
                 <button
                   className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-full hover-animation"
-                  title="Add Link"
+                  title={t(
+                    'ProfessionalNetwork.postComposer.actions.addLink',
+                    'Add Link'
+                  )}
                 >
                   <Link2 className="w-5 h-5" />
                 </button>
@@ -513,8 +631,14 @@ export function PostComposer() {
                   className="btn-primary py-2 px-5 text-[15px]"
                 >
                   {isCasePresentation && isInternalCase
-                    ? 'Share Internal Case'
-                    : 'Post'}
+                    ? t(
+                        'ProfessionalNetwork.postComposer.actions.shareInternalCase',
+                        'Share Internal Case'
+                      )
+                    : t(
+                        'ProfessionalNetwork.postComposer.actions.post',
+                        'Post'
+                      )}
                 </LoadingButton>
               </div>
             </div>
@@ -529,7 +653,10 @@ export function PostComposer() {
         onClose={() => setIsShareClinicCaseModalOpen(false)}
         onShare={(notes) => {
           // Update content with notes
-          setContent((prev) => `${prev}\n\nDoctor Notes:\n${notes}`);
+          setContent(
+            (prev) =>
+              `${prev}\n\n${t('ProfessionalNetwork.postComposer.doctorNotesHeading', 'Doctor Notes')}:\n${notes}`
+          );
           setIsShareClinicCaseModalOpen(false);
         }}
       />

@@ -13,6 +13,8 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedSpecialty } from '../../utils/specialtyLocalization';
 
 interface Props {
   author: Ophthalmologist;
@@ -26,9 +28,11 @@ export function ProfessionalAvatar({
   showOrganisation = true,
 }: Props) {
   const location = useLocation();
+  const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const displaySpecialty = getLocalizedSpecialty(t, author.specialty?.[0]);
 
   return (
     <div className="flex items-center gap-3">
@@ -53,7 +57,7 @@ export function ProfessionalAvatar({
           )}
         </div>
         <div className="flex items-center gap-2 text-sm text-text-muted">
-          <span>{author.specialty?.[0]}</span>
+          <span>{displaySpecialty}</span>
           {showOrganisation && author.organisationName && (
             <>
               <span>·</span>
