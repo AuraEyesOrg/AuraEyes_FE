@@ -47,6 +47,7 @@ export default function OrganisationScreeningPage() {
   const [searchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useSafeTranslation();
+  const currencyVndLabel = t('Organisation.common.currencyVnd', 'VND');
 
   // Wizard state
   const [currentStep, setCurrentStep] =
@@ -272,7 +273,9 @@ export default function OrganisationScreeningPage() {
       );
     }, 100);
 
-    const qualityResult = await analyzeImageQuality(file);
+    const qualityResult = await analyzeImageQuality(file, (key, fallback) =>
+      t(key, fallback)
+    );
 
     window.clearInterval(progressTimer);
 
@@ -523,7 +526,13 @@ export default function OrganisationScreeningPage() {
                           ? 'bg-amber-500'
                           : 'bg-(--color-brand-primary)'
                     }`}
-                    title={`Còn ${remainingQuota} lượt`}
+                    title={t(
+                      'Organisation.screening.badges.remainingQuotaTitle',
+                      '{{count}} credits remaining',
+                      {
+                        count: remainingQuota,
+                      }
+                    )}
                   >
                     <Zap className="w-3.5 h-3.5" />
                     <span>
@@ -949,7 +958,7 @@ export default function OrganisationScreeningPage() {
                     </span>
                     <span className="font-semibold text-(--text-primary)">
                       {hasValidUnitPrice
-                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
+                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} ${currencyVndLabel}`
                         : t('Organisation.common.notAvailable', 'N/A')}
                     </span>
                   </div>
@@ -961,7 +970,8 @@ export default function OrganisationScreeningPage() {
                       )}
                     </span>
                     <span className="font-bold text-(--text-primary)">
-                      {selectedTotalCost.toLocaleString('vi-VN')} VND
+                      {selectedTotalCost.toLocaleString('vi-VN')}{' '}
+                      {currencyVndLabel}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -972,7 +982,7 @@ export default function OrganisationScreeningPage() {
                       )}
                     </span>
                     <span className="font-semibold text-(--text-primary)">
-                      {walletBalance.toLocaleString('vi-VN')} VND
+                      {walletBalance.toLocaleString('vi-VN')} {currencyVndLabel}
                     </span>
                   </div>
                 </div>
@@ -992,7 +1002,7 @@ export default function OrganisationScreeningPage() {
                       'Insufficient balance. Missing'
                     )}{' '}
                     <span className="font-semibold">
-                      {missingAmount.toLocaleString('vi-VN')} VND
+                      {missingAmount.toLocaleString('vi-VN')} {currencyVndLabel}
                     </span>
                     .{' '}
                     {t(

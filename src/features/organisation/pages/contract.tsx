@@ -366,7 +366,9 @@ function UploadSection({
               {selectedFile.name}
             </p>
             <p className="text-xs text-slate-500">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              {t('Organisation.common.fileSizeMb', '{{size}} MB', {
+                size: (selectedFile.size / 1024 / 1024).toFixed(2),
+              })}
             </p>
           </div>
           <button

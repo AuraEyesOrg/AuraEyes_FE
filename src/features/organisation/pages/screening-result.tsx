@@ -75,6 +75,11 @@ import {
 // ─── Share modal tab type ────────────────────────────────────────────────────
 type ShareTab = 'email' | 'network';
 
+type TranslationParams = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
 interface ScreeningResultLocationState {
   patientName?: string;
   autoAnalyze?: boolean;
@@ -96,10 +101,17 @@ export default function OrganisationScreeningResultPage() {
     locationState?.skipQuotaDeduction
   );
   const { t } = useSafeTranslation();
+  const currencyVndLabel = t('Organisation.common.currencyVnd', 'VND');
 
   const currentLanguage = useMemo(
     () => i18n.resolvedLanguage ?? i18n.language ?? 'vi',
     [i18n.language, i18n.resolvedLanguage]
+  );
+
+  const translateResultText = useCallback(
+    (key: string, fallback: string, options?: TranslationParams) =>
+      t(key, fallback, options),
+    [t]
   );
 
   const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
@@ -501,9 +513,12 @@ export default function OrganisationScreeningResultPage() {
             detail.latestResult.summary ??
             buildSummary(
               normalizeRiskLevel(detail.latestResult.riskLevel),
-              mappedFindings[0]?.localizedName
+              mappedFindings[0]?.localizedName,
+              translateResultText
             ),
-          findings: parsed.findings || buildFindingsText(mappedFindings),
+          findings:
+            parsed.findings ||
+            buildFindingsText(mappedFindings, translateResultText),
         });
         setConsultationNote(parsed.note);
         setSaved(true);
@@ -519,8 +534,12 @@ export default function OrganisationScreeningResultPage() {
         setDraft({
           riskLevel: nextRiskLevel,
           confidenceScore: primary.confidence,
-          summary: buildSummary(nextRiskLevel, primary.localizedName),
-          findings: buildFindingsText(mappedFindings),
+          summary: buildSummary(
+            nextRiskLevel,
+            primary.localizedName,
+            translateResultText
+          ),
+          findings: buildFindingsText(mappedFindings, translateResultText),
         });
       } else {
         setDraft(null);
@@ -529,7 +548,7 @@ export default function OrganisationScreeningResultPage() {
       setConsultationNote('');
       setSaved(false);
     },
-    [currentLanguage]
+    [currentLanguage, translateResultText]
   );
 
   const loadSessionDetail = useCallback(
@@ -635,13 +654,19 @@ export default function OrganisationScreeningResultPage() {
   };
 
   // ─── Box annotation CRUD ────────────────────────────────────────────────
-  const syncFindingsFromBoxes = useCallback((nextBoxes: DetectionBox[]) => {
-    const nextFindings = buildFindingsFromBoxes(nextBoxes);
-    setDraft((prev) => {
-      if (!prev) return prev;
-      return { ...prev, findings: nextFindings };
-    });
-  }, []);
+  const syncFindingsFromBoxes = useCallback(
+    (nextBoxes: DetectionBox[]) => {
+      const nextFindings = buildFindingsFromBoxes(
+        nextBoxes,
+        translateResultText
+      );
+      setDraft((prev) => {
+        if (!prev) return prev;
+        return { ...prev, findings: nextFindings };
+      });
+    },
+    [translateResultText]
+  );
 
   const handleBoxCreate = useCallback(
     (payload: BoxCreatePayload) => {
@@ -772,7 +797,12 @@ export default function OrganisationScreeningResultPage() {
           .slice(0, 6);
 
         if (topK.length === 0)
-          throw new Error('AI service returned no prediction data.');
+          throw new Error(
+            t(
+              'Organisation.screeningResult.toast.aiNoPredictionData',
+              'AI service returned no prediction data.'
+            )
+          );
 
         const mappedFindings = mapAiFindings(topK, currentLanguage);
         const primary = mappedFindings[0];
@@ -788,8 +818,12 @@ export default function OrganisationScreeningResultPage() {
         setDraft({
           riskLevel: nextRiskLevel,
           confidenceScore: primary.confidence,
-          summary: buildSummary(nextRiskLevel, primary.localizedName),
-          findings: buildFindingsText(mappedFindings),
+          summary: buildSummary(
+            nextRiskLevel,
+            primary.localizedName,
+            translateResultText
+          ),
+          findings: buildFindingsText(mappedFindings, translateResultText),
         });
         setConsultationNote('');
         setSaved(false);
@@ -828,8 +862,15 @@ export default function OrganisationScreeningResultPage() {
             setDraft({
               riskLevel: fullRiskLevel,
               confidenceScore: primaryFull.confidence,
-              summary: buildSummary(fullRiskLevel, primaryFull.localizedName),
-              findings: buildFindingsText(mappedFullFindings),
+              summary: buildSummary(
+                fullRiskLevel,
+                primaryFull.localizedName,
+                translateResultText
+              ),
+              findings: buildFindingsText(
+                mappedFullFindings,
+                translateResultText
+              ),
             });
           }
         } catch (fullError) {
@@ -896,6 +937,7 @@ export default function OrganisationScreeningResultPage() {
       isViewOnly,
       queryClient,
       t,
+      translateResultText,
     ]
   );
 
@@ -1976,7 +2018,7 @@ export default function OrganisationScreeningResultPage() {
                     </span>
                     <span className="font-semibold text-(--text-primary)">
                       {hasValidUnitPrice
-                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
+                        ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} ${currencyVndLabel}`
                         : t('Organisation.common.notAvailable', 'N/A')}
                     </span>
                   </div>
@@ -1988,7 +2030,8 @@ export default function OrganisationScreeningResultPage() {
                       )}
                     </span>
                     <span className="font-bold text-(--text-primary)">
-                      {selectedTotalCost.toLocaleString('vi-VN')} VND
+                      {selectedTotalCost.toLocaleString('vi-VN')}{' '}
+                      {currencyVndLabel}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -1999,7 +2042,7 @@ export default function OrganisationScreeningResultPage() {
                       )}
                     </span>
                     <span className="font-semibold text-(--text-primary)">
-                      {walletBalance.toLocaleString('vi-VN')} VND
+                      {walletBalance.toLocaleString('vi-VN')} {currencyVndLabel}
                     </span>
                   </div>
                 </div>
@@ -2019,7 +2062,7 @@ export default function OrganisationScreeningResultPage() {
                       'Insufficient balance. Missing'
                     )}{' '}
                     <span className="font-semibold">
-                      {missingAmount.toLocaleString('vi-VN')} VND
+                      {missingAmount.toLocaleString('vi-VN')} {currencyVndLabel}
                     </span>
                     .{' '}
                     {t(

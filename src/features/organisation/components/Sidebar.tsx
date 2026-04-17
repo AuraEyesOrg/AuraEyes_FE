@@ -79,7 +79,11 @@ export default function Sidebar({
 
   const visibleNavItems = navItems;
 
-  const avatarMeta = getUserAvatarMeta(user?.fullName, 'Organisation');
+  const organisationLabel = t(
+    'Organisation.sidebar.organisation',
+    'Organisation'
+  );
+  const avatarMeta = getUserAvatarMeta(user?.fullName, organisationLabel);
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
 
@@ -106,7 +110,7 @@ export default function Sidebar({
         <div className="px-2">
           <AuraLogo
             size="md"
-            subtitle="Organisation"
+            subtitle={organisationLabel}
             to="/organisation/dashboard"
           />
         </div>
@@ -154,7 +158,7 @@ export default function Sidebar({
             <UserAvatar
               fullName={user?.fullName}
               avatarUrl={user?.avatarUrl}
-              fallbackName="Organisation"
+              fallbackName={organisationLabel}
               size="md"
               className="shrink-0 border-2 border-brand/30 shadow-sm"
               fallbackClassName="bg-brand text-white"
@@ -176,7 +180,7 @@ export default function Sidebar({
           <button
             onClick={handleLogout}
             className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-            title="Logout"
+            title={t('Common.logout', 'Logout')}
           >
             <LogOut className="w-5 h-5" />
           </button>

@@ -5,6 +5,7 @@ import type {
   RetinalImage,
   ToggleState,
 } from '@/features/organisation/types/retinal.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface ImageViewerProps {
   toggles: ToggleState;
@@ -21,10 +22,13 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   isAnalyzing,
   currentImage,
 }) => {
+  const { t } = useSafeTranslation();
   const defaultImageUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAnZvlMnDS-CcafTkkjgVLz-0UddpNaBx3OsGxIO9zGXC9fp7Xcw_1SoKlkYiy7zNvYBqtRA86b0wkhPKl9mX-MPsS7JyyMvW5eklHCPWjWy_hdxnGKOfLpWcKa1TvNvRs2wBtJzkygxKDBLqzveve9FQ-CH5A0ZR2TUS5U1KIWHEXQIs-lMeoR4Vx0jsbZlr095MuZggI7VU6BetlAaUJ6cCo_VHXoG5BRAPPmnS-xb7dR8aU3buiURokmF5U3L7W6KKyRilnvR6x4';
   const imageUrl = currentImage?.url || defaultImageUrl;
-  const imageName = currentImage?.name || 'Fundus photograph';
+  const imageName =
+    currentImage?.name ||
+    t('Organisation.imageViewer.defaultImageName', 'Fundus photograph');
 
   return (
     <section className="flex-1 relative bg-[#0a1929] dark:bg-[#0a1929] light:bg-gray-100 flex items-center justify-center overflow-hidden cursor-move select-none">
@@ -140,12 +144,16 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 
       {/* Floating Scale Bar */}
       <div className="absolute bottom-6 left-6 bg-black/80 dark:bg-black/80 light:bg-white/90 backdrop-blur text-xs text-white dark:text-white light:text-gray-900 px-3 py-1.5 rounded border border-white/20 dark:border-white/20 light:border-gray-300 flex items-center gap-2 pointer-events-none shadow-lg">
-        <span>Scale: {zoomLevel.toFixed(1)}x</span>
+        <span>
+          {t('Organisation.imageViewer.scaleLabel', 'Scale: {{value}}x', {
+            value: zoomLevel.toFixed(1),
+          })}
+        </span>
         <div className="w-20 h-1 bg-white/50 dark:bg-white/50 light:bg-gray-400 relative">
           <div className="absolute left-0 top-0 h-full w-px bg-white dark:bg-white light:bg-gray-600"></div>
           <div className="absolute right-0 top-0 h-full w-px bg-white dark:bg-white light:bg-gray-600"></div>
         </div>
-        <span>200µm</span>
+        <span>{t('Organisation.imageViewer.scaleMicrometer', '200µm')}</span>
       </div>
 
       <style>{`

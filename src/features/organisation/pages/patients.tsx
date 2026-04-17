@@ -19,6 +19,7 @@ import OrganisationHeader from '../components/OrganisationHeader';
 import AvatarFallback from '@/components/ui/avatar-fallback';
 import CreateWalkInPatientModal from '../components/CreateWalkInPatientModal';
 import UpdatePatientContactModal from '../components/UpdatePatientContactModal';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   getOrganisationRecentPatients,
   type OrganisationRecentPatientDto,
@@ -50,6 +51,7 @@ type ActionMenuPosition = {
 
 export default function PatientsPage() {
   const navigate = useNavigate();
+  const { t } = useSafeTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] =
@@ -87,9 +89,11 @@ export default function PatientsPage() {
 
   useEffect(() => {
     if (patientsQuery.isError) {
-      toast.error('Unable to load patients.');
+      toast.error(
+        t('Organisation.patients.toast.loadFailed', 'Unable to load patients.')
+      );
     }
-  }, [patientsQuery.isError]);
+  }, [patientsQuery.isError, t]);
 
   useEffect(() => {
     if (!openActionMenuPatientId) {
@@ -203,13 +207,18 @@ export default function PatientsPage() {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
         <div className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
-          <div className="font-medium mb-3">Unable to load patients</div>
+          <div className="font-medium mb-3">
+            {t(
+              'Organisation.patients.states.loadFailed',
+              'Unable to load patients'
+            )}
+          </div>
           <button
             type="button"
             onClick={() => patientsQuery.refetch()}
             className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
-            Retry
+            {t('Organisation.patients.actions.retry', 'Retry')}
           </button>
         </div>
       </div>
@@ -243,7 +252,9 @@ export default function PatientsPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader pageName="Patients" />
+        <OrganisationHeader
+          pageName={t('Organisation.patients.pageName', 'Patients')}
+        />
 
         <main className="p-6">
           {/* Header */}
@@ -251,10 +262,13 @@ export default function PatientsPage() {
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-(--text-primary)">
-                  Patients
+                  {t('Organisation.patients.header.title', 'Patients')}
                 </h1>
                 <p className="text-sm text-(--text-secondary)">
-                  Manage your organisation's patient records and screenings
+                  {t(
+                    'Organisation.patients.header.subtitle',
+                    "Manage your organisation's patient records and screenings"
+                  )}
                 </p>
               </div>
             </div>
@@ -263,7 +277,11 @@ export default function PatientsPage() {
               onClick={() => setIsWalkInModalOpen(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 shrink-0"
             >
-              <Plus className="w-4 h-4" /> Walk-in Patient
+              <Plus className="w-4 h-4" />
+              {t(
+                'Organisation.patients.actions.walkInPatient',
+                'Walk-in Patient'
+              )}
             </button>
           </div>
 
@@ -277,7 +295,10 @@ export default function PatientsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search by name, phone number, or CCCD..."
+                  placeholder={t(
+                    'Organisation.patients.search.placeholder',
+                    'Search by name, phone number, or CCCD...'
+                  )}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-(--bg-primary) border border-(--border-primary) rounded-xl pl-11 pr-4 py-2.5 text-sm text-(--text-primary) placeholder:text-(--text-tertiary) focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
@@ -291,15 +312,21 @@ export default function PatientsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-(--border-primary) bg-(--bg-primary) text-(--text-secondary) hover:bg-(--bg-tertiary) disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 <XCircle size={16} />
-                Clear
+                {t('Organisation.patients.actions.clear', 'Clear')}
               </button>
             </div>
           </div>
 
           {/* Results summary */}
           <p className="text-sm text-(--text-tertiary) mb-3 px-1">
-            {filteredPatients.length} patient
-            {filteredPatients.length !== 1 ? 's' : ''} found
+            {t(
+              'Organisation.patients.summary.foundPatients',
+              '{{count}} patient{{suffix}} found',
+              {
+                count: filteredPatients.length,
+                suffix: filteredPatients.length !== 1 ? 's' : '',
+              }
+            )}
           </p>
 
           {/* Patient Table */}
@@ -309,19 +336,22 @@ export default function PatientsPage() {
                 <thead>
                   <tr className="border-b border-(--border-primary)">
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      Patient
+                      {t('Organisation.patients.table.patient', 'Patient')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      Last Screening
+                      {t(
+                        'Organisation.patients.table.lastScreening',
+                        'Last Screening'
+                      )}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      Type
+                      {t('Organisation.patients.table.type', 'Type')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      Risk
+                      {t('Organisation.patients.table.risk', 'Risk')}
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-(--text-tertiary) uppercase tracking-wider">
-                      Action
+                      {t('Organisation.patients.table.action', 'Action')}
                     </th>
                   </tr>
                 </thead>
@@ -332,7 +362,10 @@ export default function PatientsPage() {
                         colSpan={5}
                         className="px-6 py-12 text-center text-sm text-(--text-tertiary)"
                       >
-                        No patients match your search.
+                        {t(
+                          'Organisation.patients.states.noMatch',
+                          'No patients match your search.'
+                        )}
                       </td>
                     </tr>
                   ) : (
@@ -354,8 +387,20 @@ export default function PatientsPage() {
                                   {patient.name}
                                 </div>
                                 <div className="text-xs text-(--text-tertiary)">
-                                  {patient.age}y ·{' '}
-                                  {patient.gender === 'M' ? 'Male' : 'Female'}
+                                  {patient.age}
+                                  {t(
+                                    'Organisation.common.yearsAbbr',
+                                    'yrs'
+                                  )} ·{' '}
+                                  {patient.gender === 'M'
+                                    ? t(
+                                        'Organisation.common.gender.male',
+                                        'Male'
+                                      )
+                                    : t(
+                                        'Organisation.common.gender.female',
+                                        'Female'
+                                      )}
                                   {patient.phoneNumber &&
                                     ` · ${patient.phoneNumber}`}
                                 </div>
@@ -375,7 +420,15 @@ export default function PatientsPage() {
                             <span
                               className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getPatientTypeBadge(patient.isWalkIn)}`}
                             >
-                              {patient.isWalkIn ? 'Walk-in' : 'Aura Partner'}
+                              {patient.isWalkIn
+                                ? t(
+                                    'Organisation.patients.types.walkIn',
+                                    'Walk-in'
+                                  )
+                                : t(
+                                    'Organisation.patients.types.auraPartner',
+                                    'Aura Partner'
+                                  )}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -393,7 +446,10 @@ export default function PatientsPage() {
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
                               >
                                 <ScanEye className="h-3.5 w-3.5" />
-                                Screen Now
+                                {t(
+                                  'Organisation.patients.actions.screenNow',
+                                  'Screen Now'
+                                )}
                               </button>
 
                               <button
@@ -408,7 +464,11 @@ export default function PatientsPage() {
                                   )
                                 }
                                 className="inline-flex items-center justify-center rounded-lg border border-(--border-primary) bg-(--bg-tertiary) p-1.5 text-(--text-secondary) transition hover:bg-(--bg-primary)"
-                                aria-label={`More actions for ${patient.name}`}
+                                aria-label={t(
+                                  'Organisation.patients.actions.moreForPatient',
+                                  'More actions for {{name}}',
+                                  { name: patient.name }
+                                )}
                                 aria-haspopup="menu"
                                 aria-expanded={
                                   openActionMenuPatientId === patient.id
@@ -439,7 +499,10 @@ export default function PatientsPage() {
                                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
                                     >
                                       <History className="h-3.5 w-3.5" />
-                                      View History
+                                      {t(
+                                        'Organisation.patients.actions.viewHistory',
+                                        'View History'
+                                      )}
                                     </button>
                                     <button
                                       type="button"
@@ -450,7 +513,10 @@ export default function PatientsPage() {
                                       className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-(--text-secondary) transition hover:bg-(--bg-tertiary)"
                                     >
                                       <Pencil className="h-3.5 w-3.5" />
-                                      Edit Contact
+                                      {t(
+                                        'Organisation.patients.actions.editContact',
+                                        'Edit Contact'
+                                      )}
                                     </button>
                                   </div>,
                                   document.body

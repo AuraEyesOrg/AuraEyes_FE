@@ -25,6 +25,12 @@ interface RiskConfigItem {
   icon: LucideIcon;
 }
 
+type ResultTextTranslator = (
+  key: string,
+  fallback: string,
+  options?: Record<string, string | number | boolean | null | undefined>
+) => string;
+
 const ORGANISATION_NOTE_MARKER = '[Organisation Note]';
 
 function resolveFindingName(item: AIStandardPrediction): string {
@@ -106,22 +112,63 @@ export function toRiskLevelFromUrgency(
 
 export function buildSummary(
   riskLevel: RiskLevel,
-  primaryLabel?: string
+  primaryLabel?: string,
+  translate?: ResultTextTranslator
 ): string {
+  const tr = (
+    key: string,
+    fallback: string,
+    options?: Record<string, string | number | boolean | null | undefined>
+  ) => (translate ? translate(key, fallback, options) : fallback);
+
   if (riskLevel === 'High') {
-    return `Findings need attention from an ophthalmologist${primaryLabel ? ` (${primaryLabel})` : ''}.`;
+    return primaryLabel
+      ? tr(
+          'Organisation.screeningResult.summary.high.withPrimary',
+          'Findings need attention from an ophthalmologist ({{primaryLabel}}).',
+          { primaryLabel }
+        )
+      : tr(
+          'Organisation.screeningResult.summary.high.default',
+          'Findings need attention from an ophthalmologist.'
+        );
   }
 
   if (riskLevel === 'Moderate') {
-    return `Some findings may need specialist review${primaryLabel ? ` (${primaryLabel})` : ''}.`;
+    return primaryLabel
+      ? tr(
+          'Organisation.screeningResult.summary.moderate.withPrimary',
+          'Some findings may need specialist review ({{primaryLabel}}).',
+          { primaryLabel }
+        )
+      : tr(
+          'Organisation.screeningResult.summary.moderate.default',
+          'Some findings may need specialist review.'
+        );
   }
 
   return primaryLabel
-    ? `Low-risk findings detected (${primaryLabel}). Routine specialist follow-up is recommended.`
-    : 'Low-risk findings detected. Routine specialist follow-up is recommended.';
+    ? tr(
+        'Organisation.screeningResult.summary.low.withPrimary',
+        'Low-risk findings detected ({{primaryLabel}}). Routine specialist follow-up is recommended.',
+        { primaryLabel }
+      )
+    : tr(
+        'Organisation.screeningResult.summary.low.default',
+        'Low-risk findings detected. Routine specialist follow-up is recommended.'
+      );
 }
 
-export function buildFindingsText(items: AiFindingItem[]): string {
+export function buildFindingsText(
+  items: AiFindingItem[],
+  translate?: ResultTextTranslator
+): string {
+  const tr = (
+    key: string,
+    fallback: string,
+    options?: Record<string, string | number | boolean | null | undefined>
+  ) => (translate ? translate(key, fallback, options) : fallback);
+
   const findingNames = items
     .slice(0, 4)
     .map((item) => item.localizedName.trim())
@@ -132,13 +179,33 @@ export function buildFindingsText(items: AiFindingItem[]): string {
   const [primaryFinding, ...secondaryFindings] = findingNames;
 
   if (secondaryFindings.length === 0) {
-    return `Primary Finding: ${primaryFinding}`;
+    return tr(
+      'Organisation.screeningResult.findings.primaryOnly',
+      'Primary Finding: {{primaryFinding}}',
+      { primaryFinding }
+    );
   }
 
-  return `Primary Finding: ${primaryFinding}\nRelated Findings: ${secondaryFindings.join(', ')}`;
+  return tr(
+    'Organisation.screeningResult.findings.primaryAndRelated',
+    'Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}',
+    {
+      primaryFinding,
+      relatedFindings: secondaryFindings.join(', '),
+    }
+  );
 }
 
-export function buildFindingsFromBoxes(boxes: DetectionBox[]): string {
+export function buildFindingsFromBoxes(
+  boxes: DetectionBox[],
+  translate?: ResultTextTranslator
+): string {
+  const tr = (
+    key: string,
+    fallback: string,
+    options?: Record<string, string | number | boolean | null | undefined>
+  ) => (translate ? translate(key, fallback, options) : fallback);
+
   const labeled = boxes.filter((b) => b.localizedName.trim().length > 0);
   if (labeled.length === 0) return '';
 
@@ -149,17 +216,39 @@ export function buildFindingsFromBoxes(boxes: DetectionBox[]): string {
 
   if (aiBoxes.length > 0) {
     const [primary, ...rest] = aiBoxes;
-    lines.push(`Primary Finding: ${primary.localizedName}`);
+    lines.push(
+      tr(
+        'Organisation.screeningResult.findings.primaryOnly',
+        'Primary Finding: {{primaryFinding}}',
+        {
+          primaryFinding: primary.localizedName,
+        }
+      )
+    );
     if (rest.length > 0) {
       lines.push(
-        `Related Findings: ${rest.map((b) => b.localizedName).join(', ')}`
+        tr(
+          'Organisation.screeningResult.findings.relatedOnly',
+          'Related Findings: {{relatedFindings}}',
+          {
+            relatedFindings: rest.map((b) => b.localizedName).join(', '),
+          }
+        )
       );
     }
   }
 
   if (manualBoxes.length > 0) {
     const manualNames = manualBoxes.map((b) => b.localizedName).join(', ');
-    lines.push(`Manual Annotations: ${manualNames}`);
+    lines.push(
+      tr(
+        'Organisation.screeningResult.findings.manualAnnotations',
+        'Manual Annotations: {{manualNames}}',
+        {
+          manualNames,
+        }
+      )
+    );
   }
 
   return lines.join('\n');

@@ -13,6 +13,7 @@ import type {
   Anomaly,
   ToggleState,
 } from '@/features/organisation/types/retinal.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface AnalysisSidebarProps {
   toggles: ToggleState;
@@ -35,6 +36,8 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
   isFallback,
   errorMessage,
 }) => {
+  const { t } = useSafeTranslation();
+
   // Calculate a mock risk score based on findings
   const riskScore =
     anomalies.length > 0
@@ -51,12 +54,15 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
       <div className="p-5 border-b border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white dark:text-white light:text-gray-900 text-sm font-semibold uppercase tracking-wider">
-            AURA Risk Score
+            {t('Organisation.analysisSidebar.risk.title', 'AURA Risk Score')}
           </h3>
           <div className="group relative cursor-help">
             <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 light:text-gray-600" />
             <div className="absolute right-0 top-6 w-48 p-2 bg-black dark:bg-black light:bg-white border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 text-xs text-gray-400 dark:text-gray-400 light:text-gray-600 rounded hidden group-hover:block z-50 shadow-xl">
-              Based on real-time AI analysis of retinal features.
+              {t(
+                'Organisation.analysisSidebar.risk.tooltip',
+                'Based on real-time AI analysis of retinal features.'
+              )}
             </div>
           </div>
         </div>
@@ -69,7 +75,10 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
           </span>
           {Number(riskScore) > 5 && (
             <span className="ml-auto px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded border border-red-500/30">
-              Referral Recommended
+              {t(
+                'Organisation.analysisSidebar.risk.referralRecommended',
+                'Referral Recommended'
+              )}
             </span>
           )}
         </div>
@@ -88,22 +97,30 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
           {!analyzed && !isAnalyzing ? (
             <div className="p-3 text-center">
               <p className="text-gray-400 dark:text-gray-400 light:text-gray-600 text-xs mb-3">
-                No active analysis data. Start AI processing to detect
-                anomalies.
+                {t(
+                  'Organisation.analysisSidebar.analysis.idleMessage',
+                  'No active analysis data. Start AI processing to detect anomalies.'
+                )}
               </p>
               <button
                 onClick={onAnalyze}
                 className="w-full py-2.5 bg-[#13ecec] hover:bg-[#13ecec]/90 text-[#102222] font-bold rounded text-sm transition-colors flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
-                Start AI Diagnosis
+                {t(
+                  'Organisation.analysisSidebar.analysis.startAction',
+                  'Start AI Diagnosis'
+                )}
               </button>
             </div>
           ) : isAnalyzing ? (
             <div className="p-4 flex flex-col items-center justify-center gap-3">
               <Spinner size={32} />
               <span className="text-[#13ecec] text-xs font-medium animate-pulse">
-                Processing Retinal Data...
+                {t(
+                  'Organisation.analysisSidebar.analysis.processing',
+                  'Processing Retinal Data...'
+                )}
               </span>
             </div>
           ) : (
@@ -111,13 +128,16 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs text-green-400 flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
-                  Analysis Complete
+                  {t(
+                    'Organisation.analysisSidebar.analysis.complete',
+                    'Analysis Complete'
+                  )}
                 </span>
                 <button
                   onClick={onAnalyze}
                   className="text-xs text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 underline"
                 >
-                  Re-run
+                  {t('Organisation.analysisSidebar.analysis.rerun', 'Re-run')}
                 </button>
               </div>
               {isFallback && (
@@ -125,7 +145,10 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
                   <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                   <span>
                     {errorMessage ||
-                      'API unavailable. Showing simulated results.'}
+                      t(
+                        'Organisation.analysisSidebar.analysis.fallbackMessage',
+                        'API unavailable. Showing simulated results.'
+                      )}
                   </span>
                 </div>
               )}
@@ -136,21 +159,33 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
         {/* AI Layers Control */}
         <div className="space-y-3">
           <h4 className="text-xs font-semibold text-gray-400 dark:text-gray-400 light:text-gray-600 uppercase tracking-wider mb-2">
-            Annotation Layers
+            {t(
+              'Organisation.analysisSidebar.layers.title',
+              'Annotation Layers'
+            )}
           </h4>
 
           <ToggleItem
-            label="Vessel Segmentation"
+            label={t(
+              'Organisation.analysisSidebar.layers.vesselSegmentation',
+              'Vessel Segmentation'
+            )}
             checked={toggles.vesselSegmentation}
             onChange={() => onToggleChange('vesselSegmentation')}
           />
           <ToggleItem
-            label="Hemorrhages"
+            label={t(
+              'Organisation.analysisSidebar.layers.hemorrhages',
+              'Hemorrhages'
+            )}
             checked={toggles.hemorrhages}
             onChange={() => onToggleChange('hemorrhages')}
           />
           <ToggleItem
-            label="Exudates"
+            label={t(
+              'Organisation.analysisSidebar.layers.exudates',
+              'Exudates'
+            )}
             checked={toggles.exudates}
             onChange={() => onToggleChange('exudates')}
           />
@@ -161,12 +196,18 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
         {/* Detailed Findings */}
         <div className="space-y-3">
           <h4 className="text-xs font-semibold text-gray-400 dark:text-gray-400 light:text-gray-600 uppercase tracking-wider mb-2">
-            Detected Anomalies
+            {t(
+              'Organisation.analysisSidebar.findings.title',
+              'Detected Anomalies'
+            )}
           </h4>
 
           {anomalies.length === 0 && analyzed && (
             <div className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-600 italic text-center py-4">
-              No significant anomalies detected.
+              {t(
+                'Organisation.analysisSidebar.findings.noneDetected',
+                'No significant anomalies detected.'
+              )}
             </div>
           )}
 
@@ -205,16 +246,21 @@ const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
       <div className="p-4 border-t border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-200 bg-[#0a1f44] dark:bg-[#0a1f44] light:bg-gray-50 space-y-3">
         <div className="flex items-center gap-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-blue-200">
           <Bot className="w-4 h-4 flex-shrink-0" />
-          <span>AI findings are assistive. Please verify.</span>
+          <span>
+            {t(
+              'Organisation.analysisSidebar.footer.assistiveNotice',
+              'AI findings are assistive. Please verify.'
+            )}
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#2d4a6f] dark:border-[#2d4a6f] light:border-gray-300 bg-[#1e3a5f]/50 dark:bg-[#1e3a5f]/50 light:bg-gray-100 text-white dark:text-white light:text-gray-900 text-sm font-bold hover:bg-[#1e3a5f] dark:hover:bg-[#1e3a5f] light:hover:bg-gray-200 transition-colors">
             <Download className="w-4 h-4" />
-            Export
+            {t('Organisation.analysisSidebar.footer.export', 'Export')}
           </button>
           <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#13ecec] text-[#102222] text-sm font-bold hover:bg-[#13ecec]/90 transition-colors shadow-lg shadow-[#13ecec]/20">
             <FileText className="w-4 h-4" />
-            Report
+            {t('Organisation.analysisSidebar.footer.report', 'Report')}
           </button>
         </div>
       </div>

@@ -35,14 +35,6 @@ import { formatCurrency } from '@/lib/helper';
 import { formatDateTimeWithYear } from '@/lib/date-utils';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
-const vndCurrencyOptions = {
-  locale: 'vi-VN',
-  useCurrencyStyle: false,
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-  suffix: ' VND',
-} as const;
-
 const isCreditTransaction = (transaction: WalletTransactionDto): boolean => {
   const txType = parseWalletTransactionType(transaction.transactionType);
   return (
@@ -56,6 +48,14 @@ const isCreditTransaction = (transaction: WalletTransactionDto): boolean => {
 export default function OrganisationWalletPage() {
   const queryClient = useQueryClient();
   const { t } = useSafeTranslation();
+  const currencyVndLabel = t('Organisation.common.currencyVnd', 'VND');
+  const vndCurrencyOptions = {
+    locale: 'vi-VN',
+    useCurrencyStyle: false,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    suffix: ` ${currencyVndLabel}`,
+  } as const;
 
   const getTransactionLabel = (type: TransactionType): string => {
     switch (type) {
@@ -417,7 +417,7 @@ export default function OrganisationWalletPage() {
                       </p>
                       <p className="text-xs text-(--text-tertiary) mt-1">
                         {hasValidUnitPrice
-                          ? `${totalCost.toLocaleString('vi-VN')} VND`
+                          ? `${totalCost.toLocaleString('vi-VN')} ${currencyVndLabel}`
                           : t(
                               'Organisation.wallet.purchase.priceUnavailable',
                               'Price unavailable'
@@ -512,7 +512,7 @@ export default function OrganisationWalletPage() {
                   </span>
                   <span className="font-semibold text-(--text-primary)">
                     {hasValidUnitPrice
-                      ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} VND`
+                      ? `${effectiveOrganisationUnitPrice.toLocaleString('vi-VN')} ${currencyVndLabel}`
                       : t(
                           'Organisation.wallet.purchase.priceUnavailable',
                           'Price unavailable'
@@ -717,7 +717,7 @@ export default function OrganisationWalletPage() {
                     </span>
                     <span className="font-semibold text-(--text-primary)">
                       {effectiveOrganisationUnitPrice.toLocaleString('vi-VN')}{' '}
-                      VND
+                      {currencyVndLabel}
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-(--border-primary) pt-3">
@@ -728,7 +728,8 @@ export default function OrganisationWalletPage() {
                       )}
                     </span>
                     <span className="font-bold text-(--text-primary)">
-                      {selectedTotalCost.toLocaleString('vi-VN')} VND
+                      {selectedTotalCost.toLocaleString('vi-VN')}{' '}
+                      {currencyVndLabel}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -739,7 +740,7 @@ export default function OrganisationWalletPage() {
                       )}
                     </span>
                     <span className="font-semibold text-(--text-primary)">
-                      {walletBalance.toLocaleString('vi-VN')} VND
+                      {walletBalance.toLocaleString('vi-VN')} {currencyVndLabel}
                     </span>
                   </div>
                 </div>
@@ -760,7 +761,8 @@ export default function OrganisationWalletPage() {
                         'Insufficient balance. You are missing'
                       )}{' '}
                       <span className="font-semibold">
-                        {missingAmount.toLocaleString('vi-VN')} VND
+                        {missingAmount.toLocaleString('vi-VN')}{' '}
+                        {currencyVndLabel}
                       </span>
                       .
                     </div>
