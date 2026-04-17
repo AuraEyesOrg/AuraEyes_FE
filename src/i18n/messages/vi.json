@@ -3316,6 +3316,7 @@
     "sidebar": {
       "dashboard": "Tổng quan",
       "patients": "Bệnh nhân",
+      "organisation": "Tổ chức",
       "historicalData": "Dữ liệu lịch sử",
       "calendar": "Lịch",
       "screening": "Sàng lọc",
@@ -3330,6 +3331,7 @@
     "common": {
       "cancel": "Hủy",
       "close": "Đóng",
+      "currencyVnd": "VND",
       "daysOfWeek": {
         "friday": "Thứ Sáu",
         "monday": "Thứ Hai",
@@ -3343,6 +3345,7 @@
         "female": "Nữ",
         "male": "Nam"
       },
+      "fileSizeMb": "{{size}} MB",
       "idLabel": "ID",
       "loading": "Đang tải...",
       "next": "Tiếp",
@@ -3574,6 +3577,33 @@
         "loadFailed": "Không thể tải bảng điều khiển trực tiếp của tổ chức."
       }
     },
+    "analytics": {
+      "pageName": "Phân tích",
+      "header": {
+        "title": "Phân tích ảnh võng mạc",
+        "subtitle": "Sàng lọc võng mạc và phát hiện bất thường bằng AI"
+      },
+      "eye": {
+        "leftOd": "Mắt trái (OS)",
+        "rightOd": "Mắt phải (OD)"
+      },
+      "error": {
+        "analysisUnavailable": "Dịch vụ AI tạm thời không khả dụng. Đang hiển thị kết quả demo.",
+        "apiKeyMissing": "Chế độ demo: Chưa cấu hình API key",
+        "imageFetchFallback": "Đang dùng chế độ demo (không tải được ảnh)",
+        "quotaExceeded": "Đã vượt quota API. Đang hiển thị kết quả demo. Vui lòng kiểm tra gói Gemini API tại ai.google.dev"
+      },
+      "fallback": {
+        "hardExudates": {
+          "description": "Cặn lipid xuất hiện gần vùng hoàng điểm.",
+          "name": "Xuất tiết cứng"
+        },
+        "microaneurysms": {
+          "description": "Phát hiện cụm tổn thương ở góc trên thái dương.",
+          "name": "Vi phình mạch"
+        }
+      }
+    },
     "settings": {
       "actions": {
         "saveChanges": "Lưu thay đổi",
@@ -3667,7 +3697,8 @@
         "topUpWallet": "Nạp ví"
       },
       "badges": {
-        "remainingQuota": "Còn {{count}} lượt"
+        "remainingQuota": "Còn {{count}} lượt",
+        "remainingQuotaTitle": "Còn {{count}} lượt"
       },
       "header": {
         "subtitle": "Tải lên ảnh DICOM hoặc ảnh đáy mắt độ phân giải cao để AI sàng lọc. Hãy đảm bảo ảnh rõ nét trước khi chạy thuật toán.",
@@ -3724,6 +3755,17 @@
         "quotaExhausted": "Đã hết quota. Vui lòng mua thêm quota hoặc nạp ví.",
         "quotaUnitPriceUnavailable": "Không lấy được đơn giá quota. Vui lòng thử lại sau.",
         "walletInsufficient": "Ví không đủ tiền, vui lòng nạp thêm vào ví."
+      },
+      "quality": {
+        "acceptable": "Chất lượng chấp nhận được",
+        "blurry": "Ảnh bị mờ.",
+        "croppedEdges": "Ảnh có dấu hiệu bị cắt mép.",
+        "notFundus": "Không phải ảnh võng mạc rõ nét.",
+        "optimal": "Chất lượng tối ưu",
+        "overexposed": "Ảnh bị thừa sáng.",
+        "poor": "Chất lượng kém",
+        "tooDark": "Ảnh quá tối.",
+        "validationServiceError": "Lỗi dịch vụ kiểm định ảnh."
       },
       "upload": {
         "analyzingQuality": "Đang phân tích chất lượng ảnh...",
@@ -3837,6 +3879,7 @@
         "notFound": "Không tìm thấy phiên khám"
       },
       "toast": {
+        "aiNoPredictionData": "Dịch vụ AI không trả về dữ liệu dự đoán.",
         "analyzeBeforeSave": "Vui lòng chạy phân tích AI trước khi lưu hồ sơ.",
         "analyzeCompleted": "Phân tích AI hoàn tất. Bạn có thể chỉnh sửa kết quả trước khi lưu.",
         "analyzeFailed": "Phân tích AI thất bại. Vui lòng kiểm tra dịch vụ AI và thử lại.",
@@ -3856,6 +3899,26 @@
         "shareNetworkSuccess": "Đã đăng ca khám lên Professional Network.",
         "shareSelectAtLeastOne": "Vui lòng chọn ít nhất một nội dung để chia sẻ.",
         "shareWalkInEmailRequired": "Vui lòng nhập email nhận kết quả cho bệnh nhân walk-in."
+      },
+      "summary": {
+        "high": {
+          "default": "Phát hiện cần được bác sĩ nhãn khoa chú ý.",
+          "withPrimary": "Phát hiện cần được bác sĩ nhãn khoa chú ý ({{primaryLabel}})."
+        },
+        "moderate": {
+          "default": "Một số phát hiện có thể cần bác sĩ chuyên khoa đánh giá thêm.",
+          "withPrimary": "Một số phát hiện có thể cần bác sĩ chuyên khoa đánh giá thêm ({{primaryLabel}})."
+        },
+        "low": {
+          "default": "Phát hiện nguy cơ thấp. Khuyến nghị theo dõi định kỳ với bác sĩ chuyên khoa.",
+          "withPrimary": "Phát hiện nguy cơ thấp ({{primaryLabel}}). Khuyến nghị theo dõi định kỳ với bác sĩ chuyên khoa."
+        }
+      },
+      "findings": {
+        "primaryOnly": "Phát hiện chính: {{primaryFinding}}",
+        "primaryAndRelated": "Phát hiện chính: {{primaryFinding}}\nPhát hiện liên quan: {{relatedFindings}}",
+        "relatedOnly": "Phát hiện liên quan: {{relatedFindings}}",
+        "manualAnnotations": "Ghi chú thủ công: {{manualNames}}"
       }
     },
     "wallet": {
@@ -3929,6 +3992,300 @@
         "quotaPurchase": "Mua quota",
         "title": "Giao dịch ví"
       }
+    },
+    "recentPatients": {
+      "actions": {
+        "viewAll": "Xem tất cả"
+      },
+      "confidenceLabel": "(độ tin cậy {{confidence}}%)",
+      "status": {
+        "pending": "Chờ đánh giá",
+        "reviewed": "Đã đánh giá"
+      },
+      "title": "Bệnh nhân gần đây"
+    },
+    "patients": {
+      "actions": {
+        "clear": "Xóa lọc",
+        "editContact": "Chỉnh sửa liên hệ",
+        "moreForPatient": "Thao tác thêm cho {{name}}",
+        "retry": "Thử lại",
+        "screenNow": "Sàng lọc ngay",
+        "viewHistory": "Xem lịch sử",
+        "walkInPatient": "Bệnh nhân walk-in"
+      },
+      "header": {
+        "subtitle": "Quản lý hồ sơ bệnh nhân và các phiên sàng lọc của tổ chức",
+        "title": "Bệnh nhân"
+      },
+      "pageName": "Bệnh nhân",
+      "search": {
+        "placeholder": "Tìm theo tên, số điện thoại hoặc CCCD..."
+      },
+      "states": {
+        "loadFailed": "Không thể tải danh sách bệnh nhân",
+        "noMatch": "Không có bệnh nhân phù hợp với từ khóa tìm kiếm."
+      },
+      "summary": {
+        "foundPatients": "Tìm thấy {{count}} bệnh nhân{{suffix}}"
+      },
+      "table": {
+        "action": "Thao tác",
+        "lastScreening": "Lần sàng lọc gần nhất",
+        "patient": "Bệnh nhân",
+        "risk": "Nguy cơ",
+        "type": "Loại"
+      },
+      "toast": {
+        "loadFailed": "Không thể tải danh sách bệnh nhân."
+      },
+      "types": {
+        "auraPartner": "Đối tác Aura",
+        "walkIn": "Walk-in"
+      }
+    },
+    "updatePatientModal": {
+      "badges": {
+        "auraAccount": "Tài khoản Aura"
+      },
+      "form": {
+        "address": "Địa chỉ",
+        "addressPlaceholder": "Số nhà, phường/xã, quận/huyện, tỉnh/thành phố",
+        "bmi": "BMI",
+        "bmiPlaceholder": "vd. 22.5",
+        "citizenId": "CCCD",
+        "citizenIdPlaceholder": "vd. 001099000000",
+        "dateOfBirth": "Ngày sinh",
+        "diseaseHistory": "Tiền sử bệnh",
+        "diseaseHistoryPlaceholder": "vd. Đái tháo đường type 2, tăng huyết áp, glaucoma...",
+        "fullName": "Họ và tên *",
+        "gender": "Giới tính",
+        "genderOther": "Khác",
+        "phoneNumber": "Số điện thoại",
+        "phonePlaceholder": "vd. +84 123 456 789"
+      },
+      "header": {
+        "title": "Chỉnh sửa bệnh nhân"
+      },
+      "readOnly": {
+        "address": "Địa chỉ",
+        "age": "Tuổi",
+        "citizenId": "CCCD",
+        "dateOfBirth": "Ngày sinh",
+        "email": "Email",
+        "fullName": "Họ và tên",
+        "gender": "Giới tính",
+        "phone": "Số điện thoại"
+      },
+      "sections": {
+        "administrativeInfo": "Thông tin hành chính",
+        "medicalInfo": "Thông tin y khoa",
+        "personalInfo": "Thông tin cá nhân",
+        "personalInfoManagedByAura": "- được quản lý bởi tài khoản Aura của bệnh nhân"
+      },
+      "toast": {
+        "noChanges": "Không có thay đổi nào",
+        "patientNotFound": "Không tìm thấy bệnh nhân",
+        "updateFailed": "Không thể cập nhật thông tin bệnh nhân.",
+        "updateSuccess": "Cập nhật bệnh nhân thành công."
+      }
+    },
+    "patientHistory": {
+      "actions": {
+        "backToPatients": "Quay lại danh sách bệnh nhân",
+        "openReviewPage": "Mở trang đánh giá"
+      },
+      "detail": {
+        "createdAt": "Thời điểm tạo",
+        "modelVersion": "Phiên bản mô hình",
+        "sessionStatus": "Trạng thái phiên",
+        "subtitle": "Ảnh võng mạc và hồ sơ lâm sàng đã lưu cho phiên được chọn.",
+        "title": "Chi tiết phiên"
+      },
+      "header": {
+        "subtitle": "Xem toàn bộ phiên sàng lọc, ảnh võng mạc và hồ sơ đã lưu của bệnh nhân này.",
+        "title": "Dòng thời gian sàng lọc bệnh nhân"
+      },
+      "images": {
+        "alt": {
+          "boxedRetinalImage": "Ảnh võng mạc đã đóng khung",
+          "heatmap": "Bản đồ nhiệt",
+          "heatmapBackground": "Nền bản đồ nhiệt",
+          "retinalImage": "Ảnh võng mạc",
+          "thumbnail": "Ảnh phiên {{index}}"
+        },
+        "boxed": "Đóng khung",
+        "empty": "Không tìm thấy ảnh võng mạc cho phiên này.",
+        "heatmap": "Bản đồ nhiệt",
+        "imageIndex": "Ảnh {{index}}",
+        "original": "Ảnh gốc",
+        "selectToPreview": "Chọn một ảnh gốc để cập nhật phần xem trước Đóng khung/Bản đồ nhiệt.",
+        "title": "Ảnh võng mạc"
+      },
+      "pageName": "Lịch sử bệnh nhân",
+      "record": {
+        "findingsNote": "Phát hiện / Ghi chú",
+        "noFindings": "Chưa có phát hiện",
+        "noSummary": "Chưa có tóm tắt",
+        "notSavedYet": "Phiên này chưa được lưu. Hãy mở trang đánh giá để lưu hồ sơ.",
+        "riskLevel": "Mức độ nguy cơ",
+        "savedAt": "Thời điểm lưu",
+        "summary": "Tóm tắt",
+        "title": "Hồ sơ đã lưu"
+      },
+      "risk": {
+        "high": "Cao",
+        "low": "Thấp",
+        "moderate": "Trung bình"
+      },
+      "sessions": {
+        "count": "Tìm thấy {{count}} phiên",
+        "empty": "Bệnh nhân này chưa có lịch sử sàng lọc tại tổ chức.",
+        "images": "ảnh",
+        "title": "Các phiên sàng lọc"
+      },
+      "states": {
+        "detailLoadFailed": "Không thể tải chi tiết phiên sàng lọc này.",
+        "selectSession": "Chọn một phiên ở cột bên trái để xem chi tiết."
+      },
+      "status": {
+        "completed": "Hoàn tất",
+        "pending": "Đang chờ",
+        "saved": "Đã lưu"
+      }
+    },
+    "analysisSidebar": {
+      "analysis": {
+        "complete": "Phân tích hoàn tất",
+        "fallbackMessage": "API không khả dụng. Đang hiển thị kết quả mô phỏng.",
+        "idleMessage": "Chưa có dữ liệu phân tích. Hãy bắt đầu xử lý AI để phát hiện bất thường.",
+        "processing": "Đang xử lý dữ liệu võng mạc...",
+        "rerun": "Chạy lại",
+        "startAction": "Bắt đầu chẩn đoán AI"
+      },
+      "findings": {
+        "noneDetected": "Không phát hiện bất thường đáng kể.",
+        "title": "Bất thường được phát hiện"
+      },
+      "footer": {
+        "assistiveNotice": "Kết quả AI chỉ mang tính hỗ trợ. Vui lòng xác minh.",
+        "export": "Xuất",
+        "report": "Báo cáo"
+      },
+      "layers": {
+        "exudates": "Xuất tiết",
+        "hemorrhages": "Xuất huyết",
+        "title": "Lớp chú thích",
+        "vesselSegmentation": "Phân đoạn mạch máu"
+      },
+      "risk": {
+        "referralRecommended": "Khuyến nghị chuyển tuyến",
+        "title": "Điểm rủi ro AURA",
+        "tooltip": "Dựa trên phân tích AI thời gian thực các đặc trưng võng mạc."
+      }
+    },
+    "boxLabelSelector": {
+      "actions": {
+        "deleteBox": "Xóa box"
+      },
+      "confidence": {
+        "label": "Độ tin cậy"
+      },
+      "custom": {
+        "apply": "Áp dụng nhãn",
+        "label": "Nhãn tùy chỉnh",
+        "placeholder": "Nhập tên phát hiện tùy chỉnh..."
+      },
+      "header": {
+        "editAi": "Chỉnh sửa box AI",
+        "manual": "Gán nhãn chú thích"
+      },
+      "search": {
+        "noResults": "Không có bệnh phù hợp",
+        "placeholder": "Tìm bệnh..."
+      },
+      "tabs": {
+        "custom": "Tùy chỉnh",
+        "diseaseList": "Danh sách bệnh"
+      },
+      "urgency": {
+        "caution": "Lưu ý",
+        "critical": "Nguy kịch",
+        "info": "Thông tin",
+        "normal": "Bình thường",
+        "warning": "Cảnh báo"
+      }
+    },
+    "imageGallery": {
+      "actions": {
+        "upload": "Tải lên"
+      },
+      "count": {
+        "one": "{{count}} ảnh",
+        "other": "{{count}} ảnh"
+      },
+      "dropzone": {
+        "hint": "Kéo thả ảnh hoặc bấm để tải lên"
+      }
+    },
+    "imageViewer": {
+      "defaultImageName": "Ảnh đáy mắt",
+      "scaleLabel": "Tỷ lệ: {{value}}x",
+      "scaleMicrometer": "200µm"
+    },
+    "retinalViewer": {
+      "actions": {
+        "close": "Đóng",
+        "delete": "Xóa",
+        "deleteSelectedBox": "Xóa box đã chọn",
+        "draw": "Vẽ",
+        "drawNewBox": "Vẽ box phát hiện mới",
+        "hideBoxes": "Ẩn box",
+        "select": "Chọn",
+        "selectEditBoxes": "Chọn và chỉnh sửa box",
+        "showBoxes": "Hiển thị box",
+        "undo": "Hoàn tác"
+      },
+      "boxCount": {
+        "one": "· {{count}} box",
+        "other": "· {{count}} box"
+      },
+      "heatmap": {
+        "brushSize": "Cỡ",
+        "clear": "Xóa",
+        "dragToolkit": "Kéo bộ công cụ",
+        "editTool": "Công cụ chỉnh sửa",
+        "eraserTool": "Công cụ tẩy",
+        "hide": "Ẩn bản đồ nhiệt",
+        "intensity": "Nhiệt",
+        "intensityHigh": "Cường độ cao (Đỏ)",
+        "intensityLow": "Cường độ thấp (Vàng)",
+        "intensityMedium": "Cường độ trung bình (Cam)",
+        "label": "Bản đồ nhiệt",
+        "opacity": "Độ mờ",
+        "opacityShort": "Mờ",
+        "show": "Hiện bản đồ nhiệt",
+        "threshold": "Ngưỡng",
+        "thresholdShort": "Ngư",
+        "undoLastStroke": "Hoàn tác nét vẽ gần nhất"
+      },
+      "image": {
+        "altHeatmapOverlay": "Lớp phủ bản đồ nhiệt AI",
+        "altRetinalScan": "Ảnh quét võng mạc"
+      },
+      "imageCounter": "Ảnh võng mạc · Ảnh {{current}}/{{total}}",
+      "manualCount": "({{count}} thủ công)",
+      "title": "Trình xem võng mạc"
+    },
+    "toolsSidebar": {
+      "brightnessContrast": "Độ sáng/Tương phản",
+      "comparePrevious": "So sánh lần trước",
+      "keyboardShortcuts": "Phím tắt",
+      "measurement": "Đo lường",
+      "panTool": "Công cụ kéo",
+      "resetView": "Đặt lại góc nhìn",
+      "zoomIn": "Phóng to",
+      "zoomOut": "Thu nhỏ"
     },
     "slotManagement": {
       "actions": {

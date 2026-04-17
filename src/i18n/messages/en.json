@@ -3306,6 +3306,7 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "patients": "Patients",
+      "organisation": "Organisation",
       "historicalData": "Historical Data",
       "calendar": "Calendar",
       "screening": "Screening",
@@ -3320,6 +3321,7 @@
     "common": {
       "cancel": "Cancel",
       "close": "Close",
+      "currencyVnd": "VND",
       "daysOfWeek": {
         "friday": "Friday",
         "monday": "Monday",
@@ -3333,6 +3335,7 @@
         "female": "Female",
         "male": "Male"
       },
+      "fileSizeMb": "{{size}} MB",
       "idLabel": "ID",
       "loading": "Loading...",
       "next": "Next",
@@ -3564,6 +3567,33 @@
         "loadFailed": "Unable to load the live organisation dashboard."
       }
     },
+    "analytics": {
+      "pageName": "Analytics",
+      "header": {
+        "title": "Retinal Image Analytics",
+        "subtitle": "AI-powered retinal screening and anomaly detection"
+      },
+      "eye": {
+        "leftOd": "Left Eye (OS)",
+        "rightOd": "Right Eye (OD)"
+      },
+      "error": {
+        "analysisUnavailable": "AI analysis unavailable. Showing demo results.",
+        "apiKeyMissing": "Demo mode: No API key configured",
+        "imageFetchFallback": "Using demo mode (image fetch failed)",
+        "quotaExceeded": "API quota exceeded. Showing demo results. Please check your Gemini API plan at ai.google.dev"
+      },
+      "fallback": {
+        "hardExudates": {
+          "description": "Lipid residues near the macula.",
+          "name": "Hard Exudates"
+        },
+        "microaneurysms": {
+          "description": "Cluster detected in the superior temporal quadrant.",
+          "name": "Microaneurysms"
+        }
+      }
+    },
     "settings": {
       "actions": {
         "saveChanges": "Save Changes",
@@ -3657,7 +3687,8 @@
         "topUpWallet": "Top up wallet"
       },
       "badges": {
-        "remainingQuota": "{{count}} credits left"
+        "remainingQuota": "{{count}} credits left",
+        "remainingQuotaTitle": "{{count}} credits remaining"
       },
       "header": {
         "subtitle": "Upload high-resolution DICOM or fundus images for diagnostic AI triage. Ensure image clarity before proceeding to the algorithm.",
@@ -3714,6 +3745,17 @@
         "quotaExhausted": "Quota exhausted. Please buy more quota from wallet or top up your balance.",
         "quotaUnitPriceUnavailable": "Quota unit price is unavailable. Please try again later.",
         "walletInsufficient": "Insufficient wallet balance. Please top up your wallet."
+      },
+      "quality": {
+        "acceptable": "Acceptable quality",
+        "blurry": "Image appears blurry.",
+        "croppedEdges": "Image appears cropped.",
+        "notFundus": "Not a clear retinal scan.",
+        "optimal": "Optimal quality",
+        "overexposed": "Image appears overexposed.",
+        "poor": "Poor quality",
+        "tooDark": "Image appears too dark.",
+        "validationServiceError": "Validation service error."
       },
       "upload": {
         "analyzingQuality": "Analyzing image quality...",
@@ -3827,6 +3869,7 @@
         "notFound": "Screening session not found"
       },
       "toast": {
+        "aiNoPredictionData": "AI service returned no prediction data.",
         "analyzeBeforeSave": "Please run AI analysis before saving the record.",
         "analyzeCompleted": "AI analysis completed. You can edit the result before saving.",
         "analyzeFailed": "AI analysis failed. Please verify AI service and try again.",
@@ -3846,6 +3889,26 @@
         "shareNetworkSuccess": "Case shared to Professional Network successfully.",
         "shareSelectAtLeastOne": "Please select at least one item to share.",
         "shareWalkInEmailRequired": "Please enter recipient email for walk-in patient."
+      },
+      "summary": {
+        "high": {
+          "default": "Findings need attention from an ophthalmologist.",
+          "withPrimary": "Findings need attention from an ophthalmologist ({{primaryLabel}})."
+        },
+        "moderate": {
+          "default": "Some findings may need specialist review.",
+          "withPrimary": "Some findings may need specialist review ({{primaryLabel}})."
+        },
+        "low": {
+          "default": "Low-risk findings detected. Routine specialist follow-up is recommended.",
+          "withPrimary": "Low-risk findings detected ({{primaryLabel}}). Routine specialist follow-up is recommended."
+        }
+      },
+      "findings": {
+        "primaryOnly": "Primary Finding: {{primaryFinding}}",
+        "primaryAndRelated": "Primary Finding: {{primaryFinding}}\nRelated Findings: {{relatedFindings}}",
+        "relatedOnly": "Related Findings: {{relatedFindings}}",
+        "manualAnnotations": "Manual Annotations: {{manualNames}}"
       }
     },
     "wallet": {
@@ -3919,6 +3982,300 @@
         "quotaPurchase": "Quota purchase",
         "title": "Wallet Transactions"
       }
+    },
+    "recentPatients": {
+      "actions": {
+        "viewAll": "View all"
+      },
+      "confidenceLabel": "({{confidence}}% confidence)",
+      "status": {
+        "pending": "Pending",
+        "reviewed": "Reviewed"
+      },
+      "title": "Recent Patients"
+    },
+    "patients": {
+      "actions": {
+        "clear": "Clear",
+        "editContact": "Edit Contact",
+        "moreForPatient": "More actions for {{name}}",
+        "retry": "Retry",
+        "screenNow": "Screen Now",
+        "viewHistory": "View History",
+        "walkInPatient": "Walk-in Patient"
+      },
+      "header": {
+        "subtitle": "Manage your organisation's patient records and screenings",
+        "title": "Patients"
+      },
+      "pageName": "Patients",
+      "search": {
+        "placeholder": "Search by name, phone number, or CCCD..."
+      },
+      "states": {
+        "loadFailed": "Unable to load patients",
+        "noMatch": "No patients match your search."
+      },
+      "summary": {
+        "foundPatients": "{{count}} patient{{suffix}} found"
+      },
+      "table": {
+        "action": "Action",
+        "lastScreening": "Last Screening",
+        "patient": "Patient",
+        "risk": "Risk",
+        "type": "Type"
+      },
+      "toast": {
+        "loadFailed": "Unable to load patients."
+      },
+      "types": {
+        "auraPartner": "Aura Partner",
+        "walkIn": "Walk-in"
+      }
+    },
+    "updatePatientModal": {
+      "badges": {
+        "auraAccount": "Aura Account"
+      },
+      "form": {
+        "address": "Address",
+        "addressPlaceholder": "Street, ward, district, city",
+        "bmi": "BMI",
+        "bmiPlaceholder": "e.g. 22.5",
+        "citizenId": "Citizen ID (CCCD)",
+        "citizenIdPlaceholder": "e.g. 001099000000",
+        "dateOfBirth": "Date of Birth",
+        "diseaseHistory": "Disease History",
+        "diseaseHistoryPlaceholder": "e.g. Type-2 Diabetes, Hypertension, Glaucoma...",
+        "fullName": "Full Name *",
+        "gender": "Gender",
+        "genderOther": "Other",
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "e.g. +84 123 456 789"
+      },
+      "header": {
+        "title": "Edit Patient"
+      },
+      "readOnly": {
+        "address": "Address",
+        "age": "Age",
+        "citizenId": "Citizen ID",
+        "dateOfBirth": "Date of Birth",
+        "email": "Email",
+        "fullName": "Full Name",
+        "gender": "Gender",
+        "phone": "Phone"
+      },
+      "sections": {
+        "administrativeInfo": "Administrative Information",
+        "medicalInfo": "Medical Information",
+        "personalInfo": "Personal Information",
+        "personalInfoManagedByAura": "- managed by patient's Aura account"
+      },
+      "toast": {
+        "noChanges": "No changes detected",
+        "patientNotFound": "Patient not found",
+        "updateFailed": "Unable to update patient.",
+        "updateSuccess": "Patient updated successfully."
+      }
+    },
+    "patientHistory": {
+      "actions": {
+        "backToPatients": "Back to patients",
+        "openReviewPage": "Open review page"
+      },
+      "detail": {
+        "createdAt": "Created at",
+        "modelVersion": "Model version",
+        "sessionStatus": "Session status",
+        "subtitle": "Retinal images and saved clinical record for the selected session.",
+        "title": "Session Detail"
+      },
+      "header": {
+        "subtitle": "Review every screening session, retinal images, and saved record for this patient.",
+        "title": "Patient Screening Timeline"
+      },
+      "images": {
+        "alt": {
+          "boxedRetinalImage": "Boxed retinal image",
+          "heatmap": "Heatmap",
+          "heatmapBackground": "Heatmap background",
+          "retinalImage": "Retinal image",
+          "thumbnail": "Session image {{index}}"
+        },
+        "boxed": "Boxed",
+        "empty": "No retinal images were found for this session.",
+        "heatmap": "Heatmap",
+        "imageIndex": "Image {{index}}",
+        "original": "Original image",
+        "selectToPreview": "Select an original image to update Boxed/Heatmap previews.",
+        "title": "Retinal images"
+      },
+      "pageName": "Patient History",
+      "record": {
+        "findingsNote": "Findings / Note",
+        "noFindings": "No findings",
+        "noSummary": "No summary",
+        "notSavedYet": "This session is not saved yet. Open the review page to save the record.",
+        "riskLevel": "Risk level",
+        "savedAt": "Saved at",
+        "summary": "Summary",
+        "title": "Saved record"
+      },
+      "risk": {
+        "high": "High",
+        "low": "Low",
+        "moderate": "Moderate"
+      },
+      "sessions": {
+        "count": "{{count}} sessions found",
+        "empty": "This patient has no organisation screening history yet.",
+        "images": "images",
+        "title": "Screening Sessions"
+      },
+      "states": {
+        "detailLoadFailed": "Unable to load this screening detail.",
+        "selectSession": "Select a session from the left to view details."
+      },
+      "status": {
+        "completed": "Completed",
+        "pending": "Pending",
+        "saved": "Saved"
+      }
+    },
+    "analysisSidebar": {
+      "analysis": {
+        "complete": "Analysis Complete",
+        "fallbackMessage": "API unavailable. Showing simulated results.",
+        "idleMessage": "No active analysis data. Start AI processing to detect anomalies.",
+        "processing": "Processing Retinal Data...",
+        "rerun": "Re-run",
+        "startAction": "Start AI Diagnosis"
+      },
+      "findings": {
+        "noneDetected": "No significant anomalies detected.",
+        "title": "Detected Anomalies"
+      },
+      "footer": {
+        "assistiveNotice": "AI findings are assistive. Please verify.",
+        "export": "Export",
+        "report": "Report"
+      },
+      "layers": {
+        "exudates": "Exudates",
+        "hemorrhages": "Hemorrhages",
+        "title": "Annotation Layers",
+        "vesselSegmentation": "Vessel Segmentation"
+      },
+      "risk": {
+        "referralRecommended": "Referral Recommended",
+        "title": "AURA Risk Score",
+        "tooltip": "Based on real-time AI analysis of retinal features."
+      }
+    },
+    "boxLabelSelector": {
+      "actions": {
+        "deleteBox": "Delete box"
+      },
+      "confidence": {
+        "label": "Confidence"
+      },
+      "custom": {
+        "apply": "Apply Label",
+        "label": "Custom Label",
+        "placeholder": "Enter custom finding name..."
+      },
+      "header": {
+        "editAi": "Edit AI Box",
+        "manual": "Label Annotation"
+      },
+      "search": {
+        "noResults": "No matching diseases",
+        "placeholder": "Search diseases..."
+      },
+      "tabs": {
+        "custom": "Custom",
+        "diseaseList": "Disease List"
+      },
+      "urgency": {
+        "caution": "Caution",
+        "critical": "Critical",
+        "info": "Info",
+        "normal": "Normal",
+        "warning": "Warning"
+      }
+    },
+    "imageGallery": {
+      "actions": {
+        "upload": "Upload"
+      },
+      "count": {
+        "one": "{{count}} Image",
+        "other": "{{count}} Images"
+      },
+      "dropzone": {
+        "hint": "Drop images or click to upload"
+      }
+    },
+    "imageViewer": {
+      "defaultImageName": "Fundus photograph",
+      "scaleLabel": "Scale: {{value}}x",
+      "scaleMicrometer": "200µm"
+    },
+    "retinalViewer": {
+      "actions": {
+        "close": "Close",
+        "delete": "Delete",
+        "deleteSelectedBox": "Delete selected box",
+        "draw": "Draw",
+        "drawNewBox": "Draw new detection box",
+        "hideBoxes": "Hide boxes",
+        "select": "Select",
+        "selectEditBoxes": "Select & edit boxes",
+        "showBoxes": "Show boxes",
+        "undo": "Undo"
+      },
+      "boxCount": {
+        "one": "· {{count}} box",
+        "other": "· {{count}} boxes"
+      },
+      "heatmap": {
+        "brushSize": "Size",
+        "clear": "Clear",
+        "dragToolkit": "Drag toolkit",
+        "editTool": "Edit Tool",
+        "eraserTool": "Eraser Tool",
+        "hide": "Hide heatmap",
+        "intensity": "Heat",
+        "intensityHigh": "High Intensity (Red)",
+        "intensityLow": "Low Intensity (Yellow)",
+        "intensityMedium": "Medium Intensity (Orange)",
+        "label": "Heatmap",
+        "opacity": "Opacity",
+        "opacityShort": "Opa",
+        "show": "Show heatmap",
+        "threshold": "Threshold",
+        "thresholdShort": "Thr",
+        "undoLastStroke": "Undo last stroke"
+      },
+      "image": {
+        "altHeatmapOverlay": "AI heatmap overlay",
+        "altRetinalScan": "Retinal scan"
+      },
+      "imageCounter": "Retinal Scan · Image {{current}}/{{total}}",
+      "manualCount": "({{count}} manual)",
+      "title": "Retinal Viewer"
+    },
+    "toolsSidebar": {
+      "brightnessContrast": "Brightness/Contrast",
+      "comparePrevious": "Compare Previous",
+      "keyboardShortcuts": "Keyboard Shortcuts",
+      "measurement": "Measurement",
+      "panTool": "Pan Tool",
+      "resetView": "Reset View",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out"
     },
     "slotManagement": {
       "actions": {
