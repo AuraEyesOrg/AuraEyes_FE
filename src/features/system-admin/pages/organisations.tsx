@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -33,7 +34,7 @@ import type {
   Organisation as ApiOrganisation,
   OrganisationOnboardingRequestDto,
 } from '../types/system-admin.types';
-import { formatViDate, formatViTimestamp } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { extractApiErrorMessage } from '@/lib/api-error';
 import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
@@ -70,12 +71,34 @@ interface Organisation {
   contactEmail: string;
 }
 
+const formatDate = (
+  value: string | undefined,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleDateString(locale);
+};
+
+const formatDateTime = (
+  value: string | undefined,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleString(locale);
+};
+
 /** Map API response to UI Organisation */
 const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   id: item.id,
   name: item.name,
   type: (item.orgType || 'clinic').toLowerCase(),
-  location: item.address || 'Unknown',
+  location: item.address || '',
   country: '',
   status: item.isActive ? 'active' : 'inactive',
   contractStatus: item.isActive ? 'active' : 'expired',
@@ -93,11 +116,20 @@ const mapToUiOrg = (item: ApiOrganisation): Organisation => ({
   totalScreenings: 0,
   contractStartDate: item.createdAt,
   contractEndDate: '',
-  createdAt: formatViDate(item.createdAt),
+  createdAt: item.createdAt,
   contactEmail: item.contactEmail || '',
 });
 
 export default function OrganisationsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const dateTimeLocale = dateLocale;
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+  const notProvidedLabel = t('SystemAdmin.common.notProvided', 'Not provided');
+  const noNotesLabel = t('SystemAdmin.common.noNotes', 'No notes');
   const navigate = useNavigate();
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [onboardingRequests, setOnboardingRequests] = useState<
@@ -149,7 +181,13 @@ export default function OrganisationsPage() {
       console.error('Failed to load organisations:', error);
       setOrganisations([]);
       setOnboardingError(
-        extractApiErrorMessage(error, 'Failed to load onboarding requests.')
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.organisations.toasts.loadOnboardingError',
+            'Failed to load onboarding requests.'
+          )
+        )
       );
     } finally {
       setLoading(false);
@@ -192,7 +230,13 @@ export default function OrganisationsPage() {
       await loadData();
     } catch (error) {
       setOnboardingError(
-        extractApiErrorMessage(error, 'Failed to approve onboarding request.')
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.organisations.toasts.approveOnboardingError',
+            'Failed to approve onboarding request.'
+          )
+        )
       );
     } finally {
       setApprovingRequestId(null);
@@ -208,40 +252,106 @@ export default function OrganisationsPage() {
       });
 
       if (organisationsForExport.length === 0) {
-        toast.info('No organisations available for export.');
+        toast.info(
+          t(
+            'SystemAdmin.organisations.toasts.exportNoData',
+            'No organisations available for export.'
+          )
+        );
         return;
       }
 
       await downloadXlsxFile(
         organisationsForExport,
         [
-          { header: 'Name', value: (row) => row.name },
-          { header: 'Type', value: (row) => row.orgType ?? '' },
-          { header: 'Address', value: (row) => row.address ?? '' },
-          { header: 'Contact Email', value: (row) => row.contactEmail ?? '' },
           {
-            header: 'License Number',
+            header: t('SystemAdmin.organisations.export.columns.name', 'Name'),
+            value: (row) => row.name,
+          },
+          {
+            header: t('SystemAdmin.organisations.export.columns.type', 'Type'),
+            value: (row) => row.orgType ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.address',
+              'Address'
+            ),
+            value: (row) => row.address ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.contactEmail',
+              'Contact Email'
+            ),
+            value: (row) => row.contactEmail ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.licenseNumber',
+              'License Number'
+            ),
             value: (row) => row.licenseNumber ?? '',
           },
           {
-            header: 'Tax Code',
+            header: t(
+              'SystemAdmin.organisations.export.columns.taxCode',
+              'Tax Code'
+            ),
             value: (row) => row.taxCode ?? '',
           },
-          { header: 'Device Count', value: (row) => row.deviceCount ?? 0 },
-          { header: 'Users Count', value: (row) => row.usersCount ?? 0 },
           {
-            header: 'Status',
-            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+            header: t(
+              'SystemAdmin.organisations.export.columns.deviceCount',
+              'Device Count'
+            ),
+            value: (row) => row.deviceCount ?? 0,
           },
-          { header: 'Created At', value: (row) => row.createdAt },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.usersCount',
+              'Users Count'
+            ),
+            value: (row) => row.usersCount ?? 0,
+          },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.status',
+              'Status'
+            ),
+            value: (row) =>
+              row.isActive
+                ? t('SystemAdmin.organisations.status.active', 'Active')
+                : t('SystemAdmin.organisations.status.inactive', 'Inactive'),
+          },
+          {
+            header: t(
+              'SystemAdmin.organisations.export.columns.createdAt',
+              'Created At'
+            ),
+            value: (row) => row.createdAt,
+          },
         ],
         buildTimestampedFileName('system-admin-organisations', 'xlsx'),
-        'Organisations'
+        t('SystemAdmin.organisations.export.sheetName', 'Organisations')
       );
-      toast.success(`Exported ${organisationsForExport.length} organisations.`);
+      toast.success(
+        t(
+          'SystemAdmin.organisations.toasts.exportSuccess',
+          'Exported {{count}} organisations.',
+          {
+            count: organisationsForExport.length,
+          }
+        )
+      );
     } catch (error) {
       console.error('Failed to export organisations:', error);
-      toast.error('Failed to export organisations. Please try again.');
+      toast.error(
+        t(
+          'SystemAdmin.organisations.toasts.exportError',
+          'Failed to export organisations. Please try again.'
+        )
+      );
     } finally {
       setIsExporting(false);
     }
@@ -266,7 +376,12 @@ export default function OrganisationsPage() {
 
     const parsedQuota = Number.parseInt(monthlyQuotaInput, 10);
     if (!Number.isFinite(parsedQuota) || parsedQuota < 0) {
-      toast.error('Monthly quota must be a non-negative integer.');
+      toast.error(
+        t(
+          'SystemAdmin.organisations.toasts.updateQuotaInvalid',
+          'Monthly quota must be a non-negative integer.'
+        )
+      );
       return;
     }
 
@@ -274,11 +389,22 @@ export default function OrganisationsPage() {
       setIsUpdatingQuota(true);
       await organisationApi.updateMonthlyQuota(editingQuotaOrg.id, parsedQuota);
       await loadData();
-      toast.success('Monthly quota updated successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.organisations.toasts.updateQuotaSuccess',
+          'Monthly quota updated successfully.'
+        )
+      );
       closeMonthlyQuotaEditor();
     } catch (error) {
       toast.error(
-        extractApiErrorMessage(error, 'Failed to update monthly quota.')
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.organisations.toasts.updateQuotaError',
+            'Failed to update monthly quota.'
+          )
+        )
       );
       setIsUpdatingQuota(false);
     }
@@ -292,7 +418,10 @@ export default function OrganisationsPage() {
 
   const organisationColumns: TableColumn<Organisation>[] = [
     {
-      header: 'Organisation',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.organisation',
+        'Organisation'
+      ),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex items-center gap-3">
@@ -304,15 +433,28 @@ export default function OrganisationsPage() {
               {row.name}
             </span>
             <span className="text-xs text-slate-500">
-              {row.type.replace('_', ' ')}
+              {t(
+                `SystemAdmin.organisations.orgType.${row.type}`,
+                row.type.replace('_', ' ')
+              )}
             </span>
           </div>
         </div>
       ),
     },
-    { header: 'Location', accessor: 'location' },
     {
-      header: 'Users',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.location',
+        'Location'
+      ),
+      accessor: 'location',
+      render: (value) => (value as string) || notAvailableLabel,
+    },
+    {
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.users',
+        'Users'
+      ),
       accessor: 'usersCount',
       render: (value) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
@@ -321,31 +463,56 @@ export default function OrganisationsPage() {
       ),
     },
     {
-      header: 'Purchased Quota',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.purchasedQuota',
+        'Purchased Quota'
+      ),
       accessor: 'purchasedAiQuota',
       render: (value) => (
         <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-          {(value as number).toLocaleString()} credits
+          {(value as number).toLocaleString()}{' '}
+          {t(
+            'SystemAdmin.organisations.table.organisations.values.credits',
+            'credits'
+          )}
         </span>
       ),
     },
     {
-      header: 'Monthly Quota',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.monthlyQuota',
+        'Monthly Quota'
+      ),
       accessor: 'monthlyQuotaLimit',
       render: (_, row) => (
         <div className="text-sm text-slate-700 dark:text-slate-300">
           <p className="font-semibold">
-            {row.monthlyQuotaLimit.toLocaleString()} limit
+            {row.monthlyQuotaLimit.toLocaleString()}{' '}
+            {t(
+              'SystemAdmin.organisations.table.organisations.values.limit',
+              'limit'
+            )}
           </p>
           <p className="text-xs text-slate-500">
-            {row.monthlyQuotaUsed.toLocaleString()} used •{' '}
-            {row.monthlyQuotaRemaining.toLocaleString()} remaining
+            {row.monthlyQuotaUsed.toLocaleString()}{' '}
+            {t(
+              'SystemAdmin.organisations.table.organisations.values.used',
+              'used'
+            )}{' '}
+            • {row.monthlyQuotaRemaining.toLocaleString()}{' '}
+            {t(
+              'SystemAdmin.organisations.table.organisations.values.remaining',
+              'remaining'
+            )}
           </p>
         </div>
       ),
     },
     {
-      header: 'AI Screenings',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.aiScreenings',
+        'AI Screenings'
+      ),
       accessor: 'totalScreenings',
       render: (value) => (
         <span className="text-sm font-medium text-slate-900 dark:text-white">
@@ -354,7 +521,10 @@ export default function OrganisationsPage() {
       ),
     },
     {
-      header: 'Contract',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.contract',
+        'Contract'
+      ),
       accessor: 'contractStatus',
       render: (value) => {
         const statusMap: Record<
@@ -366,22 +536,22 @@ export default function OrganisationsPage() {
           expired: 'error',
           suspended: 'error',
         };
-        const labelMap: Record<ContractStatus, string> = {
-          active: 'Active',
-          pending: 'Pending',
-          expired: 'Expired',
-          suspended: 'Suspended',
-        };
         return (
           <StatusBadge
             status={statusMap[value as ContractStatus]}
-            label={labelMap[value as ContractStatus]}
+            label={t(
+              `SystemAdmin.organisations.table.contractStatus.${value as ContractStatus}`,
+              value as string
+            )}
           />
         );
       },
     },
     {
-      header: 'Status',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.status',
+        'Status'
+      ),
       accessor: 'status',
       render: (value) => {
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
@@ -389,40 +559,56 @@ export default function OrganisationsPage() {
           inactive: 'error',
           suspended: 'warning',
         };
+        const rawStatus = value as string;
+        const fallbackLabel =
+          rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+
         return (
           <StatusBadge
-            status={statusMap[value as string] || 'info'}
-            label={
-              (value as string).charAt(0).toUpperCase() +
-              (value as string).slice(1)
-            }
+            status={statusMap[rawStatus] || 'info'}
+            label={t(
+              `SystemAdmin.organisations.status.${rawStatus}`,
+              fallbackLabel
+            )}
           />
         );
       },
     },
     {
-      header: 'Actions',
+      header: t(
+        'SystemAdmin.organisations.table.organisations.columns.actions',
+        'Actions'
+      ),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => focusOrganisationInTab('contracts', row.name)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View contracts"
+            title={t(
+              'SystemAdmin.organisations.actions.viewContracts',
+              'View contracts'
+            )}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => focusOrganisationInTab('billing', row.name)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View billing"
+            title={t(
+              'SystemAdmin.organisations.actions.viewBilling',
+              'View billing'
+            )}
           >
             <CreditCard className="w-4 h-4" />
           </button>
           <button
             onClick={() => openMonthlyQuotaEditor(row)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="Edit monthly quota"
+            title={t(
+              'SystemAdmin.organisations.actions.editMonthlyQuota',
+              'Edit monthly quota'
+            )}
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -433,37 +619,59 @@ export default function OrganisationsPage() {
 
   const billingColumns: TableColumn<Organisation>[] = [
     {
-      header: 'Organisation',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.organisation',
+        'Organisation'
+      ),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-900 dark:text-white">
             {row.name}
           </span>
-          <span className="text-xs text-slate-500">{row.contactEmail}</span>
+          <span className="text-xs text-slate-500">
+            {row.contactEmail || notAvailableLabel}
+          </span>
         </div>
       ),
     },
     {
-      header: 'Monthly AI Usage',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.monthlyAiUsage',
+        'Monthly AI Usage'
+      ),
       accessor: 'monthlyAIUsage',
       render: (value) => (
         <span className="text-sm font-medium text-slate-900 dark:text-white">
-          {value as number} screenings
+          {value as number}{' '}
+          {t(
+            'SystemAdmin.organisations.table.billing.values.screenings',
+            'screenings'
+          )}
         </span>
       ),
     },
     {
-      header: 'Purchased Quota',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.purchasedQuota',
+        'Purchased Quota'
+      ),
       accessor: 'purchasedAiQuota',
       render: (value) => (
         <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-          {(value as number).toLocaleString()} credits
+          {(value as number).toLocaleString()}{' '}
+          {t(
+            'SystemAdmin.organisations.table.billing.values.credits',
+            'credits'
+          )}
         </span>
       ),
     },
     {
-      header: 'Monthly Quota',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.monthlyQuota',
+        'Monthly Quota'
+      ),
       accessor: 'monthlyQuotaLimit',
       render: (_, row) => (
         <span className="text-sm font-medium text-slate-900 dark:text-white">
@@ -473,20 +681,34 @@ export default function OrganisationsPage() {
       ),
     },
     {
-      header: 'Managed Patients',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.managedPatients',
+        'Managed Patients'
+      ),
       accessor: 'managedPatientCount',
       render: (_, row) => (
         <div className="text-sm text-slate-700 dark:text-slate-300">
           <p className="font-semibold">{row.managedPatientCount}</p>
           <p className="text-xs text-slate-500">
-            {row.registeredPatientCount} registered • {row.walkInPatientCount}{' '}
-            walk-in
+            {row.registeredPatientCount}{' '}
+            {t(
+              'SystemAdmin.organisations.table.billing.values.registered',
+              'registered'
+            )}{' '}
+            • {row.walkInPatientCount}{' '}
+            {t(
+              'SystemAdmin.organisations.table.billing.values.walkIn',
+              'walk-in'
+            )}
           </p>
         </div>
       ),
     },
     {
-      header: 'Monthly Billing',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.monthlyBilling',
+        'Monthly Billing'
+      ),
       accessor: 'monthlyBilling',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
@@ -495,7 +717,10 @@ export default function OrganisationsPage() {
       ),
     },
     {
-      header: 'Pending Payment',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.pendingPayment',
+        'Pending Payment'
+      ),
       accessor: 'pendingPayment',
       render: (value) => (
         <span
@@ -506,27 +731,46 @@ export default function OrganisationsPage() {
       ),
     },
     {
-      header: 'Status',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.status',
+        'Status'
+      ),
       accessor: 'pendingPayment',
       render: (value) => {
         const isPaid = (value as number) === 0;
         return (
           <StatusBadge
             status={isPaid ? 'success' : 'warning'}
-            label={isPaid ? 'Paid' : 'Pending'}
+            label={
+              isPaid
+                ? t(
+                    'SystemAdmin.organisations.table.billing.values.paid',
+                    'Paid'
+                  )
+                : t(
+                    'SystemAdmin.organisations.table.billing.values.pending',
+                    'Pending'
+                  )
+            }
           />
         );
       },
     },
     {
-      header: 'Actions',
+      header: t(
+        'SystemAdmin.organisations.table.billing.columns.actions',
+        'Actions'
+      ),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => focusOrganisationInTab('organisations', row.name)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View organisation"
+            title={t(
+              'SystemAdmin.organisations.actions.viewOrganisation',
+              'View organisation'
+            )}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -537,7 +781,10 @@ export default function OrganisationsPage() {
 
   const contractColumns: TableColumn<Organisation>[] = [
     {
-      header: 'Organisation',
+      header: t(
+        'SystemAdmin.organisations.table.contracts.columns.organisation',
+        'Organisation'
+      ),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex flex-col">
@@ -545,31 +792,51 @@ export default function OrganisationsPage() {
             {row.name}
           </span>
           <span className="text-xs text-slate-500">
-            {row.type.replace('_', ' ')}
+            {t(
+              `SystemAdmin.organisations.orgType.${row.type}`,
+              row.type.replace('_', ' ')
+            )}
           </span>
         </div>
       ),
     },
     {
-      header: 'Contract Start',
+      header: t(
+        'SystemAdmin.organisations.table.contracts.columns.contractStart',
+        'Contract Start'
+      ),
       accessor: 'contractStartDate',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {value ? formatViDate(value as string) : 'N/A'}
+          {formatDate(
+            value as string | undefined,
+            dateLocale,
+            notAvailableLabel
+          )}
         </span>
       ),
     },
     {
-      header: 'Contract End',
+      header: t(
+        'SystemAdmin.organisations.table.contracts.columns.contractEnd',
+        'Contract End'
+      ),
       accessor: 'contractEndDate',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {value ? formatViDate(value as string) : 'N/A'}
+          {formatDate(
+            value as string | undefined,
+            dateLocale,
+            notAvailableLabel
+          )}
         </span>
       ),
     },
     {
-      header: 'Contract Status',
+      header: t(
+        'SystemAdmin.organisations.table.contracts.columns.contractStatus',
+        'Contract Status'
+      ),
       accessor: 'contractStatus',
       render: (value) => {
         const statusMap: Record<
@@ -581,35 +848,38 @@ export default function OrganisationsPage() {
           expired: 'error',
           suspended: 'error',
         };
-        const labelMap: Record<ContractStatus, string> = {
-          active: 'Active',
-          pending: 'Pending Signature',
-          expired: 'Expired',
-          suspended: 'Suspended',
-        };
         return (
           <StatusBadge
             status={statusMap[value as ContractStatus]}
-            label={labelMap[value as ContractStatus]}
+            label={t(
+              `SystemAdmin.organisations.table.contractStatus.${value as ContractStatus}`,
+              value as string
+            )}
           />
         );
       },
     },
     {
-      header: 'Actions',
+      header: t(
+        'SystemAdmin.organisations.table.contracts.columns.actions',
+        'Actions'
+      ),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             onClick={openContractsManagement}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Contract"
+            title={t(
+              'SystemAdmin.organisations.actions.viewContract',
+              'View Contract'
+            )}
           >
             <FileText className="w-4 h-4" />
           </button>
           {row.contractStatus === 'expired' && (
             <button className="text-xs px-2 py-1 bg-primary text-slate-900 rounded font-medium hover:opacity-90">
-              Renew
+              {t('SystemAdmin.organisations.actions.renew', 'Renew')}
             </button>
           )}
         </div>
@@ -620,12 +890,26 @@ export default function OrganisationsPage() {
   const tabs = [
     {
       id: 'organisations' as const,
-      label: 'All Organisations',
+      label: t(
+        'SystemAdmin.organisations.tabs.allOrganisations',
+        'All Organisations'
+      ),
       icon: Building2,
       count: organisations.length,
     },
-    { id: 'billing' as const, label: 'Billing & Payments', icon: CreditCard },
-    { id: 'contracts' as const, label: 'Contracts', icon: FileText },
+    {
+      id: 'billing' as const,
+      label: t(
+        'SystemAdmin.organisations.tabs.billingPayments',
+        'Billing & Payments'
+      ),
+      icon: CreditCard,
+    },
+    {
+      id: 'contracts' as const,
+      label: t('SystemAdmin.organisations.tabs.contracts', 'Contracts'),
+      icon: FileText,
+    },
   ];
 
   const getActiveColumns = () => {
@@ -645,8 +929,14 @@ export default function OrganisationsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Organisation Management"
-          description="Manage organizations, contracts, billing, and AI usage reports"
+          title={t(
+            'SystemAdmin.organisations.page.title',
+            'Organisation Management'
+          )}
+          description={t(
+            'SystemAdmin.organisations.page.description',
+            'Manage organizations, contracts, billing, and AI usage reports'
+          )}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -655,7 +945,15 @@ export default function OrganisationsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export Report'}
+                {isExporting
+                  ? t(
+                      'SystemAdmin.organisations.actions.exporting',
+                      'Exporting...'
+                    )
+                  : t(
+                      'SystemAdmin.organisations.actions.exportReport',
+                      'Export Report'
+                    )}
               </button>
               <button
                 onClick={() => {
@@ -666,7 +964,10 @@ export default function OrganisationsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
               >
                 <Plus className="w-4 h-4" />
-                Review Onboarding
+                {t(
+                  'SystemAdmin.organisations.actions.reviewOnboarding',
+                  'Review Onboarding'
+                )}
               </button>
             </div>
           }
@@ -677,33 +978,60 @@ export default function OrganisationsPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatsCard
-                title="Total Organisations"
+                title={t(
+                  'SystemAdmin.organisations.stats.totalOrganisations',
+                  'Total Organisations'
+                )}
                 value={totalCount}
                 icon={Building2}
-                description="Current page is server-paginated"
+                description={t(
+                  'SystemAdmin.organisations.stats.totalOrganisationsDescription',
+                  'Current page is server-paginated'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Active Organisations"
+                title={t(
+                  'SystemAdmin.organisations.stats.activeOrganisations',
+                  'Active Organisations'
+                )}
                 value={activeOrgs}
                 icon={CheckCircle2}
                 change={2}
                 trend="up"
-                description={`${organisations.length} total`}
+                description={t(
+                  'SystemAdmin.organisations.stats.activeOrganisationsDescription',
+                  {
+                    defaultValue: '{{count}} total',
+                    count: organisations.length,
+                  }
+                )}
                 variant="success"
               />
               <StatsCard
-                title="Purchased Quota"
+                title={t(
+                  'SystemAdmin.organisations.stats.purchasedQuota',
+                  'Purchased Quota'
+                )}
                 value={totalPurchasedQuota.toLocaleString()}
                 icon={CreditCard}
-                description="Credits purchased by organisations"
+                description={t(
+                  'SystemAdmin.organisations.stats.purchasedQuotaDescription',
+                  'Credits purchased by organisations'
+                )}
                 variant="warning"
               />
               <StatsCard
-                title="Inactive Organisations"
+                title={t(
+                  'SystemAdmin.organisations.stats.inactiveOrganisations',
+                  'Inactive Organisations'
+                )}
                 value={inactiveOrgs}
                 icon={Users}
-                description="Need admin review"
+                description={t(
+                  'SystemAdmin.organisations.stats.inactiveOrganisationsDescription',
+                  'Need admin review'
+                )}
                 variant="warning"
               />
             </div>
@@ -715,16 +1043,24 @@ export default function OrganisationsPage() {
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Organisation Onboarding Requests
+                    {t(
+                      'SystemAdmin.organisations.onboarding.title',
+                      'Organisation Onboarding Requests'
+                    )}
                   </h2>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Duyệt hồ sơ gửi từ form public và cấp tài khoản quản trị tổ
-                    chức.
+                    {t(
+                      'SystemAdmin.organisations.onboarding.description',
+                      'Review submissions from the public form and provision organisation admin accounts.'
+                    )}
                   </p>
                 </div>
                 <div className="rounded-xl bg-cyan-50 px-4 py-3 text-right dark:bg-cyan-500/10">
                   <p className="text-xs uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">
-                    Pending
+                    {t(
+                      'SystemAdmin.organisations.onboarding.pendingLabel',
+                      'Pending'
+                    )}
                   </p>
                   <p className="text-2xl font-bold text-cyan-900 dark:text-cyan-100">
                     {pendingOnboardingRequests.length}
@@ -738,7 +1074,10 @@ export default function OrganisationsPage() {
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                     <div>
                       <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                        Đã cấp tài khoản thành công
+                        {t(
+                          'SystemAdmin.organisations.onboarding.approvalSuccess',
+                          'Organisation account provisioned successfully'
+                        )}
                       </p>
                     </div>
                   </div>
@@ -754,7 +1093,10 @@ export default function OrganisationsPage() {
               <div className="mt-5 grid gap-4">
                 {pendingOnboardingRequests.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                    Không có yêu cầu onboarding nào đang chờ duyệt.
+                    {t(
+                      'SystemAdmin.organisations.onboarding.empty',
+                      'No onboarding requests are pending review.'
+                    )}
                   </div>
                 ) : (
                   pendingOnboardingRequests.map((request) => (
@@ -768,11 +1110,29 @@ export default function OrganisationsPage() {
                             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                               {request.organisationName}
                             </h3>
-                            <StatusBadge status="warning" label="Pending" />
+                            <StatusBadge
+                              status="warning"
+                              label={t(
+                                'SystemAdmin.organisations.onboarding.pendingLabel',
+                                'Pending'
+                              )}
+                            />
                           </div>
                           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {request.orgType} • Gửi lúc{' '}
-                            {formatViTimestamp(request.createdAt)}
+                            {t(
+                              `SystemAdmin.organisations.orgType.${request.orgType}`,
+                              request.orgType
+                            )}{' '}
+                            •{' '}
+                            {t(
+                              'SystemAdmin.organisations.onboarding.submittedAt',
+                              'Submitted at'
+                            )}{' '}
+                            {formatDateTime(
+                              request.createdAt,
+                              dateTimeLocale,
+                              notAvailableLabel
+                            )}
                           </p>
                         </div>
                         <button
@@ -782,33 +1142,54 @@ export default function OrganisationsPage() {
                         >
                           <ShieldCheck className="h-4 w-4" />
                           {approvingRequestId === request.id
-                            ? 'Đang cấp tài khoản...'
-                            : 'Xác nhận & cấp tài khoản'}
+                            ? t(
+                                'SystemAdmin.organisations.onboarding.approving',
+                                'Provisioning account...'
+                              )
+                            : t(
+                                'SystemAdmin.organisations.onboarding.approveAction',
+                                'Approve & provision account'
+                              )}
                         </button>
                       </div>
 
                       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                         <InfoTile
                           icon={Mail}
-                          label="Email"
+                          label={t(
+                            'SystemAdmin.organisations.onboarding.fields.email',
+                            'Email'
+                          )}
                           value={request.contactEmail}
                         />
                         <InfoTile
                           icon={Phone}
-                          label="Số điện thoại"
-                          value={request.contactPhone || 'Chưa cung cấp'}
+                          label={t(
+                            'SystemAdmin.organisations.onboarding.fields.phone',
+                            'Phone'
+                          )}
+                          value={request.contactPhone || notProvidedLabel}
                         />
                         <InfoTile
-                          label="Người liên hệ"
+                          label={t(
+                            'SystemAdmin.organisations.onboarding.fields.contactPerson',
+                            'Contact person'
+                          )}
                           value={request.contactFullName}
                         />
                         <InfoTile
-                          label="Giấy phép"
-                          value={request.licenseNumber || 'Chưa cung cấp'}
+                          label={t(
+                            'SystemAdmin.organisations.onboarding.fields.license',
+                            'License'
+                          )}
+                          value={request.licenseNumber || notProvidedLabel}
                         />
                         <InfoTile
-                          label="Mã số thuế"
-                          value={request.taxCode || 'Chưa cung cấp'}
+                          label={t(
+                            'SystemAdmin.organisations.onboarding.fields.taxCode',
+                            'Tax code'
+                          )}
+                          value={request.taxCode || notProvidedLabel}
                         />
                       </div>
 
@@ -816,18 +1197,24 @@ export default function OrganisationsPage() {
                         <div className="mt-4 grid gap-3 md:grid-cols-2">
                           <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                              Địa chỉ
+                              {t(
+                                'SystemAdmin.organisations.onboarding.fields.address',
+                                'Address'
+                              )}
                             </p>
                             <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">
-                              {request.address || 'Chưa cung cấp'}
+                              {request.address || notProvidedLabel}
                             </p>
                           </div>
                           <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                              Ghi chú
+                              {t(
+                                'SystemAdmin.organisations.onboarding.fields.notes',
+                                'Notes'
+                              )}
                             </p>
                             <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">
-                              {request.notes || 'Không có ghi chú'}
+                              {request.notes || noNotesLabel}
                             </p>
                           </div>
                         </div>
@@ -869,7 +1256,10 @@ export default function OrganisationsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search organisations..."
+                  placeholder={t(
+                    'SystemAdmin.organisations.filters.searchPlaceholder',
+                    'Search organisations...'
+                  )}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
@@ -881,10 +1271,27 @@ export default function OrganisationsPage() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="all">
+                      {t(
+                        'SystemAdmin.organisations.filters.status.all',
+                        'All Status'
+                      )}
+                    </option>
+                    <option value="active">
+                      {t('SystemAdmin.organisations.status.active', 'Active')}
+                    </option>
+                    <option value="inactive">
+                      {t(
+                        'SystemAdmin.organisations.status.inactive',
+                        'Inactive'
+                      )}
+                    </option>
+                    <option value="suspended">
+                      {t(
+                        'SystemAdmin.organisations.status.suspended',
+                        'Suspended'
+                      )}
+                    </option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -912,15 +1319,21 @@ export default function OrganisationsPage() {
                 data={filteredOrganisations}
                 keyExtractor={(row) => row.id}
                 isLoading={loading}
-                emptyMessage="No organisations found"
+                emptyMessage={t(
+                  'SystemAdmin.organisations.table.empty',
+                  'No organisations found'
+                )}
               />
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredOrganisations.length} of {totalCount}{' '}
-                organisations
+                {t('SystemAdmin.organisations.pagination.showingSummary', {
+                  defaultValue: 'Showing {{shown}} of {{total}} organisations',
+                  shown: filteredOrganisations.length,
+                  total: totalCount,
+                })}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -928,15 +1341,23 @@ export default function OrganisationsPage() {
                   onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t(
+                    'SystemAdmin.organisations.pagination.previous',
+                    'Previous'
+                  )}
                 </button>
-                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <span className="px-2 font-medium">
+                  {t('SystemAdmin.organisations.pagination.page', {
+                    defaultValue: 'Page {{page}}',
+                    page: pageNumber,
+                  })}
+                </span>
                 <button
                   disabled={!hasNext}
                   onClick={() => setPageNumber((p) => p + 1)}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t('SystemAdmin.organisations.pagination.next', 'Next')}
                 </button>
               </div>
             </div>
@@ -948,7 +1369,10 @@ export default function OrganisationsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Update Monthly Quota
+              {t(
+                'SystemAdmin.organisations.quotaModal.title',
+                'Update Monthly Quota'
+              )}
             </h3>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               {editingQuotaOrg.name}
@@ -959,7 +1383,10 @@ export default function OrganisationsPage() {
                 htmlFor="monthlyQuota"
                 className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                Monthly quota limit
+                {t(
+                  'SystemAdmin.organisations.quotaModal.monthlyQuotaLimitLabel',
+                  'Monthly quota limit'
+                )}
               </label>
               <input
                 id="monthlyQuota"
@@ -970,8 +1397,10 @@ export default function OrganisationsPage() {
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/40 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Current usage:{' '}
-                {editingQuotaOrg.monthlyQuotaUsed.toLocaleString()} credits
+                {t('SystemAdmin.organisations.quotaModal.currentUsage', {
+                  defaultValue: 'Current usage: {{used}} credits',
+                  used: editingQuotaOrg.monthlyQuotaUsed.toLocaleString(),
+                })}
               </p>
             </div>
 
@@ -981,14 +1410,19 @@ export default function OrganisationsPage() {
                 disabled={isUpdatingQuota}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                Cancel
+                {t('SystemAdmin.organisations.actions.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleSaveMonthlyQuota}
                 disabled={isUpdatingQuota}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-900 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isUpdatingQuota ? 'Saving...' : 'Save quota'}
+                {isUpdatingQuota
+                  ? t('SystemAdmin.organisations.actions.saving', 'Saving...')
+                  : t(
+                      'SystemAdmin.organisations.actions.saveQuota',
+                      'Save quota'
+                    )}
               </button>
             </div>
           </div>
