@@ -27,6 +27,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
+  const systemAdminLabel = t('SystemAdmin.common.systemAdmin', 'System Admin');
 
   const activePath = stripLocaleFromPathname(location.pathname);
   const activeGroupIds = useMemo(
@@ -64,7 +65,7 @@ export default function Sidebar() {
     });
   }, [activeGroupIds]);
 
-  const avatarMeta = getUserAvatarMeta(user?.fullName, 'System Admin');
+  const avatarMeta = getUserAvatarMeta(user?.fullName, systemAdminLabel);
   const displayName = avatarMeta.displayName;
   const displayEmail = user?.email ?? '';
 
@@ -92,13 +93,13 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-[280px] bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
+    <aside className="w-70 bg-(--bg-secondary) flex flex-col justify-between shrink-0 transition-colors duration-300 z-20 h-screen">
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
         <div className="mb-8 px-2">
           <AuraLogo
             size="md"
-            subtitle="System Admin"
+            subtitle={systemAdminLabel}
             to="/system-admin/dashboard"
           />
         </div>
@@ -168,7 +169,7 @@ export default function Sidebar() {
                           group.label
                         )}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-45">
                         {t(
                           `SystemAdmin.sidebar.groups.${group.id}.description`,
                           group.description
@@ -242,7 +243,7 @@ export default function Sidebar() {
               <UserAvatar
                 fullName={user?.fullName}
                 avatarUrl={user?.avatarUrl}
-                fallbackName="System Admin"
+                fallbackName={systemAdminLabel}
                 size="md"
                 className="shrink-0 border-2 border-brand/30 shadow-sm"
                 fallbackClassName="bg-brand text-white"
@@ -266,7 +267,7 @@ export default function Sidebar() {
             <button
               onClick={handleLogout}
               className="text-slate-500 hover:text-rose-400 transition-colors p-2 rounded-lg hover:bg-rose-500/10"
-              title="Logout"
+              title={t('Common.logout', 'Logout')}
             >
               <LogOut className="w-5 h-5" />
             </button>

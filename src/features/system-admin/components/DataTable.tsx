@@ -5,6 +5,7 @@
 
 import { ReactNode } from 'react';
 import Spinner from '@/components/ui/spinner';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 export interface TableColumn<T> {
   header: string;
@@ -31,17 +32,22 @@ export const DataTable = <T,>({
   keyExtractor,
   isLoading = false,
   isEmpty = data.length === 0,
-  emptyMessage = 'No data available',
+  emptyMessage,
   onRowClick,
   className = '',
 }: DataTableProps<T>) => {
+  const { t } = useSafeTranslation();
+  const resolvedEmptyMessage =
+    emptyMessage ??
+    t('SystemAdmin.common.noDataAvailable', 'No data available');
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Spinner size={32} />
           <p className="mt-3 text-slate-600 dark:text-slate-400">
-            Loading data...
+            {t('SystemAdmin.common.loadingData', 'Loading data...')}
           </p>
         </div>
       </div>
@@ -51,7 +57,9 @@ export const DataTable = <T,>({
   if (isEmpty) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-slate-600 dark:text-slate-400">{emptyMessage}</p>
+        <p className="text-slate-600 dark:text-slate-400">
+          {resolvedEmptyMessage}
+        </p>
       </div>
     );
   }
