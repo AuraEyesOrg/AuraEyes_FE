@@ -6217,6 +6217,429 @@ declare module 'i18next' {
         };
       };
     };
+    ProfessionalNetwork: {
+      common: {
+        network: string;
+        user: string;
+        member: string;
+        unknownAuthor: string;
+        showMore: string;
+        tryAgain: string;
+        actions: {
+          cancel: string;
+          follow: string;
+        };
+        roles: {
+          ophthalmologist: string;
+          orgAdmin: string;
+          systemAdmin: string;
+          patient: string;
+        };
+        gender: {
+          male: string;
+          female: string;
+          other: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          pageOf: string;
+        };
+      };
+      navigation: {
+        feed: string;
+        discover: string;
+        saved: string;
+        managePosts: string;
+        profile: string;
+      };
+      sidebar: {
+        backToOrganisationDashboard: string;
+        backToDashboard: string;
+        logout: string;
+        theme: {
+          lightMode: string;
+          darkMode: string;
+        };
+      };
+      rightPanel: {
+        searchPlaceholder: string;
+        sections: {
+          trendingTopics: string;
+          whoToFollow: string;
+          yourGroups: string;
+        };
+        trending: {
+          rankLabel: string;
+          postsCount: string;
+          tags: {
+            aiScreening: string;
+            diabeticRetinopathy: string;
+            glaucomaGuidelines2026: string;
+            smileSurgery: string;
+            pediatricVision: string;
+          };
+        };
+        groups: {
+          membersCount: string;
+        };
+      };
+      footer: {
+        terms: string;
+        privacy: string;
+        help: string;
+        copyright: string;
+      };
+      postTypes: {
+        casePresentation: string;
+        peerDiscussion: string;
+        knowledgeShare: string;
+        announcement: string;
+      };
+      specialties: {
+        aiScreening: string;
+        communityOphthalmology: string;
+        deepLearning: string;
+        diabeticRetinopathy: string;
+        drScreening: string;
+        retinalDiseases: string;
+        glaucoma: string;
+        retinopathyOfPrematurity: string;
+        aiMedicalImaging: string;
+        primaryEyeCare: string;
+        octAnalysis: string;
+        opticNerveImaging: string;
+        pediatricRetina: string;
+        retinalAnalysis: string;
+        telemedicine: string;
+      };
+      reactions: {
+        insightful: string;
+        agree: string;
+        helpful: string;
+        question: string;
+        celebrate: string;
+      };
+      discover: {
+        title: string;
+        description: string;
+        searchPlaceholder: string;
+        tabs: {
+          professionals: string;
+          organisations: string;
+        };
+        categories: {
+          all: string;
+        };
+        results: {
+          oneFound: string;
+          manyFound: string;
+        };
+        empty: {
+          title: string;
+          description: string;
+        };
+      };
+      feed: {
+        title: string;
+        description: {
+          manageMode: string;
+          default: string;
+        };
+        tabs: {
+          feed: string;
+          managePosts: string;
+        };
+        states: {
+          loadError: string;
+          empty: string;
+        };
+        manage: {
+          reportedPostsHeading: string;
+          hiddenPostsHeading: string;
+          noReportedPosts: string;
+          noHiddenPosts: string;
+        };
+        trending: {
+          title: string;
+          rankLabel: string;
+          postsCount: string;
+          empty: string;
+        };
+      };
+      postDetail: {
+        title: string;
+        inputs: {
+          addCommentPlaceholder: string;
+          replyTo: string;
+        };
+        comments: {
+          title: string;
+        };
+        actions: {
+          reply: string;
+          hide: string;
+          view: string;
+        };
+        replies: {
+          one: string;
+          many: string;
+        };
+        states: {
+          loadingReplies: string;
+          notFound: string;
+          noComments: string;
+        };
+      };
+      postComposer: {
+        placeholder: string;
+        typeLabel: string;
+        doctorNotesHeading: string;
+        caseSource: {
+          title: string;
+          externalCase: string;
+          internalCase: string;
+        };
+        internal: {
+          selectConsultationCase: string;
+          loadingInternalCases: string;
+          chooseInternalCase: string;
+          caseOptionLabel: string;
+          anonymousPatient: string;
+          previewTitle: string;
+          retinalCasePreviewAlt: string;
+          noImagePreview: string;
+          medicalDiagnosis: string;
+          noFinalDiagnosis: string;
+          patientIdentityHidden: string;
+          addDoctorNotes: string;
+        };
+        external: {
+          allowedInfoOptional: string;
+          patientAge: string;
+          patientGender: string;
+          allowedDataHint: string;
+        };
+        caseDisclosureConsent: string;
+        fileAnonymizationConsent: string;
+        actions: {
+          addImage: string;
+          attachDocument: string;
+          addLink: string;
+          shareInternalCase: string;
+          post: string;
+        };
+      };
+      postCard: {
+        states: {
+          hiddenByModeration: string;
+          originalPostHidden: string;
+        };
+        repost: {
+          shared: string;
+        };
+        menu: {
+          copyLink: string;
+          saved: string;
+          savePost: string;
+          hidePost: string;
+          reportPost: string;
+        };
+        actions: {
+          sharePost: string;
+        };
+        internalCase: {
+          caseResultAndDiagnosis: string;
+          noAiSummary: string;
+          doctorNote: string;
+          noDoctorNote: string;
+        };
+        hideDialog: {
+          title: string;
+          description: string;
+          reasonPlaceholder: string;
+        };
+        shareDialog: {
+          title: string;
+          commentPlaceholder: string;
+          previewAlt: string;
+          share: string;
+        };
+      };
+      shareClinicCaseModal: {
+        title: string;
+        caseInformation: {
+          title: string;
+        };
+        fields: {
+          patient: string;
+          riskLevel: string;
+          confidence: string;
+        };
+        retinalImages: {
+          title: string;
+          alt: string;
+        };
+        findings: {
+          label: string;
+        };
+        symptoms: {
+          label: string;
+        };
+        summary: {
+          label: string;
+        };
+        doctorNotes: {
+          label: string;
+          placeholder: string;
+        };
+        preview: {
+          title: string;
+          empty: string;
+        };
+        actions: {
+          posting: string;
+          postCase: string;
+        };
+      };
+      commentCard: {
+        actions: {
+          reacted: string;
+          react: string;
+          reply: string;
+          hide: string;
+          view: string;
+        };
+        time: {
+          recentFallback: string;
+        };
+        replies: {
+          one: string;
+          many: string;
+        };
+      };
+      saved: {
+        title: string;
+        sections: {
+          allSaved: string;
+          allSavedPosts: string;
+        };
+        count: {
+          posts: string;
+        };
+        states: {
+          loadError: string;
+          empty: string;
+        };
+      };
+      organisation: {
+        title: string;
+        types: {
+          hospital: string;
+          clinic: string;
+          researchCenter: string;
+        };
+        actions: {
+          follow: string;
+          following: string;
+        };
+        stats: {
+          followers: string;
+          members: string;
+          membersLabel: string;
+          postsLabel: string;
+        };
+        tabs: {
+          posts: string;
+          members: string;
+          about: string;
+        };
+        states: {
+          notFound: string;
+          noPosts: string;
+          noPublicMembers: string;
+        };
+        accreditations: {
+          jciAccredited: string;
+          iso9001: string;
+          nationalRetinalScreeningCenter: string;
+          auraAiCertifiedPartner: string;
+          fda510kCleared: string;
+          ceMarkClassIIa: string;
+          mohVnApproved: string;
+          auraAiScreeningSite: string;
+        };
+        about: {
+          title: string;
+          location: string;
+          accreditations: string;
+        };
+      };
+      profile: {
+        title: string;
+        verified: string;
+        preview: {
+          banner: string;
+          exit: string;
+          label: string;
+        };
+        stats: {
+          postsCount: string;
+          yearsExperience: string;
+        };
+        states: {
+          notFound: string;
+          noPosts: string;
+        };
+        actions: {
+          shareProfile: string;
+          report: string;
+        };
+        systemAdmin: {
+          title: string;
+          description: string;
+          items: {
+            moderatePosts: string;
+            reviewReports: string;
+            maintainStandards: string;
+          };
+        };
+        organisation: {
+          introductionTitle: string;
+          defaultBio: string;
+          featuredServicesTitle: string;
+          featuredServices: {
+            items: {
+              aiScreening: string;
+              consultationAndReferral: string;
+              recordsAndFollowUp: string;
+            };
+          };
+          qualityCommitmentTitle: string;
+          qualityCommitment: {
+            items: {
+              dataPrivacy: string;
+              aiAndClinical: string;
+              fastAccurateCare: string;
+            };
+          };
+        };
+        about: {
+          bioTitle: string;
+          noBio: string;
+          experienceTitle: string;
+          experienceValue: string;
+          degreesTitle: string;
+          noDegreeRecords: string;
+          licensesTitle: string;
+          noLicenseRecords: string;
+          unknownAuthority: string;
+          issued: string;
+          expires: string;
+          viewFile: string;
+        };
+      };
+    };
   }
 
   interface CustomTypeOptions {

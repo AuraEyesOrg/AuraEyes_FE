@@ -6213,5 +6213,428 @@
         "rejectError": "Từ chối hồ sơ thất bại. Vui lòng thử lại."
       }
     }
+  },
+  "ProfessionalNetwork": {
+    "common": {
+      "network": "Mạng lưới",
+      "user": "Người dùng",
+      "member": "Thành viên",
+      "unknownAuthor": "Không xác định",
+      "showMore": "Xem thêm",
+      "tryAgain": "Thử lại",
+      "actions": {
+        "cancel": "Hủy",
+        "follow": "Theo dõi"
+      },
+      "roles": {
+        "ophthalmologist": "Bác sĩ nhãn khoa",
+        "orgAdmin": "Quản trị tổ chức",
+        "systemAdmin": "Quản trị hệ thống",
+        "patient": "Bệnh nhân"
+      },
+      "gender": {
+        "male": "Nam",
+        "female": "Nữ",
+        "other": "Khác"
+      },
+      "pagination": {
+        "previous": "Trước",
+        "next": "Tiếp",
+        "pageOf": "Trang {{page}} / {{total}}"
+      }
+    },
+    "navigation": {
+      "feed": "Bảng tin",
+      "discover": "Khám phá",
+      "saved": "Đã lưu",
+      "managePosts": "Quản lý bài viết",
+      "profile": "Hồ sơ"
+    },
+    "sidebar": {
+      "backToOrganisationDashboard": "Quay lại bảng điều khiển tổ chức",
+      "backToDashboard": "Quay lại bảng điều khiển",
+      "logout": "Đăng xuất",
+      "theme": {
+        "lightMode": "Chế độ sáng",
+        "darkMode": "Chế độ tối"
+      }
+    },
+    "rightPanel": {
+      "searchPlaceholder": "Tìm kiếm chuyên gia, bài viết...",
+      "sections": {
+        "trendingTopics": "Chủ đề thịnh hành",
+        "whoToFollow": "Gợi ý kết nối",
+        "yourGroups": "Nhóm của bạn"
+      },
+      "trending": {
+        "rankLabel": "#{{rank}} - Thịnh hành",
+        "postsCount": "{{count}} bài viết",
+        "tags": {
+          "aiScreening": "Sàng lọc AI",
+          "diabeticRetinopathy": "Bệnh võng mạc đái tháo đường",
+          "glaucomaGuidelines2026": "Hướng dẫn Glaucoma 2026",
+          "smileSurgery": "Phẫu thuật SMILE",
+          "pediatricVision": "Thị lực nhi khoa"
+        }
+      },
+      "groups": {
+        "membersCount": "{{count}} thành viên"
+      }
+    },
+    "footer": {
+      "terms": "Điều khoản",
+      "privacy": "Quyền riêng tư",
+      "help": "Trợ giúp",
+      "copyright": "© {{year}} Aura"
+    },
+    "postTypes": {
+      "casePresentation": "Ca lâm sàng",
+      "peerDiscussion": "Thảo luận chuyên môn",
+      "knowledgeShare": "Chia sẻ kiến thức",
+      "announcement": "Thông báo"
+    },
+    "specialties": {
+      "aiScreening": "Sàng lọc AI",
+      "communityOphthalmology": "Nhãn khoa cộng đồng",
+      "deepLearning": "Học sâu",
+      "diabeticRetinopathy": "Bệnh võng mạc đái tháo đường",
+      "drScreening": "Sàng lọc bệnh võng mạc đái tháo đường",
+      "retinalDiseases": "Bệnh lý võng mạc",
+      "glaucoma": "Glaucoma",
+      "retinopathyOfPrematurity": "Bệnh võng mạc trẻ sinh non",
+      "aiMedicalImaging": "Hình ảnh y khoa AI",
+      "primaryEyeCare": "Chăm sóc mắt ban đầu",
+      "octAnalysis": "Phân tích OCT",
+      "opticNerveImaging": "Chẩn đoán hình ảnh thần kinh thị giác",
+      "pediatricRetina": "Võng mạc nhi khoa",
+      "retinalAnalysis": "Phân tích võng mạc",
+      "telemedicine": "Y tế từ xa"
+    },
+    "reactions": {
+      "insightful": "Sâu sắc",
+      "agree": "Đồng ý",
+      "helpful": "Hữu ích",
+      "question": "Đặt câu hỏi",
+      "celebrate": "Chúc mừng"
+    },
+    "discover": {
+      "title": "Khám phá",
+      "description": "Khám phá bài viết từ chuyên gia và tổ chức",
+      "searchPlaceholder": "Tìm kiếm bài viết...",
+      "tabs": {
+        "professionals": "Chuyên gia",
+        "organisations": "Tổ chức"
+      },
+      "categories": {
+        "all": "Tất cả"
+      },
+      "results": {
+        "oneFound": "Tìm thấy 1 bài viết",
+        "manyFound": "Tìm thấy {{count}} bài viết"
+      },
+      "empty": {
+        "title": "Không tìm thấy bài viết",
+        "description": "Hãy thử danh mục hoặc từ khóa khác"
+      }
+    },
+    "feed": {
+      "title": "Bảng tin",
+      "description": {
+        "manageMode": "Chế độ kiểm duyệt cho nội dung bị ẩn hoặc bị gắn cờ",
+        "default": "Các bài viết mới nhất từ mạng lưới chuyên môn"
+      },
+      "tabs": {
+        "feed": "Bảng tin",
+        "managePosts": "Quản lý bài viết"
+      },
+      "states": {
+        "loadError": "Không thể tải bài viết",
+        "empty": "Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!"
+      },
+      "manage": {
+        "reportedPostsHeading": "Bài viết bị báo cáo ({{count}})",
+        "hiddenPostsHeading": "Bài viết đã ẩn ({{count}})",
+        "noReportedPosts": "Hiện chưa có bài viết bị báo cáo.",
+        "noHiddenPosts": "Chưa có bài viết nào bị ẩn."
+      },
+      "trending": {
+        "title": "Chủ đề thịnh hành",
+        "rankLabel": "#{{rank}} - Thịnh hành",
+        "postsCount": "{{count}} bài viết",
+        "empty": "Chưa có chủ đề thịnh hành"
+      }
+    },
+    "postDetail": {
+      "title": "Bài viết",
+      "inputs": {
+        "addCommentPlaceholder": "Thêm bình luận...",
+        "replyTo": "Trả lời {{name}}..."
+      },
+      "comments": {
+        "title": "Bình luận ({{count}})"
+      },
+      "actions": {
+        "reply": "Trả lời",
+        "hide": "Ẩn",
+        "view": "Xem"
+      },
+      "replies": {
+        "one": "1 phản hồi",
+        "many": "{{count}} phản hồi"
+      },
+      "states": {
+        "loadingReplies": "Đang tải phản hồi...",
+        "notFound": "Không tìm thấy bài viết",
+        "noComments": "Chưa có bình luận nào. Hãy là người đầu tiên bình luận!"
+      }
+    },
+    "postComposer": {
+      "placeholder": "Chia sẻ góc nhìn chuyên môn của bạn...",
+      "typeLabel": "Loại:",
+      "doctorNotesHeading": "Ghi chú bác sĩ",
+      "caseSource": {
+        "title": "Nguồn ca",
+        "externalCase": "Ca bên ngoài",
+        "internalCase": "Ca nội bộ"
+      },
+      "internal": {
+        "selectConsultationCase": "Chọn ca tư vấn",
+        "loadingInternalCases": "Đang tải ca nội bộ...",
+        "chooseInternalCase": "Chọn một ca nội bộ",
+        "caseOptionLabel": "{{patient}} - {{type}} - {{status}} - #{{id}}",
+        "anonymousPatient": "Bệnh nhân ẩn danh",
+        "previewTitle": "Xem trước ca nội bộ (đã ẩn danh)",
+        "retinalCasePreviewAlt": "Xem trước ảnh ca võng mạc",
+        "noImagePreview": "Không có ảnh xem trước",
+        "medicalDiagnosis": "Chẩn đoán y khoa",
+        "noFinalDiagnosis": "Chưa có chẩn đoán cuối cùng của bác sĩ cho ca này.",
+        "patientIdentityHidden": "Thông tin định danh bệnh nhân đã được ẩn. Chỉ chia sẻ dữ liệu y khoa.",
+        "addDoctorNotes": "Thêm ghi chú bác sĩ"
+      },
+      "external": {
+        "allowedInfoOptional": "Thông tin bệnh nhân đã ẩn danh được phép chia sẻ (tùy chọn)",
+        "patientAge": "Tuổi bệnh nhân",
+        "patientGender": "Giới tính bệnh nhân",
+        "allowedDataHint": "Chỉ được phép chia sẻ tuổi, giới tính và hình ảnh y khoa. Không bao gồm tên, địa chỉ hoặc số điện thoại."
+      },
+      "caseDisclosureConsent": "Tôi xác nhận ca này đã được ẩn danh và chỉ chia sẻ phục vụ trao đổi chuyên môn.",
+      "fileAnonymizationConsent": "Tôi xác nhận tệp đính kèm không chứa thông tin định danh bệnh nhân.",
+      "actions": {
+        "addImage": "Thêm ảnh",
+        "attachDocument": "Đính kèm tài liệu",
+        "addLink": "Thêm liên kết",
+        "shareInternalCase": "Chia sẻ ca nội bộ",
+        "post": "Đăng"
+      }
+    },
+    "postCard": {
+      "states": {
+        "hiddenByModeration": "Đã bị ẩn bởi kiểm duyệt",
+        "originalPostHidden": "Bài viết gốc đã bị ẩn"
+      },
+      "repost": {
+        "shared": "đã chia sẻ"
+      },
+      "menu": {
+        "copyLink": "Sao chép liên kết",
+        "saved": "Đã lưu",
+        "savePost": "Lưu bài viết",
+        "hidePost": "Ẩn bài viết",
+        "reportPost": "Báo cáo bài viết"
+      },
+      "actions": {
+        "sharePost": "Chia sẻ bài viết"
+      },
+      "internalCase": {
+        "caseResultAndDiagnosis": "Kết quả và chẩn đoán ca",
+        "noAiSummary": "Không có tóm tắt AI hoặc chẩn đoán.",
+        "doctorNote": "Ghi chú bác sĩ",
+        "noDoctorNote": "{{name}}: \"Chưa có ghi chú.\""
+      },
+      "hideDialog": {
+        "title": "Ẩn bài viết này",
+        "description": "Bài viết bị ẩn chỉ hiển thị cho tác giả và Quản trị hệ thống.",
+        "reasonPlaceholder": "Lý do ẩn (tùy chọn)"
+      },
+      "shareDialog": {
+        "title": "Chia sẻ bài viết này",
+        "commentPlaceholder": "Thêm bình luận của bạn... (tùy chọn)",
+        "previewAlt": "xem trước",
+        "share": "Chia sẻ"
+      }
+    },
+    "shareClinicCaseModal": {
+      "title": "Chia sẻ ca lâm sàng",
+      "caseInformation": {
+        "title": "Thông tin ca"
+      },
+      "fields": {
+        "patient": "Bệnh nhân",
+        "riskLevel": "Mức độ rủi ro",
+        "confidence": "Độ tin cậy"
+      },
+      "retinalImages": {
+        "title": "Ảnh võng mạc ({{count}})",
+        "alt": "Ảnh võng mạc {{index}}"
+      },
+      "findings": {
+        "label": "Phát hiện"
+      },
+      "symptoms": {
+        "label": "Triệu chứng"
+      },
+      "summary": {
+        "label": "Tóm tắt"
+      },
+      "doctorNotes": {
+        "label": "Thêm ghi chú bác sĩ",
+        "placeholder": "Nhập nhận định, khuyến nghị hoặc ghi chú bổ sung..."
+      },
+      "preview": {
+        "title": "Xem trước bài đăng",
+        "empty": "Nhập ghi chú để xem trước"
+      },
+      "actions": {
+        "posting": "Đang đăng...",
+        "postCase": "Đăng ca bệnh"
+      }
+    },
+    "commentCard": {
+      "actions": {
+        "reacted": "Đã phản hồi",
+        "react": "Phản hồi",
+        "reply": "Trả lời",
+        "hide": "Ẩn",
+        "view": "Xem"
+      },
+      "time": {
+        "recentFallback": "2 giờ"
+      },
+      "replies": {
+        "one": "1 phản hồi",
+        "many": "{{count}} phản hồi"
+      }
+    },
+    "saved": {
+      "title": "Đã lưu",
+      "sections": {
+        "allSaved": "Tất cả đã lưu",
+        "allSavedPosts": "Toàn bộ bài viết đã lưu"
+      },
+      "count": {
+        "posts": "{{count}} bài viết"
+      },
+      "states": {
+        "loadError": "Không thể tải danh sách bài viết đã lưu",
+        "empty": "Chưa có bài viết nào được lưu"
+      }
+    },
+    "organisation": {
+      "title": "Tổ chức",
+      "types": {
+        "hospital": "Bệnh viện",
+        "clinic": "Phòng khám",
+        "researchCenter": "Trung tâm nghiên cứu"
+      },
+      "actions": {
+        "follow": "Theo dõi",
+        "following": "Đang theo dõi"
+      },
+      "stats": {
+        "followers": "Người theo dõi",
+        "members": "{{count}} thành viên",
+        "membersLabel": "Thành viên",
+        "postsLabel": "Bài viết"
+      },
+      "tabs": {
+        "posts": "Bài viết",
+        "members": "Thành viên",
+        "about": "Giới thiệu"
+      },
+      "states": {
+        "notFound": "Không tìm thấy tổ chức",
+        "noPosts": "Chưa có bài viết nào",
+        "noPublicMembers": "Chưa có thành viên công khai"
+      },
+      "accreditations": {
+        "jciAccredited": "Đạt chuẩn JCI",
+        "iso9001": "ISO 9001:2015",
+        "nationalRetinalScreeningCenter": "Trung tâm Sàng lọc Võng mạc Quốc gia",
+        "auraAiCertifiedPartner": "Đối tác được chứng nhận Aura AI",
+        "fda510kCleared": "Được FDA 510(k) chấp thuận",
+        "ceMarkClassIIa": "Dấu CE Class IIa",
+        "mohVnApproved": "Được Bộ Y tế Việt Nam phê duyệt",
+        "auraAiScreeningSite": "Điểm sàng lọc Aura AI"
+      },
+      "about": {
+        "title": "Giới thiệu",
+        "location": "Địa điểm",
+        "accreditations": "Chứng nhận"
+      }
+    },
+    "profile": {
+      "title": "Hồ sơ",
+      "verified": "Đã xác minh",
+      "preview": {
+        "banner": "Bạn đang xem hồ sơ của mình dưới góc nhìn người khác",
+        "exit": "Thoát xem trước",
+        "label": "Xem trước"
+      },
+      "stats": {
+        "postsCount": "{{count}} bài viết",
+        "yearsExperience": "{{years}} năm kinh nghiệm"
+      },
+      "states": {
+        "notFound": "Không tìm thấy hồ sơ",
+        "noPosts": "Chưa có bài viết nào"
+      },
+      "actions": {
+        "shareProfile": "Chia sẻ hồ sơ",
+        "report": "Báo cáo"
+      },
+      "systemAdmin": {
+        "title": "Hồ sơ quản trị hệ thống",
+        "description": "Tài khoản Quản trị hệ thống tập trung vào quản trị nền tảng AURA, kiểm duyệt nội dung mạng lưới và điều phối vận hành hệ thống.",
+        "items": {
+          "moderatePosts": "Kiểm duyệt và ẩn các bài viết vi phạm",
+          "reviewReports": "Rà soát nội dung bị báo cáo và các trường hợp cần leo thang",
+          "maintainStandards": "Duy trì tiêu chuẩn chính sách và an toàn trên toàn bộ mạng lưới"
+        }
+      },
+      "organisation": {
+        "introductionTitle": "Giới thiệu phòng khám",
+        "defaultBio": "Phòng khám là đối tác của AURA trong triển khai sàng lọc võng mạc bằng AI, kết hợp chuyên môn bác sĩ và công cụ hỗ trợ quyết định lâm sàng.",
+        "featuredServicesTitle": "Dịch vụ nổi bật",
+        "featuredServices": {
+          "items": {
+            "aiScreening": "Sàng lọc võng mạc bằng AI tại cơ sở",
+            "consultationAndReferral": "Tư vấn kết quả và chuyển tuyến phù hợp",
+            "recordsAndFollowUp": "Quản lý hồ sơ khám và theo dõi định kỳ"
+          }
+        },
+        "qualityCommitmentTitle": "Cam kết chất lượng",
+        "qualityCommitment": {
+          "items": {
+            "dataPrivacy": "Tuân thủ quy trình bảo mật dữ liệu bệnh nhân",
+            "aiAndClinical": "Kết hợp đánh giá AI với chuyên môn lâm sàng",
+            "fastAccurateCare": "Tối ưu trải nghiệm khám nhanh và chính xác"
+          }
+        }
+      },
+      "about": {
+        "bioTitle": "Giới thiệu",
+        "noBio": "Chưa cập nhật thông tin giới thiệu.",
+        "experienceTitle": "Kinh nghiệm",
+        "experienceValue": "{{years}} năm kinh nghiệm",
+        "degreesTitle": "Bằng cấp",
+        "noDegreeRecords": "Chưa có hồ sơ bằng cấp.",
+        "licensesTitle": "Chứng chỉ hành nghề và chứng nhận",
+        "noLicenseRecords": "Chưa có hồ sơ chứng chỉ.",
+        "unknownAuthority": "Đơn vị cấp không xác định",
+        "issued": "Ngày cấp",
+        "expires": "Ngày hết hạn",
+        "viewFile": "Xem tệp"
+      }
+    }
   }
 }
