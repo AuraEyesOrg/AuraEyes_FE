@@ -22,6 +22,7 @@ export interface SidebarNavItem {
   label: string;
   path: string;
   icon: ComponentType<{ className?: string }>;
+  requiredPermission?: string;
 }
 
 export interface SidebarNavGroup {
@@ -51,36 +52,42 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Organisations',
         path: '/system-admin/organisations',
         icon: Building2,
+        requiredPermission: 'OrganisationsRead',
       },
       {
         id: 'ophthalmologists',
         label: 'Ophthalmologists',
         path: '/system-admin/ophthalmologists',
         icon: Stethoscope,
+        requiredPermission: 'OphthalmologistsRead',
       },
       {
         id: 'leave-requests',
         label: 'Leave Requests',
         path: '/system-admin/leave-requests',
         icon: CalendarX,
+        requiredPermission: 'SchedulesManage',
       },
       {
         id: 'employment-type-change-requests',
         label: 'Employment Type Changes',
         path: '/system-admin/employment-type-change-requests',
         icon: ArrowRightLeft,
+        requiredPermission: 'OphthalmologistsUpdate',
       },
       {
         id: 'patients',
         label: 'Patients',
         path: '/system-admin/patients',
         icon: Users,
+        requiredPermission: 'PatientsRead',
       },
       {
         id: 'verifications',
         label: 'Verifications',
         path: '/system-admin/verifications',
         icon: ClipboardCheck,
+        requiredPermission: 'OphthalmologistsUpdate',
       },
     ],
   },
@@ -95,12 +102,14 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Contract Templates',
         path: '/system-admin/contract-templates',
         icon: ScrollText,
+        requiredPermission: 'ContractsRead',
       },
       {
         id: 'contracts',
         label: 'Contracts',
         path: '/system-admin/contracts',
         icon: FileCheck,
+        requiredPermission: 'ContractsRead',
       },
     ],
   },
@@ -115,12 +124,14 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Payment Transactions',
         path: '/system-admin/cashflow',
         icon: Wallet,
+        requiredPermission: 'CashflowRead',
       },
       {
         id: 'withdrawal-requests',
         label: 'Withdrawal Requests',
         path: '/system-admin/withdrawal-requests',
         icon: Landmark,
+        requiredPermission: 'PayoutsRead',
       },
     ],
   },
@@ -135,18 +146,21 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
         label: 'Permissions',
         path: '/system-admin/permissions',
         icon: KeyRound,
+        requiredPermission: 'PermissionsRead',
       },
       {
         id: 'audit-logs',
         label: 'Audit Logs',
         path: '/system-admin/audit-logs',
         icon: FileText,
+        requiredPermission: 'AuditLogsRead',
       },
       {
         id: 'settings',
         label: 'Settings',
         path: '/system-admin/settings',
         icon: Settings,
+        requiredPermission: 'SettingsRead',
       },
       {
         id: 'aura-network',

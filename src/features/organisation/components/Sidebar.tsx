@@ -27,35 +27,67 @@ import {
 import { persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
 import { getOrganisationDashboardMetrics } from '../api/dashboard.api';
+import usePermissions from '@/hooks/use-permissions';
 
 interface SidebarProps {
   pendingCount?: number;
 }
 
 const navItems = [
-  { icon: Home, labelKey: 'dashboard', path: '/organisation/dashboard' },
-  { icon: FileText, labelKey: 'contract', path: '/organisation/contract' },
+  {
+    icon: Home,
+    labelKey: 'dashboard',
+    path: '/organisation/dashboard',
+    requiredPermission: 'DashboardRead',
+  },
+  {
+    icon: FileText,
+    labelKey: 'contract',
+    path: '/organisation/contract',
+    requiredPermission: 'ContractsRead',
+  },
   {
     icon: Users,
     labelKey: 'patients',
     path: '/organisation/patients',
     hasBadge: true,
+    requiredPermission: 'PatientsRead',
   },
-  // { icon: BarChart3, labelKey: 'analytics', path: '/organisation/analytics' },
-  { icon: Wallet, labelKey: 'wallet', path: '/organisation/wallet' },
-  { icon: FileBarChart, labelKey: 'reports', path: '/organisation/reports' },
+  {
+    icon: Wallet,
+    labelKey: 'wallet',
+    path: '/organisation/wallet',
+    requiredPermission: 'WalletsRead',
+  },
+  {
+    icon: FileBarChart,
+    labelKey: 'reports',
+    path: '/organisation/reports',
+    requiredPermission: 'ScreeningsRead',
+  },
   {
     icon: Globe,
     labelKey: 'auraNetwork',
     path: '/network',
   },
-  { icon: Calendar, labelKey: 'calendar', path: '/organisation/calendar' },
+  {
+    icon: Calendar,
+    labelKey: 'calendar',
+    path: '/organisation/calendar',
+    requiredPermission: 'AppointmentsRead',
+  },
   {
     icon: CalendarCog,
     labelKey: 'slotManagement',
     path: '/organisation/slots',
+    requiredPermission: 'ApptSlotsManage',
   },
-  { icon: Settings, labelKey: 'settings', path: '/organisation/settings' },
+  {
+    icon: Settings,
+    labelKey: 'settings',
+    path: '/organisation/settings',
+    requiredPermission: 'SettingsRead',
+  },
 ];
 
 export default function Sidebar({
@@ -64,6 +96,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
+  const { hasPermission } = usePermissions();
 
   const metricsQuery = useQuery({
     queryKey: ['organisation-dashboard', 'metrics'],
@@ -77,7 +110,9 @@ export default function Sidebar({
 
   const pendingCount = propPendingCount ?? sidebarPendingCount;
 
-  const visibleNavItems = navItems;
+  const visibleNavItems = navItems.filter((item) =>
+    item.requiredPermission ? hasPermission(item.requiredPermission) : true
+  );
 
   const organisationLabel = t(
     'Organisation.sidebar.organisation',
