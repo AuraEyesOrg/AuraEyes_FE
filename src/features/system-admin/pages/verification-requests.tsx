@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   ClipboardList,
@@ -30,20 +31,28 @@ import {
   ophthalmologistApi,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
-import { formatTimeAgo } from '@/lib/utility';
+import { formatRelativeTime } from '@/lib/date-utils';
 import Spinner from '@/components/ui/spinner';
 import AvatarFallback from '@/components/ui/avatar-fallback';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ─────────────────────────────────────────────
 // Query key
 // ─────────────────────────────────────────────
 const QUERY_KEY = ['admin', 'verification-requests'] as const;
 
-const formatDate = (value: string | undefined) => {
-  if (!value) return 'N/A';
+type TranslateFn = ReturnType<typeof useSafeTranslation>['t'];
+
+const formatDate = (
+  value: string | undefined,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'N/A';
-  return parsed.toLocaleDateString('vi-VN', {
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleDateString(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -53,15 +62,27 @@ const formatDate = (value: string | undefined) => {
 const isImageUrl = (url: string) =>
   /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
 
-const formatDegreeLevel = (value?: string) => {
-  if (!value) return 'N/A';
+const formatDegreeLevel = (value: string | undefined, t: TranslateFn) => {
+  if (!value) return t('SystemAdmin.common.notAvailable', 'N/A');
 
   const mapping: Record<string, string> = {
-    Bachelor: 'Bachelor',
-    Master: 'Master',
-    Doctorate: 'Doctorate',
-    AssociateProfessor: 'Associate Professor',
-    Professor: 'Professor',
+    Bachelor: t(
+      'SystemAdmin.verificationRequests.degreeLevels.bachelor',
+      'Bachelor'
+    ),
+    Master: t('SystemAdmin.verificationRequests.degreeLevels.master', 'Master'),
+    Doctorate: t(
+      'SystemAdmin.verificationRequests.degreeLevels.doctorate',
+      'Doctorate'
+    ),
+    AssociateProfessor: t(
+      'SystemAdmin.verificationRequests.degreeLevels.associateProfessor',
+      'Associate Professor'
+    ),
+    Professor: t(
+      'SystemAdmin.verificationRequests.degreeLevels.professor',
+      'Professor'
+    ),
   };
 
   return mapping[value] ?? value;
@@ -74,20 +95,33 @@ const getCredentialCounts = (doctor: OphthalmologistListItem) => {
 };
 
 const getVerificationRequestType = (
-  verificationStatus: OphthalmologistListItem['verificationStatus']
+  verificationStatus: OphthalmologistListItem['verificationStatus'],
+  t: TranslateFn
 ) => {
   if (verificationStatus === 'PendingUpdate') {
     return {
-      label: 'Credential Update Review',
-      hint: 'Bác sĩ cập nhật chứng chỉ sau khi đã được duyệt trước đó.',
+      label: t(
+        'SystemAdmin.verificationRequests.requestType.credentialUpdate.label',
+        'Credential Update Review'
+      ),
+      hint: t(
+        'SystemAdmin.verificationRequests.requestType.credentialUpdate.hint',
+        'Doctor submitted updated credentials after prior approval.'
+      ),
       className:
         'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
     };
   }
 
   return {
-    label: 'Onboarding Verification',
-    hint: 'Hồ sơ xác minh ban đầu của bác sĩ mới đăng ký.',
+    label: t(
+      'SystemAdmin.verificationRequests.requestType.onboarding.label',
+      'Onboarding Verification'
+    ),
+    hint: t(
+      'SystemAdmin.verificationRequests.requestType.onboarding.hint',
+      'Initial verification profile for newly registered doctor.'
+    ),
     className:
       'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
   };
@@ -108,6 +142,8 @@ function ApproveModal({
   onCancel,
   isLoading,
 }: ApproveModalProps) {
+  const { t } = useSafeTranslation();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
@@ -122,7 +158,10 @@ function ApproveModal({
               <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Xác nhận phê duyệt
+              {t(
+                'SystemAdmin.verificationRequests.approveModal.title',
+                'Confirm approval'
+              )}
             </h3>
           </div>
           <button
@@ -149,23 +188,29 @@ function ApproveModal({
               </p>
               <p className="text-sm text-slate-500">{doctor.email}</p>
               <p className="text-xs text-slate-400 mt-0.5">
-                {doctor.yearsOfExperience} năm kinh nghiệm
+                {t(
+                  'SystemAdmin.verificationRequests.common.experienceYears',
+                  '{{count}} years of experience',
+                  { count: doctor.yearsOfExperience }
+                )}
               </p>
             </div>
           </div>
 
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Bạn có chắc chắn muốn{' '}
-            <span className="font-semibold text-emerald-600">phê duyệt</span> hồ
-            sơ chứng chỉ của bác sĩ này? Hành động này sẽ cấp quyền hoạt động
-            đầy đủ trên hệ thống AURA.
+            {t(
+              'SystemAdmin.verificationRequests.approveModal.description',
+              'Are you sure you want to approve this doctor credential profile? This action grants full access in the AURA system.'
+            )}
           </p>
 
           <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-700 dark:text-emerald-300">
-              Bác sĩ sẽ nhận email thông báo và có thể bắt đầu nhận ca tư vấn
-              ngay lập tức.
+              {t(
+                'SystemAdmin.verificationRequests.approveModal.notice',
+                'The doctor will receive an email notification and can start accepting consultations immediately.'
+              )}
             </p>
           </div>
         </div>
@@ -177,7 +222,7 @@ function ApproveModal({
             disabled={isLoading}
             className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
-            Hủy
+            {t('SystemAdmin.common.actions.cancel', 'Cancel')}
           </button>
           <button
             onClick={onConfirm}
@@ -189,7 +234,7 @@ function ApproveModal({
             ) : (
               <CheckCircle className="w-4 h-4" />
             )}
-            Xác nhận phê duyệt
+            {t('SystemAdmin.common.actions.confirmApprove', 'Confirm approval')}
           </button>
         </div>
       </div>
@@ -212,12 +257,19 @@ function RejectModal({
   onCancel,
   isLoading,
 }: RejectModalProps) {
+  const { t } = useSafeTranslation();
+
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = () => {
     if (!reason.trim()) {
-      setError('Vui lòng nhập lý do từ chối.');
+      setError(
+        t(
+          'SystemAdmin.verificationRequests.rejectModal.errors.reasonRequired',
+          'Please provide a rejection reason.'
+        )
+      );
       return;
     }
     onConfirm(reason.trim());
@@ -237,7 +289,10 @@ function RejectModal({
               <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Từ chối xác minh
+              {t(
+                'SystemAdmin.verificationRequests.rejectModal.title',
+                'Reject verification'
+              )}
             </h3>
           </div>
           <button
@@ -268,7 +323,11 @@ function RejectModal({
 
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Lý do từ chối <span className="text-red-500">*</span>
+              {t(
+                'SystemAdmin.verificationRequests.rejectModal.reasonLabel',
+                'Rejection reason'
+              )}{' '}
+              <span className="text-red-500">*</span>
             </label>
             <textarea
               value={reason}
@@ -277,7 +336,10 @@ function RejectModal({
                 if (error) setError('');
               }}
               rows={4}
-              placeholder="Mô tả rõ lý do từ chối (ví dụ: ảnh giấy phép không rõ nét, chứng chỉ chưa có hiệu lực, thiếu bằng cấp chuyên ngành...)"
+              placeholder={t(
+                'SystemAdmin.verificationRequests.rejectModal.reasonPlaceholder',
+                'Describe why this request is rejected (for example: unreadable license image, expired certificate, missing required specialist degree).'
+              )}
               className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-red-400/50 focus:border-red-400 outline-none resize-none text-sm transition-all"
             />
             {error && (
@@ -288,8 +350,10 @@ function RejectModal({
           <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Lý do sẽ được gửi qua email đến bác sĩ. Hãy mô tả cụ thể để họ có
-              thể bổ sung hồ sơ.
+              {t(
+                'SystemAdmin.verificationRequests.rejectModal.notice',
+                'This reason will be sent to the doctor by email. Please be specific so they can correct and resubmit.'
+              )}
             </p>
           </div>
         </div>
@@ -301,7 +365,7 @@ function RejectModal({
             disabled={isLoading}
             className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
-            Hủy
+            {t('SystemAdmin.common.actions.cancel', 'Cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -313,7 +377,7 @@ function RejectModal({
             ) : (
               <XCircle className="w-4 h-4" />
             )}
-            Xác nhận từ chối
+            {t('SystemAdmin.common.actions.confirmReject', 'Confirm rejection')}
           </button>
         </div>
       </div>
@@ -327,6 +391,8 @@ interface ImagePreviewModalProps {
 }
 
 function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewModalProps) {
+  const { t } = useSafeTranslation();
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/80" onClick={onClose} />
@@ -339,7 +405,10 @@ function ImagePreviewModal({ imageUrl, onClose }: ImagePreviewModalProps) {
         </button>
         <img
           src={imageUrl}
-          alt="Credential preview"
+          alt={t(
+            'SystemAdmin.verificationRequests.imagePreview.alt',
+            'Credential preview'
+          )}
           className="max-h-[80vh] w-full rounded-lg object-contain"
         />
       </div>
@@ -358,6 +427,13 @@ function VerificationDetailModal({
   onClose,
   onZoomImage,
 }: VerificationDetailModalProps) {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+
   const licenses = doctor.licenses ?? [];
   const degrees = doctor.degrees ?? [];
 
@@ -388,29 +464,57 @@ function VerificationDetailModal({
             </h5>
             <dl className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
               <div className="flex justify-between gap-3">
-                <dt>Cơ quan cấp</dt>
+                <dt>
+                  {t(
+                    'SystemAdmin.verificationRequests.detailModal.fields.issuingAuthority',
+                    'Issuing authority'
+                  )}
+                </dt>
                 <dd className="text-right">
-                  {credential.issuingAuthority || 'N/A'}
+                  {credential.issuingAuthority || notAvailableLabel}
                 </dd>
               </div>
               {options?.showDegreeLevel && (
                 <div className="flex justify-between gap-3">
-                  <dt>Học vị</dt>
+                  <dt>
+                    {t(
+                      'SystemAdmin.verificationRequests.detailModal.fields.degreeLevel',
+                      'Degree level'
+                    )}
+                  </dt>
                   <dd className="text-right">
-                    {formatDegreeLevel(credential.degreeLevel)}
+                    {formatDegreeLevel(credential.degreeLevel, t)}
                   </dd>
                 </div>
               )}
               <div className="flex justify-between gap-3">
-                <dt>Ngày cấp</dt>
+                <dt>
+                  {t(
+                    'SystemAdmin.verificationRequests.detailModal.fields.issuedDate',
+                    'Issued date'
+                  )}
+                </dt>
                 <dd className="text-right">
-                  {formatDate(credential.issuedDate)}
+                  {formatDate(
+                    credential.issuedDate,
+                    dateLocale,
+                    notAvailableLabel
+                  )}
                 </dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt>Ngày hết hạn</dt>
+                <dt>
+                  {t(
+                    'SystemAdmin.verificationRequests.detailModal.fields.expiryDate',
+                    'Expiry date'
+                  )}
+                </dt>
                 <dd className="text-right">
-                  {formatDate(credential.expiryDate)}
+                  {formatDate(
+                    credential.expiryDate,
+                    dateLocale,
+                    notAvailableLabel
+                  )}
                 </dd>
               </div>
             </dl>
@@ -430,7 +534,10 @@ function VerificationDetailModal({
                     />
                     <div className="flex items-center justify-center gap-1.5 bg-slate-100 py-1.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       <ZoomIn className="h-3.5 w-3.5" />
-                      Zoom ảnh
+                      {t(
+                        'SystemAdmin.verificationRequests.detailModal.actions.zoomImage',
+                        'Zoom image'
+                      )}
                     </div>
                   </button>
                 ) : (
@@ -440,7 +547,10 @@ function VerificationDetailModal({
                     rel="noopener noreferrer"
                     className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-primary hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
-                    Mở tài liệu
+                    {t(
+                      'SystemAdmin.verificationRequests.detailModal.actions.openDocument',
+                      'Open document'
+                    )}
                   </a>
                 )}
               </div>
@@ -461,7 +571,10 @@ function VerificationDetailModal({
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4">
           <div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Verification Details
+              {t(
+                'SystemAdmin.verificationRequests.detailModal.title',
+                'Verification Details'
+              )}
             </h3>
             <p className="text-sm text-slate-500">
               {doctor.fullName} • {doctor.email}
@@ -478,21 +591,35 @@ function VerificationDetailModal({
         <div className="max-h-[85vh] space-y-6 overflow-y-auto p-6">
           <section>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
-              Licenses / Certificates ({licenses.length})
+              {t(
+                'SystemAdmin.verificationRequests.detailModal.sections.licenses',
+                'Licenses / Certificates ({{count}})',
+                { count: licenses.length }
+              )}
             </h4>
             {renderCredentialCards(
               licenses,
-              'Bác sĩ chưa cung cấp giấy phép hoặc chứng chỉ hợp lệ.'
+              t(
+                'SystemAdmin.verificationRequests.detailModal.states.emptyLicenses',
+                'The doctor has not provided valid licenses or certificates yet.'
+              )
             )}
           </section>
 
           <section>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
-              Degrees ({degrees.length})
+              {t(
+                'SystemAdmin.verificationRequests.detailModal.sections.degrees',
+                'Degrees ({{count}})',
+                { count: degrees.length }
+              )}
             </h4>
             {renderCredentialCards(
               degrees,
-              'Bác sĩ chưa cung cấp thông tin bằng cấp.',
+              t(
+                'SystemAdmin.verificationRequests.detailModal.states.emptyDegrees',
+                'The doctor has not provided degree information yet.'
+              ),
               { showDegreeLevel: true }
             )}
           </section>
@@ -506,6 +633,12 @@ function VerificationDetailModal({
 // Main Page
 // ─────────────────────────────────────────────
 export default function VerificationRequestsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [pageNumber, setPageNumber] = useState(1);
@@ -542,10 +675,23 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setApprovingDoctor(null);
-      toast.success('Đã phê duyệt hồ sơ bác sĩ thành công.');
+      toast.success(
+        t(
+          'SystemAdmin.verificationRequests.toasts.approveSuccess',
+          'Doctor verification approved successfully.'
+        )
+      );
     },
-    onError: () => {
-      toast.error('Phê duyệt thất bại. Vui lòng thử lại.');
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.verificationRequests.toasts.approveError',
+            'Approval failed. Please try again.'
+          )
+        )
+      );
     },
   });
 
@@ -555,10 +701,23 @@ export default function VerificationRequestsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setRejectingDoctor(null);
-      toast.success('Đã từ chối hồ sơ bác sĩ thành công.');
+      toast.success(
+        t(
+          'SystemAdmin.verificationRequests.toasts.rejectSuccess',
+          'Doctor verification rejected successfully.'
+        )
+      );
     },
-    onError: () => {
-      toast.error('Từ chối hồ sơ thất bại. Vui lòng thử lại.');
+    onError: (error) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.verificationRequests.toasts.rejectError',
+            'Rejection failed. Please try again.'
+          )
+        )
+      );
     },
   });
 
@@ -578,8 +737,14 @@ export default function VerificationRequestsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Verification Requests"
-          description="Review and approve ophthalmologist credential submissions"
+          title={t(
+            'SystemAdmin.verificationRequests.title',
+            'Verification Requests'
+          )}
+          description={t(
+            'SystemAdmin.verificationRequests.description',
+            'Review and approve ophthalmologist credential submissions'
+          )}
           actions={
             <button
               onClick={() =>
@@ -591,7 +756,7 @@ export default function VerificationRequestsPage() {
               <RefreshCw
                 className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`}
               />
-              Refresh
+              {t('SystemAdmin.common.actions.refresh', 'Refresh')}
             </button>
           }
         />
@@ -605,10 +770,17 @@ export default function VerificationRequestsPage() {
               </div>
               <div>
                 <p className="font-semibold text-amber-800 dark:text-amber-200">
-                  {totalCount} hồ sơ đang chờ xét duyệt
+                  {t(
+                    'SystemAdmin.verificationRequests.summary.pendingCount',
+                    '{{count}} profiles pending review',
+                    { count: totalCount }
+                  )}
                 </p>
                 <p className="text-sm text-amber-600 dark:text-amber-400">
-                  Mỗi bác sĩ cần được xem xét kỹ tài liệu trước khi phê duyệt
+                  {t(
+                    'SystemAdmin.verificationRequests.summary.description',
+                    'Each doctor profile should be carefully reviewed before approval.'
+                  )}
                 </p>
               </div>
             </div>
@@ -623,7 +795,10 @@ export default function VerificationRequestsPage() {
                   setSearchQuery(e.target.value);
                   setPageNumber(1);
                 }}
-                placeholder="Tìm theo tên, email..."
+                placeholder={t(
+                  'SystemAdmin.verificationRequests.filters.searchPlaceholder',
+                  'Search by name, email...'
+                )}
                 className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm transition-all"
               />
             </div>
@@ -634,19 +809,34 @@ export default function VerificationRequestsPage() {
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Bác sĩ
+                      {t(
+                        'SystemAdmin.verificationRequests.table.columns.doctor',
+                        'Doctor'
+                      )}
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Credentials Summary
+                      {t(
+                        'SystemAdmin.verificationRequests.table.columns.credentialsSummary',
+                        'Credentials Summary'
+                      )}
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Loại xác minh
+                      {t(
+                        'SystemAdmin.verificationRequests.table.columns.verificationType',
+                        'Verification Type'
+                      )}
                     </th>
                     <th className="text-left px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Thời gian nộp
+                      {t(
+                        'SystemAdmin.verificationRequests.table.columns.submittedAt',
+                        'Submitted At'
+                      )}
                     </th>
                     <th className="text-center px-5 py-3.5 font-semibold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider">
-                      Hành động
+                      {t(
+                        'SystemAdmin.verificationRequests.table.columns.actions',
+                        'Actions'
+                      )}
                     </th>
                   </tr>
                 </thead>
@@ -668,10 +858,16 @@ export default function VerificationRequestsPage() {
                         <div className="flex flex-col items-center gap-3">
                           <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-600" />
                           <p className="text-slate-500 font-medium">
-                            Không có hồ sơ nào đang chờ xét duyệt
+                            {t(
+                              'SystemAdmin.verificationRequests.states.emptyTitle',
+                              'No profiles are pending review'
+                            )}
                           </p>
                           <p className="text-slate-400 text-xs">
-                            Tất cả yêu cầu đã được xử lý!
+                            {t(
+                              'SystemAdmin.verificationRequests.states.emptyDescription',
+                              'All requests have been processed.'
+                            )}
                           </p>
                         </div>
                       </td>
@@ -699,7 +895,11 @@ export default function VerificationRequestsPage() {
                               </p>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="text-xs text-slate-400">
-                                  {doctor.yearsOfExperience} năm KN
+                                  {t(
+                                    'SystemAdmin.verificationRequests.common.shortExperienceYears',
+                                    '{{count}} yrs exp',
+                                    { count: doctor.yearsOfExperience }
+                                  )}
                                 </span>
                                 {doctor.organisationName && (
                                   <>
@@ -718,7 +918,8 @@ export default function VerificationRequestsPage() {
                         <td className="px-5 py-4">
                           {(() => {
                             const requestType = getVerificationRequestType(
-                              doctor.verificationStatus
+                              doctor.verificationStatus,
+                              t
                             );
 
                             return (
@@ -745,11 +946,20 @@ export default function VerificationRequestsPage() {
                               return (
                                 <>
                                   <p className="font-medium text-slate-700 dark:text-slate-200">
-                                    Có {licenseCount} giấy phép, {degreeCount}{' '}
-                                    bằng cấp
+                                    {t(
+                                      'SystemAdmin.verificationRequests.table.credentialsSummaryValue',
+                                      '{{licenseCount}} licenses, {{degreeCount}} degrees',
+                                      {
+                                        licenseCount,
+                                        degreeCount,
+                                      }
+                                    )}
                                   </p>
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    Nhấn "View Details" để xem hồ sơ chi tiết
+                                    {t(
+                                      'SystemAdmin.verificationRequests.table.credentialsSummaryHint',
+                                      'Click "View Details" to inspect full credentials.'
+                                    )}
                                   </p>
                                 </>
                               );
@@ -761,11 +971,15 @@ export default function VerificationRequestsPage() {
                         <td className="px-5 py-4">
                           <div className="flex flex-col gap-0.5">
                             <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
-                              {formatTimeAgo(doctor.createdAt)}
+                              {formatRelativeTime(
+                                doctor.createdAt,
+                                true,
+                                dateLocale
+                              )}
                             </span>
                             <span className="text-xs text-slate-400">
                               {new Date(doctor.createdAt).toLocaleDateString(
-                                'vi-VN',
+                                dateLocale,
                                 {
                                   year: 'numeric',
                                   month: '2-digit',
@@ -781,31 +995,46 @@ export default function VerificationRequestsPage() {
                           <div className="flex flex-wrap items-center justify-center gap-2">
                             <button
                               onClick={() => setDetailDoctor(doctor)}
-                              title="View details"
+                              title={t(
+                                'SystemAdmin.verificationRequests.actions.viewDetails',
+                                'View details'
+                              )}
                               className="group relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
                             >
                               <Eye className="w-4 h-4" />
-                              View Details
+                              {t(
+                                'SystemAdmin.verificationRequests.actions.viewDetails',
+                                'View details'
+                              )}
                             </button>
 
                             {/* Approve */}
                             <button
                               onClick={() => setApprovingDoctor(doctor)}
-                              title="Phê duyệt"
+                              title={t(
+                                'SystemAdmin.common.actions.approve',
+                                'Approve'
+                              )}
                               className="group relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:border-emerald-400 transition-all"
                             >
                               <CheckCircle className="w-4 h-4" />
-                              Duyệt
+                              {t(
+                                'SystemAdmin.common.actions.approve',
+                                'Approve'
+                              )}
                             </button>
 
                             {/* Reject */}
                             <button
                               onClick={() => setRejectingDoctor(doctor)}
-                              title="Từ chối"
+                              title={t(
+                                'SystemAdmin.common.actions.reject',
+                                'Reject'
+                              )}
                               className="group relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:border-red-400 transition-all"
                             >
                               <XCircle className="w-4 h-4" />
-                              Từ chối
+                              {t('SystemAdmin.common.actions.reject', 'Reject')}
                             </button>
                           </div>
                         </td>
@@ -820,7 +1049,14 @@ export default function VerificationRequestsPage() {
             {(hasNext || hasPrevious) && (
               <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                 <span>
-                  Hiển thị {items.length} / {totalCount} hồ sơ
+                  {t(
+                    'SystemAdmin.verificationRequests.pagination.showing',
+                    'Showing {{shown}} / {{total}} profiles',
+                    {
+                      shown: items.length,
+                      total: totalCount,
+                    }
+                  )}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -828,15 +1064,24 @@ export default function VerificationRequestsPage() {
                     onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
                     className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Trước
+                    {t(
+                      'SystemAdmin.common.pagination.previous',
+                      'Previous page'
+                    )}
                   </button>
-                  <span className="px-2 font-medium">Trang {pageNumber}</span>
+                  <span className="px-2 font-medium">
+                    {t(
+                      'SystemAdmin.verificationRequests.pagination.page',
+                      'Page {{page}}',
+                      { page: pageNumber }
+                    )}
+                  </span>
                   <button
                     disabled={!hasNext}
                     onClick={() => setPageNumber((p) => p + 1)}
                     className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Tiếp
+                    {t('SystemAdmin.common.pagination.next', 'Next page')}
                   </button>
                 </div>
               </div>

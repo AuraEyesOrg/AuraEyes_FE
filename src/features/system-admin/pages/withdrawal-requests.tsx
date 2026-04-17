@@ -1,5 +1,6 @@
 import { useMemo, useState, type ComponentType } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   ArrowLeft,
@@ -19,18 +20,8 @@ import {
   type AdminWithdrawalRequestItem,
   type WithdrawalRequestStatus,
 } from '../api/ophthalmologist.api';
-
-const statusOptions: Array<{
-  label: string;
-  value: WithdrawalRequestStatus | 'all';
-}> = [
-  { label: 'Tất cả', value: 'all' },
-  { label: 'Đang chờ', value: 'Pending' },
-  { label: 'Đang xử lý', value: 'Processing' },
-  { label: 'Hoàn tất', value: 'Completed' },
-  { label: 'Từ chối', value: 'Failed' },
-  { label: 'Đã hủy', value: 'Cancelled' },
-];
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 const WITHDRAWAL_TOAST_IDS = {
   confirm: 'system-admin-withdraw-confirm',
@@ -39,41 +30,18 @@ const WITHDRAWAL_TOAST_IDS = {
   payosSync: 'system-admin-withdraw-payos-sync',
 } as const;
 
-const formatMoney = (value: number) =>
-  value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+const formatMoney = (value: number, locale: string) =>
+  value.toLocaleString(locale, { style: 'currency', currency: 'VND' });
 
-const formatDate = (value?: string | null) => {
-  if (!value) return 'N/A';
+const formatDate = (
+  value: string | undefined | null,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'N/A';
-  return parsed.toLocaleString('vi-VN');
-};
-
-const getStatusChip = (status: WithdrawalRequestStatus) => {
-  if (status === 'Completed') {
-    return {
-      label: 'Đã hoàn tất',
-      className:
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-      icon: BadgeCheck,
-    };
-  }
-
-  if (status === 'Failed' || status === 'Cancelled') {
-    return {
-      label: status === 'Cancelled' ? 'Đã hủy' : 'Từ chối',
-      className:
-        'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
-      icon: XCircle,
-    };
-  }
-
-  return {
-    label: status === 'Processing' ? 'Đang xử lý' : 'Đang chờ',
-    className:
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    icon: Clock3,
-  };
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleString(locale);
 };
 
 /** Color coding for PayOS approvalState values */
@@ -87,6 +55,42 @@ const getPayOSStateBadgeClass = (state: string) => {
 
 export default function WithdrawalRequestsPage() {
   const queryClient = useQueryClient();
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+
+  const statusOptions: Array<{
+    label: string;
+    value: WithdrawalRequestStatus | 'all';
+  }> = [
+    {
+      label: t('SystemAdmin.withdrawalRequests.filters.status.all', 'All'),
+      value: 'all',
+    },
+    {
+      label: t('SystemAdmin.common.status.pending', 'Pending'),
+      value: 'Pending',
+    },
+    {
+      label: t('SystemAdmin.common.status.processing', 'Processing'),
+      value: 'Processing',
+    },
+    {
+      label: t('SystemAdmin.common.status.completed', 'Completed'),
+      value: 'Completed',
+    },
+    {
+      label: t('SystemAdmin.common.status.failed', 'Failed'),
+      value: 'Failed',
+    },
+    {
+      label: t('SystemAdmin.common.status.cancelled', 'Cancelled'),
+      value: 'Cancelled',
+    },
+  ];
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
@@ -145,9 +149,15 @@ export default function WithdrawalRequestsPage() {
         note: adminNote.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success('Đã xác nhận chuyển khoản thành công.', {
-        toastId: WITHDRAWAL_TOAST_IDS.confirm,
-      });
+      toast.success(
+        t(
+          'SystemAdmin.withdrawalRequests.toasts.confirmSuccess',
+          'Withdrawal transfer confirmed successfully.'
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.confirm,
+        }
+      );
       setConfirmingId(null);
       setTransferReference('');
       setAdminNote('');
@@ -156,11 +166,18 @@ export default function WithdrawalRequestsPage() {
       });
     },
     onError: (error) => {
-      const message =
-        error instanceof Error ? error.message : 'Không thể xác nhận yêu cầu.';
-      toast.error(message, {
-        toastId: WITHDRAWAL_TOAST_IDS.confirm,
-      });
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.withdrawalRequests.toasts.confirmError',
+            'Unable to confirm withdrawal request.'
+          )
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.confirm,
+        }
+      );
     },
   });
 
@@ -170,9 +187,15 @@ export default function WithdrawalRequestsPage() {
         reason: rejectReason.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success('Đã từ chối yêu cầu rút tiền.', {
-        toastId: WITHDRAWAL_TOAST_IDS.reject,
-      });
+      toast.success(
+        t(
+          'SystemAdmin.withdrawalRequests.toasts.rejectSuccess',
+          'Withdrawal request rejected.'
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.reject,
+        }
+      );
       setRejectingId(null);
       setRejectReason('');
       queryClient.invalidateQueries({
@@ -180,11 +203,18 @@ export default function WithdrawalRequestsPage() {
       });
     },
     onError: (error) => {
-      const message =
-        error instanceof Error ? error.message : 'Không thể từ chối yêu cầu.';
-      toast.error(message, {
-        toastId: WITHDRAWAL_TOAST_IDS.reject,
-      });
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.withdrawalRequests.toasts.rejectError',
+            'Unable to reject withdrawal request.'
+          )
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.reject,
+        }
+      );
     },
   });
 
@@ -198,7 +228,14 @@ export default function WithdrawalRequestsPage() {
     onSuccess: (data) => {
       const state = data.approvalState ?? 'UNKNOWN';
       toast.success(
-        `Chi qua PayOS thành công. Trạng thái: ${state}. PayOS ID: ${data.externalPayoutId}`,
+        t(
+          'SystemAdmin.withdrawalRequests.toasts.payosPayoutSuccess',
+          'PayOS payout successful. State: {{state}}. PayOS ID: {{payOSId}}',
+          {
+            state,
+            payOSId: data.externalPayoutId,
+          }
+        ),
         { toastId: WITHDRAWAL_TOAST_IDS.payosPayout }
       );
       setPayosProcessingId(null);
@@ -207,13 +244,18 @@ export default function WithdrawalRequestsPage() {
       });
     },
     onError: (error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Không thể thực hiện lệnh chi qua PayOS.';
-      toast.error(message, {
-        toastId: WITHDRAWAL_TOAST_IDS.payosPayout,
-      });
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.withdrawalRequests.toasts.payosPayoutError',
+            'Unable to process payout via PayOS.'
+          )
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.payosPayout,
+        }
+      );
       setPayosProcessingId(null);
     },
   });
@@ -227,7 +269,14 @@ export default function WithdrawalRequestsPage() {
       ophthalmologistApi.syncPayoutStatus(requestId),
     onSuccess: (data) => {
       toast.success(
-        `Đã đồng bộ trạng thái: ${data.approvalState} → Rút tiền: ${data.withdrawalStatus}`,
+        t(
+          'SystemAdmin.withdrawalRequests.toasts.payosSyncSuccess',
+          'Synced payout state: {{approvalState}} -> Withdrawal: {{withdrawalStatus}}',
+          {
+            approvalState: data.approvalState,
+            withdrawalStatus: data.withdrawalStatus,
+          }
+        ),
         { toastId: WITHDRAWAL_TOAST_IDS.payosSync }
       );
       setPayosSyncingId(null);
@@ -236,13 +285,18 @@ export default function WithdrawalRequestsPage() {
       });
     },
     onError: (error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Không thể đồng bộ trạng thái PayOS.';
-      toast.error(message, {
-        toastId: WITHDRAWAL_TOAST_IDS.payosSync,
-      });
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.withdrawalRequests.toasts.payosSyncError',
+            'Unable to sync PayOS payout status.'
+          )
+        ),
+        {
+          toastId: WITHDRAWAL_TOAST_IDS.payosSync,
+        }
+      );
       setPayosSyncingId(null);
     },
   });
@@ -303,21 +357,63 @@ export default function WithdrawalRequestsPage() {
     );
   }, [withdrawHistoryQuery.data?.items, searchTerm]);
 
+  const getStatusChip = (status: WithdrawalRequestStatus) => {
+    if (status === 'Completed') {
+      return {
+        label: t('SystemAdmin.common.status.completed', 'Completed'),
+        className:
+          'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+        icon: BadgeCheck,
+      };
+    }
+
+    if (status === 'Failed' || status === 'Cancelled') {
+      return {
+        label:
+          status === 'Cancelled'
+            ? t('SystemAdmin.common.status.cancelled', 'Cancelled')
+            : t('SystemAdmin.common.status.failed', 'Failed'),
+        className:
+          'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+        icon: XCircle,
+      };
+    }
+
+    return {
+      label:
+        status === 'Processing'
+          ? t('SystemAdmin.common.status.processing', 'Processing')
+          : t('SystemAdmin.common.status.pending', 'Pending'),
+      className:
+        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+      icon: Clock3,
+    };
+  };
+
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
         <PageHeader
-          title="Withdrawal Requests"
-          description="Xử lý yêu cầu rút tiền của bác sĩ"
+          title={t(
+            'SystemAdmin.withdrawalRequests.title',
+            'Withdrawal Requests'
+          )}
+          description={t(
+            'SystemAdmin.withdrawalRequests.description',
+            'Process withdrawal requests from ophthalmologists'
+          )}
         />
 
         <main className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                Yêu cầu chờ xử lý
+                {t(
+                  'SystemAdmin.withdrawalRequests.summary.pendingRequests',
+                  'Requests waiting for processing'
+                )}
               </p>
               <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                 {summary.pending}
@@ -325,10 +421,13 @@ export default function WithdrawalRequestsPage() {
             </div>
             <div className="rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20 p-4">
               <p className="text-sm text-cyan-700 dark:text-cyan-300">
-                Tổng tiền trên trang hiện tại
+                {t(
+                  'SystemAdmin.withdrawalRequests.summary.totalAmountCurrentPage',
+                  'Total amount on current page'
+                )}
               </p>
-              <p className="min-w-0 break-words leading-tight text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                {formatMoney(summary.totalAmount)}
+              <p className="min-w-0 wrap-break-word leading-tight text-2xl font-bold text-cyan-700 dark:text-cyan-300">
+                {formatMoney(summary.totalAmount, dateLocale)}
               </p>
             </div>
           </div>
@@ -340,7 +439,10 @@ export default function WithdrawalRequestsPage() {
                 <input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm bác sĩ, email, STK..."
+                  placeholder={t(
+                    'SystemAdmin.withdrawalRequests.filters.searchPlaceholder',
+                    'Search doctor, email, bank account...'
+                  )}
                   className="bg-transparent outline-none text-sm w-full"
                 />
               </div>
@@ -368,18 +470,21 @@ export default function WithdrawalRequestsPage() {
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Làm mới
+                  {t('SystemAdmin.common.actions.refresh', 'Refresh')}
                 </button>
               </div>
             </div>
 
             {listQuery.isLoading ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                Đang tải dữ liệu...
+                {t('SystemAdmin.common.loadingData', 'Loading data...')}
               </div>
             ) : filteredItems.length === 0 ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                Không có yêu cầu rút tiền nào.
+                {t(
+                  'SystemAdmin.withdrawalRequests.states.empty',
+                  'No withdrawal requests found.'
+                )}
               </div>
             ) : (
               <div className="space-y-3">
@@ -405,6 +510,8 @@ export default function WithdrawalRequestsPage() {
                       statusLabel={statusChip.label}
                       statusClassName={statusChip.className}
                       StatusIcon={StatusIcon}
+                      locale={dateLocale}
+                      notAvailableLabel={notAvailableLabel}
                       onConfirm={() => {
                         setConfirmingId(item.id);
                         setTransferReference(item.transferReference ?? '');
@@ -430,10 +537,17 @@ export default function WithdrawalRequestsPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Trước
+                  {t('SystemAdmin.common.pagination.previous', 'Previous page')}
                 </button>
                 <p className="text-sm text-slate-500">
-                  Trang {listQuery.data.pageNumber}/{listQuery.data.totalPages}
+                  {t(
+                    'SystemAdmin.common.pagination.label',
+                    'Page {{page}}/{{total}}',
+                    {
+                      page: listQuery.data.pageNumber,
+                      total: listQuery.data.totalPages,
+                    }
+                  )}
                 </p>
                 <button
                   onClick={() =>
@@ -444,7 +558,7 @@ export default function WithdrawalRequestsPage() {
                   disabled={!listQuery.data.hasNext}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
                 >
-                  Sau
+                  {t('SystemAdmin.common.pagination.next', 'Next page')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -454,36 +568,78 @@ export default function WithdrawalRequestsPage() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
             <div className="flex items-center justify-between gap-3 mb-4">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Withdraw Transaction History
+                {t(
+                  'SystemAdmin.withdrawalRequests.history.title',
+                  'Withdrawal Transaction History'
+                )}
               </h3>
               <button
                 onClick={() => withdrawHistoryQuery.refetch()}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh history
+                {t(
+                  'SystemAdmin.withdrawalRequests.history.refresh',
+                  'Refresh history'
+                )}
               </button>
             </div>
 
             {withdrawHistoryQuery.isLoading ? (
               <div className="py-8 text-center text-sm text-slate-500">
-                Đang tải lịch sử giao dịch rút tiền...
+                {t(
+                  'SystemAdmin.withdrawalRequests.history.loading',
+                  'Loading withdrawal history...'
+                )}
               </div>
             ) : withdrawalHistoryItems.length === 0 ? (
               <div className="py-8 text-center text-sm text-slate-500">
-                Chưa có giao dịch rút tiền nào.
+                {t(
+                  'SystemAdmin.withdrawalRequests.history.empty',
+                  'No withdrawal transaction history yet.'
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200 dark:border-slate-700">
-                      <th className="py-2 pr-3">Created</th>
-                      <th className="py-2 pr-3">Doctor</th>
-                      <th className="py-2 pr-3">Amount</th>
-                      <th className="py-2 pr-3">Type</th>
-                      <th className="py-2 pr-3">Reference</th>
-                      <th className="py-2 pr-3">Description</th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.created',
+                          'Created'
+                        )}
+                      </th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.doctor',
+                          'Doctor'
+                        )}
+                      </th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.amount',
+                          'Amount'
+                        )}
+                      </th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.type',
+                          'Type'
+                        )}
+                      </th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.reference',
+                          'Reference'
+                        )}
+                      </th>
+                      <th className="py-2 pr-3">
+                        {t(
+                          'SystemAdmin.withdrawalRequests.history.columns.description',
+                          'Description'
+                        )}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -493,27 +649,36 @@ export default function WithdrawalRequestsPage() {
                         className="border-b border-slate-100 dark:border-slate-800"
                       >
                         <td className="py-2 pr-3 whitespace-nowrap">
-                          {formatDate(item.createdAt)}
+                          {formatDate(
+                            item.createdAt,
+                            dateLocale,
+                            notAvailableLabel
+                          )}
                         </td>
                         <td className="py-2 pr-3">
                           <p className="font-medium text-slate-900 dark:text-white">
                             {item.doctorFullName}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {item.doctorEmail ?? 'N/A'}
+                            {item.doctorEmail ?? notAvailableLabel}
                           </p>
                         </td>
                         <td className="py-2 pr-3 font-semibold text-amber-600">
-                          {formatMoney(item.amount)}
+                          {formatMoney(item.amount, dateLocale)}
                         </td>
-                        <td className="py-2 pr-3">Withdrawal</td>
+                        <td className="py-2 pr-3">
+                          {t(
+                            'SystemAdmin.withdrawalRequests.history.withdrawalType',
+                            'Withdrawal'
+                          )}
+                        </td>
                         <td className="py-2 pr-3 font-mono text-xs text-slate-500">
                           {item.transferReference ??
                             item.externalPayoutId ??
-                            'N/A'}
+                            notAvailableLabel}
                         </td>
                         <td className="py-2 pr-3">
-                          {item.adminNote ?? item.note ?? 'N/A'}
+                          {item.adminNote ?? item.note ?? notAvailableLabel}
                         </td>
                       </tr>
                     ))}
@@ -533,11 +698,17 @@ export default function WithdrawalRequestsPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Trước
+                  {t('SystemAdmin.common.pagination.previous', 'Previous page')}
                 </button>
                 <p className="text-sm text-slate-500">
-                  Trang {withdrawHistoryQuery.data.pageNumber}/
-                  {withdrawHistoryQuery.data.totalPages}
+                  {t(
+                    'SystemAdmin.common.pagination.label',
+                    'Page {{page}}/{{total}}',
+                    {
+                      page: withdrawHistoryQuery.data.pageNumber,
+                      total: withdrawHistoryQuery.data.totalPages,
+                    }
+                  )}
                 </p>
                 <button
                   onClick={() =>
@@ -548,7 +719,7 @@ export default function WithdrawalRequestsPage() {
                   disabled={!withdrawHistoryQuery.data.hasNext}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50"
                 >
-                  Sau
+                  {t('SystemAdmin.common.pagination.next', 'Next page')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -565,9 +736,19 @@ export default function WithdrawalRequestsPage() {
             onClick={() => setConfirmingId(null)}
           />
           <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 space-y-4">
-            <h3 className="text-lg font-semibold">Xác nhận đã chuyển khoản</h3>
+            <h3 className="text-lg font-semibold">
+              {t(
+                'SystemAdmin.withdrawalRequests.modals.confirm.title',
+                'Confirm transfer completed'
+              )}
+            </h3>
             <label className="block space-y-1 text-sm">
-              <span>Mã giao dịch/ủy nhiệm chi</span>
+              <span>
+                {t(
+                  'SystemAdmin.withdrawalRequests.modals.confirm.transferReference',
+                  'Transfer reference'
+                )}
+              </span>
               <input
                 value={transferReference}
                 onChange={(e) => setTransferReference(e.target.value)}
@@ -575,7 +756,7 @@ export default function WithdrawalRequestsPage() {
               />
             </label>
             <label className="block space-y-1 text-sm">
-              <span>Ghi chú admin</span>
+              <span>{t('SystemAdmin.common.adminNote', 'Admin note')}</span>
               <textarea
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
@@ -588,14 +769,22 @@ export default function WithdrawalRequestsPage() {
                 onClick={() => setConfirmingId(null)}
                 className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm"
               >
-                Hủy
+                {t('SystemAdmin.common.actions.cancel', 'Cancel')}
               </button>
               <button
                 onClick={() => confirmMutation.mutate(confirmingId)}
                 disabled={confirmMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold disabled:opacity-60"
               >
-                {confirmMutation.isPending ? 'Đang xác nhận...' : 'Xác nhận'}
+                {confirmMutation.isPending
+                  ? t(
+                      'SystemAdmin.withdrawalRequests.modals.confirm.processing',
+                      'Confirming...'
+                    )
+                  : t(
+                      'SystemAdmin.withdrawalRequests.modals.confirm.confirm',
+                      'Confirm'
+                    )}
               </button>
             </div>
           </div>
@@ -610,9 +799,19 @@ export default function WithdrawalRequestsPage() {
             onClick={() => setRejectingId(null)}
           />
           <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 space-y-4">
-            <h3 className="text-lg font-semibold">Từ chối yêu cầu rút tiền</h3>
+            <h3 className="text-lg font-semibold">
+              {t(
+                'SystemAdmin.withdrawalRequests.modals.reject.title',
+                'Reject withdrawal request'
+              )}
+            </h3>
             <label className="block space-y-1 text-sm">
-              <span>Lý do (không bắt buộc)</span>
+              <span>
+                {t(
+                  'SystemAdmin.withdrawalRequests.modals.reject.reasonOptional',
+                  'Reason (optional)'
+                )}
+              </span>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -625,14 +824,19 @@ export default function WithdrawalRequestsPage() {
                 onClick={() => setRejectingId(null)}
                 className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm"
               >
-                Hủy
+                {t('SystemAdmin.common.actions.cancel', 'Cancel')}
               </button>
               <button
                 onClick={() => rejectMutation.mutate(rejectingId)}
                 disabled={rejectMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold disabled:opacity-60"
               >
-                {rejectMutation.isPending ? 'Đang từ chối...' : 'Từ chối'}
+                {rejectMutation.isPending
+                  ? t(
+                      'SystemAdmin.withdrawalRequests.modals.reject.processing',
+                      'Rejecting...'
+                    )
+                  : t('SystemAdmin.common.actions.reject', 'Reject')}
               </button>
             </div>
           </div>
@@ -652,6 +856,8 @@ interface RequestCardProps {
   statusLabel: string;
   statusClassName: string;
   StatusIcon: ComponentType<{ className?: string }>;
+  locale: string;
+  notAvailableLabel: string;
   onConfirm: () => void;
   onReject: () => void;
   onPayOSPayout: () => void;
@@ -668,11 +874,15 @@ function RequestCard({
   statusLabel,
   statusClassName,
   StatusIcon,
+  locale,
+  notAvailableLabel,
   onConfirm,
   onReject,
   onPayOSPayout,
   onSyncPayoutStatus,
 }: RequestCardProps) {
+  const { t } = useSafeTranslation();
+
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -696,7 +906,11 @@ function RequestCard({
             <span
               className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getPayOSStateBadgeClass(item.payOSApprovalState)}`}
             >
-              PayOS: {item.payOSApprovalState}
+              {t(
+                'SystemAdmin.withdrawalRequests.requestCard.payOSLabel',
+                'PayOS'
+              )}
+              : {item.payOSApprovalState}
             </span>
           ) : null}
         </div>
@@ -704,19 +918,31 @@ function RequestCard({
 
       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
         <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
-          <p className="text-slate-500">Số tiền</p>
+          <p className="text-slate-500">
+            {t('SystemAdmin.withdrawalRequests.requestCard.amount', 'Amount')}
+          </p>
           <p className="font-semibold text-slate-900 dark:text-white mt-1">
-            {formatMoney(item.amount)}
+            {formatMoney(item.amount, locale)}
           </p>
         </div>
 
         <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
-          <p className="text-slate-500">Ngân hàng / STK</p>
+          <p className="text-slate-500">
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.bankAndAccount',
+              'Bank / Account'
+            )}
+          </p>
           <p className="font-semibold text-slate-900 dark:text-white mt-1">
             {item.bankName}
             {item.bankBin ? (
               <span className="ml-1 text-xs text-slate-400 font-mono">
-                (BIN: {item.bankBin})
+                (
+                {t(
+                  'SystemAdmin.withdrawalRequests.requestCard.bankBinLabel',
+                  'BIN'
+                )}
+                : {item.bankBin})
               </span>
             ) : null}
           </p>
@@ -729,29 +955,72 @@ function RequestCard({
         </div>
 
         <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
-          <p className="text-slate-500">Thời gian</p>
-          <p className="text-xs text-slate-700 dark:text-slate-200 mt-1">
-            Tạo: {formatDate(item.createdAt)}
+          <p className="text-slate-500">
+            {t('SystemAdmin.withdrawalRequests.requestCard.time', 'Time')}
           </p>
           <p className="text-xs text-slate-700 dark:text-slate-200 mt-1">
-            Xử lý: {formatDate(item.processedAt)}
+            {t('SystemAdmin.common.createdAt', 'Created at')}:{' '}
+            {formatDate(item.createdAt, locale, notAvailableLabel)}
+          </p>
+          <p className="text-xs text-slate-700 dark:text-slate-200 mt-1">
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.processedAt',
+              'Processed at'
+            )}
+            : {formatDate(item.processedAt, locale, notAvailableLabel)}
           </p>
         </div>
       </div>
 
       <div className="mt-3 text-xs text-slate-500 space-y-1">
-        {item.contractNumber ? <p>Hợp đồng: {item.contractNumber}</p> : null}
-        {item.transferReference ? <p>Mã CK: {item.transferReference}</p> : null}
-        {item.note ? <p>Ghi chú bác sĩ: {item.note}</p> : null}
-        {item.adminNote ? <p>Ghi chú admin: {item.adminNote}</p> : null}
+        {item.contractNumber ? (
+          <p>
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.contract',
+              'Contract'
+            )}
+            : {item.contractNumber}
+          </p>
+        ) : null}
+        {item.transferReference ? (
+          <p>
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.transferCode',
+              'Transfer code'
+            )}
+            : {item.transferReference}
+          </p>
+        ) : null}
+        {item.note ? (
+          <p>
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.doctorNote',
+              'Doctor note'
+            )}
+            : {item.note}
+          </p>
+        ) : null}
+        {item.adminNote ? (
+          <p>
+            {t('SystemAdmin.common.adminNote', 'Admin note')}: {item.adminNote}
+          </p>
+        ) : null}
         {item.externalPayoutId ? (
           <p className="font-mono text-indigo-600 dark:text-indigo-400">
-            PayOS ID: {item.externalPayoutId}
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.payOSId',
+              'PayOS ID'
+            )}
+            : {item.externalPayoutId}
           </p>
         ) : null}
         {item.payOSReferenceId ? (
           <p className="font-mono text-slate-400">
-            Ref: {item.payOSReferenceId}
+            {t(
+              'SystemAdmin.withdrawalRequests.requestCard.reference',
+              'Reference'
+            )}
+            : {item.payOSReferenceId}
           </p>
         ) : null}
       </div>
@@ -765,11 +1034,22 @@ function RequestCard({
               <button
                 onClick={onPayOSPayout}
                 disabled={isPayOSProcessing}
-                title="Tự động chuyển tiền qua PayOS Payout API"
+                title={t(
+                  'SystemAdmin.withdrawalRequests.requestCard.tooltips.payoutViaPayOS',
+                  'Automatically process payout via PayOS API'
+                )}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold disabled:opacity-60"
               >
                 <Send className="w-4 h-4" />
-                {isPayOSProcessing ? 'Đang chi...' : 'Chi qua PayOS'}
+                {isPayOSProcessing
+                  ? t(
+                      'SystemAdmin.withdrawalRequests.requestCard.actions.payoutProcessing',
+                      'Processing payout...'
+                    )
+                  : t(
+                      'SystemAdmin.withdrawalRequests.requestCard.actions.payoutViaPayOS',
+                      'Payout via PayOS'
+                    )}
               </button>
             ) : null}
 
@@ -778,18 +1058,32 @@ function RequestCard({
               <button
                 onClick={onSyncPayoutStatus}
                 disabled={isPayOSSyncing}
-                title="Đồng bộ trạng thái lệnh chi từ PayOS"
+                title={t(
+                  'SystemAdmin.withdrawalRequests.requestCard.tooltips.syncPayOS',
+                  'Sync payout status from PayOS'
+                )}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-300 text-sm font-medium disabled:opacity-60"
               >
                 <RotateCcw className="w-4 h-4" />
-                {isPayOSSyncing ? 'Đang đồng bộ...' : 'Sync PayOS'}
+                {isPayOSSyncing
+                  ? t(
+                      'SystemAdmin.withdrawalRequests.requestCard.actions.syncingPayOS',
+                      'Syncing...'
+                    )
+                  : t(
+                      'SystemAdmin.withdrawalRequests.requestCard.actions.syncPayOS',
+                      'Sync PayOS'
+                    )}
               </button>
             ) : null}
 
             {/* Warn if no BankBin */}
             {!hasBankBin && !hasPayOSPayout ? (
               <span className="text-xs text-amber-600 dark:text-amber-400">
-                ⚠ Thiếu BankBIN — không thể chi tự động qua PayOS
+                {t(
+                  'SystemAdmin.withdrawalRequests.requestCard.warnings.missingBankBin',
+                  'Missing BankBIN - cannot auto payout via PayOS'
+                )}
               </span>
             ) : null}
           </div>
@@ -800,13 +1094,16 @@ function RequestCard({
               onClick={onReject}
               className="px-3 py-2 rounded-lg border border-rose-300 text-rose-700 dark:text-rose-300 text-sm font-medium"
             >
-              Từ chối
+              {t('SystemAdmin.common.actions.reject', 'Reject')}
             </button>
             <button
               onClick={onConfirm}
               className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold"
             >
-              Xác nhận thủ công
+              {t(
+                'SystemAdmin.withdrawalRequests.requestCard.actions.confirmManual',
+                'Manual confirm'
+              )}
             </button>
           </div>
         </div>
@@ -818,11 +1115,22 @@ function RequestCard({
           <button
             onClick={onSyncPayoutStatus}
             disabled={isPayOSSyncing}
-            title="Đồng bộ trạng thái lệnh chi từ PayOS"
+            title={t(
+              'SystemAdmin.withdrawalRequests.requestCard.tooltips.syncPayOS',
+              'Sync payout status from PayOS'
+            )}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-300 text-sm font-medium disabled:opacity-60"
           >
             <RotateCcw className="w-4 h-4" />
-            {isPayOSSyncing ? 'Đang đồng bộ...' : 'Sync PayOS'}
+            {isPayOSSyncing
+              ? t(
+                  'SystemAdmin.withdrawalRequests.requestCard.actions.syncingPayOS',
+                  'Syncing...'
+                )
+              : t(
+                  'SystemAdmin.withdrawalRequests.requestCard.actions.syncPayOS',
+                  'Sync PayOS'
+                )}
           </button>
         </div>
       ) : null}

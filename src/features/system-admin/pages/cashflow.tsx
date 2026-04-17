@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Eye, RefreshCw, Search, Wallet, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -9,39 +10,97 @@ import {
   type CashflowStatus,
   type CashflowTransactionDetail,
 } from '../api/cashflow.api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
-const ROLE_FILTERS: Array<{ label: string; value: 'all' | CashflowActorRole }> =
-  [
-    { label: 'All roles', value: 'all' },
-    { label: 'Patient', value: 'Patient' },
-    { label: 'Ophthalmologist', value: 'Ophthalmologist' },
-    { label: 'Organisation', value: 'Organisation' },
-  ];
+const ROLE_FILTERS: Array<{
+  labelKey: string;
+  labelFallback: string;
+  value: 'all' | CashflowActorRole;
+}> = [
+  {
+    labelKey: 'SystemAdmin.cashflow.filters.role.all',
+    labelFallback: 'All roles',
+    value: 'all',
+  },
+  {
+    labelKey: 'SystemAdmin.cashflow.roles.patient',
+    labelFallback: 'Patient',
+    value: 'Patient',
+  },
+  {
+    labelKey: 'SystemAdmin.cashflow.roles.ophthalmologist',
+    labelFallback: 'Ophthalmologist',
+    value: 'Ophthalmologist',
+  },
+  {
+    labelKey: 'SystemAdmin.cashflow.roles.organisation',
+    labelFallback: 'Organisation',
+    value: 'Organisation',
+  },
+];
 
-const STATUS_FILTERS: Array<{ label: string; value: 'all' | CashflowStatus }> =
-  [
-    { label: 'All statuses', value: 'all' },
-    { label: 'Pending', value: 'Pending' },
-    { label: 'Processing', value: 'Processing' },
-    { label: 'Completed', value: 'Completed' },
-    { label: 'Failed', value: 'Failed' },
-    { label: 'Cancelled', value: 'Cancelled' },
-    { label: 'Refunded', value: 'Refunded' },
-  ];
+const STATUS_FILTERS: Array<{
+  labelKey: string;
+  labelFallback: string;
+  value: 'all' | CashflowStatus;
+}> = [
+  {
+    labelKey: 'SystemAdmin.cashflow.filters.status.all',
+    labelFallback: 'All statuses',
+    value: 'all',
+  },
+  {
+    labelKey: 'SystemAdmin.common.status.pending',
+    labelFallback: 'Pending',
+    value: 'Pending',
+  },
+  {
+    labelKey: 'SystemAdmin.common.status.processing',
+    labelFallback: 'Processing',
+    value: 'Processing',
+  },
+  {
+    labelKey: 'SystemAdmin.common.status.completed',
+    labelFallback: 'Completed',
+    value: 'Completed',
+  },
+  {
+    labelKey: 'SystemAdmin.common.status.failed',
+    labelFallback: 'Failed',
+    value: 'Failed',
+  },
+  {
+    labelKey: 'SystemAdmin.common.status.cancelled',
+    labelFallback: 'Cancelled',
+    value: 'Cancelled',
+  },
+  {
+    labelKey: 'SystemAdmin.cashflow.status.refunded',
+    labelFallback: 'Refunded',
+    value: 'Refunded',
+  },
+];
 
-const formatMoney = (value: number) =>
-  value.toLocaleString('vi-VN', {
+const formatMoney = (value: number, locale: string) =>
+  value.toLocaleString(locale, {
     style: 'currency',
     currency: 'VND',
   });
 
-const formatDateTime = (value: string) => {
+const formatDateTime = (value: string, locale: string, fallback: string) => {
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'N/A';
-  return parsed.toLocaleString('vi-VN');
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleString(locale);
 };
 
 export default function CashflowPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(20);
   const [actorRole, setActorRole] = useState<'all' | CashflowActorRole>('all');
@@ -87,30 +146,42 @@ export default function CashflowPage() {
 
       <div className="flex-1 h-full overflow-y-auto">
         <PageHeader
-          title="Payment Transactions"
-          description="Manage wallet top-up and withdrawal transactions in one financial table"
+          title={t('SystemAdmin.cashflow.title', 'Payment Transactions')}
+          description={t(
+            'SystemAdmin.cashflow.description',
+            'Manage wallet top-up and withdrawal transactions in one financial table'
+          )}
         />
 
         <main className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <SummaryCard
-              title="Total on current page"
-              value={formatMoney(pageTotal)}
+              title={t(
+                'SystemAdmin.cashflow.summary.totalCurrentPage',
+                'Total on current page'
+              )}
+              value={formatMoney(pageTotal, dateLocale)}
               tone="cyan"
             />
             <SummaryCard
-              title="Patients"
-              value={formatMoney(roleSummary.Patient ?? 0)}
+              title={t('SystemAdmin.cashflow.summary.patients', 'Patients')}
+              value={formatMoney(roleSummary.Patient ?? 0, dateLocale)}
               tone="emerald"
             />
             <SummaryCard
-              title="Ophthalmologists"
-              value={formatMoney(roleSummary.Ophthalmologist ?? 0)}
+              title={t(
+                'SystemAdmin.cashflow.summary.ophthalmologists',
+                'Ophthalmologists'
+              )}
+              value={formatMoney(roleSummary.Ophthalmologist ?? 0, dateLocale)}
               tone="amber"
             />
             <SummaryCard
-              title="Organisations"
-              value={formatMoney(roleSummary.Organisation ?? 0)}
+              title={t(
+                'SystemAdmin.cashflow.summary.organisations',
+                'Organisations'
+              )}
+              value={formatMoney(roleSummary.Organisation ?? 0, dateLocale)}
               tone="violet"
             />
           </div>
@@ -125,7 +196,10 @@ export default function CashflowPage() {
                     setPageNumber(1);
                     setSearchTerm(e.target.value);
                   }}
-                  placeholder="Search actor, reference, description..."
+                  placeholder={t(
+                    'SystemAdmin.cashflow.filters.searchPlaceholder',
+                    'Search actor, reference, description...'
+                  )}
                   className="bg-transparent outline-none text-sm w-full"
                 />
               </div>
@@ -141,7 +215,7 @@ export default function CashflowPage() {
                 >
                   {ROLE_FILTERS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey, option.labelFallback)}
                     </option>
                   ))}
                 </select>
@@ -156,7 +230,7 @@ export default function CashflowPage() {
                 >
                   {STATUS_FILTERS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey, option.labelFallback)}
                     </option>
                   ))}
                 </select>
@@ -166,22 +240,31 @@ export default function CashflowPage() {
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Refresh
+                  {t('SystemAdmin.common.actions.refresh', 'Refresh')}
                 </button>
               </div>
             </div>
 
             {query.isLoading ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                Loading transaction records...
+                {t(
+                  'SystemAdmin.cashflow.states.loading',
+                  'Loading transaction records...'
+                )}
               </div>
             ) : query.isError ? (
               <div className="py-10 text-center text-sm text-rose-500">
-                Unable to load transaction records from API.
+                {t(
+                  'SystemAdmin.cashflow.states.loadError',
+                  'Unable to load transaction records from API.'
+                )}
               </div>
             ) : rows.length === 0 ? (
               <div className="py-10 text-center text-sm text-slate-500">
-                No transaction records found.
+                {t(
+                  'SystemAdmin.cashflow.states.empty',
+                  'No transaction records found.'
+                )}
               </div>
             ) : (
               <>
@@ -189,14 +272,45 @@ export default function CashflowPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left border-b border-slate-200 dark:border-slate-700 text-slate-500">
-                        <th className="py-3 pr-3">Date</th>
-                        <th className="py-3 pr-3">Actor</th>
-                        <th className="py-3 pr-3">Role</th>
-                        <th className="py-3 pr-3">Type</th>
-                        <th className="py-3 pr-3">Amount</th>
-                        <th className="py-3 pr-3">Status</th>
-                        <th className="py-3 pr-3">Reference</th>
-                        <th className="py-3 pr-3 text-right">Action</th>
+                        <th className="py-3 pr-3">
+                          {t('SystemAdmin.cashflow.table.columns.date', 'Date')}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t(
+                            'SystemAdmin.cashflow.table.columns.actor',
+                            'Actor'
+                          )}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t('SystemAdmin.cashflow.table.columns.role', 'Role')}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t('SystemAdmin.cashflow.table.columns.type', 'Type')}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t(
+                            'SystemAdmin.cashflow.table.columns.amount',
+                            'Amount'
+                          )}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t(
+                            'SystemAdmin.cashflow.table.columns.status',
+                            'Status'
+                          )}
+                        </th>
+                        <th className="py-3 pr-3">
+                          {t(
+                            'SystemAdmin.cashflow.table.columns.reference',
+                            'Reference'
+                          )}
+                        </th>
+                        <th className="py-3 pr-3 text-right">
+                          {t(
+                            'SystemAdmin.cashflow.table.columns.action',
+                            'Action'
+                          )}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -206,29 +320,36 @@ export default function CashflowPage() {
                           className="border-b border-slate-100 dark:border-slate-800"
                         >
                           <td className="py-3 pr-3 text-slate-600 dark:text-slate-300">
-                            {formatDateTime(row.createdAt)}
+                            {formatDateTime(
+                              row.createdAt,
+                              dateLocale,
+                              notAvailableLabel
+                            )}
                           </td>
                           <td className="py-3 pr-3">
                             <p className="font-medium text-slate-800 dark:text-slate-100">
                               {row.actorName}
                             </p>
                             <p className="text-xs text-slate-500">
-                              {row.actorEmail || 'N/A'}
+                              {row.actorEmail || notAvailableLabel}
                             </p>
                           </td>
                           <td className="py-3 pr-3 text-slate-700 dark:text-slate-300">
-                            {row.actorRole}
+                            {t(
+                              `SystemAdmin.cashflow.roles.${row.actorRole.toLowerCase()}`,
+                              row.actorRole
+                            )}
                           </td>
                           <td className="py-3 pr-3">
                             <p className="text-slate-700 dark:text-slate-300">
                               {row.transactionType}
                             </p>
                             <p className="text-xs text-slate-500">
-                              {row.referenceType || 'N/A'}
+                              {row.referenceType || notAvailableLabel}
                             </p>
                           </td>
                           <td className="py-3 pr-3 font-semibold text-slate-900 dark:text-slate-100">
-                            {formatMoney(row.amount)}
+                            {formatMoney(row.amount, dateLocale)}
                           </td>
                           <td className="py-3 pr-3">
                             <StatusBadge status={row.status} />
@@ -237,7 +358,7 @@ export default function CashflowPage() {
                             {row.bookingCode ||
                               row.referenceId ||
                               row.depositOrderCode ||
-                              'N/A'}
+                              notAvailableLabel}
                           </td>
                           <td className="py-3 pr-3 text-right">
                             <button
@@ -246,7 +367,10 @@ export default function CashflowPage() {
                               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              Details
+                              {t(
+                                'SystemAdmin.cashflow.table.actions.details',
+                                'Details'
+                              )}
                             </button>
                           </td>
                         </tr>
@@ -257,8 +381,14 @@ export default function CashflowPage() {
 
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <span className="text-slate-500">
-                    Showing page {pageMeta?.pageNumber ?? pageNumber} of{' '}
-                    {pageMeta?.totalPages ?? 1}
+                    {t(
+                      'SystemAdmin.cashflow.pagination.pageSummary',
+                      'Showing page {{page}} of {{totalPages}}',
+                      {
+                        page: pageMeta?.pageNumber ?? pageNumber,
+                        totalPages: pageMeta?.totalPages ?? 1,
+                      }
+                    )}
                   </span>
 
                   <div className="flex items-center gap-2">
@@ -269,7 +399,10 @@ export default function CashflowPage() {
                       disabled={!pageMeta?.hasPrevious}
                       className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40"
                     >
-                      Previous
+                      {t(
+                        'SystemAdmin.common.pagination.previous',
+                        'Previous page'
+                      )}
                     </button>
                     <button
                       onClick={() =>
@@ -280,7 +413,7 @@ export default function CashflowPage() {
                       disabled={!pageMeta?.hasNext}
                       className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40"
                     >
-                      Next
+                      {t('SystemAdmin.common.pagination.next', 'Next page')}
                     </button>
                   </div>
                 </div>
@@ -333,6 +466,17 @@ function SummaryCard({
 }
 
 function StatusBadge({ status }: { status: CashflowStatus }) {
+  const { t } = useSafeTranslation();
+
+  const statusLabelMap: Record<CashflowStatus, string> = {
+    Pending: t('SystemAdmin.common.status.pending', 'Pending'),
+    Processing: t('SystemAdmin.common.status.processing', 'Processing'),
+    Completed: t('SystemAdmin.common.status.completed', 'Completed'),
+    Failed: t('SystemAdmin.common.status.failed', 'Failed'),
+    Cancelled: t('SystemAdmin.common.status.cancelled', 'Cancelled'),
+    Refunded: t('SystemAdmin.cashflow.status.refunded', 'Refunded'),
+  };
+
   const classes =
     status === 'Completed'
       ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
@@ -346,7 +490,7 @@ function StatusBadge({ status }: { status: CashflowStatus }) {
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${classes}`}
     >
-      {status}
+      {statusLabelMap[status]}
     </span>
   );
 }
@@ -358,6 +502,13 @@ function TransactionDetailModal({
   transaction: CashflowTransactionDetail;
   onClose: () => void;
 }) {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
+
   const hasWithdrawalDetails =
     Boolean(transaction.withdrawalBankName) ||
     Boolean(transaction.withdrawalBankAccountNumber) ||
@@ -377,10 +528,14 @@ function TransactionDetailModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Payment Transaction Details
+              {t(
+                'SystemAdmin.cashflow.detailModal.title',
+                'Payment Transaction Details'
+              )}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              ID: {transaction.id}
+              {t('SystemAdmin.cashflow.detailModal.idLabel', 'ID')}:{' '}
+              {transaction.id}
             </p>
           </div>
           <button
@@ -395,41 +550,89 @@ function TransactionDetailModal({
         <div className="max-h-[70vh] overflow-y-auto p-6 space-y-6">
           <section>
             <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-              General Information
+              {t(
+                'SystemAdmin.cashflow.detailModal.sections.general',
+                'General Information'
+              )}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <DetailRow
-                label="Created At"
-                value={formatDateTime(transaction.createdAt)}
-              />
-              <DetailRow label="Status" value={transaction.status} />
-              <DetailRow label="Actor" value={transaction.actorName} />
-              <DetailRow
-                label="Actor Email"
-                value={transaction.actorEmail || 'N/A'}
-              />
-              <DetailRow label="Actor Role" value={transaction.actorRole} />
-              <DetailRow
-                label="Amount"
-                value={formatMoney(transaction.amount)}
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.createdAt',
+                  'Created At'
+                )}
+                value={formatDateTime(
+                  transaction.createdAt,
+                  dateLocale,
+                  notAvailableLabel
+                )}
               />
               <DetailRow
-                label="Transaction Type"
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.status',
+                  'Status'
+                )}
+                value={transaction.status}
+              />
+              <DetailRow
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.actor',
+                  'Actor'
+                )}
+                value={transaction.actorName}
+              />
+              <DetailRow
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.actorEmail',
+                  'Actor Email'
+                )}
+                value={transaction.actorEmail || notAvailableLabel}
+              />
+              <DetailRow
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.actorRole',
+                  'Actor Role'
+                )}
+                value={transaction.actorRole}
+              />
+              <DetailRow
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.amount',
+                  'Amount'
+                )}
+                value={formatMoney(transaction.amount, dateLocale)}
+              />
+              <DetailRow
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.transactionType',
+                  'Transaction Type'
+                )}
                 value={transaction.transactionType}
               />
               <DetailRow
-                label="Reference Type"
-                value={transaction.referenceType || 'N/A'}
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.referenceType',
+                  'Reference Type'
+                )}
+                value={transaction.referenceType || notAvailableLabel}
               />
               <DetailRow
-                label="Reference ID"
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.referenceId',
+                  'Reference ID'
+                )}
                 value={
-                  transaction.referenceId || transaction.bookingCode || 'N/A'
+                  transaction.referenceId ||
+                  transaction.bookingCode ||
+                  notAvailableLabel
                 }
               />
               <DetailRow
-                label="Description"
-                value={transaction.description || 'N/A'}
+                label={t(
+                  'SystemAdmin.cashflow.detailModal.fields.description',
+                  'Description'
+                )}
+                value={transaction.description || notAvailableLabel}
               />
             </div>
           </section>
@@ -437,53 +640,87 @@ function TransactionDetailModal({
           {hasDepositDetails && (
             <section>
               <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                Top-up Information
+                {t(
+                  'SystemAdmin.cashflow.detailModal.sections.topUp',
+                  'Top-up Information'
+                )}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <DetailRow
-                  label="Order Code"
-                  value={transaction.depositOrderCode || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.orderCode',
+                    'Order Code'
+                  )}
+                  value={transaction.depositOrderCode || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Payment Method"
-                  value={transaction.depositPaymentMethod || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.paymentMethod',
+                    'Payment Method'
+                  )}
+                  value={transaction.depositPaymentMethod || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Completed At"
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.completedAt',
+                    'Completed At'
+                  )}
                   value={
                     transaction.depositCompletedAt
-                      ? formatDateTime(transaction.depositCompletedAt)
-                      : 'N/A'
+                      ? formatDateTime(
+                          transaction.depositCompletedAt,
+                          dateLocale,
+                          notAvailableLabel
+                        )
+                      : notAvailableLabel
                   }
                 />
                 <DetailRow
-                  label="Provider Txn Ref"
-                  value={transaction.depositProviderTxnRef || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.providerTxnRef',
+                    'Provider Txn Ref'
+                  )}
+                  value={transaction.depositProviderTxnRef || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Failure Reason"
-                  value={transaction.depositFailureReason || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.failureReason',
+                    'Failure Reason'
+                  )}
+                  value={transaction.depositFailureReason || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Payment URL"
-                  value={transaction.depositPaymentUrl || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.paymentUrl',
+                    'Payment URL'
+                  )}
+                  value={transaction.depositPaymentUrl || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Return URL"
-                  value={transaction.depositReturnUrl || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.returnUrl',
+                    'Return URL'
+                  )}
+                  value={transaction.depositReturnUrl || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Cancel URL"
-                  value={transaction.depositCancelUrl || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.cancelUrl',
+                    'Cancel URL'
+                  )}
+                  value={transaction.depositCancelUrl || notAvailableLabel}
                 />
               </div>
 
               <div className="mt-3">
                 <p className="text-xs font-medium text-slate-500 mb-1">
-                  Provider Response
+                  {t(
+                    'SystemAdmin.cashflow.detailModal.fields.providerResponse',
+                    'Provider Response'
+                  )}
                 </p>
                 <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-xs whitespace-pre-wrap break-all text-slate-700 dark:text-slate-300">
-                  {transaction.depositProviderResponse || 'N/A'}
+                  {transaction.depositProviderResponse || notAvailableLabel}
                 </div>
               </div>
             </section>
@@ -492,64 +729,126 @@ function TransactionDetailModal({
           {hasWithdrawalDetails && (
             <section>
               <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                Withdrawal Information
+                {t(
+                  'SystemAdmin.cashflow.detailModal.sections.withdrawal',
+                  'Withdrawal Information'
+                )}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <DetailRow
-                  label="Processed At"
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.processedAt',
+                    'Processed At'
+                  )}
                   value={
                     transaction.withdrawalProcessedAt
-                      ? formatDateTime(transaction.withdrawalProcessedAt)
-                      : 'N/A'
+                      ? formatDateTime(
+                          transaction.withdrawalProcessedAt,
+                          dateLocale,
+                          notAvailableLabel
+                        )
+                      : notAvailableLabel
                   }
                 />
                 <DetailRow
-                  label="Processed By Admin"
-                  value={transaction.withdrawalProcessedByAdminId || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.processedByAdmin',
+                    'Processed By Admin'
+                  )}
+                  value={
+                    transaction.withdrawalProcessedByAdminId ||
+                    notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="Bank Name"
-                  value={transaction.withdrawalBankName || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.bankName',
+                    'Bank Name'
+                  )}
+                  value={transaction.withdrawalBankName || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Bank Account Number"
-                  value={transaction.withdrawalBankAccountNumber || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.bankAccountNumber',
+                    'Bank Account Number'
+                  )}
+                  value={
+                    transaction.withdrawalBankAccountNumber || notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="Account Holder"
-                  value={transaction.withdrawalAccountHolderName || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.accountHolder',
+                    'Account Holder'
+                  )}
+                  value={
+                    transaction.withdrawalAccountHolderName || notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="Bank BIN"
-                  value={transaction.withdrawalBankBin || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.bankBin',
+                    'Bank BIN'
+                  )}
+                  value={transaction.withdrawalBankBin || notAvailableLabel}
                 />
                 <DetailRow
-                  label="Transfer Reference"
-                  value={transaction.withdrawalTransferReference || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.transferReference',
+                    'Transfer Reference'
+                  )}
+                  value={
+                    transaction.withdrawalTransferReference || notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="PayOS External Payout ID"
-                  value={transaction.withdrawalExternalPayoutId || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.payOSExternalPayoutId',
+                    'PayOS External Payout ID'
+                  )}
+                  value={
+                    transaction.withdrawalExternalPayoutId || notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="PayOS Reference ID"
-                  value={transaction.withdrawalPayOSReferenceId || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.payOSReferenceId',
+                    'PayOS Reference ID'
+                  )}
+                  value={
+                    transaction.withdrawalPayOSReferenceId || notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="PayOS Transaction ID"
-                  value={transaction.withdrawalPayOSTransactionId || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.payOSTransactionId',
+                    'PayOS Transaction ID'
+                  )}
+                  value={
+                    transaction.withdrawalPayOSTransactionId ||
+                    notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="PayOS Approval State"
-                  value={transaction.withdrawalPayOSApprovalState || 'N/A'}
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.payOSApprovalState',
+                    'PayOS Approval State'
+                  )}
+                  value={
+                    transaction.withdrawalPayOSApprovalState ||
+                    notAvailableLabel
+                  }
                 />
                 <DetailRow
-                  label="Payout Fee"
+                  label={t(
+                    'SystemAdmin.cashflow.detailModal.fields.payoutFee',
+                    'Payout Fee'
+                  )}
                   value={
                     transaction.withdrawalFee !== null &&
                     transaction.withdrawalFee !== undefined
-                      ? formatMoney(transaction.withdrawalFee)
-                      : 'N/A'
+                      ? formatMoney(transaction.withdrawalFee, dateLocale)
+                      : notAvailableLabel
                   }
                 />
               </div>
