@@ -28,6 +28,8 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import Sidebar from '../components/Sidebar';
@@ -35,7 +37,8 @@ import StatsCard from '../components/StatsCard';
 import StatusBadge from '../components/StatusBadge';
 import { permissionsApi } from '../api/permissions.api';
 import { userApi } from '../api/user.api';
-import { formatViDate } from '@/lib/date-utils';
+import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type {
   ApplicationRoleDto,
   CreatePermissionPayload,
@@ -84,6 +87,27 @@ const KNOWN_CATEGORIES = [
   'Audit',
   'Dashboard',
 ];
+
+const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
+  Users: 'SystemAdmin.permissions.categories.users',
+  Permissions: 'SystemAdmin.permissions.categories.permissions',
+  Patients: 'SystemAdmin.permissions.categories.patients',
+  Ophthalmologists: 'SystemAdmin.permissions.categories.ophthalmologists',
+  Organisations: 'SystemAdmin.permissions.categories.organisations',
+  Screening: 'SystemAdmin.permissions.categories.screening',
+  Consultations: 'SystemAdmin.permissions.categories.consultations',
+  Audit: 'SystemAdmin.permissions.categories.audit',
+  Dashboard: 'SystemAdmin.permissions.categories.dashboard',
+};
+
+const getCategoryLabel = (
+  category: string | undefined,
+  t: ReturnType<typeof useSafeTranslation>['t']
+) => {
+  if (!category) return '';
+  const key = CATEGORY_TRANSLATION_KEYS[category];
+  return key ? t(key, category) : category;
+};
 
 // ─── Shared input/label styles ───────────────────────────────────────────────
 
@@ -137,15 +161,19 @@ function Modal({
   );
 }
 
-const BtnCancel = ({ onClick }: { onClick: () => void }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-  >
-    Cancel
-  </button>
-);
+const BtnCancel = ({ onClick }: { onClick: () => void }) => {
+  const { t } = useSafeTranslation();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+    >
+      {t('SystemAdmin.permissions.common.actions.cancel', 'Cancel')}
+    </button>
+  );
+};
 
 const BtnPrimary = ({
   label,
@@ -155,19 +183,25 @@ const BtnPrimary = ({
   label: string;
   loading?: boolean;
   danger?: boolean;
-}) => (
-  <button
-    type="submit"
-    disabled={loading}
-    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60 ${
-      danger
-        ? 'bg-red-500 hover:bg-red-600 text-white'
-        : 'bg-primary hover:opacity-90 text-slate-900'
-    }`}
-  >
-    {loading ? 'Saving…' : label}
-  </button>
-);
+}) => {
+  const { t } = useSafeTranslation();
+
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-60 ${
+        danger
+          ? 'bg-red-500 hover:bg-red-600 text-white'
+          : 'bg-primary hover:opacity-90 text-slate-900'
+      }`}
+    >
+      {loading
+        ? t('SystemAdmin.permissions.common.actions.saving', 'Saving...')
+        : label}
+    </button>
+  );
+};
 
 // ─── Create Permission Modal ──────────────────────────────────────────────────
 
@@ -178,6 +212,7 @@ function CreatePermissionModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [form, setForm] = useState<CreatePermissionPayload>({
     name: '',
     displayName: '',
@@ -199,10 +234,15 @@ function CreatePermissionModal({
       });
       onCreated();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Failed to create permission.';
+      const msg = extractApiErrorMessage(
+        err,
+        t(
+          'SystemAdmin.permissions.modals.create.errors.createFailed',
+          'Failed to create permission.'
+        )
+      );
       setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -211,12 +251,21 @@ function CreatePermissionModal({
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title="Create Permission"
+        title={t(
+          'SystemAdmin.permissions.modals.create.title',
+          'Create Permission'
+        )}
         onClose={onClose}
         footer={
           <>
             <BtnCancel onClick={onClose} />
-            <BtnPrimary label="Create" loading={saving} />
+            <BtnPrimary
+              label={t(
+                'SystemAdmin.permissions.modals.create.actions.create',
+                'Create'
+              )}
+              loading={saving}
+            />
           </>
         }
       >
@@ -226,52 +275,94 @@ function CreatePermissionModal({
           </p>
         )}
         <div>
-          <label className={labelCls}>Name *</label>
+          <label className={labelCls}>
+            {t('SystemAdmin.permissions.modals.create.fields.name', 'Name')} *
+          </label>
           <input
             className={inputCls}
-            placeholder="e.g. users:read"
+            placeholder={t(
+              'SystemAdmin.permissions.modals.create.fields.namePlaceholder',
+              'e.g. users:read'
+            )}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
             pattern="^[a-zA-Z0-9_.:-]+$"
-            title="Letters, digits, underscore, dot, colon, or hyphen only"
+            title={t(
+              'SystemAdmin.permissions.modals.create.fields.namePatternHint',
+              'Letters, digits, underscore, dot, colon, or hyphen only'
+            )}
           />
           <p className="text-xs text-slate-400 mt-1">
-            Convention: <code>resource:action</code> (e.g.{' '}
-            <code>screening:approve</code>)
+            {t(
+              'SystemAdmin.permissions.modals.create.fields.nameConventionPrefix',
+              'Convention:'
+            )}{' '}
+            <code>resource:action</code>{' '}
+            {t(
+              'SystemAdmin.permissions.modals.create.fields.nameConventionSuffix',
+              '(e.g. screening:approve)'
+            )}
           </p>
         </div>
         <div>
-          <label className={labelCls}>Display Name *</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.create.fields.displayName',
+              'Display Name'
+            )}{' '}
+            *
+          </label>
           <input
             className={inputCls}
-            placeholder="e.g. Read Users"
+            placeholder={t(
+              'SystemAdmin.permissions.modals.create.fields.displayNamePlaceholder',
+              'e.g. Read Users'
+            )}
             value={form.displayName}
             onChange={(e) => setForm({ ...form, displayName: e.target.value })}
             required
           />
         </div>
         <div>
-          <label className={labelCls}>Category</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.create.fields.category',
+              'Category'
+            )}
+          </label>
           <select
             className={inputCls}
             value={form.category ?? ''}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
-            <option value="">— None —</option>
+            <option value="">
+              {t(
+                'SystemAdmin.permissions.modals.create.fields.none',
+                '- None -'
+              )}
+            </option>
             {KNOWN_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {getCategoryLabel(c, t)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className={labelCls}>Description</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.create.fields.description',
+              'Description'
+            )}
+          </label>
           <textarea
             className={`${inputCls} resize-none`}
             rows={3}
-            placeholder="What does this permission allow?"
+            placeholder={t(
+              'SystemAdmin.permissions.modals.create.fields.descriptionPlaceholder',
+              'What does this permission allow?'
+            )}
             value={form.description ?? ''}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
@@ -292,6 +383,7 @@ function EditPermissionModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [form, setForm] = useState<UpdatePermissionPayload>({
     displayName: permission.displayName,
     description: permission.description ?? '',
@@ -312,10 +404,15 @@ function EditPermissionModal({
       });
       onUpdated();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Failed to update permission.';
+      const msg = extractApiErrorMessage(
+        err,
+        t(
+          'SystemAdmin.permissions.modals.edit.errors.updateFailed',
+          'Failed to update permission.'
+        )
+      );
       setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -324,12 +421,21 @@ function EditPermissionModal({
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title="Edit Permission"
+        title={t(
+          'SystemAdmin.permissions.modals.edit.title',
+          'Edit Permission'
+        )}
         onClose={onClose}
         footer={
           <>
             <BtnCancel onClick={onClose} />
-            <BtnPrimary label="Save Changes" loading={saving} />
+            <BtnPrimary
+              label={t(
+                'SystemAdmin.permissions.modals.edit.actions.saveChanges',
+                'Save Changes'
+              )}
+              loading={saving}
+            />
           </>
         }
       >
@@ -339,7 +445,12 @@ function EditPermissionModal({
           </p>
         )}
         <div>
-          <label className={labelCls}>Name (read-only)</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.edit.fields.nameReadonly',
+              'Name (read-only)'
+            )}
+          </label>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
             <Key className="w-4 h-4 text-slate-400 shrink-0" />
             <code className="text-sm text-slate-700 dark:text-slate-300">
@@ -348,7 +459,13 @@ function EditPermissionModal({
           </div>
         </div>
         <div>
-          <label className={labelCls}>Display Name *</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.edit.fields.displayName',
+              'Display Name'
+            )}{' '}
+            *
+          </label>
           <input
             className={inputCls}
             value={form.displayName}
@@ -357,22 +474,34 @@ function EditPermissionModal({
           />
         </div>
         <div>
-          <label className={labelCls}>Category</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.edit.fields.category',
+              'Category'
+            )}
+          </label>
           <select
             className={inputCls}
             value={form.category ?? ''}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
-            <option value="">— None —</option>
+            <option value="">
+              {t('SystemAdmin.permissions.modals.edit.fields.none', '- None -')}
+            </option>
             {KNOWN_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {getCategoryLabel(c, t)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className={labelCls}>Description</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.edit.fields.description',
+              'Description'
+            )}
+          </label>
           <textarea
             className={`${inputCls} resize-none`}
             rows={3}
@@ -396,6 +525,7 @@ function ConfirmDeleteModal({
   onClose: () => void;
   onDeleted: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -404,6 +534,16 @@ function ConfirmDeleteModal({
     try {
       await permissionsApi.deletePermission(permission.id);
       onDeleted();
+    } catch (err: unknown) {
+      toast.error(
+        extractApiErrorMessage(
+          err,
+          t(
+            'SystemAdmin.permissions.modals.delete.errors.deactivateFailed',
+            'Failed to deactivate permission.'
+          )
+        )
+      );
     } finally {
       setSaving(false);
     }
@@ -412,12 +552,22 @@ function ConfirmDeleteModal({
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title="Deactivate Permission"
+        title={t(
+          'SystemAdmin.permissions.modals.delete.title',
+          'Deactivate Permission'
+        )}
         onClose={onClose}
         footer={
           <>
             <BtnCancel onClick={onClose} />
-            <BtnPrimary label="Deactivate" loading={saving} danger />
+            <BtnPrimary
+              label={t(
+                'SystemAdmin.permissions.modals.delete.actions.deactivate',
+                'Deactivate'
+              )}
+              loading={saving}
+              danger
+            />
           </>
         }
       >
@@ -427,15 +577,20 @@ function ConfirmDeleteModal({
           </div>
           <div>
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              Are you sure you want to deactivate{' '}
+              {t(
+                'SystemAdmin.permissions.modals.delete.messagePrefix',
+                'Are you sure you want to deactivate'
+              )}{' '}
               <strong className="text-slate-900 dark:text-white">
                 {permission.displayName}
               </strong>
               ?
             </p>
             <p className="text-xs text-slate-500 mt-2">
-              The permission record is kept for audit purposes but will no
-              longer be assignable to roles or users.
+              {t(
+                'SystemAdmin.permissions.modals.delete.messageNote',
+                'The permission record is kept for audit purposes but will no longer be assignable to roles or users.'
+              )}
             </p>
           </div>
         </div>
@@ -459,6 +614,7 @@ function AssignToRoleModal({
   onClose: () => void;
   onAssigned: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [saving, setSaving] = useState(false);
@@ -486,10 +642,15 @@ function AssignToRoleModal({
       });
       onAssigned();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Failed to assign permission.';
+      const msg = extractApiErrorMessage(
+        err,
+        t(
+          'SystemAdmin.permissions.modals.assign.errors.assignFailed',
+          'Failed to assign permission.'
+        )
+      );
       setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -498,12 +659,22 @@ function AssignToRoleModal({
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title={`Assign Permission — ${role.name}`}
+        title={t(
+          'SystemAdmin.permissions.modals.assign.title',
+          'Assign Permission - {{roleName}}',
+          { roleName: role.name }
+        )}
         onClose={onClose}
         footer={
           <>
             <BtnCancel onClick={onClose} />
-            <BtnPrimary label="Assign" loading={saving} />
+            <BtnPrimary
+              label={t(
+                'SystemAdmin.permissions.modals.assign.actions.assign',
+                'Assign'
+              )}
+              loading={saving}
+            />
           </>
         }
         wide
@@ -517,7 +688,10 @@ function AssignToRoleModal({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             className={`${inputCls} pl-9`}
-            placeholder="Search permissions…"
+            placeholder={t(
+              'SystemAdmin.permissions.modals.assign.searchPlaceholder',
+              'Search permissions...'
+            )}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -525,7 +699,10 @@ function AssignToRoleModal({
         <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
           {filtered.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
-              No available permissions
+              {t(
+                'SystemAdmin.permissions.modals.assign.empty',
+                'No available permissions'
+              )}
             </p>
           ) : (
             filtered.map((p) => (
@@ -555,7 +732,7 @@ function AssignToRoleModal({
                   <span
                     className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${categoryClass(p.category)}`}
                   >
-                    {p.category}
+                    {getCategoryLabel(p.category, t)}
                   </span>
                 )}
               </label>
@@ -584,6 +761,7 @@ function GrantUserPermissionModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [form, setForm] = useState<GrantPermissionToUserPayload>({
     userId,
     permissionId: initialValues?.permissionId ?? '',
@@ -614,10 +792,15 @@ function GrantUserPermissionModal({
       });
       onSaved();
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Failed to save override.';
+      const msg = extractApiErrorMessage(
+        err,
+        t(
+          'SystemAdmin.permissions.modals.userOverride.errors.saveFailed',
+          'Failed to save override.'
+        )
+      );
       setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -626,12 +809,21 @@ function GrantUserPermissionModal({
   return (
     <form onSubmit={handleSubmit}>
       <Modal
-        title="Add Permission Override"
+        title={t(
+          'SystemAdmin.permissions.modals.userOverride.title',
+          'Add Permission Override'
+        )}
         onClose={onClose}
         footer={
           <>
             <BtnCancel onClick={onClose} />
-            <BtnPrimary label="Save Override" loading={saving} />
+            <BtnPrimary
+              label={t(
+                'SystemAdmin.permissions.modals.userOverride.actions.saveOverride',
+                'Save Override'
+              )}
+              loading={saving}
+            />
           </>
         }
         wide
@@ -642,7 +834,10 @@ function GrantUserPermissionModal({
           </p>
         )}
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Adding override for{' '}
+          {t(
+            'SystemAdmin.permissions.modals.userOverride.subtitle',
+            'Adding override for'
+          )}{' '}
           <strong className="text-slate-900 dark:text-white">
             {userEmail}
           </strong>
@@ -650,7 +845,12 @@ function GrantUserPermissionModal({
 
         {/* Grant / Revoke toggle */}
         <div>
-          <label className={labelCls}>Override Type</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.userOverride.fields.overrideType',
+              'Override Type'
+            )}
+          </label>
           <div className="grid grid-cols-2 gap-3">
             <label
               className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${
@@ -668,9 +868,17 @@ function GrantUserPermissionModal({
               />
               <div>
                 <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                  Grant
+                  {t(
+                    'SystemAdmin.permissions.modals.userOverride.types.grant',
+                    'Grant'
+                  )}
                 </p>
-                <p className="text-xs text-slate-500">Extra permission</p>
+                <p className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.permissions.modals.userOverride.types.grantDescription',
+                    'Extra permission'
+                  )}
+                </p>
               </div>
             </label>
             <label
@@ -689,9 +897,17 @@ function GrantUserPermissionModal({
               />
               <div>
                 <p className="text-sm font-semibold text-red-700 dark:text-red-400">
-                  Revoke
+                  {t(
+                    'SystemAdmin.permissions.modals.userOverride.types.revoke',
+                    'Revoke'
+                  )}
                 </p>
-                <p className="text-xs text-slate-500">Remove from role</p>
+                <p className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.permissions.modals.userOverride.types.revokeDescription',
+                    'Remove from role'
+                  )}
+                </p>
               </div>
             </label>
           </div>
@@ -699,12 +915,21 @@ function GrantUserPermissionModal({
 
         {/* Permission picker */}
         <div>
-          <label className={labelCls}>Permission *</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.userOverride.fields.permission',
+              'Permission'
+            )}{' '}
+            *
+          </label>
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               className={`${inputCls} pl-9`}
-              placeholder="Search…"
+              placeholder={t(
+                'SystemAdmin.permissions.modals.userOverride.fields.searchPermissionPlaceholder',
+                'Search...'
+              )}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -740,7 +965,12 @@ function GrantUserPermissionModal({
 
         {/* Expiry */}
         <div>
-          <label className={labelCls}>Expires At (optional)</label>
+          <label className={labelCls}>
+            {t(
+              'SystemAdmin.permissions.modals.userOverride.fields.expiresAt',
+              'Expires At (optional)'
+            )}
+          </label>
           <input
             type="datetime-local"
             className={inputCls}
@@ -758,6 +988,28 @@ function GrantUserPermissionModal({
 type TabId = 'permissions' | 'roles' | 'users';
 
 export default function PermissionsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+
+  const formatLocalizedDate = useCallback(
+    (dateText: string | undefined | null) => {
+      if (!dateText) {
+        return t('SystemAdmin.common.notAvailable', 'N/A');
+      }
+
+      const parsed = new Date(dateText);
+      if (Number.isNaN(parsed.getTime())) {
+        return t('SystemAdmin.common.notAvailable', 'N/A');
+      }
+
+      return parsed.toLocaleDateString(dateLocale);
+    },
+    [dateLocale, t]
+  );
+
   // ── Shared state ──────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<TabId>('permissions');
   const [allPermissions, setAllPermissions] = useState<PermissionDto[]>([]); // full list (< 200) for pickers
@@ -933,7 +1185,10 @@ export default function PermissionsPage() {
 
   const permColumns: TableColumn<PermissionDto>[] = [
     {
-      header: 'Permission',
+      header: t(
+        'SystemAdmin.permissions.table.columns.permission',
+        'Permission'
+      ),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex flex-col gap-0.5">
@@ -947,7 +1202,7 @@ export default function PermissionsPage() {
       ),
     },
     {
-      header: 'Category',
+      header: t('SystemAdmin.permissions.table.columns.category', 'Category'),
       accessor: 'category',
       render: (value) =>
         value ? (
@@ -955,40 +1210,50 @@ export default function PermissionsPage() {
             className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold ${categoryClass(value as string)}`}
           >
             <Tag className="w-3 h-3" />
-            {value as string}
+            {getCategoryLabel(value as string, t)}
           </span>
         ) : (
-          <span className="text-slate-400 text-xs">—</span>
+          <span className="text-slate-400 text-xs">
+            {t('SystemAdmin.common.notProvided', 'Not provided')}
+          </span>
         ),
     },
     {
-      header: 'Description',
+      header: t(
+        'SystemAdmin.permissions.table.columns.description',
+        'Description'
+      ),
       accessor: 'description',
       render: (value) => (
         <span className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1 max-w-xs">
-          {(value as string) || '—'}
+          {(value as string) ||
+            t('SystemAdmin.common.notProvided', 'Not provided')}
         </span>
       ),
     },
     {
-      header: 'Status',
+      header: t('SystemAdmin.permissions.table.columns.status', 'Status'),
       accessor: 'isActive',
       render: (value) => (
         <StatusBadge
           status={value ? 'success' : 'warning'}
-          label={value ? 'Active' : 'Inactive'}
+          label={
+            value
+              ? t('SystemAdmin.permissions.status.active', 'Active')
+              : t('SystemAdmin.permissions.status.inactive', 'Inactive')
+          }
         />
       ),
     },
     {
-      header: 'Actions',
+      header: t('SystemAdmin.permissions.table.columns.actions', 'Actions'),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-1">
           <button
             onClick={() => setEditingPerm(row)}
             className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-all"
-            title="Edit"
+            title={t('SystemAdmin.permissions.table.actions.edit', 'Edit')}
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -996,7 +1261,10 @@ export default function PermissionsPage() {
             onClick={() => setDeletingPerm(row)}
             disabled={!row.isActive}
             className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-30"
-            title="Deactivate"
+            title={t(
+              'SystemAdmin.permissions.table.actions.deactivate',
+              'Deactivate'
+            )}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -1052,9 +1320,27 @@ export default function PermissionsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
-    { id: 'permissions', label: 'All Permissions', icon: Shield },
-    { id: 'roles', label: 'Role Assignments', icon: ShieldCheck },
-    { id: 'users', label: 'User Overrides', icon: UserCheck },
+    {
+      id: 'permissions',
+      label: t(
+        'SystemAdmin.permissions.tabs.allPermissions',
+        'All Permissions'
+      ),
+      icon: Shield,
+    },
+    {
+      id: 'roles',
+      label: t(
+        'SystemAdmin.permissions.tabs.roleAssignments',
+        'Role Assignments'
+      ),
+      icon: ShieldCheck,
+    },
+    {
+      id: 'users',
+      label: t('SystemAdmin.permissions.tabs.userOverrides', 'User Overrides'),
+      icon: UserCheck,
+    },
   ];
 
   return (
@@ -1063,8 +1349,14 @@ export default function PermissionsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Permission Management"
-          description="Define permissions, assign them to roles, and manage per-user overrides"
+          title={t(
+            'SystemAdmin.permissions.page.title',
+            'Permission Management'
+          )}
+          description={t(
+            'SystemAdmin.permissions.page.description',
+            'Define permissions, assign them to roles, and manage per-user overrides'
+          )}
           actions={
             activeTab === 'permissions' ? (
               <button
@@ -1072,7 +1364,10 @@ export default function PermissionsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20"
               >
                 <Plus className="w-4 h-4" />
-                New Permission
+                {t(
+                  'SystemAdmin.permissions.page.actions.newPermission',
+                  'New Permission'
+                )}
               </button>
             ) : undefined
           }
@@ -1083,31 +1378,49 @@ export default function PermissionsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatsCard
-                title="Total Permissions"
+                title={t(
+                  'SystemAdmin.permissions.stats.totalPermissions',
+                  'Total Permissions'
+                )}
                 value={allPermissions.length}
                 icon={Shield}
-                description="All defined permissions"
+                description={t(
+                  'SystemAdmin.permissions.stats.totalPermissionsDescription',
+                  'All defined permissions'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Active"
+                title={t('SystemAdmin.permissions.stats.active', 'Active')}
                 value={activeCount}
                 icon={CheckCircle2}
-                description="Currently assignable"
+                description={t(
+                  'SystemAdmin.permissions.stats.activeDescription',
+                  'Currently assignable'
+                )}
                 variant="success"
               />
               <StatsCard
-                title="Inactive"
+                title={t('SystemAdmin.permissions.stats.inactive', 'Inactive')}
                 value={inactiveCount}
                 icon={XCircle}
-                description="Deactivated / archived"
+                description={t(
+                  'SystemAdmin.permissions.stats.inactiveDescription',
+                  'Deactivated / archived'
+                )}
                 variant="warning"
               />
               <StatsCard
-                title="Categories"
+                title={t(
+                  'SystemAdmin.permissions.stats.categories',
+                  'Categories'
+                )}
                 value={categories}
                 icon={Layers}
-                description="Distinct categories"
+                description={t(
+                  'SystemAdmin.permissions.stats.categoriesDescription',
+                  'Distinct categories'
+                )}
                 variant="primary"
               />
             </div>
@@ -1146,7 +1459,10 @@ export default function PermissionsPage() {
                         setPermPage(1);
                         setPermSearch(e.target.value);
                       }}
-                      placeholder="Search by name or display name…"
+                      placeholder={t(
+                        'SystemAdmin.permissions.filters.searchPlaceholder',
+                        'Search by name or display name...'
+                      )}
                       className={`${inputCls} pl-9`}
                     />
                   </div>
@@ -1160,10 +1476,15 @@ export default function PermissionsPage() {
                       }}
                       className="appearance-none pl-3 pr-9 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none cursor-pointer transition-all"
                     >
-                      <option value="">All Categories</option>
+                      <option value="">
+                        {t(
+                          'SystemAdmin.permissions.filters.categories.all',
+                          'All Categories'
+                        )}
+                      </option>
                       {KNOWN_CATEGORIES.map((c) => (
                         <option key={c} value={c}>
-                          {c}
+                          {getCategoryLabel(c, t)}
                         </option>
                       ))}
                     </select>
@@ -1179,9 +1500,21 @@ export default function PermissionsPage() {
                       }}
                       className="appearance-none pl-3 pr-9 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none cursor-pointer transition-all"
                     >
-                      <option value="">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="">
+                        {t(
+                          'SystemAdmin.permissions.filters.status.all',
+                          'All Status'
+                        )}
+                      </option>
+                      <option value="active">
+                        {t('SystemAdmin.permissions.status.active', 'Active')}
+                      </option>
+                      <option value="inactive">
+                        {t(
+                          'SystemAdmin.permissions.status.inactive',
+                          'Inactive'
+                        )}
+                      </option>
                     </select>
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
@@ -1194,14 +1527,24 @@ export default function PermissionsPage() {
                     data={permissions}
                     keyExtractor={(row) => row.id}
                     isLoading={permLoading}
-                    emptyMessage="No permissions found"
+                    emptyMessage={t(
+                      'SystemAdmin.permissions.states.empty',
+                      'No permissions found'
+                    )}
                   />
                 </div>
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                   <span>
-                    Showing {permissions.length} of {permTotal} permissions
+                    {t(
+                      'SystemAdmin.permissions.pagination.showing',
+                      'Showing {{shown}} of {{total}} permissions',
+                      {
+                        shown: permissions.length,
+                        total: permTotal,
+                      }
+                    )}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -1209,15 +1552,26 @@ export default function PermissionsPage() {
                       onClick={() => setPermPage((p) => p - 1)}
                       className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Previous
+                      {t(
+                        'SystemAdmin.permissions.pagination.previous',
+                        'Previous'
+                      )}
                     </button>
-                    <span className="px-2 font-medium">Page {permPage}</span>
+                    <span className="px-2 font-medium">
+                      {t(
+                        'SystemAdmin.permissions.pagination.page',
+                        'Page {{page}}',
+                        {
+                          page: permPage,
+                        }
+                      )}
+                    </span>
                     <button
                       disabled={permissions.length < 20}
                       onClick={() => setPermPage((p) => p + 1)}
                       className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Next
+                      {t('SystemAdmin.permissions.pagination.next', 'Next')}
                     </button>
                   </div>
                 </div>
@@ -1232,7 +1586,10 @@ export default function PermissionsPage() {
                 {/* Left: role picker */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-                    Select Role
+                    {t(
+                      'SystemAdmin.permissions.roles.selectRole',
+                      'Select Role'
+                    )}
                   </h3>
                   {rolesLoading ? (
                     <div className="space-y-3">
@@ -1269,7 +1626,10 @@ export default function PermissionsPage() {
                               {role.name}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Click to view permissions
+                              {t(
+                                'SystemAdmin.permissions.roles.roleCardHint',
+                                'Click to view permissions'
+                              )}
                             </p>
                           </div>
                         </div>
@@ -1285,7 +1645,10 @@ export default function PermissionsPage() {
                       <div className="text-center">
                         <ShieldCheck className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                         <p className="text-slate-500 dark:text-slate-400 text-sm">
-                          Select a role to manage its permissions
+                          {t(
+                            'SystemAdmin.permissions.roles.emptySelectRole',
+                            'Select a role to manage its permissions'
+                          )}
                         </p>
                       </div>
                     </div>
@@ -1299,8 +1662,17 @@ export default function PermissionsPage() {
                           </h3>
                           <p className="text-xs text-slate-500 mt-0.5">
                             {rolePermsLoading
-                              ? 'Loading…'
-                              : `${rolePerms.length} permission${rolePerms.length !== 1 ? 's' : ''} assigned`}
+                              ? t(
+                                  'SystemAdmin.permissions.common.loading',
+                                  'Loading...'
+                                )
+                              : t(
+                                  'SystemAdmin.permissions.roles.assignedCount',
+                                  '{{count}} permission(s) assigned',
+                                  {
+                                    count: rolePerms.length,
+                                  }
+                                )}
                           </p>
                         </div>
                         <button
@@ -1308,7 +1680,10 @@ export default function PermissionsPage() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all"
                         >
                           <Plus className="w-4 h-4" />
-                          Assign
+                          {t(
+                            'SystemAdmin.permissions.roles.actions.assign',
+                            'Assign'
+                          )}
                         </button>
                       </div>
 
@@ -1326,7 +1701,10 @@ export default function PermissionsPage() {
                         <div className="py-12 text-center">
                           <Shield className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                           <p className="text-sm text-slate-500">
-                            No permissions assigned to this role yet
+                            {t(
+                              'SystemAdmin.permissions.roles.empty',
+                              'No permissions assigned to this role yet'
+                            )}
                           </p>
                         </div>
                       ) : (
@@ -1349,7 +1727,7 @@ export default function PermissionsPage() {
                                 <span
                                   className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${categoryClass(rp.category)}`}
                                 >
-                                  {rp.category}
+                                  {getCategoryLabel(rp.category, t)}
                                 </span>
                               )}
                               <button
@@ -1360,7 +1738,10 @@ export default function PermissionsPage() {
                                   removingRolePerm === rp.rolePermissionId
                                 }
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-40"
-                                title="Remove from role"
+                                title={t(
+                                  'SystemAdmin.permissions.roles.actions.removeFromRole',
+                                  'Remove from role'
+                                )}
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -1382,13 +1763,19 @@ export default function PermissionsPage() {
                 {/* User search */}
                 <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
                   <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                    Search User
+                    {t(
+                      'SystemAdmin.permissions.users.searchTitle',
+                      'Search User'
+                    )}
                   </h3>
                   <div className="relative max-w-md" ref={userSearchRef}>
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       className={`${inputCls} pl-9`}
-                      placeholder="Type name or email…"
+                      placeholder={t(
+                        'SystemAdmin.permissions.users.searchPlaceholder',
+                        'Type name or email...'
+                      )}
                       value={userSearch}
                       onChange={(e) => handleUserSearchChange(e.target.value)}
                       onFocus={() => {
@@ -1457,7 +1844,10 @@ export default function PermissionsPage() {
                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all"
                       >
                         <Plus className="w-4 h-4" />
-                        Add Override
+                        {t(
+                          'SystemAdmin.permissions.users.actions.addOverride',
+                          'Add Override'
+                        )}
                       </button>
                     </div>
 
@@ -1468,7 +1858,10 @@ export default function PermissionsPage() {
                         {/* Roles */}
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
                           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                            Roles
+                            {t(
+                              'SystemAdmin.permissions.users.rolesTitle',
+                              'Roles'
+                            )}
                           </h4>
                           <div className="flex flex-wrap gap-2">
                             {userEffective.roles.map((r) => (
@@ -1486,8 +1879,14 @@ export default function PermissionsPage() {
                         {/* Effective permissions */}
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
                           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                            Effective Permissions (
-                            {userEffective.effectivePermissionNames.length})
+                            {t(
+                              'SystemAdmin.permissions.users.effectivePermissionsTitle',
+                              'Effective Permissions ({{count}})',
+                              {
+                                count:
+                                  userEffective.effectivePermissionNames.length,
+                              }
+                            )}
                           </h4>
                           <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
                             {userEffective.effectivePermissionNames.map((n) => (
@@ -1505,16 +1904,27 @@ export default function PermissionsPage() {
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              Inherited from Roles (
-                              {userEffective.rolePermissions.length})
+                              {t(
+                                'SystemAdmin.permissions.users.inheritedFromRolesTitle',
+                                'Inherited from Roles ({{count}})',
+                                {
+                                  count: userEffective.rolePermissions.length,
+                                }
+                              )}
                             </h4>
                             <p className="text-xs text-slate-400 mt-0.5">
-                              Add a deny override to block a role permission
+                              {t(
+                                'SystemAdmin.permissions.users.inheritedFromRolesDescription',
+                                'Add a deny override to block a role permission'
+                              )}
                             </p>
                           </div>
                           {userEffective.rolePermissions.length === 0 ? (
                             <div className="py-8 text-center text-sm text-slate-500">
-                              No role permissions
+                              {t(
+                                'SystemAdmin.permissions.users.states.noRolePermissions',
+                                'No role permissions'
+                              )}
                             </div>
                           ) : (
                             <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
@@ -1541,7 +1951,10 @@ export default function PermissionsPage() {
                                     </div>
                                     {denied ? (
                                       <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 shrink-0">
-                                        Denied
+                                        {t(
+                                          'SystemAdmin.permissions.users.status.denied',
+                                          'Denied'
+                                        )}
                                       </span>
                                     ) : (
                                       <button
@@ -1553,10 +1966,16 @@ export default function PermissionsPage() {
                                           setShowGrantModal(true);
                                         }}
                                         className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0"
-                                        title="Add deny override"
+                                        title={t(
+                                          'SystemAdmin.permissions.users.actions.addDenyOverride',
+                                          'Add deny override'
+                                        )}
                                       >
                                         <ShieldOff className="w-3 h-3" />
-                                        Deny
+                                        {t(
+                                          'SystemAdmin.permissions.users.actions.deny',
+                                          'Deny'
+                                        )}
                                       </button>
                                     )}
                                   </div>
@@ -1570,20 +1989,25 @@ export default function PermissionsPage() {
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              Active Overrides (
-                              {
-                                userEffective.userOverrides.filter(
-                                  (ov) => ov.isActive
-                                ).length
-                              }
-                              )
+                              {t(
+                                'SystemAdmin.permissions.users.activeOverridesTitle',
+                                'Active Overrides ({{count}})',
+                                {
+                                  count: userEffective.userOverrides.filter(
+                                    (ov) => ov.isActive
+                                  ).length,
+                                }
+                              )}
                             </h4>
                           </div>
                           {userEffective.userOverrides.filter(
                             (ov) => ov.isActive
                           ).length === 0 ? (
                             <div className="py-8 text-center text-sm text-slate-500">
-                              No active overrides
+                              {t(
+                                'SystemAdmin.permissions.users.states.noActiveOverrides',
+                                'No active overrides'
+                              )}
                             </div>
                           ) : (
                             <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
@@ -1622,7 +2046,15 @@ export default function PermissionsPage() {
                                           : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                                       }`}
                                     >
-                                      {ov.isGranted ? 'Granted' : 'Denied'}
+                                      {ov.isGranted
+                                        ? t(
+                                            'SystemAdmin.permissions.users.status.granted',
+                                            'Granted'
+                                          )
+                                        : t(
+                                            'SystemAdmin.permissions.users.status.denied',
+                                            'Denied'
+                                          )}
                                     </span>
                                     <button
                                       onClick={() =>
@@ -1634,7 +2066,10 @@ export default function PermissionsPage() {
                                         revokingUserPerm === ov.userPermissionId
                                       }
                                       className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-40 shrink-0"
-                                      title="Remove override"
+                                      title={t(
+                                        'SystemAdmin.permissions.users.actions.removeOverride',
+                                        'Remove override'
+                                      )}
                                     >
                                       <X className="w-4 h-4" />
                                     </button>
@@ -1662,8 +2097,13 @@ export default function PermissionsPage() {
                                 <div className="flex items-center gap-2">
                                   <Clock className="w-4 h-4 text-slate-400" />
                                   <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    Override History ({history.length} revoked /
-                                    expired)
+                                    {t(
+                                      'SystemAdmin.permissions.users.overrideHistoryTitle',
+                                      'Override History ({{count}} revoked / expired)',
+                                      {
+                                        count: history.length,
+                                      }
+                                    )}
                                   </h4>
                                 </div>
                                 {showOverrideHistory ? (
@@ -1698,12 +2138,28 @@ export default function PermissionsPage() {
                                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                                           }`}
                                         >
-                                          {ov.isGranted ? 'Granted' : 'Denied'}
+                                          {ov.isGranted
+                                            ? t(
+                                                'SystemAdmin.permissions.users.status.granted',
+                                                'Granted'
+                                              )
+                                            : t(
+                                                'SystemAdmin.permissions.users.status.denied',
+                                                'Denied'
+                                              )}
                                         </span>
                                         <span className="text-xs text-slate-400">
-                                          {ov.isExpired ? 'Expired' : 'Revoked'}
+                                          {ov.isExpired
+                                            ? t(
+                                                'SystemAdmin.permissions.users.status.expired',
+                                                'Expired'
+                                              )
+                                            : t(
+                                                'SystemAdmin.permissions.users.status.revoked',
+                                                'Revoked'
+                                              )}
                                           {ov.expiresAt && ov.isExpired
-                                            ? ` · ${formatViDate(ov.expiresAt)}`
+                                            ? ` · ${formatLocalizedDate(ov.expiresAt)}`
                                             : ''}
                                         </span>
                                       </div>
@@ -1717,7 +2173,10 @@ export default function PermissionsPage() {
                       </div>
                     ) : (
                       <div className="rounded-xl border border-slate-200 dark:border-slate-700 py-12 text-center text-sm text-slate-500">
-                        Failed to load user permissions
+                        {t(
+                          'SystemAdmin.permissions.users.states.loadFailed',
+                          'Failed to load user permissions'
+                        )}
                       </div>
                     )}
                   </div>

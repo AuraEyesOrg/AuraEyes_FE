@@ -22,16 +22,23 @@ import StatsCard from '../components/StatsCard';
 import DataTable, { type TableColumn } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { exportApi, userApi } from '../api';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import type { User, UserRole } from '../types/system-admin.types';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
 
-const roleLabels: Record<UserRole, string> = {
-  system_admin: 'System Admin',
-  organisation_admin: 'Org Admin',
-  doctor: 'Doctor',
-  operator: 'Operator',
-  analyst: 'Analyst',
+const roleLabelMeta: Record<UserRole, { key: string; fallback: string }> = {
+  system_admin: {
+    key: 'SystemAdmin.users.roles.systemAdmin',
+    fallback: 'System Admin',
+  },
+  organisation_admin: {
+    key: 'SystemAdmin.users.roles.organisationAdmin',
+    fallback: 'Org Admin',
+  },
+  doctor: { key: 'SystemAdmin.users.roles.doctor', fallback: 'Doctor' },
+  operator: { key: 'SystemAdmin.users.roles.operator', fallback: 'Operator' },
+  analyst: { key: 'SystemAdmin.users.roles.analyst', fallback: 'Analyst' },
 };
 
 const roleColors: Record<UserRole, string> = {
@@ -46,21 +53,46 @@ const roleColors: Record<UserRole, string> = {
     'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
-const roleFilterOptions: Array<{ value: string; label: string }> = [
-  { value: 'all', label: 'All Roles' },
-  { value: 'system_admin', label: 'System Admin' },
-  { value: 'organisation_admin', label: 'Org Admin' },
-  { value: 'doctor', label: 'Doctor' },
-  { value: 'operator', label: 'Operator' },
-  { value: 'analyst', label: 'Analyst' },
-];
-
 export default function UsersPage() {
+  const { t } = useSafeTranslation();
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+
+  const roleFilterOptions: Array<{ value: string; label: string }> = [
+    {
+      value: 'all',
+      label: t('SystemAdmin.users.filters.options.allRoles', 'All Roles'),
+    },
+    {
+      value: 'system_admin',
+      label: t('SystemAdmin.users.roles.systemAdmin', 'System Admin'),
+    },
+    {
+      value: 'organisation_admin',
+      label: t('SystemAdmin.users.roles.organisationAdmin', 'Org Admin'),
+    },
+    {
+      value: 'doctor',
+      label: t('SystemAdmin.users.roles.doctor', 'Doctor'),
+    },
+    {
+      value: 'operator',
+      label: t('SystemAdmin.users.roles.operator', 'Operator'),
+    },
+    {
+      value: 'analyst',
+      label: t('SystemAdmin.users.roles.analyst', 'Analyst'),
+    },
+  ];
+
+  const getRoleLabel = (role: UserRole) => {
+    const meta = roleLabelMeta[role];
+    return t(meta.key, meta.fallback);
+  };
 
   // Load data
   const loadData = useCallback(async () => {
@@ -102,12 +134,30 @@ export default function UsersPage() {
     try {
       if (currentStatus === 'locked') {
         await userApi.unlockUser(userId);
+        toast.success(
+          t(
+            'SystemAdmin.users.toasts.userUnlocked',
+            'User account has been unlocked.'
+          )
+        );
       } else {
         await userApi.lockUser(userId);
+        toast.success(
+          t(
+            'SystemAdmin.users.toasts.userLocked',
+            'User account has been locked.'
+          )
+        );
       }
       loadData(); // Refresh data
     } catch (error) {
       console.error('Failed to toggle user lock status:', error);
+      toast.error(
+        t(
+          'SystemAdmin.users.toasts.toggleLockError',
+          'Failed to update user lock status. Please try again.'
+        )
+      );
     }
   };
 
@@ -120,49 +170,110 @@ export default function UsersPage() {
       });
 
       if (usersForExport.length === 0) {
-        toast.info('No users available for export.');
+        toast.info(
+          t(
+            'SystemAdmin.users.toasts.exportNoData',
+            'No users available for export.'
+          )
+        );
         return;
       }
 
       await downloadXlsxFile(
         usersForExport,
         [
-          { header: 'User ID', value: (row) => row.id },
-          { header: 'Name', value: (row) => row.name },
-          { header: 'Email', value: (row) => row.email },
-          { header: 'Role', value: (row) => roleLabels[row.role] ?? row.role },
-          { header: 'Status', value: (row) => row.status },
           {
-            header: 'Organisation',
+            header: t('SystemAdmin.users.table.columns.id', 'User ID'),
+            value: (row) => row.id,
+          },
+          {
+            header: t('SystemAdmin.users.export.columns.name', 'Name'),
+            value: (row) => row.name,
+          },
+          {
+            header: t('SystemAdmin.users.export.columns.email', 'Email'),
+            value: (row) => row.email,
+          },
+          {
+            header: t('SystemAdmin.users.table.columns.role', 'Role'),
+            value: (row) => getRoleLabel(row.role),
+          },
+          {
+            header: t('SystemAdmin.users.table.columns.status', 'Status'),
+            value: (row) =>
+              t(`SystemAdmin.users.status.${row.status}`, row.status),
+          },
+          {
+            header: t(
+              'SystemAdmin.users.table.columns.organization',
+              'Organization'
+            ),
             value: (row) => row.organisationName ?? '',
           },
-          { header: 'Last Login', value: (row) => row.lastLogin ?? '' },
-          { header: 'Created At', value: (row) => row.createdAt },
           {
-            header: 'Email Verified',
-            value: (row) => (row.emailVerified ? 'Yes' : 'No'),
+            header: t(
+              'SystemAdmin.users.table.columns.lastLogin',
+              'Last Login'
+            ),
+            value: (row) => row.lastLogin ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.users.export.columns.createdAt',
+              'Created At'
+            ),
+            value: (row) => row.createdAt,
+          },
+          {
+            header: t(
+              'SystemAdmin.users.export.columns.emailVerified',
+              'Email Verified'
+            ),
+            value: (row) =>
+              row.emailVerified
+                ? t('SystemAdmin.users.export.yes', 'Yes')
+                : t('SystemAdmin.users.export.no', 'No'),
           },
         ],
         buildTimestampedFileName('system-admin-users', 'xlsx'),
-        'Users'
+        t('SystemAdmin.users.export.sheetName', 'Users')
       );
-      toast.success(`Exported ${usersForExport.length} users.`);
+      toast.success(
+        t(
+          'SystemAdmin.users.toasts.exportSuccess',
+          'Exported {{count}} users.',
+          {
+            count: usersForExport.length,
+          }
+        )
+      );
     } catch (error) {
       console.error('Failed to export users:', error);
-      toast.error('Failed to export users. Please try again.');
+      toast.error(
+        t(
+          'SystemAdmin.users.toasts.exportError',
+          'Failed to export users. Please try again.'
+        )
+      );
     } finally {
       setIsExporting(false);
     }
   };
 
   const userColumns: TableColumn<User>[] = [
-    { header: 'ID', accessor: 'id', width: '100px' },
     {
-      header: 'User',
+      header: t('SystemAdmin.users.table.columns.id', 'ID'),
+      accessor: 'id',
+      width: '100px',
+    },
+    {
+      header: t('SystemAdmin.users.table.columns.user', 'User'),
       accessor: 'name',
       render: (_, row) => {
         const displayName =
-          (row.name || '').trim() || row.email || 'Unknown User';
+          (row.name || '').trim() ||
+          row.email ||
+          t('SystemAdmin.users.table.values.unknownUser', 'Unknown User');
         const avatarInitials = displayName
           .split(' ')
           .map((namePart) => namePart[0])
@@ -180,7 +291,7 @@ export default function UsersPage() {
                 {displayName}
               </span>
               <span className="text-xs text-slate-500">
-                {row.email || 'N/A'}
+                {row.email || notAvailableLabel}
               </span>
             </div>
           </div>
@@ -188,28 +299,31 @@ export default function UsersPage() {
       },
     },
     {
-      header: 'Role',
+      header: t('SystemAdmin.users.table.columns.role', 'Role'),
       accessor: 'role',
       render: (value) => (
         <span
           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[value as UserRole]}`}
         >
-          {roleLabels[value as UserRole]}
+          {getRoleLabel(value as UserRole)}
         </span>
       ),
     },
     {
-      header: 'Organization',
+      header: t('SystemAdmin.users.table.columns.organization', 'Organization'),
       accessor: 'organisationName',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {(value as string) || '—'}
+          {(value as string) || notAvailableLabel}
         </span>
       ),
     },
-    { header: 'Last Login', accessor: 'lastLogin' },
     {
-      header: 'Status',
+      header: t('SystemAdmin.users.table.columns.lastLogin', 'Last Login'),
+      accessor: 'lastLogin',
+    },
+    {
+      header: t('SystemAdmin.users.table.columns.status', 'Status'),
       accessor: 'status',
       render: (value) => {
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
@@ -217,28 +331,30 @@ export default function UsersPage() {
           inactive: 'warning',
           locked: 'error',
         };
-        const labelMap: Record<string, string> = {
-          active: 'Active',
-          inactive: 'Inactive',
-          locked: 'Locked',
-        };
         return (
           <StatusBadge
             status={statusMap[value as string] || 'info'}
-            label={labelMap[value as string] || (value as string)}
+            label={t(
+              `SystemAdmin.users.status.${value as string}`,
+              value as string
+            )}
           />
         );
       },
     },
     {
-      header: 'Actions',
+      header: t('SystemAdmin.users.table.columns.actions', 'Actions'),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleToggleLock(row.id, row.status)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title={row.status === 'locked' ? 'Unlock User' : 'Lock User'}
+            title={
+              row.status === 'locked'
+                ? t('SystemAdmin.users.actions.unlockUser', 'Unlock User')
+                : t('SystemAdmin.users.actions.lockUser', 'Lock User')
+            }
           >
             {row.status === 'locked' ? (
               <Unlock className="w-4 h-4" />
@@ -260,8 +376,11 @@ export default function UsersPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="User & Role Management"
-          description="Manage platform users, assign roles, and control access permissions"
+          title={t('SystemAdmin.users.title', 'User & Role Management')}
+          description={t(
+            'SystemAdmin.users.description',
+            'Manage platform users, assign roles, and control access permissions'
+          )}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -270,11 +389,13 @@ export default function UsersPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export'}
+                {isExporting
+                  ? t('SystemAdmin.users.actions.exporting', 'Exporting...')
+                  : t('SystemAdmin.actions.export', 'Export')}
               </button>
               <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4" />
-                Add User
+                {t('SystemAdmin.users.actions.addUser', 'Add User')}
               </button>
             </div>
           }
@@ -285,33 +406,48 @@ export default function UsersPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatsCard
-                title="Total Users"
+                title={t('SystemAdmin.users.stats.totalUsers', 'Total Users')}
                 value={totalUsers}
                 icon={Users}
-                description="All registered users"
+                description={t(
+                  'SystemAdmin.users.stats.totalUsersDescription',
+                  'All registered users'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Active Users"
+                title={t('SystemAdmin.users.stats.activeUsers', 'Active Users')}
                 value={activeUsers}
                 icon={UserCheck}
                 change={12}
                 trend="up"
-                description="+12 this month"
+                description={t(
+                  'SystemAdmin.users.stats.activeUsersDescription',
+                  '+12 this month'
+                )}
                 variant="success"
               />
               <StatsCard
-                title="Locked Accounts"
+                title={t(
+                  'SystemAdmin.users.stats.lockedAccounts',
+                  'Locked Accounts'
+                )}
                 value={lockedUsers}
                 icon={UserX}
-                description="Require attention"
+                description={t(
+                  'SystemAdmin.users.stats.lockedAccountsDescription',
+                  'Require attention'
+                )}
                 variant="danger"
               />
               <StatsCard
-                title="Role Types"
-                value={Object.keys(roleLabels).length}
+                title={t('SystemAdmin.users.stats.roleTypes', 'Role Types')}
+                value={Object.keys(roleLabelMeta).length}
                 icon={Shield}
-                description="Available roles"
+                description={t(
+                  'SystemAdmin.users.stats.roleTypesDescription',
+                  'Available roles'
+                )}
                 variant="primary"
               />
             </div>
@@ -324,7 +460,10 @@ export default function UsersPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or ID..."
+                  placeholder={t(
+                    'SystemAdmin.users.filters.searchPlaceholder',
+                    'Search by name, email, or ID...'
+                  )}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
@@ -332,7 +471,7 @@ export default function UsersPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Role:
+                    {t('SystemAdmin.users.filters.roleLabel', 'Role')}:
                   </span>
                   <div className="flex flex-wrap items-center gap-1">
                     {roleFilterOptions.map((option) => {
@@ -365,21 +504,31 @@ export default function UsersPage() {
                 data={filteredUsers}
                 keyExtractor={(row) => row.id}
                 isLoading={loading}
-                emptyMessage="No users found"
+                emptyMessage={t(
+                  'SystemAdmin.users.states.empty',
+                  'No users found'
+                )}
               />
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredUsers.length} of {users.length} users
+                {t(
+                  'SystemAdmin.users.summary.showing',
+                  'Showing {{shown}} of {{total}} users',
+                  {
+                    shown: filteredUsers.length,
+                    total: users.length,
+                  }
+                )}
               </span>
               <div className="flex items-center gap-2">
                 <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  Previous
+                  {t('SystemAdmin.common.pagination.previous', 'Previous page')}
                 </button>
                 <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  Next
+                  {t('SystemAdmin.common.pagination.next', 'Next page')}
                 </button>
               </div>
             </div>

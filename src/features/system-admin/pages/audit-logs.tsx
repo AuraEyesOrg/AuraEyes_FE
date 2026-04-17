@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import AuditLogDetailModal from '../components/AuditLogDetailModal';
@@ -27,54 +28,32 @@ import useDebounce from '@/hooks/use-debounce';
 import type { AuditLogDto } from '../types/system-admin.types';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ============ Action Badge Config ============
 const actionConfig: Record<
   string,
-  { label: string; color: string; icon: typeof Plus }
+  { labelKey: string; color: string; icon: typeof Plus }
 > = {
   Insert: {
-    label: 'Insert',
+    labelKey: 'SystemAdmin.auditLogs.actions.insert',
     color:
       'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     icon: Plus,
   },
   Update: {
-    label: 'Update',
+    labelKey: 'SystemAdmin.auditLogs.actions.update',
     color:
       'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     icon: Edit,
   },
   Delete: {
-    label: 'Delete',
+    labelKey: 'SystemAdmin.auditLogs.actions.delete',
     color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     icon: Trash2,
   },
 };
-
-// ============ Time Formatting ============
-function timeAgo(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(isoDate).toLocaleDateString('vi-VN');
-}
-
-function formatFull(isoDate: string): string {
-  return new Date(isoDate).toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
 
 // ============ Skeleton Row ============
 function SkeletonRow() {
@@ -104,6 +83,63 @@ function SkeletonRow() {
 
 // ============ Main Page ============
 export default function AuditLogsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+
+  const formatRelativeTime = (isoDate: string): string => {
+    const parsedDate = new Date(isoDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return t('SystemAdmin.common.notAvailable', 'N/A');
+    }
+
+    const diff = Date.now() - parsedDate.getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) {
+      return t('SystemAdmin.auditLogs.time.justNow', 'Just now');
+    }
+
+    if (mins < 60) {
+      return t('SystemAdmin.auditLogs.time.minutesAgo', '{{count}}m ago', {
+        count: mins,
+      });
+    }
+
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) {
+      return t('SystemAdmin.auditLogs.time.hoursAgo', '{{count}}h ago', {
+        count: hrs,
+      });
+    }
+
+    const days = Math.floor(hrs / 24);
+    if (days < 7) {
+      return t('SystemAdmin.auditLogs.time.daysAgo', '{{count}}d ago', {
+        count: days,
+      });
+    }
+
+    return parsedDate.toLocaleDateString(dateLocale);
+  };
+
+  const formatFullTimestamp = (isoDate: string): string => {
+    const parsedDate = new Date(isoDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return t('SystemAdmin.common.notAvailable', 'N/A');
+    }
+
+    return parsedDate.toLocaleString(dateLocale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
   // Filter & pagination state
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(20);
@@ -158,40 +194,87 @@ export default function AuditLogsPage() {
       });
 
       if (logsForExport.length === 0) {
-        toast.info('No audit logs available for export.');
+        toast.info(
+          t(
+            'SystemAdmin.auditLogs.export.noData',
+            'No audit logs available for export.'
+          )
+        );
         return;
       }
 
       await downloadXlsxFile(
         logsForExport,
         [
-          { header: 'Timestamp', value: (row: AuditLogDto) => row.createdAt },
           {
-            header: 'User Name',
-            value: (row: AuditLogDto) => row.userName ?? 'System',
+            header: t(
+              'SystemAdmin.auditLogs.export.columns.timestamp',
+              'Timestamp'
+            ),
+            value: (row: AuditLogDto) => row.createdAt,
           },
-          { header: 'User ID', value: (row: AuditLogDto) => row.userId ?? '' },
-          { header: 'Action', value: (row: AuditLogDto) => row.action },
           {
-            header: 'Entity Name',
+            header: t(
+              'SystemAdmin.auditLogs.export.columns.userName',
+              'User Name'
+            ),
+            value: (row: AuditLogDto) =>
+              row.userName ??
+              t('SystemAdmin.auditLogs.values.system', 'System'),
+          },
+          {
+            header: t('SystemAdmin.auditLogs.export.columns.userId', 'User ID'),
+            value: (row: AuditLogDto) => row.userId ?? '',
+          },
+          {
+            header: t('SystemAdmin.auditLogs.export.columns.action', 'Action'),
+            value: (row: AuditLogDto) => row.action,
+          },
+          {
+            header: t(
+              'SystemAdmin.auditLogs.export.columns.entityName',
+              'Entity Name'
+            ),
             value: (row: AuditLogDto) => row.entityName,
           },
           {
-            header: 'Entity ID',
+            header: t(
+              'SystemAdmin.auditLogs.export.columns.entityId',
+              'Entity ID'
+            ),
             value: (row: AuditLogDto) => row.entityId ?? '',
           },
           {
-            header: 'IP Address',
+            header: t(
+              'SystemAdmin.auditLogs.export.columns.ipAddress',
+              'IP Address'
+            ),
             value: (row: AuditLogDto) => row.ipAddress ?? '',
           },
         ],
         buildTimestampedFileName('system-admin-audit-logs', 'xlsx'),
-        'Audit Logs'
+        t('SystemAdmin.auditLogs.export.sheetName', 'Audit Logs')
       );
-      toast.success(`Exported ${logsForExport.length} audit logs.`);
+      toast.success(
+        t(
+          'SystemAdmin.auditLogs.export.success',
+          'Exported {{count}} audit logs.',
+          {
+            count: logsForExport.length,
+          }
+        )
+      );
     } catch (error) {
       console.error('Failed to export audit logs:', error);
-      toast.error('Failed to export audit logs. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.auditLogs.export.failed',
+            'Failed to export audit logs. Please try again.'
+          )
+        )
+      );
     } finally {
       setIsExporting(false);
     }
@@ -203,8 +286,11 @@ export default function AuditLogsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Audit Logs & Compliance"
-          description="Track all system changes — Insert, Update, Delete operations"
+          title={t('SystemAdmin.auditLogs.title', 'Audit Logs & Compliance')}
+          description={t(
+            'SystemAdmin.auditLogs.description',
+            'Track all system changes - Insert, Update, Delete operations'
+          )}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -213,14 +299,24 @@ export default function AuditLogsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export Excel'}
+                {isExporting
+                  ? t('SystemAdmin.auditLogs.actions.exporting', 'Exporting...')
+                  : t(
+                      'SystemAdmin.auditLogs.actions.exportExcel',
+                      'Export Excel'
+                    )}
               </button>
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <FileText className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {totalCount.toLocaleString()}
+                  {totalCount.toLocaleString(dateLocale)}
                 </span>
-                <span className="text-xs text-slate-500">total entries</span>
+                <span className="text-xs text-slate-500">
+                  {t(
+                    'SystemAdmin.auditLogs.summary.totalEntries',
+                    'total entries'
+                  )}
+                </span>
               </div>
             </div>
           }
@@ -240,7 +336,10 @@ export default function AuditLogsPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by entity name, action, or entity ID... (Enter to search)"
+                  placeholder={t(
+                    'SystemAdmin.auditLogs.filters.searchPlaceholder',
+                    'Search by entity name, action, or entity ID... (Enter to search)'
+                  )}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </form>
@@ -249,7 +348,7 @@ export default function AuditLogsPage() {
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <Activity className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Action:
+                  {t('SystemAdmin.auditLogs.filters.actionLabel', 'Action:')}
                 </span>
                 <select
                   value={actionFilter}
@@ -258,10 +357,30 @@ export default function AuditLogsPage() {
                   }
                   className="bg-transparent border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-0 cursor-pointer py-0 pl-1 pr-6"
                 >
-                  <option value="">All</option>
-                  <option value="Insert">Insert</option>
-                  <option value="Update">Update</option>
-                  <option value="Delete">Delete</option>
+                  <option value="">
+                    {t(
+                      'SystemAdmin.auditLogs.filters.actionOptions.all',
+                      'All'
+                    )}
+                  </option>
+                  <option value="Insert">
+                    {t(
+                      'SystemAdmin.auditLogs.filters.actionOptions.insert',
+                      'Insert'
+                    )}
+                  </option>
+                  <option value="Update">
+                    {t(
+                      'SystemAdmin.auditLogs.filters.actionOptions.update',
+                      'Update'
+                    )}
+                  </option>
+                  <option value="Delete">
+                    {t(
+                      'SystemAdmin.auditLogs.filters.actionOptions.delete',
+                      'Delete'
+                    )}
+                  </option>
                 </select>
               </div>
 
@@ -269,13 +388,16 @@ export default function AuditLogsPage() {
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <Filter className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Entity:
+                  {t('SystemAdmin.auditLogs.filters.entityLabel', 'Entity:')}
                 </span>
                 <input
                   type="text"
                   value={entityNameFilterInput}
                   onChange={(e) => setEntityNameFilterInput(e.target.value)}
-                  placeholder="e.g. WalletTransaction"
+                  placeholder={t(
+                    'SystemAdmin.auditLogs.filters.entityPlaceholder',
+                    'e.g. WalletTransaction'
+                  )}
                   className="bg-transparent border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-0 w-40 py-0 pl-1 placeholder:text-slate-400"
                 />
               </div>
@@ -284,7 +406,7 @@ export default function AuditLogsPage() {
               {isFetching && !isLoading && (
                 <div className="flex items-center gap-2 text-sm text-primary">
                   <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  Updating...
+                  {t('SystemAdmin.auditLogs.filters.updating', 'Updating...')}
                 </div>
               )}
             </div>
@@ -295,12 +417,39 @@ export default function AuditLogsPage() {
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-6 py-4 font-semibold">Timestamp</th>
-                      <th className="px-6 py-4 font-semibold">User</th>
-                      <th className="px-6 py-4 font-semibold">Action</th>
-                      <th className="px-6 py-4 font-semibold">Entity</th>
-                      <th className="px-6 py-4 font-semibold">IP Address</th>
-                      <th className="px-6 py-4 font-semibold w-20">Details</th>
+                      <th className="px-6 py-4 font-semibold">
+                        {t(
+                          'SystemAdmin.auditLogs.table.columns.timestamp',
+                          'Timestamp'
+                        )}
+                      </th>
+                      <th className="px-6 py-4 font-semibold">
+                        {t('SystemAdmin.auditLogs.table.columns.user', 'User')}
+                      </th>
+                      <th className="px-6 py-4 font-semibold">
+                        {t(
+                          'SystemAdmin.auditLogs.table.columns.action',
+                          'Action'
+                        )}
+                      </th>
+                      <th className="px-6 py-4 font-semibold">
+                        {t(
+                          'SystemAdmin.auditLogs.table.columns.entity',
+                          'Entity'
+                        )}
+                      </th>
+                      <th className="px-6 py-4 font-semibold">
+                        {t(
+                          'SystemAdmin.auditLogs.table.columns.ipAddress',
+                          'IP Address'
+                        )}
+                      </th>
+                      <th className="px-6 py-4 font-semibold w-20">
+                        {t(
+                          'SystemAdmin.auditLogs.table.columns.details',
+                          'Details'
+                        )}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -315,10 +464,16 @@ export default function AuditLogsPage() {
                           className="px-6 py-16 text-center text-slate-500"
                         >
                           <p className="text-base font-medium">
-                            Failed to load audit logs
+                            {t(
+                              'SystemAdmin.auditLogs.states.loadFailedTitle',
+                              'Failed to load audit logs'
+                            )}
                           </p>
                           <p className="text-sm mt-1">
-                            Please check your connection and try again.
+                            {t(
+                              'SystemAdmin.auditLogs.states.loadFailedDescription',
+                              'Please check your connection and try again.'
+                            )}
                           </p>
                         </td>
                       </tr>
@@ -328,13 +483,16 @@ export default function AuditLogsPage() {
                           colSpan={6}
                           className="px-6 py-16 text-center text-slate-500"
                         >
-                          No audit logs found
+                          {t(
+                            'SystemAdmin.auditLogs.states.empty',
+                            'No audit logs found'
+                          )}
                         </td>
                       </tr>
                     ) : (
                       logs.map((log) => {
                         const config = actionConfig[log.action] ?? {
-                          label: log.action,
+                          labelKey: '',
                           color:
                             'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400',
                           icon: Activity,
@@ -349,9 +507,9 @@ export default function AuditLogsPage() {
                             <td className="px-6 py-4">
                               <span
                                 className="text-sm text-slate-900 dark:text-white cursor-help"
-                                title={formatFull(log.createdAt)}
+                                title={formatFullTimestamp(log.createdAt)}
                               >
-                                {timeAgo(log.createdAt)}
+                                {formatRelativeTime(log.createdAt)}
                               </span>
                             </td>
 
@@ -359,7 +517,11 @@ export default function AuditLogsPage() {
                             <td className="px-6 py-4">
                               <div className="flex flex-col">
                                 <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                  {log.userName ?? 'System'}
+                                  {log.userName ??
+                                    t(
+                                      'SystemAdmin.auditLogs.values.system',
+                                      'System'
+                                    )}
                                 </span>
                                 {log.userId && (
                                   <span className="text-xs text-slate-500 font-mono truncate max-w-[140px]">
@@ -375,7 +537,9 @@ export default function AuditLogsPage() {
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${config.color}`}
                               >
                                 <ActionIcon className="w-3 h-3" />
-                                {config.label}
+                                {config.labelKey
+                                  ? t(config.labelKey, log.action)
+                                  : log.action}
                               </span>
                             </td>
 
@@ -405,7 +569,10 @@ export default function AuditLogsPage() {
                               <button
                                 onClick={() => setSelectedLog(log)}
                                 className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500 hover:text-primary"
-                                title="View JSON details"
+                                title={t(
+                                  'SystemAdmin.auditLogs.actions.viewJsonDetails',
+                                  'View JSON details'
+                                )}
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
@@ -423,8 +590,15 @@ export default function AuditLogsPage() {
             {totalPages > 0 && (
               <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                 <span>
-                  Page {pageNumber} of {totalPages} &middot;{' '}
-                  {totalCount.toLocaleString()} total entries
+                  {t(
+                    'SystemAdmin.auditLogs.pagination.summary',
+                    'Page {{page}} of {{totalPages}} · {{totalCount}} total entries',
+                    {
+                      page: pageNumber,
+                      totalPages,
+                      totalCount: totalCount.toLocaleString(dateLocale),
+                    }
+                  )}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
@@ -433,7 +607,7 @@ export default function AuditLogsPage() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous
+                    {t('SystemAdmin.auditLogs.pagination.previous', 'Previous')}
                   </button>
 
                   {/* Page numbers */}
@@ -470,7 +644,7 @@ export default function AuditLogsPage() {
                     disabled={pageNumber >= totalPages}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {t('SystemAdmin.auditLogs.pagination.next', 'Next')}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
