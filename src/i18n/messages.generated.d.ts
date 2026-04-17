@@ -3319,6 +3319,7 @@ declare module 'i18next' {
       sidebar: {
         dashboard: string;
         patients: string;
+        organisation: string;
         historicalData: string;
         calendar: string;
         screening: string;
@@ -3333,6 +3334,7 @@ declare module 'i18next' {
       common: {
         cancel: string;
         close: string;
+        currencyVnd: string;
         daysOfWeek: {
           friday: string;
           monday: string;
@@ -3346,6 +3348,7 @@ declare module 'i18next' {
           female: string;
           male: string;
         };
+        fileSizeMb: string;
         idLabel: string;
         loading: string;
         next: string;
@@ -3577,6 +3580,33 @@ declare module 'i18next' {
           loadFailed: string;
         };
       };
+      analytics: {
+        pageName: string;
+        header: {
+          title: string;
+          subtitle: string;
+        };
+        eye: {
+          leftOd: string;
+          rightOd: string;
+        };
+        error: {
+          analysisUnavailable: string;
+          apiKeyMissing: string;
+          imageFetchFallback: string;
+          quotaExceeded: string;
+        };
+        fallback: {
+          hardExudates: {
+            description: string;
+            name: string;
+          };
+          microaneurysms: {
+            description: string;
+            name: string;
+          };
+        };
+      };
       settings: {
         actions: {
           saveChanges: string;
@@ -3671,6 +3701,7 @@ declare module 'i18next' {
         };
         badges: {
           remainingQuota: string;
+          remainingQuotaTitle: string;
         };
         header: {
           subtitle: string;
@@ -3727,6 +3758,17 @@ declare module 'i18next' {
           quotaExhausted: string;
           quotaUnitPriceUnavailable: string;
           walletInsufficient: string;
+        };
+        quality: {
+          acceptable: string;
+          blurry: string;
+          croppedEdges: string;
+          notFundus: string;
+          optimal: string;
+          overexposed: string;
+          poor: string;
+          tooDark: string;
+          validationServiceError: string;
         };
         upload: {
           analyzingQuality: string;
@@ -3840,6 +3882,7 @@ declare module 'i18next' {
           notFound: string;
         };
         toast: {
+          aiNoPredictionData: string;
           analyzeBeforeSave: string;
           analyzeCompleted: string;
           analyzeFailed: string;
@@ -3859,6 +3902,26 @@ declare module 'i18next' {
           shareNetworkSuccess: string;
           shareSelectAtLeastOne: string;
           shareWalkInEmailRequired: string;
+        };
+        summary: {
+          high: {
+            default: string;
+            withPrimary: string;
+          };
+          moderate: {
+            default: string;
+            withPrimary: string;
+          };
+          low: {
+            default: string;
+            withPrimary: string;
+          };
+        };
+        findings: {
+          primaryOnly: string;
+          primaryAndRelated: string;
+          relatedOnly: string;
+          manualAnnotations: string;
         };
       };
       wallet: {
@@ -3932,6 +3995,300 @@ declare module 'i18next' {
           quotaPurchase: string;
           title: string;
         };
+      };
+      recentPatients: {
+        actions: {
+          viewAll: string;
+        };
+        confidenceLabel: string;
+        status: {
+          pending: string;
+          reviewed: string;
+        };
+        title: string;
+      };
+      patients: {
+        actions: {
+          clear: string;
+          editContact: string;
+          moreForPatient: string;
+          retry: string;
+          screenNow: string;
+          viewHistory: string;
+          walkInPatient: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        search: {
+          placeholder: string;
+        };
+        states: {
+          loadFailed: string;
+          noMatch: string;
+        };
+        summary: {
+          foundPatients: string;
+        };
+        table: {
+          action: string;
+          lastScreening: string;
+          patient: string;
+          risk: string;
+          type: string;
+        };
+        toast: {
+          loadFailed: string;
+        };
+        types: {
+          auraPartner: string;
+          walkIn: string;
+        };
+      };
+      updatePatientModal: {
+        badges: {
+          auraAccount: string;
+        };
+        form: {
+          address: string;
+          addressPlaceholder: string;
+          bmi: string;
+          bmiPlaceholder: string;
+          citizenId: string;
+          citizenIdPlaceholder: string;
+          dateOfBirth: string;
+          diseaseHistory: string;
+          diseaseHistoryPlaceholder: string;
+          fullName: string;
+          gender: string;
+          genderOther: string;
+          phoneNumber: string;
+          phonePlaceholder: string;
+        };
+        header: {
+          title: string;
+        };
+        readOnly: {
+          address: string;
+          age: string;
+          citizenId: string;
+          dateOfBirth: string;
+          email: string;
+          fullName: string;
+          gender: string;
+          phone: string;
+        };
+        sections: {
+          administrativeInfo: string;
+          medicalInfo: string;
+          personalInfo: string;
+          personalInfoManagedByAura: string;
+        };
+        toast: {
+          noChanges: string;
+          patientNotFound: string;
+          updateFailed: string;
+          updateSuccess: string;
+        };
+      };
+      patientHistory: {
+        actions: {
+          backToPatients: string;
+          openReviewPage: string;
+        };
+        detail: {
+          createdAt: string;
+          modelVersion: string;
+          sessionStatus: string;
+          subtitle: string;
+          title: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        images: {
+          alt: {
+            boxedRetinalImage: string;
+            heatmap: string;
+            heatmapBackground: string;
+            retinalImage: string;
+            thumbnail: string;
+          };
+          boxed: string;
+          empty: string;
+          heatmap: string;
+          imageIndex: string;
+          original: string;
+          selectToPreview: string;
+          title: string;
+        };
+        pageName: string;
+        record: {
+          findingsNote: string;
+          noFindings: string;
+          noSummary: string;
+          notSavedYet: string;
+          riskLevel: string;
+          savedAt: string;
+          summary: string;
+          title: string;
+        };
+        risk: {
+          high: string;
+          low: string;
+          moderate: string;
+        };
+        sessions: {
+          count: string;
+          empty: string;
+          images: string;
+          title: string;
+        };
+        states: {
+          detailLoadFailed: string;
+          selectSession: string;
+        };
+        status: {
+          completed: string;
+          pending: string;
+          saved: string;
+        };
+      };
+      analysisSidebar: {
+        analysis: {
+          complete: string;
+          fallbackMessage: string;
+          idleMessage: string;
+          processing: string;
+          rerun: string;
+          startAction: string;
+        };
+        findings: {
+          noneDetected: string;
+          title: string;
+        };
+        footer: {
+          assistiveNotice: string;
+          export: string;
+          report: string;
+        };
+        layers: {
+          exudates: string;
+          hemorrhages: string;
+          title: string;
+          vesselSegmentation: string;
+        };
+        risk: {
+          referralRecommended: string;
+          title: string;
+          tooltip: string;
+        };
+      };
+      boxLabelSelector: {
+        actions: {
+          deleteBox: string;
+        };
+        confidence: {
+          label: string;
+        };
+        custom: {
+          apply: string;
+          label: string;
+          placeholder: string;
+        };
+        header: {
+          editAi: string;
+          manual: string;
+        };
+        search: {
+          noResults: string;
+          placeholder: string;
+        };
+        tabs: {
+          custom: string;
+          diseaseList: string;
+        };
+        urgency: {
+          caution: string;
+          critical: string;
+          info: string;
+          normal: string;
+          warning: string;
+        };
+      };
+      imageGallery: {
+        actions: {
+          upload: string;
+        };
+        count: {
+          one: string;
+          other: string;
+        };
+        dropzone: {
+          hint: string;
+        };
+      };
+      imageViewer: {
+        defaultImageName: string;
+        scaleLabel: string;
+        scaleMicrometer: string;
+      };
+      retinalViewer: {
+        actions: {
+          close: string;
+          delete: string;
+          deleteSelectedBox: string;
+          draw: string;
+          drawNewBox: string;
+          hideBoxes: string;
+          select: string;
+          selectEditBoxes: string;
+          showBoxes: string;
+          undo: string;
+        };
+        boxCount: {
+          one: string;
+          other: string;
+        };
+        heatmap: {
+          brushSize: string;
+          clear: string;
+          dragToolkit: string;
+          editTool: string;
+          eraserTool: string;
+          hide: string;
+          intensity: string;
+          intensityHigh: string;
+          intensityLow: string;
+          intensityMedium: string;
+          label: string;
+          opacity: string;
+          opacityShort: string;
+          show: string;
+          threshold: string;
+          thresholdShort: string;
+          undoLastStroke: string;
+        };
+        image: {
+          altHeatmapOverlay: string;
+          altRetinalScan: string;
+        };
+        imageCounter: string;
+        manualCount: string;
+        title: string;
+      };
+      toolsSidebar: {
+        brightnessContrast: string;
+        comparePrevious: string;
+        keyboardShortcuts: string;
+        measurement: string;
+        panTool: string;
+        resetView: string;
+        zoomIn: string;
+        zoomOut: string;
       };
       slotManagement: {
         actions: {
