@@ -5691,7 +5691,16 @@
         "screening": "Screening",
         "consultations": "Consultations",
         "audit": "Audit",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "appointments": "Appointments",
+        "scheduling": "Scheduling",
+        "quotas": "Quotas",
+        "wallets": "Wallets",
+        "financial": "Financial",
+        "contracts": "Contracts",
+        "platform": "Platform",
+        "settings": "Settings",
+        "notifications": "Notifications"
       },
       "common": {
         "loading": "Loading...",

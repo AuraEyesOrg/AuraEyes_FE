@@ -69,6 +69,22 @@ const CATEGORY_COLORS: Record<string, string> = {
   Audit:
     'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   Dashboard: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  Appointments: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+  Scheduling:
+    'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  Quotas:
+    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  Wallets:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  Financial: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  Contracts:
+    'bg-stone-100 text-stone-700 dark:bg-stone-900/30 dark:text-stone-400',
+  Platform:
+    'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
+  Settings:
+    'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
+  Notifications:
+    'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
 };
 
 const categoryClass = (cat?: string) =>
@@ -84,6 +100,15 @@ const KNOWN_CATEGORIES = [
   'Organisations',
   'Screening',
   'Consultations',
+  'Appointments',
+  'Scheduling',
+  'Quotas',
+  'Wallets',
+  'Financial',
+  'Contracts',
+  'Platform',
+  'Settings',
+  'Notifications',
   'Audit',
   'Dashboard',
 ];
@@ -98,6 +123,15 @@ const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
   Consultations: 'SystemAdmin.permissions.categories.consultations',
   Audit: 'SystemAdmin.permissions.categories.audit',
   Dashboard: 'SystemAdmin.permissions.categories.dashboard',
+  Appointments: 'SystemAdmin.permissions.categories.appointments',
+  Scheduling: 'SystemAdmin.permissions.categories.scheduling',
+  Quotas: 'SystemAdmin.permissions.categories.quotas',
+  Wallets: 'SystemAdmin.permissions.categories.wallets',
+  Financial: 'SystemAdmin.permissions.categories.financial',
+  Contracts: 'SystemAdmin.permissions.categories.contracts',
+  Platform: 'SystemAdmin.permissions.categories.platform',
+  Settings: 'SystemAdmin.permissions.categories.settings',
+  Notifications: 'SystemAdmin.permissions.categories.notifications',
 };
 
 const getCategoryLabel = (

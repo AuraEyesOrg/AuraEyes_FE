@@ -5701,7 +5701,16 @@
         "screening": "Sàng lọc",
         "consultations": "Tư vấn",
         "audit": "Kiểm toán",
-        "dashboard": "Bảng điều khiển"
+        "dashboard": "Bảng điều khiển",
+        "appointments": "Lịch hẹn",
+        "scheduling": "Lập lịch",
+        "quotas": "Quota/Gói",
+        "wallets": "Ví điện tử",
+        "financial": "Tài chính",
+        "contracts": "Hợp đồng",
+        "platform": "Nền tảng",
+        "settings": "Cài đặt",
+        "notifications": "Thông báo"
       },
       "common": {
         "loading": "Đang tải...",

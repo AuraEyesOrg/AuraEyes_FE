@@ -22,6 +22,7 @@ export interface AuthUser {
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
+  permissions?: string[];
 }
 
 type AuthState = {

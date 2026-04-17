@@ -114,6 +114,7 @@ export interface UserInfoResponse {
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
+  permissions?: string[];
 }
 
 export interface AuthResponse {

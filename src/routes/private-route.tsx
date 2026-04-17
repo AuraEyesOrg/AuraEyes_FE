@@ -7,9 +7,14 @@ import { stripLocaleFromPathname } from '@/i18n/locales';
 interface Props {
   children: ReactElement;
   allowedRoles?: string[];
+  requiredPermissions?: string[];
 }
 
-const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
+const PrivateRoute: React.FC<Props> = ({
+  children,
+  allowedRoles,
+  requiredPermissions,
+}) => {
   const { isAuthenticated, user } = useAuthStore((state) => state);
   const location = useLocation();
   const normalizedPath = stripLocaleFromPathname(location.pathname);
@@ -24,10 +29,22 @@ const PrivateRoute: React.FC<Props> = ({ children, allowedRoles }) => {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
 
+  // Role check
   if (
     allowedRoles &&
     allowedRoles.length > 0 &&
     !allowedRoles.some((role) => user?.roles?.includes(role))
+  ) {
+    return <Navigate to={resolvePathWithLocale('/')} replace />;
+  }
+
+  // Permission check
+  if (
+    requiredPermissions &&
+    requiredPermissions.length > 0 &&
+    !requiredPermissions.every((permission) =>
+      user?.permissions?.includes(permission)
+    )
   ) {
     return <Navigate to={resolvePathWithLocale('/')} replace />;
   }
