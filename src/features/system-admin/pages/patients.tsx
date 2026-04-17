@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Users,
   UserCheck,
@@ -28,7 +29,7 @@ import {
   type PatientMetricsDto,
 } from '../api/patient.api';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
-import { formatViDate } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
 
@@ -37,20 +38,35 @@ interface Patient extends PatientListItem {
   status: 'active' | 'inactive' | 'locked';
   lastScreening?: string;
   emailVerified: boolean;
-  patientTypeLabel: 'Walk-in' | 'Registered';
 }
+
+const formatDate = (
+  value: string | undefined,
+  locale: string,
+  fallback: string
+) => {
+  if (!value) return fallback;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return parsed.toLocaleDateString(locale);
+};
 
 /** Map API item to UI Patient model */
 const mapToUiPatient = (item: PatientListItem): Patient => ({
   ...item,
   name: item.fullName,
   status: item.isWalkIn ? 'active' : item.isActive ? 'active' : 'locked',
-  lastScreening: item.lastLoginAt ? formatViDate(item.lastLoginAt) : undefined,
+  lastScreening: item.lastLoginAt ?? undefined,
   emailVerified: item.emailConfirmed,
-  patientTypeLabel: item.isWalkIn ? 'Walk-in' : 'Registered',
 });
 
 export default function PatientsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const notAvailableLabel = t('SystemAdmin.common.notAvailable', 'N/A');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [metrics, setMetrics] = useState<PatientMetricsDto | null>(null);
@@ -113,7 +129,12 @@ export default function PatientsPage() {
     currentStatus: string
   ) => {
     if (!userId) {
-      toast.info('Walk-in patients do not have login accounts to lock/unlock.');
+      toast.info(
+        t(
+          'SystemAdmin.patients.toasts.walkInNoLogin',
+          'Walk-in patients do not have login accounts to lock/unlock.'
+        )
+      );
       return;
     }
 
@@ -126,17 +147,29 @@ export default function PatientsPage() {
         );
         setLockTarget({
           userId,
-          name: targetPatient?.name ?? 'this patient',
+          name:
+            targetPatient?.name ??
+            t('SystemAdmin.patients.table.values.thisPatient', 'this patient'),
         });
         return;
       }
 
       await patientApi.updatePatientStatus(userId, action);
-      toast.success('Patient has been activated successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.patients.toasts.activatedSuccess',
+          'Patient has been activated successfully.'
+        )
+      );
       loadData();
     } catch (error) {
       console.error('Failed to toggle patient lock status:', error);
-      toast.error('Failed to update patient status. Please try again.');
+      toast.error(
+        t(
+          'SystemAdmin.patients.toasts.updateStatusError',
+          'Failed to update patient status. Please try again.'
+        )
+      );
     }
   };
 
@@ -148,11 +181,21 @@ export default function PatientsPage() {
     try {
       setIsLockingPatient(true);
       await patientApi.updatePatientStatus(lockTarget.userId, 'lock');
-      toast.success('Patient has been locked successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.patients.toasts.lockedSuccess',
+          'Patient has been locked successfully.'
+        )
+      );
       await loadData();
     } catch (error) {
       console.error('Failed to lock patient:', error);
-      toast.error('Failed to update patient status. Please try again.');
+      toast.error(
+        t(
+          'SystemAdmin.patients.toasts.updateStatusError',
+          'Failed to update patient status. Please try again.'
+        )
+      );
     } finally {
       setIsLockingPatient(false);
       setLockTarget(null);
@@ -168,43 +211,107 @@ export default function PatientsPage() {
       });
 
       if (patientsForExport.length === 0) {
-        toast.info('No patients available for export.');
+        toast.info(
+          t(
+            'SystemAdmin.patients.toasts.exportNoData',
+            'No patients available for export.'
+          )
+        );
         return;
       }
 
       await downloadXlsxFile(
         patientsForExport,
         [
-          { header: 'Full Name', value: (row) => row.fullName },
-          { header: 'Email', value: (row) => row.email ?? '' },
-          { header: 'Phone', value: (row) => row.phone ?? '' },
           {
-            header: 'Patient Type',
-            value: (row) => (row.isWalkIn ? 'Walk-in' : 'Registered'),
+            header: t(
+              'SystemAdmin.patients.export.columns.fullName',
+              'Full Name'
+            ),
+            value: (row) => row.fullName,
           },
           {
-            header: 'Linked Organisation',
+            header: t('SystemAdmin.patients.export.columns.email', 'Email'),
+            value: (row) => row.email ?? '',
+          },
+          {
+            header: t('SystemAdmin.patients.export.columns.phone', 'Phone'),
+            value: (row) => row.phone ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.patients.table.columns.patientType',
+              'Patient Type'
+            ),
+            value: (row) =>
+              row.isWalkIn
+                ? t('SystemAdmin.patients.table.values.walkIn', 'Walk-in')
+                : t(
+                    'SystemAdmin.patients.table.values.registered',
+                    'Registered'
+                  ),
+          },
+          {
+            header: t(
+              'SystemAdmin.patients.table.columns.linkedOrganisation',
+              'Linked Organisation'
+            ),
             value: (row) => row.linkedOrganisationName ?? '',
           },
           {
-            header: 'Status',
+            header: t('SystemAdmin.patients.table.columns.status', 'Status'),
             value: (row) =>
-              row.isWalkIn ? 'Walk-in' : row.isActive ? 'Active' : 'Locked',
+              row.isWalkIn
+                ? t('SystemAdmin.patients.table.values.walkIn', 'Walk-in')
+                : row.isActive
+                  ? t('SystemAdmin.patients.status.active', 'Active')
+                  : t('SystemAdmin.patients.status.locked', 'Locked'),
           },
           {
-            header: 'Email Confirmed',
-            value: (row) => (row.emailConfirmed ? 'Yes' : 'No'),
+            header: t(
+              'SystemAdmin.patients.export.columns.emailConfirmed',
+              'Email Confirmed'
+            ),
+            value: (row) =>
+              row.emailConfirmed
+                ? t('SystemAdmin.patients.export.yes', 'Yes')
+                : t('SystemAdmin.patients.export.no', 'No'),
           },
-          { header: 'Created At', value: (row) => row.createdAt },
-          { header: 'Last Login', value: (row) => row.lastLoginAt ?? '' },
+          {
+            header: t(
+              'SystemAdmin.patients.export.columns.createdAt',
+              'Created At'
+            ),
+            value: (row) => row.createdAt,
+          },
+          {
+            header: t(
+              'SystemAdmin.patients.table.columns.lastLogin',
+              'Last Login'
+            ),
+            value: (row) => row.lastLoginAt ?? '',
+          },
         ],
         buildTimestampedFileName('system-admin-patients', 'xlsx'),
-        'Patients'
+        t('SystemAdmin.patients.export.sheetName', 'Patients')
       );
-      toast.success(`Exported ${patientsForExport.length} patients.`);
+      toast.success(
+        t(
+          'SystemAdmin.patients.toasts.exportSuccess',
+          'Exported {{count}} patients.',
+          {
+            count: patientsForExport.length,
+          }
+        )
+      );
     } catch (error) {
       console.error('Failed to export patients:', error);
-      toast.error('Failed to export patients. Please try again.');
+      toast.error(
+        t(
+          'SystemAdmin.patients.toasts.exportError',
+          'Failed to export patients. Please try again.'
+        )
+      );
     } finally {
       setIsExporting(false);
     }
@@ -212,7 +319,7 @@ export default function PatientsPage() {
 
   const patientColumns: TableColumn<Patient>[] = [
     {
-      header: 'Patient',
+      header: t('SystemAdmin.patients.table.columns.patient', 'Patient'),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex items-center gap-3">
@@ -228,14 +335,21 @@ export default function PatientsPage() {
               {row.name}
             </span>
             <span className="text-xs text-slate-500">
-              {row.email ?? 'Walk-in profile'}
+              {row.email ??
+                t(
+                  'SystemAdmin.patients.table.values.walkInProfile',
+                  'Walk-in profile'
+                )}
             </span>
           </div>
         </div>
       ),
     },
     {
-      header: 'Patient Type',
+      header: t(
+        'SystemAdmin.patients.table.columns.patientType',
+        'Patient Type'
+      ),
       accessor: 'patientType',
       render: (_, row) => (
         <span
@@ -245,31 +359,48 @@ export default function PatientsPage() {
               : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
           }`}
         >
-          {row.patientTypeLabel}
+          {row.isWalkIn
+            ? t('SystemAdmin.patients.table.values.walkIn', 'Walk-in')
+            : t('SystemAdmin.patients.table.values.registered', 'Registered')}
         </span>
       ),
     },
     {
-      header: 'Linked Organisation',
+      header: t(
+        'SystemAdmin.patients.table.columns.linkedOrganisation',
+        'Linked Organisation'
+      ),
       accessor: 'linkedOrganisationName',
       render: (value) => (
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          {(value as string) || 'Unassigned'}
+          {(value as string) ||
+            t('SystemAdmin.patients.table.values.unassigned', 'Unassigned')}
         </span>
       ),
     },
-    { header: 'Last Login', accessor: 'lastScreening' },
     {
-      header: 'Joined',
-      accessor: 'createdAt',
-      render: (value) => formatViDate(String(value ?? '')),
+      header: t('SystemAdmin.patients.table.columns.lastLogin', 'Last Login'),
+      accessor: 'lastScreening',
+      render: (value) =>
+        formatDate(value as string | undefined, dateLocale, notAvailableLabel),
     },
     {
-      header: 'Status',
+      header: t('SystemAdmin.patients.table.columns.joined', 'Joined'),
+      accessor: 'createdAt',
+      render: (value) =>
+        formatDate(String(value ?? ''), dateLocale, notAvailableLabel),
+    },
+    {
+      header: t('SystemAdmin.patients.table.columns.status', 'Status'),
       accessor: 'status',
       render: (value, row) => {
         if (row.isWalkIn) {
-          return <StatusBadge status="success" label="Active" />;
+          return (
+            <StatusBadge
+              status="success"
+              label={t('SystemAdmin.patients.status.active', 'Active')}
+            />
+          );
         }
 
         const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
@@ -277,34 +408,38 @@ export default function PatientsPage() {
           inactive: 'warning',
           locked: 'error',
         };
-        const labelMap: Record<string, string> = {
-          active: 'Active',
-          inactive: 'Inactive',
-          locked: 'Locked',
-        };
 
         return (
           <StatusBadge
             status={statusMap[value as string] || 'info'}
-            label={labelMap[value as string] || (value as string)}
+            label={t(
+              `SystemAdmin.patients.status.${value as string}`,
+              value as string
+            )}
           />
         );
       },
     },
     {
-      header: 'Actions',
+      header: t('SystemAdmin.patients.table.columns.actions', 'Actions'),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Details"
+            title={t(
+              'SystemAdmin.patients.actions.viewDetails',
+              'View Details'
+            )}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Medical History"
+            title={t(
+              'SystemAdmin.patients.actions.viewMedicalHistory',
+              'View Medical History'
+            )}
           >
             <FileText className="w-4 h-4" />
           </button>
@@ -314,10 +449,19 @@ export default function PatientsPage() {
             className="text-slate-500 hover:text-primary transition-colors p-1 disabled:opacity-40 disabled:cursor-not-allowed"
             title={
               row.isWalkIn
-                ? 'Walk-in patients cannot be locked'
+                ? t(
+                    'SystemAdmin.patients.actions.walkInCannotBeLocked',
+                    'Walk-in patients cannot be locked'
+                  )
                 : row.status === 'locked'
-                  ? 'Unlock Patient'
-                  : 'Lock Patient'
+                  ? t(
+                      'SystemAdmin.patients.actions.unlockPatient',
+                      'Unlock Patient'
+                    )
+                  : t(
+                      'SystemAdmin.patients.actions.lockPatient',
+                      'Lock Patient'
+                    )
             }
           >
             {row.status === 'locked' ? (
@@ -340,8 +484,11 @@ export default function PatientsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Patient Management"
-          description="Manage patient accounts, view screening history, and monitor patient activity"
+          title={t('SystemAdmin.patients.title', 'Patient Management')}
+          description={t(
+            'SystemAdmin.patients.description',
+            'Manage patient accounts, view screening history, and monitor patient activity'
+          )}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -350,7 +497,9 @@ export default function PatientsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export'}
+                {isExporting
+                  ? t('SystemAdmin.patients.actions.exporting', 'Exporting...')
+                  : t('SystemAdmin.actions.export', 'Export')}
               </button>
             </div>
           }
@@ -361,31 +510,55 @@ export default function PatientsPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatsCard
-                title="Total Patients"
+                title={t(
+                  'SystemAdmin.patients.stats.totalPatients',
+                  'Total Patients'
+                )}
                 value={totalPatients}
                 icon={Users}
-                description="Registered and walk-in patients"
+                description={t(
+                  'SystemAdmin.patients.stats.totalPatientsDescription',
+                  'Registered and walk-in patients'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Registered Patients"
+                title={t(
+                  'SystemAdmin.patients.stats.registeredPatients',
+                  'Registered Patients'
+                )}
                 value={registeredPatients}
                 icon={UserCheck}
-                description="Patients with login accounts"
+                description={t(
+                  'SystemAdmin.patients.stats.registeredPatientsDescription',
+                  'Patients with login accounts'
+                )}
                 variant="success"
               />
               <StatsCard
-                title="Walk-in Patients"
+                title={t(
+                  'SystemAdmin.patients.stats.walkInPatients',
+                  'Walk-in Patients'
+                )}
                 value={walkInPatients}
                 icon={Users}
-                description="Clinic-managed patient profiles"
+                description={t(
+                  'SystemAdmin.patients.stats.walkInPatientsDescription',
+                  'Clinic-managed patient profiles'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Locked Accounts"
+                title={t(
+                  'SystemAdmin.patients.stats.lockedAccounts',
+                  'Locked Accounts'
+                )}
                 value={lockedPatients}
                 icon={UserX}
-                description="Registered accounts requiring attention"
+                description={t(
+                  'SystemAdmin.patients.stats.lockedAccountsDescription',
+                  'Registered accounts requiring attention'
+                )}
                 variant="danger"
               />
             </div>
@@ -398,7 +571,10 @@ export default function PatientsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name or email..."
+                  placeholder={t(
+                    'SystemAdmin.patients.filters.searchPlaceholder',
+                    'Search by name or email...'
+                  )}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
@@ -410,11 +586,30 @@ export default function PatientsPage() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="locked">Locked</option>
-                    <option value="registered">Registered</option>
-                    <option value="walkin">Walk-in</option>
+                    <option value="all">
+                      {t(
+                        'SystemAdmin.patients.filters.status.all',
+                        'All Status'
+                      )}
+                    </option>
+                    <option value="active">
+                      {t('SystemAdmin.patients.status.active', 'Active')}
+                    </option>
+                    <option value="locked">
+                      {t('SystemAdmin.patients.status.locked', 'Locked')}
+                    </option>
+                    <option value="registered">
+                      {t(
+                        'SystemAdmin.patients.filters.status.registered',
+                        'Registered'
+                      )}
+                    </option>
+                    <option value="walkin">
+                      {t(
+                        'SystemAdmin.patients.filters.status.walkIn',
+                        'Walk-in'
+                      )}
+                    </option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -442,14 +637,24 @@ export default function PatientsPage() {
                 data={filteredPatients}
                 keyExtractor={(row) => row.id}
                 isLoading={loading}
-                emptyMessage="No patients found"
+                emptyMessage={t(
+                  'SystemAdmin.patients.states.empty',
+                  'No patients found'
+                )}
               />
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredPatients.length} of {totalCount} patients
+                {t(
+                  'SystemAdmin.patients.summary.showing',
+                  'Showing {{shown}} of {{total}} patients',
+                  {
+                    shown: filteredPatients.length,
+                    total: totalCount,
+                  }
+                )}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -457,15 +662,19 @@ export default function PatientsPage() {
                   onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t('SystemAdmin.common.pagination.previous', 'Previous page')}
                 </button>
-                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <span className="px-2 font-medium">
+                  {t('SystemAdmin.common.pagination.page', 'Page {{page}}', {
+                    page: pageNumber,
+                  })}
+                </span>
                 <button
                   disabled={!hasNext}
                   onClick={() => setPageNumber((p) => p + 1)}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t('SystemAdmin.common.pagination.next', 'Next page')}
                 </button>
               </div>
             </div>
@@ -475,10 +684,30 @@ export default function PatientsPage() {
 
       <ConfirmModal
         open={!!lockTarget}
-        title="Lock patient account?"
-        message={`Are you sure you want to lock ${lockTarget?.name ?? 'this patient'}? They will not be able to access the system until re-activated.`}
-        confirmLabel="Lock account"
-        cancelLabel="Keep active"
+        title={t(
+          'SystemAdmin.patients.confirmModal.lockTitle',
+          'Lock patient account?'
+        )}
+        message={t(
+          'SystemAdmin.patients.confirmModal.lockMessage',
+          'Are you sure you want to lock {{name}}? They will not be able to access the system until re-activated.',
+          {
+            name:
+              lockTarget?.name ??
+              t(
+                'SystemAdmin.patients.table.values.thisPatient',
+                'this patient'
+              ),
+          }
+        )}
+        confirmLabel={t(
+          'SystemAdmin.patients.confirmModal.confirmLock',
+          'Lock account'
+        )}
+        cancelLabel={t(
+          'SystemAdmin.patients.confirmModal.cancelLock',
+          'Keep active'
+        )}
         tone="danger"
         isLoading={isLockingPatient}
         onCancel={() => setLockTarget(null)}

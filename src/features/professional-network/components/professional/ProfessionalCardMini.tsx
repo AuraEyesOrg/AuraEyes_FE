@@ -13,16 +13,20 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedSpecialty } from '../../utils/specialtyLocalization';
 
 interface Props {
   professional: Ophthalmologist;
 }
 
 export function ProfessionalCardMini({ professional }: Props) {
+  const { t } = useSafeTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const displaySpecialty = getLocalizedSpecialty(t, professional.specialty[0]);
 
   return (
     <div className="flex items-center gap-3 w-full">
@@ -53,12 +57,14 @@ export function ProfessionalCardMini({ professional }: Props) {
           )}
         </Link>
         <p className="text-[13px] text-text-muted truncate">
-          {professional.specialty[0]}
+          {displaySpecialty}
         </p>
       </div>
 
       {/* Follow button - fixed width, never shrinks */}
-      <button className="network-btn-follow flex-shrink-0">Follow</button>
+      <button className="network-btn-follow flex-shrink-0">
+        {t('ProfessionalNetwork.common.actions.follow', 'Follow')}
+      </button>
     </div>
   );
 }

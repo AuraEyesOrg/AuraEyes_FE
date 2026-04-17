@@ -3,7 +3,8 @@
  * System Admin view for managing ophthalmologists - request status, fees, feedback
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stethoscope,
   UserCheck,
@@ -37,11 +38,12 @@ import {
   type FeedbackRatingSummary,
   type OphthalmologistListItem,
 } from '../api/ophthalmologist.api';
-import { formatViDate } from '@/lib/date-utils';
 import { formatCurrency } from '@/lib/helper';
 import { buildTimestampedFileName, downloadXlsxFile } from '@/lib/file-export';
+import { extractApiErrorMessage } from '@/lib/api-error';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/confirm-modal';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 type VerificationStatus =
   | 'PendingVerification'
@@ -86,6 +88,7 @@ const calculateCommissionAmount = (
 /** Map API item to UI Ophthalmologist model */
 const mapToUiModel = (
   item: OphthalmologistListItem,
+  locale: 'en-US' | 'vi-VN',
   ratingSummary?: FeedbackRatingSummary | null
 ): Ophthalmologist => ({
   ...item,
@@ -101,40 +104,80 @@ const mapToUiModel = (
     item.ratingAverage ?? ratingSummary?.ratingAverage ?? 0
   ),
   totalReviews: Number(item.ratingCount ?? ratingSummary?.ratingCount ?? 0),
-  joinedAt: formatViDate(item.createdAt),
+  joinedAt: new Date(item.createdAt).toLocaleDateString(locale),
 });
 
 type TabType = 'overview' | 'requests' | 'feedback';
 
 type DoctorStatus = 'available' | 'busy' | 'unavailable' | 'fully_booked';
 
-const statusConfig: Record<
-  DoctorStatus,
-  { label: string; color: string; dotColor: string }
-> = {
-  available: {
-    label: 'Available',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    dotColor: 'bg-emerald-500',
-  },
-  busy: {
-    label: 'Busy',
-    color: 'text-amber-600 dark:text-amber-400',
-    dotColor: 'bg-amber-500',
-  },
-  unavailable: {
-    label: 'Unavailable',
-    color: 'text-slate-500 dark:text-slate-400',
-    dotColor: 'bg-slate-400',
-  },
-  fully_booked: {
-    label: 'Fully Booked',
-    color: 'text-red-600 dark:text-red-400',
-    dotColor: 'bg-red-500',
-  },
-};
+const statusConfig: Record<DoctorStatus, { color: string; dotColor: string }> =
+  {
+    available: {
+      color: 'text-emerald-600 dark:text-emerald-400',
+      dotColor: 'bg-emerald-500',
+    },
+    busy: {
+      color: 'text-amber-600 dark:text-amber-400',
+      dotColor: 'bg-amber-500',
+    },
+    unavailable: {
+      color: 'text-slate-500 dark:text-slate-400',
+      dotColor: 'bg-slate-400',
+    },
+    fully_booked: {
+      color: 'text-red-600 dark:text-red-400',
+      dotColor: 'bg-red-500',
+    },
+  };
 
 export default function OphthalmologistsPage() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const locale: 'en-US' | 'vi-VN' = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+  const doctorStatusLabels: Record<DoctorStatus, string> = useMemo(
+    () => ({
+      available: t(
+        'SystemAdmin.ophthalmologists.status.available',
+        'Available'
+      ),
+      busy: t('SystemAdmin.ophthalmologists.status.busy', 'Busy'),
+      unavailable: t(
+        'SystemAdmin.ophthalmologists.status.unavailable',
+        'Unavailable'
+      ),
+      fully_booked: t(
+        'SystemAdmin.ophthalmologists.status.fullyBooked',
+        'Fully Booked'
+      ),
+    }),
+    [t]
+  );
+
+  const verificationLabels: Record<VerificationStatus, string> = useMemo(
+    () => ({
+      Approved: t(
+        'SystemAdmin.ophthalmologists.verification.verified',
+        'Verified'
+      ),
+      PendingVerification: t(
+        'SystemAdmin.ophthalmologists.verification.pending',
+        'Pending'
+      ),
+      PendingUpdate: t(
+        'SystemAdmin.ophthalmologists.verification.pendingUpdate',
+        'Pending Update'
+      ),
+      Rejected: t(
+        'SystemAdmin.ophthalmologists.verification.rejected',
+        'Rejected'
+      ),
+    }),
+    [t]
+  );
+
   const [ophthalmologists, setOphthalmologists] = useState<Ophthalmologist[]>(
     []
   );
@@ -201,7 +244,11 @@ export default function OphthalmologistsPage() {
 
       setOphthalmologists(
         result.items.map((doctor) =>
-          mapToUiModel(doctor, ratingSummaryByDoctorId.get(doctor.id) ?? null)
+          mapToUiModel(
+            doctor,
+            locale,
+            ratingSummaryByDoctorId.get(doctor.id) ?? null
+          )
         )
       );
       setTotalCount(result.totalCount);
@@ -213,7 +260,7 @@ export default function OphthalmologistsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pageNumber, searchQuery, verificationFilter]);
+  }, [pageNumber, searchQuery, verificationFilter, locale]);
 
   useEffect(() => {
     loadData();
@@ -289,7 +336,12 @@ export default function OphthalmologistsPage() {
 
   const handlePaySalary = async (doctor: Ophthalmologist) => {
     if (doctor.actualMonthlySalary == null || doctor.actualMonthlySalary <= 0) {
-      toast.error('Doctor has no valid actual salary to payout.');
+      toast.error(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.invalidSalaryForPayout',
+          'Doctor has no valid actual salary to payout.'
+        )
+      );
       return;
     }
 
@@ -300,11 +352,24 @@ export default function OphthalmologistsPage() {
         doctor.actualMonthlySalary,
         `Salary payout (${new Date().toISOString().slice(0, 7)})`
       );
-      toast.success('Salary paid to doctor wallet successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.paySalarySuccess',
+          'Salary paid to doctor wallet successfully.'
+        )
+      );
       await loadData();
     } catch (error) {
       console.error('Failed to pay salary:', error);
-      toast.error('Failed to pay salary. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.paySalaryError',
+            'Failed to pay salary. Please try again.'
+          )
+        )
+      );
     } finally {
       setPayingSalary(false);
     }
@@ -314,7 +379,12 @@ export default function OphthalmologistsPage() {
     if (!selectedDoctor) return;
 
     if (selectedEmploymentType === selectedDoctor.employmentType) {
-      toast.info('Employment type is unchanged.');
+      toast.info(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.employmentTypeUnchanged',
+          'Employment type is unchanged.'
+        )
+      );
       return;
     }
 
@@ -338,11 +408,24 @@ export default function OphthalmologistsPage() {
         )
       );
 
-      toast.success('Employment type updated successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.updateEmploymentSuccess',
+          'Employment type updated successfully.'
+        )
+      );
       await loadData();
     } catch (error) {
       console.error('Failed to update employment type:', error);
-      toast.error('Failed to update employment type. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.updateEmploymentError',
+            'Failed to update employment type. Please try again.'
+          )
+        )
+      );
     } finally {
       setUpdatingEmployment(false);
     }
@@ -362,11 +445,24 @@ export default function OphthalmologistsPage() {
       if (selectedDoctor?.id === deleteTargetDoctor.id) {
         closeDoctorDetail();
       }
-      toast.success('Doctor deleted successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.deleteSuccess',
+          'Doctor deleted successfully.'
+        )
+      );
       await loadData();
     } catch (error) {
       console.error('Failed to delete doctor:', error);
-      toast.error('Failed to delete doctor. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.deleteError',
+            'Failed to delete doctor. Please try again.'
+          )
+        )
+      );
     } finally {
       setDeletingDoctorId(null);
       setDeleteTargetDoctor(null);
@@ -389,7 +485,12 @@ export default function OphthalmologistsPage() {
   const handleRejectSubmit = async () => {
     if (!rejectingDoctor) return;
     if (!rejectReason.trim()) {
-      setRejectError('Vui lòng nhập lý do từ chối.');
+      setRejectError(
+        t(
+          'SystemAdmin.ophthalmologists.rejectModal.validation.reasonRequired',
+          'Please enter a rejection reason.'
+        )
+      );
       return;
     }
     setRejectSubmitting(true);
@@ -403,8 +504,16 @@ export default function OphthalmologistsPage() {
       setRejectingDoctor(null);
       setPendingTotalCount((c) => Math.max(0, c - 1));
       loadData();
-    } catch {
-      setRejectError('Từ chối thất bại. Vui lòng thử lại.');
+    } catch (error) {
+      setRejectError(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.rejectError',
+            'Rejection failed. Please try again.'
+          )
+        )
+      );
     } finally {
       setRejectSubmitting(false);
     }
@@ -420,66 +529,142 @@ export default function OphthalmologistsPage() {
       });
 
       const mappedDoctors = doctorsForExport
-        .map((doctor) => mapToUiModel(doctor))
+        .map((doctor) => mapToUiModel(doctor, locale))
         .filter((doctor) =>
           statusFilter === 'all' ? true : doctor.status === statusFilter
         );
 
       if (mappedDoctors.length === 0) {
-        toast.info('No ophthalmologists available for export.');
+        toast.info(
+          t(
+            'SystemAdmin.ophthalmologists.toasts.noDataForExport',
+            'No ophthalmologists available for export.'
+          )
+        );
         return;
       }
 
       await downloadXlsxFile(
         mappedDoctors,
         [
-          { header: 'Ophthalmologist ID', value: (row) => row.id },
-          { header: 'Full Name', value: (row) => row.fullName },
-          { header: 'Email', value: (row) => row.email },
-          { header: 'Phone', value: (row) => row.phone ?? '' },
           {
-            header: 'Verification Status',
-            value: (row) => row.verificationStatus,
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.ophthalmologistId',
+              'Ophthalmologist ID'
+            ),
+            value: (row: Ophthalmologist) => row.id,
           },
           {
-            header: 'Is Verified',
-            value: (row) => (row.isVerified ? 'Yes' : 'No'),
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.fullName',
+              'Full Name'
+            ),
+            value: (row: Ophthalmologist) => row.fullName,
           },
           {
-            header: 'Active Status',
-            value: (row) => (row.isActive ? 'Active' : 'Inactive'),
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.email',
+              'Email'
+            ),
+            value: (row: Ophthalmologist) => row.email,
           },
           {
-            header: 'Years of Experience',
-            value: (row) => row.yearsOfExperience,
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.phone',
+              'Phone'
+            ),
+            value: (row: Ophthalmologist) => row.phone ?? '',
           },
           {
-            header: 'Organisation',
-            value: (row) => row.organisationName ?? '',
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.verificationStatus',
+              'Verification Status'
+            ),
+            value: (row: Ophthalmologist) => row.verificationStatus,
           },
-          { header: 'Created At', value: (row) => row.createdAt },
+          {
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.isVerified',
+              'Is Verified'
+            ),
+            value: (row: Ophthalmologist) =>
+              row.isVerified
+                ? t('SystemAdmin.ophthalmologists.export.values.yes', 'Yes')
+                : t('SystemAdmin.ophthalmologists.export.values.no', 'No'),
+          },
+          {
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.activeStatus',
+              'Active Status'
+            ),
+            value: (row: Ophthalmologist) =>
+              row.isActive
+                ? t(
+                    'SystemAdmin.ophthalmologists.export.values.active',
+                    'Active'
+                  )
+                : t(
+                    'SystemAdmin.ophthalmologists.export.values.inactive',
+                    'Inactive'
+                  ),
+          },
+          {
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.yearsOfExperience',
+              'Years of Experience'
+            ),
+            value: (row: Ophthalmologist) => row.yearsOfExperience,
+          },
+          {
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.organisation',
+              'Organisation'
+            ),
+            value: (row: Ophthalmologist) => row.organisationName ?? '',
+          },
+          {
+            header: t(
+              'SystemAdmin.ophthalmologists.export.columns.createdAt',
+              'Created At'
+            ),
+            value: (row: Ophthalmologist) => row.createdAt,
+          },
         ],
         buildTimestampedFileName('system-admin-ophthalmologists', 'xlsx'),
-        'Ophthalmologists'
+        t('SystemAdmin.ophthalmologists.export.sheetName', 'Ophthalmologists')
       );
-      toast.success(`Exported ${mappedDoctors.length} ophthalmologists.`);
+      toast.success(
+        t(
+          'SystemAdmin.ophthalmologists.toasts.exportSuccess',
+          'Exported {{count}} ophthalmologists.',
+          { count: mappedDoctors.length }
+        )
+      );
     } catch (error) {
       console.error('Failed to export ophthalmologists:', error);
-      toast.error('Failed to export ophthalmologists. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.ophthalmologists.toasts.exportError',
+            'Failed to export ophthalmologists. Please try again.'
+          )
+        )
+      );
     } finally {
       setIsExporting(false);
     }
   };
 
   const vndCurrencyOptions = {
-    locale: 'vi-VN',
+    locale,
     currency: 'VND',
     minimumFractionDigits: 0,
   } as const;
 
   const ophthalmologistColumns: TableColumn<Ophthalmologist>[] = [
     {
-      header: 'Doctor',
+      header: t('SystemAdmin.ophthalmologists.table.columns.doctor', 'Doctor'),
       accessor: 'name',
       render: (_, row) => (
         <div className="flex items-center gap-3">
@@ -501,14 +686,18 @@ export default function OphthalmologistsPage() {
               {row.name}
             </span>
             <span className="text-xs text-slate-500">
-              {row.yearsOfExperience} years exp.
+              {t(
+                'SystemAdmin.ophthalmologists.table.values.yearsExperience',
+                '{{count}} years exp.',
+                { count: row.yearsOfExperience }
+              )}
             </span>
           </div>
         </div>
       ),
     },
     {
-      header: 'Status',
+      header: t('SystemAdmin.ophthalmologists.table.columns.status', 'Status'),
       accessor: 'status',
       render: (value) => {
         const config = statusConfig[value as DoctorStatus];
@@ -516,50 +705,69 @@ export default function OphthalmologistsPage() {
           <div className="flex items-center gap-2">
             <Circle className={`w-2 h-2 fill-current ${config.color}`} />
             <span className={`text-sm font-medium ${config.color}`}>
-              {config.label}
+              {doctorStatusLabels[value as DoctorStatus] ?? String(value)}
             </span>
           </div>
         );
       },
     },
     {
-      header: 'Verification',
+      header: t(
+        'SystemAdmin.ophthalmologists.table.columns.verification',
+        'Verification'
+      ),
       accessor: 'verificationStatus',
       render: (value) => {
         const statusMap: Record<
           VerificationStatus,
-          { status: 'success' | 'warning' | 'error'; label: string }
+          { status: 'success' | 'warning' | 'error' }
         > = {
-          Approved: { status: 'success', label: 'Verified' },
-          PendingVerification: { status: 'warning', label: 'Pending' },
-          PendingUpdate: { status: 'warning', label: 'Pending Update' },
-          Rejected: { status: 'error', label: 'Rejected' },
+          Approved: { status: 'success' },
+          PendingVerification: { status: 'warning' },
+          PendingUpdate: { status: 'warning' },
+          Rejected: { status: 'error' },
         };
         const config = statusMap[value as VerificationStatus];
         return (
           <StatusBadge
             status={config?.status ?? 'warning'}
-            label={config?.label ?? String(value)}
+            label={
+              verificationLabels[value as VerificationStatus] ?? String(value)
+            }
           />
         );
       },
     },
     {
-      header: 'Requests',
+      header: t(
+        'SystemAdmin.ophthalmologists.table.columns.requests',
+        'Requests'
+      ),
       accessor: 'pendingRequests',
       render: (_, row) => (
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-slate-900 dark:text-white">
-            {row.pendingRequests} pending
+            {t(
+              'SystemAdmin.ophthalmologists.table.values.pendingRequests',
+              '{{count}} pending',
+              { count: row.pendingRequests }
+            )}
           </span>
           <span className="text-xs text-slate-500">
-            {row.totalRequests} total
+            {t(
+              'SystemAdmin.ophthalmologists.table.values.totalRequests',
+              '{{count}} total',
+              { count: row.totalRequests }
+            )}
           </span>
         </div>
       ),
     },
     {
-      header: 'Monthly Earnings',
+      header: t(
+        'SystemAdmin.ophthalmologists.table.columns.monthlyEarnings',
+        'Monthly Earnings'
+      ),
       accessor: 'monthlyEarnings',
       render: (value) => (
         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
@@ -568,7 +776,10 @@ export default function OphthalmologistsPage() {
       ),
     },
     {
-      header: 'Deal Terms',
+      header: t(
+        'SystemAdmin.ophthalmologists.table.columns.dealTerms',
+        'Deal Terms'
+      ),
       accessor: 'commissionRate',
       render: (_, row) => {
         const commissionAmount = calculateCommissionAmount(
@@ -579,19 +790,24 @@ export default function OphthalmologistsPage() {
         return (
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-slate-900 dark:text-white">
-              {row.commissionRate != null ? `${row.commissionRate}%` : 'N/A'}
+              {row.commissionRate != null
+                ? `${row.commissionRate}%`
+                : t('SystemAdmin.common.notAvailable', 'N/A')}
             </span>
             <span className="text-xs text-slate-500">
               {commissionAmount != null
                 ? formatCurrency(commissionAmount, vndCurrencyOptions)
-                : 'Commission pending'}
+                : t(
+                    'SystemAdmin.ophthalmologists.table.values.commissionPending',
+                    'Commission pending'
+                  )}
             </span>
           </div>
         );
       },
     },
     {
-      header: 'Rating',
+      header: t('SystemAdmin.ophthalmologists.table.columns.rating', 'Rating'),
       accessor: 'averageRating',
       render: (_, row) => (
         <div className="flex items-center gap-1">
@@ -604,14 +820,20 @@ export default function OphthalmologistsPage() {
       ),
     },
     {
-      header: 'Actions',
+      header: t(
+        'SystemAdmin.ophthalmologists.table.columns.actions',
+        'Actions'
+      ),
       accessor: () => null,
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSelectedDoctor(row)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
-            title="View Details"
+            title={t(
+              'SystemAdmin.ophthalmologists.table.actions.viewDetails',
+              'View Details'
+            )}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -621,14 +843,20 @@ export default function OphthalmologistsPage() {
               <button
                 onClick={() => handleVerify(row.id)}
                 className="text-emerald-500 hover:text-emerald-600 transition-colors p-1"
-                title="Approve Verification"
+                title={t(
+                  'SystemAdmin.ophthalmologists.table.actions.approveVerification',
+                  'Approve Verification'
+                )}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleRejectClick(row)}
                 className="text-red-500 hover:text-red-600 transition-colors p-1"
-                title="Reject Verification"
+                title={t(
+                  'SystemAdmin.ophthalmologists.table.actions.rejectVerification',
+                  'Reject Verification'
+                )}
               >
                 <XCircle className="w-4 h-4" />
               </button>
@@ -642,7 +870,10 @@ export default function OphthalmologistsPage() {
                 )
               }
               className="text-slate-500 hover:text-primary transition-colors p-1"
-              title="More actions"
+              title={t(
+                'SystemAdmin.ophthalmologists.table.actions.moreActions',
+                'More actions'
+              )}
             >
               <MoreVertical className="w-5 h-5" />
             </button>
@@ -656,7 +887,10 @@ export default function OphthalmologistsPage() {
                   className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
                 >
                   <Pencil className="w-4 h-4" />
-                  Update
+                  {t(
+                    'SystemAdmin.ophthalmologists.table.actions.update',
+                    'Update'
+                  )}
                 </button>
                 <button
                   onClick={() => {
@@ -667,7 +901,15 @@ export default function OphthalmologistsPage() {
                   className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
-                  {deletingDoctorId === row.id ? 'Deleting...' : 'Delete'}
+                  {deletingDoctorId === row.id
+                    ? t(
+                        'SystemAdmin.ophthalmologists.table.actions.deleting',
+                        'Deleting...'
+                      )
+                    : t(
+                        'SystemAdmin.ophthalmologists.table.actions.delete',
+                        'Delete'
+                      )}
                 </button>
               </div>
             )}
@@ -678,14 +920,25 @@ export default function OphthalmologistsPage() {
   ];
 
   const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: Activity },
+    {
+      id: 'overview' as const,
+      label: t('SystemAdmin.ophthalmologists.tabs.overview', 'Overview'),
+      icon: Activity,
+    },
     {
       id: 'requests' as const,
-      label: 'Pending Verification',
+      label: t(
+        'SystemAdmin.ophthalmologists.tabs.pendingVerification',
+        'Pending Verification'
+      ),
       icon: Clock,
       count: pendingTotalCount,
     },
-    { id: 'feedback' as const, label: 'Feedback', icon: MessageSquare },
+    {
+      id: 'feedback' as const,
+      label: t('SystemAdmin.ophthalmologists.tabs.feedback', 'Feedback'),
+      icon: MessageSquare,
+    },
   ];
 
   return (
@@ -694,8 +947,14 @@ export default function OphthalmologistsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Ophthalmologist Management"
-          description="Manage doctors, monitor consultation requests, earnings, and feedback"
+          title={t(
+            'SystemAdmin.ophthalmologists.page.title',
+            'Ophthalmologist Management'
+          )}
+          description={t(
+            'SystemAdmin.ophthalmologists.page.description',
+            'Manage doctors, monitor consultation requests, earnings, and feedback'
+          )}
           actions={
             <div className="flex items-center gap-3">
               <button
@@ -704,7 +963,12 @@ export default function OphthalmologistsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export'}
+                {isExporting
+                  ? t(
+                      'SystemAdmin.ophthalmologists.actions.exporting',
+                      'Exporting...'
+                    )
+                  : t('SystemAdmin.ophthalmologists.actions.export', 'Export')}
               </button>
             </div>
           }
@@ -715,40 +979,71 @@ export default function OphthalmologistsPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <StatsCard
-                title="Total Doctors"
+                title={t(
+                  'SystemAdmin.ophthalmologists.stats.totalDoctors.title',
+                  'Total Doctors'
+                )}
                 value={totalDoctors}
                 icon={Stethoscope}
-                description={`${verifiedDoctors} verified`}
+                description={t(
+                  'SystemAdmin.ophthalmologists.stats.totalDoctors.description',
+                  '{{count}} verified',
+                  { count: verifiedDoctors }
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Available Now"
+                title={t(
+                  'SystemAdmin.ophthalmologists.stats.availableNow.title',
+                  'Available Now'
+                )}
                 value={availableDoctors}
                 icon={UserCheck}
-                description="Ready for consultations"
+                description={t(
+                  'SystemAdmin.ophthalmologists.stats.availableNow.description',
+                  'Ready for consultations'
+                )}
                 variant="success"
               />
               <StatsCard
-                title="Pending Verification"
+                title={t(
+                  'SystemAdmin.ophthalmologists.stats.pendingVerification.title',
+                  'Pending Verification'
+                )}
                 value={pendingVerification}
                 icon={AlertCircle}
-                description="Require review"
+                description={t(
+                  'SystemAdmin.ophthalmologists.stats.pendingVerification.description',
+                  'Require review'
+                )}
                 variant="warning"
               />
               <StatsCard
-                title="Pending Requests"
+                title={t(
+                  'SystemAdmin.ophthalmologists.stats.pendingRequests.title',
+                  'Pending Requests'
+                )}
                 value={totalPendingRequests}
                 icon={Clock}
-                description="Consultation requests"
+                description={t(
+                  'SystemAdmin.ophthalmologists.stats.pendingRequests.description',
+                  'Consultation requests'
+                )}
                 variant="primary"
               />
               <StatsCard
-                title="Monthly Revenue"
+                title={t(
+                  'SystemAdmin.ophthalmologists.stats.monthlyRevenue.title',
+                  'Monthly Revenue'
+                )}
                 value={formatCurrency(totalMonthlyEarnings, vndCurrencyOptions)}
                 icon={DollarSign}
                 change={12}
                 trend="up"
-                description="Platform earnings"
+                description={t(
+                  'SystemAdmin.ophthalmologists.stats.monthlyRevenue.description',
+                  'Platform earnings'
+                )}
                 variant="success"
               />
             </div>
@@ -758,7 +1053,10 @@ export default function OphthalmologistsPage() {
               <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Average Rating
+                    {t(
+                      'SystemAdmin.ophthalmologists.overview.averageRating.title',
+                      'Average Rating'
+                    )}
                   </h3>
                   <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
                 </div>
@@ -769,16 +1067,26 @@ export default function OphthalmologistsPage() {
                   <span className="text-sm text-slate-500">/ 5.0</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Based on{' '}
-                  {ophthalmologists.reduce((sum, o) => sum + o.totalReviews, 0)}{' '}
-                  reviews
+                  {t(
+                    'SystemAdmin.ophthalmologists.overview.averageRating.basedOnReviews',
+                    'Based on {{count}} reviews',
+                    {
+                      count: ophthalmologists.reduce(
+                        (sum, o) => sum + o.totalReviews,
+                        0
+                      ),
+                    }
+                  )}
                 </p>
               </div>
 
               <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Total Consultations
+                    {t(
+                      'SystemAdmin.ophthalmologists.overview.totalConsultations.title',
+                      'Total Consultations'
+                    )}
                   </h3>
                   <UserCheck className="w-5 h-5 text-emerald-500" />
                 </div>
@@ -789,21 +1097,34 @@ export default function OphthalmologistsPage() {
                       0
                     )}
                   </span>
-                  <span className="text-sm text-slate-500">completed</span>
+                  <span className="text-sm text-slate-500">
+                    {t(
+                      'SystemAdmin.ophthalmologists.overview.totalConsultations.completed',
+                      'completed'
+                    )}
+                  </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  {ophthalmologists.reduce(
-                    (sum, o) => sum + o.totalRequests,
-                    0
-                  )}{' '}
-                  total requests
+                  {t(
+                    'SystemAdmin.ophthalmologists.overview.totalConsultations.totalRequests',
+                    '{{count}} total requests',
+                    {
+                      count: ophthalmologists.reduce(
+                        (sum, o) => sum + o.totalRequests,
+                        0
+                      ),
+                    }
+                  )}
                 </p>
               </div>
 
               <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                    Pending Payouts
+                    {t(
+                      'SystemAdmin.ophthalmologists.overview.pendingPayouts.title',
+                      'Pending Payouts'
+                    )}
                   </h3>
                   <Wallet className="w-5 h-5 text-amber-500" />
                 </div>
@@ -819,7 +1140,10 @@ export default function OphthalmologistsPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Awaiting transfer to doctors
+                  {t(
+                    'SystemAdmin.ophthalmologists.overview.pendingPayouts.description',
+                    'Awaiting transfer to doctors'
+                  )}
                 </p>
               </div>
             </div>
@@ -855,7 +1179,10 @@ export default function OphthalmologistsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name or email..."
+                  placeholder={t(
+                    'SystemAdmin.ophthalmologists.filters.searchPlaceholder',
+                    'Search by name or email...'
+                  )}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
                 />
               </div>
@@ -868,12 +1195,30 @@ export default function OphthalmologistsPage() {
                     onChange={(e) => setVerificationFilter(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
-                    <option value="all">All Verification</option>
-                    <option value="PendingVerification,PendingUpdate">
-                      Pending
+                    <option value="all">
+                      {t(
+                        'SystemAdmin.ophthalmologists.filters.verification.all',
+                        'All Verification'
+                      )}
                     </option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
+                    <option value="PendingVerification,PendingUpdate">
+                      {t(
+                        'SystemAdmin.ophthalmologists.filters.verification.pending',
+                        'Pending'
+                      )}
+                    </option>
+                    <option value="Approved">
+                      {t(
+                        'SystemAdmin.ophthalmologists.filters.verification.approved',
+                        'Approved'
+                      )}
+                    </option>
+                    <option value="Rejected">
+                      {t(
+                        'SystemAdmin.ophthalmologists.filters.verification.rejected',
+                        'Rejected'
+                      )}
+                    </option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -899,11 +1244,22 @@ export default function OphthalmologistsPage() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                   >
-                    <option value="all">All Status</option>
-                    <option value="available">Available</option>
-                    <option value="busy">Busy</option>
-                    <option value="fully_booked">Fully Booked</option>
-                    <option value="unavailable">Unavailable</option>
+                    <option value="all">
+                      {t(
+                        'SystemAdmin.ophthalmologists.filters.status.all',
+                        'All Status'
+                      )}
+                    </option>
+                    <option value="available">
+                      {doctorStatusLabels.available}
+                    </option>
+                    <option value="busy">{doctorStatusLabels.busy}</option>
+                    <option value="fully_booked">
+                      {doctorStatusLabels.fully_booked}
+                    </option>
+                    <option value="unavailable">
+                      {doctorStatusLabels.unavailable}
+                    </option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -929,9 +1285,17 @@ export default function OphthalmologistsPage() {
               <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 flex flex-col items-center justify-center text-center gap-3">
                 <MessageSquare className="w-12 h-12 text-slate-300" />
                 <p className="text-slate-500 font-medium">
-                  Chức năng đánh giá đang được phát triển
+                  {t(
+                    'SystemAdmin.ophthalmologists.feedback.state.inProgress',
+                    'Feedback feature is under development'
+                  )}
                 </p>
-                <p className="text-slate-400 text-sm">Coming soon</p>
+                <p className="text-slate-400 text-sm">
+                  {t(
+                    'SystemAdmin.ophthalmologists.feedback.state.comingSoon',
+                    'Coming soon'
+                  )}
+                </p>
               </div>
             ) : (
               <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -939,10 +1303,17 @@ export default function OphthalmologistsPage() {
                   <div className="px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                      {totalCount} bác sĩ đang chờ xét duyệt hồ sơ chứng chỉ
+                      {t(
+                        'SystemAdmin.ophthalmologists.requestsBanner.pendingDoctors',
+                        '{{count}} doctors are waiting for credential review',
+                        { count: totalCount }
+                      )}
                     </span>
                     <span className="ml-auto text-xs text-amber-500">
-                      Xem tài liệu đính kèm trong hàng chi tiết (biểu tượng mắt)
+                      {t(
+                        'SystemAdmin.ophthalmologists.requestsBanner.hint',
+                        'View attached documents in detail rows (eye icon)'
+                      )}
                     </span>
                   </div>
                 )}
@@ -953,8 +1324,14 @@ export default function OphthalmologistsPage() {
                   isLoading={loading}
                   emptyMessage={
                     activeTab === 'requests'
-                      ? 'Không có hồ sơ nào đang chờ xét duyệt'
-                      : 'No ophthalmologists found'
+                      ? t(
+                          'SystemAdmin.ophthalmologists.states.noPendingRequests',
+                          'No records are waiting for verification'
+                        )
+                      : t(
+                          'SystemAdmin.ophthalmologists.states.empty',
+                          'No ophthalmologists found'
+                        )
                   }
                 />
               </div>
@@ -963,8 +1340,14 @@ export default function OphthalmologistsPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
               <span>
-                Showing {filteredOphthalmologists.length} of {totalCount}{' '}
-                doctors
+                {t(
+                  'SystemAdmin.ophthalmologists.pagination.showing',
+                  'Showing {{shown}} of {{total}} doctors',
+                  {
+                    shown: filteredOphthalmologists.length,
+                    total: totalCount,
+                  }
+                )}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -972,15 +1355,26 @@ export default function OphthalmologistsPage() {
                   onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t(
+                    'SystemAdmin.ophthalmologists.pagination.previous',
+                    'Previous'
+                  )}
                 </button>
-                <span className="px-2 font-medium">Page {pageNumber}</span>
+                <span className="px-2 font-medium">
+                  {t(
+                    'SystemAdmin.ophthalmologists.pagination.page',
+                    'Page {{page}}',
+                    {
+                      page: pageNumber,
+                    }
+                  )}
+                </span>
                 <button
                   disabled={!hasNext}
                   onClick={() => setPageNumber((p) => p + 1)}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t('SystemAdmin.ophthalmologists.pagination.next', 'Next')}
                 </button>
               </div>
             </div>
@@ -1004,7 +1398,10 @@ export default function OphthalmologistsPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Từ chối xác minh
+                    {t(
+                      'SystemAdmin.ophthalmologists.rejectModal.title',
+                      'Reject verification'
+                    )}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
                     {rejectingDoctor.name}
@@ -1034,7 +1431,10 @@ export default function OphthalmologistsPage() {
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-medium"
                       >
-                        Xem giấy phép
+                        {t(
+                          'SystemAdmin.ophthalmologists.rejectModal.links.viewLicense',
+                          'View license'
+                        )}
                       </a>
                     )}
                     {rejectingDoctor.degreeUrl && (
@@ -1044,7 +1444,10 @@ export default function OphthalmologistsPage() {
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-medium"
                       >
-                        Xem bằng cấp
+                        {t(
+                          'SystemAdmin.ophthalmologists.rejectModal.links.viewDegree',
+                          'View degree'
+                        )}
                       </a>
                     )}
                   </div>
@@ -1053,7 +1456,11 @@ export default function OphthalmologistsPage() {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Lý do từ chối <span className="text-red-500">*</span>
+                  {t(
+                    'SystemAdmin.ophthalmologists.rejectModal.reasonLabel',
+                    'Rejection reason'
+                  )}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={rejectReason}
@@ -1062,7 +1469,10 @@ export default function OphthalmologistsPage() {
                     if (rejectError) setRejectError('');
                   }}
                   rows={4}
-                  placeholder="Nhập lý do từ chối hồ sơ (ví dụ: ảnh giấy phép không rõ, chứng chỉ chưa đủ điều kiện...)"
+                  placeholder={t(
+                    'SystemAdmin.ophthalmologists.rejectModal.reasonPlaceholder',
+                    'Enter rejection reason (for example: unclear license photo, insufficient credentials...)'
+                  )}
                   className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-red-400/50 focus:border-red-400 outline-none transition-all text-sm resize-none"
                 />
                 {rejectError && (
@@ -1074,8 +1484,10 @@ export default function OphthalmologistsPage() {
 
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Lý do từ chối sẽ được gửi qua email đến bác sĩ. Hãy mô tả rõ
-                  ràng để họ có thể bổ sung hồ sơ.
+                  {t(
+                    'SystemAdmin.ophthalmologists.rejectModal.hint',
+                    'The rejection reason will be emailed to the doctor. Please provide clear details so they can update the profile.'
+                  )}
                 </p>
               </div>
             </div>
@@ -1087,7 +1499,10 @@ export default function OphthalmologistsPage() {
                 disabled={rejectSubmitting}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
               >
-                Hủy
+                {t(
+                  'SystemAdmin.ophthalmologists.rejectModal.actions.cancel',
+                  'Cancel'
+                )}
               </button>
               <button
                 onClick={handleRejectSubmit}
@@ -1099,7 +1514,10 @@ export default function OphthalmologistsPage() {
                 ) : (
                   <XCircle className="w-4 h-4" />
                 )}
-                Xác nhận từ chối
+                {t(
+                  'SystemAdmin.ophthalmologists.rejectModal.actions.confirm',
+                  'Confirm rejection'
+                )}
               </button>
             </div>
           </div>
@@ -1143,7 +1561,7 @@ export default function OphthalmologistsPage() {
                       <span
                         className={`text-xs font-medium ${statusConfig[selectedDoctor.status].color}`}
                       >
-                        {statusConfig[selectedDoctor.status].label}
+                        {doctorStatusLabels[selectedDoctor.status]}
                       </span>
                     </div>
                   </div>
@@ -1161,20 +1579,33 @@ export default function OphthalmologistsPage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
-                  <p className="text-xs text-slate-500 mb-1">Total Requests</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.stats.totalRequests',
+                      'Total Requests'
+                    )}
+                  </p>
                   <p className="text-xl font-bold text-slate-900 dark:text-white">
                     {selectedDoctor.totalRequests}
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
-                  <p className="text-xs text-slate-500 mb-1">Pending</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.stats.pending',
+                      'Pending'
+                    )}
+                  </p>
                   <p className="text-xl font-bold text-amber-600">
                     {selectedDoctor.pendingRequests}
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
                   <p className="text-xs text-slate-500 mb-1">
-                    Monthly Earnings
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.stats.monthlyEarnings',
+                      'Monthly Earnings'
+                    )}
                   </p>
                   <p className="text-xl font-bold text-emerald-600">
                     {formatCurrency(
@@ -1184,7 +1615,12 @@ export default function OphthalmologistsPage() {
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800">
-                  <p className="text-xs text-slate-500 mb-1">Rating</p>
+                  <p className="text-xs text-slate-500 mb-1">
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.stats.rating',
+                      'Rating'
+                    )}
+                  </p>
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                     <span className="text-xl font-bold text-slate-900 dark:text-white">
@@ -1198,7 +1634,10 @@ export default function OphthalmologistsPage() {
               {selectedDoctor.bio && (
                 <div>
                   <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">
-                    Bio
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.sections.bio',
+                      'Bio'
+                    )}
                   </h3>
                   <p className="text-sm text-slate-700 dark:text-slate-300">
                     {selectedDoctor.bio}
@@ -1210,7 +1649,10 @@ export default function OphthalmologistsPage() {
               {(selectedDoctor.licenseUrl || selectedDoctor.degreeUrl) && (
                 <div>
                   <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
-                    Uploaded Documents
+                    {t(
+                      'SystemAdmin.ophthalmologists.detail.sections.uploadedDocuments',
+                      'Uploaded Documents'
+                    )}
                   </h3>
                   <div className="flex gap-4">
                     {selectedDoctor.licenseUrl && (
@@ -1220,7 +1662,10 @@ export default function OphthalmologistsPage() {
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline"
                       >
-                        View License
+                        {t(
+                          'SystemAdmin.ophthalmologists.detail.links.viewLicense',
+                          'View License'
+                        )}
                       </a>
                     )}
                     {selectedDoctor.degreeUrl && (
@@ -1230,7 +1675,10 @@ export default function OphthalmologistsPage() {
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline"
                       >
-                        View Degree
+                        {t(
+                          'SystemAdmin.ophthalmologists.detail.links.viewDegree',
+                          'View Degree'
+                        )}
                       </a>
                     )}
                   </div>
@@ -1242,7 +1690,10 @@ export default function OphthalmologistsPage() {
                 selectedDoctor.rejectionReason && (
                   <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                     <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-1">
-                      Rejection Reason
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.sections.rejectionReason',
+                        'Rejection Reason'
+                      )}
                     </h3>
                     <p className="text-sm text-red-700 dark:text-red-300">
                       {selectedDoctor.rejectionReason}
@@ -1253,12 +1704,18 @@ export default function OphthalmologistsPage() {
               {/* Financial Summary */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
-                  Financial Summary
+                  {t(
+                    'SystemAdmin.ophthalmologists.detail.sections.financialSummary',
+                    'Financial Summary'
+                  )}
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">
-                      Total Earnings
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.financial.totalEarnings',
+                        'Total Earnings'
+                      )}
                     </p>
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
                       {formatCurrency(
@@ -1268,7 +1725,12 @@ export default function OphthalmologistsPage() {
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">This Month</p>
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.financial.thisMonth',
+                        'This Month'
+                      )}
+                    </p>
                     <p className="text-lg font-bold text-emerald-600">
                       {formatCurrency(
                         selectedDoctor.monthlyEarnings,
@@ -1278,7 +1740,10 @@ export default function OphthalmologistsPage() {
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">
-                      Pending Payout
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.financial.pendingPayout',
+                        'Pending Payout'
+                      )}
                     </p>
                     <p className="text-lg font-bold text-amber-600">
                       {formatCurrency(
@@ -1292,11 +1757,19 @@ export default function OphthalmologistsPage() {
 
               <div>
                 <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
-                  Contract Deal Terms
+                  {t(
+                    'SystemAdmin.ophthalmologists.detail.sections.contractDealTerms',
+                    'Contract Deal Terms'
+                  )}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">Employment</p>
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.contract.employment',
+                        'Employment'
+                      )}
+                    </p>
                     <div className="mt-2 flex items-center gap-2">
                       <select
                         value={selectedEmploymentType}
@@ -1307,8 +1780,18 @@ export default function OphthalmologistsPage() {
                         }
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                       >
-                        <option value="FullTime">FullTime</option>
-                        <option value="PartTime">PartTime</option>
+                        <option value="FullTime">
+                          {t(
+                            'SystemAdmin.ophthalmologists.detail.contract.employmentType.fullTime',
+                            'Full-time'
+                          )}
+                        </option>
+                        <option value="PartTime">
+                          {t(
+                            'SystemAdmin.ophthalmologists.detail.contract.employmentType.partTime',
+                            'Part-time'
+                          )}
+                        </option>
                       </select>
                       <button
                         onClick={handleUpdateEmploymentType}
@@ -1319,26 +1802,49 @@ export default function OphthalmologistsPage() {
                         }
                         className="px-3 py-2 rounded-lg text-xs font-semibold text-white bg-primary hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        {updatingEmployment ? 'Saving...' : 'Save'}
+                        {updatingEmployment
+                          ? t(
+                              'SystemAdmin.ophthalmologists.detail.contract.actions.saving',
+                              'Saving...'
+                            )
+                          : t(
+                              'SystemAdmin.ophthalmologists.detail.contract.actions.save',
+                              'Save'
+                            )}
                       </button>
                     </div>
                     {selectedDoctor.workingHoursPerWeek !== undefined && (
                       <p className="text-xs text-slate-500 mt-1">
-                        {selectedDoctor.workingHoursPerWeek}h/week
+                        {t(
+                          'SystemAdmin.ophthalmologists.detail.contract.hoursPerWeek',
+                          '{{count}}h/week',
+                          { count: selectedDoctor.workingHoursPerWeek }
+                        )}
                       </p>
                     )}
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">Commission</p>
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.contract.commission',
+                        'Commission'
+                      )}
+                    </p>
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
                       {selectedDoctor.commissionRate != null
                         ? `${selectedDoctor.commissionRate}%`
-                        : 'Pending'}
+                        : t(
+                            'SystemAdmin.ophthalmologists.detail.contract.pending',
+                            'Pending'
+                          )}
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <p className="text-xs text-slate-500 mb-1">
-                      Expected Salary
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.contract.expectedSalary',
+                        'Expected Salary'
+                      )}
                     </p>
                     <p className="text-lg font-bold text-slate-900 dark:text-white">
                       {selectedDoctor.expectedMonthlySalary !== undefined
@@ -1346,18 +1852,26 @@ export default function OphthalmologistsPage() {
                             selectedDoctor.expectedMonthlySalary,
                             vndCurrencyOptions
                           )
-                        : 'N/A'}
+                        : t('SystemAdmin.common.notAvailable', 'N/A')}
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs text-slate-500 mb-1">Actual Salary</p>
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t(
+                        'SystemAdmin.ophthalmologists.detail.contract.actualSalary',
+                        'Actual Salary'
+                      )}
+                    </p>
                     <p className="text-lg font-bold text-emerald-600">
                       {selectedDoctor.actualMonthlySalary != null
                         ? formatCurrency(
                             selectedDoctor.actualMonthlySalary,
                             vndCurrencyOptions
                           )
-                        : 'Pending'}
+                        : t(
+                            'SystemAdmin.ophthalmologists.detail.contract.pending',
+                            'Pending'
+                          )}
                     </p>
                     {selectedDoctor.actualMonthlySalary != null &&
                       selectedDoctor.actualMonthlySalary > 0 && (
@@ -1366,7 +1880,15 @@ export default function OphthalmologistsPage() {
                           disabled={payingSalary}
                           className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          {payingSalary ? 'Paying...' : 'Pay salary to wallet'}
+                          {payingSalary
+                            ? t(
+                                'SystemAdmin.ophthalmologists.detail.contract.actions.paying',
+                                'Paying...'
+                              )
+                            : t(
+                                'SystemAdmin.ophthalmologists.detail.contract.actions.paySalaryToWallet',
+                                'Pay salary to wallet'
+                              )}
                         </button>
                       )}
                   </div>
@@ -1379,10 +1901,23 @@ export default function OphthalmologistsPage() {
 
       <ConfirmModal
         open={!!deleteTargetDoctor}
-        title="Delete ophthalmologist?"
-        message={`Bạn có chắc muốn xóa bác sĩ ${deleteTargetDoctor?.name ?? ''}? Hồ sơ sẽ được đánh dấu inactive.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t(
+          'SystemAdmin.ophthalmologists.deleteModal.title',
+          'Delete ophthalmologist?'
+        )}
+        message={t(
+          'SystemAdmin.ophthalmologists.deleteModal.message',
+          'Are you sure you want to delete doctor {{name}}? The profile will be marked as inactive.',
+          { name: deleteTargetDoctor?.name ?? '' }
+        )}
+        confirmLabel={t(
+          'SystemAdmin.ophthalmologists.deleteModal.confirmLabel',
+          'Delete'
+        )}
+        cancelLabel={t(
+          'SystemAdmin.ophthalmologists.deleteModal.cancelLabel',
+          'Cancel'
+        )}
         tone="danger"
         isLoading={
           !!deleteTargetDoctor && deletingDoctorId === deleteTargetDoctor.id

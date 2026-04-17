@@ -23,8 +23,15 @@ import {
   type OrganisationContractDetailDto,
 } from '../api/contract.api';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const CONTRACT_QUERY_KEY = ['organisation', 'my-contract'] as const;
+
+type TranslateFn = (
+  key: string,
+  fallback: string,
+  params?: Record<string, string | number>
+) => string;
 
 const getFileExtension = (url: string) => {
   const cleanUrl = url.split('?')[0] ?? url;
@@ -45,10 +52,11 @@ const openContractTemplate = (fileUrl: string) => {
 
 const downloadContractTemplate = async (
   fileUrl: string,
-  contractNumber: string
+  contractNumber: string,
+  downloadErrorMessage: string
 ) => {
   const response = await fetch(fileUrl);
-  if (!response.ok) throw new Error('Không thể tải file mẫu hợp đồng.');
+  if (!response.ok) throw new Error(downloadErrorMessage);
 
   const blob = await response.blob();
   const extension = getFileExtension(fileUrl);
@@ -62,25 +70,31 @@ const downloadContractTemplate = async (
   URL.revokeObjectURL(objectUrl);
 };
 
-function getStatusConfig(status: string, hasUpload: boolean) {
+function getStatusConfig(status: string, hasUpload: boolean, t: TranslateFn) {
   switch (status) {
     case 'PendingSignature':
       return hasUpload
         ? {
-            label: 'Đã upload - Chờ admin duyệt',
+            label: t(
+              'Organisation.contract.status.pendingReview',
+              'Uploaded - Awaiting admin review'
+            ),
             color: 'text-blue-600 bg-blue-50 border-blue-200',
             dotColor: 'bg-blue-500',
             icon: Clock,
           }
         : {
-            label: 'Chờ ký hợp đồng',
+            label: t(
+              'Organisation.contract.status.pendingSignature',
+              'Pending contract signature'
+            ),
             color: 'text-amber-600 bg-amber-50 border-amber-200',
             dotColor: 'bg-amber-500',
             icon: AlertTriangle,
           };
     case 'Active':
       return {
-        label: 'Đang hiệu lực',
+        label: t('Organisation.contract.status.active', 'Active'),
         color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
         dotColor: 'bg-emerald-500',
         icon: CheckCircle,
@@ -102,6 +116,7 @@ function UploadSection({
   contract: OrganisationContractDetailDto;
   onUploadSuccess: () => void;
 }) {
+  const { t } = useSafeTranslation();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -128,11 +143,21 @@ function UploadSection({
       'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Chỉ chấp nhận file JPEG, PNG, WebP hoặc PDF.');
+      toast.error(
+        t(
+          'Organisation.contract.toast.invalidFileType',
+          'Only JPEG, PNG, WebP, or PDF files are accepted.'
+        )
+      );
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('Kích thước file không được vượt quá 10MB.');
+      toast.error(
+        t(
+          'Organisation.contract.toast.fileTooLarge',
+          'File size must not exceed 10MB.'
+        )
+      );
       return;
     }
     setSelectedFile(file);
@@ -152,14 +177,22 @@ function UploadSection({
           {isImageUrl(contract.scannedDocumentUrl) ? (
             <img
               src={contract.scannedDocumentUrl}
-              alt="Hợp đồng đã ký"
+              alt={t(
+                'Organisation.contract.upload.signedContractAlt',
+                'Signed contract'
+              )}
               className="w-full max-h-125 object-contain"
             />
           ) : (
             <div className="flex items-center justify-center h-48">
               <div className="text-center">
                 <FileText className="w-14 h-14 text-slate-400 mx-auto mb-3" />
-                <p className="text-sm text-slate-500">File PDF đã upload</p>
+                <p className="text-sm text-slate-500">
+                  {t(
+                    'Organisation.contract.upload.pdfUploaded',
+                    'Uploaded PDF file'
+                  )}
+                </p>
               </div>
             </div>
           )}
@@ -181,13 +214,25 @@ function UploadSection({
             <div>
               <p className="text-sm font-semibold text-slate-900">
                 {isActiveContract
-                  ? 'Hợp đồng đã được kích hoạt'
-                  : 'Đang chờ admin xác nhận'}
+                  ? t(
+                      'Organisation.contract.upload.activatedTitle',
+                      'Contract has been activated'
+                    )
+                  : t(
+                      'Organisation.contract.upload.awaitingAdminTitle',
+                      'Awaiting admin confirmation'
+                    )}
               </p>
               <p className="text-xs text-slate-500">
                 {isActiveContract
-                  ? 'Tổ chức có thể bắt đầu sử dụng đầy đủ tính năng trên AURA.'
-                  : 'Hợp đồng của tổ chức đã được gửi đi'}
+                  ? t(
+                      'Organisation.contract.upload.activatedDescription',
+                      'Your organisation can now use all AURA features.'
+                    )
+                  : t(
+                      'Organisation.contract.upload.awaitingAdminDescription',
+                      'The organisation contract has been submitted for review.'
+                    )}
               </p>
             </div>
           </div>
@@ -199,7 +244,10 @@ function UploadSection({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              Mở file gốc
+              {t(
+                'Organisation.contract.actions.openOriginalFile',
+                'Open original file'
+              )}
             </a>
             {!isActiveContract ? (
               <button
@@ -207,12 +255,12 @@ function UploadSection({
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Upload lại
+                {t('Organisation.contract.actions.reupload', 'Re-upload')}
               </button>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-700 border border-emerald-200 bg-emerald-50">
                 <CheckCircle className="w-3.5 h-3.5" />
-                Đang hiệu lực
+                {t('Organisation.contract.status.active', 'Active')}
               </span>
             )}
           </div>
@@ -224,7 +272,10 @@ function UploadSection({
   if (isActiveContract) {
     return (
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        Tổ chức đã hoàn tất ký kết và hợp đồng đang ở trạng thái hiệu lực.
+        {t(
+          'Organisation.contract.upload.activeContractHint',
+          'The organisation has completed signing and the contract is currently active.'
+        )}
       </div>
     );
   }
@@ -241,7 +292,10 @@ function UploadSection({
           className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700"
         >
           <X className="w-3.5 h-3.5" />
-          Hủy, quay lại xem hợp đồng đã nộp
+          {t(
+            'Organisation.contract.actions.cancelReupload',
+            'Cancel and go back to the submitted contract'
+          )}
         </button>
       )}
 
@@ -278,11 +332,19 @@ function UploadSection({
           className={`w-10 h-10 mx-auto mb-3 ${dragActive ? 'text-primary' : 'text-slate-400'}`}
         />
         <p className="text-sm font-medium text-slate-700">
-          Kéo thả hợp đồng đã ký hoặc{' '}
-          <span className="text-primary font-semibold">chọn file</span>
+          {t(
+            'Organisation.contract.upload.dropzonePrefix',
+            'Drag and drop the signed contract or'
+          )}{' '}
+          <span className="text-primary font-semibold">
+            {t('Organisation.contract.upload.selectFileAction', 'select file')}
+          </span>
         </p>
         <p className="text-xs text-slate-400 mt-1">
-          JPEG, PNG, WebP hoặc PDF - Tối đa 10MB
+          {t(
+            'Organisation.contract.upload.supportedFormats',
+            'JPEG, PNG, WebP, or PDF - Max 10MB'
+          )}
         </p>
       </div>
 
@@ -291,7 +353,7 @@ function UploadSection({
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt="Preview"
+              alt={t('Organisation.contract.upload.previewAlt', 'Preview')}
               className="w-16 h-16 rounded-lg object-cover border border-slate-200"
             />
           ) : (
@@ -304,7 +366,9 @@ function UploadSection({
               {selectedFile.name}
             </p>
             <p className="text-xs text-slate-500">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              {t('Organisation.common.fileSizeMb', '{{size}} MB', {
+                size: (selectedFile.size / 1024 / 1024).toFixed(2),
+              })}
             </p>
           </div>
           <button
@@ -331,7 +395,10 @@ function UploadSection({
           ) : (
             <Upload className="w-4 h-4" />
           )}
-          Tải lên hợp đồng đã ký
+          {t(
+            'Organisation.contract.actions.uploadSignedContract',
+            'Upload signed contract'
+          )}
         </button>
       )}
     </div>
@@ -342,6 +409,7 @@ export default function OrganisationContractPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
+  const { t } = useSafeTranslation();
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
@@ -396,30 +464,38 @@ export default function OrganisationContractPage() {
   };
 
   const statusConfig = contract
-    ? getStatusConfig(contract.status, !!contract.scannedDocumentUrl)
+    ? getStatusConfig(contract.status, !!contract.scannedDocumentUrl, t)
     : null;
 
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar />
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader pageName="Contract" />
+        <OrganisationHeader
+          pageName={t('Organisation.contract.pageName', 'Contract')}
+        />
 
         <main className="p-6 max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Hợp đồng tổ chức
+                {t(
+                  'Organisation.contract.header.title',
+                  'Organisation Contract'
+                )}
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                Xem, tải và upload hợp đồng hợp tác của tổ chức với AURA
+                {t(
+                  'Organisation.contract.header.subtitle',
+                  'View, download, and upload your organisation cooperation contract with AURA.'
+                )}
               </p>
             </div>
             <RefreshButton
               onRefresh={() =>
                 queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY })
               }
-              label="Làm mới"
+              label={t('Organisation.common.refresh', 'Refresh')}
               isRefreshing={isLoading}
               className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm"
             />
@@ -430,7 +506,10 @@ export default function OrganisationContractPage() {
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                 <p className="text-slate-500 text-sm">
-                  Đang tải thông tin hợp đồng...
+                  {t(
+                    'Organisation.contract.states.loading',
+                    'Loading contract details...'
+                  )}
                 </p>
               </div>
             </div>
@@ -439,10 +518,17 @@ export default function OrganisationContractPage() {
           {isError && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
               <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-              <p className="font-semibold text-amber-800">Chưa có hợp đồng</p>
+              <p className="font-semibold text-amber-800">
+                {t(
+                  'Organisation.contract.states.noContractTitle',
+                  'No contract found'
+                )}
+              </p>
               <p className="text-sm text-amber-600 mt-1">
-                Tài khoản đã được cấp nhưng hợp đồng chưa được System Admin khởi
-                tạo.
+                {t(
+                  'Organisation.contract.states.noContractDescription',
+                  'Your account is provisioned, but the contract has not been created by System Admin yet.'
+                )}
               </p>
             </div>
           )}
@@ -467,12 +553,19 @@ export default function OrganisationContractPage() {
                     </span>
                   </div>
                   <p className="text-xs opacity-80">
-                    Mã hợp đồng: {contract.contractNumber}
+                    {t(
+                      'Organisation.contract.summary.contractCode',
+                      'Contract code'
+                    )}
+                    : {contract.contractNumber}
                   </p>
                   {contract.status === 'Active' && redirectSeconds !== null && (
                     <p className="text-xs opacity-80 mt-1">
-                      Tự động chuyển tới bảng điều khiển sau {redirectSeconds}{' '}
-                      giây.
+                      {t(
+                        'Organisation.contract.summary.redirectIn',
+                        'Auto redirect to dashboard in {{seconds}} seconds.',
+                        { seconds: redirectSeconds }
+                      )}
                     </p>
                   )}
                 </div>
@@ -481,13 +574,31 @@ export default function OrganisationContractPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-200 bg-white p-5">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    Thông tin hợp đồng
+                    {t(
+                      'Organisation.contract.sections.contractInfo',
+                      'Contract Information'
+                    )}
                   </p>
                   <div className="space-y-3">
-                    <Row label="Mẫu" value={contract.templateTitle} />
-                    <Row label="Loại" value="Tổ chức y tế" />
                     <Row
-                      label="Ngày tạo"
+                      label={t(
+                        'Organisation.contract.fields.template',
+                        'Template'
+                      )}
+                      value={contract.templateTitle}
+                    />
+                    <Row
+                      label={t('Organisation.contract.fields.type', 'Type')}
+                      value={t(
+                        'Organisation.contract.fields.organisationType',
+                        'Medical organisation'
+                      )}
+                    />
+                    <Row
+                      label={t(
+                        'Organisation.contract.fields.createdAt',
+                        'Created At'
+                      )}
                       value={new Date(contract.createdAt).toLocaleDateString(
                         'vi-VN'
                       )}
@@ -496,18 +607,30 @@ export default function OrganisationContractPage() {
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-5">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    Tài khoản tổ chức
+                    {t(
+                      'Organisation.contract.sections.organisationAccount',
+                      'Organisation Account'
+                    )}
                   </p>
                   <div className="space-y-3">
-                    <Row label="Người liên hệ" value={contract.userFullName} />
-                    <Row label="Email" value={contract.userEmail} />
+                    <Row
+                      label={t(
+                        'Organisation.contract.fields.contactPerson',
+                        'Contact Person'
+                      )}
+                      value={contract.userFullName}
+                    />
+                    <Row
+                      label={t('Organisation.contract.fields.email', 'Email')}
+                      value={contract.userEmail}
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Hành động
+                  {t('Organisation.contract.sections.actions', 'Actions')}
                 </p>
                 {contract.signedContent && (
                   <button
@@ -519,10 +642,16 @@ export default function OrganisationContractPage() {
                     <Eye className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        Xem mẫu hợp đồng
+                        {t(
+                          'Organisation.contract.actions.viewTemplate',
+                          'View contract template'
+                        )}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Mở trực tiếp file hợp đồng ở tab mới
+                        {t(
+                          'Organisation.contract.actions.viewTemplateHint',
+                          'Open the contract file directly in a new tab.'
+                        )}
                       </p>
                     </div>
                   </button>
@@ -534,13 +663,20 @@ export default function OrganisationContractPage() {
                         setDownloadError(null);
                         await downloadContractTemplate(
                           contract.signedContent!,
-                          contract.contractNumber
+                          contract.contractNumber,
+                          t(
+                            'Organisation.contract.toast.downloadTemplateFailed',
+                            'Unable to download contract template file.'
+                          )
                         );
                       } catch (error) {
                         setDownloadError(
                           error instanceof Error
                             ? error.message
-                            : 'Không thể tải file mẫu hợp đồng.'
+                            : t(
+                                'Organisation.contract.toast.downloadTemplateFailed',
+                                'Unable to download contract template file.'
+                              )
                         );
                       }
                     }}
@@ -549,10 +685,16 @@ export default function OrganisationContractPage() {
                     <Download className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        Tải mẫu hợp đồng
+                        {t(
+                          'Organisation.contract.actions.downloadTemplate',
+                          'Download contract template'
+                        )}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Tải file gốc để in và ký
+                        {t(
+                          'Organisation.contract.actions.downloadTemplateHint',
+                          'Download the original file for printing and signing.'
+                        )}
                       </p>
                     </div>
                   </button>
@@ -568,23 +710,59 @@ export default function OrganisationContractPage() {
                   <div>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                       {contract.scannedDocumentUrl
-                        ? 'Hợp đồng đã ký'
-                        : 'Upload hợp đồng đã ký'}
+                        ? t(
+                            'Organisation.contract.sections.signedContract',
+                            'Signed Contract'
+                          )
+                        : t(
+                            'Organisation.contract.sections.uploadSignedContract',
+                            'Upload Signed Contract'
+                          )}
                     </p>
                     <p className="text-sm text-slate-500">
                       {contract.scannedDocumentUrl
                         ? contract.status === 'Active'
-                          ? 'Bạn hiện đã có thể bắt đầu sử dụng đầy đủ các tính năng của AURA.'
-                          : 'Hợp đồng đã được gửi đi và đang chờ admin phê duyệt.'
-                        : 'Tải mẫu, ký đóng dấu rồi upload lại file scan hoặc ảnh chụp.'}
+                          ? t(
+                              'Organisation.contract.sections.signedDescriptionActive',
+                              'You can now start using all AURA features.'
+                            )
+                          : t(
+                              'Organisation.contract.sections.signedDescriptionPending',
+                              'The contract has been submitted and is awaiting admin approval.'
+                            )
+                        : t(
+                            'Organisation.contract.sections.uploadDescription',
+                            'Download, sign, stamp, and upload the scanned file or photo.'
+                          )}
                     </p>
                   </div>
                   {!contract.scannedDocumentUrl && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
-                        { step: 1, icon: Download, text: 'Tải & in hợp đồng' },
-                        { step: 2, icon: FileText, text: 'Ký tên & đóng dấu' },
-                        { step: 3, icon: Image, text: 'Chụp ảnh & upload' },
+                        {
+                          step: 1,
+                          icon: Download,
+                          text: t(
+                            'Organisation.contract.steps.downloadAndPrint',
+                            'Download & print contract'
+                          ),
+                        },
+                        {
+                          step: 2,
+                          icon: FileText,
+                          text: t(
+                            'Organisation.contract.steps.signAndStamp',
+                            'Sign & stamp'
+                          ),
+                        },
+                        {
+                          step: 3,
+                          icon: Image,
+                          text: t(
+                            'Organisation.contract.steps.captureAndUpload',
+                            'Capture & upload'
+                          ),
+                        },
                       ].map(({ step, icon: Icon, text }) => (
                         <div
                           key={step}

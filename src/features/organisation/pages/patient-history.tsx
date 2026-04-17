@@ -13,6 +13,7 @@ import AvatarFallback from '@/components/ui/avatar-fallback';
 import Spinner from '@/components/ui/spinner';
 import { unwrapApiData } from '@/types/api-response';
 import { resolvePathWithLocale } from '@/i18n/middleware';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import Sidebar from '../components/Sidebar';
 import OrganisationHeader from '../components/OrganisationHeader';
 import {
@@ -34,10 +35,12 @@ import {
 function HeatmapStaticThumbnail({
   data,
   fallbackUrl,
+  altText,
   threshold = 0.35,
 }: {
   data?: number[][] | null;
   fallbackUrl?: string;
+  altText?: string;
   threshold?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,7 +88,7 @@ function HeatmapStaticThumbnail({
     return (
       <img
         src={fallbackUrl}
-        alt="Heatmap"
+        alt={altText ?? ''}
         className="h-full w-full object-cover"
       />
     );
@@ -259,13 +262,8 @@ function getStatusClass(status: OrgScreeningHistoryItem['status']): string {
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
 }
 
-function formatStatus(status: OrgScreeningHistoryItem['status']): string {
-  if (status === 'completed') return 'Completed';
-  if (status === 'saved') return 'Saved';
-  return 'Pending';
-}
-
 export default function OrganisationPatientHistoryPage() {
+  const { t } = useSafeTranslation();
   const { patientId } = useParams<{ patientId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -424,6 +422,32 @@ export default function OrganisationPatientHistoryPage() {
 
   const isLoading = patientsQuery.isLoading || screeningHistoryQuery.isLoading;
 
+  const formatStatusLabel = (status: OrgScreeningHistoryItem['status']) => {
+    if (status === 'completed') {
+      return t('Organisation.patientHistory.status.completed', 'Completed');
+    }
+
+    if (status === 'saved') {
+      return t('Organisation.patientHistory.status.saved', 'Saved');
+    }
+
+    return t('Organisation.patientHistory.status.pending', 'Pending');
+  };
+
+  const formatRiskLabel = (riskLevel?: string) => {
+    const normalized = riskLevel?.toLowerCase();
+
+    if (normalized === 'high') {
+      return t('Organisation.patientHistory.risk.high', 'High');
+    }
+
+    if (normalized === 'moderate') {
+      return t('Organisation.patientHistory.risk.moderate', 'Moderate');
+    }
+
+    return t('Organisation.patientHistory.risk.low', 'Low');
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-(--bg-primary)">
@@ -437,7 +461,12 @@ export default function OrganisationPatientHistoryPage() {
       <Sidebar />
 
       <div className="flex-1 h-full overflow-y-auto">
-        <OrganisationHeader pageName="Patient History" />
+        <OrganisationHeader
+          pageName={t(
+            'Organisation.patientHistory.pageName',
+            'Patient History'
+          )}
+        />
 
         <main className="p-6 space-y-6">
           <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -449,15 +478,24 @@ export default function OrganisationPatientHistoryPage() {
                 }
                 className="inline-flex items-center gap-2 text-sm font-medium text-(--text-secondary) hover:text-(--text-primary)"
               >
-                <ArrowLeft className="h-4 w-4" /> Back to patients
+                <ArrowLeft className="h-4 w-4" />
+                {t(
+                  'Organisation.patientHistory.actions.backToPatients',
+                  'Back to patients'
+                )}
               </button>
 
               <h1 className="mt-3 text-2xl font-bold text-(--text-primary)">
-                Patient Screening Timeline
+                {t(
+                  'Organisation.patientHistory.header.title',
+                  'Patient Screening Timeline'
+                )}
               </h1>
               <p className="text-sm text-(--text-secondary)">
-                Review every screening session, retinal images, and saved record
-                for this patient.
+                {t(
+                  'Organisation.patientHistory.header.subtitle',
+                  'Review every screening session, retinal images, and saved record for this patient.'
+                )}
               </p>
             </div>
 
@@ -474,8 +512,11 @@ export default function OrganisationPatientHistoryPage() {
                       {patient.name}
                     </p>
                     <p className="text-xs text-(--text-tertiary)">
-                      {patient.gender === 'M' ? 'Male' : 'Female'} ·{' '}
-                      {patient.age}y
+                      {patient.gender === 'M'
+                        ? t('Organisation.common.gender.male', 'Male')
+                        : t('Organisation.common.gender.female', 'Female')}{' '}
+                      · {patient.age}
+                      {t('Organisation.common.yearsAbbr', 'yrs')}
                       {patient.phoneNumber ? ` · ${patient.phoneNumber}` : ''}
                     </p>
                   </div>
@@ -488,17 +529,29 @@ export default function OrganisationPatientHistoryPage() {
             <section className="rounded-2xl border border-(--border-primary) bg-(--bg-secondary) overflow-hidden">
               <div className="px-5 py-4 border-b border-(--border-primary)">
                 <h2 className="text-base font-bold text-(--text-primary)">
-                  Screening Sessions
+                  {t(
+                    'Organisation.patientHistory.sessions.title',
+                    'Screening Sessions'
+                  )}
                 </h2>
                 <p className="text-xs text-(--text-tertiary)">
-                  {patientHistory.length} sessions found
+                  {t(
+                    'Organisation.patientHistory.sessions.count',
+                    '{{count}} sessions found',
+                    {
+                      count: patientHistory.length,
+                    }
+                  )}
                 </p>
               </div>
 
               <div className="max-h-[640px] overflow-y-auto p-3 space-y-2">
                 {patientHistory.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-(--border-primary) p-4 text-sm text-(--text-tertiary)">
-                    This patient has no organisation screening history yet.
+                    {t(
+                      'Organisation.patientHistory.sessions.empty',
+                      'This patient has no organisation screening history yet.'
+                    )}
                   </div>
                 ) : (
                   patientHistory.map((item) => {
@@ -527,7 +580,7 @@ export default function OrganisationPatientHistoryPage() {
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClass(item.status)}`}
                           >
-                            {formatStatus(item.status)}
+                            {formatStatusLabel(item.status)}
                           </span>
                         </div>
 
@@ -535,11 +588,14 @@ export default function OrganisationPatientHistoryPage() {
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 font-semibold ${getRiskClass(item.latestRiskLevel)}`}
                           >
-                            {item.latestRiskLevel ?? 'Low'}
+                            {formatRiskLabel(item.latestRiskLevel)}
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-tertiary) px-2.5 py-1 text-(--text-secondary)">
                             <Eye className="h-3.5 w-3.5" /> {item.imagesCount}{' '}
-                            images
+                            {t(
+                              'Organisation.patientHistory.sessions.images',
+                              'images'
+                            )}
                           </span>
                         </div>
                       </button>
@@ -553,11 +609,16 @@ export default function OrganisationPatientHistoryPage() {
               <div className="px-5 py-4 border-b border-(--border-primary) flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-(--text-primary)">
-                    Session Detail
+                    {t(
+                      'Organisation.patientHistory.detail.title',
+                      'Session Detail'
+                    )}
                   </h2>
                   <p className="text-xs text-(--text-tertiary)">
-                    Retinal images and saved clinical record for the selected
-                    session.
+                    {t(
+                      'Organisation.patientHistory.detail.subtitle',
+                      'Retinal images and saved clinical record for the selected session.'
+                    )}
                   </p>
                 </div>
 
@@ -567,13 +628,20 @@ export default function OrganisationPatientHistoryPage() {
                   disabled={!selectedScreeningId}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-50"
                 >
-                  <ScanEye className="h-3.5 w-3.5" /> Open review page
+                  <ScanEye className="h-3.5 w-3.5" />
+                  {t(
+                    'Organisation.patientHistory.actions.openReviewPage',
+                    'Open review page'
+                  )}
                 </button>
               </div>
 
               {!selectedScreeningId ? (
                 <div className="p-6 text-sm text-(--text-tertiary)">
-                  Select a session from the left to view details.
+                  {t(
+                    'Organisation.patientHistory.states.selectSession',
+                    'Select a session from the left to view details.'
+                  )}
                 </div>
               ) : screeningDetailQuery.isLoading ? (
                 <div className="p-10 flex items-center justify-center">
@@ -584,7 +652,10 @@ export default function OrganisationPatientHistoryPage() {
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="rounded-xl bg-(--bg-primary) border border-(--border-primary) px-3.5 py-3">
                       <p className="text-xs text-(--text-tertiary)">
-                        Created at
+                        {t(
+                          'Organisation.patientHistory.detail.createdAt',
+                          'Created at'
+                        )}
                       </p>
                       <p className="text-sm font-semibold text-(--text-primary)">
                         {new Date(
@@ -594,7 +665,10 @@ export default function OrganisationPatientHistoryPage() {
                     </div>
                     <div className="rounded-xl bg-(--bg-primary) border border-(--border-primary) px-3.5 py-3">
                       <p className="text-xs text-(--text-tertiary)">
-                        Model version
+                        {t(
+                          'Organisation.patientHistory.detail.modelVersion',
+                          'Model version'
+                        )}
                       </p>
                       <p className="text-sm font-semibold text-(--text-primary)">
                         {screeningDetailQuery.data.modelVersion}
@@ -602,12 +676,15 @@ export default function OrganisationPatientHistoryPage() {
                     </div>
                     <div className="rounded-xl bg-(--bg-primary) border border-(--border-primary) px-3.5 py-3">
                       <p className="text-xs text-(--text-tertiary)">
-                        Session status
+                        {t(
+                          'Organisation.patientHistory.detail.sessionStatus',
+                          'Session status'
+                        )}
                       </p>
                       <p className="text-sm font-semibold text-(--text-primary)">
                         {selectedHistoryItem
-                          ? formatStatus(selectedHistoryItem.status)
-                          : 'N/A'}
+                          ? formatStatusLabel(selectedHistoryItem.status)
+                          : t('Organisation.common.notAvailable', 'N/A')}
                       </p>
                     </div>
                   </div>
@@ -615,11 +692,17 @@ export default function OrganisationPatientHistoryPage() {
                   <div>
                     <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2 mb-3">
                       <CalendarDays className="h-4 w-4 text-primary" />
-                      Retinal images
+                      {t(
+                        'Organisation.patientHistory.images.title',
+                        'Retinal images'
+                      )}
                     </h3>
                     {sessionImages.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-(--border-primary) p-4 text-sm text-(--text-tertiary)">
-                        No retinal images were found for this session.
+                        {t(
+                          'Organisation.patientHistory.images.empty',
+                          'No retinal images were found for this session.'
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -627,7 +710,10 @@ export default function OrganisationPatientHistoryPage() {
                           <div className="rounded-xl overflow-hidden border border-(--border-primary) bg-(--bg-primary)">
                             <img
                               src={primaryImage?.imageUrl}
-                              alt="Retinal image"
+                              alt={t(
+                                'Organisation.patientHistory.images.alt.retinalImage',
+                                'Retinal image'
+                              )}
                               className="h-44 w-full object-cover"
                               onLoad={(event) => {
                                 const target = event.currentTarget;
@@ -638,7 +724,10 @@ export default function OrganisationPatientHistoryPage() {
                               }}
                             />
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
-                              Original image
+                              {t(
+                                'Organisation.patientHistory.images.original',
+                                'Original image'
+                              )}
                             </div>
                           </div>
 
@@ -646,7 +735,10 @@ export default function OrganisationPatientHistoryPage() {
                             <div className="relative h-44 w-full">
                               <img
                                 src={primaryImage?.imageUrl}
-                                alt="Boxed retinal image"
+                                alt={t(
+                                  'Organisation.patientHistory.images.alt.boxedRetinalImage',
+                                  'Boxed retinal image'
+                                )}
                                 className="h-44 w-full object-cover"
                               />
                               {boxedOverlayBoxes.map((box) => {
@@ -668,7 +760,10 @@ export default function OrganisationPatientHistoryPage() {
                               })}
                             </div>
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
-                              Boxed
+                              {t(
+                                'Organisation.patientHistory.images.boxed',
+                                'Boxed'
+                              )}
                             </div>
                           </div>
 
@@ -677,7 +772,10 @@ export default function OrganisationPatientHistoryPage() {
                               {primaryImage && (
                                 <img
                                   src={primaryImage.imageUrl}
-                                  alt="Heatmap background"
+                                  alt={t(
+                                    'Organisation.patientHistory.images.alt.heatmapBackground',
+                                    'Heatmap background'
+                                  )}
                                   className="absolute inset-0 h-full w-full object-cover opacity-40"
                                 />
                               )}
@@ -698,19 +796,28 @@ export default function OrganisationPatientHistoryPage() {
                                       : null
                                   }
                                   fallbackUrl={resolvedHeatmapUrl}
+                                  altText={t(
+                                    'Organisation.patientHistory.images.alt.heatmap',
+                                    'Heatmap'
+                                  )}
                                 />
                               </div>
                             </div>
                             <div className="px-3 py-2 text-xs text-(--text-secondary) border-t border-(--border-primary)">
-                              Heatmap
+                              {t(
+                                'Organisation.patientHistory.images.heatmap',
+                                'Heatmap'
+                              )}
                             </div>
                           </div>
                         </div>
                         {sessionImages.length > 1 ? (
                           <div className="space-y-2">
                             <p className="text-xs text-(--text-tertiary)">
-                              Select an original image to update Boxed/Heatmap
-                              previews.
+                              {t(
+                                'Organisation.patientHistory.images.selectToPreview',
+                                'Select an original image to update Boxed/Heatmap previews.'
+                              )}
                             </p>
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                               {sessionImages.map((image, index) => {
@@ -728,10 +835,19 @@ export default function OrganisationPatientHistoryPage() {
                                   >
                                     <img
                                       src={image.imageUrl}
+                                      alt={t(
+                                        'Organisation.patientHistory.images.alt.thumbnail',
+                                        'Session image {{index}}',
+                                        { index: index + 1 }
+                                      )}
                                       className="h-16 w-full rounded-md object-cover"
                                     />
                                     <p className="mt-1 px-1 text-[11px] text-(--text-secondary)">
-                                      Image {index + 1}
+                                      {t(
+                                        'Organisation.patientHistory.images.imageIndex',
+                                        'Image {{index}}',
+                                        { index: index + 1 }
+                                      )}
                                     </p>
                                   </button>
                                 );
@@ -746,7 +862,10 @@ export default function OrganisationPatientHistoryPage() {
                   <div>
                     <h3 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2 mb-3">
                       <FileText className="h-4 w-4 text-primary" />
-                      Saved record
+                      {t(
+                        'Organisation.patientHistory.record.title',
+                        'Saved record'
+                      )}
                     </h3>
 
                     {screeningDetailQuery.data.latestResult ? (
@@ -754,7 +873,10 @@ export default function OrganisationPatientHistoryPage() {
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                           <div>
                             <p className="text-xs text-(--text-tertiary)">
-                              Risk level
+                              {t(
+                                'Organisation.patientHistory.record.riskLevel',
+                                'Risk level'
+                              )}
                             </p>
                             <p className="text-sm font-semibold text-(--text-primary)">
                               {screeningDetailQuery.data.latestResult.riskLevel}
@@ -762,7 +884,10 @@ export default function OrganisationPatientHistoryPage() {
                           </div>
                           <div>
                             <p className="text-xs text-(--text-tertiary)">
-                              Saved at
+                              {t(
+                                'Organisation.patientHistory.record.savedAt',
+                                'Saved at'
+                              )}
                             </p>
                             <p className="text-sm font-semibold text-(--text-primary)">
                               {new Date(
@@ -775,35 +900,52 @@ export default function OrganisationPatientHistoryPage() {
 
                         <div>
                           <p className="text-xs font-semibold text-(--text-tertiary)">
-                            Summary
+                            {t(
+                              'Organisation.patientHistory.record.summary',
+                              'Summary'
+                            )}
                           </p>
                           <p className="mt-1 text-sm text-(--text-secondary) whitespace-pre-wrap">
                             {screeningDetailQuery.data.latestResult.summary ||
-                              'No summary'}
+                              t(
+                                'Organisation.patientHistory.record.noSummary',
+                                'No summary'
+                              )}
                           </p>
                         </div>
 
                         <div>
                           <p className="text-xs font-semibold text-(--text-tertiary)">
-                            Findings / Note
+                            {t(
+                              'Organisation.patientHistory.record.findingsNote',
+                              'Findings / Note'
+                            )}
                           </p>
                           <p className="mt-1 text-sm text-(--text-secondary) whitespace-pre-wrap">
                             {screeningDetailQuery.data.latestResult.findings ||
-                              'No findings'}
+                              t(
+                                'Organisation.patientHistory.record.noFindings',
+                                'No findings'
+                              )}
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-900/40 dark:text-amber-300">
-                        This session is not saved yet. Open the review page to
-                        save the record.
+                        {t(
+                          'Organisation.patientHistory.record.notSavedYet',
+                          'This session is not saved yet. Open the review page to save the record.'
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
                 <div className="p-6 text-sm text-(--text-tertiary)">
-                  Unable to load this screening detail.
+                  {t(
+                    'Organisation.patientHistory.states.detailLoadFailed',
+                    'Unable to load this screening detail.'
+                  )}
                 </div>
               )}
             </section>

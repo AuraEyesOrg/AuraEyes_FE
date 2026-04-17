@@ -18,6 +18,7 @@ import type {
   ImageLayout,
   OrgScreeningImage,
 } from '@/features/organisation/types/screening-result.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface OrganisationRetinalViewerCardProps {
   selectedImage?: OrgScreeningImage;
@@ -205,6 +206,7 @@ export function OrganisationRetinalViewerCard({
   onUndo,
   canUndo,
 }: OrganisationRetinalViewerCardProps) {
+  const { t } = useSafeTranslation();
   const [toolkitPos, setToolkitPos] = useState({ x: 0, y: 0 });
   const [isDraggingToolkit, setIsDraggingToolkit] = useState(false);
   const toolkitRef = useRef<HTMLDivElement>(null);
@@ -231,19 +233,44 @@ export function OrganisationRetinalViewerCard({
         <div className="px-5 py-4 border-b border-(--border-primary) flex items-center justify-between gap-4 min-h-[72px]">
           <div>
             <p className="text-sm font-semibold text-(--text-primary)">
-              Retinal Viewer
+              {t('Organisation.retinalViewer.title', 'Retinal Viewer')}
             </p>
             <p className="text-xs text-(--text-tertiary)">
-              Retinal Scan · Image{' '}
-              {Math.min(selectedImageIndex + 1, images.length)}/{images.length}
+              {t(
+                'Organisation.retinalViewer.imageCounter',
+                'Retinal Scan · Image {{current}}/{{total}}',
+                {
+                  current: Math.min(selectedImageIndex + 1, images.length),
+                  total: images.length,
+                }
+              )}
               {detectedBoxes.length > 0 && (
                 <span className="ml-2">
-                  · {detectedBoxes.length} box
-                  {detectedBoxes.length !== 1 ? 'es' : ''}
+                  {detectedBoxes.length === 1
+                    ? t(
+                        'Organisation.retinalViewer.boxCount.one',
+                        '· {{count}} box',
+                        {
+                          count: detectedBoxes.length,
+                        }
+                      )
+                    : t(
+                        'Organisation.retinalViewer.boxCount.other',
+                        '· {{count}} boxes',
+                        {
+                          count: detectedBoxes.length,
+                        }
+                      )}
                   {manualCount > 0 && (
                     <span className="text-indigo-500 dark:text-indigo-400">
                       {' '}
-                      ({manualCount} manual)
+                      {t(
+                        'Organisation.retinalViewer.manualCount',
+                        '({{count}} manual)',
+                        {
+                          count: manualCount,
+                        }
+                      )}
                     </span>
                   )}
                 </span>
@@ -258,7 +285,10 @@ export function OrganisationRetinalViewerCard({
                 <button
                   type="button"
                   onClick={() => onAnnotationModeChange?.('select')}
-                  title="Select & edit boxes"
+                  title={t(
+                    'Organisation.retinalViewer.actions.selectEditBoxes',
+                    'Select & edit boxes'
+                  )}
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                     annotationMode === 'select'
                       ? 'bg-(--bg-secondary) text-primary shadow-sm'
@@ -266,12 +296,15 @@ export function OrganisationRetinalViewerCard({
                   }`}
                 >
                   <MousePointer2 className="w-3.5 h-3.5" />
-                  Select
+                  {t('Organisation.retinalViewer.actions.select', 'Select')}
                 </button>
                 <button
                   type="button"
                   onClick={() => onAnnotationModeChange?.('draw')}
-                  title="Draw new detection box"
+                  title={t(
+                    'Organisation.retinalViewer.actions.drawNewBox',
+                    'Draw new detection box'
+                  )}
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                     annotationMode === 'draw'
                       ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
@@ -279,7 +312,7 @@ export function OrganisationRetinalViewerCard({
                   }`}
                 >
                   <PenTool className="w-3.5 h-3.5" />
-                  Draw
+                  {t('Organisation.retinalViewer.actions.draw', 'Draw')}
                 </button>
               </div>
             )}
@@ -296,10 +329,13 @@ export function OrganisationRetinalViewerCard({
                       ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400'
                       : 'pointer-events-none opacity-0'
                   }`}
-                  title="Delete selected box"
+                  title={t(
+                    'Organisation.retinalViewer.actions.deleteSelectedBox',
+                    'Delete selected box'
+                  )}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Delete
+                  {t('Organisation.retinalViewer.actions.delete', 'Delete')}
                 </button>
               </div>
             )}
@@ -315,7 +351,15 @@ export function OrganisationRetinalViewerCard({
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                {showHighlights ? 'Hide boxes' : 'Show boxes'}
+                {showHighlights
+                  ? t(
+                      'Organisation.retinalViewer.actions.hideBoxes',
+                      'Hide boxes'
+                    )
+                  : t(
+                      'Organisation.retinalViewer.actions.showBoxes',
+                      'Show boxes'
+                    )}
               </button>
             )}
 
@@ -329,10 +373,10 @@ export function OrganisationRetinalViewerCard({
                     ? 'border-(--border-primary) bg-(--bg-primary) text-(--text-primary) hover:bg-(--bg-tertiary)'
                     : 'opacity-40 cursor-not-allowed border-(--border-primary) bg-(--bg-primary) text-(--text-tertiary)'
                 }`}
-                title="Undo (Hoàn tác)"
+                title={t('Organisation.retinalViewer.actions.undo', 'Undo')}
               >
                 <Undo2 className="w-3.5 h-3.5" />
-                Undo
+                {t('Organisation.retinalViewer.actions.undo', 'Undo')}
               </button>
             )}
 
@@ -346,18 +390,37 @@ export function OrganisationRetinalViewerCard({
                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
                       : 'text-(--text-secondary) hover:text-(--text-primary)'
                   }`}
-                  title={showHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+                  title={
+                    showHeatmap
+                      ? t(
+                          'Organisation.retinalViewer.heatmap.hide',
+                          'Hide heatmap'
+                        )
+                      : t(
+                          'Organisation.retinalViewer.heatmap.show',
+                          'Show heatmap'
+                        )
+                  }
                 >
                   <Activity className="w-3.5 h-3.5" />
-                  Heatmap
+                  {t('Organisation.retinalViewer.heatmap.label', 'Heatmap')}
                 </button>
 
                 {showHeatmap && (
                   <div className="flex items-center gap-3 border-l border-(--border-primary) pl-3 h-5">
                     {/* Opacity Slider */}
-                    <div className="flex items-center gap-1.5" title="Opacity">
+                    <div
+                      className="flex items-center gap-1.5"
+                      title={t(
+                        'Organisation.retinalViewer.heatmap.opacity',
+                        'Opacity'
+                      )}
+                    >
                       <span className="text-[10px] font-bold text-(--text-tertiary) uppercase tracking-tighter">
-                        Opa
+                        {t(
+                          'Organisation.retinalViewer.heatmap.opacityShort',
+                          'Opa'
+                        )}
                       </span>
                       <input
                         type="range"
@@ -375,10 +438,16 @@ export function OrganisationRetinalViewerCard({
                     {/* Threshold Slider */}
                     <div
                       className="flex items-center gap-1.5"
-                      title="Threshold"
+                      title={t(
+                        'Organisation.retinalViewer.heatmap.threshold',
+                        'Threshold'
+                      )}
                     >
                       <span className="text-[10px] font-bold text-(--text-tertiary) uppercase tracking-tighter">
-                        Thr
+                        {t(
+                          'Organisation.retinalViewer.heatmap.thresholdShort',
+                          'Thr'
+                        )}
                       </span>
                       <input
                         type="range"
@@ -409,7 +478,15 @@ export function OrganisationRetinalViewerCard({
                               : 'text-(--text-tertiary) hover:text-primary hover:bg-primary/10'
                           }`}
                         >
-                          {heatmapEditMode ? 'Close' : 'Edit Tool'}
+                          {heatmapEditMode
+                            ? t(
+                                'Organisation.retinalViewer.actions.close',
+                                'Close'
+                              )
+                            : t(
+                                'Organisation.retinalViewer.heatmap.editTool',
+                                'Edit Tool'
+                              )}
                         </button>
                       </>
                     )}
@@ -429,7 +506,10 @@ export function OrganisationRetinalViewerCard({
               <img
                 ref={imageRef}
                 src={selectedImage.imageUrl}
-                alt="Retinal scan"
+                alt={t(
+                  'Organisation.retinalViewer.image.altRetinalScan',
+                  'Retinal scan'
+                )}
                 className="w-full h-full object-contain"
                 onLoad={onImageLoad}
               />
@@ -459,7 +539,10 @@ export function OrganisationRetinalViewerCard({
                   ) : heatmapUrl ? (
                     <img
                       src={heatmapUrl}
-                      alt="AI heatmap overlay"
+                      alt={t(
+                        'Organisation.retinalViewer.image.altHeatmapOverlay',
+                        'AI heatmap overlay'
+                      )}
                       className="absolute pointer-events-none"
                       style={{
                         left: imageLayout.offsetX,
@@ -494,7 +577,10 @@ export function OrganisationRetinalViewerCard({
                           );
                         }}
                         className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-(--text-tertiary) hover:text-primary transition-colors"
-                        title="Drag toolkit"
+                        title={t(
+                          'Organisation.retinalViewer.heatmap.dragToolkit',
+                          'Drag toolkit'
+                        )}
                       >
                         <svg
                           width="12"
@@ -517,7 +603,10 @@ export function OrganisationRetinalViewerCard({
                       {/* Brush Size */}
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] uppercase font-black text-(--text-tertiary) tracking-widest">
-                          Size
+                          {t(
+                            'Organisation.retinalViewer.heatmap.brushSize',
+                            'Size'
+                          )}
                         </span>
                         <input
                           type="range"
@@ -540,7 +629,10 @@ export function OrganisationRetinalViewerCard({
                       {/* Paint Intensity */}
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase font-black text-(--text-tertiary) tracking-widest mr-0.5">
-                          Heat
+                          {t(
+                            'Organisation.retinalViewer.heatmap.intensity',
+                            'Heat'
+                          )}
                         </span>
                         <button
                           onClick={() => {
@@ -553,7 +645,10 @@ export function OrganisationRetinalViewerCard({
                               ? 'ring-2 ring-offset-2 ring-primary scale-110'
                               : 'opacity-40 hover:opacity-100 hover:scale-110'
                           }`}
-                          title="High Intensity (Red)"
+                          title={t(
+                            'Organisation.retinalViewer.heatmap.intensityHigh',
+                            'High Intensity (Red)'
+                          )}
                         />
                         <button
                           onClick={() => {
@@ -566,7 +661,10 @@ export function OrganisationRetinalViewerCard({
                               ? 'ring-2 ring-offset-2 ring-primary scale-110'
                               : 'opacity-40 hover:opacity-100 hover:scale-110'
                           }`}
-                          title="Medium Intensity (Orange)"
+                          title={t(
+                            'Organisation.retinalViewer.heatmap.intensityMedium',
+                            'Medium Intensity (Orange)'
+                          )}
                         />
                         <button
                           onClick={() => {
@@ -579,7 +677,10 @@ export function OrganisationRetinalViewerCard({
                               ? 'ring-2 ring-offset-2 ring-primary scale-110'
                               : 'opacity-40 hover:opacity-100 hover:scale-110'
                           }`}
-                          title="Low Intensity (Yellow)"
+                          title={t(
+                            'Organisation.retinalViewer.heatmap.intensityLow',
+                            'Low Intensity (Yellow)'
+                          )}
                         />
                       </div>
 
@@ -594,7 +695,10 @@ export function OrganisationRetinalViewerCard({
                               ? 'bg-primary text-white shadow-lg'
                               : 'bg-(--bg-primary) text-(--text-secondary) hover:text-primary hover:bg-primary/10'
                           }`}
-                          title="Eraser Tool"
+                          title={t(
+                            'Organisation.retinalViewer.heatmap.eraserTool',
+                            'Eraser Tool'
+                          )}
                         >
                           <Eraser className="w-4 h-4" />
                         </button>
@@ -606,7 +710,10 @@ export function OrganisationRetinalViewerCard({
                               ? 'bg-(--bg-primary) text-(--text-primary) hover:bg-primary/10 hover:text-primary shadow-sm'
                               : 'opacity-40 cursor-not-allowed text-(--text-tertiary)'
                           }`}
-                          title="Undo last stroke"
+                          title={t(
+                            'Organisation.retinalViewer.heatmap.undoLastStroke',
+                            'Undo last stroke'
+                          )}
                         >
                           <Undo2 className="w-4 h-4" />
                         </button>
@@ -619,7 +726,10 @@ export function OrganisationRetinalViewerCard({
                           }}
                           className="px-2 py-1 rounded-lg border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-all text-[9px] uppercase font-black"
                         >
-                          Clear
+                          {t(
+                            'Organisation.retinalViewer.heatmap.clear',
+                            'Clear'
+                          )}
                         </button>
                       </div>
                     </div>

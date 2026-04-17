@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -27,21 +28,24 @@ import PageHeader from '../components/PageHeader';
 import { contractTemplatesApi } from '../api/contract-templates.api';
 import type { ContractTemplateDto } from '../types/system-admin.types';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 /* ─── Status badge ─────────────────────────────────────── */
 function StatusBadge({ isActive }: { isActive: boolean }) {
+  const { t } = useSafeTranslation();
+
   if (isActive) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
         <CheckCircle2 className="w-3 h-3" />
-        Active
+        {t('SystemAdmin.contractTemplates.status.active', 'Active')}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
       <Clock className="w-3 h-3" />
-      Inactive
+      {t('SystemAdmin.contractTemplates.status.inactive', 'Inactive')}
     </span>
   );
 }
@@ -64,9 +68,22 @@ function TemplateCard({
   isDuplicating: boolean;
   isUpdatingStatus: boolean;
 }) {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
   const isOphthalmologist = template.type === 'OphthalmologistContract';
   const TypeIcon = isOphthalmologist ? Stethoscope : Building2;
-  const typeLabel = isOphthalmologist ? 'Ophthalmologist' : 'Organization';
+  const typeLabel = isOphthalmologist
+    ? t(
+        'SystemAdmin.contractTemplates.contractType.ophthalmologist',
+        'Ophthalmologist'
+      )
+    : t(
+        'SystemAdmin.contractTemplates.contractType.organization',
+        'Organization'
+      );
   const typeClr = isOphthalmologist
     ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
     : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400';
@@ -77,8 +94,8 @@ function TemplateCard({
       <div
         className={`h-1.5 w-full ${
           isOphthalmologist
-            ? 'bg-gradient-to-r from-violet-500 to-purple-400'
-            : 'bg-gradient-to-r from-cyan-500 to-blue-400'
+            ? 'bg-linear-to-r from-violet-500 to-purple-400'
+            : 'bg-linear-to-r from-cyan-500 to-blue-400'
         }`}
       />
 
@@ -118,15 +135,19 @@ function TemplateCard({
 
         {/* Version */}
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          Version:{' '}
+          {t('SystemAdmin.contractTemplates.card.version', 'Version')}:{' '}
           <span className="font-medium text-slate-700 dark:text-slate-300">
             {template.contractVersion}
           </span>
           {template.effectiveDate && (
             <>
               {' '}
-              &nbsp;·&nbsp; Effective:{' '}
-              {new Date(template.effectiveDate).toLocaleDateString('vi-VN')}
+              &nbsp;·&nbsp;{' '}
+              {t(
+                'SystemAdmin.contractTemplates.card.effective',
+                'Effective'
+              )}:{' '}
+              {new Date(template.effectiveDate).toLocaleDateString(dateLocale)}
             </>
           )}
         </p>
@@ -135,17 +156,24 @@ function TemplateCard({
         <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1">
             <FileText className="w-3.5 h-3.5" />
-            DOCX template
+            {t(
+              'SystemAdmin.contractTemplates.card.docxTemplate',
+              'DOCX template'
+            )}
           </span>
           <span className="flex items-center gap-1">
             <FileText className="w-3.5 h-3.5" />
-            {template.usageCount} contracts
+            {t(
+              'SystemAdmin.contractTemplates.card.contractsCount',
+              '{{count}} contracts',
+              { count: template.usageCount }
+            )}
           </span>
           <span className="flex items-center gap-1 ml-auto">
             <Calendar className="w-3.5 h-3.5" />
             {new Date(
               template.updatedAt ?? template.createdAt
-            ).toLocaleDateString('vi-VN')}
+            ).toLocaleDateString(dateLocale)}
           </span>
         </div>
 
@@ -157,28 +185,46 @@ function TemplateCard({
             className="px-2.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-50"
           >
             {isUpdatingStatus
-              ? 'Updating...'
+              ? t(
+                  'SystemAdmin.contractTemplates.actions.updatingStatus',
+                  'Updating...'
+                )
               : template.isActive
-                ? 'Deactivate'
-                : 'Activate'}
+                ? t(
+                    'SystemAdmin.contractTemplates.actions.deactivate',
+                    'Deactivate'
+                  )
+                : t(
+                    'SystemAdmin.contractTemplates.actions.activate',
+                    'Activate'
+                  )}
           </button>
           <button
             onClick={() => onEdit(template.id)}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            Edit Template
+            {t(
+              'SystemAdmin.contractTemplates.actions.editTemplate',
+              'Edit Template'
+            )}
           </button>
           <button
             onClick={() => onEdit(template.id)}
-            title="Preview"
+            title={t(
+              'SystemAdmin.contractTemplates.actions.preview',
+              'Preview'
+            )}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDuplicate(template.id)}
-            title="Duplicate"
+            title={t(
+              'SystemAdmin.contractTemplates.actions.duplicate',
+              'Duplicate'
+            )}
             disabled={isDuplicating}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors disabled:opacity-50"
           >
@@ -190,7 +236,7 @@ function TemplateCard({
           </button>
           <button
             onClick={() => onDelete(template)}
-            title="Delete"
+            title={t('SystemAdmin.contractTemplates.actions.delete', 'Delete')}
             className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -213,6 +259,8 @@ function DeleteDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useSafeTranslation();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
@@ -221,15 +269,18 @@ function DeleteDialog({
             <Trash2 className="w-5 h-5 text-red-600" />
           </div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-            Delete Template?
+            {t(
+              'SystemAdmin.contractTemplates.deleteDialog.title',
+              'Delete Template?'
+            )}
           </h2>
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Are you sure you want to delete{' '}
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
-            {name}
-          </span>
-          ? This action cannot be undone.
+          {t(
+            'SystemAdmin.contractTemplates.deleteDialog.description',
+            'Are you sure you want to delete {{name}}? This action cannot be undone.',
+            { name }
+          )}
         </p>
         <div className="flex gap-3">
           <button
@@ -237,7 +288,7 @@ function DeleteDialog({
             disabled={isDeleting}
             className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('SystemAdmin.common.actions.cancel', 'Cancel')}
           </button>
           <button
             onClick={onConfirm}
@@ -245,7 +296,7 @@ function DeleteDialog({
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-70"
           >
             {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Delete
+            {t('SystemAdmin.contractTemplates.actions.delete', 'Delete')}
           </button>
         </div>
       </div>
@@ -257,6 +308,7 @@ function DeleteDialog({
 export default function ContractTemplatesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useSafeTranslation();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive'
@@ -282,7 +334,13 @@ export default function ContractTemplatesPage() {
 
   const templates = data?.items ?? [];
   const loadErrorMessage = isError
-    ? extractApiErrorMessage(error, 'Failed to load templates.')
+    ? extractApiErrorMessage(
+        error,
+        t(
+          'SystemAdmin.contractTemplates.states.loadError',
+          'Failed to load templates.'
+        )
+      )
     : null;
 
   /* ── Delete mutation ── */
@@ -335,15 +393,21 @@ export default function ContractTemplatesPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="Contract Templates"
-          description="Manage DOCX contract templates and activation status by version"
+          title={t('SystemAdmin.contractTemplates.title', 'Contract Templates')}
+          description={t(
+            'SystemAdmin.contractTemplates.description',
+            'Manage DOCX contract templates and activation status by version'
+          )}
           actions={
             <button
               onClick={() => navigate('/system-admin/contract-templates/new')}
               className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors font-semibold text-sm shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              New Template
+              {t(
+                'SystemAdmin.contractTemplates.actions.newTemplate',
+                'New Template'
+              )}
             </button>
           }
         />
@@ -353,22 +417,34 @@ export default function ContractTemplatesPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               {
-                label: 'Total Templates',
+                label: t(
+                  'SystemAdmin.contractTemplates.summary.totalTemplates',
+                  'Total Templates'
+                ),
                 value: templates.length,
                 color: 'text-slate-700 dark:text-slate-200',
               },
               {
-                label: 'Active',
+                label: t(
+                  'SystemAdmin.contractTemplates.status.active',
+                  'Active'
+                ),
                 value: activeCount,
                 color: 'text-emerald-600',
               },
               {
-                label: 'Inactive',
+                label: t(
+                  'SystemAdmin.contractTemplates.status.inactive',
+                  'Inactive'
+                ),
                 value: inactiveCount,
                 color: 'text-amber-600',
               },
               {
-                label: 'Contracts Issued',
+                label: t(
+                  'SystemAdmin.contractTemplates.summary.contractsIssued',
+                  'Contracts Issued'
+                ),
                 value: totalContracts,
                 color: 'text-violet-600',
               },
@@ -398,7 +474,10 @@ export default function ContractTemplatesPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search templates..."
+                placeholder={t(
+                  'SystemAdmin.contractTemplates.filters.searchPlaceholder',
+                  'Search templates...'
+                )}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
@@ -409,12 +488,33 @@ export default function ContractTemplatesPage() {
               }
               className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
             >
-              <option value="all">All statuses</option>
-              <option value="active">Active only</option>
-              <option value="inactive">Inactive only</option>
+              <option value="all">
+                {t(
+                  'SystemAdmin.contractTemplates.filters.status.all',
+                  'All statuses'
+                )}
+              </option>
+              <option value="active">
+                {t(
+                  'SystemAdmin.contractTemplates.filters.status.activeOnly',
+                  'Active only'
+                )}
+              </option>
+              <option value="inactive">
+                {t(
+                  'SystemAdmin.contractTemplates.filters.status.inactiveOnly',
+                  'Inactive only'
+                )}
+              </option>
             </select>
             <span className="text-sm text-slate-400">
-              {templates.length} template{templates.length !== 1 ? 's' : ''}
+              {t(
+                'SystemAdmin.contractTemplates.summary.templateCount',
+                '{{count}} template(s)',
+                {
+                  count: templates.length,
+                }
+              )}
             </span>
           </div>
 
@@ -429,7 +529,16 @@ export default function ContractTemplatesPage() {
           {isError && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              Failed to load templates: {loadErrorMessage ?? 'Unknown error'}
+              {t(
+                'SystemAdmin.contractTemplates.states.loadErrorPrefix',
+                'Failed to load templates'
+              )}
+              :{' '}
+              {loadErrorMessage ??
+                t(
+                  'SystemAdmin.contractTemplates.states.unknownError',
+                  'Unknown error'
+                )}
             </div>
           )}
 
@@ -439,7 +548,12 @@ export default function ContractTemplatesPage() {
               {templates.length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
                   <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">No templates found</p>
+                  <p className="font-medium">
+                    {t(
+                      'SystemAdmin.contractTemplates.states.empty',
+                      'No templates found'
+                    )}
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -448,13 +562,16 @@ export default function ContractTemplatesPage() {
                     onClick={() =>
                       navigate('/system-admin/contract-templates/new')
                     }
-                    className="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 p-10 text-slate-400 hover:text-primary min-h-[240px]"
+                    className="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 p-10 text-slate-400 hover:text-primary min-h-60"
                   >
                     <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-700 group-hover:bg-primary/10 transition-colors">
                       <Plus className="w-6 h-6" />
                     </div>
                     <span className="text-sm font-semibold">
-                      Create New Template
+                      {t(
+                        'SystemAdmin.contractTemplates.actions.createNewTemplate',
+                        'Create New Template'
+                      )}
                     </span>
                   </button>
 

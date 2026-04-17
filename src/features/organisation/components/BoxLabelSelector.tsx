@@ -10,6 +10,7 @@ import type {
   DiseaseOption,
   DiseaseUrgency,
 } from '@/features/organisation/types/screening-result.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface BoxLabelSelectorProps {
   box: DetectionBox;
@@ -62,27 +63,15 @@ function buildDiseaseOptions(language: string): DiseaseOption[] {
   return options.sort((a, b) => a.localizedName.localeCompare(b.localizedName));
 }
 
-const URGENCY_BADGES: Record<DiseaseUrgency, { label: string; cls: string }> = {
-  critical: {
-    label: 'Critical',
-    cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  },
-  warning: {
-    label: 'Warning',
-    cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  },
-  caution: {
-    label: 'Caution',
-    cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-  },
-  info: {
-    label: 'Info',
-    cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-  normal: {
-    label: 'Normal',
-    cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  },
+const URGENCY_BADGE_CLASSES: Record<DiseaseUrgency, string> = {
+  critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  warning:
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  caution:
+    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  normal:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
 
 export function BoxLabelSelector({
@@ -92,6 +81,7 @@ export function BoxLabelSelector({
   onDelete,
   onClose,
 }: BoxLabelSelectorProps) {
+  const { t } = useSafeTranslation();
   const [search, setSearch] = useState('');
   const [customName, setCustomName] = useState(box.name);
   const [confidence, setConfidence] = useState(box.confidence);
@@ -158,6 +148,29 @@ export function BoxLabelSelector({
     onClose();
   }, [customName, confidence, language, onUpdate, onClose]);
 
+  const getUrgencyBadgeLabel = useCallback(
+    (urgency: DiseaseUrgency) => {
+      if (urgency === 'critical') {
+        return t('Organisation.boxLabelSelector.urgency.critical', 'Critical');
+      }
+
+      if (urgency === 'warning') {
+        return t('Organisation.boxLabelSelector.urgency.warning', 'Warning');
+      }
+
+      if (urgency === 'caution') {
+        return t('Organisation.boxLabelSelector.urgency.caution', 'Caution');
+      }
+
+      if (urgency === 'normal') {
+        return t('Organisation.boxLabelSelector.urgency.normal', 'Normal');
+      }
+
+      return t('Organisation.boxLabelSelector.urgency.info', 'Info');
+    },
+    [t]
+  );
+
   return (
     <div
       ref={panelRef}
@@ -168,14 +181,22 @@ export function BoxLabelSelector({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-(--border-primary) bg-(--bg-tertiary)">
         <span className="text-xs font-semibold text-(--text-primary)">
-          {box.source === 'manual' ? 'Label Annotation' : 'Edit AI Box'}
+          {box.source === 'manual'
+            ? t(
+                'Organisation.boxLabelSelector.header.manual',
+                'Label Annotation'
+              )
+            : t('Organisation.boxLabelSelector.header.editAi', 'Edit AI Box')}
         </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={onDelete}
             className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            title="Delete box"
+            title={t(
+              'Organisation.boxLabelSelector.actions.deleteBox',
+              'Delete box'
+            )}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -193,7 +214,7 @@ export function BoxLabelSelector({
       <div className="px-3 py-2 border-b border-(--border-primary)">
         <div className="flex items-center justify-between mb-1">
           <span className="text-[11px] font-medium text-(--text-tertiary)">
-            Confidence
+            {t('Organisation.boxLabelSelector.confidence.label', 'Confidence')}
           </span>
           <span className="text-[11px] font-semibold text-(--text-primary)">
             {Math.round(confidence)}%
@@ -221,7 +242,7 @@ export function BoxLabelSelector({
               : 'text-(--text-tertiary) hover:bg-(--bg-primary)'
           }`}
         >
-          Disease List
+          {t('Organisation.boxLabelSelector.tabs.diseaseList', 'Disease List')}
         </button>
         <button
           type="button"
@@ -233,7 +254,7 @@ export function BoxLabelSelector({
           }`}
         >
           <Pencil className="w-3 h-3" />
-          Custom
+          {t('Organisation.boxLabelSelector.tabs.custom', 'Custom')}
         </button>
       </div>
 
@@ -248,7 +269,10 @@ export function BoxLabelSelector({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search diseases..."
+                placeholder={t(
+                  'Organisation.boxLabelSelector.search.placeholder',
+                  'Search diseases...'
+                )}
                 className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) py-1.5 pl-8 pr-3 text-xs text-(--text-primary) placeholder:text-(--text-tertiary)"
               />
             </div>
@@ -258,11 +282,14 @@ export function BoxLabelSelector({
           <div className="max-h-52 overflow-y-auto px-1.5 py-1.5">
             {filtered.length === 0 ? (
               <p className="text-center text-xs text-(--text-tertiary) py-4">
-                No matching diseases
+                {t(
+                  'Organisation.boxLabelSelector.search.noResults',
+                  'No matching diseases'
+                )}
               </p>
             ) : (
               filtered.map((option) => {
-                const badge = URGENCY_BADGES[option.urgency];
+                const badgeClass = URGENCY_BADGE_CLASSES[option.urgency];
                 const isActive = box.name === option.code;
                 return (
                   <button
@@ -286,9 +313,9 @@ export function BoxLabelSelector({
                       )}
                     </div>
                     <span
-                      className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.cls}`}
+                      className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${badgeClass}`}
                     >
-                      {badge.label}
+                      {getUrgencyBadgeLabel(option.urgency)}
                     </span>
                     {isActive && (
                       <Check className="w-3.5 h-3.5 shrink-0 text-primary" />
@@ -304,13 +331,16 @@ export function BoxLabelSelector({
         <div className="px-3 py-3 space-y-2.5">
           <div>
             <label className="text-[11px] font-medium text-(--text-tertiary) mb-1 block">
-              Custom Label
+              {t('Organisation.boxLabelSelector.custom.label', 'Custom Label')}
             </label>
             <input
               type="text"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              placeholder="Enter custom finding name..."
+              placeholder={t(
+                'Organisation.boxLabelSelector.custom.placeholder',
+                'Enter custom finding name...'
+              )}
               className="w-full rounded-lg border border-(--border-primary) bg-(--bg-primary) py-1.5 px-3 text-xs text-(--text-primary)"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleCustomSubmit();
@@ -323,7 +353,7 @@ export function BoxLabelSelector({
             disabled={!customName.trim()}
             className="w-full py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 transition"
           >
-            Apply Label
+            {t('Organisation.boxLabelSelector.custom.apply', 'Apply Label')}
           </button>
         </div>
       )}

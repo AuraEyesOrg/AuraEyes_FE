@@ -8,6 +8,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle } from 'lucide-react';
 import type { ConsultationSessionDto } from '@/types/consultation';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface ShareClinicCaseModalProps {
   session: ConsultationSessionDto | null;
@@ -24,6 +25,7 @@ export function ShareClinicCaseModal({
   onShare,
   isLoading = false,
 }: ShareClinicCaseModalProps) {
+  const { t } = useSafeTranslation();
   const [doctorNotes, setDoctorNotes] = useState('');
 
   const handleShare = useCallback(() => {
@@ -42,39 +44,49 @@ export function ShareClinicCaseModal({
 
     // Case summary
     if (caseSnapshot.summary) {
-      parts.push(`📋 **Summary**: ${caseSnapshot.summary}`);
+      parts.push(
+        `📋 **${t('ProfessionalNetwork.shareClinicCaseModal.summary.label', 'Summary')}**: ${caseSnapshot.summary}`
+      );
     }
 
     // Risk level and confidence
     if (caseSnapshot.riskLevel) {
-      parts.push(`⚠️ **Risk Level**: ${caseSnapshot.riskLevel}`);
+      parts.push(
+        `⚠️ **${t('ProfessionalNetwork.shareClinicCaseModal.fields.riskLevel', 'Risk Level')}**: ${caseSnapshot.riskLevel}`
+      );
     }
     if (
       caseSnapshot.confidenceScore !== null &&
       caseSnapshot.confidenceScore !== undefined
     ) {
       parts.push(
-        `✓ **Confidence**: ${(caseSnapshot.confidenceScore * 100).toFixed(1)}%`
+        `✓ **${t('ProfessionalNetwork.shareClinicCaseModal.fields.confidence', 'Confidence')}**: ${(caseSnapshot.confidenceScore * 100).toFixed(1)}%`
       );
     }
 
     // Findings
     if (caseSnapshot.findings) {
-      parts.push(`🔍 **Findings**: ${caseSnapshot.findings}`);
+      parts.push(
+        `🔍 **${t('ProfessionalNetwork.shareClinicCaseModal.findings.label', 'Findings')}**: ${caseSnapshot.findings}`
+      );
     }
 
     // Symptoms
     if (caseSnapshot.symptoms && caseSnapshot.symptoms.length > 0) {
-      parts.push(`🩺 **Symptoms**: ${caseSnapshot.symptoms.join(', ')}`);
+      parts.push(
+        `🩺 **${t('ProfessionalNetwork.shareClinicCaseModal.symptoms.label', 'Symptoms')}**: ${caseSnapshot.symptoms.join(', ')}`
+      );
     }
 
     // Doctor notes
     if (doctorNotes.trim()) {
-      parts.push(`\n📝 **Doctor Notes**:\n${doctorNotes}`);
+      parts.push(
+        `\n📝 **${t('ProfessionalNetwork.shareClinicCaseModal.doctorNotes.label', 'Doctor Notes')}**:\n${doctorNotes}`
+      );
     }
 
     return parts.join('\n\n');
-  }, [caseSnapshot, doctorNotes]);
+  }, [caseSnapshot, doctorNotes, t]);
 
   if (!session || !caseSnapshot) return null;
 
@@ -102,7 +114,10 @@ export function ShareClinicCaseModal({
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Share Clinic Case
+                {t(
+                  'ProfessionalNetwork.shareClinicCaseModal.title',
+                  'Share Clinic Case'
+                )}
               </h2>
               <button
                 onClick={onClose}
@@ -120,20 +135,31 @@ export function ShareClinicCaseModal({
                 {/* Case Type Badge */}
                 <div className="flex items-center gap-2 text-sm">
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
-                    🔬 Case Presentation
+                    🔬{' '}
+                    {t(
+                      'ProfessionalNetwork.postTypes.casePresentation',
+                      'Case Presentation'
+                    )}
                   </span>
                 </div>
 
                 {/* Patient Info */}
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Case Information
+                    {t(
+                      'ProfessionalNetwork.shareClinicCaseModal.caseInformation.title',
+                      'Case Information'
+                    )}
                   </h3>
                   <div className="space-y-2 text-sm">
                     {session.patientName && (
                       <p>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Patient:
+                          {t(
+                            'ProfessionalNetwork.shareClinicCaseModal.fields.patient',
+                            'Patient'
+                          )}
+                          :
                         </span>{' '}
                         <span className="font-medium text-gray-900 dark:text-white">
                           {session.patientName}
@@ -143,7 +169,11 @@ export function ShareClinicCaseModal({
                     {caseSnapshot.riskLevel && (
                       <p>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Risk Level:
+                          {t(
+                            'ProfessionalNetwork.shareClinicCaseModal.fields.riskLevel',
+                            'Risk Level'
+                          )}
+                          :
                         </span>{' '}
                         <span className="font-medium text-gray-900 dark:text-white">
                           {caseSnapshot.riskLevel}
@@ -153,7 +183,11 @@ export function ShareClinicCaseModal({
                     {caseSnapshot.confidenceScore !== null && (
                       <p>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Confidence:
+                          {t(
+                            'ProfessionalNetwork.shareClinicCaseModal.fields.confidence',
+                            'Confidence'
+                          )}
+                          :
                         </span>{' '}
                         <span className="font-medium text-gray-900 dark:text-white">
                           {(caseSnapshot.confidenceScore * 100).toFixed(1)}%
@@ -168,7 +202,11 @@ export function ShareClinicCaseModal({
                   caseSnapshot.originalImageUrls.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                        Retinal Images ({caseSnapshot.originalImageUrls.length})
+                        {t(
+                          'ProfessionalNetwork.shareClinicCaseModal.retinalImages.title',
+                          'Retinal Images ({{count}})',
+                          { count: caseSnapshot.originalImageUrls.length }
+                        )}
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
                         {caseSnapshot.originalImageUrls.map((imageUrl, idx) => (
@@ -178,7 +216,11 @@ export function ShareClinicCaseModal({
                           >
                             <img
                               src={imageUrl}
-                              alt={`Retinal image ${idx + 1}`}
+                              alt={t(
+                                'ProfessionalNetwork.shareClinicCaseModal.retinalImages.alt',
+                                'Retinal image {{index}}',
+                                { index: idx + 1 }
+                              )}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src =
@@ -195,7 +237,10 @@ export function ShareClinicCaseModal({
                 {caseSnapshot.findings && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Findings
+                      {t(
+                        'ProfessionalNetwork.shareClinicCaseModal.findings.label',
+                        'Findings'
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 bg-slate-50 dark:bg-slate-800/50 rounded p-3">
                       {caseSnapshot.findings}
@@ -207,7 +252,10 @@ export function ShareClinicCaseModal({
                 {caseSnapshot.symptoms && caseSnapshot.symptoms.length > 0 && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Symptoms
+                      {t(
+                        'ProfessionalNetwork.shareClinicCaseModal.symptoms.label',
+                        'Symptoms'
+                      )}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {caseSnapshot.symptoms.map((symptom, idx) => (
@@ -226,7 +274,10 @@ export function ShareClinicCaseModal({
                 {caseSnapshot.summary && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Summary
+                      {t(
+                        'ProfessionalNetwork.shareClinicCaseModal.summary.label',
+                        'Summary'
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 bg-slate-50 dark:bg-slate-800/50 rounded p-3">
                       {caseSnapshot.summary}
@@ -240,12 +291,18 @@ export function ShareClinicCaseModal({
                 {/* Doctor Notes Input */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-gray-900 dark:text-white">
-                    Add Doctor Notes
+                    {t(
+                      'ProfessionalNetwork.shareClinicCaseModal.doctorNotes.label',
+                      'Add Doctor Notes'
+                    )}
                   </label>
                   <textarea
                     value={doctorNotes}
                     onChange={(e) => setDoctorNotes(e.target.value)}
-                    placeholder="Type your observations, recommendations, or additional notes..."
+                    placeholder={t(
+                      'ProfessionalNetwork.shareClinicCaseModal.doctorNotes.placeholder',
+                      'Type your observations, recommendations, or additional notes...'
+                    )}
                     disabled={isLoading}
                     className="flex-1 min-h-[120px] p-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -254,7 +311,10 @@ export function ShareClinicCaseModal({
                 {/* Live Preview */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-gray-900 dark:text-white">
-                    Post Preview
+                    {t(
+                      'ProfessionalNetwork.shareClinicCaseModal.preview.title',
+                      'Post Preview'
+                    )}
                   </label>
                   <div className="flex-1 overflow-y-auto p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30">
                     {previewContent ? (
@@ -265,7 +325,12 @@ export function ShareClinicCaseModal({
                       <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                         <div className="text-center">
                           <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-xs">Type notes to see preview</p>
+                          <p className="text-xs">
+                            {t(
+                              'ProfessionalNetwork.shareClinicCaseModal.preview.empty',
+                              'Type notes to see preview'
+                            )}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -281,7 +346,7 @@ export function ShareClinicCaseModal({
                 disabled={isLoading}
                 className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-gray-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                {t('ProfessionalNetwork.common.actions.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleShare}
@@ -289,7 +354,15 @@ export function ShareClinicCaseModal({
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium inline-flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
-                {isLoading ? 'Posting...' : 'Post Case'}
+                {isLoading
+                  ? t(
+                      'ProfessionalNetwork.shareClinicCaseModal.actions.posting',
+                      'Posting...'
+                    )
+                  : t(
+                      'ProfessionalNetwork.shareClinicCaseModal.actions.postCase',
+                      'Post Case'
+                    )}
               </button>
             </div>
           </motion.div>

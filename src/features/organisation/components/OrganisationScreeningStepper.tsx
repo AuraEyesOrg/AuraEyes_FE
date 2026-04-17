@@ -6,6 +6,8 @@ import {
   User,
   type LucideIcon,
 } from 'lucide-react';
+import { useMemo } from 'react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 export type ScreeningFlowStep =
   | 'select-patient'
@@ -19,13 +21,6 @@ interface ScreeningFlowStepConfig {
   icon: LucideIcon;
 }
 
-const SCREENING_FLOW_STEPS: ScreeningFlowStepConfig[] = [
-  { key: 'select-patient', label: 'Patient Verification', icon: User },
-  { key: 'upload-images', label: 'Upload Images', icon: Upload },
-  { key: 'launch-ai', label: 'Launch AI', icon: ScanEye },
-  { key: 'review-save', label: 'Review & Save', icon: Save },
-];
-
 interface OrganisationScreeningStepperProps {
   activeStep: ScreeningFlowStep;
   className?: string;
@@ -35,7 +30,44 @@ export function OrganisationScreeningStepper({
   activeStep,
   className,
 }: OrganisationScreeningStepperProps) {
-  const currentIndex = SCREENING_FLOW_STEPS.findIndex(
+  const { t } = useSafeTranslation();
+
+  const screeningFlowSteps = useMemo<ScreeningFlowStepConfig[]>(
+    () => [
+      {
+        key: 'select-patient',
+        label: t(
+          'Organisation.screening.stepper.selectPatient',
+          'Patient Verification'
+        ),
+        icon: User,
+      },
+      {
+        key: 'upload-images',
+        label: t(
+          'Organisation.screening.stepper.uploadImages',
+          'Upload Images'
+        ),
+        icon: Upload,
+      },
+      {
+        key: 'launch-ai',
+        label: t('Organisation.screening.stepper.launchAi', 'Launch AI'),
+        icon: ScanEye,
+      },
+      {
+        key: 'review-save',
+        label: t(
+          'Organisation.screening.stepper.reviewAndSave',
+          'Review & Save'
+        ),
+        icon: Save,
+      },
+    ],
+    [t]
+  );
+
+  const currentIndex = screeningFlowSteps.findIndex(
     (step) => step.key === activeStep
   );
   const normalizedCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
@@ -44,7 +76,7 @@ export function OrganisationScreeningStepper({
     <div
       className={`flex items-center w-full overflow-x-auto pb-1 ${className ?? ''}`}
     >
-      {SCREENING_FLOW_STEPS.map((step, index) => {
+      {screeningFlowSteps.map((step, index) => {
         const isActive = index === normalizedCurrentIndex;
         const isCompleted = index < normalizedCurrentIndex;
         const StepIcon = step.icon;
@@ -82,7 +114,7 @@ export function OrganisationScreeningStepper({
                 {step.label}
               </span>
             </div>
-            {index < SCREENING_FLOW_STEPS.length - 1 && (
+            {index < screeningFlowSteps.length - 1 && (
               <div
                 className={`flex-1 mx-2 h-[2px] transition-all rounded-full ${
                   isCompleted ? 'bg-primary/30' : 'bg-slate-200'

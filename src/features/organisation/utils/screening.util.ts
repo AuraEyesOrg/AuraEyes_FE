@@ -28,11 +28,23 @@ export interface FundusValidationApiResponse {
   metrics: Record<string, number>;
 }
 
-export async function analyzeImageQuality(file: File): Promise<{
+type QualityMessageTranslator = (
+  key: string,
+  fallback: string,
+  options?: Record<string, string | number | boolean | null | undefined>
+) => string;
+
+export async function analyzeImageQuality(
+  file: File,
+  translate?: QualityMessageTranslator
+): Promise<{
   status: ImageStatus;
   quality?: 'high' | 'medium' | 'low';
   message?: string;
 }> {
+  const tr = (key: string, fallback: string) =>
+    translate ? translate(key, fallback) : fallback;
+
   const formData = new FormData();
   formData.append('file', file);
 
@@ -47,7 +59,10 @@ export async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'error',
         quality: 'low',
-        message: 'Not a clear retinal scan.',
+        message: tr(
+          'Organisation.screening.quality.notFundus',
+          'Not a clear retinal scan.'
+        ),
       };
     }
 
@@ -56,25 +71,37 @@ export async function analyzeImageQuality(file: File): Promise<{
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image appears cropped.',
+        message: tr(
+          'Organisation.screening.quality.croppedEdges',
+          'Image appears cropped.'
+        ),
       };
     if (warnings.includes('blurry'))
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image appears blurry.',
+        message: tr(
+          'Organisation.screening.quality.blurry',
+          'Image appears blurry.'
+        ),
       };
     if (warnings.includes('too_dark'))
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image appears too dark.',
+        message: tr(
+          'Organisation.screening.quality.tooDark',
+          'Image appears too dark.'
+        ),
       };
     if (warnings.includes('overexposed'))
       return {
         status: 'warning',
         quality: 'low',
-        message: 'Image appears overexposed.',
+        message: tr(
+          'Organisation.screening.quality.overexposed',
+          'Image appears overexposed.'
+        ),
       };
 
     return {
@@ -82,16 +109,22 @@ export async function analyzeImageQuality(file: File): Promise<{
       quality: data.quality === 'high' ? 'high' : 'medium',
       message:
         data.quality === 'high'
-          ? 'Optimal quality'
+          ? tr('Organisation.screening.quality.optimal', 'Optimal quality')
           : data.quality === 'medium'
-            ? 'Acceptable quality'
-            : 'Poor quality',
+            ? tr(
+                'Organisation.screening.quality.acceptable',
+                'Acceptable quality'
+              )
+            : tr('Organisation.screening.quality.poor', 'Poor quality'),
     };
   } catch {
     return {
       status: 'error',
       quality: 'low',
-      message: 'Validation service error.',
+      message: tr(
+        'Organisation.screening.quality.validationServiceError',
+        'Validation service error.'
+      ),
     };
   }
 }

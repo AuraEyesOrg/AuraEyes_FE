@@ -43,7 +43,7 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
   {
     id: 'user-directory',
     label: 'User Directory',
-    description: 'Quản lý danh bạ người dùng',
+    description: 'Manage user directory',
     icon: Users,
     items: [
       {
@@ -87,7 +87,7 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
   {
     id: 'contract-management',
     label: 'Contract Management',
-    description: 'Quản lý hợp đồng',
+    description: 'Manage contracts',
     icon: FileCheck,
     items: [
       {
@@ -107,7 +107,7 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
   {
     id: 'billing-finance',
     label: 'Billing & Finance',
-    description: 'Tài chính & Thanh toán',
+    description: 'Financial & Billing management',
     icon: Wallet,
     items: [
       {
@@ -127,7 +127,7 @@ export const sidebarNavGroups: SidebarNavGroup[] = [
   {
     id: 'system-administration',
     label: 'System Administration',
-    description: 'Quản trị hệ thống',
+    description: 'System administration tools',
     icon: Settings,
     items: [
       {

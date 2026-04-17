@@ -12,12 +12,15 @@ interface Patient {
   priority: string;
 }
 import { Clock, AlertCircle } from 'lucide-react';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface RecentPatientsProps {
   patients: Patient[];
 }
 
 export default function RecentPatients({ patients }: RecentPatientsProps) {
+  const { t } = useSafeTranslation();
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -34,13 +37,13 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
       case 'pending-review':
         return (
           <span className="px-2 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500 rounded-full">
-            Pending
+            {t('Organisation.recentPatients.status.pending', 'Pending')}
           </span>
         );
       case 'reviewed':
         return (
           <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-500 rounded-full">
-            Reviewed
+            {t('Organisation.recentPatients.status.reviewed', 'Reviewed')}
           </span>
         );
       default:
@@ -52,10 +55,10 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
     <div className="bg-white dark:bg-[#1e3a5f] rounded-xl p-6 border border-gray-200 dark:border-[#2d4a6f]">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Recent Patients
+          {t('Organisation.recentPatients.title', 'Recent Patients')}
         </h3>
         <button className="text-primary hover:text-primary/80 transition-colors text-sm">
-          View all
+          {t('Organisation.recentPatients.actions.viewAll', 'View all')}
         </button>
       </div>
 
@@ -78,7 +81,10 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
                     {patient.name}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    ID: {patient.id} • {patient.age}y • {patient.gender}
+                    {t('Organisation.common.idLabel', 'ID')}: {patient.id} •{' '}
+                    {patient.age}
+                    {t('Organisation.common.yearsAbbr', 'yrs')} •{' '}
+                    {patient.gender}
                   </p>
                 </div>
                 <div
@@ -92,7 +98,13 @@ export default function RecentPatients({ patients }: RecentPatientsProps) {
                   {patient.aiPrediction}
                 </span>
                 <span className="text-xs text-gray-600 dark:text-gray-400">
-                  ({patient.confidence}% confidence)
+                  {t(
+                    'Organisation.recentPatients.confidenceLabel',
+                    '({{confidence}}% confidence)',
+                    {
+                      confidence: patient.confidence,
+                    }
+                  )}
                 </span>
               </div>
 

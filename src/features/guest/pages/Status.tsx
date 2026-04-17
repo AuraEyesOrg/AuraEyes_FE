@@ -42,7 +42,7 @@ const StatusPage = () => {
         name: t('Status.services.aiCore.name'),
         description: t('Status.services.aiCore.description'),
         icon: 'memory',
-        region: 'Global',
+        region: t('Status.services.aiCore.region'),
         target: {
           endpoint: API_ENDPOINTS.PUBLIC.HEALTH.ROOT,
           scope: 'root',
@@ -52,7 +52,7 @@ const StatusPage = () => {
         name: t('Status.services.imageApi.name'),
         description: t('Status.services.imageApi.description'),
         icon: 'cloud_upload',
-        region: 'API Gateway',
+        region: t('Status.services.imageApi.region'),
         target: {
           endpoint: API_ENDPOINTS.PUBLIC.SYSTEM_SETTINGS,
           scope: 'api',
@@ -62,7 +62,7 @@ const StatusPage = () => {
         name: t('Status.services.providerPortal.name'),
         description: t('Status.services.providerPortal.description'),
         icon: 'medical_information',
-        region: 'Public Search',
+        region: t('Status.services.providerPortal.region'),
         target: {
           endpoint: API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.OPHTHALMOLOGISTS,
           scope: 'api',
@@ -76,7 +76,7 @@ const StatusPage = () => {
         name: t('Status.services.patientStore.name'),
         description: t('Status.services.patientStore.description'),
         icon: 'database',
-        region: 'Knowledge Base',
+        region: t('Status.services.patientStore.region'),
         target: {
           endpoint: API_ENDPOINTS.PUBLIC.RESOURCES.EYE_HEALTH,
           scope: 'api',
@@ -200,11 +200,11 @@ const StatusPage = () => {
     }
 
     if (diffSec < 60) {
-      return t('Status.time.secondsAgo', { count: diffSec });
+      return t('Status.time.secondsAgo_other', { count: diffSec });
     }
 
     const diffMin = Math.floor(diffSec / 60);
-    return t('Status.time.minutesAgo', { count: diffMin });
+    return t('Status.time.minutesAgo_other', { count: diffMin });
   };
 
   const getStatusBadge = (status: ServiceStatus['status']) => {

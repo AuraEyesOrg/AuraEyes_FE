@@ -34,6 +34,7 @@ import {
   formatWeekRange,
   toLocalDateKey,
 } from '@/lib/date-utils';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const DAYS_PER_WEEK = 7;
 const CLINIC_CHECKIN_QR_PREFIX = 'AURA-CLINIC-APPOINTMENT';
@@ -113,15 +114,6 @@ function getInitials(value: string) {
   return `${first}${last}`.toUpperCase();
 }
 
-function getPatientDisplayName(appointment: {
-  patientId: string;
-  patientName?: string | null;
-}) {
-  const patientName = appointment.patientName?.trim();
-  if (patientName) return patientName;
-  return `Patient ${appointment.patientId.slice(0, 8)}`;
-}
-
 function getPatientInitials(appointment: {
   patientId: string;
   patientName?: string | null;
@@ -165,6 +157,7 @@ function parseClinicCheckInQrPayload(rawValue: string): {
 
 export default function CalendarPage() {
   const { user } = useAuthStore();
+  const { t } = useSafeTranslation();
   const organisationId = user?.organizationId ?? '';
 
   const todayKey = toLocalDateKey(new Date());
@@ -246,6 +239,27 @@ export default function CalendarPage() {
     completeMutation.isPending ||
     noShowMutation.isPending;
 
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'Pending':
+        return t('Organisation.calendar.status.pending', 'Pending');
+      case 'Confirmed':
+        return t('Organisation.calendar.status.confirmed', 'Confirmed');
+      case 'CheckedIn':
+        return t('Organisation.calendar.status.checkedIn', 'Checked in');
+      case 'InProgress':
+        return t('Organisation.calendar.status.inProgress', 'In progress');
+      case 'Completed':
+        return t('Organisation.calendar.status.completed', 'Completed');
+      case 'Cancelled':
+        return t('Organisation.calendar.status.cancelled', 'Cancelled');
+      case 'NoShow':
+        return t('Organisation.calendar.status.noShow', 'No-show');
+      default:
+        return status;
+    }
+  };
+
   useEffect(() => {
     const inWeek = weekWindow.days.some((d) => d.dateKey === selectedDate);
     if (!inWeek && weekWindow.days[0])
@@ -303,7 +317,12 @@ export default function CalendarPage() {
 
             const parsed = parseClinicCheckInQrPayload(decodedText);
             if (!parsed) {
-              toast.error('Invalid clinic check-in QR code.');
+              toast.error(
+                t(
+                  'Organisation.calendar.toast.invalidQr',
+                  'Invalid clinic check-in QR code.'
+                )
+              );
               return;
             }
 
@@ -313,7 +332,10 @@ export default function CalendarPage() {
                 scanTargetAppointmentId.toLowerCase()
             ) {
               toast.error(
-                'This QR code does not match the selected appointment.'
+                t(
+                  'Organisation.calendar.toast.qrNotMatchAppointment',
+                  'This QR code does not match the selected appointment.'
+                )
               );
               return;
             }
@@ -324,7 +346,12 @@ export default function CalendarPage() {
               parsed.organisationId.toLowerCase() !==
                 organisationId.toLowerCase()
             ) {
-              toast.error('This QR code does not belong to your organisation.');
+              toast.error(
+                t(
+                  'Organisation.calendar.toast.qrNotBelongOrganisation',
+                  'This QR code does not belong to your organisation.'
+                )
+              );
               return;
             }
 
@@ -338,7 +365,12 @@ export default function CalendarPage() {
                 await checkInMutation.mutateAsync(
                   scanTargetAppointmentId ?? parsed.appointmentId
                 );
-                toast.success('Check-in successful via QR.');
+                toast.success(
+                  t(
+                    'Organisation.calendar.toast.qrCheckInSuccess',
+                    'Check-in successful via QR.'
+                  )
+                );
               } catch (error) {
                 toast.error(mapClinicStaffErrorMessage(error));
               }
@@ -363,23 +395,36 @@ export default function CalendarPage() {
     isQrScannerOpen,
     organisationId,
     scanTargetAppointmentId,
+    t,
   ]);
 
   const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
     if (appointment.status === 'CheckedIn')
       return {
-        label: 'Start consultation',
+        label: t(
+          'Organisation.calendar.actions.startConsultation',
+          'Start consultation'
+        ),
         icon: Play,
-        successMessage: 'Consultation started.',
+        successMessage: t(
+          'Organisation.calendar.toast.consultationStarted',
+          'Consultation started.'
+        ),
         className:
           'bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50',
         action: () => startMutation.mutateAsync(appointment.id),
       };
     if (appointment.status === 'InProgress')
       return {
-        label: 'Complete visit',
+        label: t(
+          'Organisation.calendar.actions.completeVisit',
+          'Complete visit'
+        ),
         icon: Calendar,
-        successMessage: 'Visit completed.',
+        successMessage: t(
+          'Organisation.calendar.toast.visitCompleted',
+          'Visit completed.'
+        ),
         className:
           'bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-50',
         action: () =>
@@ -392,11 +437,13 @@ export default function CalendarPage() {
     !['Completed', 'Cancelled', 'NoShow'].includes(status);
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden bg-(--bg-primary)">
+    <div className="flex h-dvh w-full overflow-hidden bg-(--bg-primary)">
       <Sidebar pendingCount={stats.pending} />
 
       <div className="h-full flex-1 overflow-y-auto">
-        <OrganisationHeader pageName="Calendar" />
+        <OrganisationHeader
+          pageName={t('Organisation.calendar.pageName', 'Calendar')}
+        />
 
         <main className="p-6">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -477,7 +524,7 @@ export default function CalendarPage() {
                     }}
                     className="w-full rounded-lg border border-cyan-200 bg-cyan-50 py-1.5 text-xs font-medium text-cyan-700 transition hover:bg-cyan-100 dark:border-cyan-800/60 dark:bg-cyan-900/20 dark:text-cyan-300"
                   >
-                    Go to today
+                    {t('Organisation.common.today', 'Today')}
                   </button>
                   <input
                     type="date"
@@ -496,22 +543,31 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     {
-                      label: 'Total',
+                      label: t('Organisation.calendar.stats.total', 'Total'),
                       value: stats.total,
                       color: 'text-(--text-primary)',
                     },
                     {
-                      label: 'Pending',
+                      label: t(
+                        'Organisation.calendar.stats.pending',
+                        'Pending'
+                      ),
                       value: stats.pending,
                       color: 'text-amber-600 dark:text-amber-400',
                     },
                     {
-                      label: 'Checked in',
+                      label: t(
+                        'Organisation.calendar.stats.checkedIn',
+                        'Checked in'
+                      ),
                       value: stats.checkedIn,
                       color: 'text-emerald-600 dark:text-emerald-400',
                     },
                     {
-                      label: 'In progress',
+                      label: t(
+                        'Organisation.calendar.stats.inProgress',
+                        'In progress'
+                      ),
                       value: stats.inProgress,
                       color: 'text-violet-600 dark:text-violet-400',
                     },
@@ -540,18 +596,31 @@ export default function CalendarPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-(--text-muted)">
-                    {appointments.length} records
+                    {t(
+                      'Organisation.calendar.summary.records',
+                      '{{count}} records',
+                      {
+                        count: appointments.length,
+                      }
+                    )}
                   </span>
                 </div>
               </div>
 
               {isLoading ? (
                 <div className="flex items-center gap-3 py-12 text-(--text-secondary)">
-                  <Spinner /> Loading appointments…
+                  <Spinner />
+                  {t(
+                    'Organisation.calendar.states.loadingAppointments',
+                    'Loading appointments...'
+                  )}
                 </div>
               ) : appointments.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-(--border-color) py-14 text-center text-sm text-(--text-muted)">
-                  No appointments on this day.
+                  {t(
+                    'Organisation.calendar.states.noAppointments',
+                    'No appointments on this day.'
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -563,7 +632,13 @@ export default function CalendarPage() {
                       'Cancelled',
                       'NoShow',
                     ].includes(appt.status);
-                    const patientDisplayName = getPatientDisplayName(appt);
+                    const patientDisplayName =
+                      appt.patientName?.trim() ||
+                      t(
+                        'Organisation.calendar.patient.fallback',
+                        'Patient {{id}}',
+                        { id: appt.patientId.slice(0, 8) }
+                      );
                     const initials = getPatientInitials(appt);
                     const patientAvatarUrl =
                       appt.patientAvatarUrl?.trim() || '';
@@ -596,11 +671,7 @@ export default function CalendarPage() {
                                         : 'bg-(--bg-secondary) text-(--text-muted)',
                                   ].join(' ')}
                                 >
-                                  {step === 'CheckedIn'
-                                    ? 'Checked in'
-                                    : step === 'InProgress'
-                                      ? 'In progress'
-                                      : step}
+                                  {getStatusDisplay(step)}
                                 </span>
                                 {i < PIPELINE_STEPS.length - 1 && (
                                   <span className="text-[10px] text-(--text-muted)">
@@ -644,11 +715,7 @@ export default function CalendarPage() {
                           <span
                             className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadge[appt.status] ?? statusBadge.Pending}`}
                           >
-                            {appt.status === 'CheckedIn'
-                              ? 'Checked in'
-                              : appt.status === 'InProgress'
-                                ? 'In progress'
-                                : appt.status}
+                            {getStatusDisplay(appt.status)}
                           </span>
                         </div>
 
@@ -672,7 +739,10 @@ export default function CalendarPage() {
                               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               <QrCode className="h-3.5 w-3.5" />
-                              Scan QR check-in
+                              {t(
+                                'Organisation.calendar.actions.scanQrCheckIn',
+                                'Scan QR check-in'
+                              )}
                             </button>
                           ) : primaryAction ? (
                             <button
@@ -691,10 +761,21 @@ export default function CalendarPage() {
                             </button>
                           ) : isTerminal ? (
                             <span className="text-xs italic text-(--text-muted)">
-                              {appt.status === 'Completed' && 'Visit completed'}
-                              {appt.status === 'NoShow' && 'Marked as no-show'}
+                              {appt.status === 'Completed' &&
+                                t(
+                                  'Organisation.calendar.states.terminal.completed',
+                                  'Visit completed'
+                                )}
+                              {appt.status === 'NoShow' &&
+                                t(
+                                  'Organisation.calendar.states.terminal.noShow',
+                                  'Marked as no-show'
+                                )}
                               {appt.status === 'Cancelled' &&
-                                'Appointment cancelled'}
+                                t(
+                                  'Organisation.calendar.states.terminal.cancelled',
+                                  'Appointment cancelled'
+                                )}
                             </span>
                           ) : null}
 
@@ -705,13 +786,19 @@ export default function CalendarPage() {
                               onClick={() =>
                                 void runAction(
                                   () => noShowMutation.mutateAsync(appt.id),
-                                  'Marked as no-show.'
+                                  t(
+                                    'Organisation.calendar.toast.markedNoShow',
+                                    'Marked as no-show.'
+                                  )
                                 )
                               }
                               className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs text-red-600 transition hover:bg-red-50 disabled:opacity-40 dark:border-red-800 dark:text-red-400"
                             >
                               <UserX className="h-3.5 w-3.5" />
-                              No-show
+                              {t(
+                                'Organisation.calendar.actions.noShow',
+                                'No-show'
+                              )}
                             </button>
                           )}
                         </div>
@@ -726,15 +813,21 @@ export default function CalendarPage() {
       </div>
 
       {isQrScannerOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-(--border-color) bg-(--bg-primary) p-4 shadow-xl">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-(--text-primary)">
-                  Scan QR for check-in
+                  {t(
+                    'Organisation.calendar.qrModal.title',
+                    'Scan QR for check-in'
+                  )}
                 </h3>
                 <p className="mt-1 text-xs text-(--text-muted)">
-                  Point the camera at the patient appointment QR code.
+                  {t(
+                    'Organisation.calendar.qrModal.subtitle',
+                    'Point the camera at the patient appointment QR code.'
+                  )}
                 </p>
               </div>
               <button

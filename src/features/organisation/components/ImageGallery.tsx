@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import type { RetinalImage } from '@/features/organisation/types/retinal.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 interface ImageGalleryProps {
   images: RetinalImage[];
@@ -30,6 +31,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   onRemoveImage,
   isUploading,
 }) => {
+  const { t } = useSafeTranslation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -71,7 +73,17 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           <div className="flex items-center gap-2">
             <Images className="w-4 h-4 text-[#13ecec]" />
             <span className="text-xs font-medium text-white dark:text-white light:text-gray-900">
-              {images.length} {images.length === 1 ? 'Image' : 'Images'}
+              {images.length === 1
+                ? t('Organisation.imageGallery.count.one', '{{count}} Image', {
+                    count: images.length,
+                  })
+                : t(
+                    'Organisation.imageGallery.count.other',
+                    '{{count}} Images',
+                    {
+                      count: images.length,
+                    }
+                  )}
             </span>
           </div>
 
@@ -149,7 +161,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
             className="flex items-center gap-1 px-2 py-1 bg-[#13ecec]/20 hover:bg-[#13ecec]/30 text-[#13ecec] text-[10px] font-medium rounded border border-[#13ecec]/30 transition-colors disabled:opacity-50"
           >
             <Upload className="w-3 h-3" />
-            Upload
+            {t('Organisation.imageGallery.actions.upload', 'Upload')}
           </button>
         </div>
 
@@ -176,7 +188,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
               onClick={() => fileInputRef.current?.click()}
             >
               <CloudUpload className="w-5 h-5" />
-              <span>Drop images or click to upload</span>
+              <span>
+                {t(
+                  'Organisation.imageGallery.dropzone.hint',
+                  'Drop images or click to upload'
+                )}
+              </span>
             </div>
           ) : (
             <>

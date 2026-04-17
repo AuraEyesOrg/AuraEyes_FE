@@ -550,6 +550,8 @@ declare module 'i18next' {
         severity: {
           mild: string;
           severe: string;
+          critical: string;
+          moderate: string;
         };
         showing: string;
         status: {
@@ -559,6 +561,13 @@ declare module 'i18next' {
         };
         submitting: string;
         view: string;
+        confirm: string;
+        fullName: string;
+        loading: string;
+        nextPage: string;
+        notAvailable: string;
+        previousPage: string;
+        submitRequest: string;
       };
       header: {
         pages: string;
@@ -668,6 +677,17 @@ declare module 'i18next' {
           title: string;
           description: string;
         };
+        priorityList: {
+          confidence: string;
+          description: string;
+          empty: string;
+          noSchedule: string;
+          patient: string;
+          schedule: string;
+          sessionId: string;
+          title: string;
+          viewAll: string;
+        };
       };
       settings: {
         defaults: {
@@ -765,6 +785,24 @@ declare module 'i18next' {
           deactivate: string;
           description: string;
         };
+        editModal: {
+          bioDescription: string;
+          fullName: string;
+          phoneNumber: string;
+          saveChanges: string;
+          title: string;
+        };
+        toast: {
+          avatarUploaded: string;
+          avatarUploadFailed: string;
+          fullNameRequired: string;
+          profileUpdated: string;
+          profileUpdateFailed: string;
+        };
+        validation: {
+          avatarFileSize: string;
+          avatarFileType: string;
+        };
       };
       appointments: {
         title: string;
@@ -815,6 +853,19 @@ declare module 'i18next' {
           today: string;
           upcoming: string;
         };
+        countdown: {
+          daysShort: string;
+          hoursShort: string;
+          in: string;
+          minutesShort: string;
+          startsIn: string;
+        };
+        emptySearch: string;
+        emptyTab: string;
+        joinCall: string;
+        now: string;
+        openPatientConversation: string;
+        todayTimeline: string;
       };
       schedules: {
         title: string;
@@ -847,6 +898,16 @@ declare module 'i18next' {
           slotType: string;
           costOptional: string;
           createSlot: string;
+        };
+        toast: {
+          cancelError: string;
+          cancelSuccess: string;
+          createSuccess: string;
+        };
+        validation: {
+          invalidCost: string;
+          invalidRange: string;
+          missingDateTime: string;
         };
       };
       consultations: {
@@ -924,7 +985,53 @@ declare module 'i18next' {
             patient: string;
             riskLevel: string;
             summary: string;
+            contentPlaceholder: string;
+            description: string;
+            doctorContent: string;
+            notEligible: string;
+            preview: string;
+            previewTitle: string;
+            retinalImages: string;
+            sharing: string;
+            success: string;
+            title: string;
           };
+          aiAnnotated: string;
+          aiCaseSnapshot: string;
+          cancelSessionTitle: string;
+          characterLimitReached: string;
+          closeSessionOverview: string;
+          completeConsultationTitle: string;
+          completedPlaceholder: string;
+          confidence: string;
+          encryptionNoticeShort: string;
+          imageAttached: string;
+          invalidSchedule: string;
+          join: string;
+          na: string;
+          noOriginalImage: string;
+          original: string;
+          originalRetinalImage: string;
+          patientTyping: string;
+          pendingImage: string;
+          previewCompletedEmpty: string;
+          previewImageAttachment: string;
+          previewLocked: string;
+          previewNewMessage: string;
+          previewPreVisitEmpty: string;
+          previewScanAttachment: string;
+          previewUnavailable: string;
+          preVisitPlaceholder: string;
+          readyToShareImage: string;
+          risk: string;
+          saveResult: {
+            aiSummary: string;
+            doctorSays: string;
+            finalDiagnosis: string;
+          };
+          sharedImage: string;
+          unknown: string;
+          unreadActivity: string;
         };
       };
       patients: {
@@ -961,6 +1068,13 @@ declare module 'i18next' {
         };
         emptyTitle: string;
         message: string;
+        chart: {
+          oneMonthAgo: string;
+          thisMonth: string;
+          twoMonthsAgo: string;
+        };
+        emptySearch: string;
+        lastDiagnosis: string;
       };
       slotManagement: {
         title: string;
@@ -1036,6 +1150,17 @@ declare module 'i18next' {
           failedGenerate: string;
           failedDeleteTemplate: string;
         };
+        pricing: {
+          allowedRangeHint: string;
+          allowedRangeLabel: string;
+          costRequired: string;
+          experienceLabel: string;
+          outOfRange: string;
+          positiveIntegerOnly: string;
+          rangeLoadFailed: string;
+          rangeLoading: string;
+          suggestedHint: string;
+        };
       };
       contract: {
         title: string;
@@ -1091,11 +1216,134 @@ declare module 'i18next' {
             signStamp: string;
             captureUpload: string;
           };
+          uploadSuccess: string;
         };
         commission: string;
+        actualSalary: string;
+        pendingDeal: string;
       };
       screeningReview: {
         note: string;
+        aiDisclaimer: string;
+        aiModel: string;
+        attentionNeeded: string;
+        backToScreenings: string;
+        boundingboxLabel: string;
+        captured: string;
+        demographics: string;
+        detectedFindings: string;
+        device: string;
+        generateReport: string;
+        imageDetails: string;
+        invalidIdentifier: string;
+        loadFailed: string;
+        loading: string;
+        magnification: string;
+        medicalConditions: string;
+        medicalConditionsHint: string;
+        modal: {
+          aiSummary: string;
+          clinicalFindings: string;
+          clinicalFindingsHint: string;
+          clinicalFindingsPlaceholder: string;
+          completeDiagnosis: string;
+          confidence: string;
+          confirmAndSave: string;
+          description: string;
+          diagnosisCode: string;
+          diagnosisCore: string;
+          exportingPdf: string;
+          exportPdf: string;
+          followUpDate: string;
+          linkingSession: string;
+          noAiSummary: string;
+          recommendations: string;
+          referralHint: string;
+          referralRequired: string;
+          riskLevel: string;
+          selectRecommendationTemplate: string;
+          selectTreatmentTemplate: string;
+          severityLevel: string;
+          treatmentAdvice: string;
+          treatmentPlan: string;
+          urgentCase: string;
+          urgentCaseHint: string;
+        };
+        modalityColorFundus: string;
+        noSelectedFundusImage: string;
+        noStructuredFindings: string;
+        notFound: string;
+        original: string;
+        overlayEditHint: string;
+        previousScans: string;
+        previousScansHint: string;
+        quality: string;
+        qualityGood: string;
+        qualityOptimal: string;
+        qualityPoor: string;
+        qualityUnknown: string;
+        referral: {
+          monitor: string;
+          recommended: string;
+          routine: string;
+        };
+        risk: {
+          critical: string;
+          high: string;
+          low: string;
+          moderate: string;
+          none: string;
+        };
+        saveButton: string;
+        screeningAi: string;
+        selectImageForDetails: string;
+        sessionLinkLoading: string;
+        share: {
+          failed: string;
+          header: string;
+          noImages: string;
+          selectImageTitle: string;
+          sendSelected: string;
+          success: string;
+        };
+        shareButton: string;
+        status: {
+          finalizedLocked: string;
+        };
+        subtitle: string;
+        tabs: {
+          currentExam: string;
+          medicalHistory: string;
+          patientSummary: string;
+          previousReports: string;
+        };
+        title: string;
+        toast: {
+          downloadReportError: string;
+          downloadReportSuccess: string;
+          saveFailed: string;
+          saveSuccess: string;
+        };
+        toolbar: {
+          addNewBox: string;
+          deleteBox: string;
+          editOverlay: string;
+          exitOverlayEdit: string;
+          fullscreen: string;
+          measure: string;
+          pan: string;
+          reset: string;
+          resetAiBoxes: string;
+          undo: string;
+          zoomIn: string;
+          zoomOut: string;
+        };
+        validation: {
+          invalidLinkedSession: string;
+          missingDoctorIdentity: string;
+          noLinkedSession: string;
+          requiredDiagnosisAndFindings: string;
+        };
       };
       screenings: {
         confidence: {
@@ -1135,8 +1383,25 @@ declare module 'i18next' {
           flagged: string;
           rejected: string;
           reviewed: string;
+          pendingReview: string;
         };
         title: string;
+        aiPrediction: string;
+        consultationDate: string;
+        createdDate: string;
+        empty: {
+          default: string;
+          filtered: string;
+          title: string;
+        };
+        loadError: string;
+        loading: string;
+        needsAttention: string;
+        openChat: string;
+        reviewNow: string;
+        searchPlaceholder: string;
+        subtitle: string;
+        toggleSortOrder: string;
       };
       wallet: {
         balance: string;
@@ -1148,6 +1413,8 @@ declare module 'i18next' {
           payment: string;
           refund: string;
           transfer: string;
+          transaction: string;
+          withdrawal: string;
         };
         transactions: string;
         withdraw: {
@@ -1156,9 +1423,54 @@ declare module 'i18next' {
             failed: string;
             pending: string;
             processing: string;
+            completed: string;
           };
         };
         yourNote: string;
+        actions: {
+          createWithdrawRequest: string;
+        };
+        adminNote: string;
+        consultationIncome: string;
+        consultationIncomeShort: string;
+        contractNumberPlaceholder: string;
+        contractReference: string;
+        loadError: string;
+        noTransactions: string;
+        noWithdrawRequests: string;
+        pendingWithdrawRequests: string;
+        requestsProcessing: string;
+        submittedAt: string;
+        subtitle: string;
+        thisMonthIn: string;
+        thisMonthInDescription: string;
+        toast: {
+          invalidWithdrawAmount: string;
+          missingBankBin: string;
+          missingBankInfo: string;
+          withdrawExceedsBalance: string;
+          withdrawSubmitFailed: string;
+          withdrawSubmitted: string;
+        };
+        transactionsInMonth: string;
+        transferReference: string;
+        withdrawModal: {
+          accountHolderLabel: string;
+          accountHolderPlaceholder: string;
+          accountNumberLabel: string;
+          accountNumberPlaceholder: string;
+          amountLabel: string;
+          amountPlaceholder: string;
+          bankLabel: string;
+          bankPlaceholder: string;
+          bankSearchPlaceholder: string;
+          contractLabel: string;
+          noBankFound: string;
+          noteLabel: string;
+          notePlaceholder: string;
+          title: string;
+        };
+        withdrawRequestsTitle: string;
       };
     };
     MedicalTerms: {
@@ -1597,8 +1909,12 @@ declare module 'i18next' {
         totalScreeningsTrend: string;
         aiModelVersion: string;
         fdaCleared: string;
+        servicesOnline: string;
+        servicesChecked: string;
         avgProcessing: string;
         avgProcessingDetail: string;
+        currentState: string;
+        lastCheckText: string;
       };
       componentStatus: {
         title: string;
@@ -1610,18 +1926,22 @@ declare module 'i18next' {
         aiCore: {
           name: string;
           description: string;
+          region: string;
         };
         imageApi: {
           name: string;
           description: string;
+          region: string;
         };
         providerPortal: {
           name: string;
           description: string;
+          region: string;
         };
         patientStore: {
           name: string;
           description: string;
+          region: string;
         };
       };
       trust: {
@@ -1711,6 +2031,12 @@ declare module 'i18next' {
         accuracyRate: string;
         countriesReached: string;
         nonProfit: string;
+      };
+      liveStats: {
+        ophthalmologists: string;
+        organisations: string;
+        availableSlots: string;
+        resources: string;
       };
     };
     EthicsPrivacy: {
@@ -1862,6 +2188,17 @@ declare module 'i18next' {
         secondary: string;
       };
     };
+    PatientAnalysisDetail: {
+      page: {
+        title: string;
+      };
+      summary: {
+        title: string;
+      };
+      actions: {
+        backToReview: string;
+      };
+    };
     PatientReview: {
       page: {
         title: string;
@@ -1902,6 +2239,7 @@ declare module 'i18next' {
         startNewAnalysis: string;
       };
       findingsDetected: string;
+      findingsMore: string;
       backToDashboard: string;
       sessionLabel: string;
       actions: {
@@ -1912,6 +2250,7 @@ declare module 'i18next' {
         findSpecialist: string;
         askAuraAssistant: string;
         downloadReport: string;
+        downloadingReport: string;
         newScan: string;
         viewAllResources: string;
       };
@@ -2680,6 +3019,7 @@ declare module 'i18next' {
         title: string;
         preAnalyzeDescription: string;
         analyzing: string;
+        waitingOverlay: string;
       };
       actions: {
         preparingSession: string;
@@ -2979,6 +3319,7 @@ declare module 'i18next' {
       sidebar: {
         dashboard: string;
         patients: string;
+        organisation: string;
         historicalData: string;
         calendar: string;
         screening: string;
@@ -2990,8 +3331,1122 @@ declare module 'i18next' {
         reports: string;
         settings: string;
       };
+      common: {
+        cancel: string;
+        close: string;
+        currencyVnd: string;
+        daysOfWeek: {
+          friday: string;
+          monday: string;
+          saturday: string;
+          sunday: string;
+          thursday: string;
+          tuesday: string;
+          wednesday: string;
+        };
+        gender: {
+          female: string;
+          male: string;
+        };
+        fileSizeMb: string;
+        idLabel: string;
+        loading: string;
+        next: string;
+        notAvailable: string;
+        previous: string;
+        processing: string;
+        refresh: string;
+        today: string;
+        yearsAbbr: string;
+      };
+      header: {
+        actions: {
+          toggleTheme: string;
+        };
+        breadcrumb: {
+          pages: string;
+        };
+        defaultPageName: string;
+        searchPlaceholder: string;
+      };
+      walkInPatientModal: {
+        actions: {
+          createPatient: string;
+        };
+        form: {
+          address: string;
+          addressPlaceholder: string;
+          citizenId: string;
+          citizenIdPlaceholder: string;
+          dateOfBirth: string;
+          fullName: string;
+          fullNamePlaceholder: string;
+          gender: string;
+          genderOther: string;
+          phoneNumber: string;
+          phonePlaceholder: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        scan: {
+          action: string;
+          cancel: string;
+          hint: string;
+        };
+        toast: {
+          createSuccess: string;
+          invalidQr: string;
+          qrExtractSuccess: string;
+        };
+      };
+      calendar: {
+        actions: {
+          completeVisit: string;
+          noShow: string;
+          scanQrCheckIn: string;
+          startConsultation: string;
+        };
+        pageName: string;
+        patient: {
+          fallback: string;
+        };
+        qrModal: {
+          subtitle: string;
+          title: string;
+        };
+        states: {
+          loadingAppointments: string;
+          noAppointments: string;
+          terminal: {
+            cancelled: string;
+            completed: string;
+            noShow: string;
+          };
+        };
+        stats: {
+          checkedIn: string;
+          inProgress: string;
+          pending: string;
+          total: string;
+        };
+        status: {
+          cancelled: string;
+          checkedIn: string;
+          completed: string;
+          confirmed: string;
+          inProgress: string;
+          noShow: string;
+          pending: string;
+        };
+        summary: {
+          records: string;
+        };
+        toast: {
+          consultationStarted: string;
+          invalidQr: string;
+          markedNoShow: string;
+          qrCheckInSuccess: string;
+          qrNotBelongOrganisation: string;
+          qrNotMatchAppointment: string;
+          visitCompleted: string;
+        };
+      };
+      contract: {
+        actions: {
+          cancelReupload: string;
+          downloadTemplate: string;
+          downloadTemplateHint: string;
+          openOriginalFile: string;
+          reupload: string;
+          uploadSignedContract: string;
+          viewTemplate: string;
+          viewTemplateHint: string;
+        };
+        fields: {
+          contactPerson: string;
+          createdAt: string;
+          email: string;
+          organisationType: string;
+          template: string;
+          type: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        sections: {
+          actions: string;
+          contractInfo: string;
+          organisationAccount: string;
+          signedContract: string;
+          signedDescriptionActive: string;
+          signedDescriptionPending: string;
+          uploadDescription: string;
+          uploadSignedContract: string;
+        };
+        status: {
+          active: string;
+          pendingReview: string;
+          pendingSignature: string;
+        };
+        states: {
+          loading: string;
+          noContractDescription: string;
+          noContractTitle: string;
+        };
+        steps: {
+          captureAndUpload: string;
+          downloadAndPrint: string;
+          signAndStamp: string;
+        };
+        summary: {
+          contractCode: string;
+          redirectIn: string;
+        };
+        toast: {
+          downloadTemplateFailed: string;
+          fileTooLarge: string;
+          invalidFileType: string;
+        };
+        upload: {
+          activatedDescription: string;
+          activatedTitle: string;
+          activeContractHint: string;
+          awaitingAdminDescription: string;
+          awaitingAdminTitle: string;
+          dropzonePrefix: string;
+          pdfUploaded: string;
+          previewAlt: string;
+          selectFileAction: string;
+          signedContractAlt: string;
+          supportedFormats: string;
+        };
+      };
+      dashboard: {
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        identity: {
+          defaultAdmin: string;
+        };
+        labels: {
+          remainingAiQuota: string;
+          utilizationRateToday: string;
+        };
+        pageName: string;
+        sections: {
+          appointmentStatus: {
+            subtitle: string;
+            title: string;
+          };
+          utilization: {
+            subtitle: string;
+            title: string;
+          };
+        };
+        states: {
+          unavailable: string;
+        };
+        stats: {
+          pendingConfirmed: {
+            change: string;
+            title: string;
+          };
+          remainingAiQuota: {
+            change: string;
+            title: string;
+          };
+          totalAppointments: {
+            change: string;
+            title: string;
+          };
+          utilizationRate: {
+            change: string;
+            title: string;
+          };
+        };
+        status: {
+          cancelled: string;
+          completed: string;
+          confirmed: string;
+          noShow: string;
+          pending: string;
+        };
+        toast: {
+          loadFailed: string;
+        };
+      };
+      analytics: {
+        pageName: string;
+        header: {
+          title: string;
+          subtitle: string;
+        };
+        eye: {
+          leftOd: string;
+          rightOd: string;
+        };
+        error: {
+          analysisUnavailable: string;
+          apiKeyMissing: string;
+          imageFetchFallback: string;
+          quotaExceeded: string;
+        };
+        fallback: {
+          hardExudates: {
+            description: string;
+            name: string;
+          };
+          microaneurysms: {
+            description: string;
+            name: string;
+          };
+        };
+      };
+      settings: {
+        actions: {
+          saveChanges: string;
+          saving: string;
+        };
+        avatar: {
+          alt: string;
+          hint: string;
+          uploadAction: string;
+        };
+        form: {
+          aboutDescription: string;
+          address: string;
+          contactEmail: string;
+          contactFullName: string;
+          contactPhone: string;
+          descriptionPlaceholder: string;
+          licenseNumber: string;
+          organisationName: string;
+          taxCode: string;
+          type: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        sections: {
+          organisationInfo: string;
+        };
+        states: {
+          loadFailed: string;
+          loading: string;
+          sectionInProgress: string;
+        };
+        tabs: {
+          clinic: string;
+          data: string;
+          notifications: string;
+          security: string;
+          users: string;
+        };
+        toast: {
+          avatarUploadFailed: string;
+          avatarUploadSuccess: string;
+          updateFailed: string;
+          updateSuccess: string;
+        };
+      };
+      reports: {
+        actions: {
+          exportCsv: string;
+        };
+        export: {
+          csvHeader: string;
+          fileName: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        metrics: {
+          averageConfidence: string;
+          highRiskCases: string;
+          lowRiskCases: string;
+          totalScreenings: string;
+        };
+        monthlyBreakdown: {
+          title: string;
+        };
+        pageName: string;
+        riskDistribution: {
+          high: string;
+          low: string;
+          moderate: string;
+          title: string;
+        };
+        table: {
+          high: string;
+          low: string;
+          moderate: string;
+          month: string;
+          noData: string;
+          total: string;
+        };
+      };
+      screening: {
+        actions: {
+          buyMoreQuota: string;
+          buyQuota: string;
+          topUpWallet: string;
+        };
+        badges: {
+          remainingQuota: string;
+          remainingQuotaTitle: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        launch: {
+          clinicalAdvisory: {
+            description: string;
+            title: string;
+          };
+          includedScans: string;
+          readyDescription: string;
+          title: string;
+        };
+        navigation: {
+          cancelAndReturn: string;
+          executingAiModel: string;
+          proceedToReview: string;
+          startAiAnalysis: string;
+          transferringFiles: string;
+        };
+        pageName: string;
+        quotaBanner: {
+          description: string;
+          title: string;
+        };
+        quotaModal: {
+          creatingPayment: string;
+          quantityLabel: string;
+          title: string;
+          topUpAction: string;
+          totalPaymentLabel: string;
+          unitPriceLabel: string;
+          walletBalanceLabel: string;
+          walletInsufficientPrefix: string;
+          walletInsufficientSuffix: string;
+          walletSufficient: string;
+        };
+        stepper: {
+          launchAi: string;
+          reviewAndSave: string;
+          selectPatient: string;
+          uploadImages: string;
+        };
+        toast: {
+          buyQuotaFailed: string;
+          buyQuotaSuccess: string;
+          createSessionFailed: string;
+          createSessionFailedGeneric: string;
+          createTopUpFailed: string;
+          invalidTopUpAmount: string;
+          noPatientSelected: string;
+          paymentLinkUnavailable: string;
+          quotaExhausted: string;
+          quotaUnitPriceUnavailable: string;
+          walletInsufficient: string;
+        };
+        quality: {
+          acceptable: string;
+          blurry: string;
+          croppedEdges: string;
+          notFundus: string;
+          optimal: string;
+          overexposed: string;
+          poor: string;
+          tooDark: string;
+          validationServiceError: string;
+        };
+        upload: {
+          analyzingQuality: string;
+          dropzone: {
+            supportedFormats: string;
+            title: string;
+          };
+          inventoryFiles: string;
+          inventoryTitle: string;
+          subtitle: string;
+          title: string;
+        };
+        wallet: {
+          topUpDescription: string;
+        };
+      };
+      screeningResult: {
+        actions: {
+          analyzing: string;
+          backToScreening: string;
+          downloadPdf: string;
+          downloadPdfDisabledTitle: string;
+          downloadPdfTitle: string;
+          generatingPdf: string;
+          printPdf: string;
+          reanalyze: string;
+          refining: string;
+          saved: string;
+          saveRecord: string;
+          saving: string;
+          share: string;
+          shareDisabledTitle: string;
+          shareResultTitle: string;
+        };
+        aiResults: {
+          emptyState: string;
+          primaryFinding: string;
+          title: string;
+        };
+        badges: {
+          viewOnly: string;
+        };
+        confirmSave: {
+          cancelLabel: string;
+          confirmLabel: string;
+          message: string;
+          title: string;
+        };
+        editable: {
+          consultationHint: string;
+          consultationPlaceholder: string;
+          consultationTitle: string;
+          diagnosisTitle: string;
+          summaryTitle: string;
+        };
+        header: {
+          newDraft: string;
+          patientLabel: string;
+          sessionLabel: string;
+          title: string;
+        };
+        network: {
+          consultationNote: string;
+          noAbnormalFindings: string;
+          notProvidedYet: string;
+          riskLevel: string;
+          session: string;
+          summary: string;
+          title: string;
+          topFindings: string;
+        };
+        pageName: string;
+        patientFallback: string;
+        riskCard: {
+          title: string;
+        };
+        sessionInfo: {
+          createdAt: string;
+          imageCount: string;
+          lastAssessed: string;
+          model: string;
+          sessionCode: string;
+          title: string;
+        };
+        shareModal: {
+          email: {
+            attachPdf: string;
+            attachRetinalImages: string;
+            auraHint: string;
+            placeholder: string;
+            recipientLabel: string;
+            send: string;
+            walkInHint: string;
+          };
+          network: {
+            intro: string;
+            noDraft: string;
+            post: string;
+            riskLabel: string;
+            summaryLabel: string;
+          };
+          tabs: {
+            email: string;
+            network: string;
+          };
+          title: string;
+        };
+        states: {
+          loading: string;
+          noAiDraft: string;
+          notFound: string;
+        };
+        toast: {
+          aiNoPredictionData: string;
+          analyzeBeforeSave: string;
+          analyzeCompleted: string;
+          analyzeFailed: string;
+          analyzingAi: string;
+          downloadPdfFailed: string;
+          downloadPdfSuccess: string;
+          loadResultFailed: string;
+          noteRequiredBeforeSave: string;
+          quotaExhaustedForAnalyze: string;
+          saveBeforePdf: string;
+          saveFailed: string;
+          saveSuccess: string;
+          sessionNotFoundForAi: string;
+          shareEmailFailed: string;
+          shareEmailSuccess: string;
+          shareNetworkFailed: string;
+          shareNetworkSuccess: string;
+          shareSelectAtLeastOne: string;
+          shareWalkInEmailRequired: string;
+        };
+        summary: {
+          high: {
+            default: string;
+            withPrimary: string;
+          };
+          moderate: {
+            default: string;
+            withPrimary: string;
+          };
+          low: {
+            default: string;
+            withPrimary: string;
+          };
+        };
+        findings: {
+          primaryOnly: string;
+          primaryAndRelated: string;
+          relatedOnly: string;
+          manualAnnotations: string;
+        };
+      };
+      wallet: {
+        actions: {
+          buy: string;
+          confirmPurchase: string;
+          creatingPayment: string;
+          topUpAmount: string;
+        };
+        alert: {
+          billingLoadFailedTitle: string;
+          refreshHint: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        purchase: {
+          customPackage: string;
+          packageCredits: string;
+          priceUnavailable: string;
+          title: string;
+        };
+        purchaseModal: {
+          balanceInsufficientPrefix: string;
+          balanceSufficient: string;
+          quotaAmount: string;
+          title: string;
+          totalCost: string;
+          unitPrice: string;
+          walletBalance: string;
+        };
+        sources: {
+          monthlyContract: string;
+          monthlySpent: string;
+          purchased: string;
+          title: string;
+          unitPrice: string;
+        };
+        stats: {
+          balance: string;
+          monthlyIn: string;
+          monthlyUsed: string;
+          remainingQuota: string;
+        };
+        toast: {
+          createTopUpFailed: string;
+          customQuotaRange: string;
+          insufficientBalance: string;
+          invalidQuotaAmount: string;
+          paymentLinkUnavailable: string;
+          purchaseQuotaFailed: string;
+          purchaseQuotaSuccess: string;
+          unitPriceUnavailable: string;
+        };
+        topUpDescription: string;
+        transactionTypes: {
+          bonus: string;
+          deposit: string;
+          payment: string;
+          refund: string;
+          transaction: string;
+          transfer: string;
+          withdrawal: string;
+        };
+        transactions: {
+          empty: string;
+          loading: string;
+          pageIndicator: string;
+          quotaPurchase: string;
+          title: string;
+        };
+      };
+      recentPatients: {
+        actions: {
+          viewAll: string;
+        };
+        confidenceLabel: string;
+        status: {
+          pending: string;
+          reviewed: string;
+        };
+        title: string;
+      };
+      patients: {
+        actions: {
+          clear: string;
+          editContact: string;
+          moreForPatient: string;
+          retry: string;
+          screenNow: string;
+          viewHistory: string;
+          walkInPatient: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        pageName: string;
+        search: {
+          placeholder: string;
+        };
+        states: {
+          loadFailed: string;
+          noMatch: string;
+        };
+        summary: {
+          foundPatients: string;
+        };
+        table: {
+          action: string;
+          lastScreening: string;
+          patient: string;
+          risk: string;
+          type: string;
+        };
+        toast: {
+          loadFailed: string;
+        };
+        types: {
+          auraPartner: string;
+          walkIn: string;
+        };
+      };
+      updatePatientModal: {
+        badges: {
+          auraAccount: string;
+        };
+        form: {
+          address: string;
+          addressPlaceholder: string;
+          bmi: string;
+          bmiPlaceholder: string;
+          citizenId: string;
+          citizenIdPlaceholder: string;
+          dateOfBirth: string;
+          diseaseHistory: string;
+          diseaseHistoryPlaceholder: string;
+          fullName: string;
+          gender: string;
+          genderOther: string;
+          phoneNumber: string;
+          phonePlaceholder: string;
+        };
+        header: {
+          title: string;
+        };
+        readOnly: {
+          address: string;
+          age: string;
+          citizenId: string;
+          dateOfBirth: string;
+          email: string;
+          fullName: string;
+          gender: string;
+          phone: string;
+        };
+        sections: {
+          administrativeInfo: string;
+          medicalInfo: string;
+          personalInfo: string;
+          personalInfoManagedByAura: string;
+        };
+        toast: {
+          noChanges: string;
+          patientNotFound: string;
+          updateFailed: string;
+          updateSuccess: string;
+        };
+      };
+      patientHistory: {
+        actions: {
+          backToPatients: string;
+          openReviewPage: string;
+        };
+        detail: {
+          createdAt: string;
+          modelVersion: string;
+          sessionStatus: string;
+          subtitle: string;
+          title: string;
+        };
+        header: {
+          subtitle: string;
+          title: string;
+        };
+        images: {
+          alt: {
+            boxedRetinalImage: string;
+            heatmap: string;
+            heatmapBackground: string;
+            retinalImage: string;
+            thumbnail: string;
+          };
+          boxed: string;
+          empty: string;
+          heatmap: string;
+          imageIndex: string;
+          original: string;
+          selectToPreview: string;
+          title: string;
+        };
+        pageName: string;
+        record: {
+          findingsNote: string;
+          noFindings: string;
+          noSummary: string;
+          notSavedYet: string;
+          riskLevel: string;
+          savedAt: string;
+          summary: string;
+          title: string;
+        };
+        risk: {
+          high: string;
+          low: string;
+          moderate: string;
+        };
+        sessions: {
+          count: string;
+          empty: string;
+          images: string;
+          title: string;
+        };
+        states: {
+          detailLoadFailed: string;
+          selectSession: string;
+        };
+        status: {
+          completed: string;
+          pending: string;
+          saved: string;
+        };
+      };
+      analysisSidebar: {
+        analysis: {
+          complete: string;
+          fallbackMessage: string;
+          idleMessage: string;
+          processing: string;
+          rerun: string;
+          startAction: string;
+        };
+        findings: {
+          noneDetected: string;
+          title: string;
+        };
+        footer: {
+          assistiveNotice: string;
+          export: string;
+          report: string;
+        };
+        layers: {
+          exudates: string;
+          hemorrhages: string;
+          title: string;
+          vesselSegmentation: string;
+        };
+        risk: {
+          referralRecommended: string;
+          title: string;
+          tooltip: string;
+        };
+      };
+      boxLabelSelector: {
+        actions: {
+          deleteBox: string;
+        };
+        confidence: {
+          label: string;
+        };
+        custom: {
+          apply: string;
+          label: string;
+          placeholder: string;
+        };
+        header: {
+          editAi: string;
+          manual: string;
+        };
+        search: {
+          noResults: string;
+          placeholder: string;
+        };
+        tabs: {
+          custom: string;
+          diseaseList: string;
+        };
+        urgency: {
+          caution: string;
+          critical: string;
+          info: string;
+          normal: string;
+          warning: string;
+        };
+      };
+      imageGallery: {
+        actions: {
+          upload: string;
+        };
+        count: {
+          one: string;
+          other: string;
+        };
+        dropzone: {
+          hint: string;
+        };
+      };
+      imageViewer: {
+        defaultImageName: string;
+        scaleLabel: string;
+        scaleMicrometer: string;
+      };
+      retinalViewer: {
+        actions: {
+          close: string;
+          delete: string;
+          deleteSelectedBox: string;
+          draw: string;
+          drawNewBox: string;
+          hideBoxes: string;
+          select: string;
+          selectEditBoxes: string;
+          showBoxes: string;
+          undo: string;
+        };
+        boxCount: {
+          one: string;
+          other: string;
+        };
+        heatmap: {
+          brushSize: string;
+          clear: string;
+          dragToolkit: string;
+          editTool: string;
+          eraserTool: string;
+          hide: string;
+          intensity: string;
+          intensityHigh: string;
+          intensityLow: string;
+          intensityMedium: string;
+          label: string;
+          opacity: string;
+          opacityShort: string;
+          show: string;
+          threshold: string;
+          thresholdShort: string;
+          undoLastStroke: string;
+        };
+        image: {
+          altHeatmapOverlay: string;
+          altRetinalScan: string;
+        };
+        imageCounter: string;
+        manualCount: string;
+        title: string;
+      };
+      toolsSidebar: {
+        brightnessContrast: string;
+        comparePrevious: string;
+        keyboardShortcuts: string;
+        measurement: string;
+        panTool: string;
+        resetView: string;
+        zoomIn: string;
+        zoomOut: string;
+      };
+      slotManagement: {
+        actions: {
+          block: string;
+          complete: string;
+          createTemplate: string;
+          delete: string;
+          generateSlots: string;
+          noShow: string;
+          unblock: string;
+        };
+        common: {
+          free: string;
+        };
+        confirmDelete: {
+          cancelLabel: string;
+          confirmLabel: string;
+          message: string;
+          title: string;
+        };
+        generate: {
+          capacityOption: string;
+          fromDate: string;
+          selectTemplate: string;
+          subtitle: string;
+          template: string;
+          title: string;
+          toDate: string;
+          useCurrentWeek: string;
+        };
+        navigation: {
+          jumpTo: string;
+        };
+        pageName: string;
+        quickPicker: {
+          createFirst: string;
+          optionMeta: string;
+          subtitle: string;
+          title: string;
+        };
+        states: {
+          generateFromTemplate: string;
+          loadingSlots: string;
+          loadingTemplates: string;
+          noOrganisationLinked: string;
+          noSlotsThisDay: string;
+          noTemplates: string;
+        };
+        stats: {
+          available: string;
+          blocked: string;
+          booked: string;
+          totalThisWeek: string;
+        };
+        status: {
+          available: string;
+          blocked: string;
+          booked: string;
+          cancelled: string;
+          completed: string;
+          expired: string;
+          noShow: string;
+          reserved: string;
+        };
+        summary: {
+          dayBooked: string;
+          daySlots: string;
+        };
+        table: {
+          actions: string;
+          capacity: string;
+          deposit: string;
+          status: string;
+          time: string;
+        };
+        tabs: {
+          dailySlots: string;
+          generateSchedule: string;
+          templateSetup: string;
+        };
+        template: {
+          createTitle: string;
+          dayOfWeek: string;
+          depositFee: string;
+          depositHint: string;
+          depositPlaceholder: string;
+          depositValue: string;
+          endTime: string;
+          existingTitle: string;
+          maxCapacity: string;
+          slotDuration: string;
+          startTime: string;
+          templateSummary: string;
+        };
+        toast: {
+          generateSlotsFailed: string;
+          generatedSlots: string;
+          invalidDateRange: string;
+          invalidMaxCapacity: string;
+          invalidSlotDuration: string;
+          invalidTimeRange: string;
+          selectTemplateFirst: string;
+          slotStatusUpdateFailed: string;
+          slotStatusUpdated: string;
+          templateCreateFailed: string;
+          templateCreated: string;
+          templateDeleteFailed: string;
+          templateDeleted: string;
+        };
+      };
     };
     SystemAdmin: {
+      common: {
+        systemAdmin: string;
+        noDataAvailable: string;
+        loadingData: string;
+        notAvailable: string;
+        notProvided: string;
+        noNotes: string;
+        doctor: string;
+        createdAt: string;
+        reviewedAt: string;
+        adminNote: string;
+        status: {
+          pending: string;
+          approved: string;
+          rejected: string;
+          cancelled: string;
+          processing: string;
+          completed: string;
+          failed: string;
+        };
+        actions: {
+          refresh: string;
+          approve: string;
+          reject: string;
+          cancel: string;
+          processing: string;
+          confirmApprove: string;
+          confirmReject: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          label: string;
+          page: string;
+        };
+      };
+      actions: {
+        export: string;
+      };
+      header: {
+        breadcrumb: {
+          pages: string;
+        };
+        searchPlaceholder: string;
+        toggleTheme: string;
+      };
       sidebar: {
         dashboard: string;
         groups: {
@@ -3027,6 +4482,2161 @@ declare module 'i18next' {
           'audit-logs': string;
           settings: string;
           'aura-network': string;
+        };
+      };
+      dashboard: {
+        page: {
+          title: string;
+          description: string;
+        };
+        actions: {
+          exporting: string;
+          exportExcel: string;
+          exportPdf: string;
+        };
+        states: {
+          metricsLoadError: string;
+        };
+        common: {
+          noData: string;
+        };
+        cards: {
+          doctors: {
+            title: string;
+            description: string;
+          };
+          organisations: {
+            title: string;
+            description: string;
+          };
+          patients: {
+            title: string;
+            description: string;
+          };
+          liveConsultations: {
+            title: string;
+            description: string;
+          };
+          walletTopUps: {
+            title: string;
+            description: string;
+          };
+          consultationCommission: {
+            title: string;
+            description: string;
+          };
+        };
+        charts: {
+          common: {
+            walletTopUps: string;
+            consultationCommission: string;
+          };
+          monthlyRevenue: {
+            title: string;
+            description: string;
+          };
+          paymentMethods: {
+            title: string;
+            description: string;
+          };
+          dailyRevenue: {
+            title: string;
+            description: string;
+          };
+        };
+        quotaUsage: {
+          title: string;
+          description: string;
+          filters: {
+            from: string;
+            to: string;
+          };
+          states: {
+            loadError: string;
+            empty: string;
+          };
+          summary: {
+            usedSlots: string;
+            quotaCapacity: string;
+            averageUtilization: string;
+            nearLimitDays: string;
+          };
+          chart: {
+            used: string;
+            remaining: string;
+          };
+        };
+        quotas: {
+          day7: string;
+          day14: string;
+          day30: string;
+        };
+        pendingActions: {
+          title: string;
+          description: string;
+          items: {
+            doctorProfileReviews: {
+              title: string;
+              subtitle: string;
+            };
+            withdrawalRequests: {
+              title: string;
+              subtitle: string;
+            };
+            organisationOnboarding: {
+              title: string;
+              subtitle: string;
+            };
+          };
+        };
+        systemStatus: {
+          title: string;
+          api: string;
+          database: string;
+          operational: string;
+          issue: string;
+          connected: string;
+          unreachable: string;
+        };
+        topDoctors: {
+          title: string;
+          description: string;
+          reviews: string;
+          noRatings: string;
+          states: {
+            empty: string;
+          };
+        };
+        topOrganisations: {
+          title: string;
+          description: string;
+          states: {
+            empty: string;
+          };
+        };
+        export: {
+          sheetName: string;
+          title: string;
+          subtitle: string;
+          generatedBy: string;
+          columns: {
+            section: string;
+            metric: string;
+            value: string;
+          };
+          rows: {
+            section: {
+              users: string;
+              operations: string;
+              pending: string;
+              revenueYtd: string;
+              paymentMethods: string;
+              monthlyRevenue: string;
+              monthlyPlatformCommission: string;
+              dailyRevenue: string;
+              dailyPlatformCommission: string;
+              partTimeSlotQuotaUsage: string;
+            };
+            metric: {
+              doctorsTotal: string;
+              doctorsGrowth: string;
+              organisationsTotal: string;
+              organisationsGrowth: string;
+              patientsTotal: string;
+              patientsGrowth: string;
+              liveConsultationSessions: string;
+              ophthalmologistVerifications: string;
+              withdrawalRequests: string;
+              organisationOnboarding: string;
+              walletTopUpsCalendarYear: string;
+              consultationCommissionCalendarYear: string;
+              quotaUsageDate: string;
+            };
+          };
+        };
+        toasts: {
+          noDataForExport: string;
+          exportSuccess: string;
+          exportError: string;
+          exportPdfSuccess: string;
+          exportPdfError: string;
+        };
+      };
+      ophthalmologists: {
+        page: {
+          title: string;
+          description: string;
+        };
+        actions: {
+          export: string;
+          exporting: string;
+        };
+        status: {
+          available: string;
+          busy: string;
+          unavailable: string;
+          fullyBooked: string;
+        };
+        verification: {
+          verified: string;
+          pending: string;
+          pendingUpdate: string;
+          rejected: string;
+        };
+        toasts: {
+          invalidSalaryForPayout: string;
+          paySalarySuccess: string;
+          paySalaryError: string;
+          employmentTypeUnchanged: string;
+          updateEmploymentSuccess: string;
+          updateEmploymentError: string;
+          deleteSuccess: string;
+          deleteError: string;
+          rejectError: string;
+          noDataForExport: string;
+          exportSuccess: string;
+          exportError: string;
+        };
+        export: {
+          sheetName: string;
+          columns: {
+            ophthalmologistId: string;
+            fullName: string;
+            email: string;
+            phone: string;
+            verificationStatus: string;
+            isVerified: string;
+            activeStatus: string;
+            yearsOfExperience: string;
+            organisation: string;
+            createdAt: string;
+          };
+          values: {
+            yes: string;
+            no: string;
+            active: string;
+            inactive: string;
+          };
+        };
+        table: {
+          columns: {
+            doctor: string;
+            status: string;
+            verification: string;
+            requests: string;
+            monthlyEarnings: string;
+            dealTerms: string;
+            rating: string;
+            actions: string;
+          };
+          values: {
+            yearsExperience: string;
+            pendingRequests: string;
+            totalRequests: string;
+            commissionPending: string;
+          };
+          actions: {
+            viewDetails: string;
+            approveVerification: string;
+            rejectVerification: string;
+            moreActions: string;
+            update: string;
+            deleting: string;
+            delete: string;
+          };
+        };
+        tabs: {
+          overview: string;
+          pendingVerification: string;
+          feedback: string;
+        };
+        stats: {
+          totalDoctors: {
+            title: string;
+            description: string;
+          };
+          availableNow: {
+            title: string;
+            description: string;
+          };
+          pendingVerification: {
+            title: string;
+            description: string;
+          };
+          pendingRequests: {
+            title: string;
+            description: string;
+          };
+          monthlyRevenue: {
+            title: string;
+            description: string;
+          };
+        };
+        overview: {
+          averageRating: {
+            title: string;
+            basedOnReviews: string;
+          };
+          totalConsultations: {
+            title: string;
+            completed: string;
+            totalRequests: string;
+          };
+          pendingPayouts: {
+            title: string;
+            description: string;
+          };
+        };
+        filters: {
+          searchPlaceholder: string;
+          verification: {
+            all: string;
+            pending: string;
+            approved: string;
+            rejected: string;
+          };
+          status: {
+            all: string;
+          };
+        };
+        feedback: {
+          state: {
+            inProgress: string;
+            comingSoon: string;
+          };
+        };
+        requestsBanner: {
+          pendingDoctors: string;
+          hint: string;
+        };
+        states: {
+          noPendingRequests: string;
+          empty: string;
+        };
+        pagination: {
+          showing: string;
+          previous: string;
+          page: string;
+          next: string;
+        };
+        rejectModal: {
+          title: string;
+          reasonLabel: string;
+          reasonPlaceholder: string;
+          hint: string;
+          links: {
+            viewLicense: string;
+            viewDegree: string;
+          };
+          actions: {
+            cancel: string;
+            confirm: string;
+          };
+          validation: {
+            reasonRequired: string;
+          };
+        };
+        detail: {
+          stats: {
+            totalRequests: string;
+            pending: string;
+            monthlyEarnings: string;
+            rating: string;
+          };
+          sections: {
+            bio: string;
+            uploadedDocuments: string;
+            rejectionReason: string;
+            financialSummary: string;
+            contractDealTerms: string;
+          };
+          links: {
+            viewLicense: string;
+            viewDegree: string;
+          };
+          financial: {
+            totalEarnings: string;
+            thisMonth: string;
+            pendingPayout: string;
+          };
+          contract: {
+            employment: string;
+            commission: string;
+            expectedSalary: string;
+            actualSalary: string;
+            pending: string;
+            hoursPerWeek: string;
+            employmentType: {
+              fullTime: string;
+              partTime: string;
+            };
+            actions: {
+              saving: string;
+              save: string;
+              paying: string;
+              paySalaryToWallet: string;
+            };
+          };
+        };
+        deleteModal: {
+          title: string;
+          message: string;
+          confirmLabel: string;
+          cancelLabel: string;
+        };
+      };
+      leaveRequests: {
+        title: string;
+        description: string;
+        summary: {
+          pending: string;
+          approved: string;
+          total: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+          };
+        };
+        states: {
+          empty: string;
+          noActionAvailable: string;
+        };
+        dialog: {
+          approveTitle: string;
+          rejectTitle: string;
+          period: string;
+          adminNoteOptional: string;
+          adminNotePlaceholder: string;
+        };
+        toasts: {
+          approveSuccess: string;
+          approveError: string;
+          rejectSuccess: string;
+          rejectError: string;
+        };
+      };
+      employmentTypeChangeRequests: {
+        title: string;
+        description: string;
+        summary: {
+          pending: string;
+          approved: string;
+          total: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+          };
+        };
+        states: {
+          empty: string;
+          noActionAvailable: string;
+        };
+        dialog: {
+          approveTitle: string;
+          rejectTitle: string;
+          transition: string;
+          adminNoteOptional: string;
+          adminNotePlaceholder: string;
+        };
+        toasts: {
+          approveSuccess: string;
+          approveError: string;
+          rejectSuccess: string;
+          rejectError: string;
+        };
+      };
+      withdrawalRequests: {
+        title: string;
+        description: string;
+        summary: {
+          pendingRequests: string;
+          totalAmountCurrentPage: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+          };
+        };
+        states: {
+          empty: string;
+        };
+        history: {
+          title: string;
+          refresh: string;
+          loading: string;
+          empty: string;
+          withdrawalType: string;
+          columns: {
+            created: string;
+            doctor: string;
+            amount: string;
+            type: string;
+            reference: string;
+            description: string;
+          };
+        };
+        modals: {
+          confirm: {
+            title: string;
+            transferReference: string;
+            processing: string;
+            confirm: string;
+          };
+          reject: {
+            title: string;
+            reasonOptional: string;
+            processing: string;
+          };
+        };
+        requestCard: {
+          payOSLabel: string;
+          amount: string;
+          bankAndAccount: string;
+          bankBinLabel: string;
+          time: string;
+          processedAt: string;
+          contract: string;
+          transferCode: string;
+          doctorNote: string;
+          payOSId: string;
+          reference: string;
+          tooltips: {
+            payoutViaPayOS: string;
+            syncPayOS: string;
+          };
+          actions: {
+            payoutProcessing: string;
+            payoutViaPayOS: string;
+            syncingPayOS: string;
+            syncPayOS: string;
+            confirmManual: string;
+          };
+          warnings: {
+            missingBankBin: string;
+          };
+        };
+        toasts: {
+          confirmSuccess: string;
+          confirmError: string;
+          rejectSuccess: string;
+          rejectError: string;
+          payosPayoutSuccess: string;
+          payosPayoutError: string;
+          payosSyncSuccess: string;
+          payosSyncError: string;
+        };
+      };
+      contractTemplateEditor: {
+        titleCreate: string;
+        titleDetail: string;
+        subtitle: string;
+        status: {
+          active: string;
+          inactive: string;
+        };
+        sections: {
+          templateFile: string;
+          templateMetadata: string;
+        };
+        fields: {
+          title: {
+            label: string;
+            placeholder: string;
+          };
+          type: {
+            label: string;
+            ophthalmologist: string;
+            medicalOrganization: string;
+          };
+          employmentMode: {
+            label: string;
+            fullTime: string;
+            partTime: string;
+          };
+          version: {
+            label: string;
+            placeholder: string;
+          };
+          effectiveDate: {
+            label: string;
+          };
+        };
+        links: {
+          previewUploadedFile: string;
+          openCurrentTemplateFile: string;
+        };
+        actions: {
+          backToTemplates: string;
+          uploadDocxFile: string;
+          updatingStatus: string;
+          deactivate: string;
+          activate: string;
+          createTemplate: string;
+          saveChanges: string;
+        };
+        metadata: {
+          createdAt: string;
+          updatedAt: string;
+          contractsUsingTemplate: string;
+        };
+        errors: {
+          templateNameRequired: string;
+          contractVersionRequired: string;
+          employmentTypeRequired: string;
+          docxRequired: string;
+          saveFailed: string;
+        };
+      };
+      contractTemplates: {
+        title: string;
+        description: string;
+        status: {
+          active: string;
+          inactive: string;
+        };
+        contractType: {
+          ophthalmologist: string;
+          organization: string;
+        };
+        card: {
+          version: string;
+          effective: string;
+          docxTemplate: string;
+          contractsCount: string;
+        };
+        actions: {
+          updatingStatus: string;
+          deactivate: string;
+          activate: string;
+          editTemplate: string;
+          preview: string;
+          duplicate: string;
+          delete: string;
+          newTemplate: string;
+          createNewTemplate: string;
+        };
+        summary: {
+          totalTemplates: string;
+          contractsIssued: string;
+          templateCount: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+            activeOnly: string;
+            inactiveOnly: string;
+          };
+        };
+        states: {
+          loadError: string;
+          loadErrorPrefix: string;
+          unknownError: string;
+          empty: string;
+        };
+        deleteDialog: {
+          title: string;
+          description: string;
+        };
+      };
+      contracts: {
+        title: string;
+        description: string;
+        status: {
+          draft: string;
+          pendingSignature: string;
+          active: string;
+          expired: string;
+          terminated: string;
+          cancelled: string;
+        };
+        upload: {
+          uploaded: string;
+          missing: string;
+        };
+        summary: {
+          totalContracts: string;
+          pendingVerification: string;
+          pendingUpload: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+          };
+        };
+        states: {
+          empty: string;
+          emptyValue: string;
+        };
+        table: {
+          columns: {
+            contractCode: string;
+            doctor: string;
+            status: string;
+            upload: string;
+            createdDate: string;
+            actions: string;
+          };
+          actions: {
+            viewDetails: string;
+            verifyContract: string;
+            dealAndVerify: string;
+          };
+        };
+        detailDialog: {
+          title: string;
+          closeAriaLabel: string;
+          fields: {
+            contractNumber: string;
+            status: string;
+            fullName: string;
+            email: string;
+            template: string;
+            createdDate: string;
+            signedDate: string;
+            aiQuota: string;
+            monthlyAiQuota: string;
+            commission: string;
+            actualMonthlySalary: string;
+            confirmedMonthlyQuota: string;
+            commissionRatePercent: string;
+            actualMonthlySalaryVnd: string;
+          };
+          sections: {
+            quotaTerms: string;
+            dealTerms: string;
+            signedContract: string;
+            templateDocx: string;
+          };
+          validation: {
+            monthlyQuotaRequired: string;
+            dealTermsRequired: string;
+          };
+          scannedContractAlt: string;
+          pdfHint: string;
+          notFinalized: string;
+          currency: {
+            vnd: string;
+          };
+          actions: {
+            openOriginalFile: string;
+            openTemplateFile: string;
+            close: string;
+            confirmContract: string;
+          };
+        };
+        pagination: {
+          label: string;
+        };
+      };
+      users: {
+        title: string;
+        description: string;
+        actions: {
+          addUser: string;
+          exporting: string;
+          lockUser: string;
+          unlockUser: string;
+        };
+        roles: {
+          systemAdmin: string;
+          organisationAdmin: string;
+          doctor: string;
+          operator: string;
+          analyst: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          roleLabel: string;
+          options: {
+            allRoles: string;
+          };
+        };
+        stats: {
+          totalUsers: string;
+          totalUsersDescription: string;
+          activeUsers: string;
+          activeUsersDescription: string;
+          lockedAccounts: string;
+          lockedAccountsDescription: string;
+          roleTypes: string;
+          roleTypesDescription: string;
+        };
+        table: {
+          columns: {
+            id: string;
+            user: string;
+            role: string;
+            organization: string;
+            lastLogin: string;
+            status: string;
+            actions: string;
+          };
+          values: {
+            unknownUser: string;
+          };
+        };
+        status: {
+          active: string;
+          inactive: string;
+          locked: string;
+        };
+        states: {
+          empty: string;
+        };
+        summary: {
+          showing: string;
+        };
+        export: {
+          columns: {
+            name: string;
+            email: string;
+            createdAt: string;
+            emailVerified: string;
+          };
+          sheetName: string;
+          yes: string;
+          no: string;
+        };
+        toasts: {
+          userUnlocked: string;
+          userLocked: string;
+          toggleLockError: string;
+          exportNoData: string;
+          exportSuccess: string;
+          exportError: string;
+        };
+      };
+      patients: {
+        title: string;
+        description: string;
+        actions: {
+          exporting: string;
+          viewDetails: string;
+          viewMedicalHistory: string;
+          walkInCannotBeLocked: string;
+          lockPatient: string;
+          unlockPatient: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+            registered: string;
+            walkIn: string;
+          };
+        };
+        stats: {
+          totalPatients: string;
+          totalPatientsDescription: string;
+          registeredPatients: string;
+          registeredPatientsDescription: string;
+          walkInPatients: string;
+          walkInPatientsDescription: string;
+          lockedAccounts: string;
+          lockedAccountsDescription: string;
+        };
+        table: {
+          columns: {
+            patient: string;
+            patientType: string;
+            linkedOrganisation: string;
+            lastLogin: string;
+            joined: string;
+            status: string;
+            actions: string;
+          };
+          values: {
+            walkInProfile: string;
+            walkIn: string;
+            registered: string;
+            unassigned: string;
+            thisPatient: string;
+          };
+        };
+        status: {
+          active: string;
+          inactive: string;
+          locked: string;
+        };
+        states: {
+          empty: string;
+        };
+        summary: {
+          showing: string;
+        };
+        confirmModal: {
+          lockTitle: string;
+          lockMessage: string;
+          confirmLock: string;
+          cancelLock: string;
+        };
+        export: {
+          columns: {
+            fullName: string;
+            email: string;
+            phone: string;
+            emailConfirmed: string;
+            createdAt: string;
+          };
+          sheetName: string;
+          yes: string;
+          no: string;
+        };
+        toasts: {
+          walkInNoLogin: string;
+          activatedSuccess: string;
+          lockedSuccess: string;
+          updateStatusError: string;
+          exportNoData: string;
+          exportSuccess: string;
+          exportError: string;
+        };
+      };
+      organisations: {
+        page: {
+          title: string;
+          description: string;
+        };
+        actions: {
+          exporting: string;
+          exportReport: string;
+          reviewOnboarding: string;
+          viewContracts: string;
+          viewBilling: string;
+          editMonthlyQuota: string;
+          viewOrganisation: string;
+          viewContract: string;
+          renew: string;
+          cancel: string;
+          saving: string;
+          saveQuota: string;
+        };
+        tabs: {
+          allOrganisations: string;
+          billingPayments: string;
+          contracts: string;
+        };
+        stats: {
+          totalOrganisations: string;
+          totalOrganisationsDescription: string;
+          activeOrganisations: string;
+          activeOrganisationsDescription: string;
+          purchasedQuota: string;
+          purchasedQuotaDescription: string;
+          inactiveOrganisations: string;
+          inactiveOrganisationsDescription: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          status: {
+            all: string;
+          };
+        };
+        status: {
+          active: string;
+          inactive: string;
+          suspended: string;
+        };
+        orgType: {
+          clinic: string;
+          hospital: string;
+          organization: string;
+          eye_center: string;
+          other: string;
+        };
+        onboarding: {
+          title: string;
+          description: string;
+          pendingLabel: string;
+          approvalSuccess: string;
+          empty: string;
+          submittedAt: string;
+          approving: string;
+          approveAction: string;
+          fields: {
+            email: string;
+            phone: string;
+            contactPerson: string;
+            license: string;
+            taxCode: string;
+            address: string;
+            notes: string;
+          };
+        };
+        table: {
+          empty: string;
+          contractStatus: {
+            active: string;
+            pending: string;
+            expired: string;
+            suspended: string;
+          };
+          organisations: {
+            columns: {
+              organisation: string;
+              location: string;
+              users: string;
+              purchasedQuota: string;
+              monthlyQuota: string;
+              aiScreenings: string;
+              contract: string;
+              status: string;
+              actions: string;
+            };
+            values: {
+              credits: string;
+              limit: string;
+              used: string;
+              remaining: string;
+            };
+          };
+          billing: {
+            columns: {
+              organisation: string;
+              monthlyAiUsage: string;
+              purchasedQuota: string;
+              monthlyQuota: string;
+              managedPatients: string;
+              monthlyBilling: string;
+              pendingPayment: string;
+              status: string;
+              actions: string;
+            };
+            values: {
+              screenings: string;
+              credits: string;
+              registered: string;
+              walkIn: string;
+              paid: string;
+              pending: string;
+            };
+          };
+          contracts: {
+            columns: {
+              organisation: string;
+              contractStart: string;
+              contractEnd: string;
+              contractStatus: string;
+              actions: string;
+            };
+          };
+        };
+        pagination: {
+          showingSummary: string;
+          previous: string;
+          page: string;
+          next: string;
+        };
+        quotaModal: {
+          title: string;
+          monthlyQuotaLimitLabel: string;
+          currentUsage: string;
+        };
+        export: {
+          columns: {
+            name: string;
+            type: string;
+            address: string;
+            contactEmail: string;
+            licenseNumber: string;
+            taxCode: string;
+            deviceCount: string;
+            usersCount: string;
+            status: string;
+            createdAt: string;
+          };
+          sheetName: string;
+        };
+        toasts: {
+          loadOnboardingError: string;
+          approveOnboardingError: string;
+          exportNoData: string;
+          exportSuccess: string;
+          exportError: string;
+          updateQuotaInvalid: string;
+          updateQuotaSuccess: string;
+          updateQuotaError: string;
+        };
+      };
+      auditLogs: {
+        title: string;
+        description: string;
+        actions: {
+          exportExcel: string;
+          exporting: string;
+          viewJsonDetails: string;
+          insert: string;
+          update: string;
+          delete: string;
+        };
+        summary: {
+          totalEntries: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          actionLabel: string;
+          entityLabel: string;
+          entityPlaceholder: string;
+          updating: string;
+          actionOptions: {
+            all: string;
+            insert: string;
+            update: string;
+            delete: string;
+          };
+        };
+        table: {
+          columns: {
+            timestamp: string;
+            user: string;
+            action: string;
+            entity: string;
+            ipAddress: string;
+            details: string;
+          };
+        };
+        states: {
+          loadFailedTitle: string;
+          loadFailedDescription: string;
+          empty: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          summary: string;
+        };
+        export: {
+          noData: string;
+          success: string;
+          failed: string;
+          sheetName: string;
+          columns: {
+            timestamp: string;
+            userName: string;
+            userId: string;
+            action: string;
+            entityName: string;
+            entityId: string;
+            ipAddress: string;
+          };
+        };
+        time: {
+          justNow: string;
+          minutesAgo: string;
+          hoursAgo: string;
+          daysAgo: string;
+        };
+        values: {
+          system: string;
+        };
+      };
+      permissions: {
+        page: {
+          title: string;
+          description: string;
+          actions: {
+            newPermission: string;
+          };
+        };
+        tabs: {
+          allPermissions: string;
+          roleAssignments: string;
+          userOverrides: string;
+        };
+        stats: {
+          totalPermissions: string;
+          totalPermissionsDescription: string;
+          active: string;
+          activeDescription: string;
+          inactive: string;
+          inactiveDescription: string;
+          categories: string;
+          categoriesDescription: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          categories: {
+            all: string;
+          };
+          status: {
+            all: string;
+          };
+        };
+        status: {
+          active: string;
+          inactive: string;
+        };
+        table: {
+          columns: {
+            permission: string;
+            category: string;
+            description: string;
+            status: string;
+            actions: string;
+          };
+          actions: {
+            edit: string;
+            deactivate: string;
+          };
+        };
+        states: {
+          empty: string;
+        };
+        pagination: {
+          showing: string;
+          previous: string;
+          page: string;
+          next: string;
+        };
+        categories: {
+          users: string;
+          permissions: string;
+          patients: string;
+          ophthalmologists: string;
+          organisations: string;
+          screening: string;
+          consultations: string;
+          audit: string;
+          dashboard: string;
+        };
+        common: {
+          loading: string;
+          actions: {
+            cancel: string;
+            saving: string;
+          };
+        };
+        modals: {
+          create: {
+            title: string;
+            actions: {
+              create: string;
+            };
+            fields: {
+              name: string;
+              namePlaceholder: string;
+              namePatternHint: string;
+              nameConventionPrefix: string;
+              nameConventionSuffix: string;
+              displayName: string;
+              displayNamePlaceholder: string;
+              category: string;
+              none: string;
+              description: string;
+              descriptionPlaceholder: string;
+            };
+            errors: {
+              createFailed: string;
+            };
+          };
+          edit: {
+            title: string;
+            actions: {
+              saveChanges: string;
+            };
+            fields: {
+              nameReadonly: string;
+              displayName: string;
+              category: string;
+              none: string;
+              description: string;
+            };
+            errors: {
+              updateFailed: string;
+            };
+          };
+          delete: {
+            title: string;
+            actions: {
+              deactivate: string;
+            };
+            messagePrefix: string;
+            messageNote: string;
+            errors: {
+              deactivateFailed: string;
+            };
+          };
+          assign: {
+            title: string;
+            searchPlaceholder: string;
+            empty: string;
+            actions: {
+              assign: string;
+            };
+            errors: {
+              assignFailed: string;
+            };
+          };
+          userOverride: {
+            title: string;
+            subtitle: string;
+            fields: {
+              overrideType: string;
+              permission: string;
+              searchPermissionPlaceholder: string;
+              expiresAt: string;
+            };
+            types: {
+              grant: string;
+              grantDescription: string;
+              revoke: string;
+              revokeDescription: string;
+            };
+            actions: {
+              saveOverride: string;
+            };
+            errors: {
+              saveFailed: string;
+            };
+          };
+        };
+        roles: {
+          selectRole: string;
+          roleCardHint: string;
+          emptySelectRole: string;
+          assignedCount: string;
+          empty: string;
+          actions: {
+            assign: string;
+            removeFromRole: string;
+          };
+        };
+        users: {
+          searchTitle: string;
+          searchPlaceholder: string;
+          rolesTitle: string;
+          effectivePermissionsTitle: string;
+          inheritedFromRolesTitle: string;
+          inheritedFromRolesDescription: string;
+          activeOverridesTitle: string;
+          overrideHistoryTitle: string;
+          status: {
+            granted: string;
+            denied: string;
+            expired: string;
+            revoked: string;
+          };
+          states: {
+            noRolePermissions: string;
+            noActiveOverrides: string;
+            loadFailed: string;
+          };
+          actions: {
+            addOverride: string;
+            addDenyOverride: string;
+            deny: string;
+            removeOverride: string;
+          };
+        };
+      };
+      settings: {
+        page: {
+          title: string;
+          description: string;
+          actions: {
+            saveChanges: string;
+            saving: string;
+          };
+        };
+        sections: {
+          general: {
+            title: string;
+            description: string;
+          };
+          notifications: {
+            title: string;
+            description: string;
+          };
+          security: {
+            title: string;
+            description: string;
+          };
+          data: {
+            title: string;
+            description: string;
+          };
+        };
+        toasts: {
+          saveSuccess: string;
+          saveFailed: string;
+        };
+        general: {
+          platformName: string;
+          supportEmail: string;
+          timezone: string;
+          timezoneOptions: {
+            americaNewYork: string;
+            americaLosAngeles: string;
+            europeLondon: string;
+            asiaHoChiMinh: string;
+          };
+          defaultLanguage: string;
+          languageOptions: {
+            en: {
+              native: string;
+              label: string;
+            };
+            vi: {
+              native: string;
+              label: string;
+            };
+          };
+          minAdvanceBookingHours: string;
+          aiQuotaUnitPrice: string;
+          aiQuotaUnitPriceHint: string;
+          freeAiQuota: string;
+          partTimeMaxSlotsPerDay: string;
+          partTimeMaxSlotsPerDayHint: string;
+          fullTimeSlotWindowDays: string;
+          fullTimeSlotWindowDaysHint: string;
+          fullTimeMinSlotCost: string;
+          fullTimeMaxSlotCost: string;
+          fullTimeMaxSlotCostHint: string;
+          pricingBands: {
+            title: string;
+            description: string;
+            empty: string;
+            experienceBand: string;
+            experienceBandValue: string;
+            minPrice: string;
+            maxPrice: string;
+          };
+          aiQuotaBillingNote: string;
+          trustedDomains: {
+            title: string;
+            descriptionPrefix: string;
+            descriptionSuffix: string;
+            empty: string;
+            removeDomainAria: string;
+            placeholder: string;
+            add: string;
+          };
+          maintenanceMode: {
+            title: string;
+            description: string;
+          };
+        };
+        notifications: {
+          items: {
+            emailNotifications: {
+              label: string;
+              description: string;
+            };
+            screeningAlerts: {
+              label: string;
+              description: string;
+            };
+            systemAlerts: {
+              label: string;
+              description: string;
+            };
+            weeklyReports: {
+              label: string;
+              description: string;
+            };
+            marketingEmails: {
+              label: string;
+              description: string;
+            };
+          };
+        };
+        security: {
+          requireTwoFactor: {
+            title: string;
+            description: string;
+          };
+          sessionTimeout: string;
+          minimumPasswordLength: string;
+          maxLoginAttempts: string;
+          ipWhitelist: string;
+          ipWhitelistPlaceholder: string;
+        };
+        data: {
+          databaseBackup: {
+            title: string;
+            lastBackup: string;
+            createNow: string;
+          };
+          exportData: {
+            title: string;
+            description: string;
+            exportToEmail: string;
+          };
+          dangerZone: {
+            title: string;
+            description: string;
+            clearCache: string;
+            resetStatistics: string;
+          };
+        };
+      };
+      statusPage: {
+        title: string;
+        description: string;
+        common: {
+          yes: string;
+          no: string;
+        };
+        states: {
+          loadError: string;
+        };
+        cards: {
+          api: {
+            title: string;
+            description: string;
+            values: {
+              operational: string;
+              issue: string;
+            };
+          };
+          database: {
+            title: string;
+            description: string;
+            values: {
+              connected: string;
+              unreachable: string;
+            };
+          };
+          liveConsultations: {
+            title: string;
+            description: string;
+          };
+        };
+        betterStack: {
+          title: string;
+          description: string;
+          embedTitle: string;
+          actions: {
+            openBetterStack: string;
+          };
+          summary: {
+            enabledLabel: string;
+            configuredMonitorsLabel: string;
+          };
+          states: {
+            emptyMonitors: string;
+            embedNotConfigured: string;
+          };
+        };
+      };
+      cashflow: {
+        title: string;
+        description: string;
+        roles: {
+          patient: string;
+          ophthalmologist: string;
+          organisation: string;
+        };
+        status: {
+          refunded: string;
+        };
+        summary: {
+          totalCurrentPage: string;
+          patients: string;
+          ophthalmologists: string;
+          organisations: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+          role: {
+            all: string;
+          };
+          status: {
+            all: string;
+          };
+        };
+        states: {
+          loading: string;
+          loadError: string;
+          empty: string;
+        };
+        table: {
+          columns: {
+            date: string;
+            actor: string;
+            role: string;
+            type: string;
+            amount: string;
+            status: string;
+            reference: string;
+            action: string;
+          };
+          actions: {
+            details: string;
+          };
+        };
+        pagination: {
+          pageSummary: string;
+        };
+        detailModal: {
+          title: string;
+          idLabel: string;
+          sections: {
+            general: string;
+            topUp: string;
+            withdrawal: string;
+          };
+          fields: {
+            createdAt: string;
+            status: string;
+            actor: string;
+            actorEmail: string;
+            actorRole: string;
+            amount: string;
+            transactionType: string;
+            referenceType: string;
+            referenceId: string;
+            description: string;
+            orderCode: string;
+            paymentMethod: string;
+            completedAt: string;
+            providerTxnRef: string;
+            failureReason: string;
+            paymentUrl: string;
+            returnUrl: string;
+            cancelUrl: string;
+            providerResponse: string;
+            processedAt: string;
+            processedByAdmin: string;
+            bankName: string;
+            bankAccountNumber: string;
+            accountHolder: string;
+            bankBin: string;
+            transferReference: string;
+            payOSExternalPayoutId: string;
+            payOSReferenceId: string;
+            payOSTransactionId: string;
+            payOSApprovalState: string;
+            payoutFee: string;
+          };
+        };
+      };
+      verificationRequests: {
+        title: string;
+        description: string;
+        common: {
+          experienceYears: string;
+          shortExperienceYears: string;
+        };
+        degreeLevels: {
+          bachelor: string;
+          master: string;
+          doctorate: string;
+          associateProfessor: string;
+          professor: string;
+        };
+        requestType: {
+          credentialUpdate: {
+            label: string;
+            hint: string;
+          };
+          onboarding: {
+            label: string;
+            hint: string;
+          };
+        };
+        approveModal: {
+          title: string;
+          description: string;
+          notice: string;
+        };
+        rejectModal: {
+          title: string;
+          reasonLabel: string;
+          reasonPlaceholder: string;
+          notice: string;
+          errors: {
+            reasonRequired: string;
+          };
+        };
+        imagePreview: {
+          alt: string;
+        };
+        detailModal: {
+          title: string;
+          sections: {
+            licenses: string;
+            degrees: string;
+          };
+          fields: {
+            issuingAuthority: string;
+            degreeLevel: string;
+            issuedDate: string;
+            expiryDate: string;
+          };
+          actions: {
+            zoomImage: string;
+            openDocument: string;
+          };
+          states: {
+            emptyLicenses: string;
+            emptyDegrees: string;
+          };
+        };
+        summary: {
+          pendingCount: string;
+          description: string;
+        };
+        filters: {
+          searchPlaceholder: string;
+        };
+        table: {
+          columns: {
+            doctor: string;
+            credentialsSummary: string;
+            verificationType: string;
+            submittedAt: string;
+            actions: string;
+          };
+          credentialsSummaryValue: string;
+          credentialsSummaryHint: string;
+        };
+        actions: {
+          viewDetails: string;
+        };
+        states: {
+          emptyTitle: string;
+          emptyDescription: string;
+        };
+        pagination: {
+          showing: string;
+          page: string;
+        };
+        toasts: {
+          approveSuccess: string;
+          approveError: string;
+          rejectSuccess: string;
+          rejectError: string;
+        };
+      };
+    };
+    ProfessionalNetwork: {
+      common: {
+        network: string;
+        user: string;
+        member: string;
+        unknownAuthor: string;
+        showMore: string;
+        tryAgain: string;
+        actions: {
+          cancel: string;
+          follow: string;
+        };
+        roles: {
+          ophthalmologist: string;
+          orgAdmin: string;
+          systemAdmin: string;
+          patient: string;
+        };
+        gender: {
+          male: string;
+          female: string;
+          other: string;
+        };
+        pagination: {
+          previous: string;
+          next: string;
+          pageOf: string;
+        };
+      };
+      navigation: {
+        feed: string;
+        discover: string;
+        saved: string;
+        managePosts: string;
+        profile: string;
+      };
+      sidebar: {
+        backToOrganisationDashboard: string;
+        backToDashboard: string;
+        logout: string;
+        theme: {
+          lightMode: string;
+          darkMode: string;
+        };
+      };
+      rightPanel: {
+        searchPlaceholder: string;
+        sections: {
+          trendingTopics: string;
+          whoToFollow: string;
+          yourGroups: string;
+        };
+        trending: {
+          rankLabel: string;
+          postsCount: string;
+          tags: {
+            aiScreening: string;
+            diabeticRetinopathy: string;
+            glaucomaGuidelines2026: string;
+            smileSurgery: string;
+            pediatricVision: string;
+          };
+        };
+        groups: {
+          membersCount: string;
+        };
+      };
+      footer: {
+        terms: string;
+        privacy: string;
+        help: string;
+        copyright: string;
+      };
+      postTypes: {
+        casePresentation: string;
+        peerDiscussion: string;
+        knowledgeShare: string;
+        announcement: string;
+      };
+      specialties: {
+        aiScreening: string;
+        communityOphthalmology: string;
+        deepLearning: string;
+        diabeticRetinopathy: string;
+        drScreening: string;
+        retinalDiseases: string;
+        glaucoma: string;
+        retinopathyOfPrematurity: string;
+        aiMedicalImaging: string;
+        primaryEyeCare: string;
+        octAnalysis: string;
+        opticNerveImaging: string;
+        pediatricRetina: string;
+        retinalAnalysis: string;
+        telemedicine: string;
+      };
+      reactions: {
+        insightful: string;
+        agree: string;
+        helpful: string;
+        question: string;
+        celebrate: string;
+      };
+      discover: {
+        title: string;
+        description: string;
+        searchPlaceholder: string;
+        tabs: {
+          professionals: string;
+          organisations: string;
+        };
+        categories: {
+          all: string;
+        };
+        results: {
+          oneFound: string;
+          manyFound: string;
+        };
+        empty: {
+          title: string;
+          description: string;
+        };
+      };
+      feed: {
+        title: string;
+        description: {
+          manageMode: string;
+          default: string;
+        };
+        tabs: {
+          feed: string;
+          managePosts: string;
+        };
+        states: {
+          loadError: string;
+          empty: string;
+        };
+        manage: {
+          reportedPostsHeading: string;
+          hiddenPostsHeading: string;
+          noReportedPosts: string;
+          noHiddenPosts: string;
+        };
+        trending: {
+          title: string;
+          rankLabel: string;
+          postsCount: string;
+          empty: string;
+        };
+      };
+      postDetail: {
+        title: string;
+        inputs: {
+          addCommentPlaceholder: string;
+          replyTo: string;
+        };
+        comments: {
+          title: string;
+        };
+        actions: {
+          reply: string;
+          hide: string;
+          view: string;
+        };
+        replies: {
+          one: string;
+          many: string;
+        };
+        states: {
+          loadingReplies: string;
+          notFound: string;
+          noComments: string;
+        };
+      };
+      postComposer: {
+        placeholder: string;
+        typeLabel: string;
+        doctorNotesHeading: string;
+        caseSource: {
+          title: string;
+          externalCase: string;
+          internalCase: string;
+        };
+        internal: {
+          selectConsultationCase: string;
+          loadingInternalCases: string;
+          chooseInternalCase: string;
+          caseOptionLabel: string;
+          anonymousPatient: string;
+          previewTitle: string;
+          retinalCasePreviewAlt: string;
+          noImagePreview: string;
+          medicalDiagnosis: string;
+          noFinalDiagnosis: string;
+          patientIdentityHidden: string;
+          addDoctorNotes: string;
+        };
+        external: {
+          allowedInfoOptional: string;
+          patientAge: string;
+          patientGender: string;
+          allowedDataHint: string;
+        };
+        caseDisclosureConsent: string;
+        fileAnonymizationConsent: string;
+        actions: {
+          addImage: string;
+          attachDocument: string;
+          addLink: string;
+          shareInternalCase: string;
+          post: string;
+        };
+      };
+      postCard: {
+        states: {
+          hiddenByModeration: string;
+          originalPostHidden: string;
+        };
+        repost: {
+          shared: string;
+        };
+        menu: {
+          copyLink: string;
+          saved: string;
+          savePost: string;
+          hidePost: string;
+          reportPost: string;
+        };
+        actions: {
+          sharePost: string;
+        };
+        internalCase: {
+          caseResultAndDiagnosis: string;
+          noAiSummary: string;
+          doctorNote: string;
+          noDoctorNote: string;
+        };
+        hideDialog: {
+          title: string;
+          description: string;
+          reasonPlaceholder: string;
+        };
+        shareDialog: {
+          title: string;
+          commentPlaceholder: string;
+          previewAlt: string;
+          share: string;
+        };
+      };
+      shareClinicCaseModal: {
+        title: string;
+        caseInformation: {
+          title: string;
+        };
+        fields: {
+          patient: string;
+          riskLevel: string;
+          confidence: string;
+        };
+        retinalImages: {
+          title: string;
+          alt: string;
+        };
+        findings: {
+          label: string;
+        };
+        symptoms: {
+          label: string;
+        };
+        summary: {
+          label: string;
+        };
+        doctorNotes: {
+          label: string;
+          placeholder: string;
+        };
+        preview: {
+          title: string;
+          empty: string;
+        };
+        actions: {
+          posting: string;
+          postCase: string;
+        };
+      };
+      commentCard: {
+        actions: {
+          reacted: string;
+          react: string;
+          reply: string;
+          hide: string;
+          view: string;
+        };
+        time: {
+          recentFallback: string;
+        };
+        replies: {
+          one: string;
+          many: string;
+        };
+      };
+      saved: {
+        title: string;
+        sections: {
+          allSaved: string;
+          allSavedPosts: string;
+        };
+        count: {
+          posts: string;
+        };
+        states: {
+          loadError: string;
+          empty: string;
+        };
+      };
+      organisation: {
+        title: string;
+        types: {
+          hospital: string;
+          clinic: string;
+          researchCenter: string;
+        };
+        actions: {
+          follow: string;
+          following: string;
+        };
+        stats: {
+          followers: string;
+          members: string;
+          membersLabel: string;
+          postsLabel: string;
+        };
+        tabs: {
+          posts: string;
+          members: string;
+          about: string;
+        };
+        states: {
+          notFound: string;
+          noPosts: string;
+          noPublicMembers: string;
+        };
+        accreditations: {
+          jciAccredited: string;
+          iso9001: string;
+          nationalRetinalScreeningCenter: string;
+          auraAiCertifiedPartner: string;
+          fda510kCleared: string;
+          ceMarkClassIIa: string;
+          mohVnApproved: string;
+          auraAiScreeningSite: string;
+        };
+        about: {
+          title: string;
+          location: string;
+          accreditations: string;
+        };
+      };
+      profile: {
+        title: string;
+        verified: string;
+        preview: {
+          banner: string;
+          exit: string;
+          label: string;
+        };
+        stats: {
+          postsCount: string;
+          yearsExperience: string;
+        };
+        states: {
+          notFound: string;
+          noPosts: string;
+        };
+        actions: {
+          shareProfile: string;
+          report: string;
+        };
+        systemAdmin: {
+          title: string;
+          description: string;
+          items: {
+            moderatePosts: string;
+            reviewReports: string;
+            maintainStandards: string;
+          };
+        };
+        organisation: {
+          introductionTitle: string;
+          defaultBio: string;
+          featuredServicesTitle: string;
+          featuredServices: {
+            items: {
+              aiScreening: string;
+              consultationAndReferral: string;
+              recordsAndFollowUp: string;
+            };
+          };
+          qualityCommitmentTitle: string;
+          qualityCommitment: {
+            items: {
+              dataPrivacy: string;
+              aiAndClinical: string;
+              fastAccurateCare: string;
+            };
+          };
+        };
+        about: {
+          bioTitle: string;
+          noBio: string;
+          experienceTitle: string;
+          experienceValue: string;
+          degreesTitle: string;
+          noDegreeRecords: string;
+          licensesTitle: string;
+          noLicenseRecords: string;
+          unknownAuthority: string;
+          issued: string;
+          expires: string;
+          viewFile: string;
         };
       };
     };

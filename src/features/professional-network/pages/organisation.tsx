@@ -22,20 +22,17 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedAccreditation } from '../utils/accreditationLocalization';
 
 type TabType = 'posts' | 'members' | 'about';
-
-const orgTypeLabels: Record<Organisation['type'], string> = {
-  hospital: 'Hospital',
-  clinic: 'Clinic',
-  research_center: 'Research Center',
-};
 
 // TODO: Replace with actual API calls
 
 function OrganisationPage() {
   const { id: _id } = useParams();
   const location = useLocation();
+  const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
@@ -44,6 +41,15 @@ function OrganisationPage() {
   const [organisation, _setOrganisation] = useState<Organisation | null>(null);
   const [orgPosts, _setOrgPosts] = useState<ProfessionalPost[]>([]);
   const [members, _setMembers] = useState<Ophthalmologist[]>([]);
+
+  const orgTypeLabels: Record<Organisation['type'], string> = {
+    hospital: t('ProfessionalNetwork.organisation.types.hospital', 'Hospital'),
+    clinic: t('ProfessionalNetwork.organisation.types.clinic', 'Clinic'),
+    research_center: t(
+      'ProfessionalNetwork.organisation.types.researchCenter',
+      'Research Center'
+    ),
+  };
 
   // TODO: Fetch from API using useEffect
 
@@ -58,12 +64,19 @@ function OrganisationPage() {
             >
               <ArrowLeft className="w-5 h-5 text-text-main" />
             </Link>
-            <h2 className="text-xl font-bold text-text-main">Organisation</h2>
+            <h2 className="text-xl font-bold text-text-main">
+              {t('ProfessionalNetwork.organisation.title', 'Organisation')}
+            </h2>
           </div>
         </header>
         <div className="text-center py-12 px-4">
           <Building2 className="w-12 h-12 text-text-muted mx-auto mb-3" />
-          <p className="text-text-muted">Organisation not found</p>
+          <p className="text-text-muted">
+            {t(
+              'ProfessionalNetwork.organisation.states.notFound',
+              'Organisation not found'
+            )}
+          </p>
         </div>
       </>
     );
@@ -131,7 +144,12 @@ function OrganisationPage() {
                 : 'btn-primary text-sm py-2 px-6'
             }
           >
-            {isFollowing ? 'Following' : 'Follow'}
+            {isFollowing
+              ? t(
+                  'ProfessionalNetwork.organisation.actions.following',
+                  'Following'
+                )
+              : t('ProfessionalNetwork.organisation.actions.follow', 'Follow')}
           </button>
         </div>
 
@@ -152,34 +170,53 @@ function OrganisationPage() {
             <p className="text-xl font-bold text-text-main">
               {organisation.followerCount.toLocaleString()}
             </p>
-            <p className="text-sm text-text-muted">Followers</p>
+            <p className="text-sm text-text-muted">
+              {t(
+                'ProfessionalNetwork.organisation.stats.followers',
+                'Followers'
+              )}
+            </p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-text-main">
               {organisation.memberCount}
             </p>
-            <p className="text-sm text-text-muted">Members</p>
+            <p className="text-sm text-text-muted">
+              {t(
+                'ProfessionalNetwork.organisation.stats.membersLabel',
+                'Members'
+              )}
+            </p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-text-main">
               {orgPosts.length}
             </p>
-            <p className="text-sm text-text-muted">Posts</p>
+            <p className="text-sm text-text-muted">
+              {t('ProfessionalNetwork.organisation.stats.postsLabel', 'Posts')}
+            </p>
           </div>
         </div>
 
         {/* Accreditations */}
         {organisation.accreditations.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
-            {organisation.accreditations.map((acc) => (
-              <span
-                key={acc}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm rounded-full"
-              >
-                <Award className="w-4 h-4" />
-                {acc}
-              </span>
-            ))}
+            {organisation.accreditations.map((accreditation) => {
+              const displayAccreditation = getLocalizedAccreditation(
+                t,
+                accreditation
+              );
+
+              return (
+                <span
+                  key={accreditation}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm rounded-full"
+                >
+                  <Award className="w-4 h-4" />
+                  {displayAccreditation}
+                </span>
+              );
+            })}
           </div>
         )}
 
@@ -195,7 +232,14 @@ function OrganisationPage() {
                   : 'border-transparent text-text-muted hover:text-text-main'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'posts'
+                ? t('ProfessionalNetwork.organisation.tabs.posts', 'Posts')
+                : tab === 'members'
+                  ? t(
+                      'ProfessionalNetwork.organisation.tabs.members',
+                      'Members'
+                    )
+                  : t('ProfessionalNetwork.organisation.tabs.about', 'About')}
             </button>
           ))}
         </div>
@@ -213,7 +257,12 @@ function OrganisationPage() {
           ) : (
             <div className="text-center py-12 px-4">
               <FileText className="w-12 h-12 text-text-muted mx-auto mb-3" />
-              <p className="text-text-muted">No posts yet</p>
+              <p className="text-text-muted">
+                {t(
+                  'ProfessionalNetwork.organisation.states.noPosts',
+                  'No posts yet'
+                )}
+              </p>
             </div>
           ))}
 
@@ -226,7 +275,12 @@ function OrganisationPage() {
             ) : (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-text-muted mx-auto mb-3" />
-                <p className="text-text-muted">No public members</p>
+                <p className="text-text-muted">
+                  {t(
+                    'ProfessionalNetwork.organisation.states.noPublicMembers',
+                    'No public members'
+                  )}
+                </p>
               </div>
             )}
           </div>
@@ -236,7 +290,7 @@ function OrganisationPage() {
           <div className="px-6 py-4 space-y-6">
             <div>
               <h3 className="font-bold text-[15px] text-text-main mb-2">
-                About
+                {t('ProfessionalNetwork.organisation.about.title', 'About')}
               </h3>
               <p className="text-[15px] text-text-main leading-relaxed">
                 {organisation.description}
@@ -244,7 +298,10 @@ function OrganisationPage() {
             </div>
             <div>
               <h3 className="font-bold text-[15px] text-text-main mb-2">
-                Location
+                {t(
+                  'ProfessionalNetwork.organisation.about.location',
+                  'Location'
+                )}
               </h3>
               <p className="flex items-center gap-2 text-text-main">
                 <MapPin className="w-4 h-4" />
@@ -254,18 +311,28 @@ function OrganisationPage() {
             {organisation.accreditations.length > 0 && (
               <div>
                 <h3 className="font-bold text-[15px] text-text-main mb-2">
-                  Accreditations
+                  {t(
+                    'ProfessionalNetwork.organisation.about.accreditations',
+                    'Accreditations'
+                  )}
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {organisation.accreditations.map((acc) => (
-                    <span
-                      key={acc}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm rounded-full"
-                    >
-                      <Award className="w-4 h-4" />
-                      {acc}
-                    </span>
-                  ))}
+                  {organisation.accreditations.map((accreditation) => {
+                    const displayAccreditation = getLocalizedAccreditation(
+                      t,
+                      accreditation
+                    );
+
+                    return (
+                      <span
+                        key={accreditation}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm rounded-full"
+                      >
+                        <Award className="w-4 h-4" />
+                        {displayAccreditation}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}

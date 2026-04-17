@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   type OrganisationRecentPatientDto,
   type UpdateOrganisationPatientRequest,
@@ -48,6 +49,7 @@ export default function UpdatePatientContactModal({
   onClose,
   onSuccess,
 }: UpdatePatientModalProps) {
+  const { t } = useSafeTranslation();
   // ── Walk-in admin fields ──
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -75,7 +77,13 @@ export default function UpdatePatientContactModal({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!patient) throw new Error('Patient not found');
+      if (!patient)
+        throw new Error(
+          t(
+            'Organisation.updatePatientModal.toast.patientNotFound',
+            'Patient not found'
+          )
+        );
 
       const body: UpdateOrganisationPatientRequest = {};
 
@@ -104,17 +112,35 @@ export default function UpdatePatientContactModal({
 
       // Only send if there's something to update
       if (Object.keys(body).length === 0) {
-        throw new Error('No changes detected');
+        throw new Error(
+          t(
+            'Organisation.updatePatientModal.toast.noChanges',
+            'No changes detected'
+          )
+        );
       }
 
       return updateOrganisationPatient(patient.id, body);
     },
     onSuccess: () => {
-      toast.success('Patient updated successfully.');
+      toast.success(
+        t(
+          'Organisation.updatePatientModal.toast.updateSuccess',
+          'Patient updated successfully.'
+        )
+      );
       onSuccess();
     },
     onError: (error) => {
-      toast.error(extractApiErrorMessage(error, 'Unable to update patient.'));
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'Organisation.updatePatientModal.toast.updateFailed',
+            'Unable to update patient.'
+          )
+        )
+      );
     },
   });
 
@@ -162,17 +188,23 @@ export default function UpdatePatientContactModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-(--text-primary)">
-                Edit Patient
+                {t(
+                  'Organisation.updatePatientModal.header.title',
+                  'Edit Patient'
+                )}
               </h3>
               <div className="flex items-center gap-2 mt-0.5">
                 {isWalkIn ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    Walk-in
+                    {t('Organisation.patients.types.walkIn', 'Walk-in')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                     <Lock className="w-3 h-3" />
-                    Aura Account
+                    {t(
+                      'Organisation.updatePatientModal.badges.auraAccount',
+                      'Aura Account'
+                    )}
                   </span>
                 )}
               </div>
@@ -200,12 +232,18 @@ export default function UpdatePatientContactModal({
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
                 <User className="h-4 w-4 text-primary" />
-                Administrative Information
+                {t(
+                  'Organisation.updatePatientModal.sections.administrativeInfo',
+                  'Administrative Information'
+                )}
               </h4>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--text-secondary)">
-                  Full Name *
+                  {t(
+                    'Organisation.updatePatientModal.form.fullName',
+                    'Full Name *'
+                  )}
                 </label>
                 <input
                   required
@@ -219,7 +257,10 @@ export default function UpdatePatientContactModal({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-(--text-secondary)">
-                    Date of Birth
+                    {t(
+                      'Organisation.updatePatientModal.form.dateOfBirth',
+                      'Date of Birth'
+                    )}
                   </label>
                   <input
                     type="date"
@@ -231,58 +272,82 @@ export default function UpdatePatientContactModal({
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-(--text-secondary)">
-                    Gender
+                    {t('Organisation.updatePatientModal.form.gender', 'Gender')}
                   </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm"
                   >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="Male">
+                      {t('Organisation.common.gender.male', 'Male')}
+                    </option>
+                    <option value="Female">
+                      {t('Organisation.common.gender.female', 'Female')}
+                    </option>
+                    <option value="Other">
+                      {t(
+                        'Organisation.updatePatientModal.form.genderOther',
+                        'Other'
+                      )}
+                    </option>
                   </select>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--text-secondary)">
-                  Citizen ID (CCCD)
+                  {t(
+                    'Organisation.updatePatientModal.form.citizenId',
+                    'Citizen ID (CCCD)'
+                  )}
                 </label>
                 <input
                   type="text"
                   value={citizenId}
                   onChange={(e) => setCitizenId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm"
-                  placeholder="e.g. 001099000000"
+                  placeholder={t(
+                    'Organisation.updatePatientModal.form.citizenIdPlaceholder',
+                    'e.g. 001099000000'
+                  )}
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--text-secondary)">
                   <Phone className="inline h-3.5 w-3.5 mr-1" />
-                  Phone Number
+                  {t(
+                    'Organisation.updatePatientModal.form.phoneNumber',
+                    'Phone Number'
+                  )}
                 </label>
                 <input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm"
-                  placeholder="e.g. +84 123 456 789"
+                  placeholder={t(
+                    'Organisation.updatePatientModal.form.phonePlaceholder',
+                    'e.g. +84 123 456 789'
+                  )}
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--text-secondary)">
                   <MapPin className="inline h-3.5 w-3.5 mr-1" />
-                  Address
+                  {t('Organisation.updatePatientModal.form.address', 'Address')}
                 </label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm"
-                  placeholder="Street, ward, district, city"
+                  placeholder={t(
+                    'Organisation.updatePatientModal.form.addressPlaceholder',
+                    'Street, ward, district, city'
+                  )}
                 />
               </div>
             </div>
@@ -291,60 +356,108 @@ export default function UpdatePatientContactModal({
             <div className="rounded-xl border border-(--border-primary) bg-(--bg-secondary) p-4">
               <h4 className="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
                 <Lock className="h-4 w-4 text-(--text-tertiary)" />
-                Personal Information
+                {t(
+                  'Organisation.updatePatientModal.sections.personalInfo',
+                  'Personal Information'
+                )}
                 <span className="text-xs font-normal text-(--text-tertiary)">
-                  — managed by patient's Aura account
+                  {t(
+                    'Organisation.updatePatientModal.sections.personalInfoManagedByAura',
+                    "- managed by patient's Aura account"
+                  )}
                 </span>
               </h4>
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Full Name</p>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.fullName',
+                      'Full Name'
+                    )}
+                  </p>
                   <p className="font-medium text-(--text-primary)">
                     {patient.name}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Gender</p>
-                  <p className="font-medium text-(--text-primary)">
-                    {formatGender(patient.gender)}
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.gender',
+                      'Gender'
+                    )}
                   </p>
-                </div>
-                <div>
-                  <p className="text-xs text-(--text-tertiary)">Age</p>
                   <p className="font-medium text-(--text-primary)">
-                    {patient.age || '—'}
+                    {formatGender(patient.gender) === 'Male'
+                      ? t('Organisation.common.gender.male', 'Male')
+                      : t('Organisation.common.gender.female', 'Female')}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-(--text-tertiary)">
-                    Date of Birth
+                    {t('Organisation.updatePatientModal.readOnly.age', 'Age')}
+                  </p>
+                  <p className="font-medium text-(--text-primary)">
+                    {patient.age ||
+                      t('Organisation.common.notAvailable', 'N/A')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.dateOfBirth',
+                      'Date of Birth'
+                    )}
                   </p>
                   <p className="font-medium text-(--text-primary)">
                     {formatDate(patient.dateOfBirth)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Citizen ID</p>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.citizenId',
+                      'Citizen ID'
+                    )}
+                  </p>
                   <p className="font-medium text-(--text-primary)">
-                    {patient.citizenId || '—'}
+                    {patient.citizenId ||
+                      t('Organisation.common.notAvailable', 'N/A')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Phone</p>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.phone',
+                      'Phone'
+                    )}
+                  </p>
                   <p className="font-medium text-(--text-primary)">
-                    {patient.phoneNumber || '—'}
+                    {patient.phoneNumber ||
+                      t('Organisation.common.notAvailable', 'N/A')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Address</p>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.address',
+                      'Address'
+                    )}
+                  </p>
                   <p className="font-medium text-(--text-primary)">
-                    {patient.address || '—'}
+                    {patient.address ||
+                      t('Organisation.common.notAvailable', 'N/A')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-(--text-tertiary)">Email</p>
+                  <p className="text-xs text-(--text-tertiary)">
+                    {t(
+                      'Organisation.updatePatientModal.readOnly.email',
+                      'Email'
+                    )}
+                  </p>
                   <p className="font-medium text-(--text-primary)">
-                    {patient.email || '—'}
+                    {patient.email ||
+                      t('Organisation.common.notAvailable', 'N/A')}
                   </p>
                 </div>
               </div>
@@ -355,13 +468,16 @@ export default function UpdatePatientContactModal({
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-(--text-primary) flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" />
-              Medical Information
+              {t(
+                'Organisation.updatePatientModal.sections.medicalInfo',
+                'Medical Information'
+              )}
             </h4>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <label className="text-sm font-medium text-(--text-secondary)">
-                  BMI
+                  {t('Organisation.updatePatientModal.form.bmi', 'BMI')}
                 </label>
                 <input
                   type="number"
@@ -371,7 +487,10 @@ export default function UpdatePatientContactModal({
                   value={bmi}
                   onChange={(e) => setBmi(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm"
-                  placeholder="e.g. 22.5"
+                  placeholder={t(
+                    'Organisation.updatePatientModal.form.bmiPlaceholder',
+                    'e.g. 22.5'
+                  )}
                 />
               </div>
             </div>
@@ -379,7 +498,10 @@ export default function UpdatePatientContactModal({
             <div className="space-y-1">
               <label className="text-sm font-medium text-(--text-secondary)">
                 <FileText className="inline h-3.5 w-3.5 mr-1" />
-                Disease History
+                {t(
+                  'Organisation.updatePatientModal.form.diseaseHistory',
+                  'Disease History'
+                )}
               </label>
               <textarea
                 value={diseaseHistory}
@@ -387,7 +509,10 @@ export default function UpdatePatientContactModal({
                 rows={3}
                 maxLength={1000}
                 className="w-full px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--border-primary) focus:border-primary focus:ring-1 focus:ring-primary outline-none transition text-sm resize-none"
-                placeholder="e.g. Type-2 Diabetes, Hypertension, Glaucoma..."
+                placeholder={t(
+                  'Organisation.updatePatientModal.form.diseaseHistoryPlaceholder',
+                  'e.g. Type-2 Diabetes, Hypertension, Glaucoma...'
+                )}
               />
               <p className="text-xs text-(--text-tertiary) text-right">
                 {diseaseHistory.length}/1000
@@ -403,7 +528,7 @@ export default function UpdatePatientContactModal({
               disabled={mutation.isPending}
               className="rounded-xl bg-(--bg-secondary) px-4 py-2 text-sm font-medium text-(--text-secondary) transition hover:bg-(--bg-tertiary) disabled:opacity-60"
             >
-              Cancel
+              {t('Organisation.common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -413,7 +538,10 @@ export default function UpdatePatientContactModal({
               {mutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              Save
+              {t(
+                'Organisation.screeningResult.actions.saveRecord',
+                'Save record'
+              )}
             </button>
           </div>
         </form>

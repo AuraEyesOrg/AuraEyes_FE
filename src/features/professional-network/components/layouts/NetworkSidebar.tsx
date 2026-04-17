@@ -23,16 +23,48 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import UserAvatar from '@/components/ui/UserAvatar';
+
+const BRAND_NAME = 'AURA';
+
+const roleLabelConfig: Record<
+  string,
+  { labelKey: string; labelFallback: string }
+> = {
+  Ophthalmologist: {
+    labelKey: 'ProfessionalNetwork.common.roles.ophthalmologist',
+    labelFallback: 'Ophthalmologist',
+  },
+  OrgAdmin: {
+    labelKey: 'ProfessionalNetwork.common.roles.orgAdmin',
+    labelFallback: 'Organisation Admin',
+  },
+  SystemAdmin: {
+    labelKey: 'ProfessionalNetwork.common.roles.systemAdmin',
+    labelFallback: 'System Admin',
+  },
+  Patient: {
+    labelKey: 'ProfessionalNetwork.common.roles.patient',
+    labelFallback: 'Patient',
+  },
+};
 
 export function NetworkSidebar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const primaryRole = user?.roles?.[0];
+  const primaryRoleConfig =
+    primaryRole !== undefined ? roleLabelConfig[primaryRole] : undefined;
+  const displayRoleLabel = primaryRoleConfig
+    ? t(primaryRoleConfig.labelKey, primaryRoleConfig.labelFallback)
+    : primaryRole || t('ProfessionalNetwork.common.member', 'Member');
 
   const stateDashboardRoute = (location.state as { dashboardRoute?: string })
     ?.dashboardRoute;
@@ -57,7 +89,7 @@ export function NetworkSidebar() {
     {
       to: '/network',
       icon: Home,
-      label: 'Feed',
+      label: t('ProfessionalNetwork.navigation.feed', 'Feed'),
       isActive: () =>
         (location.pathname === networkRootPath ||
           location.pathname === networkFeedPath) &&
@@ -66,14 +98,14 @@ export function NetworkSidebar() {
     {
       to: '/network/discover',
       icon: Compass,
-      label: 'Discover',
+      label: t('ProfessionalNetwork.navigation.discover', 'Discover'),
       isActive: () =>
         location.pathname === toLocalizedPath('/network/discover'),
     },
     {
       to: '/network/saved',
       icon: Bookmark,
-      label: 'Saved',
+      label: t('ProfessionalNetwork.navigation.saved', 'Saved'),
       isActive: () => location.pathname === toLocalizedPath('/network/saved'),
     },
     ...(user?.roles?.includes('SystemAdmin')
@@ -81,7 +113,10 @@ export function NetworkSidebar() {
           {
             to: '/network?tab=manage',
             icon: Shield,
-            label: 'Manage Posts',
+            label: t(
+              'ProfessionalNetwork.navigation.managePosts',
+              'Manage Posts'
+            ),
             isActive: () =>
               (location.pathname === networkRootPath ||
                 location.pathname === networkFeedPath) &&
@@ -92,7 +127,7 @@ export function NetworkSidebar() {
     {
       to: `/network/profile/${user?.id || 'me'}`,
       icon: User,
-      label: 'Profile',
+      label: t('ProfessionalNetwork.navigation.profile', 'Profile'),
       isActive: () =>
         location.pathname ===
         toLocalizedPath(`/network/profile/${user?.id || 'me'}`),
@@ -111,15 +146,15 @@ export function NetworkSidebar() {
         <div className="flex items-center gap-3 mb-10 px-2">
           <img
             src="/logo.png"
-            alt="AURA"
+            alt={BRAND_NAME}
             className="w-10 h-10 rounded-xl object-contain"
           />
           <div>
             <h1 className="text-(--text-primary) text-lg font-bold leading-none tracking-tight">
-              AURA
+              {BRAND_NAME}
             </h1>
             <p className="text-gray-400 text-xs font-medium tracking-wide uppercase">
-              Network
+              {t('ProfessionalNetwork.common.network', 'Network')}
             </p>
           </div>
         </div>
@@ -132,8 +167,14 @@ export function NetworkSidebar() {
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-medium">
             {user?.roles?.includes('OrgAdmin')
-              ? 'Back to Organisation Dashboard'
-              : 'Back to Dashboard'}
+              ? t(
+                  'ProfessionalNetwork.sidebar.backToOrganisationDashboard',
+                  'Back to Organisation Dashboard'
+                )
+              : t(
+                  'ProfessionalNetwork.sidebar.backToDashboard',
+                  'Back to Dashboard'
+                )}
           </span>
         </Link>
 
@@ -165,7 +206,9 @@ export function NetworkSidebar() {
               <Moon className="w-5 h-5" />
             )}
             <span className="text-sm font-medium">
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              {theme === 'dark'
+                ? t('ProfessionalNetwork.sidebar.theme.lightMode', 'Light Mode')
+                : t('ProfessionalNetwork.sidebar.theme.darkMode', 'Dark Mode')}
             </span>
           </button>
         </nav>
@@ -177,24 +220,25 @@ export function NetworkSidebar() {
               <UserAvatar
                 fullName={user?.fullName}
                 avatarUrl={user?.avatarUrl}
-                fallbackName="User"
+                fallbackName={t('ProfessionalNetwork.common.user', 'User')}
                 size="md"
                 className="shrink-0 border-2 border-brand/30 shadow-sm"
                 fallbackClassName="bg-brand/20 text-brand"
               />
               <div className="flex flex-col overflow-hidden">
                 <p className="text-sm font-bold text-(--text-primary) truncate">
-                  {user?.fullName || 'User'}
+                  {user?.fullName ||
+                    t('ProfessionalNetwork.common.user', 'User')}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {user?.roles?.[0] || 'Member'}
+                  {displayRoleLabel}
                 </p>
               </div>
             </div>
             <button
               onClick={handleLogout}
               className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-500/10"
-              title="Logout"
+              title={t('ProfessionalNetwork.sidebar.logout', 'Logout')}
             >
               <LogOut className="w-5 h-5" />
             </button>

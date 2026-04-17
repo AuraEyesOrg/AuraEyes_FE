@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -43,12 +44,14 @@ import {
   downloadPdfTableFile,
   downloadXlsxFile,
 } from '@/lib/file-export';
+import { extractApiErrorMessage } from '@/lib/api-error';
 import { toast } from 'react-toastify';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const DONUT_COLORS = ['#06b6d4', '#14b8a6', '#22c55e', '#f59e0b', '#8b5cf6'];
 
-const formatCurrency = (value: number) =>
-  `${Math.round(value).toLocaleString('en-US')} VND`;
+const formatCurrency = (value: number, locale: 'en-US' | 'vi-VN') =>
+  `${Math.round(value).toLocaleString(locale)} VND`;
 
 /** Axis labels for small VND amounts (avoids everything showing as 0M). */
 const formatAxisVnd = (value: number) => {
@@ -78,16 +81,22 @@ const addDays = (baseDate: Date, days: number) => {
   return d;
 };
 
-const formatDayLabel = (date: string) => {
+const formatDayLabel = (date: string, locale: 'en-US' | 'vi-VN') => {
   const parsed = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString('vi-VN', {
+  return parsed.toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
   });
 };
 
 export default function SystemAdminDashboard() {
+  const { t } = useSafeTranslation();
+  const { i18n } = useTranslation();
+  const locale: 'en-US' | 'vi-VN' = i18n.resolvedLanguage?.startsWith('en')
+    ? 'en-US'
+    : 'vi-VN';
+
   const [quotaFromDate, setQuotaFromDate] = useState(() =>
     toDateOnly(new Date())
   );
@@ -133,6 +142,11 @@ export default function SystemAdminDashboard() {
   const isLoading = metricsQuery.isLoading;
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const usedLabel = t('SystemAdmin.dashboard.quotaUsage.chart.used', 'Used');
+  const remainingLabel = t(
+    'SystemAdmin.dashboard.quotaUsage.chart.remaining',
+    'Remaining'
+  );
 
   const monthlyChartData = useMemo(() => {
     if (!metrics) return [];
@@ -161,13 +175,13 @@ export default function SystemAdminDashboard() {
 
       return {
         ...row,
-        label: formatDayLabel(row.date),
+        label: formatDayLabel(row.date, locale),
         usedSlots: used,
         remainingSlots: remaining,
         utilization,
       };
     });
-  }, [quotaUsageRows]);
+  }, [quotaUsageRows, locale]);
 
   const quotaSummary = useMemo(() => {
     if (quotaChartData.length === 0) {
@@ -199,42 +213,74 @@ export default function SystemAdminDashboard() {
   const topCards = metrics
     ? [
         {
-          title: 'Doctors',
+          title: t('SystemAdmin.dashboard.cards.doctors.title', 'Doctors'),
           value: metrics.doctors.total,
           change: metrics.doctors.growthPercentage,
           trend: resolveTrend(metrics.doctors.growthPercentage),
-          description: `This month: ${metrics.doctors.currentMonth} · Prev: ${metrics.doctors.previousMonth}`,
+          description: t(
+            'SystemAdmin.dashboard.cards.doctors.description',
+            'This month: {{current}} - Prev: {{previous}}',
+            {
+              current: metrics.doctors.currentMonth.toLocaleString(locale),
+              previous: metrics.doctors.previousMonth.toLocaleString(locale),
+            }
+          ),
           icon: Stethoscope,
           variant: 'primary' as const,
           sparklineData: metrics.monthlyNewDoctorCounts,
           sparklineColor: '#0ea5e9',
         },
         {
-          title: 'Organizations',
+          title: t(
+            'SystemAdmin.dashboard.cards.organisations.title',
+            'Organizations'
+          ),
           value: metrics.organisations.total,
           change: metrics.organisations.growthPercentage,
           trend: resolveTrend(metrics.organisations.growthPercentage),
-          description: `This month: ${metrics.organisations.currentMonth} · Prev: ${metrics.organisations.previousMonth}`,
+          description: t(
+            'SystemAdmin.dashboard.cards.organisations.description',
+            'This month: {{current}} - Prev: {{previous}}',
+            {
+              current:
+                metrics.organisations.currentMonth.toLocaleString(locale),
+              previous:
+                metrics.organisations.previousMonth.toLocaleString(locale),
+            }
+          ),
           icon: Building2,
           variant: 'success' as const,
           sparklineData: metrics.monthlyNewOrganisationCounts,
           sparklineColor: '#22c55e',
         },
         {
-          title: 'Patients',
+          title: t('SystemAdmin.dashboard.cards.patients.title', 'Patients'),
           value: metrics.patients.total,
           change: metrics.patients.growthPercentage,
           trend: resolveTrend(metrics.patients.growthPercentage),
-          description: `This month: ${metrics.patients.currentMonth} · Prev: ${metrics.patients.previousMonth}`,
+          description: t(
+            'SystemAdmin.dashboard.cards.patients.description',
+            'This month: {{current}} - Prev: {{previous}}',
+            {
+              current: metrics.patients.currentMonth.toLocaleString(locale),
+              previous: metrics.patients.previousMonth.toLocaleString(locale),
+            }
+          ),
           icon: Users,
           variant: 'warning' as const,
           sparklineData: metrics.monthlyNewPatientCounts,
           sparklineColor: '#f59e0b',
         },
         {
-          title: 'Live consultations',
+          title: t(
+            'SystemAdmin.dashboard.cards.liveConsultations.title',
+            'Live consultations'
+          ),
           value: metrics.systemStatus.liveConsultationSessions,
-          description: 'Sessions with open chat (active window)',
+          description: t(
+            'SystemAdmin.dashboard.cards.liveConsultations.description',
+            'Sessions with open chat (active window)'
+          ),
           icon: Radio,
           variant: 'primary' as const,
         },
@@ -244,18 +290,30 @@ export default function SystemAdminDashboard() {
   const revenueKpiCards = metrics
     ? [
         {
-          title: 'Wallet top-ups (YTD)',
-          value: formatCurrency(metrics.totalDepositRevenueYear),
-          description: 'Completed deposits (calendar year)',
+          title: t(
+            'SystemAdmin.dashboard.cards.walletTopUps.title',
+            'Wallet top-ups (YTD)'
+          ),
+          value: formatCurrency(metrics.totalDepositRevenueYear, locale),
+          description: t(
+            'SystemAdmin.dashboard.cards.walletTopUps.description',
+            'Completed deposits (calendar year)'
+          ),
           icon: Wallet,
           variant: 'primary' as const,
           sparklineData: metrics.monthlyRevenue.map((m) => m.value),
           sparklineColor: '#0ea5e9',
         },
         {
-          title: 'Consultation commission (YTD)',
-          value: formatCurrency(metrics.totalPlatformCommissionYear),
-          description: 'Platform share → System wallet',
+          title: t(
+            'SystemAdmin.dashboard.cards.consultationCommission.title',
+            'Consultation commission (YTD)'
+          ),
+          value: formatCurrency(metrics.totalPlatformCommissionYear, locale),
+          description: t(
+            'SystemAdmin.dashboard.cards.consultationCommission.description',
+            'Platform share to system wallet'
+          ),
           icon: Landmark,
           variant: 'success' as const,
           sparklineData: metrics.monthlyPlatformCommission.map((m) => m.value),
@@ -269,113 +327,200 @@ export default function SystemAdminDashboard() {
 
     return [
       {
-        section: 'Users',
-        metric: 'Doctors - Total',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.doctorsTotal',
+          'Doctors - Total'
+        ),
         value: metrics.doctors.total,
       },
       {
-        section: 'Users',
-        metric: 'Doctors - Growth %',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.doctorsGrowth',
+          'Doctors - Growth %'
+        ),
         value: metrics.doctors.growthPercentage,
       },
       {
-        section: 'Users',
-        metric: 'Organisations - Total',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.organisationsTotal',
+          'Organisations - Total'
+        ),
         value: metrics.organisations.total,
       },
       {
-        section: 'Users',
-        metric: 'Organisations - Growth %',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.organisationsGrowth',
+          'Organisations - Growth %'
+        ),
         value: metrics.organisations.growthPercentage,
       },
       {
-        section: 'Users',
-        metric: 'Patients - Total',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.patientsTotal',
+          'Patients - Total'
+        ),
         value: metrics.patients.total,
       },
       {
-        section: 'Users',
-        metric: 'Patients - Growth %',
+        section: t('SystemAdmin.dashboard.export.rows.section.users', 'Users'),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.patientsGrowth',
+          'Patients - Growth %'
+        ),
         value: metrics.patients.growthPercentage,
       },
       {
-        section: 'Operations',
-        metric: 'Live consultation sessions',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.operations',
+          'Operations'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.liveConsultationSessions',
+          'Live consultation sessions'
+        ),
         value: metrics.systemStatus.liveConsultationSessions,
       },
       {
-        section: 'Pending',
-        metric: 'Ophthalmologist verifications',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.pending',
+          'Pending'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.ophthalmologistVerifications',
+          'Ophthalmologist verifications'
+        ),
         value: metrics.pendingActions.pendingOphthalmologistVerifications,
       },
       {
-        section: 'Pending',
-        metric: 'Withdrawal requests',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.pending',
+          'Pending'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.withdrawalRequests',
+          'Withdrawal requests'
+        ),
         value: metrics.pendingActions.pendingWithdrawalRequests,
       },
       {
-        section: 'Pending',
-        metric: 'Organisation onboarding',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.pending',
+          'Pending'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.organisationOnboarding',
+          'Organisation onboarding'
+        ),
         value: metrics.pendingActions.pendingOrganisationOnboarding,
       },
       {
-        section: 'Revenue (YTD)',
-        metric: 'Wallet top-ups (calendar year)',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.revenueYtd',
+          'Revenue (YTD)'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.walletTopUpsCalendarYear',
+          'Wallet top-ups (calendar year)'
+        ),
         value: metrics.totalDepositRevenueYear,
       },
       {
-        section: 'Revenue (YTD)',
-        metric: 'Consultation commission (calendar year)',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.revenueYtd',
+          'Revenue (YTD)'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.consultationCommissionCalendarYear',
+          'Consultation commission (calendar year)'
+        ),
         value: metrics.totalPlatformCommissionYear,
       },
       ...metrics.paymentMethods.map((item) => ({
-        section: 'Payment Methods',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.paymentMethods',
+          'Payment Methods'
+        ),
         metric: item.name,
         value: item.value,
       })),
       ...metrics.monthlyRevenue.map((item) => ({
-        section: 'Monthly Revenue',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.monthlyRevenue',
+          'Monthly Revenue'
+        ),
         metric: item.label,
         value: item.value,
       })),
       ...metrics.monthlyPlatformCommission.map((item) => ({
-        section: 'Monthly platform commission',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.monthlyPlatformCommission',
+          'Monthly platform commission'
+        ),
         metric: item.label,
         value: item.value,
       })),
       ...metrics.dailyRevenue.map((item) => ({
-        section: 'Daily Revenue',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.dailyRevenue',
+          'Daily Revenue'
+        ),
         metric: item.label,
         value: item.value,
       })),
       ...metrics.dailyPlatformCommission.map((item) => ({
-        section: 'Daily platform commission',
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.dailyPlatformCommission',
+          'Daily platform commission'
+        ),
         metric: item.label,
         value: item.value,
       })),
       ...quotaUsageRows.map((item) => ({
-        section: 'Part-time slot quota usage',
-        metric: `${item.date} - used/quota/remaining`,
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.partTimeSlotQuotaUsage',
+          'Part-time slot quota usage'
+        ),
+        metric: t(
+          'SystemAdmin.dashboard.export.rows.metric.quotaUsageDate',
+          '{{date}} - used/quota/remaining',
+          { date: item.date }
+        ),
         value: `${item.usedSlots}/${item.quota}/${item.remainingSlots}`,
       })),
     ];
-  }, [metrics]);
+  }, [metrics, quotaUsageRows, t]);
 
   const dashboardExportColumns = useMemo(
     () => [
-      { header: 'Section', value: (row: { section: string }) => row.section },
-      { header: 'Metric', value: (row: { metric: string }) => row.metric },
       {
-        header: 'Value',
+        header: t('SystemAdmin.dashboard.export.columns.section', 'Section'),
+        value: (row: { section: string }) => row.section,
+      },
+      {
+        header: t('SystemAdmin.dashboard.export.columns.metric', 'Metric'),
+        value: (row: { metric: string }) => row.metric,
+      },
+      {
+        header: t('SystemAdmin.dashboard.export.columns.value', 'Value'),
         value: (row: { value: number | string }) => row.value,
       },
     ],
-    []
+    [t]
   );
 
   const handleExportDashboard = async () => {
     if (!metrics) {
-      toast.info('No dashboard data available for export.');
+      toast.info(
+        t(
+          'SystemAdmin.dashboard.toasts.noDataForExport',
+          'No dashboard data available for export.'
+        )
+      );
       return;
     }
 
@@ -387,18 +532,40 @@ export default function SystemAdminDashboard() {
         dashboardExportColumns,
         buildTimestampedFileName('system-admin-dashboard', 'xlsx'),
         {
-          sheetName: 'Dashboard',
-          title: 'System Admin Dashboard Export',
-          subtitle: 'Growth, revenue, queue, and system status',
+          sheetName: t('SystemAdmin.dashboard.export.sheetName', 'Dashboard'),
+          title: t(
+            'SystemAdmin.dashboard.export.title',
+            'System Admin Dashboard Export'
+          ),
+          subtitle: t(
+            'SystemAdmin.dashboard.export.subtitle',
+            'Growth, revenue, queue, and system status'
+          ),
           includeGeneratedAt: true,
-          generatedBy: 'AuraEyes System Admin',
+          generatedBy: t(
+            'SystemAdmin.dashboard.export.generatedBy',
+            'AuraEyes System Admin'
+          ),
           columnWidths: [24, 48, 22],
         }
       );
-      toast.success('Dashboard data exported successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.dashboard.toasts.exportSuccess',
+          'Dashboard data exported successfully.'
+        )
+      );
     } catch (error) {
       console.error('Failed to export dashboard data:', error);
-      toast.error('Failed to export dashboard data. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.dashboard.toasts.exportError',
+            'Failed to export dashboard data. Please try again.'
+          )
+        )
+      );
     } finally {
       setIsExporting(false);
     }
@@ -406,7 +573,12 @@ export default function SystemAdminDashboard() {
 
   const handleExportDashboardPdf = async () => {
     if (!metrics) {
-      toast.info('No dashboard data available for export.');
+      toast.info(
+        t(
+          'SystemAdmin.dashboard.toasts.noDataForExport',
+          'No dashboard data available for export.'
+        )
+      );
       return;
     }
 
@@ -417,17 +589,39 @@ export default function SystemAdminDashboard() {
         dashboardExportColumns,
         buildTimestampedFileName('system-admin-dashboard', 'pdf'),
         {
-          title: 'System Admin Dashboard Export',
-          subtitle: 'Growth, revenue, queue, and system status',
+          title: t(
+            'SystemAdmin.dashboard.export.title',
+            'System Admin Dashboard Export'
+          ),
+          subtitle: t(
+            'SystemAdmin.dashboard.export.subtitle',
+            'Growth, revenue, queue, and system status'
+          ),
           orientation: 'landscape',
           includeGeneratedAt: true,
-          generatedBy: 'AuraEyes System Admin',
+          generatedBy: t(
+            'SystemAdmin.dashboard.export.generatedBy',
+            'AuraEyes System Admin'
+          ),
         }
       );
-      toast.success('Dashboard PDF exported successfully.');
+      toast.success(
+        t(
+          'SystemAdmin.dashboard.toasts.exportPdfSuccess',
+          'Dashboard PDF exported successfully.'
+        )
+      );
     } catch (error) {
       console.error('Failed to export dashboard PDF:', error);
-      toast.error('Failed to export dashboard PDF. Please try again.');
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'SystemAdmin.dashboard.toasts.exportPdfError',
+            'Failed to export dashboard PDF. Please try again.'
+          )
+        )
+      );
     } finally {
       setIsExportingPdf(false);
     }
@@ -445,8 +639,14 @@ export default function SystemAdminDashboard() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="System Admin Dashboard"
-          description="Growth, revenue, queue, and system status"
+          title={t(
+            'SystemAdmin.dashboard.page.title',
+            'System Admin Dashboard'
+          )}
+          description={t(
+            'SystemAdmin.dashboard.page.description',
+            'Growth, revenue, queue, and system status'
+          )}
           actions={
             <div className="flex items-center gap-2">
               <button
@@ -455,7 +655,12 @@ export default function SystemAdminDashboard() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Download className="w-4 h-4" />
-                {isExporting ? 'Exporting...' : 'Export Excel'}
+                {isExporting
+                  ? t('SystemAdmin.dashboard.actions.exporting', 'Exporting...')
+                  : t(
+                      'SystemAdmin.dashboard.actions.exportExcel',
+                      'Export Excel'
+                    )}
               </button>
               <button
                 onClick={handleExportDashboardPdf}
@@ -463,7 +668,9 @@ export default function SystemAdminDashboard() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FileText className="w-4 h-4" />
-                {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+                {isExportingPdf
+                  ? t('SystemAdmin.dashboard.actions.exporting', 'Exporting...')
+                  : t('SystemAdmin.dashboard.actions.exportPdf', 'Export PDF')}
               </button>
             </div>
           }
@@ -478,7 +685,10 @@ export default function SystemAdminDashboard() {
               </div>
             ) : !metrics ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-                Unable to load live dashboard metrics.
+                {t(
+                  'SystemAdmin.dashboard.states.metricsLoadError',
+                  'Unable to load live dashboard metrics.'
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
@@ -490,7 +700,7 @@ export default function SystemAdminDashboard() {
                         title={card.title}
                         value={
                           typeof card.value === 'number'
-                            ? card.value.toLocaleString('en-US')
+                            ? card.value.toLocaleString(locale)
                             : card.value
                         }
                         icon={card.icon}
@@ -507,15 +717,21 @@ export default function SystemAdminDashboard() {
                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                     <section className="xl:col-span-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
                       <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
-                        Monthly revenue (current year)
+                        {t(
+                          'SystemAdmin.dashboard.charts.monthlyRevenue.title',
+                          'Monthly revenue (current year)'
+                        )}
                       </h3>
                       <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
-                        Wallet top-ups vs platform commission
+                        {t(
+                          'SystemAdmin.dashboard.charts.monthlyRevenue.description',
+                          'Wallet top-ups vs platform commission'
+                        )}
                       </p>
 
                       {monthlyChartData.length === 0 ? (
                         <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
-                          No data
+                          {t('SystemAdmin.dashboard.common.noData', 'No data')}
                         </div>
                       ) : (
                         <div className="h-64">
@@ -533,19 +749,25 @@ export default function SystemAdminDashboard() {
                               />
                               <Tooltip
                                 formatter={(value) =>
-                                  formatCurrency(Number(value))
+                                  formatCurrency(Number(value), locale)
                                 }
                               />
                               <Legend wrapperStyle={{ fontSize: 12 }} />
                               <Bar
                                 dataKey="topUps"
-                                name="Wallet top-ups"
+                                name={t(
+                                  'SystemAdmin.dashboard.charts.common.walletTopUps',
+                                  'Wallet top-ups'
+                                )}
                                 fill="#0ea5e9"
                                 radius={[4, 4, 0, 0]}
                               />
                               <Bar
                                 dataKey="commission"
-                                name="Consultation commission"
+                                name={t(
+                                  'SystemAdmin.dashboard.charts.common.consultationCommission',
+                                  'Consultation commission'
+                                )}
                                 fill="#14b8a6"
                                 radius={[4, 4, 0, 0]}
                               />
@@ -557,15 +779,21 @@ export default function SystemAdminDashboard() {
 
                     <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
                       <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
-                        Payment methods
+                        {t(
+                          'SystemAdmin.dashboard.charts.paymentMethods.title',
+                          'Payment methods'
+                        )}
                       </h3>
                       <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
-                        By total completed deposit amount
+                        {t(
+                          'SystemAdmin.dashboard.charts.paymentMethods.description',
+                          'By total completed deposit amount'
+                        )}
                       </p>
 
                       {metrics.paymentMethods.length === 0 ? (
                         <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
-                          No data
+                          {t('SystemAdmin.dashboard.common.noData', 'No data')}
                         </div>
                       ) : (
                         <div className="h-64">
@@ -590,7 +818,7 @@ export default function SystemAdminDashboard() {
                               </Pie>
                               <Tooltip
                                 formatter={(value) =>
-                                  formatCurrency(Number(value))
+                                  formatCurrency(Number(value), locale)
                                 }
                               />
                               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -603,15 +831,21 @@ export default function SystemAdminDashboard() {
 
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
                     <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
-                      Last 7 days — top-ups & commission
+                      {t(
+                        'SystemAdmin.dashboard.charts.dailyRevenue.title',
+                        'Last 7 days - top-ups & commission'
+                      )}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
-                      Daily movement (recent week)
+                      {t(
+                        'SystemAdmin.dashboard.charts.dailyRevenue.description',
+                        'Daily movement (recent week)'
+                      )}
                     </p>
 
                     {dailyChartData.length === 0 ? (
                       <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
-                        No data
+                        {t('SystemAdmin.dashboard.common.noData', 'No data')}
                       </div>
                     ) : (
                       <div className="h-64">
@@ -629,14 +863,17 @@ export default function SystemAdminDashboard() {
                             />
                             <Tooltip
                               formatter={(value) =>
-                                formatCurrency(Number(value))
+                                formatCurrency(Number(value), locale)
                               }
                             />
                             <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Line
                               type="monotone"
                               dataKey="topUps"
-                              name="Wallet top-ups"
+                              name={t(
+                                'SystemAdmin.dashboard.charts.common.walletTopUps',
+                                'Wallet top-ups'
+                              )}
                               stroke="#0ea5e9"
                               strokeWidth={2}
                               dot={{ r: 3 }}
@@ -645,7 +882,10 @@ export default function SystemAdminDashboard() {
                             <Line
                               type="monotone"
                               dataKey="commission"
-                              name="Consultation commission"
+                              name={t(
+                                'SystemAdmin.dashboard.charts.common.consultationCommission',
+                                'Consultation commission'
+                              )}
                               stroke="#14b8a6"
                               strokeWidth={2}
                               dot={{ r: 3 }}
@@ -662,17 +902,26 @@ export default function SystemAdminDashboard() {
                       <div>
                         <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5 flex items-center gap-2">
                           <CalendarDays className="w-4 h-4 text-sky-500" />
-                          Part-time slot quota usage
+                          {t(
+                            'SystemAdmin.dashboard.quotaUsage.title',
+                            'Part-time slot quota usage'
+                          )}
                         </h3>
                         <p className="text-slate-500 dark:text-slate-400 text-xs">
-                          Reserved slots by day against global quota
+                          {t(
+                            'SystemAdmin.dashboard.quotaUsage.description',
+                            'Reserved slots by day against global quota'
+                          )}
                         </p>
                       </div>
 
                       <div className="flex flex-wrap items-end gap-2">
                         <div>
                           <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
-                            From
+                            {t(
+                              'SystemAdmin.dashboard.quotaUsage.filters.from',
+                              'From'
+                            )}
                           </label>
                           <input
                             type="date"
@@ -683,7 +932,10 @@ export default function SystemAdminDashboard() {
                         </div>
                         <div>
                           <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
-                            To
+                            {t(
+                              'SystemAdmin.dashboard.quotaUsage.filters.to',
+                              'To'
+                            )}
                           </label>
                           <input
                             type="date"
@@ -697,21 +949,21 @@ export default function SystemAdminDashboard() {
                           onClick={() => applyQuotaRangePreset(7)}
                           className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
-                          7d
+                          {t('SystemAdmin.dashboard.quotas.day7', '7d')}
                         </button>
                         <button
                           type="button"
                           onClick={() => applyQuotaRangePreset(14)}
                           className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
-                          14d
+                          {t('SystemAdmin.dashboard.quotas.day14', '14d')}
                         </button>
                         <button
                           type="button"
                           onClick={() => applyQuotaRangePreset(30)}
                           className="px-2.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
-                          30d
+                          {t('SystemAdmin.dashboard.quotas.day30', '30d')}
                         </button>
                       </div>
                     </div>
@@ -722,34 +974,49 @@ export default function SystemAdminDashboard() {
                       </div>
                     ) : quotaUsageQuery.isError ? (
                       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-                        Failed to load part-time slot quota usage.
+                        {t(
+                          'SystemAdmin.dashboard.quotaUsage.states.loadError',
+                          'Failed to load part-time slot quota usage.'
+                        )}
                       </div>
                     ) : quotaChartData.length === 0 ? (
                       <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
-                        No quota usage data
+                        {t(
+                          'SystemAdmin.dashboard.quotaUsage.states.empty',
+                          'No quota usage data'
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Used slots
+                              {t(
+                                'SystemAdmin.dashboard.quotaUsage.summary.usedSlots',
+                                'Used slots'
+                              )}
                             </p>
                             <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
-                              {quotaSummary.totalUsed.toLocaleString('en-US')}
+                              {quotaSummary.totalUsed.toLocaleString(locale)}
                             </p>
                           </div>
                           <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Quota capacity
+                              {t(
+                                'SystemAdmin.dashboard.quotaUsage.summary.quotaCapacity',
+                                'Quota capacity'
+                              )}
                             </p>
                             <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
-                              {quotaSummary.totalQuota.toLocaleString('en-US')}
+                              {quotaSummary.totalQuota.toLocaleString(locale)}
                             </p>
                           </div>
                           <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Avg utilization
+                              {t(
+                                'SystemAdmin.dashboard.quotaUsage.summary.averageUtilization',
+                                'Avg utilization'
+                              )}
                             </p>
                             <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
                               {quotaSummary.averageUtilization.toFixed(1)}%
@@ -757,7 +1024,10 @@ export default function SystemAdminDashboard() {
                           </div>
                           <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Near-limit days
+                              {t(
+                                'SystemAdmin.dashboard.quotaUsage.summary.nearLimitDays',
+                                'Near-limit days'
+                              )}
                             </p>
                             <p className="text-base font-bold text-amber-600 dark:text-amber-400 tabular-nums">
                               {quotaSummary.nearLimitDays}
@@ -778,9 +1048,9 @@ export default function SystemAdminDashboard() {
                               <Tooltip
                                 formatter={(value, name) => {
                                   if (name === 'usedSlots') {
-                                    return [value, 'Used'];
+                                    return [value, usedLabel];
                                   }
-                                  return [value, 'Remaining'];
+                                  return [value, remainingLabel];
                                 }}
                                 labelFormatter={(label, payload) => {
                                   const row = payload?.[0]?.payload as
@@ -794,14 +1064,14 @@ export default function SystemAdminDashboard() {
                               <Legend wrapperStyle={{ fontSize: 12 }} />
                               <Bar
                                 dataKey="usedSlots"
-                                name="Used"
+                                name={usedLabel}
                                 stackId="quota"
                                 fill="#0ea5e9"
                                 radius={[4, 4, 0, 0]}
                               />
                               <Bar
                                 dataKey="remainingSlots"
-                                name="Remaining"
+                                name={remainingLabel}
                                 stackId="quota"
                                 fill="#22c55e"
                                 radius={[4, 4, 0, 0]}
@@ -818,10 +1088,16 @@ export default function SystemAdminDashboard() {
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                     <h3 className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-2">
                       <Activity className="w-4 h-4 text-amber-500" />
-                      Pending actions
+                      {t(
+                        'SystemAdmin.dashboard.pendingActions.title',
+                        'Pending actions'
+                      )}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 mb-3">
-                      Queues that need your attention
+                      {t(
+                        'SystemAdmin.dashboard.pendingActions.description',
+                        'Queues that need your attention'
+                      )}
                     </p>
                     <ul className="space-y-1">
                       <li>
@@ -830,9 +1106,15 @@ export default function SystemAdminDashboard() {
                           className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
                         >
                           <span>
-                            Doctor profile reviews
+                            {t(
+                              'SystemAdmin.dashboard.pendingActions.items.doctorProfileReviews.title',
+                              'Doctor profile reviews'
+                            )}
                             <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              Pending verification
+                              {t(
+                                'SystemAdmin.dashboard.pendingActions.items.doctorProfileReviews.subtitle',
+                                'Pending verification'
+                              )}
                             </span>
                           </span>
                           <span className="flex items-center gap-1 font-semibold tabular-nums">
@@ -850,9 +1132,15 @@ export default function SystemAdminDashboard() {
                           className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
                         >
                           <span>
-                            Withdrawal requests
+                            {t(
+                              'SystemAdmin.dashboard.pendingActions.items.withdrawalRequests.title',
+                              'Withdrawal requests'
+                            )}
                             <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              Pending / processing
+                              {t(
+                                'SystemAdmin.dashboard.pendingActions.items.withdrawalRequests.subtitle',
+                                'Pending / processing'
+                              )}
                             </span>
                           </span>
                           <span className="flex items-center gap-1 font-semibold tabular-nums">
@@ -867,9 +1155,15 @@ export default function SystemAdminDashboard() {
                           className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
                         >
                           <span>
-                            Organisation onboarding
+                            {t(
+                              'SystemAdmin.dashboard.pendingActions.items.organisationOnboarding.title',
+                              'Organisation onboarding'
+                            )}
                             <span className="text-slate-500 dark:text-slate-400 block text-xs font-normal">
-                              Awaiting approval
+                              {t(
+                                'SystemAdmin.dashboard.pendingActions.items.organisationOnboarding.subtitle',
+                                'Awaiting approval'
+                              )}
                             </span>
                           </span>
                           <span className="flex items-center gap-1 font-semibold tabular-nums">
@@ -890,14 +1184,17 @@ export default function SystemAdminDashboard() {
                         to="/system-admin/status"
                         className="inline-flex items-center gap-1 text-slate-900 dark:text-white hover:text-primary transition-colors"
                       >
-                        System status
+                        {t(
+                          'SystemAdmin.dashboard.systemStatus.title',
+                          'System status'
+                        )}
                         <ChevronRight className="w-4 h-4" />
                       </Link>
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-600 dark:text-slate-400">
-                          API
+                          {t('SystemAdmin.dashboard.systemStatus.api', 'API')}
                         </span>
                         <span className="flex items-center gap-1.5">
                           <span
@@ -909,14 +1206,23 @@ export default function SystemAdminDashboard() {
                           />
                           <span className="text-slate-800 dark:text-slate-200">
                             {metrics.systemStatus.apiHealthy
-                              ? 'Operational'
-                              : 'Issue'}
+                              ? t(
+                                  'SystemAdmin.dashboard.systemStatus.operational',
+                                  'Operational'
+                                )
+                              : t(
+                                  'SystemAdmin.dashboard.systemStatus.issue',
+                                  'Issue'
+                                )}
                           </span>
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-600 dark:text-slate-400">
-                          Database
+                          {t(
+                            'SystemAdmin.dashboard.systemStatus.database',
+                            'Database'
+                          )}
                         </span>
                         <span className="flex items-center gap-1.5">
                           <span
@@ -928,8 +1234,14 @@ export default function SystemAdminDashboard() {
                           />
                           <span className="text-slate-800 dark:text-slate-200">
                             {metrics.systemStatus.databaseHealthy
-                              ? 'Connected'
-                              : 'Unreachable'}
+                              ? t(
+                                  'SystemAdmin.dashboard.systemStatus.connected',
+                                  'Connected'
+                                )
+                              : t(
+                                  'SystemAdmin.dashboard.systemStatus.unreachable',
+                                  'Unreachable'
+                                )}
                           </span>
                         </span>
                       </div>
@@ -938,13 +1250,24 @@ export default function SystemAdminDashboard() {
 
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                     <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-1">
-                      Top doctors
+                      {t(
+                        'SystemAdmin.dashboard.topDoctors.title',
+                        'Top doctors'
+                      )}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs mb-3">
-                      By consultation revenue (all time)
+                      {t(
+                        'SystemAdmin.dashboard.topDoctors.description',
+                        'By consultation revenue (all time)'
+                      )}
                     </p>
                     {metrics.topDoctorsByConsultationRevenue.length === 0 ? (
-                      <p className="text-slate-500 text-xs">No data yet</p>
+                      <p className="text-slate-500 text-xs">
+                        {t(
+                          'SystemAdmin.dashboard.topDoctors.states.empty',
+                          'No data yet'
+                        )}
+                      </p>
                     ) : (
                       <ol className="space-y-2">
                         {metrics.topDoctorsByConsultationRevenue.map(
@@ -958,23 +1281,31 @@ export default function SystemAdminDashboard() {
                                   <span className="text-slate-400 mr-1.5">
                                     {idx + 1}.
                                   </span>
-                                  {d.name || '—'}
+                                  {d.name || '-'}
                                 </div>
                                 {d.ratingCount > 0 ? (
                                   <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    ★ {d.ratingAverage.toFixed(1)}
+                                    * {d.ratingAverage.toFixed(1)}
                                     <span className="text-slate-400 ml-1">
-                                      ({d.ratingCount} reviews)
+                                      ({d.ratingCount}{' '}
+                                      {t(
+                                        'SystemAdmin.dashboard.topDoctors.reviews',
+                                        'reviews'
+                                      )}
+                                      )
                                     </span>
                                   </div>
                                 ) : (
                                   <div className="text-[10px] text-slate-400 mt-0.5">
-                                    No ratings yet
+                                    {t(
+                                      'SystemAdmin.dashboard.topDoctors.noRatings',
+                                      'No ratings yet'
+                                    )}
                                   </div>
                                 )}
                               </div>
                               <span className="text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
-                                {formatCurrency(d.revenue)}
+                                {formatCurrency(d.revenue, locale)}
                               </span>
                             </li>
                           )
@@ -985,13 +1316,24 @@ export default function SystemAdminDashboard() {
 
                   <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
                     <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-1">
-                      Top organisations
+                      {t(
+                        'SystemAdmin.dashboard.topOrganisations.title',
+                        'Top organisations'
+                      )}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs mb-3">
-                      By average rating
+                      {t(
+                        'SystemAdmin.dashboard.topOrganisations.description',
+                        'By average rating'
+                      )}
                     </p>
                     {metrics.topOrganisationsByRating.length === 0 ? (
-                      <p className="text-slate-500 text-xs">No data yet</p>
+                      <p className="text-slate-500 text-xs">
+                        {t(
+                          'SystemAdmin.dashboard.topOrganisations.states.empty',
+                          'No data yet'
+                        )}
+                      </p>
                     ) : (
                       <ol className="space-y-2">
                         {metrics.topOrganisationsByRating.map((o, idx) => (
@@ -1006,7 +1348,7 @@ export default function SystemAdminDashboard() {
                               {o.name}
                             </span>
                             <span className="text-slate-600 dark:text-slate-400 tabular-nums shrink-0">
-                              ★ {o.ratingAverage.toFixed(1)}
+                              * {o.ratingAverage.toFixed(1)}
                               <span className="text-slate-400 ml-1">
                                 ({o.ratingCount})
                               </span>

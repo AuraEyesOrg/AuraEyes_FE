@@ -12,6 +12,8 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { getLocalizedSpecialty } from '../../utils/specialtyLocalization';
 
 interface Props {
   professional: Ophthalmologist;
@@ -19,9 +21,19 @@ interface Props {
 
 export function ProfessionalCard({ professional }: Props) {
   const location = useLocation();
+  const { t } = useSafeTranslation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+  const displayPrimarySpecialty = getLocalizedSpecialty(
+    t,
+    professional.specialty?.[0]
+  );
+  const displaySecondarySpecialties =
+    professional.specialty?.slice(1).map((specialty) => ({
+      value: specialty,
+      label: getLocalizedSpecialty(t, specialty),
+    })) ?? [];
 
   return (
     <div className="px-4 py-3">
@@ -55,7 +67,7 @@ export function ProfessionalCard({ professional }: Props) {
                 )}
               </div>
               <p className="text-[15px] text-text-muted truncate">
-                {professional.specialty?.[0]}
+                {displayPrimarySpecialty}
                 {professional.organisationName &&
                   ` · ${professional.organisationName}`}
               </p>
@@ -64,9 +76,9 @@ export function ProfessionalCard({ professional }: Props) {
 
           {/* Specialties */}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {professional.specialty?.slice(1).map((spec) => (
-              <span key={spec} className="badge-specialty">
-                {spec}
+            {displaySecondarySpecialties.map((specialty) => (
+              <span key={specialty.value} className="badge-specialty">
+                {specialty.label}
               </span>
             ))}
           </div>

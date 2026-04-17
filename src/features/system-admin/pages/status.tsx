@@ -5,8 +5,11 @@ import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import { dashboardApi } from '../api';
 import type { SystemAdminDashboardMetrics } from '../types/system-admin.types';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 export default function SystemAdminStatusPage() {
+  const { t } = useSafeTranslation();
+
   const metricsQuery = useQuery<SystemAdminDashboardMetrics>({
     queryKey: ['system-admin-dashboard', 'metrics'],
     queryFn: dashboardApi.getMetrics,
@@ -26,8 +29,11 @@ export default function SystemAdminStatusPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <PageHeader
-          title="System Status"
-          description="Infrastructure health and BetterStack heartbeats"
+          title={t('SystemAdmin.statusPage.title', 'System Status')}
+          description={t(
+            'SystemAdmin.statusPage.description',
+            'Infrastructure health and BetterStack heartbeats'
+          )}
           showNotifications={true}
         />
 
@@ -39,37 +45,69 @@ export default function SystemAdminStatusPage() {
               </div>
             ) : !metrics ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
-                Unable to load status metrics.
+                {t(
+                  'SystemAdmin.statusPage.states.loadError',
+                  'Unable to load status metrics.'
+                )}
               </div>
             ) : (
               <div className="space-y-5">
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <StatusCard
-                    title="API"
+                    title={t('SystemAdmin.statusPage.cards.api.title', 'API')}
                     value={
-                      metrics.systemStatus.apiHealthy ? 'Operational' : 'Issue'
+                      metrics.systemStatus.apiHealthy
+                        ? t(
+                            'SystemAdmin.statusPage.cards.api.values.operational',
+                            'Operational'
+                          )
+                        : t(
+                            'SystemAdmin.statusPage.cards.api.values.issue',
+                            'Issue'
+                          )
                     }
                     icon={Server}
                     healthy={metrics.systemStatus.apiHealthy}
-                    description="Backend API availability"
+                    description={t(
+                      'SystemAdmin.statusPage.cards.api.description',
+                      'Backend API availability'
+                    )}
                   />
                   <StatusCard
-                    title="Database"
+                    title={t(
+                      'SystemAdmin.statusPage.cards.database.title',
+                      'Database'
+                    )}
                     value={
                       metrics.systemStatus.databaseHealthy
-                        ? 'Connected'
-                        : 'Unreachable'
+                        ? t(
+                            'SystemAdmin.statusPage.cards.database.values.connected',
+                            'Connected'
+                          )
+                        : t(
+                            'SystemAdmin.statusPage.cards.database.values.unreachable',
+                            'Unreachable'
+                          )
                     }
                     icon={Database}
                     healthy={metrics.systemStatus.databaseHealthy}
-                    description="Primary data store health"
+                    description={t(
+                      'SystemAdmin.statusPage.cards.database.description',
+                      'Primary data store health'
+                    )}
                   />
                   <StatusCard
-                    title="Live consultations"
+                    title={t(
+                      'SystemAdmin.statusPage.cards.liveConsultations.title',
+                      'Live consultations'
+                    )}
                     value={metrics.systemStatus.liveConsultationSessions.toString()}
                     icon={Radio}
                     healthy={metrics.systemStatus.liveConsultationSessions >= 0}
-                    description="Sessions with open chat window"
+                    description={t(
+                      'SystemAdmin.statusPage.cards.liveConsultations.description',
+                      'Sessions with open chat window'
+                    )}
                   />
                 </section>
 
@@ -78,10 +116,16 @@ export default function SystemAdminStatusPage() {
                     <div>
                       <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5 flex items-center gap-2">
                         <Activity className="h-4 w-4 text-cyan-500" />
-                        BetterStack heartbeats
+                        {t(
+                          'SystemAdmin.statusPage.betterStack.title',
+                          'BetterStack heartbeats'
+                        )}
                       </h3>
                       <p className="text-slate-500 dark:text-slate-400 text-xs">
-                        Background workers and Hangfire recurring jobs
+                        {t(
+                          'SystemAdmin.statusPage.betterStack.description',
+                          'Background workers and Hangfire recurring jobs'
+                        )}
                       </p>
                     </div>
 
@@ -92,18 +136,32 @@ export default function SystemAdminStatusPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                       >
-                        Open BetterStack
+                        {t(
+                          'SystemAdmin.statusPage.betterStack.actions.openBetterStack',
+                          'Open BetterStack'
+                        )}
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : null}
                   </div>
 
                   <div className="mt-3 text-xs text-slate-600 dark:text-slate-300">
-                    Enabled:{' '}
+                    {t(
+                      'SystemAdmin.statusPage.betterStack.summary.enabledLabel',
+                      'Enabled'
+                    )}
+                    :{' '}
                     <span className="font-semibold">
-                      {metrics.betterStack.enabled ? 'Yes' : 'No'}
+                      {metrics.betterStack.enabled
+                        ? t('SystemAdmin.statusPage.common.yes', 'Yes')
+                        : t('SystemAdmin.statusPage.common.no', 'No')}
                     </span>
-                    {' · '}Configured monitors:{' '}
+                    {' · '}
+                    {t(
+                      'SystemAdmin.statusPage.betterStack.summary.configuredMonitorsLabel',
+                      'Configured monitors'
+                    )}
+                    :{' '}
                     <span className="font-semibold">
                       {configuredMonitorCount}/{betterStackMonitors.length}
                     </span>
@@ -112,7 +170,10 @@ export default function SystemAdminStatusPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {betterStackMonitors.length === 0 ? (
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        No monitors available.
+                        {t(
+                          'SystemAdmin.statusPage.betterStack.states.emptyMonitors',
+                          'No monitors available.'
+                        )}
                       </span>
                     ) : (
                       betterStackMonitors.map((monitor) => (
@@ -133,7 +194,10 @@ export default function SystemAdminStatusPage() {
                   {metrics.betterStack.embedUrl ? (
                     <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                       <iframe
-                        title="BetterStack Heartbeats"
+                        title={t(
+                          'SystemAdmin.statusPage.betterStack.embedTitle',
+                          'BetterStack Heartbeats'
+                        )}
                         src={metrics.betterStack.embedUrl}
                         loading="lazy"
                         className="h-[620px] w-full"
@@ -143,7 +207,10 @@ export default function SystemAdminStatusPage() {
                     </div>
                   ) : (
                     <div className="mt-4 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 px-3 py-3 text-xs text-slate-500 dark:text-slate-400">
-                      BetterStack embed URL is not configured yet.
+                      {t(
+                        'SystemAdmin.statusPage.betterStack.states.embedNotConfigured',
+                        'BetterStack embed URL is not configured yet.'
+                      )}
                     </div>
                   )}
                 </section>

@@ -9,8 +9,10 @@ import { PostSkeleton } from '../components/post/PostSkeleton';
 import { useSavedPosts } from '../hooks/useNetworkPosts';
 import { useToggleSavePost } from '../hooks/useToggleSavePost';
 import useAuthStore from '@/store/auth-store';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 function SavedPage() {
+  const { t } = useSafeTranslation();
   const { user: currentUser } = useAuthStore();
   const currentUserId = currentUser?.id || '';
   const { data, isLoading, isError } = useSavedPosts();
@@ -27,7 +29,9 @@ function SavedPage() {
       {/* Sticky Header */}
       <header className="hover-animation sticky top-0 z-10 bg-main-background/60 backdrop-blur-md border-b border-light-border">
         <div className="flex items-center justify-between px-4 h-[53px]">
-          <h2 className="text-xl font-bold text-text-main">Bookmarks</h2>
+          <h2 className="text-xl font-bold text-text-main">
+            {t('ProfessionalNetwork.saved.title', 'Bookmarks')}
+          </h2>
         </div>
       </header>
 
@@ -38,9 +42,17 @@ function SavedPage() {
             <FileText className="w-5 h-5 text-brand-primary" />
           </div>
           <div>
-            <h3 className="font-bold text-[15px] text-text-main">All Saved</h3>
+            <h3 className="font-bold text-[15px] text-text-main">
+              {t('ProfessionalNetwork.saved.sections.allSaved', 'All Saved')}
+            </h3>
             <p className="text-[13px] text-text-muted">
-              {isLoading ? '...' : `${savedPosts.length} posts`}
+              {isLoading
+                ? '...'
+                : t(
+                    'ProfessionalNetwork.saved.count.posts',
+                    '{{count}} posts',
+                    { count: savedPosts.length }
+                  )}
             </p>
           </div>
         </div>
@@ -49,7 +61,10 @@ function SavedPage() {
       {/* Saved Posts Header */}
       <div className="px-4 py-3 border-b border-light-border">
         <h3 className="font-bold text-[15px] text-text-main">
-          All Saved Posts
+          {t(
+            'ProfessionalNetwork.saved.sections.allSavedPosts',
+            'All Saved Posts'
+          )}
         </h3>
       </div>
 
@@ -59,7 +74,12 @@ function SavedPage() {
           Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)
         ) : isError ? (
           <div className="text-center py-12 px-4">
-            <p className="text-red-500">Failed to load saved posts</p>
+            <p className="text-red-500">
+              {t(
+                'ProfessionalNetwork.saved.states.loadError',
+                'Failed to load saved posts'
+              )}
+            </p>
           </div>
         ) : savedPosts.length > 0 ? (
           savedPosts.map((item) => (
@@ -73,7 +93,12 @@ function SavedPage() {
         ) : (
           <div className="text-center py-12 px-4">
             <Bookmark className="w-12 h-12 text-text-muted mx-auto mb-3" />
-            <p className="text-text-muted">No saved posts yet</p>
+            <p className="text-text-muted">
+              {t(
+                'ProfessionalNetwork.saved.states.empty',
+                'No saved posts yet'
+              )}
+            </p>
           </div>
         )}
       </div>
