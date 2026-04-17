@@ -4398,6 +4398,52 @@
     }
   },
   "SystemAdmin": {
+    "common": {
+      "systemAdmin": "Quản trị hệ thống",
+      "noDataAvailable": "Không có dữ liệu",
+      "loadingData": "Đang tải dữ liệu...",
+      "notAvailable": "N/A",
+      "notProvided": "Chưa cung cấp",
+      "noNotes": "Không có ghi chú",
+      "doctor": "Bác sĩ",
+      "createdAt": "Tạo lúc",
+      "reviewedAt": "Duyệt lúc",
+      "adminNote": "Ghi chú admin",
+      "status": {
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối",
+        "cancelled": "Đã hủy",
+        "processing": "Đang xử lý",
+        "completed": "Hoàn tất",
+        "failed": "Thất bại"
+      },
+      "actions": {
+        "refresh": "Làm mới",
+        "approve": "Duyệt",
+        "reject": "Từ chối",
+        "cancel": "Hủy",
+        "processing": "Đang xử lý...",
+        "confirmApprove": "Xác nhận duyệt",
+        "confirmReject": "Xác nhận từ chối"
+      },
+      "pagination": {
+        "previous": "Trang trước",
+        "next": "Trang sau",
+        "label": "Trang {{page}}/{{total}}",
+        "page": "Trang {{page}}"
+      }
+    },
+    "actions": {
+      "export": "Xuất dữ liệu"
+    },
+    "header": {
+      "breadcrumb": {
+        "pages": "Trang"
+      },
+      "searchPlaceholder": "Tìm kiếm từ khóa",
+      "toggleTheme": "Chuyển giao diện"
+    },
     "sidebar": {
       "dashboard": "Tổng quan",
       "groups": {
@@ -4433,6 +4479,1738 @@
         "audit-logs": "Nhật ký hệ thống",
         "settings": "Cài đặt",
         "aura-network": "Aura Network"
+      }
+    },
+    "dashboard": {
+      "page": {
+        "title": "Bảng điều khiển quản trị hệ thống",
+        "description": "Tăng trưởng, doanh thu, hàng chờ và trạng thái hệ thống"
+      },
+      "actions": {
+        "exporting": "Đang xuất...",
+        "exportExcel": "Xuất Excel",
+        "exportPdf": "Xuất PDF"
+      },
+      "states": {
+        "metricsLoadError": "Không thể tải số liệu dashboard trực tiếp."
+      },
+      "common": {
+        "noData": "Không có dữ liệu"
+      },
+      "cards": {
+        "doctors": {
+          "title": "Bác sĩ",
+          "description": "Tháng này: {{current}} - Trước đó: {{previous}}"
+        },
+        "organisations": {
+          "title": "Tổ chức",
+          "description": "Tháng này: {{current}} - Trước đó: {{previous}}"
+        },
+        "patients": {
+          "title": "Bệnh nhân",
+          "description": "Tháng này: {{current}} - Trước đó: {{previous}}"
+        },
+        "liveConsultations": {
+          "title": "Phiên tư vấn trực tiếp",
+          "description": "Phiên có cửa sổ chat đang mở"
+        },
+        "walletTopUps": {
+          "title": "Nạp ví (YTD)",
+          "description": "Khoản nạp hoàn tất (năm hiện tại)"
+        },
+        "consultationCommission": {
+          "title": "Hoa hồng tư vấn (YTD)",
+          "description": "Phần chia nền tảng vào ví hệ thống"
+        }
+      },
+      "charts": {
+        "common": {
+          "walletTopUps": "Nạp ví",
+          "consultationCommission": "Hoa hồng tư vấn"
+        },
+        "monthlyRevenue": {
+          "title": "Doanh thu theo tháng (năm hiện tại)",
+          "description": "Nạp ví so với hoa hồng nền tảng"
+        },
+        "paymentMethods": {
+          "title": "Phương thức thanh toán",
+          "description": "Theo tổng tiền nạp đã hoàn tất"
+        },
+        "dailyRevenue": {
+          "title": "7 ngày gần nhất - nạp ví và hoa hồng",
+          "description": "Biến động theo ngày (tuần gần đây)"
+        }
+      },
+      "quotaUsage": {
+        "title": "Mức dùng quota slot bán thời gian",
+        "description": "Số slot đã đặt theo ngày so với quota toàn cục",
+        "filters": {
+          "from": "Từ ngày",
+          "to": "Đến ngày"
+        },
+        "states": {
+          "loadError": "Không thể tải dữ liệu quota slot bán thời gian.",
+          "empty": "Không có dữ liệu sử dụng quota"
+        },
+        "summary": {
+          "usedSlots": "Slot đã dùng",
+          "quotaCapacity": "Tổng quota",
+          "averageUtilization": "Mức dùng trung bình",
+          "nearLimitDays": "Ngày gần chạm ngưỡng"
+        },
+        "chart": {
+          "used": "Đã dùng",
+          "remaining": "Còn lại"
+        }
+      },
+      "quotas": {
+        "day7": "7 ngày",
+        "day14": "14 ngày",
+        "day30": "30 ngày"
+      },
+      "pendingActions": {
+        "title": "Tác vụ chờ xử lý",
+        "description": "Các hàng chờ cần bạn xử lý",
+        "items": {
+          "doctorProfileReviews": {
+            "title": "Duyệt hồ sơ bác sĩ",
+            "subtitle": "Chờ xác minh"
+          },
+          "withdrawalRequests": {
+            "title": "Yêu cầu rút tiền",
+            "subtitle": "Chờ xử lý / đang xử lý"
+          },
+          "organisationOnboarding": {
+            "title": "Onboarding tổ chức",
+            "subtitle": "Chờ phê duyệt"
+          }
+        }
+      },
+      "systemStatus": {
+        "title": "Trạng thái hệ thống",
+        "api": "API",
+        "database": "Cơ sở dữ liệu",
+        "operational": "Hoạt động tốt",
+        "issue": "Có sự cố",
+        "connected": "Đã kết nối",
+        "unreachable": "Không thể truy cập"
+      },
+      "topDoctors": {
+        "title": "Bác sĩ nổi bật",
+        "description": "Theo doanh thu tư vấn (toàn thời gian)",
+        "reviews": "đánh giá",
+        "noRatings": "Chưa có đánh giá",
+        "states": {
+          "empty": "Chưa có dữ liệu"
+        }
+      },
+      "topOrganisations": {
+        "title": "Tổ chức nổi bật",
+        "description": "Theo điểm đánh giá trung bình",
+        "states": {
+          "empty": "Chưa có dữ liệu"
+        }
+      },
+      "export": {
+        "sheetName": "Dashboard",
+        "title": "Xuất dữ liệu Dashboard Quản trị hệ thống",
+        "subtitle": "Tăng trưởng, doanh thu, hàng chờ và trạng thái hệ thống",
+        "generatedBy": "AuraEyes System Admin",
+        "columns": {
+          "section": "Nhóm",
+          "metric": "Chỉ số",
+          "value": "Giá trị"
+        },
+        "rows": {
+          "section": {
+            "users": "Người dùng",
+            "operations": "Vận hành",
+            "pending": "Đang chờ",
+            "revenueYtd": "Doanh thu (YTD)",
+            "paymentMethods": "Phương thức thanh toán",
+            "monthlyRevenue": "Doanh thu theo tháng",
+            "monthlyPlatformCommission": "Hoa hồng nền tảng theo tháng",
+            "dailyRevenue": "Doanh thu theo ngày",
+            "dailyPlatformCommission": "Hoa hồng nền tảng theo ngày",
+            "partTimeSlotQuotaUsage": "Mức dùng quota slot bán thời gian"
+          },
+          "metric": {
+            "doctorsTotal": "Bác sĩ - Tổng",
+            "doctorsGrowth": "Bác sĩ - Tăng trưởng %",
+            "organisationsTotal": "Tổ chức - Tổng",
+            "organisationsGrowth": "Tổ chức - Tăng trưởng %",
+            "patientsTotal": "Bệnh nhân - Tổng",
+            "patientsGrowth": "Bệnh nhân - Tăng trưởng %",
+            "liveConsultationSessions": "Phiên tư vấn trực tiếp",
+            "ophthalmologistVerifications": "Xác minh bác sĩ nhãn khoa",
+            "withdrawalRequests": "Yêu cầu rút tiền",
+            "organisationOnboarding": "Onboarding tổ chức",
+            "walletTopUpsCalendarYear": "Nạp ví (năm hiện tại)",
+            "consultationCommissionCalendarYear": "Hoa hồng tư vấn (năm hiện tại)",
+            "quotaUsageDate": "{{date}} - đã dùng/quota/còn lại"
+          }
+        }
+      },
+      "toasts": {
+        "noDataForExport": "Không có dữ liệu dashboard để xuất.",
+        "exportSuccess": "Đã xuất dữ liệu dashboard thành công.",
+        "exportError": "Không thể xuất dữ liệu dashboard. Vui lòng thử lại.",
+        "exportPdfSuccess": "Đã xuất PDF dashboard thành công.",
+        "exportPdfError": "Không thể xuất PDF dashboard. Vui lòng thử lại."
+      }
+    },
+    "ophthalmologists": {
+      "page": {
+        "title": "Quản lý bác sĩ nhãn khoa",
+        "description": "Quản lý bác sĩ, theo dõi yêu cầu tư vấn, thu nhập và phản hồi"
+      },
+      "actions": {
+        "export": "Xuất dữ liệu",
+        "exporting": "Đang xuất..."
+      },
+      "status": {
+        "available": "Sẵn sàng",
+        "busy": "Bận",
+        "unavailable": "Không khả dụng",
+        "fullyBooked": "Kín lịch"
+      },
+      "verification": {
+        "verified": "Đã xác minh",
+        "pending": "Đang chờ",
+        "pendingUpdate": "Chờ cập nhật",
+        "rejected": "Đã từ chối"
+      },
+      "toasts": {
+        "invalidSalaryForPayout": "Bác sĩ chưa có mức lương thực nhận hợp lệ để chi trả.",
+        "paySalarySuccess": "Đã chi lương vào ví bác sĩ thành công.",
+        "paySalaryError": "Không thể chi lương. Vui lòng thử lại.",
+        "employmentTypeUnchanged": "Loại hình làm việc chưa thay đổi.",
+        "updateEmploymentSuccess": "Đã cập nhật loại hình làm việc thành công.",
+        "updateEmploymentError": "Không thể cập nhật loại hình làm việc. Vui lòng thử lại.",
+        "deleteSuccess": "Đã xóa bác sĩ thành công.",
+        "deleteError": "Không thể xóa bác sĩ. Vui lòng thử lại.",
+        "rejectError": "Từ chối thất bại. Vui lòng thử lại.",
+        "noDataForExport": "Không có bác sĩ nhãn khoa để xuất.",
+        "exportSuccess": "Đã xuất {{count}} bác sĩ nhãn khoa.",
+        "exportError": "Không thể xuất danh sách bác sĩ nhãn khoa. Vui lòng thử lại."
+      },
+      "export": {
+        "sheetName": "Bác sĩ nhãn khoa",
+        "columns": {
+          "ophthalmologistId": "Mã bác sĩ nhãn khoa",
+          "fullName": "Họ và tên",
+          "email": "Email",
+          "phone": "Số điện thoại",
+          "verificationStatus": "Trạng thái xác minh",
+          "isVerified": "Đã xác minh",
+          "activeStatus": "Trạng thái hoạt động",
+          "yearsOfExperience": "Số năm kinh nghiệm",
+          "organisation": "Tổ chức",
+          "createdAt": "Ngày tạo"
+        },
+        "values": {
+          "yes": "Có",
+          "no": "Không",
+          "active": "Hoạt động",
+          "inactive": "Không hoạt động"
+        }
+      },
+      "table": {
+        "columns": {
+          "doctor": "Bác sĩ",
+          "status": "Trạng thái",
+          "verification": "Xác minh",
+          "requests": "Yêu cầu",
+          "monthlyEarnings": "Thu nhập tháng",
+          "dealTerms": "Điều khoản deal",
+          "rating": "Đánh giá",
+          "actions": "Hành động"
+        },
+        "values": {
+          "yearsExperience": "{{count}} năm kinh nghiệm",
+          "pendingRequests": "{{count}} đang chờ",
+          "totalRequests": "{{count}} tổng",
+          "commissionPending": "Hoa hồng đang chờ"
+        },
+        "actions": {
+          "viewDetails": "Xem chi tiết",
+          "approveVerification": "Duyệt xác minh",
+          "rejectVerification": "Từ chối xác minh",
+          "moreActions": "Thêm thao tác",
+          "update": "Cập nhật",
+          "deleting": "Đang xóa...",
+          "delete": "Xóa"
+        }
+      },
+      "tabs": {
+        "overview": "Tổng quan",
+        "pendingVerification": "Chờ xác minh",
+        "feedback": "Phản hồi"
+      },
+      "stats": {
+        "totalDoctors": {
+          "title": "Tổng số bác sĩ",
+          "description": "{{count}} đã xác minh"
+        },
+        "availableNow": {
+          "title": "Đang sẵn sàng",
+          "description": "Sẵn sàng tư vấn"
+        },
+        "pendingVerification": {
+          "title": "Chờ xác minh",
+          "description": "Cần xem xét"
+        },
+        "pendingRequests": {
+          "title": "Yêu cầu đang chờ",
+          "description": "Yêu cầu tư vấn"
+        },
+        "monthlyRevenue": {
+          "title": "Doanh thu tháng",
+          "description": "Thu nhập nền tảng"
+        }
+      },
+      "overview": {
+        "averageRating": {
+          "title": "Điểm đánh giá trung bình",
+          "basedOnReviews": "Dựa trên {{count}} đánh giá"
+        },
+        "totalConsultations": {
+          "title": "Tổng lượt tư vấn",
+          "completed": "đã hoàn thành",
+          "totalRequests": "{{count}} tổng yêu cầu"
+        },
+        "pendingPayouts": {
+          "title": "Khoản chờ chi trả",
+          "description": "Đang chờ chuyển cho bác sĩ"
+        }
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên hoặc email...",
+        "verification": {
+          "all": "Tất cả xác minh",
+          "pending": "Đang chờ",
+          "approved": "Đã duyệt",
+          "rejected": "Đã từ chối"
+        },
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "feedback": {
+        "state": {
+          "inProgress": "Tính năng phản hồi đang được phát triển",
+          "comingSoon": "Sắp ra mắt"
+        }
+      },
+      "requestsBanner": {
+        "pendingDoctors": "{{count}} bác sĩ đang chờ xét duyệt hồ sơ chứng chỉ",
+        "hint": "Xem tài liệu đính kèm trong hàng chi tiết (biểu tượng mắt)"
+      },
+      "states": {
+        "noPendingRequests": "Không có hồ sơ nào đang chờ xét duyệt",
+        "empty": "Không tìm thấy bác sĩ nhãn khoa"
+      },
+      "pagination": {
+        "showing": "Hiển thị {{shown}} trên {{total}} bác sĩ",
+        "previous": "Trước",
+        "page": "Trang {{page}}",
+        "next": "Sau"
+      },
+      "rejectModal": {
+        "title": "Từ chối xác minh",
+        "reasonLabel": "Lý do từ chối",
+        "reasonPlaceholder": "Nhập lý do từ chối hồ sơ (ví dụ: ảnh giấy phép không rõ, chứng chỉ chưa đủ điều kiện...)",
+        "hint": "Lý do từ chối sẽ được gửi qua email đến bác sĩ. Hãy mô tả rõ ràng để họ có thể bổ sung hồ sơ.",
+        "links": {
+          "viewLicense": "Xem giấy phép",
+          "viewDegree": "Xem bằng cấp"
+        },
+        "actions": {
+          "cancel": "Hủy",
+          "confirm": "Xác nhận từ chối"
+        },
+        "validation": {
+          "reasonRequired": "Vui lòng nhập lý do từ chối."
+        }
+      },
+      "detail": {
+        "stats": {
+          "totalRequests": "Tổng yêu cầu",
+          "pending": "Đang chờ",
+          "monthlyEarnings": "Thu nhập tháng",
+          "rating": "Đánh giá"
+        },
+        "sections": {
+          "bio": "Tiểu sử",
+          "uploadedDocuments": "Tài liệu đã tải lên",
+          "rejectionReason": "Lý do từ chối",
+          "financialSummary": "Tóm tắt tài chính",
+          "contractDealTerms": "Điều khoản hợp đồng"
+        },
+        "links": {
+          "viewLicense": "Xem giấy phép",
+          "viewDegree": "Xem bằng cấp"
+        },
+        "financial": {
+          "totalEarnings": "Tổng thu nhập",
+          "thisMonth": "Tháng này",
+          "pendingPayout": "Chờ chi trả"
+        },
+        "contract": {
+          "employment": "Loại hình làm việc",
+          "commission": "Hoa hồng",
+          "expectedSalary": "Lương kỳ vọng",
+          "actualSalary": "Lương thực tế",
+          "pending": "Đang chờ",
+          "hoursPerWeek": "{{count}}h/tuần",
+          "employmentType": {
+            "fullTime": "Toàn thời gian",
+            "partTime": "Bán thời gian"
+          },
+          "actions": {
+            "saving": "Đang lưu...",
+            "save": "Lưu",
+            "paying": "Đang chi trả...",
+            "paySalaryToWallet": "Chi lương vào ví"
+          }
+        }
+      },
+      "deleteModal": {
+        "title": "Xóa bác sĩ nhãn khoa?",
+        "message": "Bạn có chắc muốn xóa bác sĩ {{name}}? Hồ sơ sẽ được đánh dấu không hoạt động.",
+        "confirmLabel": "Xóa",
+        "cancelLabel": "Hủy"
+      }
+    },
+    "leaveRequests": {
+      "title": "Đơn nghỉ phép",
+      "description": "Duyệt và quản lý đơn xin nghỉ phép của bác sĩ toàn thời gian",
+      "summary": {
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "total": "Tổng số đơn"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm bác sĩ, email, lý do nghỉ phép...",
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "states": {
+        "empty": "Không có đơn nghỉ phép nào.",
+        "noActionAvailable": "Không còn thao tác"
+      },
+      "dialog": {
+        "approveTitle": "Duyệt đơn nghỉ phép",
+        "rejectTitle": "Từ chối đơn nghỉ phép",
+        "period": "Thời gian",
+        "adminNoteOptional": "Ghi chú admin (không bắt buộc)",
+        "adminNotePlaceholder": "Nhập ghi chú để bác sĩ hiểu rõ quyết định của bạn"
+      },
+      "toasts": {
+        "approveSuccess": "Đã duyệt đơn nghỉ phép. Hệ thống đã hủy {{cancelledSessions}} phiên tư vấn, {{cancelledAppointments}} lịch hẹn và chặn {{blockedSlots}} slot.",
+        "approveError": "Không thể duyệt đơn nghỉ phép.",
+        "rejectSuccess": "Đã từ chối đơn nghỉ phép.",
+        "rejectError": "Không thể từ chối đơn nghỉ phép."
+      }
+    },
+    "employmentTypeChangeRequests": {
+      "title": "Yêu cầu chuyển loại hình làm việc",
+      "description": "Duyệt yêu cầu chuyển loại hình làm việc của bác sĩ",
+      "summary": {
+        "pending": "Đang chờ duyệt",
+        "approved": "Đã duyệt",
+        "total": "Tổng số yêu cầu"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm bác sĩ, email, lý do yêu cầu...",
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "states": {
+        "empty": "Không có yêu cầu chuyển loại nào.",
+        "noActionAvailable": "Không còn thao tác"
+      },
+      "dialog": {
+        "approveTitle": "Duyệt yêu cầu chuyển loại",
+        "rejectTitle": "Từ chối yêu cầu chuyển loại",
+        "transition": "Chuyển loại",
+        "adminNoteOptional": "Ghi chú admin (không bắt buộc)",
+        "adminNotePlaceholder": "Nhập ghi chú để bác sĩ hiểu rõ quyết định của bạn"
+      },
+      "toasts": {
+        "approveSuccess": "Đã duyệt yêu cầu chuyển loại hình làm việc.",
+        "approveError": "Không thể duyệt yêu cầu chuyển loại.",
+        "rejectSuccess": "Đã từ chối yêu cầu chuyển loại hình làm việc.",
+        "rejectError": "Không thể từ chối yêu cầu chuyển loại."
+      }
+    },
+    "withdrawalRequests": {
+      "title": "Yêu cầu rút tiền",
+      "description": "Xử lý yêu cầu rút tiền của bác sĩ",
+      "summary": {
+        "pendingRequests": "Yêu cầu chờ xử lý",
+        "totalAmountCurrentPage": "Tổng tiền trên trang hiện tại"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm bác sĩ, email, STK...",
+        "status": {
+          "all": "Tất cả"
+        }
+      },
+      "states": {
+        "empty": "Không có yêu cầu rút tiền nào."
+      },
+      "history": {
+        "title": "Lịch sử giao dịch rút tiền",
+        "refresh": "Làm mới lịch sử",
+        "loading": "Đang tải lịch sử giao dịch rút tiền...",
+        "empty": "Chưa có giao dịch rút tiền nào.",
+        "withdrawalType": "Rút tiền",
+        "columns": {
+          "created": "Tạo lúc",
+          "doctor": "Bác sĩ",
+          "amount": "Số tiền",
+          "type": "Loại",
+          "reference": "Mã tham chiếu",
+          "description": "Mô tả"
+        }
+      },
+      "modals": {
+        "confirm": {
+          "title": "Xác nhận đã chuyển khoản",
+          "transferReference": "Mã giao dịch/ủy nhiệm chi",
+          "processing": "Đang xác nhận...",
+          "confirm": "Xác nhận"
+        },
+        "reject": {
+          "title": "Từ chối yêu cầu rút tiền",
+          "reasonOptional": "Lý do (không bắt buộc)",
+          "processing": "Đang từ chối..."
+        }
+      },
+      "requestCard": {
+        "payOSLabel": "PayOS",
+        "amount": "Số tiền",
+        "bankAndAccount": "Ngân hàng / STK",
+        "bankBinLabel": "(BIN: {{bin}})",
+        "time": "Thời gian",
+        "processedAt": "Xử lý",
+        "contract": "Hợp đồng",
+        "transferCode": "Mã CK",
+        "doctorNote": "Ghi chú bác sĩ",
+        "payOSId": "PayOS ID",
+        "reference": "Ref",
+        "tooltips": {
+          "payoutViaPayOS": "Tự động chuyển tiền qua PayOS Payout API",
+          "syncPayOS": "Đồng bộ trạng thái lệnh chi từ PayOS"
+        },
+        "actions": {
+          "payoutProcessing": "Đang chi...",
+          "payoutViaPayOS": "Chi qua PayOS",
+          "syncingPayOS": "Đang đồng bộ...",
+          "syncPayOS": "Sync PayOS",
+          "confirmManual": "Xác nhận thủ công"
+        },
+        "warnings": {
+          "missingBankBin": "Thiếu BankBIN - không thể chi tự động qua PayOS"
+        }
+      },
+      "toasts": {
+        "confirmSuccess": "Đã xác nhận chuyển khoản thành công.",
+        "confirmError": "Không thể xác nhận yêu cầu.",
+        "rejectSuccess": "Đã từ chối yêu cầu rút tiền.",
+        "rejectError": "Không thể từ chối yêu cầu.",
+        "payosPayoutSuccess": "Chi qua PayOS thành công. Trạng thái: {{state}}. PayOS ID: {{payOSId}}",
+        "payosPayoutError": "Không thể thực hiện lệnh chi qua PayOS.",
+        "payosSyncSuccess": "Đã đồng bộ trạng thái: {{approvalState}} -> Rút tiền: {{withdrawalStatus}}",
+        "payosSyncError": "Không thể đồng bộ trạng thái PayOS."
+      }
+    },
+    "contractTemplateEditor": {
+      "titleCreate": "Tạo mẫu hợp đồng",
+      "titleDetail": "Chi tiết mẫu hợp đồng",
+      "subtitle": "Chỉ hỗ trợ tải lên DOCX. Không hỗ trợ cấu hình HTML hoặc biến.",
+      "status": {
+        "active": "Đang áp dụng",
+        "inactive": "Ngừng áp dụng"
+      },
+      "sections": {
+        "templateFile": "Tệp mẫu hợp đồng",
+        "templateMetadata": "Thông tin mẫu"
+      },
+      "fields": {
+        "title": {
+          "label": "Tiêu đề",
+          "placeholder": "Tên mẫu hợp đồng"
+        },
+        "type": {
+          "label": "Loại hợp đồng",
+          "ophthalmologist": "Bác sĩ nhãn khoa",
+          "medicalOrganization": "Tổ chức y tế"
+        },
+        "employmentMode": {
+          "label": "Loại hình làm việc",
+          "fullTime": "Toàn thời gian",
+          "partTime": "Bán thời gian"
+        },
+        "version": {
+          "label": "Phiên bản",
+          "placeholder": "2026"
+        },
+        "effectiveDate": {
+          "label": "Ngày hiệu lực"
+        }
+      },
+      "links": {
+        "previewUploadedFile": "Xem trước tệp vừa tải lên",
+        "openCurrentTemplateFile": "Mở tệp mẫu hiện tại"
+      },
+      "actions": {
+        "backToTemplates": "Quay lại danh sách mẫu hợp đồng",
+        "uploadDocxFile": "Tải lên tệp DOCX",
+        "updatingStatus": "Đang cập nhật...",
+        "deactivate": "Ngừng áp dụng",
+        "activate": "Kích hoạt",
+        "createTemplate": "Tạo mẫu",
+        "saveChanges": "Lưu thay đổi"
+      },
+      "metadata": {
+        "createdAt": "Tạo lúc",
+        "updatedAt": "Cập nhật lúc",
+        "contractsUsingTemplate": "Số hợp đồng đang dùng mẫu: {{count}}"
+      },
+      "errors": {
+        "templateNameRequired": "Vui lòng nhập tên mẫu hợp đồng.",
+        "contractVersionRequired": "Vui lòng nhập phiên bản hợp đồng.",
+        "employmentTypeRequired": "Vui lòng chọn toàn thời gian hoặc bán thời gian cho mẫu hợp đồng bác sĩ.",
+        "docxRequired": "Vui lòng tải lên tệp mẫu DOCX.",
+        "saveFailed": "Không thể lưu mẫu hợp đồng. Vui lòng thử lại."
+      }
+    },
+    "contractTemplates": {
+      "title": "Mẫu hợp đồng",
+      "description": "Quản lý mẫu hợp đồng DOCX và trạng thái áp dụng theo phiên bản",
+      "status": {
+        "active": "Đang áp dụng",
+        "inactive": "Ngừng áp dụng"
+      },
+      "contractType": {
+        "ophthalmologist": "Bác sĩ nhãn khoa",
+        "organization": "Tổ chức"
+      },
+      "card": {
+        "version": "Phiên bản",
+        "effective": "Hiệu lực",
+        "docxTemplate": "Mẫu DOCX",
+        "contractsCount": "{{count}} hợp đồng"
+      },
+      "actions": {
+        "updatingStatus": "Đang cập nhật...",
+        "deactivate": "Ngừng áp dụng",
+        "activate": "Kích hoạt",
+        "editTemplate": "Chỉnh sửa mẫu",
+        "preview": "Xem trước",
+        "duplicate": "Nhân bản",
+        "delete": "Xóa",
+        "newTemplate": "Tạo mẫu mới",
+        "createNewTemplate": "Tạo mẫu mới"
+      },
+      "summary": {
+        "totalTemplates": "Tổng mẫu",
+        "contractsIssued": "Hợp đồng đã phát hành",
+        "templateCount": "{{count}} mẫu"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm kiếm mẫu hợp đồng...",
+        "status": {
+          "all": "Tất cả trạng thái",
+          "activeOnly": "Chỉ đang áp dụng",
+          "inactiveOnly": "Chỉ ngừng áp dụng"
+        }
+      },
+      "states": {
+        "loadError": "Không thể tải danh sách mẫu hợp đồng.",
+        "loadErrorPrefix": "Không thể tải danh sách mẫu hợp đồng",
+        "unknownError": "Lỗi không xác định",
+        "empty": "Không tìm thấy mẫu hợp đồng"
+      },
+      "deleteDialog": {
+        "title": "Xóa mẫu hợp đồng?",
+        "description": "Bạn có chắc muốn xóa {{name}}? Hành động này không thể hoàn tác."
+      }
+    },
+    "contracts": {
+      "title": "Quản lý hợp đồng",
+      "description": "Xem danh sách và xác nhận hợp đồng đã ký của bác sĩ nhãn khoa",
+      "status": {
+        "draft": "Nháp",
+        "pendingSignature": "Chờ ký",
+        "active": "Hiệu lực",
+        "expired": "Hết hạn",
+        "terminated": "Đã hủy",
+        "cancelled": "Đã hủy bỏ"
+      },
+      "upload": {
+        "uploaded": "Đã upload",
+        "missing": "Chưa upload"
+      },
+      "summary": {
+        "totalContracts": "Tổng hợp đồng",
+        "pendingVerification": "Chờ xác nhận",
+        "pendingUpload": "Chờ upload"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên, email, mã hợp đồng...",
+        "status": {
+          "all": "Tất cả"
+        }
+      },
+      "states": {
+        "empty": "Không tìm thấy hợp đồng nào.",
+        "emptyValue": "—"
+      },
+      "table": {
+        "columns": {
+          "contractCode": "Mã hợp đồng",
+          "doctor": "Bác sĩ",
+          "status": "Trạng thái",
+          "upload": "Upload",
+          "createdDate": "Ngày tạo",
+          "actions": "Hành động"
+        },
+        "actions": {
+          "viewDetails": "Xem chi tiết",
+          "verifyContract": "Nhập deal và xác nhận hợp đồng",
+          "dealAndVerify": "Deal & xác nhận"
+        }
+      },
+      "detailDialog": {
+        "title": "Chi tiết hợp đồng",
+        "closeAriaLabel": "Đóng chi tiết hợp đồng",
+        "fields": {
+          "contractNumber": "Mã hợp đồng",
+          "status": "Trạng thái",
+          "fullName": "Họ tên",
+          "email": "Email",
+          "template": "Mẫu hợp đồng",
+          "createdDate": "Ngày tạo",
+          "signedDate": "Ngày ký",
+          "aiQuota": "AI Quota",
+          "monthlyAiQuota": "Monthly AI quota",
+          "commission": "Hoa hồng",
+          "actualMonthlySalary": "Lương deal",
+          "confirmedMonthlyQuota": "Monthly quota xác nhận",
+          "commissionRatePercent": "Hoa hồng (%)",
+          "actualMonthlySalaryVnd": "Lương thực tế hàng tháng (VND)"
+        },
+        "sections": {
+          "quotaTerms": "Điều khoản quota (Admin xác nhận)",
+          "dealTerms": "Điều khoản deal (Admin xác nhận)",
+          "signedContract": "Hợp đồng đã ký",
+          "templateDocx": "Mẫu hợp đồng (DOCX)"
+        },
+        "validation": {
+          "monthlyQuotaRequired": "Nhập monthly quota lớn hơn 0 trước khi xác nhận hợp đồng.",
+          "dealTermsRequired": "Nhập commission rate (0-100) và lương thực tế trước khi xác nhận hợp đồng."
+        },
+        "scannedContractAlt": "Hợp đồng đã scan",
+        "pdfHint": "Tệp PDF. Nhấn liên kết bên dưới để mở.",
+        "notFinalized": "Chưa chốt",
+        "currency": {
+          "vnd": "VND"
+        },
+        "actions": {
+          "openOriginalFile": "Mở file gốc trong tab mới",
+          "openTemplateFile": "Mở file mẫu hợp đồng",
+          "close": "Đóng",
+          "confirmContract": "Xác nhận hợp đồng"
+        }
+      },
+      "pagination": {
+        "label": "Trang {{page}} / {{totalPages}}"
+      }
+    },
+    "users": {
+      "title": "Quản lý người dùng & vai trò",
+      "description": "Quản lý người dùng nền tảng, phân quyền vai trò và kiểm soát truy cập",
+      "actions": {
+        "addUser": "Thêm người dùng",
+        "exporting": "Đang xuất...",
+        "lockUser": "Khóa người dùng",
+        "unlockUser": "Mở khóa người dùng"
+      },
+      "roles": {
+        "systemAdmin": "Quản trị hệ thống",
+        "organisationAdmin": "Quản trị tổ chức",
+        "doctor": "Bác sĩ",
+        "operator": "Điều phối",
+        "analyst": "Phân tích"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên, email hoặc ID...",
+        "roleLabel": "Vai trò",
+        "options": {
+          "allRoles": "Tất cả vai trò"
+        }
+      },
+      "stats": {
+        "totalUsers": "Tổng người dùng",
+        "totalUsersDescription": "Tất cả tài khoản đã đăng ký",
+        "activeUsers": "Người dùng hoạt động",
+        "activeUsersDescription": "+12 trong tháng này",
+        "lockedAccounts": "Tài khoản bị khóa",
+        "lockedAccountsDescription": "Cần theo dõi",
+        "roleTypes": "Loại vai trò",
+        "roleTypesDescription": "Các vai trò hiện có"
+      },
+      "table": {
+        "columns": {
+          "id": "ID",
+          "user": "Người dùng",
+          "role": "Vai trò",
+          "organization": "Tổ chức",
+          "lastLogin": "Đăng nhập gần nhất",
+          "status": "Trạng thái",
+          "actions": "Hành động"
+        },
+        "values": {
+          "unknownUser": "Người dùng không xác định"
+        }
+      },
+      "status": {
+        "active": "Hoạt động",
+        "inactive": "Không hoạt động",
+        "locked": "Đã khóa"
+      },
+      "states": {
+        "empty": "Không tìm thấy người dùng"
+      },
+      "summary": {
+        "showing": "Hiển thị {{shown}} / {{total}} người dùng"
+      },
+      "export": {
+        "columns": {
+          "name": "Tên",
+          "email": "Email",
+          "createdAt": "Tạo lúc",
+          "emailVerified": "Email đã xác minh"
+        },
+        "sheetName": "Người dùng",
+        "yes": "Có",
+        "no": "Không"
+      },
+      "toasts": {
+        "userUnlocked": "Đã mở khóa tài khoản người dùng.",
+        "userLocked": "Đã khóa tài khoản người dùng.",
+        "toggleLockError": "Không thể cập nhật trạng thái khóa người dùng. Vui lòng thử lại.",
+        "exportNoData": "Không có người dùng để xuất.",
+        "exportSuccess": "Đã xuất {{count}} người dùng.",
+        "exportError": "Không thể xuất danh sách người dùng. Vui lòng thử lại."
+      }
+    },
+    "patients": {
+      "title": "Quản lý bệnh nhân",
+      "description": "Quản lý tài khoản bệnh nhân, xem lịch sử sàng lọc và theo dõi hoạt động",
+      "actions": {
+        "exporting": "Đang xuất...",
+        "viewDetails": "Xem chi tiết",
+        "viewMedicalHistory": "Xem bệnh sử",
+        "walkInCannotBeLocked": "Bệnh nhân vãng lai không thể bị khóa",
+        "lockPatient": "Khóa bệnh nhân",
+        "unlockPatient": "Mở khóa bệnh nhân"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên hoặc email...",
+        "status": {
+          "all": "Tất cả trạng thái",
+          "registered": "Đã đăng ký",
+          "walkIn": "Vãng lai"
+        }
+      },
+      "stats": {
+        "totalPatients": "Tổng bệnh nhân",
+        "totalPatientsDescription": "Bao gồm bệnh nhân đăng ký và vãng lai",
+        "registeredPatients": "Bệnh nhân đã đăng ký",
+        "registeredPatientsDescription": "Bệnh nhân có tài khoản đăng nhập",
+        "walkInPatients": "Bệnh nhân vãng lai",
+        "walkInPatientsDescription": "Hồ sơ bệnh nhân do phòng khám quản lý",
+        "lockedAccounts": "Tài khoản bị khóa",
+        "lockedAccountsDescription": "Tài khoản đăng ký cần xử lý"
+      },
+      "table": {
+        "columns": {
+          "patient": "Bệnh nhân",
+          "patientType": "Loại bệnh nhân",
+          "linkedOrganisation": "Tổ chức liên kết",
+          "lastLogin": "Đăng nhập gần nhất",
+          "joined": "Ngày tham gia",
+          "status": "Trạng thái",
+          "actions": "Hành động"
+        },
+        "values": {
+          "walkInProfile": "Hồ sơ vãng lai",
+          "walkIn": "Vãng lai",
+          "registered": "Đã đăng ký",
+          "unassigned": "Chưa liên kết",
+          "thisPatient": "bệnh nhân này"
+        }
+      },
+      "status": {
+        "active": "Hoạt động",
+        "inactive": "Không hoạt động",
+        "locked": "Đã khóa"
+      },
+      "states": {
+        "empty": "Không tìm thấy bệnh nhân"
+      },
+      "summary": {
+        "showing": "Hiển thị {{shown}} / {{total}} bệnh nhân"
+      },
+      "confirmModal": {
+        "lockTitle": "Khóa tài khoản bệnh nhân?",
+        "lockMessage": "Bạn có chắc muốn khóa {{name}}? Bệnh nhân sẽ không thể truy cập hệ thống cho đến khi được kích hoạt lại.",
+        "confirmLock": "Khóa tài khoản",
+        "cancelLock": "Giữ trạng thái hoạt động"
+      },
+      "export": {
+        "columns": {
+          "fullName": "Họ tên",
+          "email": "Email",
+          "phone": "Số điện thoại",
+          "emailConfirmed": "Email đã xác nhận",
+          "createdAt": "Tạo lúc"
+        },
+        "sheetName": "Bệnh nhân",
+        "yes": "Có",
+        "no": "Không"
+      },
+      "toasts": {
+        "walkInNoLogin": "Bệnh nhân vãng lai không có tài khoản đăng nhập để khóa/mở khóa.",
+        "activatedSuccess": "Đã kích hoạt bệnh nhân thành công.",
+        "lockedSuccess": "Đã khóa bệnh nhân thành công.",
+        "updateStatusError": "Không thể cập nhật trạng thái bệnh nhân. Vui lòng thử lại.",
+        "exportNoData": "Không có bệnh nhân để xuất.",
+        "exportSuccess": "Đã xuất {{count}} bệnh nhân.",
+        "exportError": "Không thể xuất danh sách bệnh nhân. Vui lòng thử lại."
+      }
+    },
+    "organisations": {
+      "page": {
+        "title": "Quản lý tổ chức",
+        "description": "Quản lý tổ chức, hợp đồng, thanh toán và báo cáo sử dụng AI"
+      },
+      "actions": {
+        "exporting": "Đang xuất...",
+        "exportReport": "Xuất báo cáo",
+        "reviewOnboarding": "Duyệt onboarding",
+        "viewContracts": "Xem hợp đồng",
+        "viewBilling": "Xem thanh toán",
+        "editMonthlyQuota": "Chỉnh sửa quota tháng",
+        "viewOrganisation": "Xem tổ chức",
+        "viewContract": "Xem hợp đồng",
+        "renew": "Gia hạn",
+        "cancel": "Hủy",
+        "saving": "Đang lưu...",
+        "saveQuota": "Lưu quota"
+      },
+      "tabs": {
+        "allOrganisations": "Tất cả tổ chức",
+        "billingPayments": "Thanh toán & Công nợ",
+        "contracts": "Hợp đồng"
+      },
+      "stats": {
+        "totalOrganisations": "Tổng tổ chức",
+        "totalOrganisationsDescription": "Trang hiện tại dùng phân trang phía server",
+        "activeOrganisations": "Tổ chức hoạt động",
+        "activeOrganisationsDescription": "{{count}} tổng",
+        "purchasedQuota": "Quota đã mua",
+        "purchasedQuotaDescription": "Số credits các tổ chức đã mua",
+        "inactiveOrganisations": "Tổ chức không hoạt động",
+        "inactiveOrganisationsDescription": "Cần admin xem xét"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm kiếm tổ chức...",
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "status": {
+        "active": "Hoạt động",
+        "inactive": "Không hoạt động",
+        "suspended": "Tạm ngưng"
+      },
+      "orgType": {
+        "clinic": "Phòng khám",
+        "hospital": "Bệnh viện",
+        "organization": "Tổ chức",
+        "eye_center": "Trung tâm mắt",
+        "other": "Khác"
+      },
+      "onboarding": {
+        "title": "Yêu cầu onboarding tổ chức",
+        "description": "Duyệt hồ sơ từ form công khai và cấp tài khoản quản trị cho tổ chức.",
+        "pendingLabel": "Đang chờ",
+        "approvalSuccess": "Đã cấp tài khoản tổ chức thành công",
+        "empty": "Không có yêu cầu onboarding nào đang chờ duyệt.",
+        "submittedAt": "Gửi lúc",
+        "approving": "Đang cấp tài khoản...",
+        "approveAction": "Xác nhận & cấp tài khoản",
+        "fields": {
+          "email": "Email",
+          "phone": "Số điện thoại",
+          "contactPerson": "Người liên hệ",
+          "license": "Giấy phép",
+          "taxCode": "Mã số thuế",
+          "address": "Địa chỉ",
+          "notes": "Ghi chú"
+        }
+      },
+      "table": {
+        "empty": "Không tìm thấy tổ chức",
+        "contractStatus": {
+          "active": "Hiệu lực",
+          "pending": "Đang chờ",
+          "expired": "Hết hạn",
+          "suspended": "Tạm ngưng"
+        },
+        "organisations": {
+          "columns": {
+            "organisation": "Tổ chức",
+            "location": "Địa điểm",
+            "users": "Người dùng",
+            "purchasedQuota": "Quota đã mua",
+            "monthlyQuota": "Quota tháng",
+            "aiScreenings": "Lượt AI screening",
+            "contract": "Hợp đồng",
+            "status": "Trạng thái",
+            "actions": "Hành động"
+          },
+          "values": {
+            "credits": "credits",
+            "limit": "giới hạn",
+            "used": "đã dùng",
+            "remaining": "còn lại"
+          }
+        },
+        "billing": {
+          "columns": {
+            "organisation": "Tổ chức",
+            "monthlyAiUsage": "Sử dụng AI theo tháng",
+            "purchasedQuota": "Quota đã mua",
+            "monthlyQuota": "Quota tháng",
+            "managedPatients": "Bệnh nhân quản lý",
+            "monthlyBilling": "Công nợ tháng",
+            "pendingPayment": "Khoản chờ thanh toán",
+            "status": "Trạng thái",
+            "actions": "Hành động"
+          },
+          "values": {
+            "screenings": "lượt screening",
+            "credits": "credits",
+            "registered": "đã đăng ký",
+            "walkIn": "vãng lai",
+            "paid": "Đã thanh toán",
+            "pending": "Đang chờ"
+          }
+        },
+        "contracts": {
+          "columns": {
+            "organisation": "Tổ chức",
+            "contractStart": "Ngày bắt đầu",
+            "contractEnd": "Ngày kết thúc",
+            "contractStatus": "Trạng thái hợp đồng",
+            "actions": "Hành động"
+          }
+        }
+      },
+      "pagination": {
+        "showingSummary": "Hiển thị {{shown}} / {{total}} tổ chức",
+        "previous": "Trước",
+        "page": "Trang {{page}}",
+        "next": "Sau"
+      },
+      "quotaModal": {
+        "title": "Cập nhật quota tháng",
+        "monthlyQuotaLimitLabel": "Giới hạn quota tháng",
+        "currentUsage": "Đang sử dụng: {{used}} credits"
+      },
+      "export": {
+        "columns": {
+          "name": "Tên",
+          "type": "Loại",
+          "address": "Địa chỉ",
+          "contactEmail": "Email liên hệ",
+          "licenseNumber": "Số giấy phép",
+          "taxCode": "Mã số thuế",
+          "deviceCount": "Số thiết bị",
+          "usersCount": "Số người dùng",
+          "status": "Trạng thái",
+          "createdAt": "Tạo lúc"
+        },
+        "sheetName": "Tổ chức"
+      },
+      "toasts": {
+        "loadOnboardingError": "Không thể tải danh sách onboarding.",
+        "approveOnboardingError": "Không thể duyệt yêu cầu onboarding.",
+        "exportNoData": "Không có tổ chức để xuất.",
+        "exportSuccess": "Đã xuất {{count}} tổ chức.",
+        "exportError": "Không thể xuất danh sách tổ chức. Vui lòng thử lại.",
+        "updateQuotaInvalid": "Quota tháng phải là số nguyên không âm.",
+        "updateQuotaSuccess": "Đã cập nhật quota tháng thành công.",
+        "updateQuotaError": "Không thể cập nhật quota tháng."
+      }
+    },
+    "auditLogs": {
+      "title": "Nhật ký hệ thống & Tuân thủ",
+      "description": "Theo dõi mọi thay đổi hệ thống - thao tác Insert, Update, Delete",
+      "actions": {
+        "exportExcel": "Xuất Excel",
+        "exporting": "Đang xuất...",
+        "viewJsonDetails": "Xem chi tiết JSON",
+        "insert": "Thêm mới",
+        "update": "Cập nhật",
+        "delete": "Xóa"
+      },
+      "summary": {
+        "totalEntries": "tổng bản ghi"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên thực thể, hành động hoặc ID thực thể... (Nhấn Enter để tìm)",
+        "actionLabel": "Hành động:",
+        "entityLabel": "Thực thể:",
+        "entityPlaceholder": "ví dụ: WalletTransaction",
+        "updating": "Đang cập nhật...",
+        "actionOptions": {
+          "all": "Tất cả",
+          "insert": "Thêm mới",
+          "update": "Cập nhật",
+          "delete": "Xóa"
+        }
+      },
+      "table": {
+        "columns": {
+          "timestamp": "Thời gian",
+          "user": "Người dùng",
+          "action": "Hành động",
+          "entity": "Thực thể",
+          "ipAddress": "Địa chỉ IP",
+          "details": "Chi tiết"
+        }
+      },
+      "states": {
+        "loadFailedTitle": "Không thể tải nhật ký hệ thống",
+        "loadFailedDescription": "Vui lòng kiểm tra kết nối và thử lại.",
+        "empty": "Không tìm thấy nhật ký hệ thống"
+      },
+      "pagination": {
+        "previous": "Trước",
+        "next": "Sau",
+        "summary": "Trang {{page}} trên {{totalPages}} · {{totalCount}} tổng bản ghi"
+      },
+      "export": {
+        "noData": "Không có nhật ký hệ thống để xuất.",
+        "success": "Đã xuất {{count}} nhật ký hệ thống.",
+        "failed": "Không thể xuất nhật ký hệ thống. Vui lòng thử lại.",
+        "sheetName": "Nhật ký hệ thống",
+        "columns": {
+          "timestamp": "Thời gian",
+          "userName": "Tên người dùng",
+          "userId": "ID người dùng",
+          "action": "Hành động",
+          "entityName": "Tên thực thể",
+          "entityId": "ID thực thể",
+          "ipAddress": "Địa chỉ IP"
+        }
+      },
+      "time": {
+        "justNow": "Vừa xong",
+        "minutesAgo": "{{count}} phút trước",
+        "hoursAgo": "{{count}} giờ trước",
+        "daysAgo": "{{count}} ngày trước"
+      },
+      "values": {
+        "system": "Hệ thống"
+      }
+    },
+    "permissions": {
+      "page": {
+        "title": "Quản lý quyền truy cập",
+        "description": "Định nghĩa quyền, gán quyền cho vai trò và quản lý ghi đè theo từng người dùng",
+        "actions": {
+          "newPermission": "Tạo quyền mới"
+        }
+      },
+      "tabs": {
+        "allPermissions": "Tất cả quyền",
+        "roleAssignments": "Phân quyền theo vai trò",
+        "userOverrides": "Ghi đè theo người dùng"
+      },
+      "stats": {
+        "totalPermissions": "Tổng quyền",
+        "totalPermissionsDescription": "Toàn bộ quyền đã khai báo",
+        "active": "Đang hoạt động",
+        "activeDescription": "Có thể gán ngay",
+        "inactive": "Ngừng hoạt động",
+        "inactiveDescription": "Đã vô hiệu hóa / lưu trữ",
+        "categories": "Danh mục",
+        "categoriesDescription": "Số danh mục phân biệt"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo mã quyền hoặc tên hiển thị...",
+        "categories": {
+          "all": "Tất cả danh mục"
+        },
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "status": {
+        "active": "Đang hoạt động",
+        "inactive": "Ngừng hoạt động"
+      },
+      "table": {
+        "columns": {
+          "permission": "Quyền",
+          "category": "Danh mục",
+          "description": "Mô tả",
+          "status": "Trạng thái",
+          "actions": "Hành động"
+        },
+        "actions": {
+          "edit": "Chỉnh sửa",
+          "deactivate": "Vô hiệu hóa"
+        }
+      },
+      "states": {
+        "empty": "Không tìm thấy quyền nào"
+      },
+      "pagination": {
+        "showing": "Hiển thị {{shown}} / {{total}} quyền",
+        "previous": "Trước",
+        "page": "Trang {{page}}",
+        "next": "Sau"
+      },
+      "categories": {
+        "users": "Người dùng",
+        "permissions": "Phân quyền",
+        "patients": "Bệnh nhân",
+        "ophthalmologists": "Bác sĩ nhãn khoa",
+        "organisations": "Tổ chức",
+        "screening": "Sàng lọc",
+        "consultations": "Tư vấn",
+        "audit": "Kiểm toán",
+        "dashboard": "Bảng điều khiển"
+      },
+      "common": {
+        "loading": "Đang tải...",
+        "actions": {
+          "cancel": "Hủy",
+          "saving": "Đang lưu..."
+        }
+      },
+      "modals": {
+        "create": {
+          "title": "Tạo quyền mới",
+          "actions": {
+            "create": "Tạo"
+          },
+          "fields": {
+            "name": "Mã quyền",
+            "namePlaceholder": "ví dụ: users:read",
+            "namePatternHint": "Chỉ chấp nhận chữ, số, gạch dưới, dấu chấm, dấu hai chấm hoặc dấu gạch ngang",
+            "nameConventionPrefix": "Quy ước:",
+            "nameConventionSuffix": "(ví dụ: screening:approve)",
+            "displayName": "Tên hiển thị",
+            "displayNamePlaceholder": "ví dụ: Đọc danh sách người dùng",
+            "category": "Danh mục",
+            "none": "- Không có -",
+            "description": "Mô tả",
+            "descriptionPlaceholder": "Quyền này cho phép thao tác gì?"
+          },
+          "errors": {
+            "createFailed": "Không thể tạo quyền mới."
+          }
+        },
+        "edit": {
+          "title": "Chỉnh sửa quyền",
+          "actions": {
+            "saveChanges": "Lưu thay đổi"
+          },
+          "fields": {
+            "nameReadonly": "Mã quyền (chỉ đọc)",
+            "displayName": "Tên hiển thị",
+            "category": "Danh mục",
+            "none": "- Không có -",
+            "description": "Mô tả"
+          },
+          "errors": {
+            "updateFailed": "Không thể cập nhật quyền."
+          }
+        },
+        "delete": {
+          "title": "Vô hiệu hóa quyền",
+          "actions": {
+            "deactivate": "Vô hiệu hóa"
+          },
+          "messagePrefix": "Bạn có chắc muốn vô hiệu hóa",
+          "messageNote": "Bản ghi quyền sẽ được giữ lại cho mục đích kiểm toán nhưng sẽ không còn được gán cho vai trò hoặc người dùng.",
+          "errors": {
+            "deactivateFailed": "Không thể vô hiệu hóa quyền."
+          }
+        },
+        "assign": {
+          "title": "Gán quyền - {{roleName}}",
+          "searchPlaceholder": "Tìm quyền...",
+          "empty": "Không còn quyền khả dụng để gán",
+          "actions": {
+            "assign": "Gán"
+          },
+          "errors": {
+            "assignFailed": "Không thể gán quyền."
+          }
+        },
+        "userOverride": {
+          "title": "Thêm ghi đè quyền",
+          "subtitle": "Đang thêm ghi đè cho",
+          "fields": {
+            "overrideType": "Loại ghi đè",
+            "permission": "Quyền",
+            "searchPermissionPlaceholder": "Tìm kiếm...",
+            "expiresAt": "Thời điểm hết hạn (không bắt buộc)"
+          },
+          "types": {
+            "grant": "Cho phép",
+            "grantDescription": "Cấp thêm quyền",
+            "revoke": "Thu hồi",
+            "revokeDescription": "Loại khỏi quyền theo vai trò"
+          },
+          "actions": {
+            "saveOverride": "Lưu ghi đè"
+          },
+          "errors": {
+            "saveFailed": "Không thể lưu ghi đè."
+          }
+        }
+      },
+      "roles": {
+        "selectRole": "Chọn vai trò",
+        "roleCardHint": "Nhấn để xem quyền",
+        "emptySelectRole": "Chọn một vai trò để quản lý quyền",
+        "assignedCount": "Đã gán {{count}} quyền",
+        "empty": "Vai trò này chưa được gán quyền nào",
+        "actions": {
+          "assign": "Gán",
+          "removeFromRole": "Gỡ khỏi vai trò"
+        }
+      },
+      "users": {
+        "searchTitle": "Tìm người dùng",
+        "searchPlaceholder": "Nhập tên hoặc email...",
+        "rolesTitle": "Vai trò",
+        "effectivePermissionsTitle": "Quyền hiệu lực ({{count}})",
+        "inheritedFromRolesTitle": "Kế thừa từ vai trò ({{count}})",
+        "inheritedFromRolesDescription": "Thêm ghi đè từ chối để chặn quyền kế thừa",
+        "activeOverridesTitle": "Ghi đè đang hoạt động ({{count}})",
+        "overrideHistoryTitle": "Lịch sử ghi đè ({{count}} đã thu hồi / hết hạn)",
+        "status": {
+          "granted": "Đã cấp",
+          "denied": "Từ chối",
+          "expired": "Hết hạn",
+          "revoked": "Đã thu hồi"
+        },
+        "states": {
+          "noRolePermissions": "Không có quyền theo vai trò",
+          "noActiveOverrides": "Không có ghi đè đang hoạt động",
+          "loadFailed": "Không thể tải quyền người dùng"
+        },
+        "actions": {
+          "addOverride": "Thêm ghi đè",
+          "addDenyOverride": "Thêm ghi đè từ chối",
+          "deny": "Từ chối",
+          "removeOverride": "Xóa ghi đè"
+        }
+      }
+    },
+    "settings": {
+      "page": {
+        "title": "Cài đặt hệ thống",
+        "description": "Cấu hình các thiết lập và tùy chọn toàn hệ thống",
+        "actions": {
+          "saveChanges": "Lưu thay đổi",
+          "saving": "Đang lưu..."
+        }
+      },
+      "sections": {
+        "general": {
+          "title": "Cài đặt chung",
+          "description": "Thiết lập các cấu hình cơ bản của hệ thống"
+        },
+        "notifications": {
+          "title": "Thông báo",
+          "description": "Quản lý tùy chọn nhận thông báo"
+        },
+        "security": {
+          "title": "Bảo mật",
+          "description": "Thiết lập bảo mật và xác thực"
+        },
+        "data": {
+          "title": "Quản lý dữ liệu",
+          "description": "Sao lưu, xuất dữ liệu và lưu trữ"
+        }
+      },
+      "toasts": {
+        "saveSuccess": "Đã lưu cài đặt thành công",
+        "saveFailed": "Không thể lưu cài đặt"
+      },
+      "general": {
+        "platformName": "Tên nền tảng",
+        "supportEmail": "Email hỗ trợ",
+        "timezone": "Múi giờ",
+        "timezoneOptions": {
+          "americaNewYork": "Giờ miền Đông (ET)",
+          "americaLosAngeles": "Giờ miền Tây (PT)",
+          "europeLondon": "London (GMT)",
+          "asiaHoChiMinh": "Việt Nam (ICT)"
+        },
+        "defaultLanguage": "Ngôn ngữ mặc định",
+        "languageOptions": {
+          "en": {
+            "native": "English",
+            "label": "Tiếng Anh"
+          },
+          "vi": {
+            "native": "Tiếng Việt",
+            "label": "Tiếng Việt"
+          }
+        },
+        "minAdvanceBookingHours": "Thời gian đặt lịch trước tối thiểu (giờ)",
+        "aiQuotaUnitPrice": "Đơn giá AI Quota (VND mỗi quota)",
+        "aiQuotaUnitPriceHint": "Tổng tiền mua = số lượng x đơn giá.",
+        "freeAiQuota": "AI Quota miễn phí (mỗi bệnh nhân)",
+        "partTimeMaxSlotsPerDay": "Số slot tối đa mỗi ngày cho bác sĩ bán thời gian",
+        "partTimeMaxSlotsPerDayHint": "Quota toàn cục mỗi ngày cho tất cả slot của bác sĩ bán thời gian.",
+        "fullTimeSlotWindowDays": "Cửa sổ tạo lịch cho bác sĩ toàn thời gian (ngày)",
+        "fullTimeSlotWindowDaysHint": "Số ngày tương lai mà Hangfire duy trì tạo sẵn cho lịch toàn thời gian.",
+        "fullTimeMinSlotCost": "Giá slot tối thiểu toàn thời gian (VND)",
+        "fullTimeMaxSlotCost": "Giá slot tối đa toàn thời gian (VND)",
+        "fullTimeMaxSlotCostHint": "Giá slot tạo tự động cho toàn thời gian sẽ được giới hạn trong khoảng min và max.",
+        "pricingBands": {
+          "title": "Khung giá bác sĩ bán thời gian theo kinh nghiệm",
+          "description": "Cập nhật giá tối thiểu/tối đa cho từng khung kinh nghiệm đã seed.",
+          "empty": "Không tìm thấy khung giá nào.",
+          "experienceBand": "Khung kinh nghiệm",
+          "experienceBandValue": "{{min}} - {{max}} năm",
+          "minPrice": "Giá tối thiểu (VND)",
+          "maxPrice": "Giá tối đa (VND)"
+        },
+        "aiQuotaBillingNote": "Đơn giá này được backend billing sử dụng trực tiếp khi mua AI quota.",
+        "trustedDomains": {
+          "title": "Tên miền y khoa đáng tin cậy cho AI Resources",
+          "descriptionPrefix": "Kết quả tìm kiếm Google sẽ chỉ giới hạn trong các tên miền này (ví dụ",
+          "descriptionSuffix": ").",
+          "empty": "Chưa cấu hình tên miền - đang dùng danh sách mặc định tích hợp.",
+          "removeDomainAria": "Xóa {{domain}}",
+          "placeholder": "ví dụ: benhvienmathanoi.vn",
+          "add": "Thêm"
+        },
+        "maintenanceMode": {
+          "title": "Chế độ bảo trì",
+          "description": "Bật để tạm thời chặn người dùng truy cập hệ thống trong lúc bảo trì"
+        }
+      },
+      "notifications": {
+        "items": {
+          "emailNotifications": {
+            "label": "Thông báo email",
+            "description": "Nhận email cho các sự kiện quan trọng"
+          },
+          "screeningAlerts": {
+            "label": "Cảnh báo sàng lọc",
+            "description": "Nhận thông báo khi có ca sàng lọc mới cần duyệt"
+          },
+          "systemAlerts": {
+            "label": "Cảnh báo hệ thống",
+            "description": "Nhận cảnh báo về sức khỏe hệ thống và sự cố"
+          },
+          "weeklyReports": {
+            "label": "Báo cáo hàng tuần",
+            "description": "Nhận báo cáo tổng hợp hàng tuần qua email"
+          },
+          "marketingEmails": {
+            "label": "Email marketing",
+            "description": "Nhận cập nhật sản phẩm và thông báo mới"
+          }
+        }
+      },
+      "security": {
+        "requireTwoFactor": {
+          "title": "Bắt buộc xác thực hai lớp",
+          "description": "Yêu cầu tất cả người dùng bật 2FA cho tài khoản"
+        },
+        "sessionTimeout": "Thời gian hết phiên (phút)",
+        "minimumPasswordLength": "Độ dài mật khẩu tối thiểu",
+        "maxLoginAttempts": "Số lần đăng nhập sai tối đa",
+        "ipWhitelist": "Danh sách IP cho phép (phân tách bằng dấu phẩy)",
+        "ipWhitelistPlaceholder": "192.168.1.1, 10.0.0.1"
+      },
+      "data": {
+        "databaseBackup": {
+          "title": "Sao lưu cơ sở dữ liệu",
+          "lastBackup": "Lần sao lưu gần nhất: 2 giờ trước",
+          "createNow": "Tạo bản sao lưu ngay"
+        },
+        "exportData": {
+          "title": "Xuất dữ liệu",
+          "description": "Tải xuống toàn bộ dữ liệu hệ thống",
+          "exportToEmail": "Xuất qua email"
+        },
+        "dangerZone": {
+          "title": "Vùng nguy hiểm",
+          "description": "Thao tác không thể hoàn tác - vui lòng cẩn trọng",
+          "clearCache": "Xóa cache",
+          "resetStatistics": "Đặt lại thống kê"
+        }
+      }
+    },
+    "statusPage": {
+      "title": "Trạng thái hệ thống",
+      "description": "Tình trạng hạ tầng và heartbeat BetterStack",
+      "common": {
+        "yes": "Có",
+        "no": "Không"
+      },
+      "states": {
+        "loadError": "Không thể tải số liệu trạng thái hệ thống."
+      },
+      "cards": {
+        "api": {
+          "title": "API",
+          "description": "Tính sẵn sàng của API backend",
+          "values": {
+            "operational": "Hoạt động ổn định",
+            "issue": "Có sự cố"
+          }
+        },
+        "database": {
+          "title": "Cơ sở dữ liệu",
+          "description": "Tình trạng kho dữ liệu chính",
+          "values": {
+            "connected": "Đã kết nối",
+            "unreachable": "Không thể truy cập"
+          }
+        },
+        "liveConsultations": {
+          "title": "Tư vấn đang diễn ra",
+          "description": "Số phiên có cửa sổ chat đang mở"
+        }
+      },
+      "betterStack": {
+        "title": "Heartbeat BetterStack",
+        "description": "Background worker và job lặp Hangfire",
+        "embedTitle": "Heartbeat BetterStack",
+        "actions": {
+          "openBetterStack": "Mở BetterStack"
+        },
+        "summary": {
+          "enabledLabel": "Kích hoạt",
+          "configuredMonitorsLabel": "Monitor đã cấu hình"
+        },
+        "states": {
+          "emptyMonitors": "Không có monitor nào.",
+          "embedNotConfigured": "Chưa cấu hình BetterStack embed URL."
+        }
+      }
+    },
+    "cashflow": {
+      "title": "Giao dịch thanh toán",
+      "description": "Quản lý giao dịch nạp và rút ví trong một bảng tài chính",
+      "roles": {
+        "patient": "Bệnh nhân",
+        "ophthalmologist": "Bác sĩ nhãn khoa",
+        "organisation": "Tổ chức"
+      },
+      "status": {
+        "refunded": "Đã hoàn tiền"
+      },
+      "summary": {
+        "totalCurrentPage": "Tổng trên trang hiện tại",
+        "patients": "Bệnh nhân",
+        "ophthalmologists": "Bác sĩ nhãn khoa",
+        "organisations": "Tổ chức"
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo người giao dịch, mã tham chiếu, mô tả...",
+        "role": {
+          "all": "Tất cả vai trò"
+        },
+        "status": {
+          "all": "Tất cả trạng thái"
+        }
+      },
+      "states": {
+        "loading": "Đang tải danh sách giao dịch...",
+        "loadError": "Không thể tải dữ liệu giao dịch từ API.",
+        "empty": "Không có giao dịch nào."
+      },
+      "table": {
+        "columns": {
+          "date": "Thời gian",
+          "actor": "Người giao dịch",
+          "role": "Vai trò",
+          "type": "Loại",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "reference": "Tham chiếu",
+          "action": "Thao tác"
+        },
+        "actions": {
+          "details": "Chi tiết"
+        }
+      },
+      "pagination": {
+        "pageSummary": "Hiển thị trang {{page}} / {{totalPages}}"
+      },
+      "detailModal": {
+        "title": "Chi tiết giao dịch thanh toán",
+        "idLabel": "ID",
+        "sections": {
+          "general": "Thông tin chung",
+          "topUp": "Thông tin nạp tiền",
+          "withdrawal": "Thông tin rút tiền"
+        },
+        "fields": {
+          "createdAt": "Thời gian tạo",
+          "status": "Trạng thái",
+          "actor": "Người giao dịch",
+          "actorEmail": "Email người giao dịch",
+          "actorRole": "Vai trò",
+          "amount": "Số tiền",
+          "transactionType": "Loại giao dịch",
+          "referenceType": "Loại tham chiếu",
+          "referenceId": "Mã tham chiếu",
+          "description": "Mô tả",
+          "orderCode": "Mã đơn",
+          "paymentMethod": "Phương thức thanh toán",
+          "completedAt": "Hoàn tất lúc",
+          "providerTxnRef": "Mã giao dịch nhà cung cấp",
+          "failureReason": "Lý do thất bại",
+          "paymentUrl": "Liên kết thanh toán",
+          "returnUrl": "Liên kết quay lại",
+          "cancelUrl": "Liên kết hủy",
+          "providerResponse": "Phản hồi nhà cung cấp",
+          "processedAt": "Xử lý lúc",
+          "processedByAdmin": "Admin xử lý",
+          "bankName": "Tên ngân hàng",
+          "bankAccountNumber": "Số tài khoản",
+          "accountHolder": "Chủ tài khoản",
+          "bankBin": "Bank BIN",
+          "transferReference": "Mã chuyển khoản",
+          "payOSExternalPayoutId": "PayOS External Payout ID",
+          "payOSReferenceId": "PayOS Reference ID",
+          "payOSTransactionId": "PayOS Transaction ID",
+          "payOSApprovalState": "Trạng thái duyệt PayOS",
+          "payoutFee": "Phí chi trả"
+        }
+      }
+    },
+    "verificationRequests": {
+      "title": "Yêu cầu xác minh",
+      "description": "Xem xét và duyệt hồ sơ chứng chỉ bác sĩ nhãn khoa",
+      "common": {
+        "experienceYears": "{{count}} năm kinh nghiệm",
+        "shortExperienceYears": "{{count}} năm KN"
+      },
+      "degreeLevels": {
+        "bachelor": "Cử nhân",
+        "master": "Thạc sĩ",
+        "doctorate": "Tiến sĩ",
+        "associateProfessor": "Phó giáo sư",
+        "professor": "Giáo sư"
+      },
+      "requestType": {
+        "credentialUpdate": {
+          "label": "Duyệt cập nhật chứng chỉ",
+          "hint": "Bác sĩ đã được duyệt trước đó và đang nộp hồ sơ cập nhật."
+        },
+        "onboarding": {
+          "label": "Xác minh onboarding",
+          "hint": "Hồ sơ xác minh ban đầu của bác sĩ mới đăng ký."
+        }
+      },
+      "approveModal": {
+        "title": "Xác nhận phê duyệt",
+        "description": "Bạn có chắc chắn muốn phê duyệt hồ sơ chứng chỉ của bác sĩ này? Hành động này sẽ cấp quyền hoạt động đầy đủ trên hệ thống AURA.",
+        "notice": "Bác sĩ sẽ nhận email thông báo và có thể bắt đầu nhận ca tư vấn ngay lập tức."
+      },
+      "rejectModal": {
+        "title": "Từ chối xác minh",
+        "reasonLabel": "Lý do từ chối",
+        "reasonPlaceholder": "Mô tả rõ lý do từ chối (ví dụ: ảnh giấy phép không rõ nét, chứng chỉ chưa có hiệu lực, thiếu bằng cấp chuyên ngành...)",
+        "notice": "Lý do sẽ được gửi qua email đến bác sĩ. Hãy mô tả cụ thể để họ có thể bổ sung hồ sơ.",
+        "errors": {
+          "reasonRequired": "Vui lòng nhập lý do từ chối."
+        }
+      },
+      "imagePreview": {
+        "alt": "Xem trước chứng chỉ"
+      },
+      "detailModal": {
+        "title": "Chi tiết xác minh",
+        "sections": {
+          "licenses": "Giấy phép / Chứng chỉ ({{count}})",
+          "degrees": "Bằng cấp ({{count}})"
+        },
+        "fields": {
+          "issuingAuthority": "Cơ quan cấp",
+          "degreeLevel": "Học vị",
+          "issuedDate": "Ngày cấp",
+          "expiryDate": "Ngày hết hạn"
+        },
+        "actions": {
+          "zoomImage": "Phóng to ảnh",
+          "openDocument": "Mở tài liệu"
+        },
+        "states": {
+          "emptyLicenses": "Bác sĩ chưa cung cấp giấy phép hoặc chứng chỉ hợp lệ.",
+          "emptyDegrees": "Bác sĩ chưa cung cấp thông tin bằng cấp."
+        }
+      },
+      "summary": {
+        "pendingCount": "{{count}} hồ sơ đang chờ xét duyệt",
+        "description": "Mỗi bác sĩ cần được xem xét kỹ tài liệu trước khi phê duyệt."
+      },
+      "filters": {
+        "searchPlaceholder": "Tìm theo tên, email..."
+      },
+      "table": {
+        "columns": {
+          "doctor": "Bác sĩ",
+          "credentialsSummary": "Tóm tắt hồ sơ",
+          "verificationType": "Loại xác minh",
+          "submittedAt": "Thời gian nộp",
+          "actions": "Hành động"
+        },
+        "credentialsSummaryValue": "Có {{licenseCount}} giấy phép, {{degreeCount}} bằng cấp",
+        "credentialsSummaryHint": "Nhấn \"View details\" để xem hồ sơ chi tiết."
+      },
+      "actions": {
+        "viewDetails": "Xem chi tiết"
+      },
+      "states": {
+        "emptyTitle": "Không có hồ sơ nào đang chờ xét duyệt",
+        "emptyDescription": "Tất cả yêu cầu đã được xử lý."
+      },
+      "pagination": {
+        "showing": "Hiển thị {{shown}} / {{total}} hồ sơ",
+        "page": "Trang {{page}}"
+      },
+      "toasts": {
+        "approveSuccess": "Đã phê duyệt hồ sơ bác sĩ thành công.",
+        "approveError": "Phê duyệt thất bại. Vui lòng thử lại.",
+        "rejectSuccess": "Đã từ chối hồ sơ bác sĩ thành công.",
+        "rejectError": "Từ chối hồ sơ thất bại. Vui lòng thử lại."
       }
     }
   }
