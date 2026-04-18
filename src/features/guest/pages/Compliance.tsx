@@ -10,6 +10,7 @@ import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
 import { prefersReducedMotion } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -179,6 +180,12 @@ const CompliancePage = () => {
       ref={containerRef}
       className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
+      <SeoMeta
+        title="Compliance — AURA HIPAA &amp; GDPR Standards"
+        description="AURA meets HIPAA, GDPR, and medical-grade security standards. AES-256 encryption, MFA, audit logs, and 99.9% uptime SLA for healthcare organisations."
+        canonical="https://web.auraeyes.site/en/compliance"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('Navigation.compliance')}

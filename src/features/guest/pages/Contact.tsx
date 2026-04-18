@@ -16,6 +16,7 @@ import {
   getAdaptiveScrollBehavior,
   prefersReducedMotion,
 } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -184,6 +185,25 @@ const ContactPage = () => {
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
+      <SeoMeta
+        title="Contact AURA — Partner With Us"
+        description="Partner with AURA to bring AI retinal screening to your clinic or hospital. Register as an organisation and get onboarded within 48 hours."
+        canonical="https://web.auraeyes.site/en/contact"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          name: 'Contact AURA',
+          url: 'https://web.auraeyes.site/en/contact',
+          description:
+            'Partner with AURA to bring AI retinal screening to your healthcare organisation.',
+          contactPoint: {
+            '@type': 'ContactPoint',
+            email: 'auraeyes4se@gmail.com',
+            contactType: 'partnership',
+            availableLanguage: ['English', 'Vietnamese'],
+          },
+        }}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('Navigation.contact')}
