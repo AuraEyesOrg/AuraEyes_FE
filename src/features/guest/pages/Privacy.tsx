@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 const PrivacyPage = () => {
   const { t } = useSafeTranslation();
@@ -15,6 +16,12 @@ const PrivacyPage = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
+      <SeoMeta
+        title="Privacy Policy — AURA"
+        description="AURA's privacy policy outlines how we collect, use, and protect your personal health information in compliance with HIPAA and GDPR standards."
+        canonical="https://web.auraeyes.site/en/privacy"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('GuestFooter.privacy')}

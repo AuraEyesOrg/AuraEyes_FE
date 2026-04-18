@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 const SecurityPage = () => {
   const { t } = useSafeTranslation();
@@ -15,6 +16,12 @@ const SecurityPage = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
+      <SeoMeta
+        title="Security — AURA Data Protection"
+        description="AURA secures all patient data with AES-256 encryption, RBAC access control, MFA, and continuous security monitoring. Enterprise-grade protection for medical data."
+        canonical="https://web.auraeyes.site/en/security"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('GuestFooter.security')}

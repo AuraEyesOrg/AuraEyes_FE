@@ -15,6 +15,7 @@ import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
 import { prefersReducedMotion } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -474,11 +475,58 @@ const HomePage = () => {
     return () => ctx.revert();
   }, []);
 
+  const currentLocale = (i18n.resolvedLanguage ?? i18n.language ?? 'vi')
+    .toLowerCase()
+    .startsWith('en')
+    ? 'en'
+    : 'vi';
+  const homeCanonical = `https://web.auraeyes.site/${currentLocale}/`;
+
+  const homeStructuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'AURA',
+      url: 'https://web.auraeyes.site',
+      description: 'AI-powered retinal vascular health screening platform.',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://web.auraeyes.site/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalWebPage',
+      name: 'AURA — AI Retinal Health Screening',
+      url: homeCanonical,
+      description:
+        'Detect retinal diseases early with clinical-grade AI precision. Book screenings with verified ophthalmologists.',
+      about: {
+        '@type': 'MedicalCondition',
+        name: 'Retinal Vascular Disease',
+      },
+      audience: {
+        '@type': 'MedicalAudience',
+        audienceType: 'Patient',
+      },
+    },
+  ];
+
   return (
     <div
       ref={containerRef}
       className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
+      {/* SEO Metadata */}
+      <SeoMeta
+        title="AI Retinal Vascular Health Screening"
+        description="Detect retinal diseases early with clinical-grade AI precision. Automated diagnostics with 99.2% accuracy. Connect with verified ophthalmologists and book your free screening."
+        canonical={homeCanonical}
+        locale={currentLocale}
+        structuredData={homeStructuredData}
+      />
+
       {/* Floating Particles Background */}
       <div
         ref={floatingParticlesRef}

@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router';
 import useAuthStore from '@/store/auth-store';
 import { resolvePathWithLocale } from '@/i18n/middleware';
 import { stripLocaleFromPathname } from '@/i18n/locales';
+import { NoIndexMeta } from '@/hooks/useSeoMeta';
 
 interface Props {
   children: ReactElement;
@@ -93,7 +94,13 @@ const PrivateRoute: React.FC<Props> = ({
     );
   }
 
-  return children;
+  return (
+    <>
+      {/* Prevent all private/authenticated pages from being indexed */}
+      <NoIndexMeta />
+      {children}
+    </>
+  );
 };
 
 export default PrivateRoute;

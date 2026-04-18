@@ -10,6 +10,7 @@ import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
 import { prefersReducedMotion } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -141,6 +142,24 @@ const AboutPage = () => {
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
+      <SeoMeta
+        title="About AURA — Our Mission in Retinal Health"
+        description="AURA is an AI-powered medical platform dedicated to democratising eye health. We connect patients with verified ophthalmologists for early retinal disease detection."
+        canonical="https://web.auraeyes.site/en/about"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'AboutPage',
+          name: 'About AURA',
+          url: 'https://web.auraeyes.site/en/about',
+          description:
+            'AURA is an AI-powered platform dedicated to democratising access to retinal health screening.',
+          publisher: {
+            '@type': 'MedicalOrganization',
+            name: 'AURA',
+            url: 'https://web.auraeyes.site',
+          },
+        }}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('Navigation.about')}

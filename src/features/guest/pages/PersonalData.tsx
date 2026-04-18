@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 const PersonalDataPage = () => {
   const { t } = useSafeTranslation();
@@ -15,6 +16,12 @@ const PersonalDataPage = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
+      <SeoMeta
+        title="Personal Data Rights — AURA"
+        description="Understand your personal data rights with AURA: access, rectification, erasure and consent withdrawal. Full GDPR compliance for all users."
+        canonical="https://web.auraeyes.site/en/personal-data"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('GuestFooter.personalData')}

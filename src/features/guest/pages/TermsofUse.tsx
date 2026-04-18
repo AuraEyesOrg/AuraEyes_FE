@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 const TermsOfUsePage = () => {
   const { t } = useSafeTranslation();
@@ -15,6 +16,12 @@ const TermsOfUsePage = () => {
 
   return (
     <div className="min-h-screen bg-[var(--color-medical-bg)] flex flex-col">
+      <SeoMeta
+        title="Terms of Use — AURA"
+        description="Read AURA's terms of use. Understand your responsibilities as a patient or medical professional using AURA's AI retinal screening platform."
+        canonical="https://web.auraeyes.site/en/terms"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('GuestFooter.terms')}

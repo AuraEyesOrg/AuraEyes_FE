@@ -2,6 +2,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { HelmetProvider } from 'react-helmet-async';
 import { queryClient } from './lib/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useSignalRNotification } from './hooks/useSignalRNotification';
@@ -40,14 +41,16 @@ function GoogleI18nProvider({ children }: { children: ReactNode }) {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
-    <I18nProvider>
-      <GoogleI18nProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <SignalRProvider>{children}</SignalRProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </GoogleI18nProvider>
-    </I18nProvider>
+    <HelmetProvider>
+      <I18nProvider>
+        <GoogleI18nProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <SignalRProvider>{children}</SignalRProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </GoogleI18nProvider>
+      </I18nProvider>
+    </HelmetProvider>
   );
 }
