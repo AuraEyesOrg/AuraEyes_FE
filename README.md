@@ -1,13 +1,13 @@
 # AuraEyes Frontend — React 19 · TypeScript · Vite · TanStack Query · Zustand
 
-> **AuraEyes** là nền tảng chăm sóc sức khoẻ nhãn khoa trực tuyến. Frontend được xây dựng theo kiến trúc **Feature-Sliced Design**, tích hợp AI sàng lọc võng mạc, tư vấn trực tuyến qua Google Meet, thanh toán PayOS và real-time SignalR.
+> **AuraEyes** is an online ophthalmology healthcare platform. The frontend is built with a **Feature-Sliced Design** architecture, featuring AI-powered retinal screening, online consultations via Google Meet, PayOS payments, and real-time SignalR communication.
 
 ---
 
-## 📋 Mục lục
+## 📋 Table of Contents
 
 - [Tech Stack](#-tech-stack)
-- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Project Structure](#-project-structure)
 - [Feature Modules](#-feature-modules)
 - [State Management](#-state-management)
 - [Data Fetching Flow](#-data-fetching-flow)
@@ -15,8 +15,8 @@
 - [Real-time (SignalR)](#-real-time-signalr)
 - [Internationalization (i18n)](#-internationalization-i18n)
 - [Build & Performance](#-build--performance)
-- [Cấu hình môi trường](#-cấu-hình-môi-trường)
-- [Chạy local](#-chạy-local)
+- [Environment Configuration](#-environment-configuration)
+- [Running Locally](#-running-locally)
 - [Scripts](#-scripts)
 - [Testing](#-testing)
 
@@ -26,69 +26,69 @@
 
 ### Core
 
-| Thư viện         | Phiên bản | Mục đích                  |
-| ---------------- | --------- | ------------------------- |
-| React            | 19.x      | UI framework              |
-| TypeScript       | 5.8       | Type safety               |
-| Vite             | 7.x       | Build tool (SWC compiler) |
-| React Router DOM | 7.x       | Client-side routing       |
+| Library          | Version | Purpose                   |
+| ---------------- | ------- | ------------------------- |
+| React            | 19.x    | UI framework              |
+| TypeScript       | 5.8     | Type safety               |
+| Vite             | 7.x     | Build tool (SWC compiler) |
+| React Router DOM | 7.x     | Client-side routing       |
 
 ### State & Data
 
-| Thư viện              | Phiên bản | Mục đích                               |
-| --------------------- | --------- | -------------------------------------- |
-| TanStack React Query  | 5.x       | Server state, caching, mutations       |
-| Zustand               | 5.x       | Client state (auth, UI, notifications) |
-| Axios                 | 1.x       | HTTP client (với interceptors JWT)     |
-| React Hook Form       | 7.x       | Form management                        |
-| Yup                   | 1.x       | Schema validation                      |
-| `@hookform/resolvers` | 5.x       | Kết nối Yup ↔ React Hook Form          |
+| Library               | Version | Purpose                                |
+| --------------------- | ------- | -------------------------------------- |
+| TanStack React Query  | 5.x     | Server state, caching, mutations       |
+| Zustand               | 5.x     | Client state (auth, UI, notifications) |
+| Axios                 | 1.x     | HTTP client with JWT interceptors      |
+| React Hook Form       | 7.x     | Form management                        |
+| Yup                   | 1.x     | Schema validation                      |
+| `@hookform/resolvers` | 5.x     | Yup ↔ React Hook Form bridge           |
 
 ### UI & Styling
 
-| Thư viện                       | Mục đích                          |
-| ------------------------------ | --------------------------------- |
-| Tailwind CSS 4                 | Utility-first CSS                 |
-| Lucide React                   | Icon system                       |
-| Framer Motion                  | Animation                         |
-| GSAP + `@gsap/react`           | Phức tạp animation (landing page) |
-| `@lottiefiles/dotlottie-react` | Lottie animation                  |
-| React Toastify                 | Toast notifications               |
-| Recharts                       | Charts / Dashboard                |
+| Library                        | Purpose                               |
+| ------------------------------ | ------------------------------------- |
+| Tailwind CSS 4                 | Utility-first CSS                     |
+| Lucide React                   | Icon system                           |
+| Framer Motion                  | Animation                             |
+| GSAP + `@gsap/react`           | Complex animations (landing page)     |
+| `@lottiefiles/dotlottie-react` | Lottie animations                     |
+| React Toastify                 | Toast notifications                   |
+| Recharts                       | Charts / Dashboard data visualisation |
 
-### Tích hợp bên thứ ba
+### Third-party Integrations
 
-| Thư viện                    | Mục đích                         |
+| Library                     | Purpose                          |
 | --------------------------- | -------------------------------- |
 | `@microsoft/signalr`        | Real-time (Chat + Notifications) |
 | `@react-oauth/google`       | Google OAuth2 Login              |
 | `react-google-recaptcha`    | reCAPTCHA v2                     |
 | `@google/genai`             | Google Gemini AI                 |
 | `@n8n/chat`                 | n8n chatbot widget               |
-| `jspdf` + `jspdf-autotable` | Export PDF                       |
-| `xlsx`                      | Export Excel                     |
+| `jspdf` + `jspdf-autotable` | PDF export                       |
+| `xlsx`                      | Excel export                     |
 | `html5-qrcode`              | QR Code scanner                  |
 | `date-fns`                  | Date utilities                   |
 | `react-joyride`             | Guided onboarding tour           |
 
 ### Dev & Tooling
 
-| Công cụ                                        | Mục đích                                 |
+| Tool                                           | Purpose                                  |
 | ---------------------------------------------- | ---------------------------------------- |
-| Husky + lint-staged                            | Git hooks (auto lint/format)             |
+| Husky + lint-staged                            | Git hooks (auto lint/format on commit)   |
 | ESLint 9                                       | Linting (react-hooks, a11y, import-sort) |
 | Prettier                                       | Code formatting                          |
-| Commitlint + Commitizen                        | Conventional commits                     |
+| Commitlint + Commitizen                        | Conventional commits enforcement         |
 | Jest + `@testing-library`                      | Unit tests                               |
-| Playwright                                     | E2E tests                                |
+| Playwright                                     | End-to-end tests                         |
 | `rollup-plugin-visualizer`                     | Bundle analysis                          |
-| `vite-plugin-pwa`                              | Progressive Web App                      |
-| `vite-plugin-compression`                      | Brotli + Gzip nén output                 |
+| `vite-plugin-pwa`                              | Progressive Web App support              |
+| `vite-plugin-compression`                      | Brotli + Gzip output compression         |
 | `@vercel/analytics` + `@vercel/speed-insights` | Vercel monitoring                        |
 
 ---
 
-## 📁 Cấu trúc thư mục
+## 📁 Project Structure
 
 ```
 AuraEyes_FE/
@@ -99,18 +99,18 @@ AuraEyes_FE/
 │   ├── provider.tsx            # AppProvider (QueryClient, Google OAuth, Theme, SignalR)
 │   │
 │   ├── features/               # Feature modules (core)
-│   │   ├── auth/               # Đăng nhập, đăng ký, 2FA, Google login
-│   │   ├── patient/            # Dashboard, sàng lọc AI, đặt lịch, ví, bác sĩ, ...
-│   │   ├── ophthalmologist/    # Dashboard, lịch hẹn, slot, screening review, ví, ...
-│   │   ├── organisation/       # Dashboard, bệnh nhân, lịch, screening, hợp đồng, ...
-│   │   ├── system-admin/       # Quản trị toàn hệ thống
-│   │   ├── consultation/       # Chat + phiên tư vấn (API + hooks)
-│   │   ├── professional-network/ # Mạng lưới bác sĩ, bài đăng
-│   │   ├── notifications/      # Trung tâm thông báo
-│   │   └── guest/              # Trang công khai (landing, about, ...)
+│   │   ├── auth/               # Login, registration, 2FA, Google login
+│   │   ├── patient/            # Dashboard, AI screening, booking, wallet, doctors, ...
+│   │   ├── ophthalmologist/    # Dashboard, appointments, slots, screening review, wallet, ...
+│   │   ├── organisation/       # Dashboard, patients, calendar, screening, contracts, ...
+│   │   ├── system-admin/       # Full system administration
+│   │   ├── consultation/       # Chat + consultation sessions (API + hooks)
+│   │   ├── professional-network/ # Doctor network, posts
+│   │   ├── notifications/      # Notification centre
+│   │   └── guest/              # Public pages (landing, about, ...)
 │   │
 │   ├── components/
-│   │   ├── layouts/            # Layout wrapper (patient, doctor, org, admin)
+│   │   ├── layouts/            # Layout wrappers (patient, doctor, org, admin)
 │   │   └── ui/                 # Shared UI components (Button, Modal, Table, ...)
 │   │
 │   ├── hooks/                  # Shared custom hooks
@@ -130,8 +130,8 @@ AuraEyes_FE/
 │   │   ├── axios.ts            # Axios instance
 │   │   ├── interceptors.ts     # JWT interceptor + refresh token logic
 │   │   ├── api.ts              # Generic API helpers
-│   │   ├── endpoints.ts        # Tất cả API endpoint constants
-│   │   ├── react-query.ts      # QueryClient config
+│   │   ├── endpoints.ts        # All API endpoint constants
+│   │   ├── react-query.ts      # QueryClient configuration
 │   │   ├── date-utils.ts       # Date formatting helpers
 │   │   ├── file-export.ts      # PDF / Excel export helpers
 │   │   ├── api-error.ts        # Error message extraction (FluentValidation)
@@ -144,7 +144,7 @@ AuraEyes_FE/
 │   │   └── ThemeContext.tsx    # Dark / Light mode context
 │   │
 │   ├── i18n/                   # Internationalization
-│   │   ├── i18n.ts             # i18next config
+│   │   ├── i18n.ts             # i18next configuration
 │   │   ├── I18nProvider.tsx
 │   │   ├── locales.ts          # Supported locales (vi, en)
 │   │   ├── useSafeTranslation.ts
@@ -174,17 +174,17 @@ AuraEyes_FE/
 └── package.json
 ```
 
-### Cấu trúc nội bộ mỗi Feature
+### Internal Feature Structure
 
 ```
 src/features/<feature>/
 ├── api/          # TanStack Query hooks (useQuery, useMutation) + API calls
 ├── components/   # Feature-specific UI components
 ├── hooks/        # Feature-specific hooks
-├── pages/        # Page components (map 1:1 với routes)
+├── pages/        # Page components (1:1 mapping with routes)
 ├── types/        # TypeScript interfaces & types
-├── schemas/      # Yup validation schemas (nếu có)
-├── stores/       # Feature-level Zustand stores (nếu có)
+├── schemas/      # Yup validation schemas (if applicable)
+├── stores/       # Feature-level Zustand stores (if applicable)
 ├── lib/          # Feature-local utilities
 ├── utils/        # Helper functions
 └── index.ts      # Public exports
@@ -196,105 +196,105 @@ src/features/<feature>/
 
 ### 👤 Auth (`/features/auth`)
 
-- Đăng nhập (email/password + Google OAuth2)
-- Đăng ký tài khoản
-- Xác thực email (OTP)
-- Quên mật khẩu, đặt lại mật khẩu
+- Login (email/password + Google OAuth2)
+- Account registration
+- Email verification (OTP)
+- Forgot password / Reset password
 - Two-Factor Authentication (2FA)
 - reCAPTCHA v2
 
 ### 🧑‍⚕️ Patient (`/features/patient`) — 20 pages
 
-| Page                       | Mô tả                                |
-| -------------------------- | ------------------------------------ |
-| `dashboard.tsx`            | Tổng quan sức khoẻ, lịch sử sàng lọc |
-| `screening.tsx`            | Danh sách lịch sử AI screening       |
-| `screening-new.tsx`        | Tạo phiên sàng lọc mới               |
-| `retinal-analysis.tsx`     | Phân tích ảnh võng mạc bằng AI       |
-| `analysis-detail.tsx`      | Chi tiết kết quả phân tích           |
-| `roadmap.tsx`              | Lộ trình điều trị do AI sinh         |
-| `doctors.tsx`              | Tìm kiếm & xem hồ sơ bác sĩ          |
-| `book-appointment.tsx`     | Đặt lịch hẹn với bác sĩ              |
-| `booking-confirmation.tsx` | Xác nhận đặt lịch                    |
-| `appointments.tsx`         | Lịch hẹn của tôi                     |
-| `clinics.tsx`              | Danh sách phòng khám / tổ chức       |
-| `wallet.tsx`               | Ví điện tử, lịch sử giao dịch        |
-| `payment-callback.tsx`     | Callback sau thanh toán PayOS        |
-| `chat.tsx`                 | Chat với bác sĩ (SignalR)            |
-| `review.tsx`               | Đánh giá sau phiên tư vấn            |
-| `profile.tsx`              | Hồ sơ cá nhân bệnh nhân              |
-| `settings.tsx`             | Cài đặt tài khoản                    |
-| `notifications.tsx`        | Thông báo                            |
-| `help-feedback.tsx`        | Trợ giúp & Phản hồi                  |
+| Page                       | Description                           |
+| -------------------------- | ------------------------------------- |
+| `dashboard.tsx`            | Health overview and screening history |
+| `screening.tsx`            | AI screening history list             |
+| `screening-new.tsx`        | Start a new screening session         |
+| `retinal-analysis.tsx`     | AI-powered retinal image analysis     |
+| `analysis-detail.tsx`      | Detailed analysis result              |
+| `roadmap.tsx`              | AI-generated treatment roadmap        |
+| `doctors.tsx`              | Search & view doctor profiles         |
+| `book-appointment.tsx`     | Book an appointment with a doctor     |
+| `booking-confirmation.tsx` | Appointment booking confirmation      |
+| `appointments.tsx`         | My appointments                       |
+| `clinics.tsx`              | Clinics / organisations listing       |
+| `wallet.tsx`               | Digital wallet & transaction history  |
+| `payment-callback.tsx`     | PayOS payment callback handler        |
+| `chat.tsx`                 | Chat with doctor (SignalR)            |
+| `review.tsx`               | Post-consultation review              |
+| `profile.tsx`              | Patient personal profile              |
+| `settings.tsx`             | Account settings                      |
+| `notifications.tsx`        | Notifications                         |
+| `help-feedback.tsx`        | Help & Feedback                       |
 
 ### 👁 Ophthalmologist (`/features/ophthalmologist`) — 15 pages
 
-| Page                                  | Mô tả                          |
-| ------------------------------------- | ------------------------------ |
-| `dashboard.tsx`                       | Tổng quan hoạt động            |
-| `appointments.tsx`                    | Quản lý lịch hẹn               |
-| `slot-management.tsx`                 | Quản lý slot giờ khám          |
-| `schedules.tsx`                       | Lịch làm việc mẫu              |
-| `leave-requests.tsx`                  | Yêu cầu nghỉ phép              |
-| `screenings.tsx`                      | Danh sách screening cần duyệt  |
-| `screening-review.tsx`                | Duyệt & nhận xét kết quả AI    |
-| `patients.tsx`                        | Danh sách bệnh nhân của tôi    |
-| `ConsultationsChatView.tsx`           | Chat + phiên tư vấn trực tuyến |
-| `consultations.tsx`                   | Danh sách phiên tư vấn         |
-| `wallet.tsx`                          | Ví & thu nhập                  |
-| `contract.tsx`                        | Hợp đồng hành nghề             |
-| `employment-type-change-requests.tsx` | Yêu cầu đổi loại hình HĐ       |
-| `settings.tsx`                        | Profile & chứng chỉ            |
+| Page                                  | Description                            |
+| ------------------------------------- | -------------------------------------- |
+| `dashboard.tsx`                       | Activity overview                      |
+| `appointments.tsx`                    | Appointment management                 |
+| `slot-management.tsx`                 | Appointment slot management            |
+| `schedules.tsx`                       | Work schedule templates                |
+| `leave-requests.tsx`                  | Leave requests                         |
+| `screenings.tsx`                      | Screenings pending review              |
+| `screening-review.tsx`                | Review & annotate AI screening results |
+| `patients.tsx`                        | My patient list                        |
+| `ConsultationsChatView.tsx`           | Online consultation chat view          |
+| `consultations.tsx`                   | Consultation session list              |
+| `wallet.tsx`                          | Wallet & earnings                      |
+| `contract.tsx`                        | Employment contract                    |
+| `employment-type-change-requests.tsx` | Employment type change requests        |
+| `settings.tsx`                        | Profile & certifications               |
 
 ### 🏥 Organisation (`/features/organisation`) — 14 pages
 
-| Page                   | Mô tả                         |
-| ---------------------- | ----------------------------- |
-| `dashboard.tsx`        | Tổng quan tổ chức             |
-| `analytics.tsx`        | Phân tích số liệu             |
-| `patients.tsx`         | Bệnh nhân thuộc tổ chức       |
-| `patient-history.tsx`  | Lịch sử bệnh nhân             |
-| `screening.tsx`        | Sàng lọc do tổ chức thực hiện |
-| `screening-result.tsx` | Kết quả sàng lọc (PDF export) |
-| `reports.tsx`          | Báo cáo tổng hợp              |
-| `calendar.tsx`         | Lịch làm việc tổ chức         |
-| `slot-management.tsx`  | Quản lý slot                  |
-| `wallet.tsx`           | Thu chi tài chính             |
-| `contract.tsx`         | Hợp đồng với bác sĩ           |
-| `settings.tsx`         | Cấu hình tổ chức              |
+| Page                   | Description                       |
+| ---------------------- | --------------------------------- |
+| `dashboard.tsx`        | Organisation overview             |
+| `analytics.tsx`        | Data analytics & metrics          |
+| `patients.tsx`         | Organisation patients             |
+| `patient-history.tsx`  | Patient medical history           |
+| `screening.tsx`        | Organisation-conducted screenings |
+| `screening-result.tsx` | Screening results (PDF export)    |
+| `reports.tsx`          | Summary reports                   |
+| `calendar.tsx`         | Organisation work calendar        |
+| `slot-management.tsx`  | Slot management                   |
+| `wallet.tsx`           | Financial management              |
+| `contract.tsx`         | Doctor contracts                  |
+| `settings.tsx`         | Organisation settings             |
 
 ### 🔧 System Admin (`/features/system-admin`) — 18 pages
 
-| Page                                  | Mô tả                                   |
-| ------------------------------------- | --------------------------------------- |
-| `dashboard.tsx`                       | Dashboard tổng hợp toàn hệ thống        |
-| `ophthalmologists.tsx`                | Quản lý bác sĩ + xét duyệt              |
-| `organisations.tsx`                   | Quản lý tổ chức + onboarding            |
-| `patients.tsx`                        | Quản lý bệnh nhân                       |
-| `users.tsx`                           | Quản lý tất cả tài khoản                |
-| `permissions.tsx`                     | RBAC — phân quyền granular              |
-| `verification-requests.tsx`           | Duyệt yêu cầu xác thực bác sĩ           |
-| `employment-type-change-requests.tsx` | Duyệt đổi hợp đồng                      |
-| `leave-requests.tsx`                  | Duyệt nghỉ phép                         |
-| `contracts.tsx`                       | Toàn bộ hợp đồng                        |
-| `contract-templates.tsx`              | Mẫu hợp đồng                            |
-| `contract-template-editor.tsx`        | Soạn thảo mẫu hợp đồng                  |
-| `cashflow.tsx`                        | Dòng tiền hệ thống                      |
-| `withdrawal-requests.tsx`             | Duyệt yêu cầu rút tiền                  |
-| `audit-logs.tsx`                      | Nhật ký thao tác                        |
-| `settings.tsx`                        | Cấu hình hệ thống                       |
-| `status.tsx`                          | Trạng thái hệ thống (BetterStack embed) |
+| Page                                  | Description                           |
+| ------------------------------------- | ------------------------------------- |
+| `dashboard.tsx`                       | System-wide analytics dashboard       |
+| `ophthalmologists.tsx`                | Doctor management & verification      |
+| `organisations.tsx`                   | Organisation management & onboarding  |
+| `patients.tsx`                        | Patient management                    |
+| `users.tsx`                           | All accounts management               |
+| `permissions.tsx`                     | RBAC — granular permission management |
+| `verification-requests.tsx`           | Doctor verification requests          |
+| `employment-type-change-requests.tsx` | Employment contract change approvals  |
+| `leave-requests.tsx`                  | Leave request approvals               |
+| `contracts.tsx`                       | All contracts                         |
+| `contract-templates.tsx`              | Contract templates                    |
+| `contract-template-editor.tsx`        | Contract template editor              |
+| `cashflow.tsx`                        | System cash flow                      |
+| `withdrawal-requests.tsx`             | Withdrawal request approvals          |
+| `audit-logs.tsx`                      | System audit logs                     |
+| `settings.tsx`                        | System configuration                  |
+| `status.tsx`                          | System status (BetterStack embed)     |
 
 ### 🌐 Professional Network (`/features/professional-network`)
 
-- Feed bài đăng của bác sĩ
-- Tạo / chỉnh sửa bài đăng
-- Tương tác mạng lưới y tế
+- Doctor post feed
+- Create / edit posts
+- Medical professional network interactions
 
 ### 💬 Consultation (`/features/consultation`)
 
-- API hooks cho phiên tư vấn
-- Chat real-time qua SignalR
+- API hooks for consultation sessions
+- Real-time chat via SignalR
 
 ---
 
@@ -302,18 +302,18 @@ src/features/<feature>/
 
 ### Zustand Stores
 
-| Store                     | Nội dung                                                          |
+| Store                     | Contents                                                          |
 | ------------------------- | ----------------------------------------------------------------- |
 | `auth-store.ts`           | `user`, `accessToken`, `refreshToken`, `roles`, `isAuthenticated` |
 | `global-store.ts`         | Global UI flags                                                   |
-| `useNotificationStore.ts` | Danh sách thông báo real-time, badge count                        |
-| `useLanguageStore.ts`     | Locale hiện tại (vi/en)                                           |
+| `useNotificationStore.ts` | Real-time notification list, badge count                          |
+| `useLanguageStore.ts`     | Current locale (vi/en)                                            |
 
 ### TanStack Query
 
-- Tất cả **server state** (danh sách, chi tiết, phân trang) đều dùng `useQuery`
-- Tất cả **mutations** (tạo, cập nhật, xoá) dùng `useMutation` + `invalidateQueries`
-- QueryClient được cấu hình tập trung tại `src/lib/react-query.ts`
+- All **server state** (lists, details, pagination) handled via `useQuery`
+- All **mutations** (create, update, delete) handled via `useMutation` + `invalidateQueries`
+- `QueryClient` configured centrally at `src/lib/react-query.ts`
 
 ---
 
@@ -328,7 +328,7 @@ Component
     │   Feature API hook  (src/features/<f>/api/*.ts)
     │       │
     │       ▼
-    │   lib/axios.ts  (Axios instance với Base URL)
+    │   lib/axios.ts  (Axios instance with Base URL)
     │       │
     │       ├── Request  →  lib/interceptors.ts
     │       │                └── Inject Authorization: Bearer <token>
@@ -347,7 +347,7 @@ Component
 
 ## 🛣 Routing & Authorization
 
-### Cấu trúc Routes (`src/routes/index.tsx`)
+### Route Structure (`src/routes/index.tsx`)
 
 ```
 /                           → Guest (Landing page)
@@ -362,42 +362,42 @@ Component
 
 ### Route Guards
 
-| Component      | Mô tả                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------- |
-| `PrivateRoute` | Kiểm tra `isAuthenticated` + role từ `auth-store`. Redirect `/auth/login` nếu chưa đăng nhập |
-| `PublicRoute`  | Redirect về dashboard nếu đã đăng nhập                                                       |
+| Component      | Description                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `PrivateRoute` | Checks `isAuthenticated` + role from `auth-store`. Redirects to `/auth/login` if not authenticated |
+| `PublicRoute`  | Redirects to dashboard if already authenticated                                                    |
 
 ### Permission Hook
 
-`usePermissions` — đọc permissions granular từ JWT claims, dùng để ẩn/hiện UI elements.
+`usePermissions` — reads granular permissions from JWT claims, used to show/hide UI elements.
 
 ---
 
 ## ⚡ Real-time (SignalR)
 
-Được khởi tạo tự động khi user đã xác thực, thông qua `SignalRProvider` trong `AppProvider`.
+Automatically initialised when the user is authenticated, via `SignalRProvider` inside `AppProvider`.
 
-| Hook                     | Hub               | Chức năng                     |
-| ------------------------ | ----------------- | ----------------------------- |
-| `useSignalRNotification` | `NotificationHub` | Nhận thông báo push real-time |
-| `useSignalRChat`         | `ChatHub`         | Chat giữa bệnh nhân ↔ bác sĩ  |
+| Hook                     | Hub               | Function                             |
+| ------------------------ | ----------------- | ------------------------------------ |
+| `useSignalRNotification` | `NotificationHub` | Receive real-time push notifications |
+| `useSignalRChat`         | `ChatHub`         | Chat between patient ↔ doctor        |
 
-**Kết nối:** JWT token được truyền qua query string `?access_token=...` khi connect WebSocket.
+**Connection:** JWT token is passed via `?access_token=...` query string when establishing the WebSocket connection.
 
 ---
 
 ## 🌍 Internationalization (i18n)
 
-- **Thư viện**: `i18next` + `react-i18next` + `i18next-browser-languagedetector`
-- **Ngôn ngữ hỗ trợ**: `vi` (Tiếng Việt) · `en` (English)
-- **Type-safe keys**: Script `npm run i18n:types` tự động sinh `messages.generated.d.ts`
-- **Hook an toàn**: `useSafeTranslation` wrapper tránh key undefined
+- **Libraries**: `i18next` + `react-i18next` + `i18next-browser-languagedetector`
+- **Supported languages**: `vi` (Vietnamese) · `en` (English)
+- **Type-safe keys**: `npm run i18n:types` auto-generates `messages.generated.d.ts`
+- **Safe hook**: `useSafeTranslation` wrapper prevents undefined key errors
 
 ```bash
-# Sinh lại TypeScript types cho i18n keys
+# Regenerate TypeScript types for i18n keys
 npm run i18n:types
 
-# Audit key chưa dùng trong patient feature
+# Audit unused i18n keys in the patient feature
 npm run i18n:audit:patient
 ```
 
@@ -405,36 +405,36 @@ npm run i18n:audit:patient
 
 ## 🏗 Build & Performance
 
-### Vite Build Optimizations
+### Vite Build Optimisations
 
-| Tính năng           | Chi tiết                                               |
-| ------------------- | ------------------------------------------------------ |
-| **Compiler**        | SWC (thay Babel, nhanh hơn ~5–20x)                     |
-| **Code splitting**  | `react-core`, `ui-icons`, `n8n-widget` chunks thủ công |
-| **CSS split**       | `cssCodeSplit: true`                                   |
-| **Compression**     | Brotli (`.br`) + Gzip (`.gz`) cho assets > 10KB        |
-| **Console strip**   | `drop: ['console', 'debugger']` trong production       |
-| **PWA**             | `vite-plugin-pwa` — service worker + offline support   |
-| **Bundle analysis** | `dist/stats.html` (Rollup Visualizer)                  |
-| **Path alias**      | `@/` → `src/`                                          |
+| Feature             | Details                                               |
+| ------------------- | ----------------------------------------------------- |
+| **Compiler**        | SWC (replaces Babel, ~5–20x faster)                   |
+| **Code splitting**  | Manual chunks: `react-core`, `ui-icons`, `n8n-widget` |
+| **CSS split**       | `cssCodeSplit: true`                                  |
+| **Compression**     | Brotli (`.br`) + Gzip (`.gz`) for assets > 10KB       |
+| **Console strip**   | `drop: ['console', 'debugger']` in production         |
+| **PWA**             | `vite-plugin-pwa` — service worker + offline support  |
+| **Bundle analysis** | `dist/stats.html` (Rollup Visualizer)                 |
+| **Path alias**      | `@/` → `src/`                                         |
 
 ### Dev Server
 
 ```
-Port dev:      3000
-Port preview:  8080
+Dev port:      3000
+Preview port:  8080
 ```
 
 ---
 
-## ⚙️ Cấu hình môi trường
+## ⚙️ Environment Configuration
 
 ```bash
 cp .env.example .env
 ```
 
 ```env
-# URL của backend API
+# Backend API URL
 VITE_API_END_POINT=https://api.auraeyes.site
 
 # Google reCAPTCHA v2 Site Key
@@ -446,30 +446,30 @@ VITE_GOOGLE_CLIENT_ID=
 
 ---
 
-## 💻 Chạy local
+## 💻 Running Locally
 
-### Yêu cầu
+### Requirements
 
 - Node.js ≥ 18
-- npm ≥ 9 (hoặc pnpm / yarn)
+- npm ≥ 9 (or pnpm / yarn)
 
 ```bash
-# 1. Clone repo
+# 1. Clone the repository
 git clone https://github.com/AuraEyesOrg/AuraEyes_FE.git
 cd AuraEyes_FE
 
-# 2. Cài dependencies
+# 2. Install dependencies
 npm install
 
-# 3. Tạo file .env
+# 3. Set up environment
 cp .env.example .env
-# Điền VITE_API_END_POINT, VITE_RECAPTCHA_SITE_KEY, VITE_GOOGLE_CLIENT_ID
+# Fill in VITE_API_END_POINT, VITE_RECAPTCHA_SITE_KEY, VITE_GOOGLE_CLIENT_ID
 
-# 4. Chạy dev server
+# 4. Start dev server
 npm run dev
 # → http://localhost:3000
 
-# 5. Build production
+# 5. Build for production
 npm run build
 
 # 6. Preview production build
@@ -481,27 +481,27 @@ npm run preview
 
 ## 📜 Scripts
 
-| Script                                 | Mô tả                                           |
-| -------------------------------------- | ----------------------------------------------- |
-| `npm run dev`                          | Chạy dev server (port 3000)                     |
-| `npm run dev:test`                     | Dev server mode test (port 3001)                |
-| `npm run build`                        | TypeScript check → sinh i18n types → Vite build |
-| `npm run preview`                      | Preview production build                        |
-| `npm run lint`                         | ESLint toàn bộ dự án                            |
-| `npm run lint:fix`                     | Auto-fix lint errors                            |
-| `npm run format`                       | Prettier format toàn bộ file                    |
-| `npm run test`                         | Jest unit tests                                 |
-| `npm run test:e2e`                     | Playwright E2E (toàn bộ)                        |
-| `npm run test:e2e:module:auth`         | E2E — Auth module                               |
-| `npm run test:e2e:module:screening`    | E2E — Screening module                          |
-| `npm run test:e2e:module:consultation` | E2E — Consultation module                       |
-| `npm run test:e2e:module:wallet`       | E2E — Wallet module                             |
-| `npm run test:e2e:module:booking`      | E2E — Booking module                            |
-| `npm run test:e2e:round1`              | E2E tagged `@round-1`                           |
-| `npm run test:e2e:ui`                  | Playwright UI mode                              |
-| `npm run i18n:types`                   | Sinh TypeScript types cho i18n keys             |
-| `npm run commit`                       | Commitizen (conventional commits)               |
-| `npm run release`                      | standard-version (changelog + tag)              |
+| Script                                 | Description                                         |
+| -------------------------------------- | --------------------------------------------------- |
+| `npm run dev`                          | Start dev server (port 3000)                        |
+| `npm run dev:test`                     | Dev server in test mode (port 3001)                 |
+| `npm run build`                        | TypeScript check → generate i18n types → Vite build |
+| `npm run preview`                      | Preview production build                            |
+| `npm run lint`                         | Run ESLint across the entire project                |
+| `npm run lint:fix`                     | Auto-fix lint errors                                |
+| `npm run format`                       | Prettier format all files                           |
+| `npm run test`                         | Run Jest unit tests                                 |
+| `npm run test:e2e`                     | Run all Playwright E2E tests                        |
+| `npm run test:e2e:module:auth`         | E2E — Auth module                                   |
+| `npm run test:e2e:module:screening`    | E2E — Screening module                              |
+| `npm run test:e2e:module:consultation` | E2E — Consultation module                           |
+| `npm run test:e2e:module:wallet`       | E2E — Wallet module                                 |
+| `npm run test:e2e:module:booking`      | E2E — Booking module                                |
+| `npm run test:e2e:round1`              | E2E tests tagged `@round-1`                         |
+| `npm run test:e2e:ui`                  | Playwright UI mode                                  |
+| `npm run i18n:types`                   | Generate TypeScript types for i18n keys             |
+| `npm run commit`                       | Commitizen (conventional commits)                   |
+| `npm run release`                      | standard-version (changelog + version tag)          |
 
 ---
 
@@ -520,10 +520,10 @@ npm run test
 ### E2E Tests — Playwright
 
 ```bash
-# Toàn bộ
+# All tests
 npm run test:e2e
 
-# Chạy theo module
+# Run by module
 npm run test:e2e:module:auth
 npm run test:e2e:module:screening
 npm run test:e2e:module:consultation
@@ -545,9 +545,9 @@ npm run test:e2e:ui
 
 ## 🚀 Deployment
 
-Deployed trên **Vercel** với cấu hình `vercel.json` (SPA rewrite — mọi route đều về `index.html`).
+Deployed on **Vercel** with `vercel.json` configured as an SPA (all routes rewrite to `index.html`).
 
-Monitoring: **Vercel Analytics** + **Vercel Speed Insights** tích hợp sẵn.
+Monitoring: **Vercel Analytics** + **Vercel Speed Insights** are built-in.
 
 ---
 
