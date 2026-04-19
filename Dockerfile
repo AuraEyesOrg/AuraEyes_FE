@@ -27,10 +27,17 @@ ENV VITE_N8N_WEBHOOK_URL=$VITE_N8N_WEBHOOK_URL
 ENV VITE_API_END_AI_POINT=$VITE_API_END_AI_POINT
 
 # Chạy build
-RUN npm run build
+# Chạy build (Bỏ qua tsc để đảm bảo ra được folder dist)
+RUN npx vite build
+
+# Kiểm tra xem có file nào trong dist không (Bạn có thể xem log ở GitHub Action)
+RUN ls -la dist/
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
+
+# Xóa trang mặc định của Nginx
+RUN rm -rf /usr/share/nginx/html/*
 
 # Copy built files to Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
