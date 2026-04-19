@@ -59,10 +59,11 @@
     (function () {
       const GA_ID = 'G-59D6MQZ1BJ';
       const host = window.location.hostname;
-      const isProdHost =
-        host === 'web.auraeyes.site' || host.endsWith('.auraeyes.site');
+      const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+      const isProductionLikeRuntime =
+        window.location.protocol === 'https:' && !localHosts.has(host);
 
-      if (!isProdHost) {
+      if (!isProductionLikeRuntime) {
         return;
       }
 
