@@ -141,7 +141,6 @@ const refreshAccessToken = async () => {
     };
 
     authState.setUser(mergedUser as AuthUser);
-    authState.setIsAuthenticated(true);
   }
 
   return payload.accessToken;

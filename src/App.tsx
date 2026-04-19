@@ -10,6 +10,9 @@ import { ErrorFallback } from './components/ui/errorfallback';
 import { ErrorInfo } from 'react';
 
 function App() {
+  const isTelemetryEnabled =
+    import.meta.env.PROD && import.meta.env.VITE_ENABLE_TELEMETRY !== 'false';
+
   // Hàm ghi log lỗi ra dịch vụ bên ngoài hoặc console
   const logErrorToService = (error: unknown, info: ErrorInfo) => {
     if (error instanceof Error) {
@@ -48,8 +51,8 @@ function App() {
       </AppProvider>
 
       {/* Vercel Analytics & Speed Insights */}
-      <Analytics />
-      <SpeedInsights />
+      {isTelemetryEnabled && <Analytics />}
+      {isTelemetryEnabled && <SpeedInsights />}
     </>
   );
 }

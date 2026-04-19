@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
@@ -79,8 +80,16 @@ const HomePage = () => {
     heroTitleHighlight.trim().length > 0 &&
     heroTitleHighlight !== 'Home.hero.titleHighlight';
 
-  const [overviewMetrics, setOverviewMetrics] =
-    useState<GuestOverviewMetrics | null>(null);
+  const { data: overviewMetrics = null } =
+    useQuery<GuestOverviewMetrics | null>({
+      queryKey: ['guest-overview-metrics'],
+      queryFn: fetchGuestOverviewMetrics,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    });
 
   // Refs for animations
   const containerRef = useRef<HTMLDivElement>(null);
@@ -136,24 +145,6 @@ const HomePage = () => {
   );
 
   const hasLiveStats = liveStats.some((stat) => stat.value !== null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadOverview = async () => {
-      const metrics = await fetchGuestOverviewMetrics();
-
-      if (isMounted) {
-        setOverviewMetrics(metrics);
-      }
-    };
-
-    void loadOverview();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (prefersReducedMotion()) {

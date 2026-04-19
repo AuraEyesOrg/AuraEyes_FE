@@ -23,11 +23,9 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 const PendingApprovalPage = () => {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
-  const { logout, user, setUser } = useAuthStore((state) => ({
-    logout: state.logout,
-    user: state.user,
-    setUser: state.setUser,
-  }));
+  const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);

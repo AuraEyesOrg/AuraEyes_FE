@@ -143,7 +143,9 @@ const useNotificationStore = create<NotificationState>()(
        * Set unread count (from API)
        */
       setUnreadCount: (count) => {
-        set({ unreadCount: count });
+        set((state) =>
+          state.unreadCount === count ? state : { unreadCount: count }
+        );
       },
 
       /**
@@ -185,7 +187,11 @@ const useNotificationStore = create<NotificationState>()(
        * Set SignalR connection status
        */
       setConnectionStatus: (status) => {
-        set({ connectionStatus: status });
+        set((state) =>
+          state.connectionStatus === status
+            ? state
+            : { connectionStatus: status }
+        );
       },
 
       /**
