@@ -15,6 +15,7 @@ import {
   Lock,
   Plus,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -92,6 +93,9 @@ const createDefaultCertificate = (): CertificateFormItem => ({
 const RegisterDoctorPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
   const [submittedEmail, setSubmittedEmail] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -255,10 +259,12 @@ const RegisterDoctorPage = () => {
       });
 
       setSubmittedEmail(data.email);
-      setIsSubmitted(true);
-      navigate(
-        `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(data.email)}`
+      toast.success(
+        'Đăng ký bác sĩ thành công! Vui lòng kiểm tra email để xác nhận tài khoản và chờ admin phê duyệt.',
+        { autoClose: 5000 }
       );
+      setIsSubmitted(true);
+      setRedirectCountdown(5);
     } catch (err: unknown) {
       const error = err as {
         code?: string;
@@ -312,6 +318,22 @@ const RegisterDoctorPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Countdown redirect after successful doctor registration
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      navigate(
+        `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(submittedEmail)}`
+      );
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [redirectCountdown, submittedEmail, navigate, toLocalizedAuthPath]);
 
   if (isSubmitted) {
     return (
@@ -370,6 +392,15 @@ const RegisterDoctorPage = () => {
                   verify your account before the admin reviews your contract.
                 </p>
               </div>
+              {redirectCountdown !== null && redirectCountdown > 0 && (
+                <div className="flex items-center justify-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-xl mb-4">
+                  <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
+                  <p className="text-sm text-green-700 font-medium">
+                    Chuyển hướng đến trang xác nhận email sau{' '}
+                    {redirectCountdown}s...
+                  </p>
+                </div>
+              )}
               <Link
                 to="/"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#00d1c0] hover:bg-[#00b8a9] text-white rounded-lg font-semibold transition-all duration-200 button-hover-lift uppercase tracking-wider text-sm"

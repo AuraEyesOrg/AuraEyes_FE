@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -23,8 +23,10 @@ const EmailVerificationRequiredPage = () => {
 
   const emailFromQuery = searchParams.get('email')?.trim() ?? '';
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
+  const toLocalizedAuthPath = useCallback(
+    (pathname: string) => withLocalePathname(locale, pathname),
+    [locale]
+  );
 
   const [resendEmail, setResendEmail] = useState(emailFromQuery);
   const [isResending, setIsResending] = useState(false);

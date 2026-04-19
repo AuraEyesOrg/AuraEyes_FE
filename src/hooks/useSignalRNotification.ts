@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   HubConnectionBuilder,
   HubConnection,
@@ -37,7 +37,11 @@ export function useSignalRNotification(): {
   const userRolesRef = useRef<string[]>([]);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const userRoles = useAuthStore((state) => state.user?.roles ?? []);
+  // Stable selector: extract roles array, fall back to a module-level empty array
+  // to avoid returning a new reference on every render (which causes infinite loop
+  // with useSyncExternalStore / Zustand).
+  const userRolesRaw = useAuthStore((state) => state.user?.roles);
+  const userRoles = useMemo(() => userRolesRaw ?? [], [userRolesRaw]);
   const addNotification = useNotificationStore(
     (state) => state.addNotification
   );
