@@ -14,6 +14,7 @@ import {
   ArrowRight,
   RefreshCw,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
   DEFAULT_LOCALE,
@@ -25,6 +26,13 @@ import useAuthStore from '@/store/auth-store';
 import { shouldRedirectToContract } from '../utils/contract-status';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
+
+const TOAST_IDS = {
+  confirmSuccess: 'confirm-email-success',
+  confirmError: 'confirm-email-error',
+  resendSuccess: 'confirm-email-resend-success',
+  resendError: 'confirm-email-resend-error',
+} as const;
 
 const ConfirmEmailPage = () => {
   const { t } = useSafeTranslation();
@@ -38,12 +46,10 @@ const ConfirmEmailPage = () => {
   const [state, setState] = useState<PageState>(
     userId && token ? 'verifying' : 'resend'
   );
-  const [errorMessage, setErrorMessage] = useState('');
   const [resendEmail, setResendEmail] = useState(emailFromQuery);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isRefreshingSession, setIsRefreshingSession] = useState(false);
-  const [resendSent, setResendSent] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
     null
   );
@@ -117,6 +123,41 @@ const ConfirmEmailPage = () => {
     navigate(nextPath, { replace: true });
   }, [navigate, resolvePostConfirmPath]);
 
+  const resolveApiErrorMessage = useCallback(
+    (err: unknown, fallback: string) => {
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as {
+          response?: {
+            data?: {
+              message?: string;
+              errors?: string[] | Record<string, string[]>;
+            };
+          };
+        };
+
+        const responseErrors = axiosError.response?.data?.errors;
+        const flattenedErrors = Array.isArray(responseErrors)
+          ? responseErrors
+          : responseErrors
+            ? Object.values(responseErrors).flat()
+            : [];
+
+        return (
+          axiosError.response?.data?.message ||
+          flattenedErrors.find(Boolean) ||
+          fallback
+        );
+      }
+
+      if (err instanceof Error && err.message) {
+        return err.message;
+      }
+
+      return fallback;
+    },
+    []
+  );
+
   useEffect(() => {
     if (!resendEmail && user?.email) {
       setResendEmail(user.email);
@@ -170,32 +211,39 @@ const ConfirmEmailPage = () => {
 
     confirmEmail({ userId, token })
       .then(async () => {
+        toast.success(t('AuthPages.confirmEmail.success.description'), {
+          toastId: TOAST_IDS.confirmSuccess,
+        });
         setState('success');
         const nextPath = await resolvePostConfirmPath();
         setRedirectTarget(nextPath);
         setRedirectCountdown(5);
       })
       .catch((err) => {
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.errors?.[0] ||
-          t('AuthPages.confirmEmail.error.defaultMessage');
-        setErrorMessage(msg);
+        const msg = resolveApiErrorMessage(
+          err,
+          t('AuthPages.confirmEmail.error.defaultMessage')
+        );
+        toast.error(msg, { toastId: TOAST_IDS.confirmError });
         setState('error');
       });
-  }, [resolvePostConfirmPath, t, token, userId]);
+  }, [resolveApiErrorMessage, resolvePostConfirmPath, t, token, userId]);
 
   const handleResend = async () => {
     if (!resendEmail || resendCooldown > 0) return;
     setResendLoading(true);
     try {
       await resendConfirmation({ email: resendEmail });
-      setResendSent(true);
       setResendCooldown(30);
-
-      window.setTimeout(() => {
-        setResendSent(false);
-      }, 3000);
+      toast.success(t('AuthPages.confirmEmail.resend.successDescription'), {
+        toastId: TOAST_IDS.resendSuccess,
+      });
+    } catch (err) {
+      const msg = resolveApiErrorMessage(
+        err,
+        t('AuthPages.confirmEmail.error.defaultMessage')
+      );
+      toast.error(msg, { toastId: TOAST_IDS.resendError });
     } finally {
       setResendLoading(false);
     }
@@ -267,7 +315,9 @@ const ConfirmEmailPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
             {t('AuthPages.confirmEmail.error.title')}
           </h2>
-          <p className="text-gray-500 text-sm mb-6">{errorMessage}</p>
+          <p className="text-gray-500 text-sm mb-6">
+            {t('AuthPages.confirmEmail.error.defaultMessage')}
+          </p>
           <button
             type="button"
             onClick={() => setState('resend')}
@@ -302,15 +352,6 @@ const ConfirmEmailPage = () => {
           </div>
 
           <div className="space-y-4">
-            {resendSent && (
-              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-                <CheckCircle className="h-4 w-4" />
-                <span>
-                  {t('AuthPages.confirmEmail.resend.successDescription')}
-                </span>
-              </div>
-            )}
-
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-gray-700">
                 {t('AuthPages.confirmEmail.resend.emailLabel')}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { CheckCircle, Mail, RefreshCw } from 'lucide-react';
+import { CheckCircle, RefreshCw } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { AuthLayout } from '@/components/layouts';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import {
@@ -9,6 +10,11 @@ import {
   withLocalePathname,
 } from '@/i18n/locales';
 import { resendConfirmation } from '../api';
+
+const TOAST_IDS = {
+  resendSuccess: 'email-verification-required-resend-success',
+  resendError: 'email-verification-required-resend-error',
+} as const;
 
 const EmailVerificationRequiredPage = () => {
   const { t } = useSafeTranslation();
@@ -23,7 +29,38 @@ const EmailVerificationRequiredPage = () => {
   const [resendEmail, setResendEmail] = useState(email);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [resendSuccess, setResendSuccess] = useState(false);
+
+  const resolveApiErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === 'object' && err !== null && 'response' in err) {
+      const axiosError = err as {
+        response?: {
+          data?: {
+            message?: string;
+            errors?: string[] | Record<string, string[]>;
+          };
+        };
+      };
+
+      const responseErrors = axiosError.response?.data?.errors;
+      const flattenedErrors = Array.isArray(responseErrors)
+        ? responseErrors
+        : responseErrors
+          ? Object.values(responseErrors).flat()
+          : [];
+
+      return (
+        axiosError.response?.data?.message ||
+        flattenedErrors.find(Boolean) ||
+        fallback
+      );
+    }
+
+    if (err instanceof Error && err.message) {
+      return err.message;
+    }
+
+    return fallback;
+  };
 
   useEffect(() => {
     if (!resendEmail && email) {
@@ -53,12 +90,20 @@ const EmailVerificationRequiredPage = () => {
     setIsResending(true);
     try {
       await resendConfirmation({ email: resendEmail });
-      setResendSuccess(true);
       setResendCooldown(30);
-
-      window.setTimeout(() => {
-        setResendSuccess(false);
-      }, 3000);
+      toast.success(
+        t(
+          'AuthPages.emailVerificationRequired.resendSuccess',
+          'Verification email sent successfully.'
+        ),
+        { toastId: TOAST_IDS.resendSuccess }
+      );
+    } catch (err) {
+      const msg = resolveApiErrorMessage(
+        err,
+        t('AuthPages.confirmEmail.error.defaultMessage')
+      );
+      toast.error(msg, { toastId: TOAST_IDS.resendError });
     } finally {
       setIsResending(false);
     }
@@ -132,16 +177,6 @@ const EmailVerificationRequiredPage = () => {
                   'Resend verification email'
                 )}
           </button>
-
-          {resendSuccess && (
-            <p className="mt-3 text-sm font-medium text-green-700">
-              <Mail className="mr-1 inline h-4 w-4" />
-              {t(
-                'AuthPages.emailVerificationRequired.resendSuccess',
-                'Verification email sent successfully.'
-              )}
-            </p>
-          )}
         </div>
 
         <p className="mt-5 text-sm text-blue-800">

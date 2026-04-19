@@ -406,6 +406,14 @@ const Router = () => (
           element={<LocalizedRedirect target="/security" />}
         />
         <Route path="/terms" element={<LocalizedRedirect target="/terms" />} />
+        <Route
+          path="/confirm-email"
+          element={<LocalizedRedirect target="/confirm-email" />}
+        />
+        <Route
+          path="/email-verification-required"
+          element={<LocalizedRedirect target="/email-verification-required" />}
+        />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />
         <Route
           path="/ophthalmologist/analytics"
@@ -1150,22 +1158,6 @@ const Router = () => (
           element={
             <PublicRoute>
               <RegisterOrganisationPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/confirm-email"
-          element={
-            <PublicRoute>
-              <ConfirmEmailPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/email-verification-required"
-          element={
-            <PublicRoute>
-              <EmailVerificationRequiredPage />
             </PublicRoute>
           }
         />
