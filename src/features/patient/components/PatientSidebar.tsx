@@ -26,6 +26,7 @@ import {
 import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
 import usePermissions from '@/hooks/use-permissions';
+import { Permissions } from '@/constants/permissions';
 
 export default function PatientSidebar() {
   const { t: i18nT } = useTranslation();
@@ -49,19 +50,19 @@ export default function PatientSidebar() {
       icon: Home,
       label: t('PatientSidebar.nav.dashboard', 'Dashboard'),
       path: '/patient/dashboard',
-      requiredPermission: 'DashboardRead',
+      requiredPermission: Permissions.DashboardRead,
     },
     {
       icon: Eye,
       label: t('PatientSidebar.nav.myScans', 'My Scans'),
       path: '/patient/screening',
-      requiredPermission: 'ScreeningsRead',
+      requiredPermission: Permissions.ScreeningRead,
     },
     {
       icon: Calendar,
       label: t('PatientSidebar.nav.appointments', 'Appointments'),
       path: '/patient/appointments',
-      requiredPermission: 'AppointmentsRead',
+      requiredPermission: Permissions.AppointmentsRead,
     },
     {
       icon: MapPin,
@@ -72,20 +73,20 @@ export default function PatientSidebar() {
       icon: Milestone,
       label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
       path: '/patient/roadmap',
-      requiredPermission: 'ScreeningsRead',
+      requiredPermission: Permissions.ScreeningRead,
     },
     {
       icon: MessageCircle,
       label: t('PatientSidebar.nav.chat', 'Chat'),
       path: '/patient/chat',
       badge: true,
-      requiredPermission: 'ConsultationsRead',
+      requiredPermission: Permissions.ConsultationsRead,
     },
     {
       icon: Wallet,
       label: t('PatientSidebar.nav.wallet', 'Wallet'),
       path: '/patient/wallet',
-      requiredPermission: 'WalletsRead',
+      requiredPermission: Permissions.WalletsRead,
     },
     {
       icon: MessageSquareHeart,
@@ -96,7 +97,7 @@ export default function PatientSidebar() {
       icon: Settings,
       label: t('PatientSidebar.nav.settings', 'Settings'),
       path: '/patient/settings',
-      requiredPermission: 'SettingsRead',
+      requiredPermission: Permissions.SettingsRead,
     },
   ];
 
