@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import {
@@ -70,7 +71,7 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
@@ -258,7 +259,6 @@ const LoginPage = () => {
     try {
       setIsLoading(true);
       setError(null);
-      setSuccessMessage(null);
 
       await registerPatient({
         email: data.email,
@@ -282,13 +282,13 @@ const LoginPage = () => {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
         };
-        setError(
+        const msg =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          axiosError.response?.data?.errors?.join(', ') ||
+          errorMessage;
+        toast.error(msg);
       } else {
-        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -412,7 +412,6 @@ const LoginPage = () => {
   const handleAuthModeChange = (mode: AuthMode) => {
     setAuthMode(mode);
     setError(null);
-    setSuccessMessage(null);
   };
 
   return (
@@ -531,14 +530,6 @@ const LoginPage = () => {
                   {t('AuthPages.login.messages.dismiss')}
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <Shield className="text-green-500 w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-sm text-green-700">{successMessage}</p>
             </div>
           )}
 

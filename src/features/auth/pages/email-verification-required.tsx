@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AuthLayout } from '@/components/layouts';
@@ -19,14 +19,14 @@ const TOAST_IDS = {
 const EmailVerificationRequiredPage = () => {
   const { t } = useSafeTranslation();
   const location = useLocation();
-  const [searchParams] = useState(() => new URLSearchParams(location.search));
+  const [searchParams] = useSearchParams();
 
-  const email = searchParams.get('email')?.trim() ?? '';
+  const emailFromQuery = searchParams.get('email')?.trim() ?? '';
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
 
-  const [resendEmail, setResendEmail] = useState(email);
+  const [resendEmail, setResendEmail] = useState(emailFromQuery);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -63,10 +63,10 @@ const EmailVerificationRequiredPage = () => {
   };
 
   useEffect(() => {
-    if (!resendEmail && email) {
-      setResendEmail(email);
+    if (!resendEmail && emailFromQuery) {
+      setResendEmail(emailFromQuery);
     }
-  }, [email, resendEmail]);
+  }, [emailFromQuery, resendEmail]);
 
   useEffect(() => {
     if (resendCooldown <= 0) {
@@ -83,13 +83,15 @@ const EmailVerificationRequiredPage = () => {
   }, [resendCooldown]);
 
   const handleResend = async () => {
-    if (!resendEmail || resendCooldown > 0 || isResending) {
+    const normalizedEmail = resendEmail.trim();
+
+    if (!normalizedEmail || resendCooldown > 0 || isResending) {
       return;
     }
 
     setIsResending(true);
     try {
-      await resendConfirmation({ email: resendEmail });
+      await resendConfirmation({ email: normalizedEmail });
       setResendCooldown(30);
       toast.success(
         t(
@@ -184,7 +186,7 @@ const EmailVerificationRequiredPage = () => {
             'AuthPages.emailVerificationRequired.hint',
             'Please check your email'
           )}{' '}
-          <strong>{resendEmail || email || '-'}</strong>{' '}
+          <strong>{resendEmail || emailFromQuery || '-'}</strong>{' '}
           {t(
             'AuthPages.emailVerificationRequired.hintSuffix',
             'to verify your account.'

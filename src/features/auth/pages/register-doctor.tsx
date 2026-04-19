@@ -17,6 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { registerOphthalmologist } from '../api/auth.api';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import {
@@ -91,7 +92,6 @@ const createDefaultCertificate = (): CertificateFormItem => ({
 const RegisterDoctorPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,34 +179,34 @@ const RegisterDoctorPage = () => {
         type: 'validate',
         message: 'Passwords do not match',
       });
-      setSubmitError('Passwords do not match. Please re-check your password.');
+      toast.error('Passwords do not match. Please re-check your password.');
       return;
     }
 
     if (!data.degrees.length) {
-      setSubmitError('At least one degree is required before submitting.');
+      toast.error('At least one degree is required before submitting.');
       return;
     }
 
     if (!data.certificates.length) {
-      setSubmitError(
+      toast.error(
         'At least one certificate/license is required before submitting.'
       );
       return;
     }
 
     if (data.degrees.some((item) => !item.file)) {
-      setSubmitError('Every degree item must include a file.');
+      toast.error('Every degree item must include a file.');
       return;
     }
 
     if (data.certificates.some((item) => !item.file)) {
-      setSubmitError('Every certificate item must include a file.');
+      toast.error('Every certificate item must include a file.');
       return;
     }
 
     if (data.certificates.some((item) => !item.expiryDate)) {
-      setSubmitError('Every certificate item must include an expiry date.');
+      toast.error('Every certificate item must include an expiry date.');
       return;
     }
 
@@ -217,12 +217,11 @@ const RegisterDoctorPage = () => {
           new Date(`${item.issuedDate}T00:00:00.000Z`)
       )
     ) {
-      setSubmitError('Certificate expiry date must be later than issued date.');
+      toast.error('Certificate expiry date must be later than issued date.');
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError('');
 
     try {
       await registerOphthalmologist({
@@ -308,7 +307,7 @@ const RegisterDoctorPage = () => {
         return;
       }
 
-      setSubmitError(resolvedError);
+      toast.error(resolvedError);
     } finally {
       setIsSubmitting(false);
     }
@@ -1068,11 +1067,6 @@ const RegisterDoctorPage = () => {
               </div>
 
               <div className="pt-4">
-                {submitError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">{submitError}</p>
-                  </div>
-                )}
                 <button
                   type="submit"
                   disabled={isSubmitting}
