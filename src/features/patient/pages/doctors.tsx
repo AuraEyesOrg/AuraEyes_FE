@@ -17,11 +17,12 @@ import {
   Sparkles,
   Stethoscope,
   Banknote,
-  Video,
   Wallet,
   AlertTriangle,
   ChevronRight,
 } from 'lucide-react';
+import DoctorLottie from '../components/DoctorLottie';
+
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -516,7 +517,9 @@ export default function DoctorsPage() {
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-[0.15em]">
                   <Stethoscope className="w-2.5 h-2.5" />
-                  {t('PatientDoctors.header.eyebrow', 'Verified Specialists')}
+                  {t('PatientDoctors.header.eyebrow', {
+                    defaultValue: 'Verified Specialists',
+                  })}
                 </span>
               </div>
               <h1 className="text-base sm:text-lg font-bold text-(--text-primary) leading-tight truncate">
@@ -535,10 +538,9 @@ export default function DoctorsPage() {
               ) : (
                 <button
                   onClick={() => navigate('/patient/wallet')}
-                  title={t(
-                    'PatientDoctors.header.walletTooltip',
-                    'View your wallet'
-                  )}
+                  title={t('PatientDoctors.header.walletTooltip', {
+                    defaultValue: 'View your wallet',
+                  })}
                   className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border font-semibold text-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] ${
                     walletSufficient === true
                       ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:border-emerald-400/60'
@@ -553,7 +555,7 @@ export default function DoctorsPage() {
                     <Wallet className="w-3.5 h-3.5 shrink-0" />
                   )}
                   <span className="text-xs">
-                    {formatCurrency(walletBalance, { absolute: true })}
+                    {formatCurrency(walletBalance ?? 0, { absolute: true })}
                   </span>
                   <span className="w-5 h-5 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center group-hover:translate-x-0.5 transition-transform duration-200">
                     <ChevronRight className="w-3 h-3" />
@@ -592,8 +594,8 @@ export default function DoctorsPage() {
             </ul>
           </div>
           <div className="hidden md:flex flex-1 relative items-center justify-center">
-            <div className="w-full max-w-sm aspect-video bg-gradient-to-tr from-brand/20 to-brand/5 rounded-3xl flex items-center justify-center border-4 border-white dark:border-(--bg-primary) shadow-2xl skew-y-3 transform hover:skew-y-0 transition-transform duration-500">
-              <Video className="w-24 h-24 text-brand/60" />
+            <div className="w-full max-w-sm aspect-video bg-gradient-to-tr from-brand/20 to-brand/5 rounded-3xl flex items-center justify-center border-4 border-white dark:border-(--bg-primary) shadow-2xl skew-y-3 transform hover:skew-y-0 transition-transform duration-500 overflow-hidden">
+              <DoctorLottie />
             </div>
           </div>
         </div>
