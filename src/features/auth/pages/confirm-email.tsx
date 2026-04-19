@@ -57,8 +57,10 @@ const ConfirmEmailPage = () => {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
+  const toLocalizedAuthPath = useCallback(
+    (pathname: string) => withLocalePathname(locale, pathname),
+    [locale]
+  );
 
   const didVerify = useRef(false);
 

@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Shield, ArrowLeft, AlertCircle, Key, Smartphone } from 'lucide-react';
+import { toast } from 'react-toastify';
+import {
+  Shield,
+  ArrowLeft,
+  AlertCircle,
+  Key,
+  Smartphone,
+  CheckCircle,
+  Loader2,
+} from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { verifyTwoFactorLogin } from '../api/auth.api';
 import useAuthStore from '@/store/auth-store';
@@ -24,8 +33,11 @@ const TwoFactorVerifyPage = () => {
   const { login: authLogin, setIsAuthenticated } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
 
   const isPendingVerification = (user?: {
     isVerified?: boolean | null;
@@ -42,6 +54,25 @@ const TwoFactorVerifyPage = () => {
     formState: { errors },
     reset,
   } = useForm<TwoFactorVerifyForm>();
+
+  useEffect(() => {
+    if (!redirectTarget || redirectCountdown === null) {
+      return;
+    }
+
+    if (redirectCountdown <= 0) {
+      navigate(redirectTarget, { replace: true });
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [navigate, redirectCountdown, redirectTarget]);
 
   // Redirect if no userId in state
   if (!state?.userId) {
@@ -70,7 +101,6 @@ const TwoFactorVerifyPage = () => {
   const onSubmit = async (data: TwoFactorVerifyForm) => {
     try {
       setIsLoading(true);
-      setError(null);
 
       const response = await verifyTwoFactorLogin({
         userId: state.userId,
@@ -85,27 +115,31 @@ const TwoFactorVerifyPage = () => {
           setIsAuthenticated(true);
         }
 
-        // Navigate based on user role
+        // Resolve redirect target based on user role
         const roles = response.user?.roles || [];
+        let nextPath = '/';
+
         if (roles.includes('SystemAdmin')) {
-          navigate('/system-admin/dashboard');
+          nextPath = '/system-admin/dashboard';
         } else if (roles.includes('Patient')) {
-          navigate('/patient/dashboard');
+          nextPath = '/patient/dashboard';
         } else if (roles.includes('Ophthalmologist')) {
           if (isPendingVerification(response.user)) {
-            navigate('/ophthalmologist/pending-approval');
+            nextPath = '/ophthalmologist/pending-approval';
           } else if (shouldRedirectToContract(response.user?.contractStatus)) {
-            navigate('/ophthalmologist/contract');
+            nextPath = '/ophthalmologist/contract';
           } else {
-            navigate('/ophthalmologist/dashboard');
+            nextPath = '/ophthalmologist/dashboard';
           }
         } else if (roles.includes('OrgAdmin')) {
-          navigate('/organisation/dashboard');
-        } else {
-          navigate('/');
+          nextPath = '/organisation/dashboard';
         }
+
+        toast.success('Xác thực thành công. Đang chuyển trang...');
+        setRedirectTarget(nextPath);
+        setRedirectCountdown(5);
       } else {
-        setError(response.errors?.join(', ') || 'Verification failed');
+        toast.error(response.errors?.join(', ') || 'Verification failed');
       }
     } catch (err: unknown) {
       console.error('2FA verification error:', err);
@@ -113,13 +147,13 @@ const TwoFactorVerifyPage = () => {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
         };
-        setError(
+        toast.error(
           axiosError.response?.data?.message ||
             axiosError.response?.data?.errors?.join(', ') ||
             'Invalid verification code'
         );
       } else {
-        setError('An error occurred during verification');
+        toast.error('An error occurred during verification');
       }
     } finally {
       setIsLoading(false);
@@ -128,7 +162,6 @@ const TwoFactorVerifyPage = () => {
 
   const toggleCodeType = () => {
     setUseRecoveryCode(!useRecoveryCode);
-    setError(null);
     reset();
   };
 
@@ -192,127 +225,149 @@ const TwoFactorVerifyPage = () => {
 
           {/* Header */}
           <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-[#00d1c0]/10 flex items-center justify-center">
-                {useRecoveryCode ? (
-                  <Key className="w-8 h-8 text-[#00d1c0]" />
-                ) : (
-                  <Smartphone className="w-8 h-8 text-[#00d1c0]" />
-                )}
+            {redirectCountdown !== null ? (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <CheckCircle className="h-8 w-8" />
+                </div>
+                <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
+                  Verification Successful
+                </h2>
+                <p className="text-gray-500">
+                  Your identity has been verified. We are preparing your
+                  workspace.
+                </p>
+                <div className="inline-flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Redirecting in {redirectCountdown}s...
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (redirectTarget) {
+                      navigate(redirectTarget, { replace: true });
+                    }
+                  }}
+                  className="text-sm font-semibold text-[#1F85F5] hover:text-[#00d1c0]"
+                >
+                  Continue now
+                </button>
               </div>
-            </div>
-            <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight mb-2">
-              {useRecoveryCode
-                ? 'Enter Recovery Code'
-                : 'Two-Factor Authentication'}
-            </h2>
-            <p className="text-gray-500">
-              {useRecoveryCode
-                ? 'Enter one of your recovery codes to verify your identity.'
-                : 'Enter the 6-digit code from your authenticator app.'}
-            </p>
-            {state.email && (
-              <p className="text-sm text-gray-400 mt-2">
-                Logging in as: <strong>{state.email}</strong>
-              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-[#00d1c0]/10 flex items-center justify-center">
+                    {useRecoveryCode ? (
+                      <Key className="w-8 h-8 text-[#00d1c0]" />
+                    ) : (
+                      <Smartphone className="w-8 h-8 text-[#00d1c0]" />
+                    )}
+                  </div>
+                </div>
+                <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight mb-2">
+                  {useRecoveryCode
+                    ? 'Enter Recovery Code'
+                    : 'Two-Factor Authentication'}
+                </h2>
+                <p className="text-gray-500">
+                  {useRecoveryCode
+                    ? 'Enter one of your recovery codes to verify your identity.'
+                    : 'Enter the 6-digit code from your authenticator app.'}
+                </p>
+                {state.email && (
+                  <p className="text-sm text-gray-400 mt-2">
+                    Logging in as: <strong>{state.email}</strong>
+                  </p>
+                )}
+              </>
             )}
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="text-red-500 w-5 h-5 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm text-red-700">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="text-xs text-red-600 hover:text-red-800 mt-1"
+          {/* Verification Form */}
+          {redirectCountdown === null && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="code"
+                  className="block text-sm font-semibold text-gray-700"
                 >
-                  Dismiss
-                </button>
+                  {useRecoveryCode ? 'Recovery Code' : 'Verification Code'}
+                </label>
+                <input
+                  {...register('code', {
+                    required: 'Code is required',
+                    pattern: useRecoveryCode
+                      ? {
+                          value: /^[a-zA-Z0-9-]+$/,
+                          message: 'Invalid recovery code format',
+                        }
+                      : {
+                          value: /^[0-9]{6}$/,
+                          message: 'Code must be 6 digits',
+                        },
+                  })}
+                  type="text"
+                  inputMode={useRecoveryCode ? 'text' : 'numeric'}
+                  autoComplete="one-time-code"
+                  maxLength={useRecoveryCode ? 20 : 6}
+                  placeholder={useRecoveryCode ? 'XXXX-XXXX-XXXX' : '000000'}
+                  className={`block w-full px-4 py-4 text-center font-mono tracking-[0.3em] border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] bg-gray-50/30 transition-all ${
+                    useRecoveryCode ? 'text-lg' : 'text-2xl'
+                  }`}
+                  autoFocus
+                />
+                {errors.code && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.code.message}
+                  </p>
+                )}
               </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Spinner size={20} className="shrink-0" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify & Sign In'
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Toggle Recovery Code */}
+          {redirectCountdown === null && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={toggleCodeType}
+                className="text-sm text-[#1F85F5] hover:text-[#00d1c0] font-medium transition-colors"
+              >
+                {useRecoveryCode
+                  ? 'Use authenticator app instead'
+                  : "Can't access your authenticator? Use a recovery code"}
+              </button>
             </div>
           )}
 
-          {/* Verification Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="code"
-                className="block text-sm font-semibold text-gray-700"
-              >
-                {useRecoveryCode ? 'Recovery Code' : 'Verification Code'}
-              </label>
-              <input
-                {...register('code', {
-                  required: 'Code is required',
-                  pattern: useRecoveryCode
-                    ? {
-                        value: /^[a-zA-Z0-9-]+$/,
-                        message: 'Invalid recovery code format',
-                      }
-                    : {
-                        value: /^[0-9]{6}$/,
-                        message: 'Code must be 6 digits',
-                      },
-                })}
-                type="text"
-                inputMode={useRecoveryCode ? 'text' : 'numeric'}
-                autoComplete="one-time-code"
-                maxLength={useRecoveryCode ? 20 : 6}
-                placeholder={useRecoveryCode ? 'XXXX-XXXX-XXXX' : '000000'}
-                className={`block w-full px-4 py-4 text-center font-mono tracking-[0.3em] border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] bg-gray-50/30 transition-all ${
-                  useRecoveryCode ? 'text-lg' : 'text-2xl'
-                }`}
-                autoFocus
-              />
-              {errors.code && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.code.message}
-                </p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Spinner size={20} className="shrink-0" />
-                  Verifying...
-                </>
-              ) : (
-                'Verify & Sign In'
-              )}
-            </button>
-          </form>
-
-          {/* Toggle Recovery Code */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={toggleCodeType}
-              className="text-sm text-[#1F85F5] hover:text-[#00d1c0] font-medium transition-colors"
-            >
-              {useRecoveryCode
-                ? 'Use authenticator app instead'
-                : "Can't access your authenticator? Use a recovery code"}
-            </button>
-          </div>
-
           {/* Security Notice */}
-          <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-            <div className="flex items-start gap-3">
-              <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {useRecoveryCode
-                  ? 'Each recovery code can only be used once. After using a code, we recommend generating new ones from your security settings.'
-                  : "If you've lost access to your authenticator app and recovery codes, please contact your system administrator for account recovery."}
-              </p>
+          {redirectCountdown === null && (
+            <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+              <div className="flex items-start gap-3">
+                <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  {useRecoveryCode
+                    ? 'Each recovery code can only be used once. After using a code, we recommend generating new ones from your security settings.'
+                    : "If you've lost access to your authenticator app and recovery codes, please contact your system administrator for account recovery."}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
