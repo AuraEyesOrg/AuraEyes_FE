@@ -5705,6 +5705,15 @@ declare module 'i18next' {
           consultations: string;
           audit: string;
           dashboard: string;
+          appointments: string;
+          scheduling: string;
+          quotas: string;
+          wallets: string;
+          financial: string;
+          contracts: string;
+          platform: string;
+          settings: string;
+          notifications: string;
         };
         common: {
           loading: string;

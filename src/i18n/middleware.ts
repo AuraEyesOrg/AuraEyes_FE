@@ -21,8 +21,12 @@ export const getStoredLocale = (): AppLocale | null => {
     return null;
   }
 
-  const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  return toSupportedLocale(storedLocale);
+  try {
+    const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    return toSupportedLocale(storedLocale);
+  } catch {
+    return null;
+  }
 };
 
 export const persistLocale = (locale: AppLocale): void => {
@@ -30,7 +34,11 @@ export const persistLocale = (locale: AppLocale): void => {
     return;
   }
 
-  window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  try {
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    // Ignore storage write failures (e.g. privacy mode / blocked storage).
+  }
 };
 
 export const detectPreferredLocale = (): AppLocale =>
