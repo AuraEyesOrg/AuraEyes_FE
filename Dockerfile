@@ -9,6 +9,9 @@ RUN npm install
 # Copy source
 COPY . .
 
+# Xóa bỏ các file .env cũ để ép Vite dùng biến môi trường từ Docker Build-Args
+RUN rm -f .env .env.local .env.production .env.development
+
 # Khai báo các Arg để nhận giá trị từ GitHub Action
 ARG VITE_API_END_POINT=/api
 ARG VITE_RECAPTCHA_SITE_KEY
@@ -23,6 +26,7 @@ ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_N8N_WEBHOOK_URL=$VITE_N8N_WEBHOOK_URL
 ENV VITE_API_END_AI_POINT=$VITE_API_END_AI_POINT
 
+# Chạy build
 RUN npm run build
 
 # Stage 2: Serve the application with Nginx
