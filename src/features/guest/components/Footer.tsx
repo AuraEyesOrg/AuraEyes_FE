@@ -108,14 +108,6 @@ export const Footer = () => {
                   {t('Navigation.ethicsPrivacy')}
                 </Link>
               </li>
-              <li>
-                <Link
-                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
-                  to={withLocalePathname(locale, '/compliance')}
-                >
-                  {t('Navigation.compliance')}
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -136,20 +128,11 @@ export const Footer = () => {
               <li>
                 <Link
                   className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
-                  to={withLocalePathname(locale, '/status')}
-                >
-                  {t('Navigation.status')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/compliance')}
                 >
                   {t('Navigation.compliance')}
                 </Link>
               </li>
-              <li>{t('MedicalTerms.retinalScreening')}</li>
             </ul>
           </div>
         </div>
