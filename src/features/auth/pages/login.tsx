@@ -267,15 +267,11 @@ const LoginPage = () => {
         fullName: data.fullName,
       });
 
-      // Registration successful
-      setSuccessMessage(t('AuthPages.login.messages.registrationSuccess'));
       resetRegisterForm();
-
-      // Switch to login mode after a delay
-      setTimeout(() => {
-        setAuthMode('login');
-        setSuccessMessage(null);
-      }, 3000);
+      navigate(
+        `${toLocalizedAuthPath('/confirm-email')}?email=${encodeURIComponent(data.email)}`,
+        { replace: true }
+      );
     } catch (err: unknown) {
       console.error('Registration error:', err);
       const errorMessage =

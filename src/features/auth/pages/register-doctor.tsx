@@ -262,6 +262,7 @@ const RegisterDoctorPage = () => {
       );
     } catch (err: unknown) {
       const error = err as {
+        code?: string;
         response?: {
           data?: {
             message?: string;
@@ -278,12 +279,36 @@ const RegisterDoctorPage = () => {
             .find((item) => Boolean(item))
         : undefined;
 
-      setSubmitError(
+      const resolvedError =
         firstValidationMessage ||
-          error?.response?.data?.message ||
-          error?.response?.data?.title ||
-          'Registration failed. Please try again.'
-      );
+        error?.response?.data?.message ||
+        error?.response?.data?.title ||
+        (err instanceof Error ? err.message : '') ||
+        'Registration failed. Please try again.';
+
+      const normalizedError = resolvedError.toLowerCase();
+      const hasDuplicateEmailError = [
+        'already exists',
+        'email already',
+        'email is already',
+        'da ton tai',
+        'da duoc su dung',
+        'trung email',
+        'đã tồn tại',
+        'đã được sử dụng',
+        'trùng email',
+      ].some((keyword) => normalizedError.includes(keyword));
+
+      const isTimeoutError = error?.code === 'ECONNABORTED';
+
+      if (hasDuplicateEmailError || isTimeoutError) {
+        navigate(
+          `${toLocalizedAuthPath('/confirm-email')}?email=${encodeURIComponent(data.email)}`
+        );
+        return;
+      }
+
+      setSubmitError(resolvedError);
     } finally {
       setIsSubmitting(false);
     }

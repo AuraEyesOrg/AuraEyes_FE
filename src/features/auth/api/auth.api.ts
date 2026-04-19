@@ -349,7 +349,10 @@ export const registerOphthalmologist = async (
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    }
   );
   return unwrapApiData<{ userId: string }>(response.data);
 };
