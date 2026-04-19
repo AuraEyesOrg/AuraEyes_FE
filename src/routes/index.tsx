@@ -408,18 +408,12 @@ const Router = () => (
         <Route path="/terms" element={<LocalizedRedirect target="/terms" />} />
         <Route
           path="/confirm-email"
-          element={
-            <PublicRoute>
-              <ConfirmEmailPage />
-            </PublicRoute>
-          }
+          element={<LocalizedPublicRoute element={<ConfirmEmailPage />} />}
         />
         <Route
           path="/email-verification-required"
           element={
-            <PublicRoute>
-              <EmailVerificationRequiredPage />
-            </PublicRoute>
+            <LocalizedPublicRoute element={<EmailVerificationRequiredPage />} />
           }
         />
         <Route path="/404" element={<LocalizedRedirect target="/404" />} />

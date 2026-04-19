@@ -29,6 +29,19 @@ const TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const AUTH_BASE_URL = '/auth';
+const PUBLIC_AUTH_ENDPOINTS = [
+  `${AUTH_BASE_URL}/login`,
+  `${AUTH_BASE_URL}/google-login`,
+  `${AUTH_BASE_URL}/refresh`,
+  `${AUTH_BASE_URL}/login/verify-2fa`,
+  `${AUTH_BASE_URL}/confirm-email`,
+  `${AUTH_BASE_URL}/resend-confirmation`,
+  `${AUTH_BASE_URL}/forgot-password`,
+  `${AUTH_BASE_URL}/reset-password`,
+  `${AUTH_BASE_URL}/register/patient`,
+  `${AUTH_BASE_URL}/register/ophthalmologist`,
+  `${AUTH_BASE_URL}/register/organisation`,
+] as const;
 
 let isRefreshing = false;
 let failedQueue: FailedQueueItem[] = [];
@@ -53,11 +66,8 @@ const logoutAndRedirect = () => {
 
 const shouldSkipRefresh = (config?: InternalAxiosRequestConfig) => {
   const url = config?.url ?? '';
-  return (
-    url.includes(`${AUTH_BASE_URL}/login`) ||
-    url.includes(`${AUTH_BASE_URL}/google-login`) ||
-    url.includes(`${AUTH_BASE_URL}/refresh`)
-  );
+
+  return PUBLIC_AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
 };
 
 const refreshAccessToken = async () => {
