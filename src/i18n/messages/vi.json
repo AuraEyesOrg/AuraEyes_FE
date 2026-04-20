@@ -2260,8 +2260,14 @@
   },
   "PatientAppointments": {
     "page": {
+      "eyebrow": "Lịch của bạn",
       "title": "Lịch hẹn",
       "subtitle": "Quản lý lịch hẹn với bác sĩ và cơ sở y tế"
+    },
+    "pagination": {
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {{page}} / {{total}}"
     },
     "loading": {
       "appointments": "Đang tải lịch hẹn...",
@@ -2285,6 +2291,7 @@
       "doctorSlots": "Lịch bác sĩ"
     },
     "actions": {
+      "bookNew": "Đặt lịch mới",
       "bookMoreSlot": "Đặt thêm lịch",
       "rateClinic": "Đánh giá cơ sở",
       "viewChat": "Xem chat",

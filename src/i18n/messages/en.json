@@ -2260,8 +2260,14 @@
   },
   "PatientAppointments": {
     "page": {
+      "eyebrow": "Your schedule",
       "title": "Appointments",
       "subtitle": "Manage your doctor and organisation appointments"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
     },
     "loading": {
       "appointments": "Loading appointments...",
@@ -2285,6 +2291,7 @@
       "doctorSlots": "Doctor Slots"
     },
     "actions": {
+      "bookNew": "Book new",
       "bookMoreSlot": "Book More Slot",
       "rateClinic": "Rate Clinic",
       "viewChat": "View Chat",
