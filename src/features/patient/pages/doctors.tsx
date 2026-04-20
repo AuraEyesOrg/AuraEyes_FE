@@ -17,8 +17,12 @@ import {
   Sparkles,
   Stethoscope,
   Banknote,
-  Video,
+  Wallet,
+  AlertTriangle,
+  ChevronRight,
 } from 'lucide-react';
+import DoctorLottie from '../components/DoctorLottie';
+
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -41,6 +45,8 @@ import {
   type ScreeningConsultationContext,
 } from '../types/consultation-context';
 import type { Anomaly, RetinalImage } from '../types/type';
+import { useWallet } from '../hooks/use-wallet';
+import { formatCurrency } from '@/lib/helper';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -80,6 +86,10 @@ export default function DoctorsPage() {
   const t = (key: string, options?: Record<string, unknown>) =>
     i18nT(key as never, options as never) as unknown as string;
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Wallet balance for affordability indicator
+  const { data: walletData } = useWallet();
+  const walletBalance = walletData?.balance ?? null;
   const routeState = location.state as
     | {
         consultationContext?: ScreeningConsultationContext;
@@ -449,37 +459,112 @@ export default function DoctorsPage() {
     return names.join(', ');
   };
 
+  // Cheapest doctor price for affordability comparison
+  const cheapestDoctorPrice = useMemo(() => {
+    const prices = filteredDoctors
+      .map((d) => d.minPrice)
+      .filter((p): p is number => p != null && Number.isFinite(p));
+    return prices.length > 0 ? Math.min(...prices) : null;
+  }, [filteredDoctors]);
+
+  const walletAffordable =
+    walletBalance !== null &&
+    cheapestDoctorPrice !== null &&
+    walletBalance >= cheapestDoctorPrice;
+
+  const walletSufficient =
+    walletBalance !== null && cheapestDoctorPrice !== null
+      ? walletAffordable
+      : null; // null = cannot determine yet
+
   return (
     <div className="min-h-screen bg-(--bg-primary) flex flex-col w-full relative">
-      <header className="sticky top-0 z-40 border-b border-(--border-color) bg-(--bg-primary)/95 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-(--text-primary) leading-none">
-            {t('PatientDoctors.header.title')}
-          </h1>
-          <p className="text-sm text-(--text-secondary)">
-            {t('PatientDoctors.header.subtitle')}
-          </p>
+      {/* ── Premium Header ── */}
+      <header className="sticky top-0 z-40 bg-(--bg-primary)/95 backdrop-blur-md border-b border-(--border-color) shadow-[0_1px_0_0_var(--border-color),0_4px_24px_-4px_rgba(0,0,0,0.06)]">
+        {/* Accent gradient line on top */}
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-brand/60 to-transparent" />
+
+        <div className="px-5 lg:px-8 py-3">
+          <div className="flex items-center gap-4">
+            {/* Back button — button-in-button pattern */}
+            <button
+              onClick={() =>
+                navigate('/patient/screening/review', {
+                  state: consultationContext
+                    ? {
+                        screeningId: consultationContext.screeningId,
+                        images: consultationContext.images,
+                        anomalies: consultationContext.anomalies,
+                        riskLevel: consultationContext.riskLevel,
+                        riskScore: consultationContext.riskScore,
+                        rawJsonOutput: consultationContext.rawJsonOutput,
+                      }
+                    : undefined,
+                })
+              }
+              className="group flex items-center gap-2 pl-2 pr-4 py-2 rounded-full border border-(--border-color) bg-(--bg-secondary) hover:border-brand/40 hover:bg-brand/5 text-(--text-secondary) hover:text-brand transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] shrink-0"
+            >
+              <span className="w-6 h-6 rounded-full bg-(--bg-primary) border border-(--border-color) group-hover:border-brand/30 flex items-center justify-center transition-all duration-300 group-hover:-translate-x-0.5">
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </span>
+              <span className="text-xs font-semibold tracking-wide hidden sm:inline">
+                {t('PatientDoctors.header.backToReview')}
+              </span>
+            </button>
+
+            {/* Title block */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-[0.15em]">
+                  <Stethoscope className="w-2.5 h-2.5" />
+                  {t('PatientDoctors.header.eyebrow', {
+                    defaultValue: 'Verified Specialists',
+                  })}
+                </span>
+              </div>
+              <h1 className="text-base sm:text-lg font-bold text-(--text-primary) leading-tight truncate">
+                {t('PatientDoctors.header.title')}
+              </h1>
+              <p className="hidden md:block text-xs text-(--text-muted) mt-0.5 truncate">
+                {t('PatientDoctors.header.subtitle')}
+              </p>
+            </div>
+
+            {/* Wallet Balance Chip */}
+            <div className="shrink-0">
+              {walletBalance === null ? (
+                // Loading skeleton
+                <div className="h-9 w-32 rounded-full bg-(--bg-secondary) animate-pulse" />
+              ) : (
+                <button
+                  onClick={() => navigate('/patient/wallet')}
+                  title={t('PatientDoctors.header.walletTooltip', {
+                    defaultValue: 'View your wallet',
+                  })}
+                  className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border font-semibold text-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] ${
+                    walletSufficient === true
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:border-emerald-400/60'
+                      : walletSufficient === false
+                        ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 hover:border-amber-400/60'
+                        : 'bg-(--bg-secondary) border-(--border-color) text-(--text-secondary) hover:border-brand/30 hover:text-brand'
+                  }`}
+                >
+                  {walletSufficient === false ? (
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <Wallet className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span className="text-xs">
+                    {formatCurrency(walletBalance ?? 0, { absolute: true })}
+                  </span>
+                  <span className="w-5 h-5 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center group-hover:translate-x-0.5 transition-transform duration-200">
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() =>
-            navigate('/patient/screening/review', {
-              state: consultationContext
-                ? {
-                    screeningId: consultationContext.screeningId,
-                    images: consultationContext.images,
-                    anomalies: consultationContext.anomalies,
-                    riskLevel: consultationContext.riskLevel,
-                    riskScore: consultationContext.riskScore,
-                    rawJsonOutput: consultationContext.rawJsonOutput,
-                  }
-                : undefined,
-            })
-          }
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-(--text-secondary) hover:text-(--text-primary) bg-(--bg-secondary) hover:bg-[var(--border-color)] rounded-xl transition-all border border-(--border-color) shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t('PatientDoctors.header.backToReview')}
-        </button>
       </header>
 
       {/* Hero Banner Area */}
@@ -507,21 +592,10 @@ export default function DoctorsPage() {
                 {t('PatientDoctors.hero.feature4')}
               </li>
             </ul>
-            <div className="mt-8 p-4 bg-white/60 dark:bg-black/20 rounded-xl border border-brand/20 backdrop-blur-sm inline-block shadow-sm">
-              <p className="text-sm font-semibold text-(--text-secondary)">
-                {t('PatientDoctors.hero.hotlineLabel')}{' '}
-                <a
-                  href="tel:19002115"
-                  className="text-brand text-xl font-bold ml-1"
-                >
-                  {t('PatientDoctors.hero.hotline')}
-                </a>
-              </p>
-            </div>
           </div>
           <div className="hidden md:flex flex-1 relative items-center justify-center">
-            <div className="w-full max-w-sm aspect-video bg-gradient-to-tr from-brand/20 to-brand/5 rounded-3xl flex items-center justify-center border-4 border-white dark:border-(--bg-primary) shadow-2xl skew-y-3 transform hover:skew-y-0 transition-transform duration-500">
-              <Video className="w-24 h-24 text-brand/60" />
+            <div className="w-full max-w-sm aspect-video bg-gradient-to-tr from-brand/20 to-brand/5 rounded-3xl flex items-center justify-center border-4 border-white dark:border-(--bg-primary) shadow-2xl skew-y-3 transform hover:skew-y-0 transition-transform duration-500 overflow-hidden">
+              <DoctorLottie />
             </div>
           </div>
         </div>

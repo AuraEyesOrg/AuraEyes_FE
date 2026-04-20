@@ -93,18 +93,63 @@ export default function FocusModeLayout({
 
             {/* Center: Step Progress */}
             <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative flex items-center justify-between">
-                {/* Progress Line Background */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-[var(--border-color)] -z-10 rounded-full" />
+              {/* Row 1: circles + connectors */}
+              <div className="flex items-center">
+                {steps.map((step, index) => {
+                  const currentIndex = steps.findIndex(
+                    (s) => s.key === currentStep
+                  );
+                  const isCompleted = currentIndex > index;
+                  const isCurrent = step.key === currentStep;
 
-                {/* Progress Line Filled */}
-                <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand -z-10 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${(steps.findIndex((s) => s.key === currentStep) / (steps.length - 1)) * 100}%`,
-                  }}
-                />
+                  return (
+                    <div
+                      key={step.key}
+                      className="flex items-center flex-1 last:flex-none"
+                    >
+                      {/* Step Circle */}
+                      <div className="relative flex-shrink-0">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ring-4 ring-[var(--bg-primary)] transition-all duration-300 ${
+                            isCompleted
+                              ? 'bg-brand text-white'
+                              : isCurrent
+                                ? 'bg-brand text-white'
+                                : 'bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] text-[var(--text-muted)]'
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle className="w-5 h-5" />
+                          ) : (
+                            <span className="text-sm font-bold">
+                              {step.number}
+                            </span>
+                          )}
+                        </div>
+                        {/* Ping animation for current step */}
+                        {isCurrent && (
+                          <span className="absolute -inset-1 rounded-full border border-brand animate-ping opacity-30 pointer-events-none" />
+                        )}
+                      </div>
 
+                      {/* Connector line (not rendered after last node) */}
+                      {index < steps.length - 1 && (
+                        <div className="relative flex-1 h-[3px] mx-1 rounded-full overflow-hidden bg-[var(--border-color)]">
+                          <div
+                            className="absolute inset-y-0 left-0 bg-brand rounded-full transition-all duration-500"
+                            style={{
+                              width: currentIndex > index ? '100%' : '0%',
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Row 2: labels aligned under each circle */}
+              <div className="flex items-start mt-2">
                 {steps.map((step, index) => {
                   const currentIndex = steps.findIndex(
                     (s) => s.key === currentStep
@@ -116,39 +161,26 @@ export default function FocusModeLayout({
                   return (
                     <div
                       key={step.key}
-                      className="flex flex-col items-center gap-2"
+                      className="flex items-start flex-1 last:flex-none"
                     >
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ring-4 ring-[var(--bg-primary)] transition-all ${
-                          isCompleted
-                            ? 'bg-brand text-white'
-                            : isCurrent
-                              ? 'bg-brand text-white relative'
-                              : 'bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] text-[var(--text-muted)]'
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle className="w-5 h-5" />
-                        ) : (
-                          <span className="text-sm font-bold">
-                            {step.number}
-                          </span>
-                        )}
-                        {isCurrent && (
-                          <span className="absolute -inset-1 rounded-full border border-brand animate-ping opacity-30" />
-                        )}
+                      {/* Label centered under the 40px circle */}
+                      <div className="w-10 flex-shrink-0 flex justify-center">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wide text-center whitespace-nowrap ${
+                            isCurrent
+                              ? 'text-[var(--text-primary)]'
+                              : isPending
+                                ? 'text-[var(--text-muted)]'
+                                : 'text-brand'
+                          }`}
+                        >
+                          {step.label}
+                        </span>
                       </div>
-                      <span
-                        className={`text-xs font-bold uppercase tracking-wide whitespace-nowrap ${
-                          isCurrent
-                            ? 'text-[var(--text-primary)]'
-                            : isPending
-                              ? 'text-[var(--text-muted)]'
-                              : 'text-brand'
-                        }`}
-                      >
-                        {step.label}
-                      </span>
+                      {/* Spacer to match connector width */}
+                      {index < steps.length - 1 && (
+                        <div className="flex-1 mx-1" />
+                      )}
                     </div>
                   );
                 })}
