@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { api } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/endpoints';
 
 interface ApiEnvelope<T> {
   data?: T;
@@ -13,8 +12,8 @@ type ServiceScope = 'api' | 'root';
 export interface GuestOverviewMetrics {
   ophthalmologistCount: number | null;
   organisationCount: number | null;
-  availableSlotCount: number | null;
-  eyeHealthResourceCount: number | null;
+  screeningCount: number | null;
+  feedbackCount: number | null;
 }
 
 export interface GuestServiceCheckTarget {
@@ -165,24 +164,27 @@ export const fetchTrustedAvatars = async (): Promise<TrustedAvatarsResult> => {
 
 export const fetchGuestOverviewMetrics =
   async (): Promise<GuestOverviewMetrics> => {
-    const [
-      ophthalmologistCount,
-      organisationCount,
-      availableSlotCount,
-      eyeHealthResourceCount,
-    ] = await Promise.all([
-      fetchPublicCount(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.OPHTHALMOLOGISTS),
-      fetchPublicCount(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.ORGANISATIONS),
-      fetchPublicCount(API_ENDPOINTS.PUBLIC.PATIENT_SEARCH.AVAILABLE_SLOTS),
-      fetchPublicCount(API_ENDPOINTS.PUBLIC.RESOURCES.EYE_HEALTH),
-    ]);
+    try {
+      const response = await api.get<ApiEnvelope<any>>(
+        '/guest/overview-metrics'
+      );
+      const payload =
+        response.data?.data ?? response.data?.result ?? response.data?.payload;
 
-    return {
-      ophthalmologistCount,
-      organisationCount,
-      availableSlotCount,
-      eyeHealthResourceCount,
-    };
+      return {
+        ophthalmologistCount: payload?.ophthalmologistCount ?? null,
+        organisationCount: payload?.organisationCount ?? null,
+        screeningCount: payload?.screeningCount ?? null,
+        feedbackCount: payload?.feedbackCount ?? null,
+      };
+    } catch {
+      return {
+        ophthalmologistCount: null,
+        organisationCount: null,
+        screeningCount: null,
+        feedbackCount: null,
+      };
+    }
   };
 
 export const checkGuestServiceHealth = async (
