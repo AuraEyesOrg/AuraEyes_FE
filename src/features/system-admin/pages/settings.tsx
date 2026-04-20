@@ -108,6 +108,94 @@ const SETTINGS_TOAST_IDS = {
   save: 'system-admin-settings-save',
 } as const;
 
+const DEFAULT_GENERAL_SETTINGS = {
+  platformName: 'AURA Medical',
+  supportEmail: 'support@aura.med',
+  timezone: 'UTC',
+  language: 'en',
+  maintenanceMode: false,
+  minAdvanceBookingHours: 0.5,
+  aiQuotaUnitPrice: 10000,
+  freeAiQuota: 3,
+  partTimeMaxSlotsPerDay: 100,
+  fullTimeSlotWindowDays: 30,
+  fullTimeRequiredHoursWeek: 40,
+  fullTimeRequiredHoursMonth: 160,
+  fullTimeMinSlotCost: 100000,
+  fullTimeMaxSlotCost: 400000,
+};
+
+const DEFAULT_NOTIFICATION_SETTINGS = {
+  emailNotifications: true,
+  screeningAlerts: true,
+  systemAlerts: true,
+  weeklyReports: true,
+  marketingEmails: false,
+};
+
+const DEFAULT_SECURITY_SETTINGS = {
+  twoFactorRequired: false,
+  sessionTimeout: 30,
+  passwordMinLength: 8,
+  maxLoginAttempts: 5,
+  ipWhitelist: '',
+};
+
+const getGeneralSettingsFromSystemSettings = (
+  systemSettings?: Record<string, string>
+) => ({
+  ...DEFAULT_GENERAL_SETTINGS,
+  minAdvanceBookingHours: systemSettings?.['MIN_ADVANCE_BOOKING_HOURS']
+    ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
+    : DEFAULT_GENERAL_SETTINGS.minAdvanceBookingHours,
+  aiQuotaUnitPrice: systemSettings?.['AI_QUOTA_UNIT_PRICE']
+    ? parseFloat(systemSettings['AI_QUOTA_UNIT_PRICE'])
+    : DEFAULT_GENERAL_SETTINGS.aiQuotaUnitPrice,
+  freeAiQuota: systemSettings?.['FREE_AI_QUOTA']
+    ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
+    : DEFAULT_GENERAL_SETTINGS.freeAiQuota,
+  partTimeMaxSlotsPerDay: systemSettings?.['PART_TIME_MAX_SLOTS_PER_DAY']
+    ? parseInt(systemSettings['PART_TIME_MAX_SLOTS_PER_DAY'], 10)
+    : DEFAULT_GENERAL_SETTINGS.partTimeMaxSlotsPerDay,
+  fullTimeSlotWindowDays: systemSettings?.['FULLTIME_SLOT_WINDOW_DAYS']
+    ? parseInt(systemSettings['FULLTIME_SLOT_WINDOW_DAYS'], 10)
+    : DEFAULT_GENERAL_SETTINGS.fullTimeSlotWindowDays,
+  fullTimeRequiredHoursWeek: systemSettings?.['FULLTIME_REQUIRED_HOURS_WEEK']
+    ? parseFloat(systemSettings['FULLTIME_REQUIRED_HOURS_WEEK'])
+    : DEFAULT_GENERAL_SETTINGS.fullTimeRequiredHoursWeek,
+  fullTimeRequiredHoursMonth: systemSettings?.['FULLTIME_REQUIRED_HOURS_MONTH']
+    ? parseFloat(systemSettings['FULLTIME_REQUIRED_HOURS_MONTH'])
+    : DEFAULT_GENERAL_SETTINGS.fullTimeRequiredHoursMonth,
+  fullTimeMinSlotCost: systemSettings?.['FULLTIME_MIN_SLOT_COST']
+    ? parseInt(systemSettings['FULLTIME_MIN_SLOT_COST'], 10)
+    : DEFAULT_GENERAL_SETTINGS.fullTimeMinSlotCost,
+  fullTimeMaxSlotCost: systemSettings?.['FULLTIME_MAX_SLOT_COST']
+    ? parseInt(systemSettings['FULLTIME_MAX_SLOT_COST'], 10)
+    : DEFAULT_GENERAL_SETTINGS.fullTimeMaxSlotCost,
+});
+
+const getTrustedDomainsFromSystemSettings = (
+  systemSettings?: Record<string, string>
+) => {
+  const configuredDomains = systemSettings?.['TRUSTED_EYE_HEALTH_DOMAINS'];
+
+  if (!configuredDomains) {
+    return [...DEFAULT_TRUSTED_DOMAINS];
+  }
+
+  const parsedDomains = configuredDomains
+    .split(',')
+    .map((domain) => domain.trim())
+    .filter(Boolean);
+
+  return parsedDomains.length > 0
+    ? parsedDomains
+    : [...DEFAULT_TRUSTED_DOMAINS];
+};
+
+const sortPricingBandsByExperience = (rules: ExperiencePricingRule[]) =>
+  [...rules].sort((a, b) => a.minYearsExperience - b.minYearsExperience);
+
 export default function SettingsPage() {
   const { t } = useSafeTranslation();
   const [activeSection, setActiveSection] = useState('general');
@@ -121,61 +209,20 @@ export default function SettingsPage() {
 
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
-    platformName: 'AURA Medical',
-    supportEmail: 'support@aura.med',
-    timezone: 'UTC',
-    language: 'en',
-    maintenanceMode: false,
-    minAdvanceBookingHours: 0.5,
-    aiQuotaUnitPrice: 10000,
-    freeAiQuota: 3,
-    partTimeMaxSlotsPerDay: 100,
-    fullTimeSlotWindowDays: 30,
-    fullTimeMinSlotCost: 100000,
-    fullTimeMaxSlotCost: 400000,
+    ...DEFAULT_GENERAL_SETTINGS,
   });
 
   // Trusted medical domains for AI resource search
-  const [trustedDomains, setTrustedDomains] = useState<string[]>(
-    DEFAULT_TRUSTED_DOMAINS
-  );
+  const [trustedDomains, setTrustedDomains] = useState<string[]>([
+    ...DEFAULT_TRUSTED_DOMAINS,
+  ]);
   const [domainInput, setDomainInput] = useState('');
   const [pricingBands, setPricingBands] = useState<ExperiencePricingRule[]>([]);
 
   useEffect(() => {
     if (systemSettings) {
-      setGeneralSettings((prev) => ({
-        ...prev,
-        minAdvanceBookingHours: systemSettings['MIN_ADVANCE_BOOKING_HOURS']
-          ? parseFloat(systemSettings['MIN_ADVANCE_BOOKING_HOURS'])
-          : 0.5,
-        aiQuotaUnitPrice: systemSettings['AI_QUOTA_UNIT_PRICE']
-          ? parseFloat(systemSettings['AI_QUOTA_UNIT_PRICE'])
-          : 10000,
-        freeAiQuota: systemSettings['FREE_AI_QUOTA']
-          ? parseInt(systemSettings['FREE_AI_QUOTA'], 10)
-          : 3,
-        partTimeMaxSlotsPerDay: systemSettings['PART_TIME_MAX_SLOTS_PER_DAY']
-          ? parseInt(systemSettings['PART_TIME_MAX_SLOTS_PER_DAY'], 10)
-          : 100,
-        fullTimeSlotWindowDays: systemSettings['FULLTIME_SLOT_WINDOW_DAYS']
-          ? parseInt(systemSettings['FULLTIME_SLOT_WINDOW_DAYS'], 10)
-          : 30,
-        fullTimeMinSlotCost: systemSettings['FULLTIME_MIN_SLOT_COST']
-          ? parseInt(systemSettings['FULLTIME_MIN_SLOT_COST'], 10)
-          : 100000,
-        fullTimeMaxSlotCost: systemSettings['FULLTIME_MAX_SLOT_COST']
-          ? parseInt(systemSettings['FULLTIME_MAX_SLOT_COST'], 10)
-          : 400000,
-      }));
-
-      if (systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']) {
-        const parsed = systemSettings['TRUSTED_EYE_HEALTH_DOMAINS']
-          .split(',')
-          .map((d) => d.trim())
-          .filter(Boolean);
-        if (parsed.length > 0) setTrustedDomains(parsed);
-      }
+      setGeneralSettings(getGeneralSettingsFromSystemSettings(systemSettings));
+      setTrustedDomains(getTrustedDomainsFromSystemSettings(systemSettings));
     }
   }, [systemSettings]);
 
@@ -184,29 +231,17 @@ export default function SettingsPage() {
       return;
     }
 
-    setPricingBands(
-      [...experiencePricingRules].sort(
-        (a, b) => a.minYearsExperience - b.minYearsExperience
-      )
-    );
+    setPricingBands(sortPricingBandsByExperience(experiencePricingRules));
   }, [experiencePricingRules]);
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    screeningAlerts: true,
-    systemAlerts: true,
-    weeklyReports: true,
-    marketingEmails: false,
+    ...DEFAULT_NOTIFICATION_SETTINGS,
   });
 
   // Security settings state
   const [securitySettings, setSecuritySettings] = useState({
-    twoFactorRequired: false,
-    sessionTimeout: 30,
-    passwordMinLength: 8,
-    maxLoginAttempts: 5,
-    ipWhitelist: '',
+    ...DEFAULT_SECURITY_SETTINGS,
   });
 
   const handleSave = async () => {
@@ -238,6 +273,14 @@ export default function SettingsPage() {
         FULLTIME_SLOT_WINDOW_DAYS: Math.max(
           1,
           generalSettings.fullTimeSlotWindowDays
+        ).toString(),
+        FULLTIME_REQUIRED_HOURS_WEEK: Math.max(
+          0,
+          generalSettings.fullTimeRequiredHoursWeek
+        ).toString(),
+        FULLTIME_REQUIRED_HOURS_MONTH: Math.max(
+          0,
+          generalSettings.fullTimeRequiredHoursMonth
         ).toString(),
         FULLTIME_MIN_SLOT_COST: normalizedFullTimeMinCost.toString(),
         FULLTIME_MAX_SLOT_COST: normalizedFullTimeMaxCost.toString(),
@@ -321,413 +364,508 @@ export default function SettingsPage() {
   const removeDomain = (domain: string) =>
     setTrustedDomains((prev) => prev.filter((d) => d !== domain));
 
+  const handleReset = () => {
+    setGeneralSettings(getGeneralSettingsFromSystemSettings(systemSettings));
+    setTrustedDomains(getTrustedDomainsFromSystemSettings(systemSettings));
+    setPricingBands(sortPricingBandsByExperience(experiencePricingRules ?? []));
+    setNotificationSettings({ ...DEFAULT_NOTIFICATION_SETTINGS });
+    setSecuritySettings({ ...DEFAULT_SECURITY_SETTINGS });
+    setDomainInput('');
+  };
+
   const renderGeneralSettings = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t('SystemAdmin.settings.general.platformName', 'Platform Name')}
-          </label>
-          <input
-            type="text"
-            value={generalSettings.platformName}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                platformName: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t('SystemAdmin.settings.general.supportEmail', 'Support Email')}
-          </label>
-          <input
-            type="email"
-            value={generalSettings.supportEmail}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                supportEmail: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t('SystemAdmin.settings.general.timezone', 'Timezone')}
-          </label>
-          <select
-            value={generalSettings.timezone}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                timezone: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          >
-            <option value="UTC">UTC</option>
-            <option value="America/New_York">
-              {t(
-                'SystemAdmin.settings.general.timezoneOptions.americaNewYork',
-                'Eastern Time (ET)'
-              )}
-            </option>
-            <option value="America/Los_Angeles">
-              {t(
-                'SystemAdmin.settings.general.timezoneOptions.americaLosAngeles',
-                'Pacific Time (PT)'
-              )}
-            </option>
-            <option value="Europe/London">
-              {t(
-                'SystemAdmin.settings.general.timezoneOptions.europeLondon',
-                'London (GMT)'
-              )}
-            </option>
-            <option value="Asia/Ho_Chi_Minh">
-              {t(
-                'SystemAdmin.settings.general.timezoneOptions.asiaHoChiMinh',
-                'Vietnam (ICT)'
-              )}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.defaultLanguage',
-              'Default Language'
-            )}
-          </label>
-          <div className="flex gap-2">
-            {SYSTEM_LANGUAGE_OPTIONS.map((option) => {
-              const isSelected = generalSettings.language === option.code;
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+          Platform & locale
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Basic identity, contact channel, timezone, and default language.
+        </p>
 
-              return (
-                <button
-                  key={option.code}
-                  type="button"
-                  onClick={() =>
-                    setGeneralSettings({
-                      ...generalSettings,
-                      language: option.code,
-                    })
-                  }
-                  className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-sm ${
-                    isSelected
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/40'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold leading-none">
-                      {option.flag}
-                    </span>
-                    <div className="text-left">
-                      <p className="font-semibold">
-                        {t(option.nativeLabelKey, option.nativeLabelFallback)}
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {t(option.labelKey, option.labelFallback)}
-                      </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('SystemAdmin.settings.general.platformName', 'Platform Name')}
+            </label>
+            <input
+              type="text"
+              value={generalSettings.platformName}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  platformName: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('SystemAdmin.settings.general.supportEmail', 'Support Email')}
+            </label>
+            <input
+              type="email"
+              value={generalSettings.supportEmail}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  supportEmail: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('SystemAdmin.settings.general.timezone', 'Timezone')}
+            </label>
+            <select
+              value={generalSettings.timezone}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  timezone: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            >
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">
+                {t(
+                  'SystemAdmin.settings.general.timezoneOptions.americaNewYork',
+                  'Eastern Time (ET)'
+                )}
+              </option>
+              <option value="America/Los_Angeles">
+                {t(
+                  'SystemAdmin.settings.general.timezoneOptions.americaLosAngeles',
+                  'Pacific Time (PT)'
+                )}
+              </option>
+              <option value="Europe/London">
+                {t(
+                  'SystemAdmin.settings.general.timezoneOptions.europeLondon',
+                  'London (GMT)'
+                )}
+              </option>
+              <option value="Asia/Ho_Chi_Minh">
+                {t(
+                  'SystemAdmin.settings.general.timezoneOptions.asiaHoChiMinh',
+                  'Vietnam (ICT)'
+                )}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.defaultLanguage',
+                'Default Language'
+              )}
+            </label>
+            <div className="flex gap-2">
+              {SYSTEM_LANGUAGE_OPTIONS.map((option) => {
+                const isSelected = generalSettings.language === option.code;
+
+                return (
+                  <button
+                    key={option.code}
+                    type="button"
+                    onClick={() =>
+                      setGeneralSettings({
+                        ...generalSettings,
+                        language: option.code,
+                      })
+                    }
+                    className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-sm ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold leading-none">
+                        {option.flag}
+                      </span>
+                      <div className="text-left">
+                        <p className="font-semibold">
+                          {t(option.nativeLabelKey, option.nativeLabelFallback)}
+                        </p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {t(option.labelKey, option.labelFallback)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {isSelected && <Check className="w-4 h-4 shrink-0" />}
-                </button>
-              );
-            })}
+                    {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.minAdvanceBookingHours',
-              'Minimum advance booking time (hours)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={0.5}
-            step={0.5}
-            max={72}
-            value={generalSettings.minAdvanceBookingHours}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                minAdvanceBookingHours: parseFloat(e.target.value) || 0.5,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.aiQuotaUnitPrice',
-              'AI Quota Unit Price (VND per quota)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={1}
-            step={1000}
-            value={generalSettings.aiQuotaUnitPrice}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                aiQuotaUnitPrice: parseFloat(e.target.value) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {t(
-              'SystemAdmin.settings.general.aiQuotaUnitPriceHint',
-              'Total purchase cost = quantity x unit price.'
-            )}
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.freeAiQuota',
-              'Free AI Quota (Per Patient)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={1}
-            value={generalSettings.freeAiQuota}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                freeAiQuota: parseInt(e.target.value) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.partTimeMaxSlotsPerDay',
-              'Part-time max slots per day'
-            )}
-          </label>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={generalSettings.partTimeMaxSlotsPerDay}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                partTimeMaxSlotsPerDay: parseInt(e.target.value, 10) || 1,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {t(
-              'SystemAdmin.settings.general.partTimeMaxSlotsPerDayHint',
-              'Global daily quota for all part-time ophthalmologist slots.'
-            )}
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.fullTimeSlotWindowDays',
-              'Full-time generation window (days)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={generalSettings.fullTimeSlotWindowDays}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                fullTimeSlotWindowDays: parseInt(e.target.value, 10) || 1,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {t(
-              'SystemAdmin.settings.general.fullTimeSlotWindowDaysHint',
-              'Number of forward days Hangfire keeps generated for full-time schedules.'
-            )}
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.fullTimeMinSlotCost',
-              'Full-time minimum slot cost (VND)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={1000}
-            value={generalSettings.fullTimeMinSlotCost}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                fullTimeMinSlotCost: parseInt(e.target.value, 10) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            {t(
-              'SystemAdmin.settings.general.fullTimeMaxSlotCost',
-              'Full-time maximum slot cost (VND)'
-            )}
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={1000}
-            value={generalSettings.fullTimeMaxSlotCost}
-            onChange={(e) =>
-              setGeneralSettings({
-                ...generalSettings,
-                fullTimeMaxSlotCost: parseInt(e.target.value, 10) || 0,
-              })
-            }
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-          />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {t(
-              'SystemAdmin.settings.general.fullTimeMaxSlotCostHint',
-              'Auto-generated full-time slot cost is clamped between min and max.'
-            )}
-          </p>
-        </div>
-        <div className="md:col-span-2">
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/60">
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+      </section>
+
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+          Booking & workload rules
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Core constraints for slot generation and doctor workload targets.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               {t(
-                'SystemAdmin.settings.general.pricingBands.title',
-                'Part-time pricing bands by experience'
+                'SystemAdmin.settings.general.minAdvanceBookingHours',
+                'Minimum advance booking time (hours)'
               )}
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+            </label>
+            <input
+              type="number"
+              min={0.5}
+              step={0.5}
+              max={72}
+              value={generalSettings.minAdvanceBookingHours}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  minAdvanceBookingHours: parseFloat(e.target.value) || 0.5,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               {t(
-                'SystemAdmin.settings.general.pricingBands.description',
-                'Update min/max price for each seeded experience band.'
+                'SystemAdmin.settings.general.partTimeMaxSlotsPerDay',
+                'Part-time max slots per day'
+              )}
+            </label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={generalSettings.partTimeMaxSlotsPerDay}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  partTimeMaxSlotsPerDay: parseInt(e.target.value, 10) || 1,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t(
+                'SystemAdmin.settings.general.partTimeMaxSlotsPerDayHint',
+                'Global daily quota for all part-time ophthalmologist slots.'
               )}
             </p>
+          </div>
 
-            {pricingBands.length === 0 ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t(
-                  'SystemAdmin.settings.general.pricingBands.empty',
-                  'No pricing bands found.'
-                )}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {pricingBands.map((band) => (
-                  <div
-                    key={band.id}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900"
-                  >
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                        {t(
-                          'SystemAdmin.settings.general.pricingBands.experienceBand',
-                          'Experience band'
-                        )}
-                      </label>
-                      <input
-                        type="text"
-                        value={t(
-                          'SystemAdmin.settings.general.pricingBands.experienceBandValue',
-                          '{{min}} - {{max}} years',
-                          {
-                            min: band.minYearsExperience,
-                            max: band.maxYearsExperience,
-                          }
-                        )}
-                        readOnly
-                        disabled
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                        {t(
-                          'SystemAdmin.settings.general.pricingBands.minPrice',
-                          'Min price (VND)'
-                        )}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1000}
-                        value={band.minPrice}
-                        onChange={(e) =>
-                          handlePricingBandChange(
-                            band.id,
-                            'minPrice',
-                            parseInt(e.target.value, 10) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                        {t(
-                          'SystemAdmin.settings.general.pricingBands.maxPrice',
-                          'Max price (VND)'
-                        )}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1000}
-                        value={band.maxPrice}
-                        onChange={(e) =>
-                          handlePricingBandChange(
-                            band.id,
-                            'maxPrice',
-                            parseInt(e.target.value, 10) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.fullTimeSlotWindowDays',
+                'Full-time generation window (days)'
+              )}
+            </label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={generalSettings.fullTimeSlotWindowDays}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  fullTimeSlotWindowDays: parseInt(e.target.value, 10) || 1,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t(
+                'SystemAdmin.settings.general.fullTimeSlotWindowDaysHint',
+                'Number of forward days Hangfire keeps generated for full-time schedules.'
+              )}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('SystemAdmin.settings.general.fullTimeRequiredHoursWeek')}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={generalSettings.fullTimeRequiredHoursWeek}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  fullTimeRequiredHoursWeek: parseFloat(e.target.value) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t('SystemAdmin.settings.general.fullTimeRequiredHoursWeekHint')}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('SystemAdmin.settings.general.fullTimeRequiredHoursMonth')}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={generalSettings.fullTimeRequiredHoursMonth}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  fullTimeRequiredHoursMonth: parseFloat(e.target.value) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t('SystemAdmin.settings.general.fullTimeRequiredHoursMonthHint')}
+            </p>
           </div>
         </div>
-        <div className="md:col-span-2">
+      </section>
+
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+          Quota & slot pricing
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          AI quota behavior and full-time slot pricing boundaries.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.freeAiQuota',
+                'Free AI Quota (Per Patient)'
+              )}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={generalSettings.freeAiQuota}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  freeAiQuota: parseInt(e.target.value, 10) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.aiQuotaUnitPrice',
+                'AI Quota Unit Price (VND per quota)'
+              )}
+            </label>
+            <input
+              type="number"
+              min={1}
+              step={1000}
+              value={generalSettings.aiQuotaUnitPrice}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  aiQuotaUnitPrice: parseFloat(e.target.value) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t(
+                'SystemAdmin.settings.general.aiQuotaUnitPriceHint',
+                'Total purchase cost = quantity x unit price.'
+              )}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.fullTimeMinSlotCost',
+                'Full-time minimum slot cost (VND)'
+              )}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={generalSettings.fullTimeMinSlotCost}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  fullTimeMinSlotCost: parseInt(e.target.value, 10) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t(
+                'SystemAdmin.settings.general.fullTimeMaxSlotCost',
+                'Full-time maximum slot cost (VND)'
+              )}
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={generalSettings.fullTimeMaxSlotCost}
+              onChange={(e) =>
+                setGeneralSettings({
+                  ...generalSettings,
+                  fullTimeMaxSlotCost: parseInt(e.target.value, 10) || 0,
+                })
+              }
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t(
+                'SystemAdmin.settings.general.fullTimeMaxSlotCostHint',
+                'Auto-generated full-time slot cost is clamped between min and max.'
+              )}
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t(
+                'SystemAdmin.settings.general.aiQuotaBillingNote',
+                'This unit price is used directly by backend billing when purchasing AI quota.'
+              )}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/60">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+          {t(
+            'SystemAdmin.settings.general.pricingBands.title',
+            'Part-time pricing bands by experience'
+          )}
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          {t(
+            'SystemAdmin.settings.general.pricingBands.description',
+            'Update min/max price for each seeded experience band.'
+          )}
+        </p>
+
+        {pricingBands.length === 0 ? (
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {t(
-              'SystemAdmin.settings.general.aiQuotaBillingNote',
-              'This unit price is used directly by backend billing when purchasing AI quota.'
+              'SystemAdmin.settings.general.pricingBands.empty',
+              'No pricing bands found.'
             )}
           </p>
-        </div>
-      </div>
+        ) : (
+          <div className="space-y-3">
+            {pricingBands.map((band) => (
+              <div
+                key={band.id}
+                className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900"
+              >
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                    {t(
+                      'SystemAdmin.settings.general.pricingBands.experienceBand',
+                      'Experience band'
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={t(
+                      'SystemAdmin.settings.general.pricingBands.experienceBandValue',
+                      '{{min}} - {{max}} years',
+                      {
+                        min: band.minYearsExperience,
+                        max: band.maxYearsExperience,
+                      }
+                    )}
+                    readOnly
+                    disabled
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm"
+                  />
+                </div>
 
-      {/* Trusted Medical Domains */}
-      <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                    {t(
+                      'SystemAdmin.settings.general.pricingBands.minPrice',
+                      'Min price (VND)'
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1000}
+                    value={band.minPrice}
+                    onChange={(e) =>
+                      handlePricingBandChange(
+                        band.id,
+                        'minPrice',
+                        parseInt(e.target.value, 10) || 0
+                      )
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                    {t(
+                      'SystemAdmin.settings.general.pricingBands.maxPrice',
+                      'Max price (VND)'
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1000}
+                    value={band.maxPrice}
+                    onChange={(e) =>
+                      handlePricingBandChange(
+                        band.id,
+                        'maxPrice',
+                        parseInt(e.target.value, 10) || 0
+                      )
+                    }
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50 space-y-3">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t(
@@ -750,8 +888,7 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Domain tags */}
-        <div className="flex flex-wrap gap-2 min-h-[40px] p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <div className="flex flex-wrap gap-2 min-h-10 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           {trustedDomains.length === 0 && (
             <span className="text-xs text-slate-400 italic">
               {t(
@@ -785,7 +922,6 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Add domain input */}
         <div className="flex gap-2">
           <input
             ref={domainInputRef}
@@ -813,9 +949,9 @@ export default function SettingsPage() {
             {t('SystemAdmin.settings.general.trustedDomains.add', 'Add')}
           </button>
         </div>
-      </div>
+      </section>
 
-      <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+      <section className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
         <div>
           <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-400">
             {t(
@@ -844,7 +980,7 @@ export default function SettingsPage() {
           />
           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-amber-500"></div>
         </label>
-      </div>
+      </section>
     </div>
   );
 
@@ -1184,29 +1320,10 @@ export default function SettingsPage() {
             'SystemAdmin.settings.page.description',
             'Configure system-wide settings and preferences'
           )}
-          actions={
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:opacity-90 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-            >
-              {isSaving ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {isSaving
-                ? t('SystemAdmin.settings.page.actions.saving', 'Saving...')
-                : t(
-                    'SystemAdmin.settings.page.actions.saveChanges',
-                    'Save Changes'
-                  )}
-            </button>
-          }
         />
 
         <main className="flex-1 overflow-y-auto">
-          <div className="px-6 md:px-10 py-6 max-w-[1200px] mx-auto w-full">
+          <div className="px-6 md:px-10 pt-6 pb-24 max-w-[1200px] mx-auto w-full">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Settings Navigation */}
               <div className="lg:w-64 flex-shrink-0">
@@ -1270,6 +1387,56 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 {renderContent()}
+              </div>
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 z-20 border-t border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 supports-[backdrop-filter]:dark:bg-slate-900/80">
+            <div className="px-6 md:px-10 py-3 max-w-[1200px] mx-auto w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t(
+                    'SystemAdmin.settings.page.actions.stickyHint',
+                    'Review changes before saving. You can reset unsaved edits anytime.'
+                  )}
+                </p>
+
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-all disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {t(
+                      'SystemAdmin.settings.page.actions.resetChanges',
+                      'Reset'
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:opacity-90 text-slate-900 text-sm font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {isSaving
+                      ? t(
+                          'SystemAdmin.settings.page.actions.saving',
+                          'Saving...'
+                        )
+                      : t(
+                          'SystemAdmin.settings.page.actions.saveChanges',
+                          'Save Changes'
+                        )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -5829,7 +5829,9 @@
         "description": "Configure system-wide settings and preferences",
         "actions": {
           "saveChanges": "Save Changes",
-          "saving": "Saving..."
+          "saving": "Saving...",
+          "resetChanges": "Reset",
+          "stickyHint": "Review changes before saving. You can reset unsaved edits anytime."
         }
       },
       "sections": {
@@ -5883,6 +5885,10 @@
         "partTimeMaxSlotsPerDayHint": "Global daily quota for all part-time ophthalmologist slots.",
         "fullTimeSlotWindowDays": "Full-time generation window (days)",
         "fullTimeSlotWindowDaysHint": "Number of forward days Hangfire keeps generated for full-time schedules.",
+        "fullTimeRequiredHoursWeek": "Full-time required workload (hours/week)",
+        "fullTimeRequiredHoursWeekHint": "Target consultation workload for full-time doctors in weekly dashboards.",
+        "fullTimeRequiredHoursMonth": "Full-time required workload (hours/month)",
+        "fullTimeRequiredHoursMonthHint": "Target consultation workload for full-time doctors in monthly dashboards.",
         "fullTimeMinSlotCost": "Full-time minimum slot cost (VND)",
         "fullTimeMaxSlotCost": "Full-time maximum slot cost (VND)",
         "fullTimeMaxSlotCostHint": "Auto-generated full-time slot cost is clamped between min and max.",

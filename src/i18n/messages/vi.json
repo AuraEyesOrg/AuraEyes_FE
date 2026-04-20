@@ -5839,7 +5839,9 @@
         "description": "Cấu hình các thiết lập và tùy chọn toàn hệ thống",
         "actions": {
           "saveChanges": "Lưu thay đổi",
-          "saving": "Đang lưu..."
+          "saving": "Đang lưu...",
+          "resetChanges": "Đặt lại",
+          "stickyHint": "Kiểm tra thay đổi trước khi lưu. Bạn có thể đặt lại các chỉnh sửa chưa lưu bất kỳ lúc nào."
         }
       },
       "sections": {
@@ -5893,6 +5895,10 @@
         "partTimeMaxSlotsPerDayHint": "Quota toàn cục mỗi ngày cho tất cả slot của bác sĩ bán thời gian.",
         "fullTimeSlotWindowDays": "Cửa sổ tạo lịch cho bác sĩ toàn thời gian (ngày)",
         "fullTimeSlotWindowDaysHint": "Số ngày tương lai mà Hangfire duy trì tạo sẵn cho lịch toàn thời gian.",
+        "fullTimeRequiredHoursWeek": "Khối lượng công việc yêu cầu cho bác sĩ toàn thời gian (giờ/tuần)",
+        "fullTimeRequiredHoursWeekHint": "Mục tiêu giờ tư vấn cho bác sĩ toàn thời gian trên dashboard theo tuần.",
+        "fullTimeRequiredHoursMonth": "Khối lượng công việc yêu cầu cho bác sĩ toàn thời gian (giờ/tháng)",
+        "fullTimeRequiredHoursMonthHint": "Mục tiêu giờ tư vấn cho bác sĩ toàn thời gian trên dashboard theo tháng.",
         "fullTimeMinSlotCost": "Giá slot tối thiểu toàn thời gian (VND)",
         "fullTimeMaxSlotCost": "Giá slot tối đa toàn thời gian (VND)",
         "fullTimeMaxSlotCostHint": "Giá slot tạo tự động cho toàn thời gian sẽ được giới hạn trong khoảng min và max.",

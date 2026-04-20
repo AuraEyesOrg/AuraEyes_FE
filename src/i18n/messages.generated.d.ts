@@ -5843,6 +5843,8 @@ declare module 'i18next' {
           actions: {
             saveChanges: string;
             saving: string;
+            resetChanges: string;
+            stickyHint: string;
           };
         };
         sections: {
@@ -5896,6 +5898,10 @@ declare module 'i18next' {
           partTimeMaxSlotsPerDayHint: string;
           fullTimeSlotWindowDays: string;
           fullTimeSlotWindowDaysHint: string;
+          fullTimeRequiredHoursWeek: string;
+          fullTimeRequiredHoursWeekHint: string;
+          fullTimeRequiredHoursMonth: string;
+          fullTimeRequiredHoursMonthHint: string;
           fullTimeMinSlotCost: string;
           fullTimeMaxSlotCost: string;
           fullTimeMaxSlotCostHint: string;
