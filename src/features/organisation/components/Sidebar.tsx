@@ -67,11 +67,6 @@ const navItems = [
     requiredPermission: Permissions.ScreeningRead,
   },
   {
-    icon: Globe,
-    labelKey: 'auraNetwork',
-    path: '/network',
-  },
-  {
     icon: Calendar,
     labelKey: 'calendar',
     path: '/organisation/calendar',
@@ -82,6 +77,11 @@ const navItems = [
     labelKey: 'slotManagement',
     path: '/organisation/slots',
     requiredPermission: Permissions.ApptSlotsManage,
+  },
+  {
+    icon: Globe,
+    labelKey: 'auraNetwork',
+    path: '/network',
   },
   {
     icon: Settings,
