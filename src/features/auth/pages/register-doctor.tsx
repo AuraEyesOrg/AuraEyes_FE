@@ -347,7 +347,12 @@ const RegisterDoctorPage = () => {
           </div>
 
           <div className="relative z-10">
-            <AuraLogo size="sm" variant="light" className="mb-2" />
+            <AuraLogo
+              size="sm"
+              variant="light"
+              className="mb-2"
+              to={toLocalizedAuthPath('/')}
+            />
           </div>
 
           <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -425,7 +430,12 @@ const RegisterDoctorPage = () => {
         </div>
 
         <div className="relative z-10">
-          <AuraLogo size="sm" variant="light" className="mb-2" />
+          <AuraLogo
+            size="sm"
+            variant="light"
+            className="mb-2"
+            to={toLocalizedAuthPath('/')}
+          />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -453,7 +463,12 @@ const RegisterDoctorPage = () => {
           <div className="w-full max-w-[640px] mx-auto animate-slide-in-right">
             <div className="mb-8 text-center">
               <div className="mb-4 flex justify-center">
-                <AuraLogo size="sm" showText={false} variant="dark" />
+                <AuraLogo
+                  size="sm"
+                  showText={false}
+                  variant="dark"
+                  to={toLocalizedAuthPath('/')}
+                />
               </div>
               <h2 className="text-3xl font-bold text-[#1A202C] mb-2 tracking-tight">
                 Doctor Registration
@@ -1112,7 +1127,7 @@ const RegisterDoctorPage = () => {
               <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
-                  to={toLocalizedAuthPath('/')}
+                  to={toLocalizedAuthPath('/login')}
                   className="font-semibold text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                 >
                   Sign in here

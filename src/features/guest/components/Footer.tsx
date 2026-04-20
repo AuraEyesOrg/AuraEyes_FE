@@ -12,6 +12,9 @@ export const Footer = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const scrollToTopSmooth = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="border-t border-[#D2DCE8] bg-[#ECF1F7] dark:border-slate-700 dark:bg-[#0f172a]">
@@ -51,10 +54,10 @@ export const Footer = () => {
               <li>
                 <a
                   className="flex items-start gap-3 rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
-                  href="tel:19002115"
+                  href="tel:0977452762"
                 >
                   <Phone className="mt-2 h-5 w-5 shrink-0 text-[#4299E1]" />
-                  <span>1900 2115</span>
+                  <span>0977 452 762</span>
                 </a>
               </li>
               <li>
@@ -78,6 +81,7 @@ export const Footer = () => {
                   <Link
                     className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                     to={withLocalePathname(locale, '/contact')}
+                    onClick={scrollToTopSmooth}
                   >
                     {t('Navigation.contact')}
                   </Link>
@@ -96,6 +100,7 @@ export const Footer = () => {
                 <Link
                   className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/about')}
+                  onClick={scrollToTopSmooth}
                 >
                   {t('Navigation.about')}
                 </Link>
@@ -104,6 +109,7 @@ export const Footer = () => {
                 <Link
                   className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/ethics')}
+                  onClick={scrollToTopSmooth}
                 >
                   {t('Navigation.ethicsPrivacy')}
                 </Link>
@@ -121,6 +127,7 @@ export const Footer = () => {
                 <Link
                   className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/how-it-works')}
+                  onClick={scrollToTopSmooth}
                 >
                   {t('Navigation.howItWorks')}
                 </Link>
@@ -129,6 +136,7 @@ export const Footer = () => {
                 <Link
                   className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
                   to={withLocalePathname(locale, '/compliance')}
+                  onClick={scrollToTopSmooth}
                 >
                   {t('Navigation.compliance')}
                 </Link>
@@ -146,30 +154,35 @@ export const Footer = () => {
             <Link
               className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/personal-data')}
+              onClick={scrollToTopSmooth}
             >
               {t('GuestFooter.personalData')}
             </Link>
             <Link
               className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/privacy')}
+              onClick={scrollToTopSmooth}
             >
               {t('GuestFooter.privacy')}
             </Link>
             <Link
               className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/security')}
+              onClick={scrollToTopSmooth}
             >
               {t('GuestFooter.security')}
             </Link>
             <Link
               className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/terms')}
+              onClick={scrollToTopSmooth}
             >
               {t('GuestFooter.terms')}
             </Link>
             <Link
               className="rounded-md transition-colors hover:text-[#2B6CB0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-primary) focus-visible:ring-offset-2"
               to={withLocalePathname(locale, '/about')}
+              onClick={scrollToTopSmooth}
             >
               {t('Navigation.about')}
             </Link>
