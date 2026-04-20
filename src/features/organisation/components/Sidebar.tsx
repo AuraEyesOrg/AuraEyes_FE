@@ -28,6 +28,7 @@ import { persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
 import { getOrganisationDashboardMetrics } from '../api/dashboard.api';
 import usePermissions from '@/hooks/use-permissions';
+import { Permissions } from '@/constants/permissions';
 
 interface SidebarProps {
   pendingCount?: number;
@@ -38,32 +39,44 @@ const navItems = [
     icon: Home,
     labelKey: 'dashboard',
     path: '/organisation/dashboard',
-    requiredPermission: 'DashboardRead',
+    requiredPermission: Permissions.DashboardRead,
   },
   {
     icon: FileText,
     labelKey: 'contract',
     path: '/organisation/contract',
-    requiredPermission: 'ContractsRead',
+    requiredPermission: Permissions.ContractsRead,
   },
   {
     icon: Users,
     labelKey: 'patients',
     path: '/organisation/patients',
     hasBadge: true,
-    requiredPermission: 'PatientsRead',
+    requiredPermission: Permissions.PatientsRead,
   },
   {
     icon: Wallet,
     labelKey: 'wallet',
     path: '/organisation/wallet',
-    requiredPermission: 'WalletsRead',
+    requiredPermission: Permissions.WalletsRead,
   },
   {
     icon: FileBarChart,
     labelKey: 'reports',
     path: '/organisation/reports',
-    requiredPermission: 'ScreeningsRead',
+    requiredPermission: Permissions.ScreeningRead,
+  },
+  {
+    icon: Calendar,
+    labelKey: 'calendar',
+    path: '/organisation/calendar',
+    requiredPermission: Permissions.AppointmentsRead,
+  },
+  {
+    icon: CalendarCog,
+    labelKey: 'slotManagement',
+    path: '/organisation/slots',
+    requiredPermission: Permissions.ApptSlotsManage,
   },
   {
     icon: Globe,
@@ -71,22 +84,10 @@ const navItems = [
     path: '/network',
   },
   {
-    icon: Calendar,
-    labelKey: 'calendar',
-    path: '/organisation/calendar',
-    requiredPermission: 'AppointmentsRead',
-  },
-  {
-    icon: CalendarCog,
-    labelKey: 'slotManagement',
-    path: '/organisation/slots',
-    requiredPermission: 'ApptSlotsManage',
-  },
-  {
     icon: Settings,
     labelKey: 'settings',
     path: '/organisation/settings',
-    requiredPermission: 'SettingsRead',
+    requiredPermission: Permissions.SettingsRead,
   },
 ];
 

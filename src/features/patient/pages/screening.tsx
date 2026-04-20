@@ -350,66 +350,82 @@ export default function ScreeningPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="medical-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center">
-                <Eye className="w-5 h-5 text-brand" />
+          {sessionsQuery.isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={`stat-skeleton-${i}`} className="medical-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton-shimmer w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <div className="skeleton-shimmer h-6 w-8 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-3 w-20 rounded bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-[var(--text-primary)]">
-                  {scans.length}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {t('PatientScreening.stats.totalScans', 'Total Scans')}
-                </p>
+            ))
+          ) : (
+            <>
+              <div className="medical-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-brand-soft rounded-xl flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-brand" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--text-primary)]">
+                      {scans.length}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('PatientScreening.stats.totalScans', 'Total Scans')}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="medical-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-400" />
+              <div className="medical-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--text-primary)]">
+                      {completedScans}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('PatientScreening.stats.completed', 'Completed')}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-[var(--text-primary)]">
-                  {completedScans}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {t('PatientScreening.stats.completed', 'Completed')}
-                </p>
+              <div className="medical-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--text-primary)]">
+                      {processingScans}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {t('PatientScreening.stats.processing', 'Processing')}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="medical-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                <Clock className="w-5 h-5 text-blue-400" />
+              <div className="medical-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-(--text-primary)">
+                      {scans.reduce((acc, s) => acc + (s.findings || 0), 0)}
+                    </p>
+                    <p className="text-xs text-(--text-muted)">
+                      {t('PatientScreening.stats.findings', 'Findings')}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-[var(--text-primary)]">
-                  {processingScans}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {t('PatientScreening.stats.processing', 'Processing')}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="medical-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                <FileText className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-(--text-primary)">
-                  {scans.reduce((acc, s) => acc + (s.findings || 0), 0)}
-                </p>
-                <p className="text-xs text-(--text-muted)">
-                  {t('PatientScreening.stats.findings', 'Findings')}
-                </p>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         {/* Search & Filter */}
@@ -437,13 +453,46 @@ export default function ScreeningPage() {
         <div className="medical-card flex-1 overflow-hidden">
           <div className="p-4 border-b border-(--border-color)">
             <h2 className="text-sm font-bold text-(--text-primary)">
-              {t('PatientScreening.list.recentScans', {
-                count: filteredScans.length,
-              })}
+              {sessionsQuery.isLoading ? (
+                <span className="skeleton-shimmer inline-block h-4 w-32 rounded bg-slate-200 dark:bg-slate-700" />
+              ) : (
+                t('PatientScreening.list.recentScans', {
+                  count: filteredScans.length,
+                })
+              )}
             </h2>
           </div>
 
-          {filteredScans.length === 0 ? (
+          {sessionsQuery.isLoading ? (
+            <div className="divide-y divide-[var(--border-color)]">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={`scan-skeleton-${i}`}
+                  className="flex items-center gap-4 p-4"
+                >
+                  {/* Thumbnail skeleton */}
+                  <div className="skeleton-shimmer w-14 h-14 rounded-lg bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  {/* Info skeleton */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="skeleton-shimmer h-4 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                      <div className="skeleton-shimmer h-4 w-16 rounded-full bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="skeleton-shimmer h-3 w-20 rounded bg-slate-200 dark:bg-slate-700" />
+                      <div className="skeleton-shimmer h-3 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                  </div>
+                  {/* Status badge skeleton */}
+                  <div className="skeleton-shimmer h-6 w-20 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  {/* Actions skeleton */}
+                  <div className="skeleton-shimmer w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  {/* Arrow skeleton */}
+                  <div className="skeleton-shimmer w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : filteredScans.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center mb-4">
                 <Eye className="w-8 h-8 text-[var(--text-muted)]" />

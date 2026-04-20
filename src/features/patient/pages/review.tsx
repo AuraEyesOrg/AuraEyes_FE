@@ -131,66 +131,67 @@ export default function ReviewPage() {
     (relevantStoredContext?.images?.length ?? 0) === 0 &&
     (relevantStoredContext?.anomalies?.length ?? 0) === 0;
 
-  const { data: hydratedSession } = useQuery({
-    queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
-    enabled: shouldHydrateFromApi,
-    queryFn: async () => {
-      if (!screeningIdFromRouteOrStore) return null;
-      const response = await screeningApi.getSessionById(
-        screeningIdFromRouteOrStore
-      );
-      const session = response.data;
-      if (!session) return null;
+  const { data: hydratedSession, isLoading: isHydratedSessionLoading } =
+    useQuery({
+      queryKey: ['patient-screening-review', screeningIdFromRouteOrStore],
+      enabled: shouldHydrateFromApi,
+      queryFn: async () => {
+        if (!screeningIdFromRouteOrStore) return null;
+        const response = await screeningApi.getSessionById(
+          screeningIdFromRouteOrStore
+        );
+        const session = response.data;
+        if (!session) return null;
 
-      const mappedImages: RetinalImage[] = (session.images ?? []).map(
-        (img) => ({
-          id: img.id,
-          url: img.imageUrl,
-          name:
-            img.imageUrl.split('/').pop() ??
-            t('PatientReview.labels.retinalImage', 'Retinal image'),
-          eye:
-            img.eyeSide?.toLowerCase() === 'right'
-              ? 'Right Eye (OD)'
-              : img.eyeSide?.toLowerCase() === 'left'
-                ? 'Left Eye (OS)'
-                : 'Both Eyes',
-          uploadedAt: img.capturedAt,
-          analyzed: false,
-          anomalies: [],
-        })
-      );
+        const mappedImages: RetinalImage[] = (session.images ?? []).map(
+          (img) => ({
+            id: img.id,
+            url: img.imageUrl,
+            name:
+              img.imageUrl.split('/').pop() ??
+              t('PatientReview.labels.retinalImage', 'Retinal image'),
+            eye:
+              img.eyeSide?.toLowerCase() === 'right'
+                ? 'Right Eye (OD)'
+                : img.eyeSide?.toLowerCase() === 'left'
+                  ? 'Left Eye (OS)'
+                  : 'Both Eyes',
+            uploadedAt: img.capturedAt,
+            analyzed: false,
+            anomalies: [],
+          })
+        );
 
-      const firstImageUrl = mappedImages[0]?.url;
-      const { anomalies, heatmapUrl, heatmapData } =
-        await hydrateFullScreeningData(session.rawJsonOutput, firstImageUrl);
+        const firstImageUrl = mappedImages[0]?.url;
+        const { anomalies, heatmapUrl, heatmapData } =
+          await hydrateFullScreeningData(session.rawJsonOutput, firstImageUrl);
 
-      const enrichedImages = mappedImages.map((img, idx) =>
-        idx === 0
-          ? { ...img, analyzed: true, anomalies, heatmapUrl, heatmapData }
-          : { ...img, analyzed: true }
-      );
+        const enrichedImages = mappedImages.map((img, idx) =>
+          idx === 0
+            ? { ...img, analyzed: true, anomalies, heatmapUrl, heatmapData }
+            : { ...img, analyzed: true }
+        );
 
-      const normalizedRiskLevel =
-        session.latestResult?.riskLevel?.toLowerCase();
-      const riskLevel: 'low' | 'moderate' | 'high' =
-        normalizedRiskLevel === 'moderate'
-          ? 'moderate'
-          : normalizedRiskLevel === 'high'
-            ? 'high'
-            : 'low';
+        const normalizedRiskLevel =
+          session.latestResult?.riskLevel?.toLowerCase();
+        const riskLevel: 'low' | 'moderate' | 'high' =
+          normalizedRiskLevel === 'moderate'
+            ? 'moderate'
+            : normalizedRiskLevel === 'high'
+              ? 'high'
+              : 'low';
 
-      return {
-        screeningId: session.screeningId,
-        images: enrichedImages,
-        anomalies,
-        riskLevel,
-        riskScore: session.latestResult?.confidenceScore,
-        rawJsonOutput: session.rawJsonOutput,
-        resultsPersisted: Boolean(session.latestResult),
-      };
-    },
-  });
+        return {
+          screeningId: session.screeningId,
+          images: enrichedImages,
+          anomalies,
+          riskLevel,
+          riskScore: session.latestResult?.confidenceScore,
+          rawJsonOutput: session.rawJsonOutput,
+          resultsPersisted: Boolean(session.latestResult),
+        };
+      },
+    });
   const images =
     activeState?.images ??
     relevantStoredContext?.images ??
@@ -355,6 +356,7 @@ export default function ReviewPage() {
   const thumbnail = images[0]?.url;
   const eyeLabel = images[0]?.eye ?? 'Left Eye (OS)';
   const scanId = screeningId?.slice(0, 8);
+  const isPageLoading = shouldHydrateFromApi && isHydratedSessionLoading;
   const showEducationalResourcesSkeleton =
     (isEducationalResourcesLoading || isEducationalResourcesFetching) &&
     educationalResources.length === 0;
@@ -446,190 +448,258 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          <div className="w-full surface-primary rounded-2xl shadow-sm surface-border overflow-hidden flex flex-col md:flex-row">
-            {/* Image */}
-            <div className="w-full md:w-1/3 min-h-[240px] md:min-h-full bg-slate-900 relative group">
-              {thumbnail ? (
-                <img
-                  src={thumbnail}
-                  alt={t('PatientReview.labels.retinalScanAlt')}
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-500">
-                  {t('PatientReview.labels.noImage')}
-                </div>
-              )}
-              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg">
-                {eyeLabel}
-              </div>
-              <button
-                className="absolute top-3 right-3 p-2 bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md rounded-lg text-white transition-colors"
-                title={t('PatientReview.actions.zoomImage')}
-              >
-                <ZoomIn className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 p-6 md:p-8 flex flex-col justify-between gap-5">
-              <div>
-                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-(--text-secondary) font-medium mb-0.5">
-                      {t('PatientReview.labels.scanId', { id: scanId })}
-                    </p>
-                    <p className="text-xs text-(--text-muted)">
-                      {t('PatientReview.labels.capturedAt')}{' '}
-                      {new Date().toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
+          {isPageLoading ? (
+            /* ── Hero Card Skeleton ── */
+            <div className="w-full surface-primary rounded-2xl shadow-sm surface-border overflow-hidden flex flex-col md:flex-row">
+              {/* Image skeleton */}
+              <div className="skeleton-shimmer w-full md:w-1/3 min-h-[240px] bg-slate-200 dark:bg-slate-700" />
+              {/* Content skeleton */}
+              <div className="flex-1 p-6 md:p-8 flex flex-col justify-between gap-5">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="space-y-1.5">
+                      <div className="skeleton-shimmer h-4 w-32 rounded bg-slate-200 dark:bg-slate-700" />
+                      <div className="skeleton-shimmer h-3 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <div className="skeleton-shimmer h-7 w-28 rounded-full bg-slate-200 dark:bg-slate-700" />
                   </div>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${riskStyle.color} ${riskStyle.bg} border ${riskStyle.border}`}
-                  >
-                    {riskStyle.icon}
-                    {riskLabel}
-                  </span>
+                  <div className="skeleton-shimmer h-6 w-48 rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="space-y-2">
+                    <div className="skeleton-shimmer h-4 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-4 w-5/6 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
+                  </div>
                 </div>
-
-                <h3 className="text-xl font-bold mb-2 text-(--text-primary)">
-                  {t('PatientReview.labels.aiAssessment')}
-                </h3>
-                <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
-                  {riskSummary}
-                  {patientFriendlyFindings.length > 0 && (
-                    <>
-                      {' '}
-                      {t(
-                        'PatientReview.findingsDetected',
-                        'Detected findings include:'
-                      )}{' '}
-                      <strong className="text-(--text-primary)">
-                        {patientFriendlyFindings.slice(0, 4).join(', ')}
-                        {patientFriendlyFindings.length > 4
-                          ? t('PatientReview.findingsMore', {
-                              count: patientFriendlyFindings.length - 4,
-                              defaultValue: currentLanguage
-                                .toLowerCase()
-                                .startsWith('vi')
-                                ? ' và {{count}} dấu hiệu khác'
-                                : ' and {{count}} more findings',
-                            })
-                          : ''}
-                      </strong>
-                      .
-                    </>
-                  )}
-                </p>
+                <div className="pt-4 border-t border-(--border-color)">
+                  <div className="skeleton-shimmer h-5 w-44 rounded bg-slate-200 dark:bg-slate-700" />
+                </div>
               </div>
-
-              <div className="flex items-center gap-3 pt-4 border-t border-(--border-color)">
+            </div>
+          ) : (
+            <div className="w-full surface-primary rounded-2xl shadow-sm surface-border overflow-hidden flex flex-col md:flex-row">
+              {/* Image */}
+              <div className="w-full md:w-1/3 min-h-[240px] md:min-h-full bg-slate-900 relative group">
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={t('PatientReview.labels.retinalScanAlt')}
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-500">
+                    {t('PatientReview.labels.noImage')}
+                  </div>
+                )}
+                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg">
+                  {eyeLabel}
+                </div>
                 <button
-                  onClick={() => {
-                    if (!screeningId && images.length === 0) {
-                      navigate('/patient/screening/new');
-                      return;
-                    }
-                    navigate('/patient/analysis/details', {
-                      state: {
-                        screeningId,
-                        rawJsonOutput: rawJsonForAnalysis,
-                        resultsPersisted,
-                        images,
-                        anomalies,
-                        riskLevel: effectiveRiskLevel,
-                      },
-                    });
-                  }}
-                  className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
+                  className="absolute top-3 right-3 p-2 bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md rounded-lg text-white transition-colors"
+                  title={t('PatientReview.actions.zoomImage')}
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  {t('PatientReview.actions.viewFullAnalysisDetails')}
+                  <ZoomIn className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Content */}
+              <div className="flex-1 p-6 md:p-8 flex flex-col justify-between gap-5">
+                <div>
+                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-(--text-secondary) font-medium mb-0.5">
+                        {t('PatientReview.labels.scanId', { id: scanId })}
+                      </p>
+                      <p className="text-xs text-(--text-muted)">
+                        {t('PatientReview.labels.capturedAt')}{' '}
+                        {new Date().toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${riskStyle.color} ${riskStyle.bg} border ${riskStyle.border}`}
+                    >
+                      {riskStyle.icon}
+                      {riskLabel}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold mb-2 text-(--text-primary)">
+                    {t('PatientReview.labels.aiAssessment')}
+                  </h3>
+                  <p className="text-(--text-secondary) leading-relaxed max-w-2xl">
+                    {riskSummary}
+                    {patientFriendlyFindings.length > 0 && (
+                      <>
+                        {' '}
+                        {t(
+                          'PatientReview.findingsDetected',
+                          'Detected findings include:'
+                        )}{' '}
+                        <strong className="text-(--text-primary)">
+                          {patientFriendlyFindings.slice(0, 4).join(', ')}
+                          {patientFriendlyFindings.length > 4
+                            ? t('PatientReview.findingsMore', {
+                                count: patientFriendlyFindings.length - 4,
+                                defaultValue: currentLanguage
+                                  .toLowerCase()
+                                  .startsWith('vi')
+                                  ? ' và {{count}} dấu hiệu khác'
+                                  : ' and {{count}} more findings',
+                              })
+                            : ''}
+                        </strong>
+                        .
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 pt-4 border-t border-(--border-color)">
+                  <button
+                    onClick={() => {
+                      if (!screeningId && images.length === 0) {
+                        navigate('/patient/screening/new');
+                        return;
+                      }
+                      navigate('/patient/analysis/details', {
+                        state: {
+                          screeningId,
+                          rawJsonOutput: rawJsonForAnalysis,
+                          resultsPersisted,
+                          images,
+                          anomalies,
+                          riskLevel: effectiveRiskLevel,
+                        },
+                      });
+                    }}
+                    className="flex items-center gap-1.5 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {t('PatientReview.actions.viewFullAnalysisDetails')}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-(--text-primary)">
-              {t('PatientReview.sections.recommendedActions')}
+              {isPageLoading ? (
+                <span className="skeleton-shimmer inline-block h-7 w-56 rounded bg-slate-200 dark:bg-slate-700" />
+              ) : (
+                t('PatientReview.sections.recommendedActions')
+              )}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-              {/* PRIMARY — Book Consultation */}
-              <div className="col-span-1 md:col-span-3 lg:col-span-2 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 dark:to-[#1e3a5f] rounded-2xl p-6 md:p-8 shadow-sm border border-primary/20 dark:border-primary/30 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-[0.2] pointer-events-none">
-                  <Stethoscope className="w-44 h-44 text-primary" />
+            {isPageLoading ? (
+              /* ── Recommended Actions Skeleton ── */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                {/* Primary card skeleton */}
+                <div className="col-span-1 md:col-span-3 lg:col-span-2 rounded-2xl p-6 md:p-8 border border-(--border-color) surface-primary space-y-5">
+                  <div className="skeleton-shimmer h-5 w-36 rounded-full bg-slate-200 dark:bg-slate-700" />
+                  <div className="space-y-2">
+                    <div className="skeleton-shimmer h-7 w-64 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-4 w-full rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-4 w-4/5 rounded bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <div className="skeleton-shimmer h-11 w-40 rounded-xl bg-slate-200 dark:bg-slate-700" />
+                    <div className="skeleton-shimmer h-11 w-44 rounded-xl bg-slate-200 dark:bg-slate-700" />
+                  </div>
                 </div>
-                <div className="relative z-10 flex flex-col h-full justify-between gap-6">
-                  <div className="max-w-md">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider mb-4">
-                      {t('PatientReview.labels.primaryRecommendation')}
+                {/* Secondary cards skeleton */}
+                <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col gap-4">
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div
+                      key={`action-skeleton-${i}`}
+                      className="surface-primary rounded-2xl p-4 border border-(--border-color) flex items-center gap-4"
+                    >
+                      <div className="skeleton-shimmer w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="skeleton-shimmer h-4 w-32 rounded bg-slate-200 dark:bg-slate-700" />
+                        <div className="skeleton-shimmer h-3 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+                      </div>
+                      <div className="skeleton-shimmer w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 shrink-0" />
                     </div>
-                    <h3 className="text-2xl font-bold text-(--text-primary) mb-2">
-                      {t('PatientReview.actions.bookConsultation')}
-                    </h3>
-                    <p className="text-(--text-secondary) leading-relaxed">
-                      {t('PatientReview.descriptions.bookConsultation')}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={() =>
-                        navigate('/patient/doctors', {
-                          state: {
-                            consultationContext,
-                          },
-                        })
-                      }
-                      className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
-                    >
-                      <CalendarCheck className="w-5 h-5" />
-                      {t('PatientReview.actions.findSpecialist')}
-                    </button>
-                    <button
-                      onClick={openN8nChat}
-                      className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
-                    >
-                      <Bot className="w-5 h-5" />
-                      {t('PatientReview.actions.askAuraAssistant')}
-                    </button>
-                  </div>
+                  ))}
                 </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                {/* PRIMARY — Book Consultation */}
+                <div className="col-span-1 md:col-span-3 lg:col-span-2 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 dark:to-[#1e3a5f] rounded-2xl p-6 md:p-8 shadow-sm border border-primary/20 dark:border-primary/30 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-6 opacity-[0.2] pointer-events-none">
+                    <Stethoscope className="w-44 h-44 text-primary" />
+                  </div>
+                  <div className="relative z-10 flex flex-col h-full justify-between gap-6">
+                    <div className="max-w-md">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider mb-4">
+                        {t('PatientReview.labels.primaryRecommendation')}
+                      </div>
+                      <h3 className="text-2xl font-bold text-(--text-primary) mb-2">
+                        {t('PatientReview.actions.bookConsultation')}
+                      </h3>
+                      <p className="text-(--text-secondary) leading-relaxed">
+                        {t('PatientReview.descriptions.bookConsultation')}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={() =>
+                          navigate('/patient/doctors', {
+                            state: {
+                              consultationContext,
+                            },
+                          })
+                        }
+                        className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
+                      >
+                        <CalendarCheck className="w-5 h-5" />
+                        {t('PatientReview.actions.findSpecialist')}
+                      </button>
+                      <button
+                        onClick={openN8nChat}
+                        className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
+                      >
+                        <Bot className="w-5 h-5" />
+                        {t('PatientReview.actions.askAuraAssistant')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-              {/* SECONDARY actions column */}
-              <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col gap-4">
-                <SecondaryActionCard
-                  icon={<FileDown className="w-5 h-5" />}
-                  iconBg="bg-blue-50 text-blue-600"
-                  title={
-                    isDownloadingPdf
-                      ? t(
-                          'PatientReview.actions.downloadingReport',
-                          'Downloading report...'
-                        )
-                      : t('PatientReview.actions.downloadReport')
-                  }
-                  subtitle={t('PatientReview.labels.pdfFormat')}
-                  actionIcon={<FileDown className="w-4 h-4" />}
-                  onClick={downloadPatientReportPdf}
-                />
+                {/* SECONDARY actions column */}
+                <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col gap-4">
+                  <SecondaryActionCard
+                    icon={<FileDown className="w-5 h-5" />}
+                    iconBg="bg-blue-50 text-blue-600"
+                    title={
+                      isDownloadingPdf
+                        ? t(
+                            'PatientReview.actions.downloadingReport',
+                            'Downloading report...'
+                          )
+                        : t('PatientReview.actions.downloadReport')
+                    }
+                    subtitle={t('PatientReview.labels.pdfFormat')}
+                    actionIcon={<FileDown className="w-4 h-4" />}
+                    onClick={downloadPatientReportPdf}
+                  />
 
-                <SecondaryActionCard
-                  icon={<ImagePlus className="w-5 h-5" />}
-                  iconBg="bg-emerald-50 text-emerald-600"
-                  title={t('PatientReview.actions.newScan')}
-                  subtitle={t('PatientReview.descriptions.startNewAnalysis')}
-                  actionIcon={<ChevronRight className="w-4 h-4" />}
-                  onClick={() => navigate('/patient/screening/new')}
-                />
+                  <SecondaryActionCard
+                    icon={<ImagePlus className="w-5 h-5" />}
+                    iconBg="bg-emerald-50 text-emerald-600"
+                    title={t('PatientReview.actions.newScan')}
+                    subtitle={t('PatientReview.descriptions.startNewAnalysis')}
+                    actionIcon={<ChevronRight className="w-4 h-4" />}
+                    onClick={() => navigate('/patient/screening/new')}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="border-t border-(--border-color) pt-8">
