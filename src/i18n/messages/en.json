@@ -2034,8 +2034,8 @@
     "liveStats": {
       "ophthalmologists": "Verified ophthalmologists",
       "organisations": "Partner organisations",
-      "availableSlots": "Available booking slots",
-      "resources": "Eye health resources"
+      "screenings": "Total screening cases",
+      "feedbacks": "System feedback & ratings"
     }
   },
   "EthicsPrivacy": {
@@ -3001,6 +3001,18 @@
       "fee": "Deposit fee",
       "walletBalance": "Wallet balance",
       "insufficient": "Insufficient balance. Please top up your wallet."
+    },
+    "confirmModal": {
+      "title": "Confirm your clinic visit",
+      "subtitle": "Please review the details before confirming.",
+      "time": "Time slot",
+      "free": "Free",
+      "balanceAfter": "Balance after booking",
+      "terms": "By confirming, the deposit will be deducted from your wallet. It will be refunded or credited according to the clinic's policy.",
+      "cancel": "Cancel",
+      "confirm": "Confirm & Pay",
+      "processing": "Processing...",
+      "close": "Close"
     },
     "toast": {
       "bookSuccess": "Clinic booking completed successfully!"

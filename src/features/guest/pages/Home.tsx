@@ -134,12 +134,12 @@ const HomePage = () => {
         label: t('Home.liveStats.organisations', 'Partner organisations'),
       },
       {
-        value: overviewMetrics?.availableSlotCount ?? null,
-        label: t('Home.liveStats.availableSlots', 'Available booking slots'),
+        value: overviewMetrics?.screeningCount ?? null,
+        label: t('Home.liveStats.screenings', 'Screenings'),
       },
       {
-        value: overviewMetrics?.eyeHealthResourceCount ?? null,
-        label: t('Home.liveStats.resources', 'Eye health resources'),
+        value: overviewMetrics?.feedbackCount ?? null,
+        label: t('Home.liveStats.feedbacks', 'Feedbacks'),
       },
     ],
     [overviewMetrics, i18n.language]

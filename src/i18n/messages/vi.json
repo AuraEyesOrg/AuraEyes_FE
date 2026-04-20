@@ -2034,8 +2034,8 @@
     "liveStats": {
       "ophthalmologists": "Bác sĩ đã xác minh",
       "organisations": "Tổ chức đối tác",
-      "availableSlots": "Khung giờ còn trống",
-      "resources": "Tài liệu sức khỏe mắt"
+      "screenings": "Tổng số ca tầm soát",
+      "feedbacks": "Đánh giá hệ thống"
     }
   },
   "EthicsPrivacy": {
@@ -3001,6 +3001,18 @@
       "fee": "Phí cọc",
       "walletBalance": "Số dư ví",
       "insufficient": "Số dư không đủ. Vui lòng nạp thêm tiền vào ví."
+    },
+    "confirmModal": {
+      "title": "Xác nhận đặt lịch khám",
+      "subtitle": "Vui lòng kiểm tra kỹ thông tin trước khi xác nhận.",
+      "time": "Khung giờ",
+      "free": "Miễn phí",
+      "balanceAfter": "Số dư sau khi đặt",
+      "terms": "Khi xác nhận, phí cọc sẽ được trừ trực tiếp từ ví của bạn. Phí này sẽ được hoàn lại hoặc khấu trừ theo chính sách của cơ sở y tế.",
+      "cancel": "Huỷ",
+      "confirm": "Xác nhận & Thanh toán",
+      "processing": "Đang xử lý...",
+      "close": "Đóng"
     },
     "toast": {
       "bookSuccess": "Bạn đã đặt lịch thành công!"
