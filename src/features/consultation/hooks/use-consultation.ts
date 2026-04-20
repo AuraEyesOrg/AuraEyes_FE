@@ -5,6 +5,7 @@
 
 import {
   useQuery,
+  useQueries,
   useMutation,
   useQueryClient,
   keepPreviousData,
@@ -32,6 +33,7 @@ import type {
   ConsultationSessionDto,
   ChatMessageDto,
 } from '@/types/consultation';
+import { SessionStatus } from '@/types/consultation';
 
 // ============ QUERY KEYS ============
 
@@ -58,6 +60,54 @@ export const useConsultationSessions = (
     placeholderData: keepPreviousData,
     ...options,
   });
+
+export const useConsultationSessionCounts = (
+  patientId: string | undefined,
+  enabled = true
+) => {
+  const buckets: Array<{
+    key: 'all' | 'upcoming' | 'completed' | 'cancelled';
+    status?: SessionStatus;
+  }> = [
+    { key: 'all' },
+    { key: 'upcoming', status: SessionStatus.Confirmed },
+    { key: 'completed', status: SessionStatus.Completed },
+    { key: 'cancelled', status: SessionStatus.Cancelled },
+  ];
+
+  const results = useQueries({
+    queries: buckets.map(({ status }) => {
+      const params: GetConsultationSessionsParams = {
+        patientId,
+        pageNumber: 1,
+        pageSize: 1,
+        ...(status !== undefined ? { status } : {}),
+      };
+      return {
+        queryKey: consultationKeys.list(params),
+        queryFn: () => getConsultationSessions(params),
+        enabled: enabled && !!patientId,
+        staleTime: 30_000,
+        placeholderData: keepPreviousData,
+      };
+    }),
+  });
+
+  const counts = buckets.reduce<
+    Record<(typeof buckets)[number]['key'], number>
+  >(
+    (acc, bucket, index) => {
+      acc[bucket.key] = results[index]?.data?.totalCount ?? 0;
+      return acc;
+    },
+    { all: 0, upcoming: 0, completed: 0, cancelled: 0 }
+  );
+
+  return {
+    counts,
+    isLoading: results.some((r) => r.isLoading),
+  };
+};
 
 /** Fetch a single consultation session by ID */
 export const useConsultationSession = (
