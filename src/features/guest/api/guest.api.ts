@@ -13,7 +13,7 @@ export interface GuestOverviewMetrics {
   ophthalmologistCount: number | null;
   organisationCount: number | null;
   screeningCount: number | null;
-  feedbackCount: number | null;
+  averageRating: number | null;
 }
 
 export interface GuestServiceCheckTarget {
@@ -175,14 +175,14 @@ export const fetchGuestOverviewMetrics =
         ophthalmologistCount: payload?.ophthalmologistCount ?? null,
         organisationCount: payload?.organisationCount ?? null,
         screeningCount: payload?.screeningCount ?? null,
-        feedbackCount: payload?.feedbackCount ?? null,
+        averageRating: payload?.averageRating ?? null,
       };
     } catch {
       return {
         ophthalmologistCount: null,
         organisationCount: null,
         screeningCount: null,
-        feedbackCount: null,
+        averageRating: null,
       };
     }
   };
