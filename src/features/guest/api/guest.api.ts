@@ -138,6 +138,31 @@ const fetchPublicCount = async (endpoint: string): Promise<number | null> => {
   }
 };
 
+export interface TrustedAvatarsResult {
+  count: number;
+  avatars: string[];
+}
+
+export const fetchTrustedAvatars = async (): Promise<TrustedAvatarsResult> => {
+  try {
+    const response = await api.get<ApiEnvelope<any>>('/guest/trusted-users');
+
+    const payload =
+      response.data?.data ?? response.data?.result ?? response.data?.payload;
+
+    if (!payload) {
+      return { count: 0, avatars: [] };
+    }
+
+    return {
+      count: payload.count || 0,
+      avatars: payload.avatars || [],
+    };
+  } catch (err) {
+    return { count: 0, avatars: [] };
+  }
+};
+
 export const fetchGuestOverviewMetrics =
   async (): Promise<GuestOverviewMetrics> => {
     const [

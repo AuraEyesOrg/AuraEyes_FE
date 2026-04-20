@@ -15,6 +15,7 @@ import { Header } from '../components/Header';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import GuestTrustedBy from '../components/GuestTrustedBy';
 import { prefersReducedMotion } from '../utils/motion';
 import { SeoMeta } from '@/hooks/useSeoMeta';
 
@@ -640,6 +641,10 @@ const HomePage = () => {
                       </span>
                     </span>
                   </button>
+                </div>
+
+                <div className="mt-4">
+                  <GuestTrustedBy />
                 </div>
               </div>
               <div
