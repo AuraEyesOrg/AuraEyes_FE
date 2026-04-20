@@ -15,6 +15,7 @@ import { Header } from '../components/Header';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import GuestTrustedBy from '../components/GuestTrustedBy';
 import { prefersReducedMotion } from '../utils/motion';
 import { SeoMeta } from '@/hooks/useSeoMeta';
 
@@ -119,10 +120,19 @@ const HomePage = () => {
     ).format(value);
   };
 
+  const formatRatingValue = (value: number | null): string => {
+    if (value === null) {
+      return '--/5';
+    }
+
+    return `${value.toFixed(1)}/5`;
+  };
+
   const liveStats = useMemo(
     () => [
       {
         value: overviewMetrics?.ophthalmologistCount ?? null,
+        kind: 'count' as const,
         label: t(
           'Home.liveStats.ophthalmologists',
           'Verified ophthalmologists'
@@ -130,15 +140,18 @@ const HomePage = () => {
       },
       {
         value: overviewMetrics?.organisationCount ?? null,
+        kind: 'count' as const,
         label: t('Home.liveStats.organisations', 'Partner organisations'),
       },
       {
-        value: overviewMetrics?.availableSlotCount ?? null,
-        label: t('Home.liveStats.availableSlots', 'Available booking slots'),
+        value: overviewMetrics?.screeningCount ?? null,
+        kind: 'count' as const,
+        label: t('Home.liveStats.screenings', 'Screenings'),
       },
       {
-        value: overviewMetrics?.eyeHealthResourceCount ?? null,
-        label: t('Home.liveStats.resources', 'Eye health resources'),
+        value: overviewMetrics?.averageRating ?? null,
+        kind: 'rating' as const,
+        label: t('Home.liveStats.feedbacks', 'Feedbacks'),
       },
     ],
     [overviewMetrics, i18n.language]
@@ -640,6 +653,10 @@ const HomePage = () => {
                       </span>
                     </span>
                   </button>
+                </div>
+
+                <div className="mt-4">
+                  <GuestTrustedBy />
                 </div>
               </div>
               <div
@@ -1144,7 +1161,9 @@ const HomePage = () => {
                 {liveStats.map((stat, index) => (
                   <div key={index} className="live-stat-card p-4">
                     <div className="mb-2 text-4xl font-black text-[var(--color-brand-primary)]">
-                      {formatMetricValue(stat.value)}
+                      {stat.kind === 'rating'
+                        ? `★ ${formatRatingValue(stat.value)}`
+                        : formatMetricValue(stat.value)}
                     </div>
                     <div className="text-sm font-medium text-[var(--color-text-muted)]">
                       {stat.label}

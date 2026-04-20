@@ -12,6 +12,7 @@ import type {
   CreateClinicAppointmentResult,
   OrganisationAvailableSlotDto,
   OrganisationSummaryDto,
+  PatientClinicAppointmentsQuery,
 } from '../types/clinic-booking.types';
 
 interface PatientSearchOrganisationItem {
@@ -91,14 +92,33 @@ export const cancelClinicAppointment = async (
   await api.delete(API_ENDPOINTS.CLINIC_APPOINTMENTS.CANCEL(appointmentId));
 };
 
-export const getPatientClinicAppointments = async (
-  patientId: string
-): Promise<ClinicAppointmentDto[]> => {
-  const response = await api.get<PatientApiResponse<ClinicAppointmentDto[]>>(
-    API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId)
-  );
+const DEFAULT_PATIENT_CLINIC_PAGE_SIZE = 10;
 
-  return response.data.data ?? [];
+const EMPTY_PATIENT_CLINIC_PAGE: PatientPagedResult<ClinicAppointmentDto> = {
+  items: [],
+  pageNumber: 1,
+  pageSize: DEFAULT_PATIENT_CLINIC_PAGE_SIZE,
+  totalPages: 0,
+  totalCount: 0,
+  hasPrevious: false,
+  hasNext: false,
+};
+
+export const getPatientClinicAppointments = async (
+  patientId: string,
+  query: PatientClinicAppointmentsQuery = {}
+): Promise<PatientPagedResult<ClinicAppointmentDto>> => {
+  const response = await api.get<
+    PatientApiResponse<PatientPagedResult<ClinicAppointmentDto>>
+  >(API_ENDPOINTS.CLINIC_BOOKING.PATIENT_CLINIC_APPOINTMENTS(patientId), {
+    params: {
+      tab: query.tab ?? 'All',
+      pageNumber: query.pageNumber ?? 1,
+      pageSize: query.pageSize ?? DEFAULT_PATIENT_CLINIC_PAGE_SIZE,
+    },
+  });
+
+  return response.data.data ?? EMPTY_PATIENT_CLINIC_PAGE;
 };
 
 export const getOrganisationAppointments = async (

@@ -9,6 +9,7 @@ import {
 import { GuestTourProvider } from './tour';
 import { detectPreferredLocale } from '@/i18n/middleware';
 import GuestScrollProgress from './components/GuestScrollProgress';
+import GuestTourFAB from './components/GuestTourFAB';
 import { prefersReducedMotion } from './utils/motion';
 
 export const GuestLayout = () => {
@@ -76,12 +77,13 @@ export const GuestLayout = () => {
   return (
     <GuestTourProvider>
       <div
-        className="min-h-screen bg-[var(--color-medical-bg)]"
+        className="min-h-screen bg-[var(--color-medical-bg)] relative"
         data-guest-shell
       >
         <GuestScrollProgress />
         <LocaleSync />
         <Outlet />
+        <GuestTourFAB />
       </div>
     </GuestTourProvider>
   );

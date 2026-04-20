@@ -62,7 +62,13 @@ export const useDashboard = () => {
     queryKey: dashboardKeys.appointments(),
     queryFn: async () => {
       if (!profileQuery.data?.id) return [];
-      return getPatientClinicAppointments(profileQuery.data.id);
+      // Dashboard only needs the recent slice to surface "next appointment"
+      const paged = await getPatientClinicAppointments(profileQuery.data.id, {
+        tab: 'All',
+        pageNumber: 1,
+        pageSize: 20,
+      });
+      return paged.items;
     },
     enabled: Boolean(profileQuery.data?.id),
     placeholderData: [],

@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AlertCircle,
+  Building2,
+  CalendarDays,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Clock,
   MapPin,
   Search,
   Star,
   Stethoscope,
   Wallet,
+  X,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import PatientLayout from '../components/PatientLayout';
@@ -274,6 +280,242 @@ function SlotGroup({
   );
 }
 
+interface ClinicBookingConfirmModalProps {
+  organisationName: string;
+  organisationAddress: string;
+  slot: SlotItem;
+  visitReason: string;
+  walletBalance: number | null;
+  errorMessage: string;
+  isSubmitting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}
+
+function ClinicBookingConfirmModal({
+  organisationName,
+  organisationAddress,
+  slot,
+  visitReason,
+  walletBalance,
+  errorMessage,
+  isSubmitting,
+  onCancel,
+  onConfirm,
+  t,
+}: ClinicBookingConfirmModalProps) {
+  const depositFee = slot.cost ?? 0;
+  const requiresDeposit = depositFee > 0;
+  const insufficientBalance =
+    requiresDeposit && walletBalance != null && walletBalance < depositFee;
+  const balanceAfter =
+    walletBalance != null ? walletBalance - depositFee : null;
+
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (isSubmitting) return;
+    onCancel();
+  };
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' && !isSubmitting) {
+      event.stopPropagation();
+      onCancel();
+    }
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="clinic-confirm-title"
+      onClick={handleBackdropClick}
+      onKeyDown={handleDialogKeyDown}
+      tabIndex={-1}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+    >
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-(--border-color) bg-(--bg-primary) shadow-2xl">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-(--border-color) px-5 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+              <Stethoscope className="h-5 w-5" />
+            </div>
+            <div>
+              <h3
+                id="clinic-confirm-title"
+                className="text-base font-semibold text-(--text-primary)"
+              >
+                {t('PatientClinics.confirmModal.title')}
+              </h3>
+              <p className="mt-0.5 text-xs text-(--text-muted)">
+                {t('PatientClinics.confirmModal.subtitle')}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            aria-label={t('PatientClinics.confirmModal.close')}
+            className="rounded-lg p-1.5 text-(--text-muted) transition hover:bg-(--bg-secondary) hover:text-(--text-primary) disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-4">
+          {/* Summary */}
+          <div className="rounded-xl border border-(--border-color) bg-(--bg-secondary) p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-(--text-muted)" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                  {t('PatientClinics.labels.organisation')}
+                </p>
+                <p className="truncate text-sm font-semibold text-(--text-primary)">
+                  {organisationName}
+                </p>
+                {organisationAddress && (
+                  <p className="mt-0.5 truncate text-xs text-(--text-secondary)">
+                    {organisationAddress}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-(--text-muted)" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                  {t('PatientClinics.fields.visitDate')}
+                </p>
+                <p className="text-sm font-semibold text-(--text-primary)">
+                  {formatDate(slot.date)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-(--text-muted)" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                  {t('PatientClinics.confirmModal.time')}
+                </p>
+                <p className="text-sm font-semibold text-(--text-primary)">
+                  {formatSlotTime(slot.startTime)} –{' '}
+                  {formatSlotTime(slot.endTime)}
+                </p>
+              </div>
+            </div>
+            {visitReason.trim() && (
+              <div className="flex items-start gap-3">
+                <Stethoscope className="mt-0.5 h-4 w-4 shrink-0 text-(--text-muted)" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-(--text-muted)">
+                    {t('PatientClinics.fields.visitReason')}
+                  </p>
+                  <p className="text-sm text-(--text-primary)">
+                    {visitReason.trim()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Deposit breakdown */}
+          <div className="rounded-xl border border-(--border-color) bg-(--bg-primary) p-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-(--text-secondary)">
+                {t('PatientClinics.deposit.fee')}
+              </span>
+              <span className="font-semibold text-(--text-primary)">
+                {requiresDeposit
+                  ? `${depositFee.toLocaleString('vi-VN')}₫`
+                  : t('PatientClinics.confirmModal.free')}
+              </span>
+            </div>
+            {walletBalance != null && requiresDeposit && (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-(--text-secondary)">
+                    <Wallet className="h-3.5 w-3.5" />
+                    {t('PatientClinics.deposit.walletBalance')}
+                  </span>
+                  <span className="font-medium text-(--text-primary)">
+                    {walletBalance.toLocaleString('vi-VN')}₫
+                  </span>
+                </div>
+                <div className="border-t border-dashed border-(--border-color) pt-2" />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-(--text-secondary)">
+                    {t('PatientClinics.confirmModal.balanceAfter')}
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      balanceAfter != null && balanceAfter < 0
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {balanceAfter != null
+                      ? `${balanceAfter.toLocaleString('vi-VN')}₫`
+                      : '—'}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Insufficient balance warning */}
+          {insufficientBalance && (
+            <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{t('PatientClinics.deposit.insufficient')}</span>
+            </div>
+          )}
+
+          {/* Server error */}
+          {errorMessage && (
+            <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Terms note */}
+          <p className="text-xs text-(--text-muted)">
+            {t('PatientClinics.confirmModal.terms')}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-(--border-color) bg-(--bg-secondary) px-5 py-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="rounded-lg border border-(--border-color) bg-(--bg-primary) px-4 py-2 text-sm font-medium text-(--text-primary) transition hover:bg-(--bg-tertiary) disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t('PatientClinics.confirmModal.cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isSubmitting || insufficientBalance}
+            className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting ? <Spinner /> : <CheckCircle className="h-4 w-4" />}
+            {isSubmitting
+              ? t('PatientClinics.confirmModal.processing')
+              : t('PatientClinics.confirmModal.confirm')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClinicsPage() {
   const { t: i18nT } = useTranslation();
   const t = (key: string, options?: Record<string, unknown>) =>
@@ -295,6 +537,7 @@ export default function ClinicsPage() {
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [visitReason, setVisitReason] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const {
     data: organisations = [],
@@ -383,7 +626,18 @@ export default function ClinicsPage() {
     (item) => item.id === selectedOrganisationId
   );
 
-  const handleBookSlot = async () => {
+  const openConfirmModal = () => {
+    if (!selectedOrganisationId || !patientId || !selectedSlotId) return;
+    setErrorMessage('');
+    setShowConfirmModal(true);
+  };
+
+  const closeConfirmModal = () => {
+    if (createAppointmentMutation.isPending) return;
+    setShowConfirmModal(false);
+  };
+
+  const handleConfirmBooking = async () => {
     if (!selectedOrganisationId || !patientId || !selectedSlotId) return;
     setErrorMessage('');
     try {
@@ -394,6 +648,7 @@ export default function ClinicsPage() {
       });
       toast.success(t('PatientClinics.toast.bookSuccess'));
       setSelectedSlotId('');
+      setShowConfirmModal(false);
     } catch (error) {
       setErrorMessage(mapClinicPatientErrorMessage(error));
     }
@@ -504,6 +759,27 @@ export default function ClinicsPage() {
               </div>
             )}
           </div>
+
+          {/* ── Confirm booking modal ── */}
+          {showConfirmModal && selectedSlot && selectedOrganisation && (
+            <ClinicBookingConfirmModal
+              organisationName={selectedOrganisation.name}
+              organisationAddress={[
+                selectedOrganisation.address,
+                selectedOrganisation.city,
+              ]
+                .filter(Boolean)
+                .join(', ')}
+              slot={selectedSlot}
+              visitReason={visitReason}
+              walletBalance={walletData?.balance ?? null}
+              errorMessage={errorMessage}
+              isSubmitting={createAppointmentMutation.isPending}
+              onCancel={closeConfirmModal}
+              onConfirm={() => void handleConfirmBooking()}
+              t={t}
+            />
+          )}
 
           {/* ── Booking panel ── */}
           <div className="medical-card mt-6 p-5">
@@ -694,14 +970,10 @@ export default function ClinicsPage() {
                               walletData != null &&
                               walletData.balance < selectedSlot.cost)
                           }
-                          onClick={() => void handleBookSlot()}
+                          onClick={openConfirmModal}
                           className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {createAppointmentMutation.isPending ? (
-                            <Spinner />
-                          ) : (
-                            <Stethoscope className="h-4 w-4" />
-                          )}
+                          <Stethoscope className="h-4 w-4" />
                           {t('PatientClinics.actions.bookClinicVisit')}
                         </button>
                       </div>

@@ -10,12 +10,10 @@ import {
   stripLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
-import { useGuestTour } from '../tour';
 
 export const Header = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { startTourFromHelp } = useGuestTour();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -46,7 +44,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-[#D4DEE8] bg-white/96 backdrop-blur-md dark:border-slate-700 dark:bg-[#0f172a]/95">
+      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-slate-200/50 bg-white/70 backdrop-blur-xl shadow-[inset_0_-1px_0_rgba(255,255,255,0.5)] dark:border-slate-700/50 dark:bg-[#0f172a]/80 dark:shadow-[inset_0_-1px_0_rgba(255,255,255,0.05)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div data-tour="guest-logo-home">
             <AuraLogo
@@ -74,14 +72,6 @@ export const Header = () => {
           </nav>
 
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={startTourFromHelp}
-              className="hidden items-center justify-center rounded-lg border border-[#D6E3F0] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 sm:inline-flex"
-            >
-              {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
-            </button>
-
             <ThemeToggleButton className="hidden sm:inline-flex" />
             <PremiumLanguageSwitcher className="hidden sm:inline-flex" />
 
@@ -143,17 +133,6 @@ export const Header = () => {
               <PremiumLanguageSwitcher className="flex-1" />
               <ThemeToggleButton />
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                startTourFromHelp();
-              }}
-              className="mt-1 inline-flex h-11 items-center justify-center rounded-lg border border-[#D6E3F0] px-4 text-sm font-semibold text-[#2C5282] transition-colors hover:border-[#A6C2DC] hover:bg-[#F7FAFC] dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-            >
-              {t('Common.helpTour', { defaultValue: 'Hướng dẫn' })}
-            </button>
 
             <Link
               to={withLocalePathname(locale, '/login')}

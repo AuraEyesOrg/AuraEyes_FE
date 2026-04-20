@@ -48,6 +48,25 @@ export interface ClinicAppointmentDto {
   visitReason?: string | null;
   status: ClinicAppointmentStatus;
   createdAt?: string;
+  /**
+   * True when the current patient has already submitted feedback for this
+   * appointment. Populated server-side so the client never has to run an
+   * N+1 existence-check across organisations.
+   */
+  hasFeedback?: boolean;
+}
+
+/** Matches backend enum {@link Application.Scheduling.Appointments.Queries.GetPatientClinicAppointments.PatientAppointmentTab}. */
+export type PatientAppointmentTab =
+  | 'All'
+  | 'Upcoming'
+  | 'Completed'
+  | 'Cancelled';
+
+export interface PatientClinicAppointmentsQuery {
+  tab?: PatientAppointmentTab;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface CreateClinicAppointmentResult {

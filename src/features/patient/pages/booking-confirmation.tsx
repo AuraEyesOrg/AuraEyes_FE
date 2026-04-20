@@ -418,7 +418,7 @@ export default function BookingConfirmationPage(
                     Session ID
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white text-sm">
-                    {sessionId.slice(0, 8)}...
+                    {sessionId.slice(0, 8)}
                   </p>
                 </div>
                 <div>
