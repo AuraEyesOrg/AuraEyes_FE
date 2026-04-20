@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   Activity,
+  AlertTriangle,
   CalendarDays,
   Building2,
   ChevronRight,
@@ -11,6 +12,7 @@ import {
   FileText,
   Landmark,
   Radio,
+  Search,
   Stethoscope,
   Users,
   Wallet,
@@ -36,7 +38,11 @@ import PageHeader from '../components/PageHeader';
 import StatsCard from '../components/StatsCard';
 import { dashboardApi } from '../api';
 import type {
+  SystemAdminDoctorWorkloadPagedResult,
   SystemAdminDashboardMetrics,
+  SystemAdminWorkloadEmploymentType,
+  SystemAdminWorkloadPeriodType,
+  SystemAdminWorkloadStatus,
   SystemAdminPartTimeSlotQuotaUsage,
 } from '../types/system-admin.types';
 import {
@@ -90,6 +96,22 @@ const formatDayLabel = (date: string, locale: 'en-US' | 'vi-VN') => {
   });
 };
 
+const formatDateTimeLabel = (value: string, locale: 'en-US' | 'vi-VN') => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+
+  return parsed.toLocaleDateString(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+const toPercent = (value: number) => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(value * 100, 0);
+};
+
 export default function SystemAdminDashboard() {
   const { t } = useSafeTranslation();
   const { i18n } = useTranslation();
@@ -103,6 +125,23 @@ export default function SystemAdminDashboard() {
   const [quotaToDate, setQuotaToDate] = useState(() =>
     toDateOnly(addDays(new Date(), 13))
   );
+
+  const [workloadPeriodType, setWorkloadPeriodType] =
+    useState<SystemAdminWorkloadPeriodType>('Week');
+  const [workloadAnchorDate, setWorkloadAnchorDate] = useState(() =>
+    toDateOnly(new Date())
+  );
+  const [workloadSearchInput, setWorkloadSearchInput] = useState('');
+  const [workloadSearchTerm, setWorkloadSearchTerm] = useState('');
+  const [workloadEmploymentType, setWorkloadEmploymentType] = useState<
+    'ALL' | SystemAdminWorkloadEmploymentType
+  >('ALL');
+  const [workloadStatus, setWorkloadStatus] = useState<
+    'ALL' | SystemAdminWorkloadStatus
+  >('ALL');
+  const [workloadWarningOnly, setWorkloadWarningOnly] = useState(false);
+  const [workloadPageNumber, setWorkloadPageNumber] = useState(1);
+  const [workloadPageSize, setWorkloadPageSize] = useState(10);
 
   const normalizedQuotaRange = useMemo(() => {
     if (quotaFromDate <= quotaToDate) {
@@ -137,8 +176,37 @@ export default function SystemAdminDashboard() {
       ),
   });
 
+  const doctorWorkloadQuery = useQuery<SystemAdminDoctorWorkloadPagedResult>({
+    queryKey: [
+      'system-admin-dashboard',
+      'doctor-workloads',
+      workloadPeriodType,
+      workloadAnchorDate,
+      workloadSearchTerm,
+      workloadEmploymentType,
+      workloadStatus,
+      workloadWarningOnly,
+      workloadPageNumber,
+      workloadPageSize,
+    ],
+    queryFn: () =>
+      dashboardApi.getDoctorWorkloads({
+        periodType: workloadPeriodType,
+        date: workloadAnchorDate,
+        searchTerm: workloadSearchTerm || undefined,
+        employmentType:
+          workloadEmploymentType === 'ALL' ? undefined : workloadEmploymentType,
+        status: workloadStatus === 'ALL' ? undefined : workloadStatus,
+        warningOnly: workloadWarningOnly,
+        pageNumber: workloadPageNumber,
+        pageSize: workloadPageSize,
+      }),
+  });
+
   const metrics = metricsQuery.data;
   const quotaUsageRows = quotaUsageQuery.data ?? [];
+  const doctorWorkloadPage = doctorWorkloadQuery.data;
+  const doctorWorkloadRows = doctorWorkloadPage?.items ?? [];
   const isLoading = metricsQuery.isLoading;
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -209,6 +277,71 @@ export default function SystemAdminDashboard() {
       nearLimitDays,
     };
   }, [quotaChartData]);
+
+  const doctorWorkloadSummary = useMemo(() => {
+    if (doctorWorkloadRows.length === 0) {
+      return {
+        totalActualHours: 0,
+        totalRequiredHours: 0,
+        averageCompletionRate: 0,
+        underCount: 0,
+        warningCount: 0,
+      };
+    }
+
+    const totalActualHours = doctorWorkloadRows.reduce(
+      (sum, row) => sum + row.actualHours,
+      0
+    );
+    const totalRequiredHours = doctorWorkloadRows.reduce(
+      (sum, row) => sum + row.requiredHours,
+      0
+    );
+    const underCount = doctorWorkloadRows.filter(
+      (row) => row.status === 'UNDER'
+    ).length;
+    const warningCount = doctorWorkloadRows.filter(
+      (row) => row.warningFlag
+    ).length;
+    const averageCompletionRate =
+      doctorWorkloadRows.reduce((sum, row) => sum + row.completionRate, 0) /
+      doctorWorkloadRows.length;
+
+    return {
+      totalActualHours,
+      totalRequiredHours,
+      averageCompletionRate,
+      underCount,
+      warningCount,
+    };
+  }, [doctorWorkloadRows]);
+
+  const doctorWorkloadStartIndex =
+    doctorWorkloadPage && doctorWorkloadRows.length > 0
+      ? (doctorWorkloadPage.pageNumber - 1) * doctorWorkloadPage.pageSize + 1
+      : 0;
+
+  const doctorWorkloadEndIndex =
+    doctorWorkloadPage && doctorWorkloadRows.length > 0
+      ? doctorWorkloadStartIndex + doctorWorkloadRows.length - 1
+      : 0;
+
+  const applyDoctorWorkloadSearch = () => {
+    setWorkloadPageNumber(1);
+    setWorkloadSearchTerm(workloadSearchInput.trim());
+  };
+
+  const resetDoctorWorkloadFilters = () => {
+    setWorkloadPeriodType('Week');
+    setWorkloadAnchorDate(toDateOnly(new Date()));
+    setWorkloadSearchInput('');
+    setWorkloadSearchTerm('');
+    setWorkloadEmploymentType('ALL');
+    setWorkloadStatus('ALL');
+    setWorkloadWarningOnly(false);
+    setWorkloadPageNumber(1);
+    setWorkloadPageSize(10);
+  };
 
   const topCards = metrics
     ? [
@@ -492,8 +625,16 @@ export default function SystemAdminDashboard() {
         ),
         value: `${item.usedSlots}/${item.quota}/${item.remainingSlots}`,
       })),
+      ...doctorWorkloadRows.map((item) => ({
+        section: t(
+          'SystemAdmin.dashboard.export.rows.section.doctorWorkloads',
+          'Doctor workloads'
+        ),
+        metric: `${item.doctorName} (${item.status})`,
+        value: `${item.actualHours.toFixed(2)}/${item.requiredHours.toFixed(2)}h (${toPercent(item.completionRate).toFixed(1)}%)`,
+      })),
     ];
-  }, [metrics, quotaUsageRows, t]);
+  }, [metrics, quotaUsageRows, doctorWorkloadRows, t]);
 
   const dashboardExportColumns = useMemo(
     () => [
@@ -1078,6 +1219,528 @@ export default function SystemAdminDashboard() {
                               />
                             </BarChart>
                           </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 md:p-5 shadow-sm">
+                    <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-4">
+                      <div>
+                        <h3 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5 flex items-center gap-2">
+                          <Stethoscope className="w-4 h-4 text-indigo-500" />
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.title',
+                            'Doctor workload compliance'
+                          )}
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.description',
+                            'Completed consultation hours vs required target (overlap-safe)'
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {doctorWorkloadPage
+                          ? t(
+                              'SystemAdmin.dashboard.doctorWorkload.total',
+                              'Total doctors in filter: {{count}}',
+                              {
+                                count:
+                                  doctorWorkloadPage.totalCount.toLocaleString(
+                                    locale
+                                  ),
+                              }
+                            )
+                          : ''}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 mb-3">
+                      <div>
+                        <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.period',
+                            'Period'
+                          )}
+                        </label>
+                        <select
+                          value={workloadPeriodType}
+                          onChange={(event) => {
+                            setWorkloadPeriodType(
+                              event.target
+                                .value as SystemAdminWorkloadPeriodType
+                            );
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        >
+                          <option value="Week">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.period.week',
+                              'Week'
+                            )}
+                          </option>
+                          <option value="Month">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.period.month',
+                              'Month'
+                            )}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.anchorDate',
+                            'Anchor date'
+                          )}
+                        </label>
+                        <input
+                          type="date"
+                          value={workloadAnchorDate}
+                          onChange={(event) => {
+                            setWorkloadAnchorDate(event.target.value);
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.employment',
+                            'Employment'
+                          )}
+                        </label>
+                        <select
+                          value={workloadEmploymentType}
+                          onChange={(event) => {
+                            setWorkloadEmploymentType(
+                              event.target.value as
+                                | 'ALL'
+                                | SystemAdminWorkloadEmploymentType
+                            );
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        >
+                          <option value="ALL">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.filters.employmentAll',
+                              'All'
+                            )}
+                          </option>
+                          <option value="FullTime">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.employment.fullTime',
+                              'Full-time'
+                            )}
+                          </option>
+                          <option value="PartTime">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.employment.partTime',
+                              'Part-time'
+                            )}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.status',
+                            'Status'
+                          )}
+                        </label>
+                        <select
+                          value={workloadStatus}
+                          onChange={(event) => {
+                            setWorkloadStatus(
+                              event.target.value as
+                                | 'ALL'
+                                | SystemAdminWorkloadStatus
+                            );
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        >
+                          <option value="ALL">
+                            {t(
+                              'SystemAdmin.dashboard.doctorWorkload.filters.statusAll',
+                              'All'
+                            )}
+                          </option>
+                          <option value="OK">OK</option>
+                          <option value="UNDER">UNDER</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                          {t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.pageSize',
+                            'Page size'
+                          )}
+                        </label>
+                        <select
+                          value={workloadPageSize}
+                          onChange={(event) => {
+                            setWorkloadPageSize(Number(event.target.value));
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="w-full px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-4">
+                      <div className="flex-1 relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={workloadSearchInput}
+                          onChange={(event) =>
+                            setWorkloadSearchInput(event.target.value)
+                          }
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              applyDoctorWorkloadSearch();
+                            }
+                          }}
+                          placeholder={t(
+                            'SystemAdmin.dashboard.doctorWorkload.filters.searchPlaceholder',
+                            'Search doctor name or email'
+                          )}
+                          className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={applyDoctorWorkloadSearch}
+                        className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90"
+                      >
+                        {t(
+                          'SystemAdmin.dashboard.doctorWorkload.filters.apply',
+                          'Apply'
+                        )}
+                      </button>
+
+                      <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200">
+                        <input
+                          type="checkbox"
+                          checked={workloadWarningOnly}
+                          onChange={(event) => {
+                            setWorkloadWarningOnly(event.target.checked);
+                            setWorkloadPageNumber(1);
+                          }}
+                          className="rounded border-slate-300 text-amber-500 focus:ring-amber-400"
+                        />
+                        {t(
+                          'SystemAdmin.dashboard.doctorWorkload.filters.warningOnly',
+                          'Warning only (< 80%)'
+                        )}
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={resetDoctorWorkloadFilters}
+                        className="px-3 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        {t(
+                          'SystemAdmin.dashboard.doctorWorkload.filters.reset',
+                          'Reset'
+                        )}
+                      </button>
+                    </div>
+
+                    {doctorWorkloadQuery.isLoading ? (
+                      <div className="h-56 flex items-center justify-center">
+                        <Spinner size={28} />
+                      </div>
+                    ) : doctorWorkloadQuery.isError ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+                        {t(
+                          'SystemAdmin.dashboard.doctorWorkload.states.loadError',
+                          'Failed to load doctor workload data.'
+                        )}
+                      </div>
+                    ) : doctorWorkloadRows.length === 0 ? (
+                      <div className="h-40 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                        {t(
+                          'SystemAdmin.dashboard.doctorWorkload.states.empty',
+                          'No doctors match the selected filters.'
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.summary.underCount',
+                                'Under target'
+                              )}
+                            </p>
+                            <p className="text-base font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+                              {doctorWorkloadSummary.underCount}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.summary.warningCount',
+                                'Warning doctors'
+                              )}
+                            </p>
+                            <p className="text-base font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                              {doctorWorkloadSummary.warningCount}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.summary.avgCompletion',
+                                'Avg completion'
+                              )}
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {toPercent(
+                                doctorWorkloadSummary.averageCompletionRate
+                              ).toFixed(1)}
+                              %
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.summary.actualHours',
+                                'Actual hours'
+                              )}
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {doctorWorkloadSummary.totalActualHours.toFixed(
+                                2
+                              )}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.summary.requiredHours',
+                                'Required hours'
+                              )}
+                            </p>
+                            <p className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                              {doctorWorkloadSummary.totalRequiredHours.toFixed(
+                                2
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                          <table className="min-w-full text-xs">
+                            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300">
+                              <tr>
+                                <th className="px-3 py-2 text-left font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.doctor',
+                                    'Doctor'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-left font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.employment',
+                                    'Employment'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-left font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.period',
+                                    'Period'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-right font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.required',
+                                    'Required'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-right font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.actual',
+                                    'Actual'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-left font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.completion',
+                                    'Completion'
+                                  )}
+                                </th>
+                                <th className="px-3 py-2 text-left font-semibold">
+                                  {t(
+                                    'SystemAdmin.dashboard.doctorWorkload.table.status',
+                                    'Status'
+                                  )}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {doctorWorkloadRows.map((row) => (
+                                <tr
+                                  key={row.doctorId}
+                                  className="border-t border-slate-200 dark:border-slate-700"
+                                >
+                                  <td className="px-3 py-2 align-top">
+                                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                                      {row.doctorName}
+                                    </p>
+                                    <p className="text-slate-500 dark:text-slate-400">
+                                      {row.email || '-'}
+                                    </p>
+                                  </td>
+                                  <td className="px-3 py-2 align-top">
+                                    <span className="inline-flex items-center rounded-md px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                      {row.employmentType === 'FULL_TIME'
+                                        ? t(
+                                            'SystemAdmin.dashboard.doctorWorkload.employment.fullTime',
+                                            'Full-time'
+                                          )
+                                        : t(
+                                            'SystemAdmin.dashboard.doctorWorkload.employment.partTime',
+                                            'Part-time'
+                                          )}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 align-top text-slate-600 dark:text-slate-300">
+                                    <p className="font-medium">
+                                      {row.periodType}
+                                    </p>
+                                    <p>
+                                      {formatDateTimeLabel(
+                                        row.periodStart,
+                                        locale
+                                      )}
+                                      {' - '}
+                                      {formatDateTimeLabel(
+                                        row.periodEnd,
+                                        locale
+                                      )}
+                                    </p>
+                                  </td>
+                                  <td className="px-3 py-2 align-top text-right tabular-nums text-slate-700 dark:text-slate-200">
+                                    {row.requiredHours.toFixed(2)}h
+                                  </td>
+                                  <td className="px-3 py-2 align-top text-right tabular-nums text-slate-700 dark:text-slate-200">
+                                    {row.actualHours.toFixed(2)}h
+                                  </td>
+                                  <td className="px-3 py-2 align-top">
+                                    <p className="tabular-nums text-slate-700 dark:text-slate-200 mb-1">
+                                      {toPercent(row.completionRate).toFixed(1)}
+                                      %
+                                    </p>
+                                    <div className="w-28 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                                      <div
+                                        className={`h-full ${
+                                          row.completionRate >= 1
+                                            ? 'bg-emerald-500'
+                                            : row.completionRate >= 0.8
+                                              ? 'bg-amber-500'
+                                              : 'bg-rose-500'
+                                        }`}
+                                        style={{
+                                          width: `${Math.min(toPercent(row.completionRate), 100)}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2 align-top">
+                                    <span
+                                      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium ${
+                                        row.status === 'OK'
+                                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                          : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+                                      }`}
+                                    >
+                                      {row.status}
+                                    </span>
+                                    {row.warningFlag ? (
+                                      <p className="mt-1 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                                        <AlertTriangle className="w-3 h-3" />
+                                        {t(
+                                          'SystemAdmin.dashboard.doctorWorkload.warningLabel',
+                                          'Warning'
+                                        )}
+                                      </p>
+                                    ) : null}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                          <p>
+                            {doctorWorkloadPage
+                              ? t(
+                                  'SystemAdmin.dashboard.doctorWorkload.pagination.summary',
+                                  'Showing {{from}}-{{to}} of {{total}}',
+                                  {
+                                    from: doctorWorkloadStartIndex,
+                                    to: doctorWorkloadEndIndex,
+                                    total: doctorWorkloadPage.totalCount,
+                                  }
+                                )
+                              : ''}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setWorkloadPageNumber((prev) =>
+                                  Math.max(prev - 1, 1)
+                                )
+                              }
+                              disabled={!doctorWorkloadPage?.hasPrevious}
+                              className="px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.pagination.prev',
+                                'Previous'
+                              )}
+                            </button>
+                            <span className="tabular-nums text-slate-600 dark:text-slate-300">
+                              {doctorWorkloadPage
+                                ? `${doctorWorkloadPage.pageNumber}/${doctorWorkloadPage.totalPages || 1}`
+                                : '1/1'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setWorkloadPageNumber((prev) => prev + 1)
+                              }
+                              disabled={!doctorWorkloadPage?.hasNext}
+                              className="px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {t(
+                                'SystemAdmin.dashboard.doctorWorkload.pagination.next',
+                                'Next'
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

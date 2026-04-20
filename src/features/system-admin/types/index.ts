@@ -14,6 +14,12 @@ export type {
   DashboardData,
   SystemAdminDashboardMetrics,
   SystemAdminPartTimeSlotQuotaUsage,
+  SystemAdminWorkloadPeriodType,
+  SystemAdminWorkloadStatus,
+  SystemAdminWorkloadEmploymentType,
+  SystemAdminDoctorWorkloadListItem,
+  SystemAdminDoctorWorkloadPagedResult,
+  SystemAdminDoctorWorkloadQueryParams,
   // Organisations & Devices
   Organisation,
   Device,

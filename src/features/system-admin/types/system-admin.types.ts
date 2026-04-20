@@ -150,6 +150,46 @@ export interface SystemAdminPartTimeSlotQuotaUsage {
   remainingSlots: number;
 }
 
+export type SystemAdminWorkloadPeriodType = 'Week' | 'Month';
+export type SystemAdminWorkloadStatus = 'OK' | 'UNDER';
+export type SystemAdminWorkloadEmploymentType = 'FullTime' | 'PartTime';
+
+export interface SystemAdminDoctorWorkloadListItem {
+  doctorId: string;
+  doctorName: string;
+  email: string | null;
+  employmentType: 'FULL_TIME' | 'PART_TIME';
+  periodType: 'WEEK' | 'MONTH';
+  periodStart: string;
+  periodEnd: string;
+  requiredHours: number;
+  actualHours: number;
+  completionRate: number;
+  status: SystemAdminWorkloadStatus;
+  warningFlag: boolean;
+}
+
+export interface SystemAdminDoctorWorkloadPagedResult {
+  items: SystemAdminDoctorWorkloadListItem[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+
+export interface SystemAdminDoctorWorkloadQueryParams {
+  periodType: SystemAdminWorkloadPeriodType;
+  date: string;
+  searchTerm?: string;
+  employmentType?: SystemAdminWorkloadEmploymentType;
+  status?: SystemAdminWorkloadStatus;
+  warningOnly?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
 // ============ ORGANISATIONS & DEVICES ============
 export interface Organisation {
   id: string;
