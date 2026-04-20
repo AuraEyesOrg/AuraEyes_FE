@@ -21,18 +21,19 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
-import { confirmEmail, getCurrentUser, resendConfirmation } from '../api';
-import useAuthStore from '@/store/auth-store';
-import { shouldRedirectToContract } from '../utils/contract-status';
+import { confirmEmail, resendConfirmation } from '../api';
 
 type PageState = 'verifying' | 'success' | 'error' | 'resend';
 
 const TOAST_IDS = {
   confirmSuccess: 'confirm-email-success',
+  redirectInfo: 'confirm-email-redirect-info',
   confirmError: 'confirm-email-error',
   resendSuccess: 'confirm-email-resend-success',
   resendError: 'confirm-email-resend-error',
 } as const;
+
+const SUCCESS_REDIRECT_SECONDS = 10;
 
 const ConfirmEmailPage = () => {
   const { t } = useSafeTranslation();
@@ -49,13 +50,9 @@ const ConfirmEmailPage = () => {
   const [resendEmail, setResendEmail] = useState(emailFromQuery);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
     null
   );
-  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
   const toLocalizedAuthPath = useCallback(
     (pathname: string) => withLocalePathname(locale, pathname),
@@ -63,65 +60,6 @@ const ConfirmEmailPage = () => {
   );
 
   const didVerify = useRef(false);
-
-  const isPendingVerification = useCallback(
-    (currentUser: typeof user) =>
-      currentUser?.verificationStatus === 'PendingVerification' ||
-      (currentUser?.isVerified === false &&
-        (!currentUser?.verificationStatus ||
-          currentUser?.verificationStatus === 'PendingVerification')),
-    []
-  );
-
-  const resolveNextPath = useCallback(
-    (currentUser: NonNullable<typeof user>) => {
-      const roles = currentUser.roles ?? [];
-
-      if (roles.includes('SystemAdmin')) {
-        return '/system-admin/dashboard';
-      }
-
-      if (roles.includes('OrgAdmin')) {
-        return '/organisation/dashboard';
-      }
-
-      if (roles.includes('Ophthalmologist')) {
-        if (isPendingVerification(currentUser)) {
-          return '/ophthalmologist/pending-approval';
-        }
-
-        return shouldRedirectToContract(currentUser.contractStatus)
-          ? '/ophthalmologist/contract'
-          : '/ophthalmologist/dashboard';
-      }
-
-      if (roles.includes('Patient')) {
-        return '/patient/dashboard';
-      }
-
-      return '/';
-    },
-    [isPendingVerification]
-  );
-
-  const resolvePostConfirmPath = useCallback(async () => {
-    try {
-      setIsRefreshingSession(true);
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-
-      return withLocalePathname(locale, resolveNextPath(currentUser));
-    } catch {
-      return toLocalizedAuthPath('/login');
-    } finally {
-      setIsRefreshingSession(false);
-    }
-  }, [locale, resolveNextPath, setUser, toLocalizedAuthPath]);
-
-  const refreshSessionAndContinue = useCallback(async () => {
-    const nextPath = await resolvePostConfirmPath();
-    navigate(nextPath, { replace: true });
-  }, [navigate, resolvePostConfirmPath]);
 
   const resolveApiErrorMessage = useCallback(
     (err: unknown, fallback: string) => {
@@ -159,12 +97,6 @@ const ConfirmEmailPage = () => {
   );
 
   useEffect(() => {
-    if (!resendEmail && user?.email) {
-      setResendEmail(user.email);
-    }
-  }, [resendEmail, user?.email]);
-
-  useEffect(() => {
     if (!resendEmail && emailFromQuery) {
       setResendEmail(emailFromQuery);
     }
@@ -185,12 +117,12 @@ const ConfirmEmailPage = () => {
   }, [resendCooldown]);
 
   useEffect(() => {
-    if (!redirectTarget || redirectCountdown == null) {
+    if (state !== 'success' || redirectCountdown == null) {
       return;
     }
 
     if (redirectCountdown <= 0) {
-      navigate(redirectTarget, { replace: true });
+      navigate(toLocalizedAuthPath('/login'), { replace: true });
       return;
     }
 
@@ -203,7 +135,7 @@ const ConfirmEmailPage = () => {
     return () => {
       window.clearInterval(timer);
     };
-  }, [navigate, redirectCountdown, redirectTarget]);
+  }, [navigate, redirectCountdown, state, toLocalizedAuthPath]);
 
   useEffect(() => {
     if (!userId || !token || didVerify.current) return;
@@ -214,10 +146,17 @@ const ConfirmEmailPage = () => {
         toast.success(t('AuthPages.confirmEmail.success.description'), {
           toastId: TOAST_IDS.confirmSuccess,
         });
+        toast.info(
+          t(
+            'AuthPages.confirmEmail.success.redirectToLogin',
+            'Email confirmed. You will be redirected to the login page in 10 seconds to check sign-in status.'
+          ),
+          {
+            toastId: TOAST_IDS.redirectInfo,
+          }
+        );
         setState('success');
-        const nextPath = await resolvePostConfirmPath();
-        setRedirectTarget(nextPath);
-        setRedirectCountdown(5);
+        setRedirectCountdown(SUCCESS_REDIRECT_SECONDS);
       })
       .catch((err) => {
         const msg = resolveApiErrorMessage(
@@ -227,7 +166,7 @@ const ConfirmEmailPage = () => {
         toast.error(msg, { toastId: TOAST_IDS.confirmError });
         setState('error');
       });
-  }, [resolveApiErrorMessage, resolvePostConfirmPath, t, token, userId]);
+  }, [resolveApiErrorMessage, t, token, userId]);
 
   const handleResend = async () => {
     if (!resendEmail || resendCooldown > 0) return;
@@ -277,24 +216,21 @@ const ConfirmEmailPage = () => {
           <p className="mb-4 text-sm font-medium text-slate-600">
             {t(
               'AuthPages.confirmEmail.success.redirectCountdown',
-              'Automatically continuing in {{seconds}}s...',
-              { seconds: redirectCountdown ?? 5 }
+              'Redirecting to login in {{seconds}}s...',
+              { seconds: redirectCountdown ?? SUCCESS_REDIRECT_SECONDS }
             )}
           </p>
           <button
             type="button"
-            onClick={() => void refreshSessionAndContinue()}
-            disabled={isRefreshingSession}
+            onClick={() =>
+              navigate(toLocalizedAuthPath('/login'), { replace: true })
+            }
             className="mb-4 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isRefreshingSession ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
+            <RefreshCw className="h-4 w-4" />
             {t(
-              'AuthPages.confirmEmail.success.refreshAndContinue',
-              'Refresh and continue'
+              'AuthPages.confirmEmail.success.goToLoginNow',
+              'Go to login now'
             )}
           </button>
           <Link

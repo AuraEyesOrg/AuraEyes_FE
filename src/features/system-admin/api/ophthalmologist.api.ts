@@ -168,7 +168,7 @@ export const ophthalmologistApi = {
     approve: boolean,
     rejectionReason?: string
   ) {
-    const response = await api.put<ApiResponse<string>>(
+    const response = await api.post<ApiResponse<string>>(
       API_ENDPOINTS.SYSTEM_ADMIN.OPHTHALMOLOGISTS.VERIFY(id),
       { approve, rejectionReason }
     );

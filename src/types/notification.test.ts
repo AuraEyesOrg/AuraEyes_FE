@@ -29,7 +29,7 @@ describe('getNotificationRoute', () => {
 
     const route = getNotificationRoute(notification, ['SystemAdmin']);
 
-    expect(route).toBe('/system-admin/contracts');
+    expect(route).toBe('/system-admin/verifications');
   });
 
   it('routes doctor booking with shared AI data to screening review path', () => {
