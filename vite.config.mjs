@@ -67,6 +67,13 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: true, // Needed for Docker/Network access
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: 'https://localhost:5001',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     preview: {
       port: 8080,

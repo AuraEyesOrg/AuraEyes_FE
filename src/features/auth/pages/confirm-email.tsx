@@ -40,7 +40,7 @@ const ConfirmEmailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userId = searchParams.get('userId');
-  const token = searchParams.get('token');
+  const token = searchParams.get('token')?.replace(/ /g, '+') ?? null;
   const emailFromQuery = searchParams.get('email')?.trim() ?? '';
 
   const [state, setState] = useState<PageState>(
@@ -54,13 +54,13 @@ const ConfirmEmailPage = () => {
     null
   );
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
-  const { user, setUser } = useAuthStore((state) => ({
-    user: state.user,
-    setUser: state.setUser,
-  }));
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
-  const toLocalizedAuthPath = (pathname: string) =>
-    withLocalePathname(locale, pathname);
+  const toLocalizedAuthPath = useCallback(
+    (pathname: string) => withLocalePathname(locale, pathname),
+    [locale]
+  );
 
   const didVerify = useRef(false);
 

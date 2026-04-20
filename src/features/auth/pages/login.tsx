@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import {
@@ -13,6 +14,7 @@ import {
   Activity,
   Stethoscope,
   AlertCircle,
+  CheckCircle,
   Loader2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
@@ -70,7 +72,11 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [registerCountdown, setRegisterCountdown] = useState<number | null>(
+    null
+  );
+
   const [_twoFactorData, setTwoFactorData] =
     useState<TwoFactorRequiredResponse | null>(null);
   const navigate = useNavigate();
@@ -258,7 +264,6 @@ const LoginPage = () => {
     try {
       setIsLoading(true);
       setError(null);
-      setSuccessMessage(null);
 
       await registerPatient({
         email: data.email,
@@ -268,10 +273,15 @@ const LoginPage = () => {
       });
 
       resetRegisterForm();
-      navigate(
-        `${toLocalizedAuthPath('/confirm-email')}?email=${encodeURIComponent(data.email)}`,
-        { replace: true }
+      toast.success(
+        t(
+          'AuthPages.login.messages.registerSuccess',
+          'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.'
+        ),
+        { autoClose: 4000 }
       );
+      setRegisteredEmail(data.email);
+      setRegisterCountdown(5);
     } catch (err: unknown) {
       console.error('Registration error:', err);
       const errorMessage =
@@ -282,13 +292,13 @@ const LoginPage = () => {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
         };
-        setError(
+        const msg =
           axiosError.response?.data?.message ||
-            axiosError.response?.data?.errors?.join(', ') ||
-            errorMessage
-        );
+          axiosError.response?.data?.errors?.join(', ') ||
+          errorMessage;
+        toast.error(msg);
       } else {
-        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -408,11 +418,29 @@ const LoginPage = () => {
     }
   };
 
+  // Countdown redirect after successful registration
+  useEffect(() => {
+    if (registerCountdown === null) return;
+    if (registerCountdown <= 0) {
+      navigate(
+        `${toLocalizedAuthPath('/confirm-email')}?email=${encodeURIComponent(registeredEmail ?? '')}`,
+        { replace: true }
+      );
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setRegisterCountdown((prev) => (prev !== null ? prev - 1 : null)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [registerCountdown, registeredEmail, navigate, toLocalizedAuthPath]);
+
   // Clear messages when switching auth mode
   const handleAuthModeChange = (mode: AuthMode) => {
     setAuthMode(mode);
     setError(null);
-    setSuccessMessage(null);
+    setRegisteredEmail(null);
+    setRegisterCountdown(null);
   };
 
   return (
@@ -531,14 +559,6 @@ const LoginPage = () => {
                   {t('AuthPages.login.messages.dismiss')}
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <Shield className="text-green-500 w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-sm text-green-700">{successMessage}</p>
             </div>
           )}
 
@@ -725,318 +745,367 @@ const LoginPage = () => {
           {/* Registration Form */}
           {authMode === 'register' && (
             <div className="animate-slide-in-right">
-              {/* Page Heading */}
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
-                  {t('AuthPages.login.registerForm.heading')}
-                </h2>
-                <p className="text-gray-500 text-base">
-                  {t('AuthPages.login.registerForm.description')}
-                </p>
-              </div>
-
-              {/* Form */}
-              <form
-                className="space-y-5"
-                onSubmit={handleSignupSubmit(onRegisterSubmit)}
-              >
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-sm font-semibold text-gray-700"
-                    htmlFor="register-name"
-                  >
-                    {t('AuthPages.login.registerForm.fullNameLabel')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <input
-                      {...registerSignup('fullName', {
-                        required: t(
-                          'AuthPages.login.validation.fullNameRequired'
-                        ),
-                        minLength: {
-                          value: 2,
-                          message: t('AuthPages.login.validation.fullNameMin'),
-                        },
-                      })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      id="register-name"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.fullNamePlaceholder'
-                      )}
-                      type="text"
-                    />
+              {registerCountdown !== null ? (
+                /* ── Success countdown panel ── */
+                <div className="flex flex-col items-center justify-center py-10 text-center gap-5">
+                  <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100">
+                    <CheckCircle className="h-10 w-10 text-green-600" />
                   </div>
-                  {signupErrors.fullName && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {signupErrors.fullName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-sm font-semibold text-gray-700"
-                    htmlFor="register-email"
-                  >
-                    {t('AuthPages.login.registerForm.emailLabel')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <input
-                      {...registerSignup('email', {
-                        required: t('AuthPages.login.validation.emailRequired'),
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: t('AuthPages.login.validation.invalidEmail'),
-                        },
-                      })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      id="register-email"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.emailPlaceholder'
-                      )}
-                      type="email"
-                    />
-                  </div>
-                  {signupErrors.email && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {signupErrors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-sm font-semibold text-gray-700"
-                    htmlFor="register-phone"
-                  >
-                    {t('AuthPages.login.registerForm.phoneLabel')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Phone className="w-5 h-5" />
-                    </div>
-                    <input
-                      {...registerSignup('phone', {
-                        required: t('AuthPages.login.validation.phoneRequired'),
-                        pattern: {
-                          value: /^[0-9\s\-\+\(\)]{10,}$/,
-                          message: t('AuthPages.login.validation.invalidPhone'),
-                        },
-                      })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      id="register-phone"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.phonePlaceholder'
-                      )}
-                      type="tel"
-                    />
-                  </div>
-                  {signupErrors.phone && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {signupErrors.phone.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-sm font-semibold text-gray-700"
-                    htmlFor="register-password"
-                  >
-                    {t('AuthPages.login.registerForm.passwordLabel')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Lock className="w-5 h-5" />
-                    </div>
-                    <input
-                      {...registerSignup('password', {
-                        required: t(
-                          'AuthPages.login.validation.passwordRequired'
-                        ),
-                        minLength: {
-                          value: 8,
-                          message: t('AuthPages.login.validation.passwordMin'),
-                        },
-                        pattern: {
-                          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                          message: t(
-                            'AuthPages.login.validation.passwordPattern'
-                          ),
-                        },
-                      })}
-                      className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      id="register-password"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.passwordPlaceholder'
-                      )}
-                      type={showPassword ? 'text' : 'password'}
-                    />
-                    <button
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  {signupErrors.password && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {signupErrors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="space-y-1.5">
-                  <label
-                    className="block text-sm font-semibold text-gray-700"
-                    htmlFor="register-confirm-password"
-                  >
-                    {t('AuthPages.login.registerForm.confirmPasswordLabel')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Lock className="w-5 h-5" />
-                    </div>
-                    <input
-                      {...registerSignup('confirmPassword', {
-                        required: t(
-                          'AuthPages.login.validation.confirmPasswordRequired'
-                        ),
-                        validate: (value) =>
-                          value === watch('password') ||
-                          t('AuthPages.login.validation.passwordMismatch'),
-                      })}
-                      className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                      id="register-confirm-password"
-                      placeholder={t(
-                        'AuthPages.login.registerForm.confirmPasswordPlaceholder'
-                      )}
-                      type={showConfirmPassword ? 'text' : 'password'}
-                    />
-                    <button
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  {signupErrors.confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {signupErrors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Terms Agreement */}
-                <div className="flex items-start gap-3">
-                  <input
-                    {...registerSignup('agreeTerms', {
-                      required: t('AuthPages.login.validation.agreeTerms'),
-                    })}
-                    type="checkbox"
-                    id="agree-terms"
-                    className="mt-1 w-4 h-4 text-[#00d1c0] border-gray-300 rounded focus:ring-[#00d1c0]"
-                  />
-                  <label
-                    htmlFor="agree-terms"
-                    className="text-xs text-gray-600"
-                  >
-                    {t('AuthPages.login.registerForm.agreePrefix')}{' '}
-                    <Link
-                      to={toLocalizedAuthPath('/terms')}
-                      className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
-                    >
-                      {t('AuthPages.shared.termsOfService')}
-                    </Link>{' '}
-                    {t('AuthPages.login.registerForm.and')}{' '}
-                    <Link
-                      to={toLocalizedAuthPath('/privacy')}
-                      className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
-                    >
-                      {t('AuthPages.shared.privacyPolicy')}
-                    </Link>
-                  </label>
-                </div>
-                {signupErrors.agreeTerms && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {signupErrors.agreeTerms.message}
-                  </p>
-                )}
-
-                {/* Submit Button */}
-                <div className="pt-4">
-                  <button
-                    className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
-                    type="submit"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        {t('AuthPages.login.registerForm.creatingAccount')}
-                      </>
-                    ) : (
-                      t('AuthPages.login.registerForm.createAccount')
+                  <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">
+                    {t(
+                      'AuthPages.login.messages.registerSuccessTitle',
+                      'Đăng ký thành công!'
                     )}
-                  </button>
-                </div>
-              </form>
-
-              <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/20 rounded-lg">
-                    <Stethoscope className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                      {t('AuthPages.login.registerForm.doctorCardTitle')}
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-3">
-                      {t('AuthPages.login.registerForm.doctorCardDescription')}
-                    </p>
-                    <Link
-                      to={toLocalizedAuthPath('/register-doctor')}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
-                    >
-                      <Stethoscope className="h-4 w-4" />
-                      {t('AuthPages.login.registerForm.registerDoctor')}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Note */}
-              <div className="pt-6 border-t border-gray-100">
-                <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-                  <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {t('AuthPages.login.registerForm.securityNote')}
+                  </h2>
+                  <p className="text-gray-500 text-sm max-w-xs">
+                    {t(
+                      'AuthPages.login.messages.registerSuccessBody',
+                      'Chúng tôi đã gửi email xác nhận đến'
+                    )}{' '}
+                    <strong className="text-gray-900">{registeredEmail}</strong>
                   </p>
+                  <div className="flex items-center justify-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-xl">
+                    <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
+                    <p className="text-sm text-green-700 font-medium">
+                      {t(
+                        'AuthPages.login.messages.redirectingIn',
+                        'Chuyển hướng sau {{seconds}}s...',
+                        { seconds: registerCountdown }
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* ── Register form ── */
+                <>
+                  {/* Page Heading */}
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">
+                      {t('AuthPages.login.registerForm.heading')}
+                    </h2>
+                    <p className="text-gray-500 text-base">
+                      {t('AuthPages.login.registerForm.description')}
+                    </p>
+                  </div>
+
+                  {/* Form */}
+                  <form
+                    className="space-y-5"
+                    onSubmit={handleSignupSubmit(onRegisterSubmit)}
+                  >
+                    {/* Full Name */}
+                    <div className="space-y-1.5">
+                      <label
+                        className="block text-sm font-semibold text-gray-700"
+                        htmlFor="register-name"
+                      >
+                        {t('AuthPages.login.registerForm.fullNameLabel')}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <User className="w-5 h-5" />
+                        </div>
+                        <input
+                          {...registerSignup('fullName', {
+                            required: t(
+                              'AuthPages.login.validation.fullNameRequired'
+                            ),
+                            minLength: {
+                              value: 2,
+                              message: t(
+                                'AuthPages.login.validation.fullNameMin'
+                              ),
+                            },
+                          })}
+                          className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                          id="register-name"
+                          placeholder={t(
+                            'AuthPages.login.registerForm.fullNamePlaceholder'
+                          )}
+                          type="text"
+                        />
+                      </div>
+                      {signupErrors.fullName && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {signupErrors.fullName.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                      <label
+                        className="block text-sm font-semibold text-gray-700"
+                        htmlFor="register-email"
+                      >
+                        {t('AuthPages.login.registerForm.emailLabel')}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <Mail className="w-5 h-5" />
+                        </div>
+                        <input
+                          {...registerSignup('email', {
+                            required: t(
+                              'AuthPages.login.validation.emailRequired'
+                            ),
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: t(
+                                'AuthPages.login.validation.invalidEmail'
+                              ),
+                            },
+                          })}
+                          className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                          id="register-email"
+                          placeholder={t(
+                            'AuthPages.login.registerForm.emailPlaceholder'
+                          )}
+                          type="email"
+                        />
+                      </div>
+                      {signupErrors.email && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {signupErrors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div className="space-y-1.5">
+                      <label
+                        className="block text-sm font-semibold text-gray-700"
+                        htmlFor="register-phone"
+                      >
+                        {t('AuthPages.login.registerForm.phoneLabel')}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <Phone className="w-5 h-5" />
+                        </div>
+                        <input
+                          {...registerSignup('phone', {
+                            required: t(
+                              'AuthPages.login.validation.phoneRequired'
+                            ),
+                            pattern: {
+                              value: /^[0-9\s\-\+\(\)]{10,}$/,
+                              message: t(
+                                'AuthPages.login.validation.invalidPhone'
+                              ),
+                            },
+                          })}
+                          className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                          id="register-phone"
+                          placeholder={t(
+                            'AuthPages.login.registerForm.phonePlaceholder'
+                          )}
+                          type="tel"
+                        />
+                      </div>
+                      {signupErrors.phone && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {signupErrors.phone.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                      <label
+                        className="block text-sm font-semibold text-gray-700"
+                        htmlFor="register-password"
+                      >
+                        {t('AuthPages.login.registerForm.passwordLabel')}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <Lock className="w-5 h-5" />
+                        </div>
+                        <input
+                          {...registerSignup('password', {
+                            required: t(
+                              'AuthPages.login.validation.passwordRequired'
+                            ),
+                            minLength: {
+                              value: 8,
+                              message: t(
+                                'AuthPages.login.validation.passwordMin'
+                              ),
+                            },
+                            pattern: {
+                              value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                              message: t(
+                                'AuthPages.login.validation.passwordPattern'
+                              ),
+                            },
+                          })}
+                          className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                          id="register-password"
+                          placeholder={t(
+                            'AuthPages.login.registerForm.passwordPlaceholder'
+                          )}
+                          type={showPassword ? 'text' : 'password'}
+                        />
+                        <button
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      {signupErrors.password && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {signupErrors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="space-y-1.5">
+                      <label
+                        className="block text-sm font-semibold text-gray-700"
+                        htmlFor="register-confirm-password"
+                      >
+                        {t('AuthPages.login.registerForm.confirmPasswordLabel')}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <Lock className="w-5 h-5" />
+                        </div>
+                        <input
+                          {...registerSignup('confirmPassword', {
+                            required: t(
+                              'AuthPages.login.validation.confirmPasswordRequired'
+                            ),
+                            validate: (value) =>
+                              value === watch('password') ||
+                              t('AuthPages.login.validation.passwordMismatch'),
+                          })}
+                          className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
+                          id="register-confirm-password"
+                          placeholder={t(
+                            'AuthPages.login.registerForm.confirmPasswordPlaceholder'
+                          )}
+                          type={showConfirmPassword ? 'text' : 'password'}
+                        />
+                        <button
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                          type="button"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      {signupErrors.confirmPassword && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {signupErrors.confirmPassword.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Terms Agreement */}
+                    <div className="flex items-start gap-3">
+                      <input
+                        {...registerSignup('agreeTerms', {
+                          required: t('AuthPages.login.validation.agreeTerms'),
+                        })}
+                        type="checkbox"
+                        id="agree-terms"
+                        className="mt-1 w-4 h-4 text-[#00d1c0] border-gray-300 rounded focus:ring-[#00d1c0]"
+                      />
+                      <label
+                        htmlFor="agree-terms"
+                        className="text-xs text-gray-600"
+                      >
+                        {t('AuthPages.login.registerForm.agreePrefix')}{' '}
+                        <Link
+                          to={toLocalizedAuthPath('/terms')}
+                          className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
+                        >
+                          {t('AuthPages.shared.termsOfService')}
+                        </Link>{' '}
+                        {t('AuthPages.login.registerForm.and')}{' '}
+                        <Link
+                          to={toLocalizedAuthPath('/privacy')}
+                          className="text-[#1F85F5] hover:text-[#00d1c0] font-medium"
+                        >
+                          {t('AuthPages.shared.privacyPolicy')}
+                        </Link>
+                      </label>
+                    </div>
+                    {signupErrors.agreeTerms && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {signupErrors.agreeTerms.message}
+                      </p>
+                    )}
+
+                    {/* Submit Button */}
+                    <div className="pt-4">
+                      <button
+                        className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+                        type="submit"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            {t('AuthPages.login.registerForm.creatingAccount')}
+                          </>
+                        ) : (
+                          t('AuthPages.login.registerForm.createAccount')
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/20 rounded-lg">
+                        <Stethoscope className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                          {t('AuthPages.login.registerForm.doctorCardTitle')}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-3">
+                          {t(
+                            'AuthPages.login.registerForm.doctorCardDescription'
+                          )}
+                        </p>
+                        <Link
+                          to={toLocalizedAuthPath('/register-doctor')}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 group"
+                        >
+                          <Stethoscope className="h-4 w-4" />
+                          {t('AuthPages.login.registerForm.registerDoctor')}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                      <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        {t('AuthPages.login.registerForm.securityNote')}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

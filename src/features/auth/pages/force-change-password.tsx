@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useChangePassword } from '@/features/patient/hooks/useProfile';
 import { extractApiErrorMessage } from '@/lib/api-error';
@@ -19,6 +19,9 @@ export default function ForceChangePasswordPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     const isOrgAdmin =
@@ -36,6 +39,27 @@ export default function ForceChangePasswordPage() {
       });
     }
   }, [navigate, user]);
+
+  useEffect(() => {
+    if (redirectCountdown === null) {
+      return;
+    }
+
+    if (redirectCountdown <= 0) {
+      navigate(resolvePathWithLocale('/organisation/dashboard'), {
+        replace: true,
+      });
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [navigate, redirectCountdown]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,9 +84,7 @@ export default function ForceChangePasswordPage() {
       });
 
       toast.success('Đổi mật khẩu thành công.');
-      navigate(resolvePathWithLocale('/organisation/dashboard'), {
-        replace: true,
-      });
+      setRedirectCountdown(5);
     } catch (error) {
       toast.error(
         extractApiErrorMessage(
@@ -72,6 +94,28 @@ export default function ForceChangePasswordPage() {
       );
     }
   };
+
+  if (redirectCountdown !== null) {
+    return (
+      <div className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+        <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-cyan-900/20">
+          <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-300">
+            <CheckCircle className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl font-bold">Đổi mật khẩu thành công</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            Mật khẩu mới đã được cập nhật. Hệ thống sẽ chuyển bạn về trang tổng
+            quan tổ chức.
+          </p>
+
+          <div className="mt-6 inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Chuyển hướng sau {redirectCountdown}s...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 px-6 py-10 text-white">

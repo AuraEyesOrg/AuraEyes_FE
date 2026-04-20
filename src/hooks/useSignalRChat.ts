@@ -6,8 +6,6 @@ import {
   LogLevel,
 } from '@microsoft/signalr';
 import useAuthStore from '@/store/auth-store';
-import { api } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/endpoints';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
   SIGNALR_ROOM_STATE_CHANGED_EVENT,
@@ -57,10 +55,16 @@ export const sendChatTypingIndicator = async (
  */
 export function useSignalRChat(): void {
   const connectionRef = useRef<HubConnection | null>(null);
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const getAccessToken = useCallback(async (): Promise<string> => {
-    const currentToken = sanitizeToken(localStorage.getItem('token'));
+    let currentToken = '';
+    try {
+      currentToken = sanitizeToken(localStorage.getItem('token'));
+    } catch {
+      return '';
+    }
+
     if (!currentToken) return '';
 
     try {
@@ -75,12 +79,9 @@ export function useSignalRChat(): void {
           typeof exp === 'number' &&
           exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS
         ) {
-          try {
-            await api.get(API_ENDPOINTS.AUTH.ME);
-          } catch {
-            // Interceptor handles the refresh and updates localStorage.
-          }
-          return sanitizeToken(localStorage.getItem('token'));
+          // Token is expiring soon. Avoid triggering API calls from accessTokenFactory
+          // to prevent request storms during reconnect cycles.
+          return '';
         }
       }
     } catch {

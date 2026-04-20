@@ -1160,6 +1160,37 @@ export default function PermissionsPage() {
     }
   }, []);
 
+  const [syncingRoles, setSyncingRoles] = useState(false);
+
+  const handleSyncRoles = useCallback(async () => {
+    if (
+      !window.confirm(
+        t(
+          'SystemAdmin.permissions.roles.syncConfirm',
+          'Are you sure you want to synchronize all roles with code defaults? This will add missing permissions and remove unauthorized ones based on the system configuration.'
+        )
+      )
+    )
+      return;
+
+    setSyncingRoles(true);
+    try {
+      await permissionsApi.synchronizeRoles();
+      toast.success(
+        t(
+          'SystemAdmin.permissions.roles.syncSuccess',
+          'Roles synchronized successfully.'
+        )
+      );
+      if (selectedRole) loadRolePerms(selectedRole.id);
+      loadPermissions();
+    } catch (err) {
+      toast.error(extractApiErrorMessage(err, 'Failed to synchronize roles.'));
+    } finally {
+      setSyncingRoles(false);
+    }
+  }, [selectedRole, loadRolePerms, loadPermissions, t]);
+
   const searchUsers = useCallback(async (query: string) => {
     const result = await userApi.getUsers(1, 50).catch(() => null);
     // API returns `fullName`; normalize to the `name` field expected by AdminUser type
@@ -1402,6 +1433,23 @@ export default function PermissionsPage() {
                   'SystemAdmin.permissions.page.actions.newPermission',
                   'New Permission'
                 )}
+              </button>
+            ) : activeTab === 'roles' ? (
+              <button
+                onClick={handleSyncRoles}
+                disabled={syncingRoles}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-primary text-primary hover:bg-primary/5 font-bold text-sm transition-all disabled:opacity-50"
+              >
+                <Clock className="w-4 h-4" />
+                {syncingRoles
+                  ? t(
+                      'SystemAdmin.permissions.roles.actions.syncing',
+                      'Syncing...'
+                    )
+                  : t(
+                      'SystemAdmin.permissions.roles.actions.syncDefaults',
+                      'Sync Defaults'
+                    )}
               </button>
             ) : undefined
           }

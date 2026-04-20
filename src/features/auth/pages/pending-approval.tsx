@@ -23,14 +23,13 @@ import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 const PendingApprovalPage = () => {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
-  const { logout, user, setUser } = useAuthStore((state) => ({
-    logout: state.logout,
-    user: state.user,
-    setUser: state.setUser,
-  }));
+  const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [nextAutoRefreshIn, setNextAutoRefreshIn] = useState(30);
   const hasRedirectedRef = useRef(false);
 
   const isPendingVerification = useCallback(
@@ -93,9 +92,11 @@ const PendingApprovalPage = () => {
       return;
     }
 
+    setNextAutoRefreshIn(30);
     void syncApprovalStatus({ silent: true });
 
     const timer = window.setInterval(() => {
+      setNextAutoRefreshIn(30);
       void syncApprovalStatus({ silent: true });
     }, 30000);
 
@@ -103,6 +104,16 @@ const PendingApprovalPage = () => {
       window.clearInterval(timer);
     };
   }, [isPendingVerification, navigate, syncApprovalStatus, user]);
+
+  useEffect(() => {
+    const countdownTimer = window.setInterval(() => {
+      setNextAutoRefreshIn((prev) => (prev <= 1 ? 30 : prev - 1));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(countdownTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (resendCooldown <= 0) {
@@ -182,7 +193,10 @@ const PendingApprovalPage = () => {
                 </p>
               </div>
               <button
-                onClick={() => void syncApprovalStatus()}
+                onClick={() => {
+                  setNextAutoRefreshIn(30);
+                  void syncApprovalStatus();
+                }}
                 disabled={isRefreshing}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               >
@@ -217,6 +231,13 @@ const PendingApprovalPage = () => {
                   )}
                 </p>
               </div>
+              <p className="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                {t(
+                  'AuthPages.pendingApproval.nextRefreshCountdown',
+                  'Lần kiểm tra tiếp theo sau {{seconds}}s',
+                  { seconds: nextAutoRefreshIn }
+                )}
+              </p>
             </div>
 
             <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-900/20">
