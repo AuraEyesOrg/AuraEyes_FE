@@ -3173,6 +3173,23 @@
       "notifications": "Notifications"
     }
   },
+  "PatientN8nChat": {
+    "title": "AURA Medical Assistant",
+    "subtitle": "Smart booking and consultation assistant",
+    "welcome": "Hello, I'm AURA Medical Assistant. Tell me your booking needs or policy questions and I'll help you quickly and clearly.",
+    "inputPlaceholder": "Describe what you need help with...",
+    "status": {
+      "responding": "AURA is processing your request..."
+    },
+    "actions": {
+      "topUpNow": "Top up wallet"
+    },
+    "quickPrompts": {
+      "findSpecificTime": "Find me a suitable slot for today",
+      "availableThisWeek": "Which doctors still have suitable times this week?",
+      "bestMatch": "Suggest the best earliest slot for me"
+    }
+  },
   "PatientChat": {
     "phase": {
       "preVisitLabel": "Pre-visit",

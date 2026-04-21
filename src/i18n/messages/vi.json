@@ -3173,6 +3173,23 @@
       "notifications": "Thông báo"
     }
   },
+  "PatientN8nChat": {
+    "title": "AURA Medical Assistant",
+    "subtitle": "Trợ lý đặt lịch và tư vấn nhanh",
+    "welcome": "Xin chào, mình là AURA Medical Assistant. Bạn cứ nói nhu cầu đặt lịch hoặc câu hỏi chính sách, mình sẽ hỗ trợ nhanh và rõ ràng.",
+    "inputPlaceholder": "Mô tả nhu cầu của bạn để mình hỗ trợ...",
+    "status": {
+      "responding": "AURA đang xử lý yêu cầu..."
+    },
+    "actions": {
+      "topUpNow": "Nạp ví ngay"
+    },
+    "quickPrompts": {
+      "findSpecificTime": "Hôm nay có lịch nào phù hợp giúp tôi không?",
+      "availableThisWeek": "Tuần này bác sĩ nào còn khung giờ phù hợp?",
+      "bestMatch": "Đặt lịch sớm nhất có thể giúp tôi"
+    }
+  },
   "PatientChat": {
     "phase": {
       "preVisitLabel": "Trước buổi khám",

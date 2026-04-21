@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { getItem } from '@/lib/local-storage';
 import { Bot, Loader2, Send, Sparkles, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ScreeningConsultationContext } from '../types/consultation-context';
 import {
   buildN8nChatRequest,
@@ -27,11 +28,14 @@ interface N8nChatWidgetProps {
   consultationContext?: ScreeningConsultationContext | null;
 }
 
-const QUICK_PROMPTS = [
-  'Tìm cho tôi lịch khám thứ 5 lúc 16h',
-  'Bác sĩ nào còn trống tuần này?',
-  'Đặt lịch sớm nhất có thể giúp tôi',
-];
+const CHAT_SESSION_STORAGE_KEY = 'aura-ai-chat-session-v1';
+const CHAT_SESSION_IDLE_MS = 24 * 60 * 60 * 1000;
+
+interface PersistedChatSession {
+  baseIdentity: string;
+  sessionId: string;
+  lastActivityAt: number;
+}
 
 const splitMessageBlocks = (content: string): string[] =>
   content
@@ -42,6 +46,8 @@ const splitMessageBlocks = (content: string): string[] =>
 export default function N8nChatWidget({
   consultationContext,
 }: N8nChatWidgetProps) {
+  const { t } = useTranslation();
+  const apiUrl = import.meta.env.VITE_API_END_POINT as string | undefined;
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const token = getItem<string>('token') ?? undefined;
@@ -53,13 +59,28 @@ export default function N8nChatWidget({
     {
       id: 'welcome',
       role: 'assistant',
-      content:
-        'Xin chào! Mình là AURA Medical Assistant. Bạn có thể nói nhu cầu như "Tìm cho tôi 1 lịch thứ 5 lúc 16h", mình sẽ hỗ trợ kiểm tra và đặt lịch nhanh.',
+      content: t('PatientN8nChat.welcome' as never) as string,
       createdAt: new Date().toISOString(),
     },
   ]);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const suppressAutoReleaseRef = useRef(false);
+  const [reservedSlotId, setReservedSlotId] = useState<string | null>(null);
   const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
+  const locale =
+    typeof navigator !== 'undefined' && navigator.language
+      ? navigator.language
+      : 'vi-VN';
+  const sessionBaseIdentity = useMemo(
+    () => user?.id ?? consultationContext?.screeningId ?? 'guest',
+    [user?.id, consultationContext?.screeningId]
+  );
+  const [chatSessionId, setChatSessionId] = useState<string>('guest');
+  const quickPrompts: string[] = [
+    t('PatientN8nChat.quickPrompts.findSpecificTime' as never) as string,
+    t('PatientN8nChat.quickPrompts.availableThisWeek' as never) as string,
+    t('PatientN8nChat.quickPrompts.bestMatch' as never) as string,
+  ];
 
   const patientMeta = useMemo(() => {
     const advanceBookingSetting = systemSettings?.['MIN_ADVANCE_BOOKING_HOURS'];
@@ -101,6 +122,76 @@ export default function N8nChatWidget({
     listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [isOpen, messages, isSending]);
 
+  useEffect(() => {
+    const now = Date.now();
+    let nextSessionId = `${sessionBaseIdentity}_${now}`;
+
+    try {
+      const raw = localStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as PersistedChatSession;
+        const stillActive = now - parsed.lastActivityAt <= CHAT_SESSION_IDLE_MS;
+        if (parsed.baseIdentity === sessionBaseIdentity && stillActive) {
+          nextSessionId = parsed.sessionId;
+        }
+      }
+    } catch {
+      // Ignore corrupted storage and create a new session id.
+    }
+
+    setChatSessionId(nextSessionId);
+
+    const persisted: PersistedChatSession = {
+      baseIdentity: sessionBaseIdentity,
+      sessionId: nextSessionId,
+      lastActivityAt: now,
+    };
+    localStorage.setItem(CHAT_SESSION_STORAGE_KEY, JSON.stringify(persisted));
+  }, [sessionBaseIdentity]);
+
+  const touchChatSession = () => {
+    if (!chatSessionId) return;
+    const persisted: PersistedChatSession = {
+      baseIdentity: sessionBaseIdentity,
+      sessionId: chatSessionId,
+      lastActivityAt: Date.now(),
+    };
+    localStorage.setItem(CHAT_SESSION_STORAGE_KEY, JSON.stringify(persisted));
+  };
+
+  const releaseReservedSlot = async (slotId: string) => {
+    if (!token) return;
+    try {
+      await fetch(`${apiUrl}/appointment-slots/release`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ slotId }),
+        keepalive: true,
+      });
+    } catch {
+      // best-effort release to avoid stale holds
+    }
+  };
+
+  const closeWidget = async () => {
+    setIsOpen(false);
+    if (reservedSlotId && !suppressAutoReleaseRef.current) {
+      await releaseReservedSlot(reservedSlotId);
+      setReservedSlotId(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (reservedSlotId && !suppressAutoReleaseRef.current) {
+        void releaseReservedSlot(reservedSlotId);
+      }
+    };
+  }, [reservedSlotId, token]);
+
   const handleAssistantAction = (action?: N8nChatResponseAction) => {
     if (!action || action.type === 'NONE') return;
 
@@ -112,6 +203,7 @@ export default function N8nChatWidget({
     if (action.type === 'CONFIRM_BOOKING') {
       const slotId = action.payload?.slotId;
       if (typeof slotId === 'string' && slotId.trim().length > 0) {
+        suppressAutoReleaseRef.current = true;
         sessionStorage.setItem(
           'patient-booking-confirm-context',
           JSON.stringify({ slotId })
@@ -126,6 +218,7 @@ export default function N8nChatWidget({
   const sendMessage = async (rawInput: string) => {
     const text = rawInput.trim();
     if (!text || isSending) return;
+    touchChatSession();
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -161,7 +254,8 @@ export default function N8nChatWidget({
         body: JSON.stringify({
           ...buildN8nChatRequest({
             message: text,
-            sessionId: user?.id ?? consultationContext?.screeningId ?? 'guest',
+            sessionId: chatSessionId,
+            locale,
             metadata: patientMeta,
             consultationContext,
             timestamp: new Date().toISOString(),
@@ -181,6 +275,13 @@ export default function N8nChatWidget({
       }
 
       const normalizedResponse = normalizeN8nChatResponse(payload);
+      touchChatSession();
+      if (normalizedResponse.action?.type === 'CONFIRM_BOOKING') {
+        const slotId = normalizedResponse.action.payload?.slotId;
+        if (typeof slotId === 'string' && slotId.trim().length > 0) {
+          setReservedSlotId(slotId);
+        }
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -219,7 +320,7 @@ export default function N8nChatWidget({
     <div className="fixed inset-0 z-50 flex items-end justify-end p-4 sm:p-6">
       <button
         className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
-        onClick={() => setIsOpen(false)}
+        onClick={() => void closeWidget()}
         aria-label="Close medical assistant chat"
       />
       <section className="relative w-full max-w-md h-[78vh] min-h-[520px] max-h-[760px] rounded-2xl surface-primary shadow-2xl surface-border overflow-hidden flex flex-col">
@@ -231,15 +332,15 @@ export default function N8nChatWidget({
               </span>
               <div>
                 <p className="font-semibold text-(--text-primary)">
-                  AURA Medical Assistant
+                  {t('PatientN8nChat.title' as never) as string}
                 </p>
                 <p className="text-xs text-(--text-muted)">
-                  Trợ lý đặt lịch thông minh
+                  {t('PatientN8nChat.subtitle' as never) as string}
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => void closeWidget()}
               className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               aria-label="Close chat"
             >
@@ -291,7 +392,7 @@ export default function N8nChatWidget({
                       onClick={() => handleAssistantAction(message.action)}
                       className="mt-3 inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition-colors"
                     >
-                      Nạp ví ngay
+                      {t('PatientN8nChat.actions.topUpNow' as never) as string}
                     </button>
                   )}
                 </div>
@@ -302,7 +403,7 @@ export default function N8nChatWidget({
             <div className="flex justify-start">
               <div className="inline-flex items-center gap-2 rounded-2xl rounded-bl-md surface-secondary border border-(--border-color) px-3 py-2 text-sm text-(--text-secondary)">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                AURA đang phản hồi...
+                {t('PatientN8nChat.status.responding' as never) as string}
               </div>
             </div>
           )}
@@ -310,7 +411,7 @@ export default function N8nChatWidget({
 
         <div className="px-4 pb-3">
           <div className="mb-3 flex flex-wrap gap-2">
-            {QUICK_PROMPTS.map((prompt) => (
+            {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
@@ -327,7 +428,9 @@ export default function N8nChatWidget({
               rows={2}
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Nhập nhu cầu đặt lịch của bạn..."
+              placeholder={
+                t('PatientN8nChat.inputPlaceholder' as never) as string
+              }
               className="min-h-[44px] max-h-28 flex-1 resize-none rounded-xl border border-(--border-color) bg-[var(--bg-primary)] px-3 py-2 text-sm text-(--text-primary) outline-none ring-primary/30 focus:ring"
             />
             <button
