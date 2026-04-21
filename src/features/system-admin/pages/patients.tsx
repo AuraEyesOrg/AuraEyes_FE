@@ -12,10 +12,9 @@ import {
   Search,
   Download,
   Eye,
-  MoreVertical,
   Lock,
   Unlock,
-  FileText,
+  X,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -82,6 +81,7 @@ export default function PatientsPage() {
     name: string;
   } | null>(null);
   const [isLockingPatient, setIsLockingPatient] = useState(false);
+  const [detailPatient, setDetailPatient] = useState<Patient | null>(null);
 
   // Load data from real API
   const loadData = useCallback(async () => {
@@ -426,6 +426,7 @@ export default function PatientsPage() {
       render: (_, row) => (
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setDetailPatient(row)}
             className="text-slate-500 hover:text-primary transition-colors p-1"
             title={t(
               'SystemAdmin.patients.actions.viewDetails',
@@ -433,15 +434,6 @@ export default function PatientsPage() {
             )}
           >
             <Eye className="w-4 h-4" />
-          </button>
-          <button
-            className="text-slate-500 hover:text-primary transition-colors p-1"
-            title={t(
-              'SystemAdmin.patients.actions.viewMedicalHistory',
-              'View Medical History'
-            )}
-          >
-            <FileText className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleToggleLock(row.userId, row.status)}
@@ -469,9 +461,6 @@ export default function PatientsPage() {
             ) : (
               <Lock className="w-4 h-4" />
             )}
-          </button>
-          <button className="text-slate-500 hover:text-primary transition-colors p-1">
-            <MoreVertical className="w-5 h-5" />
           </button>
         </div>
       ),
@@ -713,6 +702,180 @@ export default function PatientsPage() {
         onCancel={() => setLockTarget(null)}
         onConfirm={confirmLockPatient}
       />
+
+      {detailPatient && (
+        <PatientDetailModal
+          patient={detailPatient}
+          dateLocale={dateLocale}
+          notAvailableLabel={notAvailableLabel}
+          t={t}
+          onClose={() => setDetailPatient(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+type PatientDetailModalProps = {
+  patient: Patient;
+  dateLocale: string;
+  notAvailableLabel: string;
+  t: (key: string, fallback: string) => string;
+  onClose: () => void;
+};
+
+function PatientDetailModal({
+  patient,
+  dateLocale,
+  notAvailableLabel,
+  t,
+  onClose,
+}: PatientDetailModalProps) {
+  const roleLabel = patient.isWalkIn
+    ? t('SystemAdmin.patients.table.values.walkIn', 'Walk-in')
+    : t('SystemAdmin.patients.table.values.registered', 'Registered');
+
+  const statusLabel = patient.isWalkIn
+    ? t('SystemAdmin.patients.status.active', 'Active')
+    : t(
+        `SystemAdmin.patients.status.${patient.status}`,
+        patient.status === 'locked' ? 'Locked' : 'Active'
+      );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              {t('SystemAdmin.patients.detail.title', 'Patient Details')}
+            </h3>
+            <p className="text-sm text-slate-500">{patient.name}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+            aria-label={t('SystemAdmin.common.close', 'Close')}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.fullName', 'Full name')}
+            value={patient.name}
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.email', 'Email')}
+            value={
+              patient.email ||
+              t(
+                'SystemAdmin.patients.table.values.walkInProfile',
+                'Walk-in profile'
+              )
+            }
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.phone', 'Phone')}
+            value={patient.phone || notAvailableLabel}
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.patientType', 'Patient type')}
+            value={roleLabel}
+          />
+          <DetailRow
+            label={t(
+              'SystemAdmin.patients.table.columns.linkedOrganisation',
+              'Linked Organisation'
+            )}
+            value={
+              patient.linkedOrganisationName ||
+              t('SystemAdmin.patients.table.values.unassigned', 'Unassigned')
+            }
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.table.columns.status', 'Status')}
+            value={statusLabel}
+          />
+          <DetailRow
+            label={t(
+              'SystemAdmin.patients.detail.emailVerified',
+              'Email verified'
+            )}
+            value={
+              patient.emailVerified
+                ? t('SystemAdmin.patients.export.yes', 'Yes')
+                : t('SystemAdmin.patients.export.no', 'No')
+            }
+          />
+          <DetailRow
+            label={t(
+              'SystemAdmin.patients.detail.activeAccount',
+              'Active account'
+            )}
+            value={
+              patient.isActive
+                ? t('SystemAdmin.patients.export.yes', 'Yes')
+                : t('SystemAdmin.patients.export.no', 'No')
+            }
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.createdAt', 'Created at')}
+            value={formatDate(patient.createdAt, dateLocale, notAvailableLabel)}
+          />
+          <DetailRow
+            label={t(
+              'SystemAdmin.patients.table.columns.lastLogin',
+              'Last Login'
+            )}
+            value={formatDate(
+              patient.lastScreening,
+              dateLocale,
+              notAvailableLabel
+            )}
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.patientId', 'Patient ID')}
+            value={patient.id}
+          />
+          <DetailRow
+            label={t('SystemAdmin.patients.detail.userId', 'User ID')}
+            value={patient.userId || notAvailableLabel}
+          />
+        </div>
+
+        <div className="border-t border-slate-200 px-6 py-4 dark:border-slate-700">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t(
+              'SystemAdmin.patients.detail.medicalHistorySummary',
+              'Medical history summary'
+            )}
+          </p>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            {patient.medicalHistorySummary || notAvailableLabel}
+          </p>
+          <p className="mt-3 text-xs text-slate-500">
+            {t(
+              'SystemAdmin.patients.detail.noPasswordShown',
+              'Security note: password information is not displayed.'
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 break-all text-sm text-slate-900 dark:text-slate-200">
+        {value}
+      </p>
     </div>
   );
 }
