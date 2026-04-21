@@ -1508,6 +1508,8 @@
     "secondaryCta": "Explore AURA"
   },
   "GuestEnhancements": {
+    "trustedByPrefix": "Trusted by over",
+    "trustedBySuffix": "specialists and users globally",
     "breadcrumb": {
       "ariaLabel": "Guest page breadcrumb"
     },
@@ -2032,8 +2034,8 @@
     "liveStats": {
       "ophthalmologists": "Verified ophthalmologists",
       "organisations": "Partner organisations",
-      "availableSlots": "Available booking slots",
-      "resources": "Eye health resources"
+      "screenings": "Total screening cases",
+      "feedbacks": "System feedback & ratings"
     }
   },
   "EthicsPrivacy": {
@@ -2258,8 +2260,14 @@
   },
   "PatientAppointments": {
     "page": {
+      "eyebrow": "Your schedule",
       "title": "Appointments",
       "subtitle": "Manage your doctor and organisation appointments"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
     },
     "loading": {
       "appointments": "Loading appointments...",
@@ -2283,6 +2291,7 @@
       "doctorSlots": "Doctor Slots"
     },
     "actions": {
+      "bookNew": "Book new",
       "bookMoreSlot": "Book More Slot",
       "rateClinic": "Rate Clinic",
       "viewChat": "View Chat",
@@ -3000,6 +3009,18 @@
       "walletBalance": "Wallet balance",
       "insufficient": "Insufficient balance. Please top up your wallet."
     },
+    "confirmModal": {
+      "title": "Confirm your clinic visit",
+      "subtitle": "Please review the details before confirming.",
+      "time": "Time slot",
+      "free": "Free",
+      "balanceAfter": "Balance after booking",
+      "terms": "By confirming, the deposit will be deducted from your wallet. It will be refunded or credited according to the clinic's policy.",
+      "cancel": "Cancel",
+      "confirm": "Confirm & Pay",
+      "processing": "Processing...",
+      "close": "Close"
+    },
     "toast": {
       "bookSuccess": "Clinic booking completed successfully!"
     }
@@ -3150,6 +3171,23 @@
       "settings": "Settings",
       "security": "Security",
       "notifications": "Notifications"
+    }
+  },
+  "PatientN8nChat": {
+    "title": "AURA Medical Assistant",
+    "subtitle": "Smart booking and consultation assistant",
+    "welcome": "Hello, I'm AURA Medical Assistant. Tell me your booking needs or policy questions and I'll help you quickly and clearly.",
+    "inputPlaceholder": "Describe what you need help with...",
+    "status": {
+      "responding": "AURA is processing your request..."
+    },
+    "actions": {
+      "topUpNow": "Top up wallet"
+    },
+    "quickPrompts": {
+      "findSpecificTime": "Find me a suitable slot for today",
+      "availableThisWeek": "Which doctors still have suitable times this week?",
+      "bestMatch": "Suggest the best earliest slot for me"
     }
   },
   "PatientChat": {
@@ -5691,7 +5729,16 @@
         "screening": "Screening",
         "consultations": "Consultations",
         "audit": "Audit",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "appointments": "Appointments",
+        "scheduling": "Scheduling",
+        "quotas": "Quotas",
+        "wallets": "Wallets",
+        "financial": "Financial",
+        "contracts": "Contracts",
+        "platform": "Platform",
+        "settings": "Settings",
+        "notifications": "Notifications"
       },
       "common": {
         "loading": "Loading...",

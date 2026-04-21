@@ -51,21 +51,45 @@ const parseProfileIdFromToken = (token: string): string | null => {
   }
 };
 
-const enrichUserWithRoleId = (
+const parsePermissionsFromToken = (token: string): string[] => {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return [];
+
+    const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(normalized)) as {
+      permission?: string | string[];
+    };
+
+    if (Array.isArray(payload.permission)) {
+      return payload.permission;
+    }
+
+    if (typeof payload.permission === 'string') {
+      return [payload.permission];
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+const enrichUserWithPermissions = (
   user: UserInfoResponse,
   accessToken?: string
 ): UserInfoResponse => {
   const normalizedUser = normalizeUserAvatar(user);
 
-  if (normalizedUser.roleId) return normalizedUser;
   if (!accessToken) return normalizedUser;
 
   const profileId = parseProfileIdFromToken(accessToken);
-  if (!profileId) return normalizedUser;
+  const permissions = parsePermissionsFromToken(accessToken);
 
   return {
     ...normalizedUser,
-    roleId: profileId,
+    roleId: normalizedUser.roleId || profileId,
+    permissions: permissions,
   };
 };
 
@@ -149,7 +173,7 @@ export const login = async (
   ) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      const enrichedUser = enrichUserWithRoleId(
+      const enrichedUser = enrichUserWithPermissions(
         result.user,
         result.accessToken
       );
@@ -187,7 +211,7 @@ export const googleLogin = async (
   ) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      const enrichedUser = enrichUserWithRoleId(
+      const enrichedUser = enrichUserWithPermissions(
         result.user,
         result.accessToken
       );
@@ -219,7 +243,7 @@ export const verifyTwoFactorLogin = async (
   if (result.succeeded && result.accessToken && result.refreshToken) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      const enrichedUser = enrichUserWithRoleId(
+      const enrichedUser = enrichUserWithPermissions(
         result.user,
         result.accessToken
       );
@@ -325,7 +349,10 @@ export const registerOphthalmologist = async (
   const response = await api.post<ApiResponse<{ userId: string }>>(
     `${AUTH_BASE_URL}/register/ophthalmologist`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    }
   );
   return unwrapApiData<{ userId: string }>(response.data);
 };
@@ -366,7 +393,7 @@ export const refreshToken = async (): Promise<AuthResponse> => {
   if (result.succeeded && result.accessToken && result.refreshToken) {
     saveAuthTokens(result.accessToken, result.refreshToken);
     if (result.user) {
-      const enrichedUser = enrichUserWithRoleId(
+      const enrichedUser = enrichUserWithPermissions(
         result.user,
         result.accessToken
       );

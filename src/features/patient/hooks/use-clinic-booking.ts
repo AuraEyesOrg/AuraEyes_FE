@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { walletKeys } from './use-wallet';
 import {
   cancelClinicAppointment,
@@ -15,6 +21,8 @@ import {
 import type {
   CompleteClinicAppointmentRequest,
   CreateClinicAppointmentRequest,
+  PatientAppointmentTab,
+  PatientClinicAppointmentsQuery,
 } from '../types/clinic-booking.types';
 
 export const clinicBookingKeys = {
@@ -27,8 +35,18 @@ export const clinicBookingKeys = {
       organisationId,
       date,
     ] as const,
-  patientAppointments: (patientId: string) =>
-    [...clinicBookingKeys.all, 'patient-appointments', patientId] as const,
+  patientAppointments: (
+    patientId: string,
+    query: PatientClinicAppointmentsQuery = {}
+  ) =>
+    [
+      ...clinicBookingKeys.all,
+      'patient-appointments',
+      patientId,
+      query.tab ?? 'All',
+      query.pageNumber ?? 1,
+      query.pageSize ?? 10,
+    ] as const,
   organisationAppointments: (organisationId: string, date?: string) =>
     [
       ...clinicBookingKeys.all,
@@ -59,14 +77,62 @@ export const useOrganisationAvailableSlots = (
 
 export const usePatientClinicAppointments = (
   patientId: string,
+  query: PatientClinicAppointmentsQuery = {},
   enabled = true
 ) =>
   useQuery({
-    queryKey: clinicBookingKeys.patientAppointments(patientId),
-    queryFn: () => getPatientClinicAppointments(patientId),
+    queryKey: clinicBookingKeys.patientAppointments(patientId, query),
+    queryFn: () => getPatientClinicAppointments(patientId, query),
     enabled: enabled && !!patientId,
+    placeholderData: keepPreviousData,
     staleTime: 15_000,
   });
+
+const CLINIC_TAB_COUNT_TABS: PatientAppointmentTab[] = [
+  'All',
+  'Upcoming',
+  'Completed',
+  'Cancelled',
+];
+
+export const usePatientClinicAppointmentCounts = (
+  patientId: string,
+  enabled = true
+) => {
+  const results = useQueries({
+    queries: CLINIC_TAB_COUNT_TABS.map((tab) => ({
+      queryKey: clinicBookingKeys.patientAppointments(patientId, {
+        tab,
+        pageNumber: 1,
+        pageSize: 1,
+      }),
+      queryFn: () =>
+        getPatientClinicAppointments(patientId, {
+          tab,
+          pageNumber: 1,
+          pageSize: 1,
+        }),
+      enabled: enabled && !!patientId,
+      staleTime: 15_000,
+      placeholderData: keepPreviousData,
+    })),
+  });
+
+  const counts = CLINIC_TAB_COUNT_TABS.reduce<
+    Record<PatientAppointmentTab, number>
+  >(
+    (acc, tab, index) => {
+      acc[tab] = results[index]?.data?.totalCount ?? 0;
+      return acc;
+    },
+    { All: 0, Upcoming: 0, Completed: 0, Cancelled: 0 }
+  );
+
+  return {
+    counts,
+    isLoading: results.some((r) => r.isLoading),
+  };
+};
 
 export const useOrganisationAppointments = (
   organisationId: string,

@@ -13,6 +13,7 @@ import {
   getAdaptiveScrollBehavior,
   prefersReducedMotion,
 } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -277,6 +278,12 @@ const EthicsPrivacyPage = () => {
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
+      <SeoMeta
+        title="Ethics &amp; Privacy — AURA AI Standards"
+        description="AURA's commitment to ethical AI in retinal screening: data privacy, bias prevention, and transparent diagnostics. HIPAA and GDPR compliant."
+        canonical="https://web.auraeyes.site/en/ethics"
+        noIndex={false}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('Navigation.ethicsPrivacy')}

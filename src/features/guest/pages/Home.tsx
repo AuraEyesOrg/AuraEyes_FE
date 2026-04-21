@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +15,9 @@ import { Header } from '../components/Header';
 import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
+import GuestTrustedBy from '../components/GuestTrustedBy';
 import { prefersReducedMotion } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -78,8 +81,16 @@ const HomePage = () => {
     heroTitleHighlight.trim().length > 0 &&
     heroTitleHighlight !== 'Home.hero.titleHighlight';
 
-  const [overviewMetrics, setOverviewMetrics] =
-    useState<GuestOverviewMetrics | null>(null);
+  const { data: overviewMetrics = null } =
+    useQuery<GuestOverviewMetrics | null>({
+      queryKey: ['guest-overview-metrics'],
+      queryFn: fetchGuestOverviewMetrics,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    });
 
   // Refs for animations
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,10 +120,19 @@ const HomePage = () => {
     ).format(value);
   };
 
+  const formatRatingValue = (value: number | null): string => {
+    if (value === null) {
+      return '--/5';
+    }
+
+    return `${value.toFixed(1)}/5`;
+  };
+
   const liveStats = useMemo(
     () => [
       {
         value: overviewMetrics?.ophthalmologistCount ?? null,
+        kind: 'count' as const,
         label: t(
           'Home.liveStats.ophthalmologists',
           'Verified ophthalmologists'
@@ -120,39 +140,24 @@ const HomePage = () => {
       },
       {
         value: overviewMetrics?.organisationCount ?? null,
+        kind: 'count' as const,
         label: t('Home.liveStats.organisations', 'Partner organisations'),
       },
       {
-        value: overviewMetrics?.availableSlotCount ?? null,
-        label: t('Home.liveStats.availableSlots', 'Available booking slots'),
+        value: overviewMetrics?.screeningCount ?? null,
+        kind: 'count' as const,
+        label: t('Home.liveStats.screenings', 'Screenings'),
       },
       {
-        value: overviewMetrics?.eyeHealthResourceCount ?? null,
-        label: t('Home.liveStats.resources', 'Eye health resources'),
+        value: overviewMetrics?.averageRating ?? null,
+        kind: 'rating' as const,
+        label: t('Home.liveStats.feedbacks', 'Feedbacks'),
       },
     ],
     [overviewMetrics, i18n.language]
   );
 
   const hasLiveStats = liveStats.some((stat) => stat.value !== null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadOverview = async () => {
-      const metrics = await fetchGuestOverviewMetrics();
-
-      if (isMounted) {
-        setOverviewMetrics(metrics);
-      }
-    };
-
-    void loadOverview();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (prefersReducedMotion()) {
@@ -474,11 +479,58 @@ const HomePage = () => {
     return () => ctx.revert();
   }, []);
 
+  const currentLocale = (i18n.resolvedLanguage ?? i18n.language ?? 'vi')
+    .toLowerCase()
+    .startsWith('en')
+    ? 'en'
+    : 'vi';
+  const homeCanonical = `https://web.auraeyes.site/${currentLocale}/`;
+
+  const homeStructuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'AURA',
+      url: 'https://web.auraeyes.site',
+      description: 'AI-powered retinal vascular health screening platform.',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://web.auraeyes.site/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalWebPage',
+      name: 'AURA — AI Retinal Health Screening',
+      url: homeCanonical,
+      description:
+        'Detect retinal diseases early with clinical-grade AI precision. Book screenings with verified ophthalmologists.',
+      about: {
+        '@type': 'MedicalCondition',
+        name: 'Retinal Vascular Disease',
+      },
+      audience: {
+        '@type': 'MedicalAudience',
+        audienceType: 'Patient',
+      },
+    },
+  ];
+
   return (
     <div
       ref={containerRef}
       className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[var(--color-medical-bg)]"
     >
+      {/* SEO Metadata */}
+      <SeoMeta
+        title="AI Retinal Vascular Health Screening"
+        description="Detect retinal diseases early with clinical-grade AI precision. Automated diagnostics with 99.2% accuracy. Connect with verified ophthalmologists and book your free screening."
+        canonical={homeCanonical}
+        locale={currentLocale}
+        structuredData={homeStructuredData}
+      />
+
       {/* Floating Particles Background */}
       <div
         ref={floatingParticlesRef}
@@ -601,6 +653,10 @@ const HomePage = () => {
                       </span>
                     </span>
                   </button>
+                </div>
+
+                <div className="mt-4">
+                  <GuestTrustedBy />
                 </div>
               </div>
               <div
@@ -1105,7 +1161,9 @@ const HomePage = () => {
                 {liveStats.map((stat, index) => (
                   <div key={index} className="live-stat-card p-4">
                     <div className="mb-2 text-4xl font-black text-[var(--color-brand-primary)]">
-                      {formatMetricValue(stat.value)}
+                      {stat.kind === 'rating'
+                        ? `★ ${formatRatingValue(stat.value)}`
+                        : formatMetricValue(stat.value)}
                     </div>
                     <div className="text-sm font-medium text-[var(--color-text-muted)]">
                       {stat.label}

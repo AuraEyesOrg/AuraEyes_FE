@@ -25,6 +25,8 @@ import {
 } from '@/i18n/locales';
 import { resolvePathWithLocale, persistLocale } from '@/i18n/middleware';
 import type { AppLocale } from '@/i18n/locales';
+import usePermissions from '@/hooks/use-permissions';
+import { Permissions } from '@/constants/permissions';
 
 export default function PatientSidebar() {
   const { t: i18nT } = useTranslation();
@@ -41,22 +43,26 @@ export default function PatientSidebar() {
   };
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { hasPermission } = usePermissions();
   const { data: profile } = useProfile();
   const navItems = [
     {
       icon: Home,
       label: t('PatientSidebar.nav.dashboard', 'Dashboard'),
       path: '/patient/dashboard',
+      requiredPermission: Permissions.DashboardRead,
     },
     {
       icon: Eye,
       label: t('PatientSidebar.nav.myScans', 'My Scans'),
       path: '/patient/screening',
+      requiredPermission: Permissions.ScreeningRead,
     },
     {
       icon: Calendar,
       label: t('PatientSidebar.nav.appointments', 'Appointments'),
       path: '/patient/appointments',
+      requiredPermission: Permissions.AppointmentsRead,
     },
     {
       icon: MapPin,
@@ -67,17 +73,20 @@ export default function PatientSidebar() {
       icon: Milestone,
       label: t('PatientSidebar.nav.healthRoadmap', 'Health Roadmap'),
       path: '/patient/roadmap',
+      requiredPermission: Permissions.ScreeningRead,
     },
     {
       icon: MessageCircle,
       label: t('PatientSidebar.nav.chat', 'Chat'),
       path: '/patient/chat',
       badge: true,
+      requiredPermission: Permissions.ConsultationsRead,
     },
     {
       icon: Wallet,
       label: t('PatientSidebar.nav.wallet', 'Wallet'),
       path: '/patient/wallet',
+      requiredPermission: Permissions.WalletsRead,
     },
     {
       icon: MessageSquareHeart,
@@ -88,8 +97,13 @@ export default function PatientSidebar() {
       icon: Settings,
       label: t('PatientSidebar.nav.settings', 'Settings'),
       path: '/patient/settings',
+      requiredPermission: Permissions.SettingsRead,
     },
   ];
+
+  const visibleNavItems = navItems.filter((item) =>
+    item.requiredPermission ? hasPermission(item.requiredPermission) : true
+  );
 
   const displayName = profile?.fullName ?? user?.fullName;
   const displayEmail = profile?.email ?? user?.email;
@@ -130,7 +144,7 @@ export default function PatientSidebar() {
 
         {/* Navigation */}
         <nav className="flex flex-col space-y-1 flex-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={resolvePathWithLocale(item.path)}

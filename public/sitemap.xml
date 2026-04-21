@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ========================================================= -->
+  <!-- HOME                                                        -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- ABOUT                                                       -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/about</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/about"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/about"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/about"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/about</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/about"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/about"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/about"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- HOW IT WORKS                                               -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/how-it-works</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/how-it-works"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/how-it-works</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/how-it-works"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/how-it-works"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- CONTACT                                                     -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/contact</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/contact"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/contact</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/contact"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- PRIVACY                                                     -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/privacy"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/privacy"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- TERMS OF USE                                               -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/terms</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/terms"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/terms</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/terms"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- ETHICS & PRIVACY                                            -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/ethics</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/ethics"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/ethics"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/ethics"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/ethics</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/ethics"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/ethics"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/ethics"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- SECURITY                                                    -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/security</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/security"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/security"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/security"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/security</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/security"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/security"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/security"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- COMPLIANCE                                                  -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/compliance</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/compliance"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/compliance"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/compliance"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/compliance</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/compliance"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/compliance"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/compliance"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ========================================================= -->
+  <!-- PERSONAL DATA                                               -->
+  <!-- ========================================================= -->
+  <url>
+    <loc>https://web.auraeyes.site/vi/personal-data</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/personal-data"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/personal-data"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/personal-data"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://web.auraeyes.site/en/personal-data</loc>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://web.auraeyes.site/vi/personal-data"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://web.auraeyes.site/en/personal-data"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://web.auraeyes.site/vi/personal-data"/>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

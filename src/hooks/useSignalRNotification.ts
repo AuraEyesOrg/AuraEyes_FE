@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   HubConnectionBuilder,
   HubConnection,
@@ -11,8 +11,6 @@ import useAuthStore from '@/store/auth-store';
 import { SignalRNotification } from '@/types/notification';
 import { getNotificationRoute } from '@/types/notification';
 import { router } from '@/lib/router';
-import { api } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/endpoints';
 
 /**
  * SignalR Hub URL - configured via environment variable
@@ -36,14 +34,28 @@ export function useSignalRNotification(): {
 } {
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectAttemptRef = useRef(0);
+  const userRolesRef = useRef<string[]>([]);
 
-  const { isAuthenticated, user } = useAuthStore();
-  const {
-    addNotification,
-    setUnreadCount,
-    setConnectionStatus,
-    connectionStatus,
-  } = useNotificationStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  // Stable selector: extract roles array, fall back to a module-level empty array
+  // to avoid returning a new reference on every render (which causes infinite loop
+  // with useSyncExternalStore / Zustand).
+  const userRolesRaw = useAuthStore((state) => state.user?.roles);
+  const userRoles = useMemo(() => userRolesRaw ?? [], [userRolesRaw]);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification
+  );
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const setConnectionStatus = useNotificationStore(
+    (state) => state.setConnectionStatus
+  );
+  const connectionStatus = useNotificationStore(
+    (state) => state.connectionStatus
+  );
+
+  useEffect(() => {
+    userRolesRef.current = userRoles;
+  }, [userRoles]);
 
   /**
    * Get access token for SignalR authentication
@@ -67,7 +79,13 @@ export function useSignalRNotification(): {
       return typeof payload.exp === 'number' ? payload.exp : null;
     };
 
-    const currentToken = sanitizeToken(localStorage.getItem('token'));
+    let currentToken = '';
+    try {
+      currentToken = sanitizeToken(localStorage.getItem('token'));
+    } catch {
+      return '';
+    }
+
     if (!currentToken) {
       return '';
     }
@@ -79,13 +97,9 @@ export function useSignalRNotification(): {
         exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS;
 
       if (isExpiringSoon) {
-        try {
-          await api.get(API_ENDPOINTS.AUTH.ME);
-        } catch {
-          // Ignore: interceptor may throw while still refreshing and updating localStorage.
-        }
-
-        return sanitizeToken(localStorage.getItem('token'));
+        // Avoid token-refresh probing here to prevent high-frequency /auth/me calls
+        // when SignalR reconnects repeatedly.
+        return '';
       }
     } catch {
       // Ignore malformed tokens and fall back to the current token.
@@ -113,7 +127,7 @@ export function useSignalRNotification(): {
               userId: '',
               isRead: false,
             },
-            user?.roles ?? []
+            userRolesRef.current
           );
           if (route !== '#') {
             router.navigate(route);
@@ -123,7 +137,7 @@ export function useSignalRNotification(): {
         closeOnClick: true,
       });
     },
-    [addNotification, user?.roles]
+    [addNotification]
   );
 
   /**
@@ -250,14 +264,14 @@ export function useSignalRNotification(): {
   // Effect to manage connection based on auth state
   useEffect(() => {
     if (isAuthenticated) {
-      startConnection();
+      void startConnection();
     } else {
-      stopConnection();
+      void stopConnection();
     }
 
     // Cleanup on unmount
     return () => {
-      stopConnection();
+      void stopConnection();
     };
   }, [isAuthenticated, startConnection, stopConnection]);
 
@@ -269,7 +283,7 @@ export function useSignalRNotification(): {
         isAuthenticated &&
         connectionRef.current?.state !== HubConnectionState.Connected
       ) {
-        startConnection();
+        void startConnection();
       }
     };
 

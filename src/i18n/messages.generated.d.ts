@@ -1511,6 +1511,8 @@ declare module 'i18next' {
       secondaryCta: string;
     };
     GuestEnhancements: {
+      trustedByPrefix: string;
+      trustedBySuffix: string;
       breadcrumb: {
         ariaLabel: string;
       };
@@ -2035,8 +2037,8 @@ declare module 'i18next' {
       liveStats: {
         ophthalmologists: string;
         organisations: string;
-        availableSlots: string;
-        resources: string;
+        screenings: string;
+        feedbacks: string;
       };
     };
     EthicsPrivacy: {
@@ -2261,8 +2263,14 @@ declare module 'i18next' {
     };
     PatientAppointments: {
       page: {
+        eyebrow: string;
         title: string;
         subtitle: string;
+      };
+      pagination: {
+        prev: string;
+        next: string;
+        pageOf: string;
       };
       loading: {
         appointments: string;
@@ -2286,6 +2294,7 @@ declare module 'i18next' {
         doctorSlots: string;
       };
       actions: {
+        bookNew: string;
         bookMoreSlot: string;
         rateClinic: string;
         viewChat: string;
@@ -3002,6 +3011,18 @@ declare module 'i18next' {
         fee: string;
         walletBalance: string;
         insufficient: string;
+      };
+      confirmModal: {
+        title: string;
+        subtitle: string;
+        time: string;
+        free: string;
+        balanceAfter: string;
+        terms: string;
+        cancel: string;
+        confirm: string;
+        processing: string;
+        close: string;
       };
       toast: {
         bookSuccess: string;
@@ -5705,6 +5726,15 @@ declare module 'i18next' {
           consultations: string;
           audit: string;
           dashboard: string;
+          appointments: string;
+          scheduling: string;
+          quotas: string;
+          wallets: string;
+          financial: string;
+          contracts: string;
+          platform: string;
+          settings: string;
+          notifications: string;
         };
         common: {
           loading: string;

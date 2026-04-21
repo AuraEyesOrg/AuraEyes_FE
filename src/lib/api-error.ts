@@ -113,6 +113,11 @@ export const mapClinicPatientErrorMessage = (error: unknown): string => {
       pattern: /(timeout|network|ECONNABORTED)/i,
       mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
     },
+    {
+      pattern: /too\s+many\s+requests/i,
+      mappedMessage:
+        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+    },
   ]);
 };
 
@@ -144,6 +149,11 @@ export const mapClinicStaffErrorMessage = (error: unknown): string => {
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
       mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+    },
+    {
+      pattern: /too\s+many\s+requests/i,
+      mappedMessage:
+        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
     },
   ]);
 };
@@ -202,6 +212,11 @@ export const mapOnlineConsultationErrorMessage = (error: unknown): string => {
       pattern: /(timeout|network|ECONNABORTED)/i,
       mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
     },
+    {
+      pattern: /too\s+many\s+requests/i,
+      mappedMessage:
+        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
+    },
   ]);
 };
 
@@ -235,6 +250,11 @@ export const mapWalkInPatientErrorMessage = (error: unknown): string => {
     {
       pattern: /(timeout|network|ECONNABORTED)/i,
       mappedMessage: 'Kết nối chậm hoặc bị gián đoạn. Vui lòng thử lại.',
+    },
+    {
+      pattern: /too\s+many\s+requests/i,
+      mappedMessage:
+        'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau giây lát.',
     },
   ]);
 };

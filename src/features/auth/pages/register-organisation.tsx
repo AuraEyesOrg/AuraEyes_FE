@@ -1,5 +1,10 @@
-import { Link } from 'react-router-dom';
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  useEffect,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Building2,
@@ -9,9 +14,16 @@ import {
   MapPin,
   FileText,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { registerOrganisation } from '../api/auth.api';
 import { extractApiErrorMessage } from '@/lib/api-error';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  withLocalePathname,
+} from '@/i18n/locales';
 
 interface OrganisationFormData {
   organisationName: string;
@@ -26,10 +38,18 @@ interface OrganisationFormData {
 }
 
 export default function RegisterOrganisationPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
+  const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
+  const toLocalizedAuthPath = (pathname: string) =>
+    withLocalePathname(locale, pathname);
   const {
     register,
     handleSubmit,
@@ -37,6 +57,25 @@ export default function RegisterOrganisationPage() {
   } = useForm<OrganisationFormData>({
     defaultValues: { orgType: '2' },
   });
+
+  useEffect(() => {
+    if (!isSubmitted || redirectCountdown === null) {
+      return;
+    }
+
+    if (redirectCountdown <= 0) {
+      navigate(toLocalizedAuthPath('/login'), { replace: true });
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isSubmitted, navigate, redirectCountdown, toLocalizedAuthPath]);
 
   const onSubmit = async (data: OrganisationFormData) => {
     setIsSubmitting(true);
@@ -55,13 +94,17 @@ export default function RegisterOrganisationPage() {
       });
       setSubmittedEmail(data.contactEmail.trim());
       setIsSubmitted(true);
-    } catch (error) {
-      setSubmitError(
-        extractApiErrorMessage(
-          error,
-          'Không thể gửi đăng ký tổ chức. Vui lòng thử lại.'
-        )
+      setRedirectCountdown(5);
+      toast.success(
+        'Đăng ký tổ chức thành công. Hệ thống sẽ chuyển về trang đăng nhập.'
       );
+    } catch (error) {
+      const message = extractApiErrorMessage(
+        error,
+        'Không thể gửi đăng ký tổ chức. Vui lòng thử lại.'
+      );
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,15 +148,21 @@ export default function RegisterOrganisationPage() {
             <div className="mt-6 rounded-2xl bg-white p-5 text-sm text-slate-700 shadow-sm">
               Email liên hệ: <strong>{submittedEmail}</strong>
             </div>
+            {redirectCountdown !== null && (
+              <div className="mt-5 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Chuyển về trang đăng nhập sau {redirectCountdown}s...
+              </div>
+            )}
             <div className="mt-8 flex gap-3">
               <Link
-                to="/login"
+                to={toLocalizedAuthPath('/login')}
                 className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
               >
                 Về trang đăng nhập
               </Link>
               <Link
-                to="/"
+                to={toLocalizedAuthPath('/')}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700"
               >
                 Về trang chủ

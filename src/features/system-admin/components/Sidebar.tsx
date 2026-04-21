@@ -12,6 +12,7 @@ import { AuraLogo } from '@/components/ui/aura-logo';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import { getUserAvatarMeta } from '@/lib/user-avatar';
+import usePermissions from '@/hooks/use-permissions';
 import { dashboardNavItem, sidebarNavGroups } from './sidebar-data';
 import {
   DEFAULT_LOCALE,
@@ -27,22 +28,37 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
   const { user, logout } = useAuthStore();
+  const { hasPermission } = usePermissions();
   const systemAdminLabel = t('SystemAdmin.common.systemAdmin', 'System Admin');
 
   const activePath = stripLocaleFromPathname(location.pathname);
+
+  const filteredNavGroups = useMemo(() => {
+    return sidebarNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          item.requiredPermission
+            ? hasPermission(item.requiredPermission)
+            : true
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [hasPermission]);
+
   const activeGroupIds = useMemo(
     () =>
-      sidebarNavGroups
+      filteredNavGroups
         .filter((group) =>
           group.items.some((item) => activePath.startsWith(item.path))
         )
         .map((group) => group.id),
-    [activePath]
+    [activePath, filteredNavGroups]
   );
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     () =>
       Object.fromEntries(
-        sidebarNavGroups.map((group) => [
+        filteredNavGroups.map((group) => [
           group.id,
           activeGroupIds.includes(group.id),
         ])
@@ -134,7 +150,7 @@ export default function Sidebar() {
             )}
           </NavLink>
 
-          {sidebarNavGroups.map((group) => {
+          {filteredNavGroups.map((group) => {
             const isOpen = expandedGroups[group.id] ?? false;
             const isGroupActive = group.items.some((item) =>
               activePath.startsWith(item.path)

@@ -15,8 +15,10 @@ import {
   Lock,
   Plus,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { registerOphthalmologist } from '../api/auth.api';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import {
@@ -91,7 +93,9 @@ const createDefaultCertificate = (): CertificateFormItem => ({
 const RegisterDoctorPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
   const [submittedEmail, setSubmittedEmail] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,34 +183,34 @@ const RegisterDoctorPage = () => {
         type: 'validate',
         message: 'Passwords do not match',
       });
-      setSubmitError('Passwords do not match. Please re-check your password.');
+      toast.error('Passwords do not match. Please re-check your password.');
       return;
     }
 
     if (!data.degrees.length) {
-      setSubmitError('At least one degree is required before submitting.');
+      toast.error('At least one degree is required before submitting.');
       return;
     }
 
     if (!data.certificates.length) {
-      setSubmitError(
+      toast.error(
         'At least one certificate/license is required before submitting.'
       );
       return;
     }
 
     if (data.degrees.some((item) => !item.file)) {
-      setSubmitError('Every degree item must include a file.');
+      toast.error('Every degree item must include a file.');
       return;
     }
 
     if (data.certificates.some((item) => !item.file)) {
-      setSubmitError('Every certificate item must include a file.');
+      toast.error('Every certificate item must include a file.');
       return;
     }
 
     if (data.certificates.some((item) => !item.expiryDate)) {
-      setSubmitError('Every certificate item must include an expiry date.');
+      toast.error('Every certificate item must include an expiry date.');
       return;
     }
 
@@ -217,12 +221,11 @@ const RegisterDoctorPage = () => {
           new Date(`${item.issuedDate}T00:00:00.000Z`)
       )
     ) {
-      setSubmitError('Certificate expiry date must be later than issued date.');
+      toast.error('Certificate expiry date must be later than issued date.');
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError('');
 
     try {
       await registerOphthalmologist({
@@ -256,12 +259,15 @@ const RegisterDoctorPage = () => {
       });
 
       setSubmittedEmail(data.email);
-      setIsSubmitted(true);
-      navigate(
-        `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(data.email)}`
+      toast.success(
+        'Đăng ký bác sĩ thành công! Vui lòng kiểm tra email để xác nhận tài khoản và chờ admin phê duyệt.',
+        { autoClose: 5000 }
       );
+      setIsSubmitted(true);
+      setRedirectCountdown(5);
     } catch (err: unknown) {
       const error = err as {
+        code?: string;
         response?: {
           data?: {
             message?: string;
@@ -278,16 +284,56 @@ const RegisterDoctorPage = () => {
             .find((item) => Boolean(item))
         : undefined;
 
-      setSubmitError(
+      const resolvedError =
         firstValidationMessage ||
-          error?.response?.data?.message ||
-          error?.response?.data?.title ||
-          'Registration failed. Please try again.'
-      );
+        error?.response?.data?.message ||
+        error?.response?.data?.title ||
+        (err instanceof Error ? err.message : '') ||
+        'Registration failed. Please try again.';
+
+      const normalizedError = resolvedError.toLowerCase();
+      const hasDuplicateEmailError = [
+        'already exists',
+        'email already',
+        'email is already',
+        'da ton tai',
+        'da duoc su dung',
+        'trung email',
+        'đã tồn tại',
+        'đã được sử dụng',
+        'trùng email',
+      ].some((keyword) => normalizedError.includes(keyword));
+
+      const isTimeoutError = error?.code === 'ECONNABORTED';
+
+      if (hasDuplicateEmailError || isTimeoutError) {
+        navigate(
+          `${toLocalizedAuthPath('/confirm-email')}?email=${encodeURIComponent(data.email)}`
+        );
+        return;
+      }
+
+      toast.error(resolvedError);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Countdown redirect after successful doctor registration
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      navigate(
+        `${toLocalizedAuthPath('/email-verification-required')}?email=${encodeURIComponent(submittedEmail)}`
+      );
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [redirectCountdown, submittedEmail, navigate, toLocalizedAuthPath]);
 
   if (isSubmitted) {
     return (
@@ -301,7 +347,12 @@ const RegisterDoctorPage = () => {
           </div>
 
           <div className="relative z-10">
-            <AuraLogo size="sm" variant="light" className="mb-2" />
+            <AuraLogo
+              size="sm"
+              variant="light"
+              className="mb-2"
+              to={toLocalizedAuthPath('/')}
+            />
           </div>
 
           <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -346,6 +397,15 @@ const RegisterDoctorPage = () => {
                   verify your account before the admin reviews your contract.
                 </p>
               </div>
+              {redirectCountdown !== null && redirectCountdown > 0 && (
+                <div className="flex items-center justify-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-xl mb-4">
+                  <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
+                  <p className="text-sm text-green-700 font-medium">
+                    Chuyển hướng đến trang xác nhận email sau{' '}
+                    {redirectCountdown}s...
+                  </p>
+                </div>
+              )}
               <Link
                 to="/"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#00d1c0] hover:bg-[#00b8a9] text-white rounded-lg font-semibold transition-all duration-200 button-hover-lift uppercase tracking-wider text-sm"
@@ -370,7 +430,12 @@ const RegisterDoctorPage = () => {
         </div>
 
         <div className="relative z-10">
-          <AuraLogo size="sm" variant="light" className="mb-2" />
+          <AuraLogo
+            size="sm"
+            variant="light"
+            className="mb-2"
+            to={toLocalizedAuthPath('/')}
+          />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
@@ -398,7 +463,12 @@ const RegisterDoctorPage = () => {
           <div className="w-full max-w-[640px] mx-auto animate-slide-in-right">
             <div className="mb-8 text-center">
               <div className="mb-4 flex justify-center">
-                <AuraLogo size="sm" showText={false} variant="dark" />
+                <AuraLogo
+                  size="sm"
+                  showText={false}
+                  variant="dark"
+                  to={toLocalizedAuthPath('/')}
+                />
               </div>
               <h2 className="text-3xl font-bold text-[#1A202C] mb-2 tracking-tight">
                 Doctor Registration
@@ -1043,11 +1113,6 @@ const RegisterDoctorPage = () => {
               </div>
 
               <div className="pt-4">
-                {submitError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">{submitError}</p>
-                  </div>
-                )}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -1062,7 +1127,7 @@ const RegisterDoctorPage = () => {
               <p className="text-center text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
-                  to={toLocalizedAuthPath('/')}
+                  to={toLocalizedAuthPath('/login')}
                   className="font-semibold text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                 >
                   Sign in here

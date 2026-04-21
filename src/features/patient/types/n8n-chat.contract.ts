@@ -23,13 +23,22 @@ export interface N8nChatRequest {
   chatInput: string;
   text: string;
   sessionId: string;
-  locale: 'vi-VN';
+  locale: string;
   source: 'patient-review-page';
   timestamp: string;
   metadata: N8nChatMetadata;
   context: {
-    consultationContext?: ScreeningConsultationContext | null;
+    consultationContext?: N8nConsultationContextPayload | null;
   };
+}
+
+export interface N8nConsultationContextPayload {
+  screeningId?: string;
+  riskLevel?: 'low' | 'moderate' | 'high';
+  riskScore?: number;
+  createdAt?: string;
+  imageCount?: number;
+  anomalyCount?: number;
 }
 
 export interface N8nChatSuggestedSlot {
@@ -42,7 +51,12 @@ export interface N8nChatSuggestedSlot {
 }
 
 export interface N8nChatResponseAction {
-  type: 'CONFIRM_BOOKING' | 'PICK_SLOT' | 'OPEN_DOCTOR_LIST' | 'NONE';
+  type:
+    | 'CONFIRM_BOOKING'
+    | 'PICK_SLOT'
+    | 'OPEN_DOCTOR_LIST'
+    | 'OPEN_WALLET_TOPUP'
+    | 'NONE';
   payload?: Record<string, unknown>;
 }
 
@@ -128,6 +142,7 @@ const sanitizeAssistantReply = (value: string): string =>
 export const buildN8nChatRequest = (args: {
   message: string;
   sessionId: string;
+  locale: string;
   timestamp: string;
   metadata: N8nChatMetadata;
   consultationContext?: ScreeningConsultationContext | null;
@@ -137,12 +152,21 @@ export const buildN8nChatRequest = (args: {
   chatInput: args.message,
   text: args.message,
   sessionId: args.sessionId,
-  locale: 'vi-VN',
+  locale: args.locale,
   source: 'patient-review-page',
   timestamp: args.timestamp,
   metadata: args.metadata,
   context: {
-    consultationContext: args.consultationContext ?? null,
+    consultationContext: args.consultationContext
+      ? {
+          screeningId: args.consultationContext.screeningId,
+          riskLevel: args.consultationContext.riskLevel,
+          riskScore: args.consultationContext.riskScore,
+          createdAt: args.consultationContext.createdAt,
+          imageCount: args.consultationContext.images?.length ?? 0,
+          anomalyCount: args.consultationContext.anomalies?.length ?? 0,
+        }
+      : null,
   },
 });
 

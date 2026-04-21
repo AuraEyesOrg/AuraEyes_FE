@@ -10,6 +10,7 @@ import GuestPageContextBar from '../components/GuestPageContextBar';
 import MedicalTermTooltip from '../components/MedicalTermTooltip';
 import SourceVerificationTag from '../components/SourceVerificationTag';
 import { prefersReducedMotion } from '../utils/motion';
+import { SeoMeta } from '@/hooks/useSeoMeta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -265,6 +266,45 @@ const HowItWorksPage = () => {
       ref={containerRef}
       className="min-h-screen bg-[var(--color-medical-bg)]"
     >
+      <SeoMeta
+        title="How AURA AI Retinal Screening Works"
+        description="Learn how AURA's 4-step AI retinal screening process works: capture, upload, AI analysis, and ophthalmologist assessment. Clinical-grade accuracy in minutes."
+        canonical="https://web.auraeyes.site/en/how-it-works"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: 'How AURA Retinal Screening Works',
+          description:
+            'A 4-step process for AI-powered retinal vascular health screening.',
+          step: [
+            {
+              '@type': 'HowToStep',
+              position: 1,
+              name: 'Capture Retinal Image',
+              text: 'Capture a high-resolution fundus photograph of the retina.',
+            },
+            {
+              '@type': 'HowToStep',
+              position: 2,
+              name: 'Upload to AURA',
+              text: 'Securely upload your retinal image to the AURA platform.',
+            },
+            {
+              '@type': 'HowToStep',
+              position: 3,
+              name: 'AI Analysis',
+              text: "AURA's deep learning model analyses the image for vascular markers in seconds.",
+            },
+            {
+              '@type': 'HowToStep',
+              position: 4,
+              name: 'Doctor Assessment',
+              text: 'A verified ophthalmologist reviews the AI report and provides clinical guidance.',
+            },
+          ],
+          totalTime: 'PT10M',
+        }}
+      />
       <Header />
       <GuestPageContextBar
         currentLabel={t('Navigation.howItWorks')}

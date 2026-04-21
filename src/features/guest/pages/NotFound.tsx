@@ -5,6 +5,7 @@ import { resolvePathWithLocale } from '@/i18n/middleware';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import GuestPageContextBar from '../components/GuestPageContextBar';
+import { NoIndexMeta } from '@/hooks/useSeoMeta';
 
 export default function NotFoundPage() {
   const location = useLocation();
@@ -12,6 +13,8 @@ export default function NotFoundPage() {
 
   return (
     <div className="min-h-screen bg-(--bg-primary) text-(--text-primary)">
+      {/* 404 pages should never be indexed */}
+      <NoIndexMeta />
       <Header />
       <GuestPageContextBar
         currentLabel={t('GuestNotFound.badge')}

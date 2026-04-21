@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 import {
   Shield,
   Lock,
   Activity,
   Zap,
-  AlertCircle,
-  CheckCircle2,
   ArrowLeft,
   Eye,
   EyeOff,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
@@ -48,12 +54,15 @@ const requestResetPassword = async (payload: {
 const ResetPasswordPage = () => {
   const { t } = useSafeTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [resetDone, setResetDone] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
 
   const userId = searchParams.get('userId') ?? '';
   const token = searchParams.get('token') ?? '';
@@ -71,14 +80,12 @@ const ResetPasswordPage = () => {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!hasRequiredParams) {
-      setError(t('AuthPages.resetPassword.messages.invalidLink'));
+      toast.error(t('AuthPages.resetPassword.messages.invalidLink'));
       return;
     }
 
     try {
       setIsLoading(true);
-      setError(null);
-      setSuccessMessage(null);
 
       await requestResetPassword({
         userId,
@@ -87,24 +94,40 @@ const ResetPasswordPage = () => {
         confirmPassword: data.confirmPassword,
       });
 
-      setSuccessMessage(t('AuthPages.resetPassword.messages.success'));
+      toast.success(t('AuthPages.resetPassword.messages.success'));
+      setResetDone(true);
+      setRedirectCountdown(5);
     } catch (err: unknown) {
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const axiosError = err as {
           response?: { data?: { message?: string; errors?: string[] } };
         };
-        setError(
+        toast.error(
           axiosError.response?.data?.message ||
             axiosError.response?.data?.errors?.join(', ') ||
             t('AuthPages.resetPassword.messages.failed')
         );
       } else {
-        setError(t('AuthPages.resetPassword.messages.failed'));
+        toast.error(t('AuthPages.resetPassword.messages.failed'));
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Redirect countdown after successful password reset
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      navigate(toLocalizedAuthPath('/login'), { replace: true });
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [redirectCountdown, navigate, toLocalizedAuthPath]);
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
@@ -170,24 +193,19 @@ const ResetPasswordPage = () => {
             </Link>
           </div>
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <AlertCircle className="text-red-500 w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <CheckCircle2 className="text-green-600 w-5 h-5 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm text-green-700">{successMessage}</p>
-                <Link
-                  to={toLocalizedAuthPath('/login')}
-                  className="inline-block mt-2 text-sm font-semibold text-green-700 hover:text-green-800"
-                >
-                  {t('AuthPages.resetPassword.messages.goToSignIn')}
-                </Link>
+          {resetDone && redirectCountdown !== null && (
+            <div className="flex flex-col items-center gap-3 p-5 bg-green-50 border border-green-200 rounded-xl text-center">
+              <CheckCircle className="text-green-600 w-8 h-8" />
+              <p className="text-sm text-green-700 font-medium">
+                {t('AuthPages.resetPassword.messages.success')}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t(
+                  'AuthPages.resetPassword.messages.redirectingIn',
+                  'Chuyển đến trang đăng nhập sau {{s}}s...',
+                  { s: redirectCountdown }
+                )}
               </div>
             </div>
           )}
@@ -308,9 +326,7 @@ const ResetPasswordPage = () => {
             <button
               className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
-              disabled={
-                isLoading || !hasRequiredParams || Boolean(successMessage)
-              }
+              disabled={isLoading || !hasRequiredParams || resetDone}
             >
               {isLoading ? (
                 <>

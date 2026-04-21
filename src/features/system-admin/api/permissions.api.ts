@@ -117,4 +117,9 @@ export const permissionsApi = {
     );
     return response.data;
   },
+
+  async synchronizeRoles() {
+    const response = await api.post<ApiResponse<null>>(`${EP.LIST}/sync-roles`);
+    return response.data;
+  },
 };

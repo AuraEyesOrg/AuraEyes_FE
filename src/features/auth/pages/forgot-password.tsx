@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import {
-  Mail,
-  Shield,
-  Lock,
-  Activity,
-  Zap,
-  AlertCircle,
-  CheckCircle2,
-  ArrowLeft,
-} from 'lucide-react';
+import { toast } from 'react-toastify';
+import { Mail, Shield, Lock, Activity, Zap, ArrowLeft } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
 import { AuraLogo } from '@/components/ui/aura-logo';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
@@ -47,8 +39,6 @@ const ForgotPasswordPage = () => {
   const { t } = useSafeTranslation();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -62,18 +52,16 @@ const ForgotPasswordPage = () => {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       setIsLoading(true);
-      setError(null);
-      setSuccessMessage(null);
 
       await requestForgotPassword(data.email);
 
-      setSuccessMessage(t('AuthPages.forgotPassword.messages.success'));
+      toast.success(t('AuthPages.forgotPassword.messages.success'));
     } catch (err: unknown) {
       const message =
         err instanceof Error
           ? err.message
           : t('AuthPages.forgotPassword.messages.fallbackError');
-      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -142,20 +130,6 @@ const ForgotPasswordPage = () => {
               {t('AuthPages.shared.backToLogin')}
             </Link>
           </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <AlertCircle className="text-red-500 w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3 animate-slide-in-right">
-              <CheckCircle2 className="text-green-600 w-5 h-5 mt-0.5 shrink-0" />
-              <p className="text-sm text-green-700">{successMessage}</p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-[#1A202C] tracking-tight">

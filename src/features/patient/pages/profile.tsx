@@ -569,15 +569,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Update error is handled via Toast */}
-
-            {/* Update success */}
-            {updateProfileMutation.isSuccess && !isEditing && (
-              <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100">
-                {t('PatientProfile.toast.profileUpdated')}
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Full Name */}
               <div>

@@ -22,6 +22,7 @@ export interface AuthUser {
   isVerified?: boolean | null;
   verificationStatus?: string | null;
   contractStatus?: string | null;
+  permissions?: string[];
 }
 
 type AuthState = {
@@ -31,6 +32,42 @@ type AuthState = {
   setUser: (user: AuthUser | null) => void;
   login: (user: AuthUser) => void;
   logout: () => void;
+};
+
+const areStringArraysEqual = (a: string[] = [], b: string[] = []): boolean => {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const isSameAuthUser = (a: AuthUser, b: AuthUser): boolean => {
+  return (
+    a.id === b.id &&
+    a.roleId === b.roleId &&
+    a.email === b.email &&
+    a.fullName === b.fullName &&
+    a.avatarUrl === b.avatarUrl &&
+    a.uploadedAvatarUrl === b.uploadedAvatarUrl &&
+    a.providerAvatarUrl === b.providerAvatarUrl &&
+    a.emailConfirmed === b.emailConfirmed &&
+    a.organizationId === b.organizationId &&
+    a.employmentType === b.employmentType &&
+    a.twoFactorEnabled === b.twoFactorEnabled &&
+    a.mustChangePassword === b.mustChangePassword &&
+    a.isVerified === b.isVerified &&
+    a.verificationStatus === b.verificationStatus &&
+    a.contractStatus === b.contractStatus &&
+    areStringArraysEqual(a.roles, b.roles) &&
+    areStringArraysEqual(a.permissions ?? [], b.permissions ?? [])
+  );
 };
 
 const AUTH_USER_KEY = 'user';
@@ -61,20 +98,39 @@ const hydratedUser = hydrateAuthUser();
 
 const useAuthStore = create<AuthState>()(
   logger<AuthState>(
-    (set) => ({
+    (set, get) => ({
       isAuthenticated: !!hydratedUser,
       user: hydratedUser,
 
       setIsAuthenticated: (isAuthenticated) => {
+        if (get().isAuthenticated === isAuthenticated) {
+          return;
+        }
+
         set({ isAuthenticated });
       },
 
       setUser: (user) => {
         if (user) {
           const normalizedUser = normalizeAuthUser(user);
+
+          const currentState = get();
+          if (
+            currentState.user &&
+            currentState.isAuthenticated &&
+            isSameAuthUser(currentState.user, normalizedUser)
+          ) {
+            return;
+          }
+
           setItem(AUTH_USER_KEY, normalizedUser);
           set({ user: normalizedUser, isAuthenticated: true });
         } else {
+          const currentState = get();
+          if (!currentState.user && !currentState.isAuthenticated) {
+            return;
+          }
+
           window.localStorage.removeItem(AUTH_USER_KEY);
           set({ user: null, isAuthenticated: false });
         }
@@ -82,6 +138,16 @@ const useAuthStore = create<AuthState>()(
 
       login: (user) => {
         const normalizedUser = normalizeAuthUser(user);
+
+        const currentState = get();
+        if (
+          currentState.user &&
+          currentState.isAuthenticated &&
+          isSameAuthUser(currentState.user, normalizedUser)
+        ) {
+          return;
+        }
+
         setItem(AUTH_USER_KEY, normalizedUser);
         set({ isAuthenticated: true, user: normalizedUser });
       },
