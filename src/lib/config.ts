@@ -1,6 +1,8 @@
 import { type VitePWAOptions } from 'vite-plugin-pwa';
 
 export const PWAConfig: Partial<VitePWAOptions> = {
+  registerType: 'autoUpdate',
+
   includeAssets: [
     'favicon.svg',
     'favicon.ico',
@@ -17,41 +19,13 @@ export const PWAConfig: Partial<VitePWAOptions> = {
     start_url: '/',
     scope: '/',
     icons: [
-      {
-        src: 'icon_16x16.png',
-        sizes: '16x16',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_32x32.png',
-        sizes: '32x32',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_48x48.png',
-        sizes: '48x48',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_64x64.png',
-        sizes: '64x64',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_128x128.png',
-        sizes: '128x128',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_256x256.png',
-        sizes: '256x256',
-        type: 'image/png',
-      },
-      {
-        src: 'icon_256x256.png',
-        sizes: '384x384',
-        type: 'image/png',
-      },
+      { src: 'icon_16x16.png', sizes: '16x16', type: 'image/png' },
+      { src: 'icon_32x32.png', sizes: '32x32', type: 'image/png' },
+      { src: 'icon_48x48.png', sizes: '48x48', type: 'image/png' },
+      { src: 'icon_64x64.png', sizes: '64x64', type: 'image/png' },
+      { src: 'icon_128x128.png', sizes: '128x128', type: 'image/png' },
+      { src: 'icon_256x256.png', sizes: '256x256', type: 'image/png' },
+      { src: 'icon_256x256.png', sizes: '384x384', type: 'image/png' },
       {
         src: 'icon_512x512.png',
         sizes: '512x512',
@@ -72,6 +46,11 @@ export const PWAConfig: Partial<VitePWAOptions> = {
   },
   workbox: {
     sourcemap: true,
+
+    cleanupOutdatedCaches: true,
+    clientsClaim: true,
+    skipWaiting: true,
+
     runtimeCaching: [
       {
         urlPattern: /\/icon_\d+x\d+\.png$/,
