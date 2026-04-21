@@ -41,6 +41,20 @@ interface FeedbackModalProps {
   initialValues?: Partial<
     FeedbackFormValues & { category: WebsiteFeedbackCategory }
   >;
+  labels?: {
+    rating?: string;
+    ratingValidation?: string;
+    category?: string;
+    categories?: Partial<Record<WebsiteFeedbackCategory, string>>;
+    commentOptional?: string;
+    commentPlaceholder?: string;
+    cancel?: string;
+    submitting?: string;
+    discardTitle?: string;
+    discardDescription?: string;
+    keepEditing?: string;
+    discardDraft?: string;
+  };
   onClose: () => void;
   onSubmit: (
     values: FeedbackFormValues & { category?: WebsiteFeedbackCategory }
@@ -63,6 +77,7 @@ export const FeedbackModal = ({
   isSubmitting = false,
   showCategory = false,
   initialValues,
+  labels,
   onClose,
   onSubmit,
 }: FeedbackModalProps) => {
@@ -159,7 +174,7 @@ export const FeedbackModal = ({
         >
           <div>
             <p className="mb-2 text-sm font-semibold text-(--text-primary)">
-              Rating
+              {labels?.rating ?? 'Rating'}
             </p>
             <Controller
               control={control}
@@ -174,7 +189,8 @@ export const FeedbackModal = ({
             />
             {errors.rating?.message && (
               <p className="mt-2 text-xs text-red-500">
-                Please select a rating from 1 to 5.
+                {labels?.ratingValidation ??
+                  'Please select a rating from 1 to 5.'}
               </p>
             )}
           </div>
@@ -182,7 +198,7 @@ export const FeedbackModal = ({
           {showCategory && (
             <div>
               <p className="mb-2 text-sm font-semibold text-(--text-primary)">
-                Category
+                {labels?.category ?? 'Category'}
               </p>
               <Controller
                 control={control}
@@ -200,7 +216,7 @@ export const FeedbackModal = ({
                             : 'border-(--border-color) text-(--text-secondary) hover:bg-(--bg-secondary)'
                         }`}
                       >
-                        {category}
+                        {labels?.categories?.[category] ?? category}
                       </button>
                     ))}
                   </div>
@@ -211,14 +227,17 @@ export const FeedbackModal = ({
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-(--text-primary)">
-              Comment (optional)
+              {labels?.commentOptional ?? 'Comment (optional)'}
             </label>
             <textarea
               {...register('comment')}
               rows={4}
               maxLength={2000}
               disabled={isSubmitting}
-              placeholder="Tell us more about your experience"
+              placeholder={
+                labels?.commentPlaceholder ??
+                'Tell us more about your experience'
+              }
               className="w-full rounded-xl border border-(--border-color) bg-(--bg-primary) px-3 py-2 text-sm text-(--text-primary) outline-none transition-colors placeholder:text-(--text-muted) focus:border-primary"
             />
             <div className="mt-1 flex items-center justify-between">
@@ -240,14 +259,16 @@ export const FeedbackModal = ({
               disabled={isSubmitting}
               className="rounded-lg border border-(--border-color) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary) disabled:opacity-60"
             >
-              Not now
+              {labels?.cancel ?? 'Not now'}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
-              {isSubmitting ? 'Submitting...' : submitLabel}
+              {isSubmitting
+                ? (labels?.submitting ?? 'Submitting...')
+                : submitLabel}
             </button>
           </div>
         </form>
@@ -256,11 +277,11 @@ export const FeedbackModal = ({
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/45 p-4">
             <div className="w-full max-w-sm rounded-xl border border-(--border-color) bg-(--bg-primary) p-5 shadow-xl">
               <h4 className="text-base font-semibold text-(--text-primary)">
-                Discard draft?
+                {labels?.discardTitle ?? 'Discard draft?'}
               </h4>
               <p className="mt-2 text-sm text-(--text-secondary)">
-                Your current feedback has not been submitted yet. If you leave
-                now, the draft will be lost.
+                {labels?.discardDescription ??
+                  'Your current feedback has not been submitted yet. If you leave now, the draft will be lost.'}
               </p>
 
               <div className="mt-5 flex items-center justify-end gap-2">
@@ -269,14 +290,14 @@ export const FeedbackModal = ({
                   onClick={handleKeepEditing}
                   className="rounded-lg border border-(--border-color) px-3 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-secondary)"
                 >
-                  Keep editing
+                  {labels?.keepEditing ?? 'Keep editing'}
                 </button>
                 <button
                   type="button"
                   onClick={handleDiscardDraft}
                   className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
                 >
-                  Discard draft
+                  {labels?.discardDraft ?? 'Discard draft'}
                 </button>
               </div>
             </div>

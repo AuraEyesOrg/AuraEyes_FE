@@ -2474,6 +2474,63 @@ declare module 'i18next' {
         subtitle: string;
       };
     };
+    PatientHelpFeedback: {
+      page: {
+        title: string;
+        subtitle: string;
+      };
+      whyFeedbackMatters: {
+        title: string;
+        items: {
+          bookingAndConsultation: string;
+          bugReporting: string;
+          featureSuggestions: string;
+        };
+      };
+      form: {
+        title: string;
+        subtitle: string;
+        unlockHint: string;
+        success: {
+          title: string;
+          message: string;
+        };
+        actions: {
+          leaveFeedback: string;
+        };
+      };
+      modal: {
+        title: string;
+        subtitle: string;
+        submitLabel: string;
+        labels: {
+          rating: string;
+          ratingValidation: string;
+          category: string;
+          commentOptional: string;
+          commentPlaceholder: string;
+        };
+        categories: {
+          BUG: string;
+          UX: string;
+          SUGGESTION: string;
+          OTHER: string;
+        };
+        actions: {
+          notNow: string;
+          submitting: string;
+        };
+        discard: {
+          title: string;
+          description: string;
+          keepEditing: string;
+          discardDraft: string;
+        };
+      };
+      toast: {
+        feedbackSubmitted: string;
+      };
+    };
     PatientRoadmap: {
       page: {
         title: string;
@@ -2497,6 +2554,20 @@ declare module 'i18next' {
       };
       generatedOn: string;
       source: string;
+      sourceBadges: {
+        doctorReviewed: string;
+        aiGenerated: string;
+        doctorVerified: string;
+      };
+      actions: {
+        viewDiagnosis: string;
+        downloadPdf: string;
+        preparingPdf: string;
+      };
+      toast: {
+        downloadPdfSuccess: string;
+        downloadPdfFailed: string;
+      };
       sections: {
         nextSteps: {
           title: string;
@@ -2517,6 +2588,26 @@ declare module 'i18next' {
         timeframeFallback: string;
         notNeeded: string;
         disclaimer: string;
+      };
+      timeline: {
+        title: string;
+        phases: {
+          today: string;
+          followUpInTwoWeeks: string;
+          followUpOptional: string;
+          ongoing: string;
+        };
+        titles: {
+          immediateActions: string;
+          followUpPlan: string;
+          lifestyleRoutine: string;
+        };
+        fallbacks: {
+          immediateActions: string;
+          followUpNeeded: string;
+          followUpNotNeeded: string;
+          lifestyleRoutine: string;
+        };
       };
     };
     PatientNotifications: {
@@ -3174,6 +3265,23 @@ declare module 'i18next' {
         settings: string;
         security: string;
         notifications: string;
+      };
+    };
+    PatientN8nChat: {
+      title: string;
+      subtitle: string;
+      welcome: string;
+      inputPlaceholder: string;
+      status: {
+        responding: string;
+      };
+      actions: {
+        topUpNow: string;
+      };
+      quickPrompts: {
+        findSpecificTime: string;
+        availableThisWeek: string;
+        bestMatch: string;
       };
     };
     PatientChat: {

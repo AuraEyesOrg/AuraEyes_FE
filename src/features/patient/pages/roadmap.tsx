@@ -18,6 +18,7 @@ import { getRoadmaps } from '../api/patient.api';
 import { generateHealthRoadmapPdf } from '../utils/roadmapPdfGenerator';
 import type { HealthRoadmap } from '../types';
 import { getLocaleFromPathname, withLocalePathname } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 
 const riskLevelStyle: Record<
   HealthRoadmap['riskLevel'],
@@ -25,7 +26,6 @@ const riskLevelStyle: Record<
     badge: string;
     panel: string;
     dot: string;
-    label: string;
   }
 > = {
   LOW: {
@@ -34,7 +34,6 @@ const riskLevelStyle: Record<
     panel:
       'border-emerald-200 bg-emerald-50/70 dark:border-emerald-700/50 dark:bg-emerald-900/20',
     dot: 'bg-emerald-600',
-    label: 'Low Risk',
   },
   MEDIUM: {
     badge:
@@ -42,7 +41,6 @@ const riskLevelStyle: Record<
     panel:
       'border-amber-200 bg-amber-50/70 dark:border-amber-700/50 dark:bg-amber-900/20',
     dot: 'bg-amber-500',
-    label: 'Medium Risk',
   },
   HIGH: {
     badge:
@@ -50,7 +48,6 @@ const riskLevelStyle: Record<
     panel:
       'border-orange-200 bg-orange-50/70 dark:border-orange-700/50 dark:bg-orange-900/20',
     dot: 'bg-orange-500',
-    label: 'High Risk',
   },
   CRITICAL: {
     badge:
@@ -58,7 +55,6 @@ const riskLevelStyle: Record<
     panel:
       'border-red-200 bg-red-50/70 dark:border-red-700/50 dark:bg-red-900/20',
     dot: 'bg-red-600',
-    label: 'Critical Risk',
   },
 };
 
@@ -103,6 +99,7 @@ const highlightMedicalKeywords = (text: string) => {
 };
 
 export default function RoadmapPage() {
+  const { t } = useSafeTranslation();
   const location = useLocation();
   const currentLocale = getLocaleFromPathname(location.pathname) ?? 'vi';
   const [isDownloadingRoadmapPdf, setIsDownloadingRoadmapPdf] = useState(false);
@@ -138,10 +135,20 @@ export default function RoadmapPage() {
     try {
       setIsDownloadingRoadmapPdf(true);
       await generateHealthRoadmapPdf(latestRoadmap);
-      toast.success('Roadmap PDF downloaded successfully.');
+      toast.success(
+        t(
+          'PatientRoadmap.toast.downloadPdfSuccess',
+          'Roadmap PDF downloaded successfully.'
+        )
+      );
     } catch (error) {
       console.error('Failed to download roadmap PDF:', error);
-      toast.error('Failed to download roadmap PDF. Please try again.');
+      toast.error(
+        t(
+          'PatientRoadmap.toast.downloadPdfFailed',
+          'Failed to download roadmap PDF. Please try again.'
+        )
+      );
     } finally {
       setIsDownloadingRoadmapPdf(false);
     }
@@ -154,35 +161,66 @@ export default function RoadmapPage() {
 
     return [
       {
-        phase: 'TODAY',
-        title: 'Immediate Actions',
+        phase: t('PatientRoadmap.timeline.phases.today', 'Today'),
+        title: t(
+          'PatientRoadmap.timeline.titles.immediateActions',
+          'Immediate Actions'
+        ),
         bullets:
           latestRoadmap.nextSteps.length > 0
             ? latestRoadmap.nextSteps.slice(0, 2)
-            : ['Review your roadmap summary and monitor symptoms closely.'],
+            : [
+                t(
+                  'PatientRoadmap.timeline.fallbacks.immediateActions',
+                  'Review your roadmap summary and monitor symptoms closely.'
+                ),
+              ],
       },
       {
         phase: latestRoadmap.followUp.needed
-          ? latestRoadmap.followUp.timeframe || 'IN 2 WEEKS'
-          : 'FOLLOW-UP OPTIONAL',
-        title: 'Follow-up Plan',
+          ? latestRoadmap.followUp.timeframe ||
+            t('PatientRoadmap.timeline.phases.followUpInTwoWeeks', 'In 2 weeks')
+          : t(
+              'PatientRoadmap.timeline.phases.followUpOptional',
+              'Follow-up optional'
+            ),
+        title: t(
+          'PatientRoadmap.timeline.titles.followUpPlan',
+          'Follow-up Plan'
+        ),
         bullets: latestRoadmap.followUp.needed
           ? [
               latestRoadmap.followUp.timeframe ||
-                'Schedule follow-up based on your doctor instructions.',
+                t(
+                  'PatientRoadmap.timeline.fallbacks.followUpNeeded',
+                  'Schedule follow-up based on your doctor instructions.'
+                ),
             ]
-          : ['No urgent follow-up required unless symptoms worsen.'],
+          : [
+              t(
+                'PatientRoadmap.timeline.fallbacks.followUpNotNeeded',
+                'No urgent follow-up required unless symptoms worsen.'
+              ),
+            ],
       },
       {
-        phase: 'ONGOING',
-        title: 'Lifestyle Routine',
+        phase: t('PatientRoadmap.timeline.phases.ongoing', 'Ongoing'),
+        title: t(
+          'PatientRoadmap.timeline.titles.lifestyleRoutine',
+          'Lifestyle Routine'
+        ),
         bullets:
           latestRoadmap.lifestyleAdvice.length > 0
             ? latestRoadmap.lifestyleAdvice.slice(0, 2)
-            : ['Continue healthy eye-care habits and regular rest.'],
+            : [
+                t(
+                  'PatientRoadmap.timeline.fallbacks.lifestyleRoutine',
+                  'Continue healthy eye-care habits and regular rest.'
+                ),
+              ],
       },
     ];
-  }, [latestRoadmap]);
+  }, [latestRoadmap, t]);
 
   if (roadmapQuery.isLoading) {
     return (
@@ -206,10 +244,13 @@ export default function RoadmapPage() {
             <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
             <div>
               <h2 className="font-semibold text-(--text-primary)">
-                Unable to load roadmap
+                {t('PatientRoadmap.error.title', 'Unable to load roadmap')}
               </h2>
               <p className="text-sm text-(--text-secondary)">
-                Please refresh the page or try again later.
+                {t(
+                  'PatientRoadmap.error.description',
+                  'Please refresh the page or try again later.'
+                )}
               </p>
             </div>
           </div>
@@ -223,11 +264,13 @@ export default function RoadmapPage() {
       <PatientLayout>
         <div className="medical-card space-y-3">
           <h1 className="text-2xl font-bold text-(--text-primary)">
-            Health Roadmap
+            {t('PatientRoadmap.page.title', 'Health Roadmap')}
           </h1>
           <p className="text-(--text-secondary)">
-            Your personalized roadmap will appear after your doctor finalizes a
-            diagnosis.
+            {t(
+              'PatientRoadmap.empty.description',
+              'Your personalized roadmap will appear after your doctor finalizes a diagnosis.'
+            )}
           </p>
         </div>
       </PatientLayout>
@@ -237,19 +280,26 @@ export default function RoadmapPage() {
   const sourceBadge =
     latestRoadmap.source === 'DOCTOR_OVERRIDE'
       ? {
-          label: 'Doctor Reviewed',
+          label: t(
+            'PatientRoadmap.sourceBadges.doctorReviewed',
+            'Doctor Reviewed'
+          ),
           icon: <ShieldCheck className="w-4.5 h-4.5 text-emerald-600" />,
           className:
             'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200',
         }
       : {
-          label: 'AI Generated',
+          label: t('PatientRoadmap.sourceBadges.aiGenerated', 'AI Generated'),
           icon: <Sparkles className="w-4.5 h-4.5 text-brand" />,
           className:
             'border-(--border-color) bg-(--bg-secondary) text-(--text-secondary)',
         };
 
   const riskStyle = riskLevelStyle[latestRoadmap.riskLevel];
+  const riskLevelLabel = t(
+    `PatientRoadmap.risk.levels.${latestRoadmap.riskLevel}`,
+    latestRoadmap.riskLevel
+  );
 
   return (
     <PatientLayout>
@@ -261,16 +311,20 @@ export default function RoadmapPage() {
                 <div
                   className={`px-5 py-2 border rounded-2xl text-lg font-bold tracking-wide ${riskStyle.badge}`}
                 >
-                  {riskStyle.label.toUpperCase()}
+                  {t('PatientRoadmap.risk.badge', '{{risk}} Risk', {
+                    risk: riskLevelLabel,
+                  })}
                 </div>
                 <div className={`w-2.5 h-2.5 rounded-full ${riskStyle.dot}`} />
                 <span className="text-sm text-(--text-secondary)">
-                  Generated on {formatShortDate(latestRoadmap.generatedAt)}
+                  {t('PatientRoadmap.generatedOn', 'Generated on {{date}}', {
+                    date: formatShortDate(latestRoadmap.generatedAt),
+                  })}
                 </span>
               </div>
 
               <h1 className="text-3xl font-bold text-(--text-primary)">
-                Health Roadmap
+                {t('PatientRoadmap.page.title', 'Health Roadmap')}
               </h1>
 
               <p className="text-base text-(--text-secondary) leading-relaxed line-clamp-2">
@@ -289,7 +343,10 @@ export default function RoadmapPage() {
                 {latestRoadmap.source === 'DOCTOR_OVERRIDE' && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-700/50 dark:text-emerald-200 text-xs font-semibold">
                     <ShieldCheck className="w-4 h-4" />
-                    Doctor Verified
+                    {t(
+                      'PatientRoadmap.sourceBadges.doctorVerified',
+                      'Doctor Verified'
+                    )}
                   </div>
                 )}
               </div>
@@ -301,7 +358,7 @@ export default function RoadmapPage() {
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors"
               >
                 <FileSearch className="w-4.5 h-4.5" />
-                View Diagnosis
+                {t('PatientRoadmap.actions.viewDiagnosis', 'View Diagnosis')}
               </Link>
               <button
                 type="button"
@@ -310,7 +367,9 @@ export default function RoadmapPage() {
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-(--border-color) bg-(--bg-primary) text-(--text-primary) text-sm font-semibold hover:bg-(--bg-secondary) transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FileDown className="w-4.5 h-4.5" />
-                {isDownloadingRoadmapPdf ? 'Preparing PDF...' : 'Download PDF'}
+                {isDownloadingRoadmapPdf
+                  ? t('PatientRoadmap.actions.preparingPdf', 'Preparing PDF...')
+                  : t('PatientRoadmap.actions.downloadPdf', 'Download PDF')}
               </button>
             </div>
           </div>
@@ -322,12 +381,15 @@ export default function RoadmapPage() {
               <div className="flex items-center gap-2 mb-4">
                 <ClipboardList className="w-4.5 h-4.5 text-brand" />
                 <h2 className="text-xl font-semibold text-(--text-primary)">
-                  Next Steps
+                  {t('PatientRoadmap.sections.nextSteps.title', 'Next Steps')}
                 </h2>
               </div>
               {latestRoadmap.nextSteps.length === 0 ? (
                 <p className="text-sm text-(--text-muted)">
-                  No immediate next steps were generated.
+                  {t(
+                    'PatientRoadmap.sections.nextSteps.empty',
+                    'No immediate next steps were generated.'
+                  )}
                 </p>
               ) : (
                 <ol className="space-y-3">
@@ -352,12 +414,18 @@ export default function RoadmapPage() {
               <div className="flex items-center gap-2 mb-4">
                 <HeartPulse className="w-4.5 h-4.5 text-(--text-secondary)" />
                 <h2 className="text-lg font-semibold text-(--text-primary)">
-                  Lifestyle Advice
+                  {t(
+                    'PatientRoadmap.sections.lifestyleAdvice.title',
+                    'Lifestyle Advice'
+                  )}
                 </h2>
               </div>
               {latestRoadmap.lifestyleAdvice.length === 0 ? (
                 <p className="text-sm text-(--text-muted)">
-                  No lifestyle guidance was generated.
+                  {t(
+                    'PatientRoadmap.sections.lifestyleAdvice.empty',
+                    'No lifestyle guidance was generated.'
+                  )}
                 </p>
               ) : (
                 <ul className="space-y-2.5">
@@ -379,12 +447,18 @@ export default function RoadmapPage() {
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="w-4.5 h-4.5 text-(--roadmap-warning-title)" />
                 <h2 className="text-lg font-semibold text-(--roadmap-warning-title)">
-                  Warning Signs
+                  {t(
+                    'PatientRoadmap.sections.warningSigns.title',
+                    'Warning Signs'
+                  )}
                 </h2>
               </div>
               {latestRoadmap.warningSigns.length === 0 ? (
                 <p className="text-sm text-(--roadmap-warning-item-text)">
-                  No warning signs were listed.
+                  {t(
+                    'PatientRoadmap.sections.warningSigns.empty',
+                    'No warning signs were listed.'
+                  )}
                 </p>
               ) : (
                 <ul className="space-y-3">
@@ -405,12 +479,29 @@ export default function RoadmapPage() {
                 <CalendarClock className="w-4.5 h-4.5 text-(--roadmap-followup-icon) mt-1" />
                 <div>
                   <h2 className="text-base font-semibold text-(--text-primary)">
-                    Follow-up Recommendation
+                    {t(
+                      'PatientRoadmap.followUp.title',
+                      'Follow-up Recommendation'
+                    )}
                   </h2>
                   <p className="text-sm text-(--text-secondary) mt-1">
                     {latestRoadmap.followUp.needed
-                      ? `Follow-up is recommended: ${latestRoadmap.followUp.timeframe || 'Please contact your doctor for schedule details.'}`
-                      : 'No immediate follow-up is required.'}
+                      ? t(
+                          'PatientRoadmap.followUp.needed',
+                          'Follow-up is recommended: {{timeframe}}',
+                          {
+                            timeframe:
+                              latestRoadmap.followUp.timeframe ||
+                              t(
+                                'PatientRoadmap.followUp.timeframeFallback',
+                                'Please contact your doctor for schedule details.'
+                              ),
+                          }
+                        )
+                      : t(
+                          'PatientRoadmap.followUp.notNeeded',
+                          'No immediate follow-up is required.'
+                        )}
                   </p>
                 </div>
               </div>
@@ -422,7 +513,7 @@ export default function RoadmapPage() {
           <div className="flex items-center gap-2 mb-5">
             <CalendarClock className="w-4.5 h-4.5 text-brand" />
             <h2 className="text-xl font-semibold text-(--text-primary)">
-              Care Timeline
+              {t('PatientRoadmap.timeline.title', 'Care Timeline')}
             </h2>
           </div>
 
@@ -460,8 +551,10 @@ export default function RoadmapPage() {
           </div>
 
           <p className="text-xs text-(--text-muted) mt-4">
-            Clinical diagnosis and treatment decisions remain under doctor
-            responsibility. This roadmap is patient-facing guidance.
+            {t(
+              'PatientRoadmap.followUp.disclaimer',
+              'Clinical diagnosis and treatment decisions remain under doctor responsibility. This roadmap is patient-facing guidance.'
+            )}
           </p>
         </section>
       </div>
