@@ -106,6 +106,20 @@ export default function N8nChatWidget({
 
     if (action.type === 'OPEN_WALLET_TOPUP') {
       navigate('/patient/wallet?topup=1');
+      return;
+    }
+
+    if (action.type === 'CONFIRM_BOOKING') {
+      const slotId = action.payload?.slotId;
+      if (typeof slotId === 'string' && slotId.trim().length > 0) {
+        sessionStorage.setItem(
+          'patient-booking-confirm-context',
+          JSON.stringify({ slotId })
+        );
+        navigate('/patient/book/confirm', {
+          state: { slotId },
+        });
+      }
     }
   };
 
@@ -177,6 +191,7 @@ export default function N8nChatWidget({
           action: normalizedResponse.action,
         },
       ]);
+      handleAssistantAction(normalizedResponse.action);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -219,7 +234,7 @@ export default function N8nChatWidget({
                   AURA Medical Assistant
                 </p>
                 <p className="text-xs text-(--text-muted)">
-                  Trợ lý đặt lịch thông minh qua n8n
+                  Trợ lý đặt lịch thông minh
                 </p>
               </div>
             </div>
