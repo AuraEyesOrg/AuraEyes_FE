@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '@/store/auth-store';
 import {
@@ -7,11 +7,14 @@ import {
   CheckCircle,
   Clock,
   Download,
+  EyeOff,
   ExternalLink,
   Eye,
   FileText,
   Image,
+  Loader2,
   RefreshCw,
+  ShieldCheck,
   Upload,
   X,
 } from 'lucide-react';
@@ -24,8 +27,15 @@ import {
 } from '../api/contract.api';
 import { toast } from 'react-toastify';
 import { useSafeTranslation } from '@/i18n/useSafeTranslation';
+import { useChangePassword } from '@/features/patient/hooks/useProfile';
+import { getCurrentUser } from '@/features/auth/api/auth.api';
+import { extractApiErrorMessage } from '@/lib/api-error';
+import { resolvePathWithLocale } from '@/i18n/middleware';
 
 const CONTRACT_QUERY_KEY = ['organisation', 'my-contract'] as const;
+const TAB_PARAM = 'tab';
+
+type ContractFlowTab = 'contract' | 'change-password';
 
 type TranslateFn = (
   key: string,
@@ -405,13 +415,286 @@ function UploadSection({
   );
 }
 
-export default function OrganisationContractPage() {
-  const queryClient = useQueryClient();
+function ContractChangePasswordSection({
+  canChangePassword,
+  mustChangePassword,
+}: {
+  canChangePassword: boolean;
+  mustChangePassword: boolean;
+}) {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   const { t } = useSafeTranslation();
+  const changePasswordMutation = useChangePassword();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (redirectCountdown === null) {
+      return;
+    }
+
+    if (redirectCountdown <= 0) {
+      navigate(resolvePathWithLocale('/organisation/dashboard'), {
+        replace: true,
+      });
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [navigate, redirectCountdown]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error(
+        t(
+          'Organisation.contract.password.toast.passwordMismatch',
+          'Password confirmation does not match.'
+        )
+      );
+      return;
+    }
+
+    try {
+      await changePasswordMutation.mutateAsync({
+        currentPassword,
+        newPassword,
+        confirmNewPassword,
+      });
+
+      const refreshedUser = await getCurrentUser();
+      setUser({
+        ...(user ?? refreshedUser),
+        ...refreshedUser,
+        mustChangePassword: false,
+      });
+
+      toast.success(
+        t(
+          'Organisation.contract.password.toast.changeSuccess',
+          'Password changed successfully.'
+        )
+      );
+      setRedirectCountdown(5);
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          t(
+            'Organisation.contract.password.toast.changeFailed',
+            'Unable to change password. Please verify your current password.'
+          )
+        )
+      );
+    }
+  };
+
+  if (!canChangePassword) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
+        <p className="text-sm font-semibold">
+          {t(
+            'Organisation.contract.password.states.contractNotActiveTitle',
+            'This step is locked until the contract is activated.'
+          )}
+        </p>
+        <p className="mt-1 text-sm text-amber-700">
+          {t(
+            'Organisation.contract.password.states.contractNotActiveDescription',
+            'Complete contract signing first, then this tab will be available.'
+          )}
+        </p>
+      </div>
+    );
+  }
+
+  if (redirectCountdown !== null) {
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
+        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+          <CheckCircle className="h-6 w-6" />
+        </div>
+        <h3 className="text-lg font-semibold text-emerald-900">
+          {t(
+            'Organisation.contract.password.success.title',
+            'Password updated successfully'
+          )}
+        </h3>
+        <p className="mt-2 text-sm text-emerald-800">
+          {t(
+            'Organisation.contract.password.success.description',
+            'Your account is ready. Redirecting to dashboard...'
+          )}
+        </p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm text-emerald-700">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {t(
+            'Organisation.contract.password.success.redirectCountdown',
+            'Redirect in {{seconds}}s',
+            { seconds: redirectCountdown }
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="mb-6 flex items-start gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {t(
+              'Organisation.contract.password.title',
+              'Set a new password for organisation account'
+            )}
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {mustChangePassword
+              ? t(
+                  'Organisation.contract.password.description.required',
+                  'You are signing in with a temporary password. Please update it now to continue.'
+                )
+              : t(
+                  'Organisation.contract.password.description.optional',
+                  'Update your password to keep your organisation account secure.'
+                )}
+          </p>
+        </div>
+      </div>
+
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <ContractPasswordInput
+          label={t(
+            'Organisation.contract.password.fields.currentPassword',
+            'Current password'
+          )}
+          value={currentPassword}
+          onChange={setCurrentPassword}
+          show={showCurrentPassword}
+          onToggleShow={() => setShowCurrentPassword((prev) => !prev)}
+          disabled={changePasswordMutation.isPending}
+        />
+
+        <ContractPasswordInput
+          label={t(
+            'Organisation.contract.password.fields.newPassword',
+            'New password'
+          )}
+          value={newPassword}
+          onChange={setNewPassword}
+          show={showNewPassword}
+          onToggleShow={() => setShowNewPassword((prev) => !prev)}
+          disabled={changePasswordMutation.isPending}
+        />
+
+        <ContractPasswordInput
+          label={t(
+            'Organisation.contract.password.fields.confirmPassword',
+            'Confirm new password'
+          )}
+          value={confirmNewPassword}
+          onChange={setConfirmNewPassword}
+          show={showConfirmPassword}
+          onToggleShow={() => setShowConfirmPassword((prev) => !prev)}
+          disabled={changePasswordMutation.isPending}
+        />
+
+        <button
+          type="submit"
+          disabled={changePasswordMutation.isPending}
+          className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {changePasswordMutation.isPending
+            ? t(
+                'Organisation.contract.password.actions.updating',
+                'Updating...'
+              )
+            : t(
+                'Organisation.contract.password.actions.submit',
+                'Update password'
+              )}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+type ContractPasswordInputProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  disabled: boolean;
+};
+
+function ContractPasswordInput({
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  disabled,
+}: ContractPasswordInputProps) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-slate-700">
+        {label}
+      </span>
+      <div className="relative">
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          required
+          disabled={disabled}
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+          disabled={disabled}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </label>
+  );
+}
+
+export default function OrganisationContractPage() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, setUser } = useAuthStore();
+  const { t } = useSafeTranslation();
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
+
+  const searchParams = new URLSearchParams(location.search);
+  const activeTab: ContractFlowTab =
+    searchParams.get(TAB_PARAM) === 'change-password'
+      ? 'change-password'
+      : 'contract';
 
   const {
     data: contract,
@@ -423,41 +706,59 @@ export default function OrganisationContractPage() {
   });
 
   useEffect(() => {
-    if (
-      contract?.status === 'Active' &&
-      user &&
-      user.contractStatus !== 'Active'
-    ) {
-      setUser({ ...user, contractStatus: 'Active' });
+    if (contract?.status && user && user.contractStatus !== contract.status) {
+      setUser({ ...user, contractStatus: contract.status });
     }
   }, [contract?.status, navigate, setUser, user]);
 
+  const canOpenChangePasswordTab = contract?.status === 'Active';
+  const mustChangePassword = !!user?.mustChangePassword;
+
   useEffect(() => {
-    if (contract?.status !== 'Active') {
-      setRedirectSeconds(null);
+    if (!canOpenChangePasswordTab && activeTab === 'change-password') {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: '',
+        },
+        { replace: true }
+      );
       return;
     }
 
-    setRedirectSeconds(5);
+    if (
+      mustChangePassword &&
+      canOpenChangePasswordTab &&
+      activeTab !== 'change-password'
+    ) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: `?${TAB_PARAM}=change-password`,
+        },
+        { replace: true }
+      );
+    }
+  }, [
+    activeTab,
+    canOpenChangePasswordTab,
+    location.pathname,
+    mustChangePassword,
+    navigate,
+  ]);
 
-    const timer = window.setInterval(() => {
-      setRedirectSeconds((current) => {
-        if (current === null) {
-          return 5;
-        }
+  const setActiveTab = (nextTab: ContractFlowTab) => {
+    const nextSearch =
+      nextTab === 'change-password' ? `?${TAB_PARAM}=change-password` : '';
 
-        if (current <= 1) {
-          window.clearInterval(timer);
-          navigate('/organisation/dashboard', { replace: true });
-          return 0;
-        }
-
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [contract?.status, navigate]);
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch,
+      },
+      { replace: true }
+    );
+  };
 
   const handleUploadSuccess = () => {
     queryClient.invalidateQueries({ queryKey: CONTRACT_QUERY_KEY });
@@ -559,233 +860,283 @@ export default function OrganisationContractPage() {
                     )}
                     : {contract.contractNumber}
                   </p>
-                  {contract.status === 'Active' && redirectSeconds !== null && (
-                    <p className="text-xs opacity-80 mt-1">
-                      {t(
-                        'Organisation.contract.summary.redirectIn',
-                        'Auto redirect to dashboard in {{seconds}} seconds.',
-                        { seconds: redirectSeconds }
-                      )}
-                    </p>
-                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    {t(
-                      'Organisation.contract.sections.contractInfo',
-                      'Contract Information'
-                    )}
-                  </p>
-                  <div className="space-y-3">
-                    <Row
-                      label={t(
-                        'Organisation.contract.fields.template',
-                        'Template'
-                      )}
-                      value={contract.templateTitle}
-                    />
-                    <Row
-                      label={t('Organisation.contract.fields.type', 'Type')}
-                      value={t(
-                        'Organisation.contract.fields.organisationType',
-                        'Medical organisation'
-                      )}
-                    />
-                    <Row
-                      label={t(
-                        'Organisation.contract.fields.createdAt',
-                        'Created At'
-                      )}
-                      value={new Date(contract.createdAt).toLocaleDateString(
-                        'vi-VN'
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                    {t(
-                      'Organisation.contract.sections.organisationAccount',
-                      'Organisation Account'
-                    )}
-                  </p>
-                  <div className="space-y-3">
-                    <Row
-                      label={t(
-                        'Organisation.contract.fields.contactPerson',
-                        'Contact Person'
-                      )}
-                      value={contract.userFullName}
-                    />
-                    <Row
-                      label={t('Organisation.contract.fields.email', 'Email')}
-                      value={contract.userEmail}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {t('Organisation.contract.sections.actions', 'Actions')}
-                </p>
-                {contract.signedContent && (
+              <div className="rounded-xl border border-slate-200 bg-white p-2">
+                <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() =>
-                      openContractTemplate(contract.signedContent!)
-                    }
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left"
+                    type="button"
+                    onClick={() => setActiveTab('contract')}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'contract'
+                        ? 'bg-primary text-white'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
                   >
-                    <Eye className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {t(
-                          'Organisation.contract.actions.viewTemplate',
-                          'View contract template'
-                        )}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {t(
-                          'Organisation.contract.actions.viewTemplateHint',
-                          'Open the contract file directly in a new tab.'
-                        )}
-                      </p>
-                    </div>
+                    {t('Organisation.contract.tabs.contract', 'Contract')}
                   </button>
-                )}
-                {contract.signedContent && (
                   <button
-                    onClick={async () => {
-                      try {
-                        setDownloadError(null);
-                        await downloadContractTemplate(
-                          contract.signedContent!,
-                          contract.contractNumber,
-                          t(
-                            'Organisation.contract.toast.downloadTemplateFailed',
-                            'Unable to download contract template file.'
-                          )
-                        );
-                      } catch (error) {
-                        setDownloadError(
-                          error instanceof Error
-                            ? error.message
-                            : t(
+                    type="button"
+                    onClick={() => {
+                      if (!canOpenChangePasswordTab) {
+                        return;
+                      }
+
+                      setActiveTab('change-password');
+                    }}
+                    disabled={!canOpenChangePasswordTab}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'change-password'
+                        ? 'bg-primary text-white'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    } disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {t(
+                      'Organisation.contract.tabs.changePassword',
+                      'Change Password'
+                    )}
+                  </button>
+                </div>
+                {!canOpenChangePasswordTab && (
+                  <p className="mt-2 px-2 text-xs text-slate-500">
+                    {t(
+                      'Organisation.contract.tabs.changePasswordLockedHint',
+                      'Change Password is available after your contract is activated by System Admin.'
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {activeTab === 'contract' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-slate-200 bg-white p-5">
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                        {t(
+                          'Organisation.contract.sections.contractInfo',
+                          'Contract Information'
+                        )}
+                      </p>
+                      <div className="space-y-3">
+                        <Row
+                          label={t(
+                            'Organisation.contract.fields.template',
+                            'Template'
+                          )}
+                          value={contract.templateTitle}
+                        />
+                        <Row
+                          label={t('Organisation.contract.fields.type', 'Type')}
+                          value={t(
+                            'Organisation.contract.fields.organisationType',
+                            'Medical organisation'
+                          )}
+                        />
+                        <Row
+                          label={t(
+                            'Organisation.contract.fields.createdAt',
+                            'Created At'
+                          )}
+                          value={new Date(
+                            contract.createdAt
+                          ).toLocaleDateString('vi-VN')}
+                        />
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-5">
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                        {t(
+                          'Organisation.contract.sections.organisationAccount',
+                          'Organisation Account'
+                        )}
+                      </p>
+                      <div className="space-y-3">
+                        <Row
+                          label={t(
+                            'Organisation.contract.fields.contactPerson',
+                            'Contact Person'
+                          )}
+                          value={contract.userFullName}
+                        />
+                        <Row
+                          label={t(
+                            'Organisation.contract.fields.email',
+                            'Email'
+                          )}
+                          value={contract.userEmail}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      {t('Organisation.contract.sections.actions', 'Actions')}
+                    </p>
+                    {contract.signedContent && (
+                      <button
+                        onClick={() =>
+                          openContractTemplate(contract.signedContent!)
+                        }
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left"
+                      >
+                        <Eye className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {t(
+                              'Organisation.contract.actions.viewTemplate',
+                              'View contract template'
+                            )}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {t(
+                              'Organisation.contract.actions.viewTemplateHint',
+                              'Open the contract file directly in a new tab.'
+                            )}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                    {contract.signedContent && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            setDownloadError(null);
+                            await downloadContractTemplate(
+                              contract.signedContent!,
+                              contract.contractNumber,
+                              t(
                                 'Organisation.contract.toast.downloadTemplateFailed',
                                 'Unable to download contract template file.'
                               )
-                        );
-                      }
-                    }}
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left"
-                  >
-                    <Download className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {t(
-                          'Organisation.contract.actions.downloadTemplate',
-                          'Download contract template'
-                        )}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {t(
-                          'Organisation.contract.actions.downloadTemplateHint',
-                          'Download the original file for printing and signing.'
-                        )}
-                      </p>
-                    </div>
-                  </button>
-                )}
-                {downloadError && (
-                  <p className="text-sm text-red-500">{downloadError}</p>
-                )}
-              </div>
-
-              {(contract.status === 'PendingSignature' ||
-                contract.status === 'Active') && (
-                <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                      {contract.scannedDocumentUrl
-                        ? t(
-                            'Organisation.contract.sections.signedContract',
-                            'Signed Contract'
-                          )
-                        : t(
-                            'Organisation.contract.sections.uploadSignedContract',
-                            'Upload Signed Contract'
-                          )}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {contract.scannedDocumentUrl
-                        ? contract.status === 'Active'
-                          ? t(
-                              'Organisation.contract.sections.signedDescriptionActive',
-                              'You can now start using all AURA features.'
-                            )
-                          : t(
-                              'Organisation.contract.sections.signedDescriptionPending',
-                              'The contract has been submitted and is awaiting admin approval.'
-                            )
-                        : t(
-                            'Organisation.contract.sections.uploadDescription',
-                            'Download, sign, stamp, and upload the scanned file or photo.'
-                          )}
-                    </p>
-                  </div>
-                  {!contract.scannedDocumentUrl && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        {
-                          step: 1,
-                          icon: Download,
-                          text: t(
-                            'Organisation.contract.steps.downloadAndPrint',
-                            'Download & print contract'
-                          ),
-                        },
-                        {
-                          step: 2,
-                          icon: FileText,
-                          text: t(
-                            'Organisation.contract.steps.signAndStamp',
-                            'Sign & stamp'
-                          ),
-                        },
-                        {
-                          step: 3,
-                          icon: Image,
-                          text: t(
-                            'Organisation.contract.steps.captureAndUpload',
-                            'Capture & upload'
-                          ),
-                        },
-                      ].map(({ step, icon: Icon, text }) => (
-                        <div
-                          key={step}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-slate-50"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0">
-                            {step}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-slate-400" />
-                            <span className="text-xs font-medium text-slate-700">
-                              {text}
-                            </span>
-                          </div>
+                            );
+                          } catch (error) {
+                            setDownloadError(
+                              error instanceof Error
+                                ? error.message
+                                : t(
+                                    'Organisation.contract.toast.downloadTemplateFailed',
+                                    'Unable to download contract template file.'
+                                  )
+                            );
+                          }
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left"
+                      >
+                        <Download className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {t(
+                              'Organisation.contract.actions.downloadTemplate',
+                              'Download contract template'
+                            )}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {t(
+                              'Organisation.contract.actions.downloadTemplateHint',
+                              'Download the original file for printing and signing.'
+                            )}
+                          </p>
                         </div>
-                      ))}
+                      </button>
+                    )}
+                    {downloadError && (
+                      <p className="text-sm text-red-500">{downloadError}</p>
+                    )}
+                  </div>
+
+                  {(contract.status === 'PendingSignature' ||
+                    contract.status === 'Active') && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                          {contract.scannedDocumentUrl
+                            ? t(
+                                'Organisation.contract.sections.signedContract',
+                                'Signed Contract'
+                              )
+                            : t(
+                                'Organisation.contract.sections.uploadSignedContract',
+                                'Upload Signed Contract'
+                              )}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {contract.scannedDocumentUrl
+                            ? contract.status === 'Active'
+                              ? t(
+                                  'Organisation.contract.sections.signedDescriptionActive',
+                                  'You can now start using all AURA features.'
+                                )
+                              : t(
+                                  'Organisation.contract.sections.signedDescriptionPending',
+                                  'The contract has been submitted and is awaiting admin approval.'
+                                )
+                            : t(
+                                'Organisation.contract.sections.uploadDescription',
+                                'Download, sign, stamp, and upload the scanned file or photo.'
+                              )}
+                        </p>
+                      </div>
+                      {!contract.scannedDocumentUrl && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {[
+                            {
+                              step: 1,
+                              icon: Download,
+                              text: t(
+                                'Organisation.contract.steps.downloadAndPrint',
+                                'Download & print contract'
+                              ),
+                            },
+                            {
+                              step: 2,
+                              icon: FileText,
+                              text: t(
+                                'Organisation.contract.steps.signAndStamp',
+                                'Sign & stamp'
+                              ),
+                            },
+                            {
+                              step: 3,
+                              icon: Image,
+                              text: t(
+                                'Organisation.contract.steps.captureAndUpload',
+                                'Capture & upload'
+                              ),
+                            },
+                          ].map(({ step, icon: Icon, text }) => (
+                            <div
+                              key={step}
+                              className="flex items-center gap-3 p-3 rounded-lg bg-slate-50"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                                {step}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Icon className="w-4 h-4 text-slate-400" />
+                                <span className="text-xs font-medium text-slate-700">
+                                  {text}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <UploadSection
+                        contract={contract}
+                        onUploadSuccess={handleUploadSuccess}
+                      />
                     </div>
                   )}
-                  <UploadSection
-                    contract={contract}
-                    onUploadSuccess={handleUploadSuccess}
-                  />
-                </div>
+                </>
+              )}
+
+              {activeTab === 'change-password' && (
+                <ContractChangePasswordSection
+                  canChangePassword={canOpenChangePasswordTab}
+                  mustChangePassword={mustChangePassword}
+                />
               )}
             </>
           )}
