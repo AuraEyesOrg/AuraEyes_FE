@@ -165,5 +165,22 @@ AI Understanding Retinal Analysis
         'color: #1A202C; background: #00d1c0; padding: 2px 6px; border-radius: 4px; font-weight: bold;'
       );
     </script>
+    <script>
+    window.addEventListener('unhandledrejection', function(event) {
+      const msg = event.reason ? event.reason.toString() : '';
+      if (msg.includes('bad-precaching-response') || msg.includes('Failed to fetch dynamically imported module')) {
+        console.warn('Phát hiện lỗi Service Worker cũ, đang tự động dọn dẹp...');
+        
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+            window.location.reload();
+          });
+        }
+      }
+    });
+  </script>
   </body>
 </html>

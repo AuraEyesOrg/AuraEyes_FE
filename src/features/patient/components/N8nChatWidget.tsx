@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { getItem } from '@/lib/local-storage';
 import { Bot, Loader2, Send, Sparkles, X } from 'lucide-react';
 import type { ScreeningConsultationContext } from '../types/consultation-context';
 import {
   buildN8nChatRequest,
+  type N8nChatResponseAction,
   normalizeN8nChatResponse,
 } from '../types/n8n-chat.contract';
 import { useSystemSettings } from '@/features/system-admin/api/system-settings.api';
@@ -18,6 +20,7 @@ interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
   createdAt: string;
+  action?: N8nChatResponseAction;
 }
 
 interface N8nChatWidgetProps {
@@ -39,6 +42,7 @@ const splitMessageBlocks = (content: string): string[] =>
 export default function N8nChatWidget({
   consultationContext,
 }: N8nChatWidgetProps) {
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const token = getItem<string>('token') ?? undefined;
   const { data: systemSettings } = useSystemSettings();
@@ -97,6 +101,28 @@ export default function N8nChatWidget({
     listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [isOpen, messages, isSending]);
 
+  const handleAssistantAction = (action?: N8nChatResponseAction) => {
+    if (!action || action.type === 'NONE') return;
+
+    if (action.type === 'OPEN_WALLET_TOPUP') {
+      navigate('/patient/wallet?topup=1');
+      return;
+    }
+
+    if (action.type === 'CONFIRM_BOOKING') {
+      const slotId = action.payload?.slotId;
+      if (typeof slotId === 'string' && slotId.trim().length > 0) {
+        sessionStorage.setItem(
+          'patient-booking-confirm-context',
+          JSON.stringify({ slotId })
+        );
+        navigate('/patient/book/confirm', {
+          state: { slotId },
+        });
+      }
+    }
+  };
+
   const sendMessage = async (rawInput: string) => {
     const text = rawInput.trim();
     if (!text || isSending) return;
@@ -154,15 +180,18 @@ export default function N8nChatWidget({
         payload = await response.text();
       }
 
+      const normalizedResponse = normalizeN8nChatResponse(payload);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: normalizeN8nChatResponse(payload).reply,
+          content: normalizedResponse.reply,
           createdAt: new Date().toISOString(),
+          action: normalizedResponse.action,
         },
       ]);
+      handleAssistantAction(normalizedResponse.action);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -205,7 +234,7 @@ export default function N8nChatWidget({
                   AURA Medical Assistant
                 </p>
                 <p className="text-xs text-(--text-muted)">
-                  Trợ lý đặt lịch thông minh qua n8n
+                  Trợ lý đặt lịch thông minh
                 </p>
               </div>
             </div>
@@ -256,6 +285,15 @@ export default function N8nChatWidget({
                         </p>
                       ))
                     : message.content}
+                  {!isUser && message.action?.type === 'OPEN_WALLET_TOPUP' && (
+                    <button
+                      type="button"
+                      onClick={() => handleAssistantAction(message.action)}
+                      className="mt-3 inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition-colors"
+                    >
+                      Nạp ví ngay
+                    </button>
+                  )}
                 </div>
               </div>
             );
