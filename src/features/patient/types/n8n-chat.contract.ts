@@ -23,7 +23,7 @@ export interface N8nChatRequest {
   chatInput: string;
   text: string;
   sessionId: string;
-  locale: 'vi-VN';
+  locale: string;
   source: 'patient-review-page';
   timestamp: string;
   metadata: N8nChatMetadata;
@@ -142,6 +142,7 @@ const sanitizeAssistantReply = (value: string): string =>
 export const buildN8nChatRequest = (args: {
   message: string;
   sessionId: string;
+  locale: string;
   timestamp: string;
   metadata: N8nChatMetadata;
   consultationContext?: ScreeningConsultationContext | null;
@@ -151,7 +152,7 @@ export const buildN8nChatRequest = (args: {
   chatInput: args.message,
   text: args.message,
   sessionId: args.sessionId,
-  locale: 'vi-VN',
+  locale: args.locale,
   source: 'patient-review-page',
   timestamp: args.timestamp,
   metadata: args.metadata,
