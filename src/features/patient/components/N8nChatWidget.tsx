@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/store/auth-store';
 import { getItem } from '@/lib/local-storage';
 import { Bot, Loader2, Send, Sparkles, X } from 'lucide-react';
@@ -49,6 +49,7 @@ export default function N8nChatWidget({
   const { t } = useTranslation();
   const apiUrl = import.meta.env.VITE_API_END_POINT as string | undefined;
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const token = getItem<string>('token') ?? undefined;
   const { data: systemSettings } = useSystemSettings();
@@ -204,12 +205,13 @@ export default function N8nChatWidget({
       const slotId = action.payload?.slotId;
       if (typeof slotId === 'string' && slotId.trim().length > 0) {
         suppressAutoReleaseRef.current = true;
+        const returnTo = `${location.pathname}${location.search}${location.hash}`;
         sessionStorage.setItem(
           'patient-booking-confirm-context',
-          JSON.stringify({ slotId })
+          JSON.stringify({ slotId, returnTo })
         );
         navigate('/patient/book/confirm', {
-          state: { slotId },
+          state: { slotId, returnTo },
         });
       }
     }

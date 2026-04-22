@@ -38,8 +38,6 @@ import { hydrateConsultationPreviewAnomalies } from './retinal-analysis';
 import { agreeScreeningConsent } from '../api/consent.api';
 import { buildBookingShareConsentContent } from '../constants/consent-content';
 
-// ============ HELPERS ============
-
 export interface BookingConfirmationProps {
   embeddedSlotId?: string;
   embeddedConsultationContext?: ScreeningConsultationContext;
@@ -47,59 +45,79 @@ export interface BookingConfirmationProps {
   onSuccess?: () => void;
 }
 
+interface StoredConfirmContext {
+  slotId?: string;
+  returnTo?: string;
+}
+
+/**
+ * Parse the booking confirm context from sessionStorage once.
+ * Returns a stable object so callers don't need to repeat try/catch.
+ */
+function parseStoredConfirmContext(): StoredConfirmContext {
+  try {
+    const raw = sessionStorage.getItem('patient-booking-confirm-context');
+    if (!raw) return {};
+    return (JSON.parse(raw) as StoredConfirmContext) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+const PREVIEW_TOGGLES: ToggleState = {
+  vesselSegmentation: false,
+  hemorrhages: false,
+  exudates: false,
+  opticDisc: false,
+};
+
 export default function BookingConfirmationPage(
   props: BookingConfirmationProps
 ) {
+  const { embeddedSlotId, embeddedConsultationContext, onClose, onSuccess } =
+    props;
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const querySlotId = searchParams.get('slotId') ?? '';
-  const state = (location.state as { slotId?: string } | null) ?? {};
-  const storedConfirmContextRaw = sessionStorage.getItem(
-    'patient-booking-confirm-context'
-  );
+  // --- Resolve slotId and returnTo from all possible sources (once) ---
+  const { slotId, returnToPath } = useMemo(() => {
+    const querySlotId = searchParams.get('slotId') ?? '';
+    const locationState = (location.state as StoredConfirmContext | null) ?? {};
+    const stored = parseStoredConfirmContext();
 
-  let storedSlotId = '';
-  if (storedConfirmContextRaw) {
-    try {
-      const parsed = JSON.parse(storedConfirmContextRaw) as { slotId?: string };
-      storedSlotId = parsed.slotId ?? '';
-    } catch {
-      storedSlotId = '';
-    }
-  }
+    return {
+      slotId:
+        embeddedSlotId ?? locationState.slotId ?? stored.slotId ?? querySlotId,
+      returnToPath:
+        locationState.returnTo ?? stored.returnTo ?? '/patient/review',
+    };
+  }, [embeddedSlotId, searchParams, location.state]);
 
-  const slotId =
-    props.embeddedSlotId ?? state.slotId ?? storedSlotId ?? querySlotId;
+  // --- Resolve consultation context (read session storage only when prop is absent) ---
   const consultationContext =
     useMemo((): ScreeningConsultationContext | null => {
-      if (props.embeddedConsultationContext?.screeningId) {
-        return props.embeddedConsultationContext;
-      }
+      if (embeddedConsultationContext?.screeningId)
+        return embeddedConsultationContext;
       return loadScreeningConsultationContext();
-    }, [props.embeddedConsultationContext]);
+    }, [embeddedConsultationContext]);
+
   const primaryOriginalImage = consultationContext?.images?.[0]?.url;
-  const symptomNames =
-    consultationContext?.anomalies?.map(
-      (item) => item.friendlyName || item.name
-    ) ?? [];
+  const symptomNames = useMemo(
+    () =>
+      consultationContext?.anomalies?.map(
+        (item) => item.friendlyName || item.name
+      ) ?? [],
+    [consultationContext?.anomalies]
+  );
 
   const { user } = useAuthStore();
   const patientId = user?.roleId ?? '';
 
+  // --- Sharing toggles ---
   const [shareRetinalImages, setShareRetinalImages] = useState(true);
   const [shareAiResults, setShareAiResults] = useState(true);
-
-  const previewToggles = useMemo<ToggleState>(
-    () => ({
-      vesselSegmentation: false,
-      hemorrhages: false,
-      exudates: false,
-      opticDisc: false,
-    }),
-    []
-  );
 
   const [previewAnomalies, setPreviewAnomalies] = useState<Anomaly[]>(
     () => consultationContext?.anomalies ?? []
@@ -109,18 +127,13 @@ export default function BookingConfirmationPage(
     const base = consultationContext?.anomalies ?? [];
     const img = consultationContext?.images?.[0]?.url;
     const raw = consultationContext?.rawJsonOutput;
-    if (!img) {
+
+    // Already have location data — no need to hydrate
+    if (!img || !raw || (base.length > 0 && base.some((a) => a.location))) {
       setPreviewAnomalies(base);
       return;
     }
-    if (base.length > 0 && base.some((a) => a.location)) {
-      setPreviewAnomalies(base);
-      return;
-    }
-    if (!raw) {
-      setPreviewAnomalies(base);
-      return;
-    }
+
     let cancelled = false;
     hydrateConsultationPreviewAnomalies(raw, img).then((mapped) => {
       if (!cancelled) setPreviewAnomalies(mapped.length > 0 ? mapped : base);
@@ -134,7 +147,7 @@ export default function BookingConfirmationPage(
     consultationContext?.images,
   ]);
 
-  const previewRetinalImage: RetinalImage | null = useMemo(() => {
+  const previewRetinalImage = useMemo((): RetinalImage | null => {
     const img = consultationContext?.images?.[0];
     if (!img?.url) return null;
     return {
@@ -147,11 +160,14 @@ export default function BookingConfirmationPage(
       anomalies: previewAnomalies,
     };
   }, [consultationContext?.images, previewAnomalies]);
+
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const lastErrorToastRef = useRef('');
+
+  const timeoutReleaseTriggeredRef = useRef(false);
+  const shownErrorToastsRef = useRef(new Set<string>());
 
   const {
     data: slot,
@@ -169,14 +185,39 @@ export default function BookingConfirmationPage(
   const confirmMutation = useConfirmReservation();
   const releaseMutation = useReleaseReservation();
 
+  const exitFlow = useCallback(() => {
+    sessionStorage.removeItem('patient-booking-confirm-context');
+    if (onClose) onClose();
+    else navigate(returnToPath, { replace: true });
+  }, [onClose, navigate, returnToPath]);
+
+  const exitFlowOnSuccess = useCallback(() => {
+    if (onSuccess) onSuccess();
+    else navigate('/patient/appointments');
+  }, [onSuccess, navigate]);
+
+  const releaseOnTimeoutAndNavigate = useCallback(async () => {
+    if (timeoutReleaseTriggeredRef.current) return;
+    timeoutReleaseTriggeredRef.current = true;
+
+    if (slotId && patientId) {
+      try {
+        await releaseMutation.mutateAsync({ slotId, request: { patientId } });
+      } catch {
+        // best-effort; still redirect to unblock user
+      }
+    }
+    exitFlow();
+  }, [slotId, patientId, releaseMutation, exitFlow]);
+
   useEffect(() => {
     if (!slotId) return;
-
+    timeoutReleaseTriggeredRef.current = false;
     sessionStorage.setItem(
       'patient-booking-confirm-context',
-      JSON.stringify({ slotId })
+      JSON.stringify({ slotId, returnTo: returnToPath })
     );
-  }, [slotId]);
+  }, [slotId, returnToPath]);
 
   useEffect(() => {
     if (!consultationContext?.screeningId) return;
@@ -184,55 +225,49 @@ export default function BookingConfirmationPage(
   }, [consultationContext]);
 
   useEffect(() => {
-    if (props.embeddedSlotId || !querySlotId || state.slotId) return;
-
+    const querySlotId = searchParams.get('slotId') ?? '';
+    if (
+      embeddedSlotId ||
+      !querySlotId ||
+      (location.state as StoredConfirmContext | null)?.slotId
+    )
+      return;
     navigate('/patient/book/confirm', {
       replace: true,
       state: { slotId: querySlotId },
     });
-  }, [props.embeddedSlotId, querySlotId, state.slotId, navigate]);
+  }, [embeddedSlotId, searchParams, location.state, navigate]);
 
   useEffect(() => {
-    if (!displayErrorMessage) {
-      lastErrorToastRef.current = '';
-      return;
-    }
-
-    if (lastErrorToastRef.current === displayErrorMessage) return;
-
-    lastErrorToastRef.current = displayErrorMessage;
+    if (!displayErrorMessage) return;
+    if (shownErrorToastsRef.current.has(displayErrorMessage)) return;
+    shownErrorToastsRef.current.add(displayErrorMessage);
     toast.error(displayErrorMessage, {
       toastId: `booking-confirm-error-${displayErrorMessage}`,
     });
   }, [displayErrorMessage]);
 
-  // Calculate remaining time from slot's reservationExpireAt
   useEffect(() => {
     if (!slot?.reservationExpireAt) return;
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const expires = new Date(slot.reservationExpireAt!).getTime();
-      const diff = Math.max(0, Math.floor((expires - now) / 1000));
+    const tick = () => {
+      const diff = Math.max(
+        0,
+        Math.floor(
+          (new Date(slot.reservationExpireAt!).getTime() - Date.now()) / 1000
+        )
+      );
       setRemainingSeconds(diff);
-
-      if (diff <= 0) {
-        // Reservation expired, redirect back
-        if (props.onClose) {
-          props.onClose();
-        } else {
-          navigate('/patient/book', { replace: true });
-        }
-      }
+      if (diff <= 0) void releaseOnTimeoutAndNavigate();
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [slot?.reservationExpireAt, navigate, props]);
+  }, [slot?.reservationExpireAt, releaseOnTimeoutAndNavigate]);
 
   const handleConfirm = useCallback(async () => {
-    if (!slotId || !patientId) return;
+    if (!slotId || !patientId || confirmMutation.isPending) return;
     setErrorMessage('');
 
     try {
@@ -257,6 +292,7 @@ export default function BookingConfirmationPage(
           shareAiResults,
         },
       });
+
       toast.success('Bạn đã đặt lịch thành công!');
       sessionStorage.removeItem('patient-booking-confirm-context');
       setIsSuccess(true);
@@ -278,30 +314,15 @@ export default function BookingConfirmationPage(
     setErrorMessage('');
 
     try {
-      await releaseMutation.mutateAsync({
-        slotId,
-        request: { patientId },
-      });
+      await releaseMutation.mutateAsync({ slotId, request: { patientId } });
     } catch (error) {
       setErrorMessage(mapOnlineConsultationErrorMessage(error));
       return;
     }
-    sessionStorage.removeItem('patient-booking-confirm-context');
-    if (props.onClose) {
-      props.onClose();
-    } else {
-      navigate('/patient/book', { replace: true });
-    }
-  }, [slotId, patientId, releaseMutation, navigate, props]);
+    exitFlow();
+  }, [slotId, patientId, releaseMutation, exitFlow]);
 
-  const handleGoToAppointments = useCallback(() => {
-    if (props.onSuccess) {
-      props.onSuccess();
-    }
-    navigate('/patient/appointments');
-  }, [navigate, props]);
-
-  const isEmbedded = !!props.onClose;
+  const isEmbedded = !!onClose;
   const Wrapper = isEmbedded ? 'div' : PatientLayout;
   const wrapperProps = isEmbedded
     ? {
@@ -313,7 +334,15 @@ export default function BookingConfirmationPage(
     ? 'bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col mx-4 p-8 mt-auto mb-auto'
     : 'p-6 max-w-2xl mx-auto';
 
-  // Loading state
+  const urgencyClass =
+    remainingSeconds !== null && remainingSeconds <= 60
+      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+      : remainingSeconds !== null && remainingSeconds <= 120
+        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+        : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
+
+  // ============ RENDER STATES ============
+
   if (slotLoading) {
     return (
       <Wrapper {...wrapperProps}>
@@ -329,7 +358,6 @@ export default function BookingConfirmationPage(
     );
   }
 
-  // Slot not found or not reserved
   if (!slot || slot.status !== 'Reserved') {
     return (
       <Wrapper {...wrapperProps}>
@@ -337,7 +365,7 @@ export default function BookingConfirmationPage(
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
             {isEmbedded && (
               <button
-                onClick={props.onClose}
+                onClick={onClose}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
@@ -352,10 +380,7 @@ export default function BookingConfirmationPage(
               booking again.
             </p>
             <button
-              onClick={() => {
-                if (props.onClose) props.onClose();
-                else navigate('/patient/book');
-              }}
+              onClick={exitFlow}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
               Book an Appointment
@@ -366,7 +391,6 @@ export default function BookingConfirmationPage(
     );
   }
 
-  // Success state
   if (isSuccess && sessionId) {
     return (
       <Wrapper {...wrapperProps}>
@@ -374,10 +398,7 @@ export default function BookingConfirmationPage(
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center relative">
             {isEmbedded && (
               <button
-                onClick={() => {
-                  if (props.onSuccess) props.onSuccess();
-                  else navigate('/patient/appointments');
-                }}
+                onClick={exitFlowOnSuccess}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
@@ -409,7 +430,7 @@ export default function BookingConfirmationPage(
                     Time
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {formatSlotTime(slot.startTime)} -{' '}
+                    {formatSlotTime(slot.startTime)} –{' '}
                     {formatSlotTime(slot.endTime)}
                   </p>
                 </div>
@@ -433,7 +454,7 @@ export default function BookingConfirmationPage(
             </div>
 
             <button
-              onClick={handleGoToAppointments}
+              onClick={exitFlowOnSuccess}
               className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-medium transition"
             >
               View My Appointments
@@ -443,14 +464,6 @@ export default function BookingConfirmationPage(
       </Wrapper>
     );
   }
-
-  // Countdown warning class
-  const urgencyClass =
-    remainingSeconds !== null && remainingSeconds <= 60
-      ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-      : remainingSeconds !== null && remainingSeconds <= 120
-        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-        : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
 
   return (
     <Wrapper {...wrapperProps}>
@@ -464,7 +477,6 @@ export default function BookingConfirmationPage(
           Cancel and go back
         </button>
 
-        {/* Header with Timer */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Confirm Your Booking
@@ -481,12 +493,11 @@ export default function BookingConfirmationPage(
           )}
         </div>
 
-        {/* Appointment Details Card */}
+        {/* Appointment Details */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Appointment Details
           </h2>
-
           <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
@@ -499,7 +510,6 @@ export default function BookingConfirmationPage(
                 </p>
               </div>
             </div>
-
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                 <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -507,7 +517,7 @@ export default function BookingConfirmationPage(
               <div className="flex-1">
                 <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {formatSlotTime(slot.startTime)} -{' '}
+                  {formatSlotTime(slot.startTime)} –{' '}
                   {formatSlotTime(slot.endTime)}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -516,8 +526,6 @@ export default function BookingConfirmationPage(
               </div>
             </div>
           </div>
-
-          {/* Price */}
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <span className="text-gray-600 dark:text-gray-400">
@@ -539,7 +547,6 @@ export default function BookingConfirmationPage(
             Allow the doctor to access your previous screenings and AI analysis
             results for a more personalized consultation.
           </p>
-
           <div className="space-y-3">
             <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-cyan-500 cursor-pointer">
               <input
@@ -558,7 +565,6 @@ export default function BookingConfirmationPage(
                 </p>
               </div>
             </label>
-
             <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-cyan-500 cursor-pointer">
               <input
                 type="checkbox"
@@ -579,6 +585,7 @@ export default function BookingConfirmationPage(
           </div>
         </div>
 
+        {/* AI Case Preview */}
         {consultationContext?.screeningId && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -620,7 +627,7 @@ export default function BookingConfirmationPage(
                 ) : (
                   <div className="h-40 w-full relative overflow-hidden">
                     <PatientImageViewer
-                      toggles={previewToggles}
+                      toggles={PREVIEW_TOGGLES}
                       zoomLevel={1}
                       anomalies={previewAnomalies}
                       isAnalyzing={false}
@@ -680,13 +687,12 @@ export default function BookingConfirmationPage(
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" /> Confirm & Pay
+                <CheckCircle className="w-5 h-5" /> Confirm &amp; Pay
               </>
             )}
           </button>
         </div>
 
-        {/* Note */}
         <p className="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">
           By confirming, you agree to the consultation terms and the fee will be
           deducted from your wallet.
