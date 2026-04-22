@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Eye, RefreshCw, Search, Wallet, X } from 'lucide-react';
+import {
+  Eye,
+  RefreshCw,
+  Search,
+  Wallet,
+  X,
+  Landmark,
+  ArrowDown,
+  ArrowUp,
+} from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import {
@@ -106,6 +115,8 @@ export default function CashflowPage() {
   const [actorRole, setActorRole] = useState<'all' | CashflowActorRole>('all');
   const [status, setStatus] = useState<'all' | CashflowStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedTransaction, setSelectedTransaction] =
     useState<CashflowTransactionDetail | null>(null);
 
@@ -113,7 +124,15 @@ export default function CashflowPage() {
     queryKey: [
       'admin',
       'cashflow',
-      { pageNumber, pageSize, actorRole, status, searchTerm },
+      {
+        pageNumber,
+        pageSize,
+        actorRole,
+        status,
+        searchTerm,
+        sortBy,
+        sortDirection,
+      },
     ],
     queryFn: () =>
       cashflowApi.getTransactions({
@@ -122,8 +141,28 @@ export default function CashflowPage() {
         actorRole: actorRole === 'all' ? undefined : actorRole,
         status: status === 'all' ? undefined : status,
         searchTerm: searchTerm.trim() || undefined,
+        sortBy,
+        sortDirection,
       }),
   });
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('desc'); // Default to desc when changing column
+    }
+  };
+
+  const renderSortIcon = (column: string) => {
+    if (sortBy !== column) return null;
+    return sortDirection === 'asc' ? (
+      <ArrowUp className="w-3.5 h-3.5 ml-1 inline-block text-slate-500" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 ml-1 inline-block text-slate-500" />
+    );
+  };
 
   const rows = query.data?.items ?? [];
   const pageMeta = query.data;
@@ -140,6 +179,19 @@ export default function CashflowPage() {
     }, {});
   }, [rows]);
 
+  const commissionTotal = useMemo(() => {
+    return rows.reduce((acc, row) => {
+      if (
+        row.actorRole === 'System' &&
+        row.transactionType === 'Deposit' &&
+        row.referenceType === 'Booking'
+      ) {
+        return acc + row.amount;
+      }
+      return acc;
+    }, 0);
+  }, [rows]);
+
   return (
     <div className="flex h-screen w-full bg-(--bg-primary)">
       <Sidebar />
@@ -154,7 +206,7 @@ export default function CashflowPage() {
         />
 
         <main className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <SummaryCard
               title={t(
                 'SystemAdmin.cashflow.summary.totalCurrentPage',
@@ -183,6 +235,15 @@ export default function CashflowPage() {
               )}
               value={formatMoney(roleSummary.Organisation ?? 0, dateLocale)}
               tone="violet"
+            />
+            <SummaryCard
+              title={t(
+                'SystemAdmin.cashflow.summary.commission',
+                'Consultation commission'
+              )}
+              value={formatMoney(commissionTotal, dateLocale)}
+              tone="teal"
+              icon={Landmark}
             />
           </div>
 
@@ -272,8 +333,17 @@ export default function CashflowPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left border-b border-slate-200 dark:border-slate-700 text-slate-500">
-                        <th className="py-3 pr-3">
-                          {t('SystemAdmin.cashflow.table.columns.date', 'Date')}
+                        <th
+                          className="py-3 pr-3 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                          onClick={() => handleSort('createdAt')}
+                        >
+                          <div className="flex items-center">
+                            {t(
+                              'SystemAdmin.cashflow.table.columns.date',
+                              'Date'
+                            )}
+                            {renderSortIcon('createdAt')}
+                          </div>
                         </th>
                         <th className="py-3 pr-3">
                           {t(
@@ -287,11 +357,17 @@ export default function CashflowPage() {
                         <th className="py-3 pr-3">
                           {t('SystemAdmin.cashflow.table.columns.type', 'Type')}
                         </th>
-                        <th className="py-3 pr-3">
-                          {t(
-                            'SystemAdmin.cashflow.table.columns.amount',
-                            'Amount'
-                          )}
+                        <th
+                          className="py-3 pr-3 cursor-pointer hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                          onClick={() => handleSort('amount')}
+                        >
+                          <div className="flex items-center">
+                            {t(
+                              'SystemAdmin.cashflow.table.columns.amount',
+                              'Amount'
+                            )}
+                            {renderSortIcon('amount')}
+                          </div>
                         </th>
                         <th className="py-3 pr-3">
                           {t(
@@ -437,10 +513,12 @@ function SummaryCard({
   title,
   value,
   tone,
+  icon: Icon = Wallet,
 }: {
   title: string;
   value: string;
-  tone: 'cyan' | 'emerald' | 'amber' | 'violet';
+  tone: 'cyan' | 'emerald' | 'amber' | 'violet' | 'teal';
+  icon?: React.ElementType;
 }) {
   const palette = {
     cyan: 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300',
@@ -450,12 +528,13 @@ function SummaryCard({
       'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300',
     violet:
       'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-300',
+    teal: 'border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-300',
   };
 
   return (
     <div className={`rounded-2xl border p-4 ${palette[tone]}`}>
       <div className="flex items-center gap-2 mb-1">
-        <Wallet className="w-4 h-4" />
+        <Icon className="w-4 h-4" />
         <p className="text-sm">{title}</p>
       </div>
       <p className="min-w-0 break-words leading-tight text-xl font-bold">

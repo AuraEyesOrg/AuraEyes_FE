@@ -155,6 +155,12 @@ function parseClinicCheckInQrPayload(rawValue: string): {
   return null;
 }
 
+function isFutureDateKey(dateKey: string | undefined, todayKey: string) {
+  if (!dateKey) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
+  return dateKey > todayKey;
+}
+
 export default function CalendarPage() {
   const { user } = useAuthStore();
   const { t } = useSafeTranslation();
@@ -356,8 +362,41 @@ export default function CalendarPage() {
             }
 
             if (parsed.dateKey) {
+              if (isFutureDateKey(parsed.dateKey, todayKey)) {
+                toast.error(
+                  t(
+                    'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                    'Cannot check in before the appointment date.'
+                  )
+                );
+                return;
+              }
               setSelectedDate(parsed.dateKey);
               setCurrentWeekOffset(getWeekOffsetFromDateKey(parsed.dateKey));
+            }
+
+            const matchedAppointmentDateKey =
+              weekWindow.days.find((day, index) =>
+                (weekAppointmentQueries[index]?.data ?? []).some(
+                  (appointment) =>
+                    appointment.id.toLowerCase() ===
+                    (
+                      scanTargetAppointmentId ?? parsed.appointmentId
+                    ).toLowerCase()
+                )
+              )?.dateKey ?? null;
+
+            const effectiveDateKey =
+              parsed.dateKey ?? matchedAppointmentDateKey ?? selectedDate;
+
+            if (isFutureDateKey(effectiveDateKey ?? undefined, todayKey)) {
+              toast.error(
+                t(
+                  'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                  'Cannot check in before the appointment date.'
+                )
+              );
+              return;
             }
 
             void (async () => {
@@ -395,7 +434,11 @@ export default function CalendarPage() {
     isQrScannerOpen,
     organisationId,
     scanTargetAppointmentId,
+    selectedDate,
     t,
+    todayKey,
+    weekAppointmentQueries,
+    weekWindow.days,
   ]);
 
   const getPrimaryAction = (appointment: (typeof appointments)[number]) => {
@@ -731,8 +774,21 @@ export default function CalendarPage() {
                           {appt.status === 'Pending' ? (
                             <button
                               type="button"
-                              disabled={isMutating || !organisationId}
+                              disabled={
+                                isMutating ||
+                                !organisationId ||
+                                selectedDate > todayKey
+                              }
                               onClick={() => {
+                                if (selectedDate > todayKey) {
+                                  toast.error(
+                                    t(
+                                      'Organisation.calendar.toast.qrBeforeAppointmentDate',
+                                      'Cannot check in before the appointment date.'
+                                    )
+                                  );
+                                  return;
+                                }
                                 setScanTargetAppointmentId(appt.id);
                                 setIsQrScannerOpen(true);
                               }}

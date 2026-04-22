@@ -59,6 +59,7 @@ import {
   SessionStatus,
   SESSION_STATUS_LABELS,
   SESSION_TYPE_LABELS,
+  ConsultationSessionDto,
 } from '@/types/consultation';
 import {
   SIGNALR_CHAT_MESSAGE_EVENT,
@@ -144,7 +145,7 @@ const getPhaseUIConfig = (
   },
 });
 
-const PREJOIN_OPEN_MINUTES = 15;
+const PREJOIN_OPEN_MINUTES = 10;
 const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 const MESSAGE_CHARACTER_LIMIT = 1000;
@@ -398,6 +399,15 @@ const getMeetingAccessState = (
       'Appointment has passed the meeting window'
     ),
   };
+};
+
+const hasGeneratedCaseReport = (
+  caseSnapshot: ConsultationSessionDto['caseSnapshot'] | undefined | null
+) => {
+  if (!caseSnapshot) return false;
+  const summary = caseSnapshot.summary?.trim();
+  const findings = caseSnapshot.findings?.trim();
+  return Boolean(summary || findings);
 };
 
 type ScanAttachmentMeta = {
@@ -1250,6 +1260,37 @@ export default function ConsultationsChatView({
     return msUntilStart > threeHoursMs;
   }, [currentSession]);
 
+  const canCompleteCurrentSession = useMemo(() => {
+    if (!currentSession || currentSession.status !== SessionStatus.Confirmed) {
+      return { allowed: false, reason: null as string | null };
+    }
+
+    if (currentSession.appointmentTime) {
+      const appointmentMs = new Date(currentSession.appointmentTime).getTime();
+      if (!Number.isNaN(appointmentMs) && currentTimeMs < appointmentMs) {
+        return {
+          allowed: false,
+          reason: t(
+            'Ophthalmologist.consultations.chat.completeBlockedBeforeAppointment',
+            'Cannot complete before appointment time.'
+          ),
+        };
+      }
+    }
+
+    if (!hasGeneratedCaseReport(selectedSession?.caseSnapshot)) {
+      return {
+        allowed: false,
+        reason: t(
+          'Ophthalmologist.consultations.chat.completeBlockedWithoutReport',
+          'Generate and save the report before completing this session.'
+        ),
+      };
+    }
+
+    return { allowed: true, reason: null as string | null };
+  }, [currentSession, currentTimeMs, selectedSession?.caseSnapshot, t]);
+
   const handleCancelSession = (sessionId: string) => {
     setSessionActionTarget({ type: 'cancel', sessionId });
   };
@@ -1280,6 +1321,19 @@ export default function ConsultationsChatView({
       return;
     }
 
+    const canCompleteTargetSession =
+      currentSession?.id === sessionActionTarget.sessionId
+        ? canCompleteCurrentSession.allowed
+        : true;
+
+    if (!canCompleteTargetSession) {
+      if (canCompleteCurrentSession.reason) {
+        ophthalToast.warning(canCompleteCurrentSession.reason);
+      }
+      setSessionActionTarget(null);
+      return;
+    }
+
     endSessionMutation.mutate(
       {
         sessionId: sessionActionTarget.sessionId,
@@ -1291,6 +1345,9 @@ export default function ConsultationsChatView({
     );
   }, [
     cancelSessionMutation,
+    canCompleteCurrentSession.allowed,
+    canCompleteCurrentSession.reason,
+    currentSession?.id,
     currentDoctorId,
     endSessionMutation,
     sessionActionTarget,
@@ -1748,8 +1805,21 @@ export default function ConsultationsChatView({
 
                     {currentSession.status === SessionStatus.Confirmed && (
                       <button
-                        onClick={() => handleEndSession(currentSession.id)}
-                        disabled={endSessionMutation.isPending}
+                        onClick={() => {
+                          if (!canCompleteCurrentSession.allowed) {
+                            if (canCompleteCurrentSession.reason) {
+                              ophthalToast.warning(
+                                canCompleteCurrentSession.reason
+                              );
+                            }
+                            return;
+                          }
+                          handleEndSession(currentSession.id);
+                        }}
+                        disabled={
+                          endSessionMutation.isPending ||
+                          !canCompleteCurrentSession.allowed
+                        }
                         className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 md:rounded-2xl md:px-4 md:py-2.5 md:text-sm dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                       >
                         {endSessionMutation.isPending ? (

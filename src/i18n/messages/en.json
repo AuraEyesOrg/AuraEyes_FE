@@ -2254,6 +2254,13 @@
       "newScan": "New Scan",
       "viewAllResources": "View all resources"
     },
+    "consultation": {
+      "alreadyBookedTitle": "You already submitted this case for consultation",
+      "alreadyBookedDescription": "To avoid duplicate bookings, specialist booking and AI chat are locked for this case.",
+      "statusLabel": "Status",
+      "createdAtLabel": "Booked at",
+      "chatLocked": "AI chat locked for this consulted case"
+    },
     "footer": {
       "importantDisclaimer": "AURA is an AI-assisted screening tool and does not provide a definitive medical diagnosis.",
       "copyright": "© {{year}} AURA Health. All rights reserved."

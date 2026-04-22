@@ -168,7 +168,7 @@ const formatAppointmentSlotOrPending = (
   t: ChatTranslateFn
 ) => (value ? formatAppointmentSlot(value) : t('PatientChat.schedule.pending'));
 
-const PREJOIN_OPEN_MINUTES = 15;
+const PREJOIN_OPEN_MINUTES = 10;
 const MEETING_ACTIVE_MINUTES = 30;
 const COUNTDOWN_VISIBILITY_MINUTES = 60;
 const MESSAGE_CHARACTER_LIMIT = 1000;
