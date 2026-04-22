@@ -179,6 +179,10 @@ function UploadSection({
   };
 
   const isImageUrl = (url: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url);
+  const isPdfUrl = (url: string) => /\.pdf(\?.*)?$/i.test(url);
+  const getPdfPreviewUrl = (url: string) =>
+    url.replace(/\.pdf(\?.*)?$/i, '.jpg');
+  const getAttachmentUrl = (url: string) => url; // Removed fl_attachment to fix potential 401 issues
 
   if (contract.scannedDocumentUrl && !showReupload) {
     return (
@@ -193,6 +197,37 @@ function UploadSection({
               )}
               className="w-full max-h-125 object-contain"
             />
+          ) : isPdfUrl(contract.scannedDocumentUrl) ? (
+            <div className="w-full h-auto bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+              <img
+                src={getPdfPreviewUrl(contract.scannedDocumentUrl)}
+                alt={t(
+                  'Organisation.contract.upload.pdfPreviewAlt',
+                  'PDF Contract Preview'
+                )}
+                className="w-full h-full object-contain"
+              />
+              <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs font-medium">
+                    {t(
+                      'Organisation.contract.fields.pdfDocument',
+                      'PDF Document'
+                    )}
+                  </span>
+                </div>
+                <a
+                  href={getAttachmentUrl(contract.scannedDocumentUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {t('Organisation.contract.upload.viewFull', 'View Full PDF')}
+                </a>
+              </div>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-48">
               <div className="text-center">
@@ -248,14 +283,14 @@ function UploadSection({
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={contract.scannedDocumentUrl}
+              href={getAttachmentUrl(contract.scannedDocumentUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-4 h-4" />
               {t(
-                'Organisation.contract.actions.openOriginalFile',
+                'Organisation.contract.upload.openOriginal',
                 'Open original file'
               )}
             </a>

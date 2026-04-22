@@ -43,6 +43,16 @@ const formatDate = (
   return parsed.toLocaleDateString(locale);
 };
 
+const isImageUrl = (url: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url);
+const isPdfUrl = (url: string) => /\.pdf(\?.*)?$/i.test(url);
+const getPdfPreviewUrl = (url: string) => url.replace(/\.pdf(\?.*)?$/i, '.jpg');
+const getAttachmentUrl = (url: string) => {
+  if (url.includes('/upload/')) {
+    return url.replace('/upload/', '/upload/fl_attachment/');
+  }
+  return url;
+};
+
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
@@ -432,9 +442,7 @@ function ContractDetailDialog({
                     )}
                   </p>
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    {/\.(jpe?g|png|webp|gif)(\?|$)/i.test(
-                      contract.scannedDocumentUrl
-                    ) ? (
+                    {isImageUrl(contract.scannedDocumentUrl) ? (
                       <img
                         src={contract.scannedDocumentUrl}
                         alt={t(
@@ -443,6 +451,37 @@ function ContractDetailDialog({
                         )}
                         className="w-full max-h-100 object-contain bg-slate-50"
                       />
+                    ) : isPdfUrl(contract.scannedDocumentUrl) ? (
+                      <div className="w-full h-auto bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                        <img
+                          src={getPdfPreviewUrl(contract.scannedDocumentUrl)}
+                          alt={t(
+                            'SystemAdmin.contracts.detailDialog.pdfPreviewAlt',
+                            'PDF Contract Preview'
+                          )}
+                          className="w-full h-full object-contain bg-slate-50"
+                        />
+                        <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <FileText className="w-4 h-4" />
+                            <span className="text-xs font-medium">
+                              PDF Document
+                            </span>
+                          </div>
+                          <a
+                            href={getAttachmentUrl(contract.scannedDocumentUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            {t(
+                              'SystemAdmin.contracts.detailDialog.actions.viewFullPdf',
+                              'View Full PDF'
+                            )}
+                          </a>
+                        </div>
+                      </div>
                     ) : (
                       <div className="flex items-center justify-center h-32 bg-slate-50 dark:bg-slate-800 gap-3">
                         <FileText className="w-10 h-10 text-slate-400" />
@@ -456,7 +495,7 @@ function ContractDetailDialog({
                     )}
                   </div>
                   <a
-                    href={contract.scannedDocumentUrl}
+                    href={getAttachmentUrl(contract.scannedDocumentUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
