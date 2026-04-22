@@ -2471,6 +2471,63 @@
       "subtitle": "Choose your preferred display language"
     }
   },
+  "PatientHelpFeedback": {
+    "page": {
+      "title": "Help & Feedback",
+      "subtitle": "Share your website experience to help us make retinal care journeys better."
+    },
+    "whyFeedbackMatters": {
+      "title": "Why your feedback matters",
+      "items": {
+        "bookingAndConsultation": "Help us improve booking and consultation usability.",
+        "bugReporting": "Highlight bug issues before they impact more patients.",
+        "featureSuggestions": "Suggest features that make your care journey smoother."
+      }
+    },
+    "form": {
+      "title": "Help & Feedback",
+      "subtitle": "Takes less than 30 seconds. Your feedback helps us improve the platform.",
+      "unlockHint": "Complete at least one analysis, report, or appointment to unlock website feedback.",
+      "success": {
+        "title": "Feedback submitted",
+        "message": "Thanks for helping us improve your care journey."
+      },
+      "actions": {
+        "leaveFeedback": "Leave website feedback"
+      }
+    },
+    "modal": {
+      "title": "Website feedback",
+      "subtitle": "Tell us what worked well and what can be improved.",
+      "submitLabel": "Submit website feedback",
+      "labels": {
+        "rating": "Rating",
+        "ratingValidation": "Please select a rating from 1 to 5.",
+        "category": "Category",
+        "commentOptional": "Comment (optional)",
+        "commentPlaceholder": "Tell us more about your experience"
+      },
+      "categories": {
+        "BUG": "Bug",
+        "UX": "User Experience",
+        "SUGGESTION": "Suggestion",
+        "OTHER": "Other"
+      },
+      "actions": {
+        "notNow": "Not now",
+        "submitting": "Submitting..."
+      },
+      "discard": {
+        "title": "Discard draft?",
+        "description": "Your current feedback has not been submitted yet. If you leave now, the draft will be lost.",
+        "keepEditing": "Keep editing",
+        "discardDraft": "Discard draft"
+      }
+    },
+    "toast": {
+      "feedbackSubmitted": "Feedback submitted"
+    }
+  },
   "PatientRoadmap": {
     "page": {
       "title": "Health Roadmap",
@@ -2494,6 +2551,20 @@
     },
     "generatedOn": "Generated on {{date}}",
     "source": "Source: {{source}}",
+    "sourceBadges": {
+      "doctorReviewed": "Doctor Reviewed",
+      "aiGenerated": "AI Generated",
+      "doctorVerified": "Doctor Verified"
+    },
+    "actions": {
+      "viewDiagnosis": "View Diagnosis",
+      "downloadPdf": "Download PDF",
+      "preparingPdf": "Preparing PDF..."
+    },
+    "toast": {
+      "downloadPdfSuccess": "Roadmap PDF downloaded successfully.",
+      "downloadPdfFailed": "Failed to download roadmap PDF. Please try again."
+    },
     "sections": {
       "nextSteps": {
         "title": "Next Steps",
@@ -2514,6 +2585,26 @@
       "timeframeFallback": "Please contact your doctor for schedule details.",
       "notNeeded": "No immediate follow-up is required.",
       "disclaimer": "Clinical diagnosis and treatment decisions remain under doctor responsibility. This roadmap is patient-facing guidance."
+    },
+    "timeline": {
+      "title": "Care Timeline",
+      "phases": {
+        "today": "Today",
+        "followUpInTwoWeeks": "In 2 weeks",
+        "followUpOptional": "Follow-up optional",
+        "ongoing": "Ongoing"
+      },
+      "titles": {
+        "immediateActions": "Immediate Actions",
+        "followUpPlan": "Follow-up Plan",
+        "lifestyleRoutine": "Lifestyle Routine"
+      },
+      "fallbacks": {
+        "immediateActions": "Review your roadmap summary and monitor symptoms closely.",
+        "followUpNeeded": "Schedule follow-up based on your doctor instructions.",
+        "followUpNotNeeded": "No urgent follow-up required unless symptoms worsen.",
+        "lifestyleRoutine": "Continue healthy eye-care habits and regular rest."
+      }
     }
   },
   "PatientNotifications": {
@@ -5876,7 +5967,9 @@
         "description": "Configure system-wide settings and preferences",
         "actions": {
           "saveChanges": "Save Changes",
-          "saving": "Saving..."
+          "saving": "Saving...",
+          "resetChanges": "Reset",
+          "stickyHint": "Review changes before saving. You can reset unsaved edits anytime."
         }
       },
       "sections": {
@@ -5930,6 +6023,10 @@
         "partTimeMaxSlotsPerDayHint": "Global daily quota for all part-time ophthalmologist slots.",
         "fullTimeSlotWindowDays": "Full-time generation window (days)",
         "fullTimeSlotWindowDaysHint": "Number of forward days Hangfire keeps generated for full-time schedules.",
+        "fullTimeRequiredHoursWeek": "Full-time required workload (hours/week)",
+        "fullTimeRequiredHoursWeekHint": "Target consultation workload for full-time doctors in weekly dashboards.",
+        "fullTimeRequiredHoursMonth": "Full-time required workload (hours/month)",
+        "fullTimeRequiredHoursMonthHint": "Target consultation workload for full-time doctors in monthly dashboards.",
         "fullTimeMinSlotCost": "Full-time minimum slot cost (VND)",
         "fullTimeMaxSlotCost": "Full-time maximum slot cost (VND)",
         "fullTimeMaxSlotCostHint": "Auto-generated full-time slot cost is clamped between min and max.",

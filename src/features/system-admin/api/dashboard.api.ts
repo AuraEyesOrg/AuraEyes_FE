@@ -7,6 +7,8 @@ import { api } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/endpoints';
 import type {
   ApiResponse,
+  SystemAdminDoctorWorkloadPagedResult,
+  SystemAdminDoctorWorkloadQueryParams,
   SystemAdminDashboardMetrics,
   SystemAdminPartTimeSlotQuotaUsage,
 } from '../types/system-admin.types';
@@ -97,6 +99,31 @@ interface AdminPartTimeSlotQuotaUsageDto {
   usedSlots: number;
   quota: number;
   remainingSlots: number;
+}
+
+interface AdminDoctorWorkloadListItemDto {
+  doctorId: string;
+  doctorName: string;
+  email?: string | null;
+  employmentType: 'FULL_TIME' | 'PART_TIME';
+  periodType: 'WEEK' | 'MONTH';
+  periodStart: string;
+  periodEnd: string;
+  requiredHours: number;
+  actualHours: number;
+  completionRate: number;
+  status: 'OK' | 'UNDER';
+  warningFlag: boolean;
+}
+
+interface AdminPagedResult<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
 }
 
 export const dashboardApi = {
@@ -226,6 +253,66 @@ export const dashboardApi = {
       }));
     } catch (error) {
       console.error('Failed to fetch part-time slot quota usage:', error);
+      throw error;
+    }
+  },
+
+  async getDoctorWorkloads(
+    params: SystemAdminDoctorWorkloadQueryParams
+  ): Promise<SystemAdminDoctorWorkloadPagedResult> {
+    try {
+      const response = await api.get<
+        ApiResponse<AdminPagedResult<AdminDoctorWorkloadListItemDto>>
+      >(API_ENDPOINTS.SYSTEM_ADMIN.DASHBOARD.DOCTOR_WORKLOADS, {
+        params: {
+          periodType: params.periodType,
+          date: params.date,
+          searchTerm: params.searchTerm || undefined,
+          employmentType: params.employmentType || undefined,
+          status: params.status || undefined,
+          warningOnly: params.warningOnly ?? false,
+          pageNumber: params.pageNumber ?? 1,
+          pageSize: params.pageSize ?? 10,
+        },
+      });
+
+      const pagedResult = response.data.data;
+      if (!pagedResult) {
+        return {
+          items: [],
+          pageNumber: params.pageNumber ?? 1,
+          pageSize: params.pageSize ?? 10,
+          totalPages: 0,
+          totalCount: 0,
+          hasPrevious: false,
+          hasNext: false,
+        };
+      }
+
+      return {
+        items: (pagedResult.items ?? []).map((item) => ({
+          doctorId: item.doctorId,
+          doctorName: item.doctorName,
+          email: item.email ?? null,
+          employmentType: item.employmentType,
+          periodType: item.periodType,
+          periodStart: item.periodStart,
+          periodEnd: item.periodEnd,
+          requiredHours: Number(item.requiredHours ?? 0),
+          actualHours: Number(item.actualHours ?? 0),
+          completionRate: Number(item.completionRate ?? 0),
+          status: item.status,
+          warningFlag: Boolean(item.warningFlag),
+        })),
+        pageNumber: pagedResult.pageNumber ?? 1,
+        pageSize: pagedResult.pageSize ?? 10,
+        totalPages: pagedResult.totalPages ?? 0,
+        totalCount: pagedResult.totalCount ?? 0,
+        hasPrevious: Boolean(pagedResult.hasPrevious),
+        hasNext: Boolean(pagedResult.hasNext),
+      };
+    } catch (error) {
+      console.error('Failed to fetch doctor workloads:', error);
       throw error;
     }
   },
