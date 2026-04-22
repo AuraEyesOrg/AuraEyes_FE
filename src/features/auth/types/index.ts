@@ -7,7 +7,7 @@ export interface LoginRequest {
   email: string;
   password: string;
   deviceInfo?: string;
-  recaptchaToken?: string;
+  turnstileToken?: string;
 }
 
 export interface GoogleLoginRequest {

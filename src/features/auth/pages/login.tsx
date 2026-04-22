@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import {
   Eye,
@@ -59,6 +58,31 @@ interface RegisterFormData {
   agreeTerms: boolean;
 }
 
+type TurnstileRenderOptions = {
+  sitekey: string;
+  theme?: 'light' | 'dark';
+  language?: string;
+  callback?: (token: string) => void;
+  'expired-callback'?: () => void;
+  'error-callback'?: () => void;
+};
+
+type TurnstileApi = {
+  ready: (cb: () => void) => void;
+  render: (
+    container: HTMLElement | string,
+    parameters: TurnstileRenderOptions
+  ) => string;
+  reset: (widgetId?: string) => void;
+  remove: (widgetId: string) => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
 const LoginPage = () => {
   const { t } = useSafeTranslation();
   const copyrightText = t('AuthPages.shared.copyright').replace(
@@ -70,8 +94,9 @@ const LoginPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [registerCountdown, setRegisterCountdown] = useState<number | null>(
     null
@@ -92,8 +117,72 @@ const LoginPage = () => {
     : DEFAULT_LOCALE;
   const locale = getLocaleFromPathname(location.pathname) ?? languageLocale;
   const uiLocale = locale === 'vi' ? 'vi' : 'en';
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
   const toLocalizedAuthPath = (pathname: string) =>
     withLocalePathname(locale, pathname);
+
+  useEffect(() => {
+    setTurnstileToken(null);
+  }, [theme, uiLocale]);
+
+  useEffect(() => {
+    if (!turnstileSiteKey) {
+      return;
+    }
+
+    let isDisposed = false;
+    let retryTimeout: number | null = null;
+
+    const renderCaptcha = () => {
+      if (isDisposed) {
+        return;
+      }
+
+      const turnstileApi = window.turnstile;
+      const container = turnstileContainerRef.current;
+
+      if (!turnstileApi || !container) {
+        retryTimeout = window.setTimeout(renderCaptcha, 120);
+        return;
+      }
+
+      if (turnstileWidgetIdRef.current) {
+        turnstileApi.remove(turnstileWidgetIdRef.current);
+        turnstileWidgetIdRef.current = null;
+      }
+      container.innerHTML = '';
+
+      const widgetId = turnstileApi.render(container, {
+        sitekey: turnstileSiteKey,
+        theme: theme === 'dark' ? 'dark' : 'light',
+        language: uiLocale,
+        callback: (token) => setTurnstileToken(token),
+        'expired-callback': () => setTurnstileToken(null),
+        'error-callback': () => setTurnstileToken(null),
+      });
+
+      turnstileWidgetIdRef.current = widgetId;
+    };
+
+    const turnstileApi = window.turnstile;
+    if (turnstileApi) {
+      turnstileApi.ready(renderCaptcha);
+    } else {
+      renderCaptcha();
+    }
+
+    return () => {
+      isDisposed = true;
+      if (retryTimeout !== null) {
+        window.clearTimeout(retryTimeout);
+      }
+      const activeWidgetId = turnstileWidgetIdRef.current;
+      if (activeWidgetId && window.turnstile) {
+        window.turnstile.remove(activeWidgetId);
+        turnstileWidgetIdRef.current = null;
+      }
+    };
+  }, [theme, turnstileSiteKey, uiLocale]);
 
   const hasUnverifiedEmailError = (message: string) => {
     const normalized = message.toLowerCase();
@@ -143,9 +232,9 @@ const LoginPage = () => {
   } = useForm<RegisterFormData>();
 
   const onLoginSubmit = async (data: LoginFormData) => {
-    // Validate reCAPTCHA
-    if (!recaptchaToken) {
-      setError(t('AuthPages.login.messages.recaptchaRequired'));
+    // Validate Cloudflare Turnstile token
+    if (!turnstileToken) {
+      setError(t('AuthPages.login.messages.captchaRequired'));
       return;
     }
 
@@ -156,7 +245,7 @@ const LoginPage = () => {
       const response = await login({
         email: data.email,
         password: data.password,
-        recaptchaToken: recaptchaToken,
+        turnstileToken,
       });
 
       // Check if 2FA is required
@@ -254,9 +343,12 @@ const LoginPage = () => {
       }
     } finally {
       setIsLoading(false);
-      // Reset reCAPTCHA on error
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      // Reset Turnstile token after each submit attempt
+      const activeWidgetId = turnstileWidgetIdRef.current;
+      if (activeWidgetId) {
+        window.turnstile?.reset(activeWidgetId);
+      }
+      setTurnstileToken(null);
     }
   };
 
@@ -674,17 +766,12 @@ const LoginPage = () => {
                   )}
                 </div>
 
-                {/* reCAPTCHA */}
+                {/* Cloudflare Turnstile */}
                 <div className="flex justify-center">
-                  <ReCAPTCHA
-                    key={`recaptcha-${uiLocale}`}
-                    ref={recaptchaRef}
-                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                    hl={uiLocale}
-                    theme={theme === 'dark' ? 'dark' : 'light'}
-                    onChange={(token) => setRecaptchaToken(token)}
-                    onExpired={() => setRecaptchaToken(null)}
-                    onErrored={() => setRecaptchaToken(null)}
+                  <div
+                    key={`turnstile-${uiLocale}-${theme}`}
+                    ref={turnstileContainerRef}
+                    className="min-h-[78px]"
                   />
                 </div>
 

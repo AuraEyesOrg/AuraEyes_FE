@@ -153,10 +153,12 @@ const AUTH_BASE_URL = '/auth';
 export const login = async (
   data: LoginRequest
 ): Promise<AuthResponse | TwoFactorRequiredResponse> => {
+  const captchaToken = data.turnstileToken;
   const response = await api.post<
     ApiResponse<AuthResponse | TwoFactorRequiredResponse>
   >(`${AUTH_BASE_URL}/login`, {
     ...data,
+    recaptchaToken: captchaToken,
     deviceInfo: data.deviceInfo || navigator.userAgent,
   });
 
