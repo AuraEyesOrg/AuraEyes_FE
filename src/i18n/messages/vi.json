@@ -378,7 +378,8 @@
         "loginError": "Đã xảy ra lỗi khi đăng nhập",
         "registrationError": "Đã xảy ra lỗi khi đăng ký",
         "googleError": "Đã xảy ra lỗi khi đăng nhập Google",
-        "recaptchaRequired": "Vui lòng hoàn tất xác minh reCAPTCHA."
+        "captchaRequired": "Vui lòng hoàn tất xác minh CAPTCHA.",
+        "turnstileRequired": "Vui lòng hoàn tất xác minh Turnstile."
       },
       "loginForm": {
         "heading": "Chào mừng quay lại",

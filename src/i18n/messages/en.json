@@ -378,7 +378,8 @@
         "loginError": "An error occurred during login",
         "registrationError": "An error occurred during registration",
         "googleError": "An error occurred during Google login",
-        "recaptchaRequired": "Please complete the reCAPTCHA verification."
+        "captchaRequired": "Please complete the CAPTCHA verification.",
+        "turnstileRequired": "Please complete the Turnstile verification."
       },
       "loginForm": {
         "heading": "Welcome Back",

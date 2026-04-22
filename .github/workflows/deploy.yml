@@ -26,7 +26,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/auraeyes-web:latest
           build-args: |
             VITE_API_END_POINT=/api
-            VITE_RECAPTCHA_SITE_KEY=${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
+            VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
             VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
             VITE_N8N_WEBHOOK_URL=${{ secrets.VITE_N8N_WEBHOOK_URL }}
             VITE_API_END_AI_POINT=${{ secrets.VITE_API_END_AI_POINT }}
