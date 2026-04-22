@@ -2254,6 +2254,13 @@
       "newScan": "Lượt quét mới",
       "viewAllResources": "Xem tất cả tài liệu"
     },
+    "consultation": {
+      "alreadyBookedTitle": "Bạn đã gửi ca này để tư vấn",
+      "alreadyBookedDescription": "Để tránh đặt trùng, hệ thống đã khóa đặt bác sĩ và chat AI cho ca này.",
+      "statusLabel": "Trạng thái",
+      "createdAtLabel": "Thời điểm tạo",
+      "chatLocked": "Đã khóa chat AI cho ca đã tư vấn"
+    },
     "footer": {
       "importantDisclaimer": "AURA là công cụ sàng lọc có hỗ trợ AI và không thay thế chẩn đoán y khoa chính thức.",
       "copyright": "© {{year}} AURA Health. Bảo lưu mọi quyền."

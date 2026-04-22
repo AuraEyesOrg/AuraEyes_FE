@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Stethoscope,
   Bot,
+  CheckCircle2,
 } from 'lucide-react';
 import { SecondaryActionCard } from '../components';
 import {
@@ -36,6 +37,8 @@ import {
   isNormalDisease,
   toDisplayDiseaseName,
 } from '@/features/patient/lib/disease-translation';
+import useAuthStore from '@/store/auth-store';
+import { useConsultationSessions } from '@/features/consultation/hooks';
 
 interface LocationState {
   screeningId?: string;
@@ -102,6 +105,8 @@ export default function ReviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useSafeTranslation();
+  const { user } = useAuthStore();
+  const patientId = user?.roleId ?? undefined;
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language ?? 'vi';
   const state = location.state as LocationState | null;
   const storedConsultationContext = useMemo(
@@ -277,6 +282,33 @@ export default function ReviewPage() {
     activeState?.screeningId ??
     relevantStoredContext?.screeningId ??
     hydratedSession?.screeningId;
+
+  const {
+    data: linkedConsultationSessions,
+    isLoading: isLinkedConsultationLoading,
+    isFetching: isLinkedConsultationFetching,
+  } = useConsultationSessions(
+    {
+      patientId,
+      aiScreeningId: screeningId,
+      pageNumber: 1,
+      pageSize: 5,
+    },
+    {
+      enabled: Boolean(patientId && screeningId),
+    }
+  );
+
+  const latestLinkedConsultation =
+    linkedConsultationSessions?.items?.[0] ?? null;
+  const hasBookedOrConsultedThisCase =
+    (linkedConsultationSessions?.totalCount ?? 0) > 0;
+  const consultationProgressLabel = latestLinkedConsultation
+    ? latestLinkedConsultation.statusName
+    : null;
+  const consultationBookedAtLabel = latestLinkedConsultation?.createdAt
+    ? new Date(latestLinkedConsultation.createdAt).toLocaleString()
+    : null;
   const rawJsonForAnalysis =
     activeState?.rawJsonOutput ??
     relevantStoredContext?.rawJsonOutput ??
@@ -647,26 +679,75 @@ export default function ReviewPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={() =>
-                          navigate('/patient/doctors', {
-                            state: {
-                              consultationContext,
-                            },
-                          })
-                        }
-                        className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5"
-                      >
-                        <CalendarCheck className="w-5 h-5" />
-                        {t('PatientReview.actions.findSpecialist')}
-                      </button>
-                      <button
-                        onClick={openN8nChat}
-                        className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors"
-                      >
-                        <Bot className="w-5 h-5" />
-                        {t('PatientReview.actions.askAuraAssistant')}
-                      </button>
+                      {hasBookedOrConsultedThisCase ? (
+                        <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-4 dark:border-emerald-800/40 dark:bg-emerald-900/20">
+                          <div className="flex items-start gap-3">
+                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-800/40 dark:text-emerald-300">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </span>
+                            <div className="min-w-0 space-y-1">
+                              <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                                {t(
+                                  'PatientReview.consultation.alreadyBookedTitle',
+                                  'You already submitted this case for consultation'
+                                )}
+                              </p>
+                              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                                {t(
+                                  'PatientReview.consultation.alreadyBookedDescription',
+                                  'To avoid duplicate bookings, specialist booking and AI chat are locked for this case.'
+                                )}
+                              </p>
+                              {(consultationProgressLabel ||
+                                consultationBookedAtLabel) && (
+                                <p className="pt-1 text-xs font-medium text-emerald-700/90 dark:text-emerald-200/90">
+                                  {consultationProgressLabel
+                                    ? `${t('PatientReview.consultation.statusLabel', 'Status')}: ${consultationProgressLabel}`
+                                    : ''}
+                                  {consultationProgressLabel &&
+                                  consultationBookedAtLabel
+                                    ? ' • '
+                                    : ''}
+                                  {consultationBookedAtLabel
+                                    ? `${t('PatientReview.consultation.createdAtLabel', 'Booked at')}: ${consultationBookedAtLabel}`
+                                    : ''}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() =>
+                              navigate('/patient/doctors', {
+                                state: {
+                                  consultationContext,
+                                },
+                              })
+                            }
+                            disabled={
+                              isLinkedConsultationLoading ||
+                              isLinkedConsultationFetching
+                            }
+                            className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/30 transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
+                          >
+                            <CalendarCheck className="w-5 h-5" />
+                            {t('PatientReview.actions.findSpecialist')}
+                          </button>
+                          <button
+                            onClick={openN8nChat}
+                            disabled={
+                              isLinkedConsultationLoading ||
+                              isLinkedConsultationFetching
+                            }
+                            className="flex items-center justify-center gap-2 surface-primary hover:bg-gray-50 dark:hover:bg-[#2d4a6f] text-(--text-primary) font-semibold py-3 px-6 rounded-xl surface-border transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Bot className="w-5 h-5" />
+                            {t('PatientReview.actions.askAuraAssistant')}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -789,7 +870,9 @@ export default function ReviewPage() {
           </footer>
         </div>
       </div>
-      <N8nChatWidget consultationContext={consultationContext} />
+      {!hasBookedOrConsultedThisCase ? (
+        <N8nChatWidget consultationContext={consultationContext} />
+      ) : null}
     </FocusModeLayout>
   );
 }
