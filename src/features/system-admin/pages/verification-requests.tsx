@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Eye,
   ZoomIn,
+  ExternalLink,
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
@@ -61,6 +62,8 @@ const formatDate = (
 
 const isImageUrl = (url: string) =>
   /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
+
+const isPdfUrl = (url: string) => /\.pdf(\?.*)?$/i.test(url);
 
 const formatDegreeLevel = (value: string | undefined, t: TranslateFn) => {
   if (!value) return t('SystemAdmin.common.notAvailable', 'N/A');
@@ -540,6 +543,28 @@ function VerificationDetailModal({
                       )}
                     </div>
                   </button>
+                ) : isPdfUrl(credential.certificateUrl) ? (
+                  <div className="w-full h-48 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                    <iframe
+                      src={`${credential.certificateUrl}#toolbar=0`}
+                      className="w-full h-full border-none"
+                      title={credential.name}
+                    />
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50">
+                      <span className="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">
+                        {credential.name}
+                      </span>
+                      <a
+                        href={credential.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        {t('SystemAdmin.common.actions.openFull', 'Open Full')}
+                      </a>
+                    </div>
+                  </div>
                 ) : (
                   <a
                     href={credential.certificateUrl}
