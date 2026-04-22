@@ -26,6 +26,7 @@ import {
   getLocaleFromPathname,
   withLocalePathname,
 } from '@/i18n/locales';
+import { useSafeTranslation } from '@/i18n/useSafeTranslation';
 import '@/styles/auth-animations.css';
 
 type DegreeLevel =
@@ -35,12 +36,38 @@ type DegreeLevel =
   | 'AssociateProfessor'
   | 'Professor';
 
-const DEGREE_LEVEL_OPTIONS: Array<{ value: DegreeLevel; label: string }> = [
-  { value: 'Bachelor', label: 'Bachelor' },
-  { value: 'Master', label: 'Master' },
-  { value: 'Doctor', label: 'Doctor (PhD)' },
-  { value: 'AssociateProfessor', label: 'Associate Professor' },
-  { value: 'Professor', label: 'Professor' },
+const DEGREE_LEVEL_OPTIONS = (
+  t: (key: string, fallback: string) => string
+): Array<{ value: DegreeLevel; label: string }> => [
+  {
+    value: 'Bachelor',
+    label: t('AuthPages.registerDoctor.form.degreeLevels.Bachelor', 'Bachelor'),
+  },
+  {
+    value: 'Master',
+    label: t('AuthPages.registerDoctor.form.degreeLevels.Master', 'Master'),
+  },
+  {
+    value: 'Doctor',
+    label: t(
+      'AuthPages.registerDoctor.form.degreeLevels.Doctor',
+      'Doctor (PhD)'
+    ),
+  },
+  {
+    value: 'AssociateProfessor',
+    label: t(
+      'AuthPages.registerDoctor.form.degreeLevels.AssociateProfessor',
+      'Associate Professor'
+    ),
+  },
+  {
+    value: 'Professor',
+    label: t(
+      'AuthPages.registerDoctor.form.degreeLevels.Professor',
+      'Professor'
+    ),
+  },
 ];
 
 interface DegreeFormItem {
@@ -97,6 +124,7 @@ const RegisterDoctorPage = () => {
     null
   );
   const [submittedEmail, setSubmittedEmail] = useState('');
+  const { t } = useSafeTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const locale = getLocaleFromPathname(location.pathname) ?? DEFAULT_LOCALE;
@@ -181,36 +209,67 @@ const RegisterDoctorPage = () => {
     if (data.password !== data.confirmPassword) {
       setError('confirmPassword', {
         type: 'validate',
-        message: 'Passwords do not match',
+        message: t(
+          'AuthPages.registerDoctor.validation.passwordsNotMatch',
+          'Passwords do not match'
+        ),
       });
-      toast.error('Passwords do not match. Please re-check your password.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.passwordsNotMatch',
+          'Passwords do not match. Please re-check your password.'
+        )
+      );
       return;
     }
 
     if (!data.degrees.length) {
-      toast.error('At least one degree is required before submitting.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.degreeRequired',
+          'At least one degree is required before submitting.'
+        )
+      );
       return;
     }
 
     if (!data.certificates.length) {
       toast.error(
-        'At least one certificate/license is required before submitting.'
+        t(
+          'AuthPages.registerDoctor.validation.certificateRequired',
+          'At least one certificate/license is required before submitting.'
+        )
       );
       return;
     }
 
     if (data.degrees.some((item) => !item.file)) {
-      toast.error('Every degree item must include a file.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.degreeFileRequired',
+          'Every degree item must include a file.'
+        )
+      );
       return;
     }
 
     if (data.certificates.some((item) => !item.file)) {
-      toast.error('Every certificate item must include a file.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.certificateFileRequired',
+          'Every certificate item must include a file.'
+        )
+      );
       return;
     }
 
     if (data.certificates.some((item) => !item.expiryDate)) {
-      toast.error('Every certificate item must include an expiry date.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.expiryDateRequired',
+          'Every certificate item must include an expiry date.'
+        )
+      );
       return;
     }
 
@@ -221,7 +280,12 @@ const RegisterDoctorPage = () => {
           new Date(`${item.issuedDate}T00:00:00.000Z`)
       )
     ) {
-      toast.error('Certificate expiry date must be later than issued date.');
+      toast.error(
+        t(
+          'AuthPages.registerDoctor.validation.expiryDateInvalid',
+          'Certificate expiry date must be later than issued date.'
+        )
+      );
       return;
     }
 
@@ -260,7 +324,10 @@ const RegisterDoctorPage = () => {
 
       setSubmittedEmail(data.email);
       toast.success(
-        'Đăng ký bác sĩ thành công! Vui lòng kiểm tra email để xác nhận tài khoản và chờ admin phê duyệt.',
+        t(
+          'AuthPages.registerDoctor.toast.success',
+          'Doctor registration successful! Please check your email to confirm your account and wait for admin approval.'
+        ),
         { autoClose: 5000 }
       );
       setIsSubmitted(true);
@@ -289,7 +356,10 @@ const RegisterDoctorPage = () => {
         error?.response?.data?.message ||
         error?.response?.data?.title ||
         (err instanceof Error ? err.message : '') ||
-        'Registration failed. Please try again.';
+        t(
+          'AuthPages.registerDoctor.toast.failed',
+          'Registration failed. Please try again.'
+        );
 
       const normalizedError = resolvedError.toLowerCase();
       const hasDuplicateEmailError = [
@@ -358,19 +428,30 @@ const RegisterDoctorPage = () => {
           <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
             <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-              Welcome to <br />
-              <span className="text-[#00d1c0]">Medical Excellence.</span>
+              {t('AuthPages.registerDoctor.leftPanel.welcome', 'Welcome to')}{' '}
+              <br />
+              <span className="text-[#00d1c0]">
+                {t(
+                  'AuthPages.registerDoctor.leftPanel.medicalExcellence',
+                  'Medical Excellence.'
+                )}
+              </span>
             </h1>
             <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-              Join our network of healthcare professionals using cutting-edge AI
-              for retinal diagnostics.
+              {t(
+                'AuthPages.registerDoctor.leftPanel.description',
+                'Join our network of healthcare professionals using cutting-edge AI for retinal diagnostics.'
+              )}
             </p>
           </div>
 
           <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
             <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
             <a className="hover:text-[#00d1c0] transition-colors" href="#">
-              System Status: <span className="text-green-400">● Online</span>
+              {t('AuthPages.registerDoctor.leftPanel.status', 'System Status:')}{' '}
+              <span className="text-green-400">
+                ● {t('AuthPages.registerDoctor.leftPanel.online', 'Online')}
+              </span>
             </a>
           </div>
         </div>
@@ -382,27 +463,43 @@ const RegisterDoctorPage = () => {
                 <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
               <h2 className="text-3xl font-bold text-[#1A202C] mb-3 tracking-tight">
-                Application Submitted!
+                {t(
+                  'AuthPages.registerDoctor.success.title',
+                  'Application Submitted!'
+                )}
               </h2>
               <p className="text-gray-600 mb-2">
-                Thank you for registering with AURA Healthcare Network.
+                {t(
+                  'AuthPages.registerDoctor.success.subtitle',
+                  'Thank you for registering with AURA Healthcare Network.'
+                )}
               </p>
               <p className="text-gray-600 mb-6">
-                Our team will review your application and credentials. You will
-                receive your account details via email within 2-3 business days.
+                {t(
+                  'AuthPages.registerDoctor.success.description',
+                  'Our team will review your application and credentials. You will receive your account details via email within 2-3 business days.'
+                )}
               </p>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
                 <p className="text-sm text-blue-800">
-                  Please check your email <strong>{submittedEmail}</strong> to
-                  verify your account before the admin reviews your contract.
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: t(
+                        'AuthPages.registerDoctor.success.emailNotice',
+                        'Please check your email <strong>{{email}}</strong> to verify your account before the admin reviews your contract.'
+                      ).replace('{{email}}', submittedEmail),
+                    }}
+                  />
                 </p>
               </div>
               {redirectCountdown !== null && redirectCountdown > 0 && (
                 <div className="flex items-center justify-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-xl mb-4">
                   <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
                   <p className="text-sm text-green-700 font-medium">
-                    Chuyển hướng đến trang xác nhận email sau{' '}
-                    {redirectCountdown}s...
+                    {t(
+                      'AuthPages.registerDoctor.success.redirect',
+                      'Redirecting to email confirmation page in {{seconds}}s...'
+                    ).replace('{{seconds}}', String(redirectCountdown))}
                   </p>
                 </div>
               )}
@@ -410,7 +507,7 @@ const RegisterDoctorPage = () => {
                 to="/"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#00d1c0] hover:bg-[#00b8a9] text-white rounded-lg font-semibold transition-all duration-200 button-hover-lift uppercase tracking-wider text-sm"
               >
-                Back to Home
+                {t('AuthPages.registerDoctor.success.backHome', 'Back to Home')}
               </Link>
             </div>
           </div>
@@ -441,19 +538,30 @@ const RegisterDoctorPage = () => {
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            Join Our <br />
-            <span className="text-[#00d1c0]">Medical Network.</span>
+            {t('AuthPages.registerDoctor.leftPanel.welcome', 'Welcome to')}{' '}
+            <br />
+            <span className="text-[#00d1c0]">
+              {t(
+                'AuthPages.registerDoctor.leftPanel.medicalExcellence',
+                'Medical Excellence.'
+              )}
+            </span>
           </h1>
           <p className="text-gray-300 text-lg lg:text-xl font-light leading-relaxed max-w-md">
-            Become part of our elite team of healthcare professionals leveraging
-            AI-powered diagnostics.
+            {t(
+              'AuthPages.registerDoctor.leftPanel.description',
+              'Become part of our elite team of healthcare professionals leveraging AI-powered diagnostics.'
+            )}
           </p>
         </div>
 
         <div className="relative z-10 text-sm text-gray-500 flex justify-between items-end">
-          <p>© 2026 Aura Medical Systems.</p>
+          <p>© {new Date().getFullYear()} Aura Medical Systems.</p>
           <a className="hover:text-[#00d1c0] transition-colors" href="#">
-            System Status: <span className="text-green-400">● Online</span>
+            {t('AuthPages.registerDoctor.leftPanel.status', 'System Status:')}{' '}
+            <span className="text-green-400">
+              ● {t('AuthPages.registerDoctor.leftPanel.online', 'Online')}
+            </span>
           </a>
         </div>
       </div>
@@ -471,17 +579,24 @@ const RegisterDoctorPage = () => {
                 />
               </div>
               <h2 className="text-3xl font-bold text-[#1A202C] mb-2 tracking-tight">
-                Doctor Registration
+                {t(
+                  'AuthPages.registerDoctor.form.title',
+                  'Doctor Registration'
+                )}
               </h2>
               <p className="text-gray-600 text-sm">
-                Join AURA Healthcare Network
+                {t(
+                  'AuthPages.registerDoctor.form.description',
+                  'Join AURA Healthcare Network'
+                )}
               </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Full Name <span className="text-red-500">*</span>
+                  {t('AuthPages.registerDoctor.form.fullName', 'Full Name')}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -490,14 +605,23 @@ const RegisterDoctorPage = () => {
                   <input
                     type="text"
                     {...register('fullName', {
-                      required: 'Full name is required',
+                      required: t(
+                        'AuthPages.login.validation.fullNameRequired',
+                        'Full name is required'
+                      ),
                       minLength: {
                         value: 3,
-                        message: 'Name must be at least 3 characters',
+                        message: t(
+                          'AuthPages.login.validation.fullNameMin',
+                          'Name must be at least 3 characters'
+                        ),
                       },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="Dr. John Smith"
+                    placeholder={t(
+                      'AuthPages.registerDoctor.form.fullNamePlaceholder',
+                      'Dr. John Smith'
+                    )}
                   />
                 </div>
                 {errors.fullName && (
@@ -509,7 +633,8 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Medical Email <span className="text-red-500">*</span>
+                  {t('AuthPages.registerDoctor.form.email', 'Medical Email')}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -518,14 +643,23 @@ const RegisterDoctorPage = () => {
                   <input
                     type="email"
                     {...register('email', {
-                      required: 'Email is required',
+                      required: t(
+                        'AuthPages.login.validation.emailRequired',
+                        'Email is required'
+                      ),
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Invalid email address',
+                        message: t(
+                          'AuthPages.login.validation.invalidEmail',
+                          'Invalid email address'
+                        ),
                       },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="dr.smith@hospital.org"
+                    placeholder={t(
+                      'AuthPages.registerDoctor.form.emailPlaceholder',
+                      'dr.smith@hospital.org'
+                    )}
                   />
                 </div>
                 {errors.email && (
@@ -537,7 +671,7 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Phone Number
+                  {t('AuthPages.registerDoctor.form.phone', 'Phone Number')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -548,11 +682,17 @@ const RegisterDoctorPage = () => {
                     {...register('phone', {
                       pattern: {
                         value: /^[0-9+\-\s()]+$/,
-                        message: 'Invalid phone number',
+                        message: t(
+                          'AuthPages.login.validation.invalidPhone',
+                          'Invalid phone number'
+                        ),
                       },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="+84 (123) 456-7890"
+                    placeholder={t(
+                      'AuthPages.registerDoctor.form.phonePlaceholder',
+                      '+84 (123) 456-7890'
+                    )}
                   />
                 </div>
                 {errors.phone && (
@@ -564,7 +704,8 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Password <span className="text-red-500">*</span>
+                  {t('AuthPages.registerDoctor.form.password', 'Password')}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -573,14 +714,23 @@ const RegisterDoctorPage = () => {
                   <input
                     type="password"
                     {...register('password', {
-                      required: 'Password is required',
+                      required: t(
+                        'AuthPages.login.validation.passwordRequired',
+                        'Password is required'
+                      ),
                       minLength: {
                         value: 8,
-                        message: 'Password must be at least 8 characters',
+                        message: t(
+                          'AuthPages.login.validation.passwordMin',
+                          'Password must be at least 8 characters'
+                        ),
                       },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="Minimum 8 characters"
+                    placeholder={t(
+                      'AuthPages.registerDoctor.form.passwordPlaceholder',
+                      'Minimum 8 characters'
+                    )}
                   />
                 </div>
                 {errors.password && (
@@ -592,7 +742,11 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Confirm Password <span className="text-red-500">*</span>
+                  {t(
+                    'AuthPages.registerDoctor.form.confirmPassword',
+                    'Confirm Password'
+                  )}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -601,12 +755,22 @@ const RegisterDoctorPage = () => {
                   <input
                     type="password"
                     {...register('confirmPassword', {
-                      required: 'Please confirm your password',
+                      required: t(
+                        'AuthPages.login.validation.confirmPasswordRequired',
+                        'Please confirm your password'
+                      ),
                       validate: (value) =>
-                        value === watch('password') || 'Passwords do not match',
+                        value === watch('password') ||
+                        t(
+                          'AuthPages.login.validation.passwordMismatch',
+                          'Passwords do not match'
+                        ),
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
-                    placeholder="Re-enter your password"
+                    placeholder={t(
+                      'AuthPages.registerDoctor.form.confirmPasswordPlaceholder',
+                      'Re-enter your password'
+                    )}
                   />
                 </div>
                 {errors.confirmPassword && (
@@ -618,7 +782,11 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Experience (years) <span className="text-red-500">*</span>
+                  {t(
+                    'AuthPages.registerDoctor.form.experience',
+                    'Experience (years)'
+                  )}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -627,8 +795,17 @@ const RegisterDoctorPage = () => {
                   <input
                     type="number"
                     {...register('yearsOfExperience', {
-                      required: 'Experience is required',
-                      min: { value: 0, message: 'Invalid experience' },
+                      required: t(
+                        'Validation.Required',
+                        'Trường này là bắt buộc'
+                      ),
+                      min: {
+                        value: 0,
+                        message: t(
+                          'Ophthalmologist.common.notAvailable',
+                          'Invalid experience'
+                        ),
+                      },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                     placeholder="5"
@@ -643,19 +820,35 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Working Mode <span className="text-red-500">*</span>
+                  {t(
+                    'AuthPages.registerDoctor.form.workingMode',
+                    'Working Mode'
+                  )}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     {
                       value: 'FullTime' as const,
-                      label: 'Full-time',
-                      description: 'Toàn thời gian, lịch làm ổn định',
+                      label: t(
+                        'AuthPages.registerDoctor.form.fullTime',
+                        'Full-time'
+                      ),
+                      description: t(
+                        'AuthPages.registerDoctor.form.fullTimeDesc',
+                        'Stable schedule'
+                      ),
                     },
                     {
                       value: 'PartTime' as const,
-                      label: 'Part-time',
-                      description: 'Bán thời gian, lịch làm linh hoạt',
+                      label: t(
+                        'AuthPages.registerDoctor.form.partTime',
+                        'Part-time'
+                      ),
+                      description: t(
+                        'AuthPages.registerDoctor.form.partTimeDesc',
+                        'Flexible schedule'
+                      ),
                     },
                   ].map((option) => {
                     const isSelected = selectedEmploymentType === option.value;
@@ -672,7 +865,10 @@ const RegisterDoctorPage = () => {
                           type="radio"
                           value={option.value}
                           {...register('employmentType', {
-                            required: 'Working mode is required',
+                            required: t(
+                              'Validation.Required',
+                              'Working mode is required'
+                            ),
                           })}
                           className="sr-only"
                         />
@@ -695,7 +891,11 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Working Hours / Week <span className="text-red-500">*</span>
+                  {t(
+                    'AuthPages.registerDoctor.form.workingHours',
+                    'Working Hours / Week'
+                  )}{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -704,7 +904,10 @@ const RegisterDoctorPage = () => {
                   <input
                     type="number"
                     {...register('workingHoursPerWeek', {
-                      required: 'Working hours is required',
+                      required: t(
+                        'Validation.Required',
+                        'Working hours is required'
+                      ),
                     })}
                     disabled
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
@@ -722,7 +925,10 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Expected Monthly Salary (VND){' '}
+                  {t(
+                    'AuthPages.registerDoctor.form.expectedSalary',
+                    'Expected Monthly Salary (VND)'
+                  )}{' '}
                   <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -732,18 +938,30 @@ const RegisterDoctorPage = () => {
                   <input
                     type="number"
                     {...register('expectedMonthlySalary', {
-                      required: 'Expected salary is required',
-                      min: { value: 0, message: 'Salary cannot be negative' },
+                      required: t(
+                        'Validation.Required',
+                        'Expected salary is required'
+                      ),
+                      min: {
+                        value: 0,
+                        message: t(
+                          'Ophthalmologist.common.notAvailable',
+                          'Salary cannot be negative'
+                        ),
+                      },
                     })}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all"
                     placeholder={String(suggestedSalary)}
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Suggested by mode + experience:{' '}
-                  <span className="font-semibold text-gray-700">
-                    {suggestedSalary.toLocaleString('vi-VN')} VND
-                  </span>
+                  {t(
+                    'AuthPages.registerDoctor.form.suggestedSalary',
+                    'Suggested by mode + experience: {{salary}} VND'
+                  ).replace(
+                    '{{salary}}',
+                    suggestedSalary.toLocaleString('vi-VN')
+                  )}
                 </p>
                 {errors.expectedMonthlySalary && (
                   <p className="text-xs text-red-500 mt-1">
@@ -754,20 +972,27 @@ const RegisterDoctorPage = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-gray-700">
-                  Brief Bio (Optional)
+                  {t(
+                    'AuthPages.registerDoctor.form.bio',
+                    'Brief Bio (Optional)'
+                  )}
                 </label>
                 <textarea
                   {...register('bio')}
                   rows={3}
                   className="block w-full px-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1F85F5] focus:ring-1 focus:ring-[#1F85F5] sm:text-sm bg-gray-50/30 transition-all resize-none"
-                  placeholder="Brief introduction about your practice and expertise..."
+                  placeholder={t(
+                    'AuthPages.registerDoctor.form.bioPlaceholder',
+                    'Brief introduction about your practice and expertise...'
+                  )}
                 />
               </div>
 
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Degrees <span className="text-red-500">*</span>
+                    {t('AuthPages.registerDoctor.form.degrees', 'Degrees')}{' '}
+                    <span className="text-red-500">*</span>
                   </h3>
                   <button
                     type="button"
@@ -775,7 +1000,8 @@ const RegisterDoctorPage = () => {
                     onClick={() => appendDegree(createDefaultDegree())}
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
                   >
-                    <Plus className="h-4 w-4" /> Add Degree
+                    <Plus className="h-4 w-4" />{' '}
+                    {t('AuthPages.registerDoctor.form.addDegree', 'Add Degree')}
                   </button>
                 </div>
 
@@ -787,7 +1013,10 @@ const RegisterDoctorPage = () => {
                   >
                     <div className="flex justify-between items-center">
                       <p className="text-xs font-semibold text-gray-600">
-                        Degree #{index + 1}
+                        {t(
+                          'AuthPages.registerDoctor.form.degreeItem',
+                          'Degree #{{index}}'
+                        ).replace('{{index}}', String(index + 1))}
                       </p>
                       <button
                         type="button"
@@ -805,10 +1034,19 @@ const RegisterDoctorPage = () => {
                     <input
                       type="text"
                       {...register(`degrees.${index}.name`, {
-                        required: 'Degree name is required',
+                        required:
+                          t(
+                            'AuthPages.registerDoctor.form.fields.name',
+                            'Name'
+                          ) +
+                          ' ' +
+                          t('Validation.Required', 'is required'),
                       })}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Degree name"
+                      placeholder={t(
+                        'AuthPages.registerDoctor.form.fields.name',
+                        'Name'
+                      )}
                     />
                     {errors.degrees?.[index]?.name && (
                       <p className="text-xs text-red-500">
@@ -818,15 +1056,25 @@ const RegisterDoctorPage = () => {
 
                     <div>
                       <label className="text-xs text-gray-600">
-                        Degree level <span className="text-red-500">*</span>
+                        {t(
+                          'AuthPages.registerDoctor.form.fields.level',
+                          'Level'
+                        )}{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <select
                         {...register(`degrees.${index}.degreeLevel`, {
-                          required: 'Degree level is required',
+                          required:
+                            t(
+                              'AuthPages.registerDoctor.form.fields.level',
+                              'Level'
+                            ) +
+                            ' ' +
+                            t('Validation.Required', 'is required'),
                         })}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       >
-                        {DEGREE_LEVEL_OPTIONS.map((option) => (
+                        {DEGREE_LEVEL_OPTIONS(t).map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>
@@ -843,17 +1091,29 @@ const RegisterDoctorPage = () => {
                       type="text"
                       {...register(`degrees.${index}.issuingAuthority`)}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Issuing authority (optional)"
+                      placeholder={t(
+                        'AuthPages.registerDoctor.form.fields.issuingAuthority',
+                        'Issuing Authority'
+                      )}
                     />
 
                     <div>
                       <label className="text-xs text-gray-600">
-                        Issued date
+                        {t(
+                          'AuthPages.registerDoctor.form.fields.issuedDate',
+                          'Issued Date'
+                        )}
                       </label>
                       <input
                         type="date"
                         {...register(`degrees.${index}.issuedDate`, {
-                          required: 'Issued date is required',
+                          required:
+                            t(
+                              'AuthPages.registerDoctor.form.fields.issuedDate',
+                              'Issued Date'
+                            ) +
+                            ' ' +
+                            t('Validation.Required', 'is required'),
                         })}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
@@ -886,7 +1146,10 @@ const RegisterDoctorPage = () => {
                         >
                           <Upload className="h-5 w-5 text-[#00d1c0] mb-1" />
                           <p className="text-xs font-medium text-gray-700">
-                            Upload degree file
+                            {t(
+                              'AuthPages.registerDoctor.form.fields.selectFile',
+                              'Select File'
+                            )}
                           </p>
                         </label>
                       </div>
@@ -924,7 +1187,10 @@ const RegisterDoctorPage = () => {
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Licenses / Certificates{' '}
+                    {t(
+                      'AuthPages.registerDoctor.form.certificates',
+                      'Certificates'
+                    )}{' '}
                     <span className="text-red-500">*</span>
                   </h3>
                   <button
@@ -935,7 +1201,11 @@ const RegisterDoctorPage = () => {
                     }
                     className="inline-flex items-center gap-2 text-xs font-semibold text-[#1F85F5] hover:text-[#156ed0]"
                   >
-                    <Plus className="h-4 w-4" /> Add Certificate
+                    <Plus className="h-4 w-4" />{' '}
+                    {t(
+                      'AuthPages.registerDoctor.form.addCertificate',
+                      'Add Certificate'
+                    )}
                   </button>
                 </div>
 
@@ -947,7 +1217,10 @@ const RegisterDoctorPage = () => {
                   >
                     <div className="flex justify-between items-center">
                       <p className="text-xs font-semibold text-gray-600">
-                        Certificate #{index + 1}
+                        {t(
+                          'AuthPages.registerDoctor.form.certificateItem',
+                          'Certificate #{{index}}'
+                        ).replace('{{index}}', String(index + 1))}
                       </p>
                       <button
                         type="button"
@@ -966,10 +1239,19 @@ const RegisterDoctorPage = () => {
                     <input
                       type="text"
                       {...register(`certificates.${index}.name`, {
-                        required: 'Certificate name is required',
+                        required:
+                          t(
+                            'AuthPages.registerDoctor.form.fields.name',
+                            'Name'
+                          ) +
+                          ' ' +
+                          t('Validation.Required', 'is required'),
                       })}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Certificate/license name"
+                      placeholder={t(
+                        'AuthPages.registerDoctor.form.fields.name',
+                        'Name'
+                      )}
                     />
                     {errors.certificates?.[index]?.name && (
                       <p className="text-xs text-red-500">
@@ -981,18 +1263,30 @@ const RegisterDoctorPage = () => {
                       type="text"
                       {...register(`certificates.${index}.issuingAuthority`)}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Issuing authority (optional)"
+                      placeholder={t(
+                        'AuthPages.registerDoctor.form.fields.issuingAuthority',
+                        'Issuing Authority'
+                      )}
                     />
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs text-gray-600">
-                          Issued date
+                          {t(
+                            'AuthPages.registerDoctor.form.fields.issuedDate',
+                            'Issued Date'
+                          )}
                         </label>
                         <input
                           type="date"
                           {...register(`certificates.${index}.issuedDate`, {
-                            required: 'Issued date is required',
+                            required:
+                              t(
+                                'AuthPages.registerDoctor.form.fields.issuedDate',
+                                'Issued Date'
+                              ) +
+                              ' ' +
+                              t('Validation.Required', 'is required'),
                           })}
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
@@ -1005,29 +1299,53 @@ const RegisterDoctorPage = () => {
 
                       <div>
                         <label className="text-xs text-gray-600">
-                          Expiry date <span className="text-red-500">*</span>
+                          {t(
+                            'AuthPages.registerDoctor.form.fields.expiryDate',
+                            'Expiry Date'
+                          )}{' '}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
-                          {...register(`certificates.${index}.expiryDate`, {
-                            required: 'Expiry date is required',
-                            validate: (value) => {
-                              if (!value) return 'Expiry date is required';
+                          {...register(
+                            'certificates.' + index + '.expiryDate',
+                            {
+                              required:
+                                t(
+                                  'AuthPages.registerDoctor.form.fields.expiryDate',
+                                  'Expiry Date'
+                                ) +
+                                ' ' +
+                                t('Validation.Required', 'is required'),
+                              validate: (value) => {
+                                if (!value)
+                                  return (
+                                    t(
+                                      'AuthPages.registerDoctor.form.fields.expiryDate',
+                                      'Expiry Date'
+                                    ) +
+                                    ' ' +
+                                    t('Validation.Required', 'is required')
+                                  );
 
-                              const issuedDate = getValues(
-                                `certificates.${index}.issuedDate`
-                              );
-                              if (
-                                issuedDate &&
-                                new Date(`${value}T00:00:00.000Z`) <=
-                                  new Date(`${issuedDate}T00:00:00.000Z`)
-                              ) {
-                                return 'Expiry date must be later than issued date';
-                              }
+                                const issuedDate = getValues(
+                                  `certificates.${index}.issuedDate`
+                                );
+                                if (
+                                  issuedDate &&
+                                  new Date(`${value}T00:00:00.000Z`) <=
+                                    new Date(`${issuedDate}T00:00:00.000Z`)
+                                ) {
+                                  return t(
+                                    'AuthPages.registerDoctor.validation.expiryDateInvalid',
+                                    'Certificate expiry date must be later than issued date'
+                                  );
+                                }
 
-                              return true;
-                            },
-                          })}
+                                return true;
+                              },
+                            }
+                          )}
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
                         {errors.certificates?.[index]?.expiryDate && (
@@ -1060,7 +1378,10 @@ const RegisterDoctorPage = () => {
                         >
                           <Upload className="h-5 w-5 text-[#00d1c0] mb-1" />
                           <p className="text-xs font-medium text-gray-700">
-                            Upload certificate/license file
+                            {t(
+                              'AuthPages.registerDoctor.form.fields.selectFile',
+                              'Select File'
+                            )}
                           </p>
                         </label>
                       </div>
@@ -1100,13 +1421,16 @@ const RegisterDoctorPage = () => {
                   <Shield className="text-[#1F85F5] w-5 h-5 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <h4 className="text-sm font-semibold text-blue-900 mb-1">
-                      Account Creation Process
+                      {t(
+                        'AuthPages.registerDoctor.success.title',
+                        'Account Creation Process'
+                      )}
                     </h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      After submitting your application, our verification team
-                      will first verify your email, then review your submitted
-                      credentials and selected working mode before assigning the
-                      matching full-time/part-time contract template.
+                      {t(
+                        'AuthPages.registerDoctor.success.description',
+                        'After submitting your application, our verification team will first verify your email, then review your submitted credentials and selected working mode before assigning the matching full-time/part-time contract template.'
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1118,19 +1442,30 @@ const RegisterDoctorPage = () => {
                   disabled={isSubmitting}
                   className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#00d1c0] hover:bg-[#00b8a9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00d1c0] transition-all duration-200 uppercase tracking-wider button-hover-lift disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  {isSubmitting
+                    ? t(
+                        'AuthPages.registerDoctor.form.submitting',
+                        'Submitting...'
+                      )
+                    : t(
+                        'AuthPages.registerDoctor.form.submit',
+                        'Submit Application'
+                      )}
                 </button>
               </div>
             </form>
 
             <div className="pt-6 border-t border-gray-100 mt-6">
               <p className="text-center text-sm text-gray-600">
-                Already have an account?{' '}
+                {t(
+                  'AuthPages.login.loginForm.alreadyHaveAccount',
+                  'Already have an account?'
+                )}{' '}
                 <Link
                   to={toLocalizedAuthPath('/login')}
                   className="font-semibold text-[#1F85F5] hover:text-[#00d1c0] transition-colors"
                 >
-                  Sign in here
+                  {t('AuthPages.login.shared.backToLogin', 'Sign in here')}
                 </Link>
               </p>
             </div>

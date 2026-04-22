@@ -146,7 +146,7 @@ const ResetPasswordPage = () => {
         <div className="relative z-10 flex flex-col gap-6 my-auto py-12">
           <div className="w-16 h-1 bg-[#00d1c0] mb-2 rounded-full"></div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
-            {t('AuthPages.resetPassword.leftPanel.titleLine1')} <br />
+            {t('AuthPages.resetPassword.leftPanel.titleLine')} <br />
             <span className="text-[#00d1c0]">
               {t('AuthPages.resetPassword.leftPanel.titleHighlight')}
             </span>
