@@ -69,6 +69,8 @@ export interface CashflowTransactionsParams {
   actorRole?: CashflowActorRole;
   status?: CashflowStatus;
   searchTerm?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
   fromDate?: string;
   toDate?: string;
 }
