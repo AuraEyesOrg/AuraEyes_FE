@@ -1,18 +1,13 @@
+import { ErrorInfo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { ToastContainer } from 'react-toastify';
-import Router from './routes';
-import { AppProvider } from './provider';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
-import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ui/errorfallback';
-import { ErrorInfo } from 'react';
+import { AppProvider } from './provider';
+import Router from './routes';
 
 function App() {
-  const isTelemetryEnabled =
-    import.meta.env.PROD && import.meta.env.VITE_ENABLE_TELEMETRY !== 'false';
-
   // Hàm ghi log lỗi ra dịch vụ bên ngoài hoặc console
   const logErrorToService = (error: unknown, info: ErrorInfo) => {
     if (error instanceof Error) {
@@ -49,10 +44,6 @@ function App() {
           limit={3}
         />
       </AppProvider>
-
-      {/* Vercel Analytics & Speed Insights */}
-      {isTelemetryEnabled && <Analytics />}
-      {isTelemetryEnabled && <SpeedInsights />}
     </>
   );
 }
